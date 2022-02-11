@@ -1,0 +1,78 @@
+{
+"web_server_conf": {
+	"on":true,
+	"verbose":true,
+	"webserver_port":8000,
+	"web_rootdir":"./public",
+	"web_rootdir2":"/Users/flausj/Documents/devx/demo/cslgraphvis/dist",
+	"core_commands":true,
+	"vars_commands":true,
+	"modbus_commands":true,
+		
+	"monitor_commands":true,
+	"custom_commands":true,
+	
+	"json_commands":true,
+	"database_commands":true,
+			
+	"send_alerts":true,
+	"send_console_output":true
+	
+},
+
+"udp_server_conf": {
+	"on":true,
+	"verbose":true,	
+	"trace":true,
+	"udp_port":8001,
+	"max_input_queues":10,
+	"max_size_of_input_queues":100	
+},
+
+"data_server_conf":{
+
+       "datafile_subdir":"datafile",
+       "__//datafile_subdir":"used by data server to store json objects"
+       
+
+},
+
+"file_server_conf": {
+	"on":true,
+	"verbose":true,
+	"port":8010,
+	"root_file_dir":"./idslogs"
+},
+
+"config_file_manager_conf": {
+	"on":true,
+	"verbose":true,
+	"show_modified_files":true,
+	"root_conf_dir":"./idsconf",
+	"conf_files":["NewLearnedRules.json", "RulesForDetection.txt","RulesForLearning.txt","LearnedRules.json","SystemConfiguration.json"],
+	"max_number_of_version":10
+},
+
+"module_exec":{
+	"sampling_time":1000,
+	"modules_package_name":"main.modules",
+	"number_of_exec_loops": 2,
+	"autostart":true
+},
+"modules_package_name":"main.modules",
+"modules":[
+	{
+		"name":"test1",
+		"type":"ObjectConsumer",
+		"config":{
+		  "input_priority":90,
+		  "step_priority":99,
+		  "output_priority":98,
+		  "id_of_target":"cible",
+		  "flow_number":1
+		  
+		}
+	} 
+
+]
+}

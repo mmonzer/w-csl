@@ -1,0 +1,8 @@
+{
+  "currentDataSetNameForDetectionOffLine":"attaque_test_ids",
+  "currentDataSetNameForRecording":"",
+  "currentDataSetNameForLearning":"apprentissageSet",
+  "sendToBrowser":true,
+  "sendToConsole":true,
+  "idsMode":"IDLE"
+}

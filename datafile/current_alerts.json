@@ -1,0 +1,19 @@
+[
+  {
+    "level":"UNDEF",
+    "msg":"ALERT",
+    "uuid":"c80d7921-86cf-4284-99bf-9189b1a70830",
+    "time":1643991925736,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"p1",
+        "value":"34"
+      }
+    ],
+    "meta_infos": []
+  }
+]

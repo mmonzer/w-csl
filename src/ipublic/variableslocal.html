@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Variable table</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+	type="text/javascript"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+	type="text/javascript"></script>
+
+<script src="https://d3js.org/d3.v4.min.js" type="text/javascript"></script>
+
+<script src="js/bootstrap-slider.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="css/bootstrap-slider.css">
+
+<script src="js/vendor/jquery.js" type="text/javascript"></script>
+
+
+<style type="text/css">
+table {
+	border-collapse: collapse;
+	cellpadding
+	="10";
+}
+
+table, td, th {
+	border: 1px solid black;
+}
+</style>
+
+</head>
+<body>
+
+	<div class="container-fluid">
+		<h2 id="mytitle">Variables Table</h2>
+		<div class="row">
+		<select id="sel" onchange="updateModule()">
+	    </select>
+		</div>
+		<div class="row">
+			<div class="col-sm-11 small" style="" id="table"></div>
+		</div>
+		<!-- <button onclick="getTable()">update table</button> --->
+
+	</div>
+
+
+
+
+
+
+
+	<script type="text/javascript">
+	
+	var moduleName="???"
+	
+	function start() {
+		const s=window.location.hostname+':'+window.location.port;
+		
+		const Http = new XMLHttpRequest();
+		const url='http://'+s+'/core?command=start';
+		Http.open("GET", url);
+		Http.send();
+		
+	}
+		function stop() {
+			const s=window.location.hostname+':'+window.location.port;
+			
+			const Http = new XMLHttpRequest();
+			const url='http://'+s+'/core?command=stop';
+			Http.open("GET", url);
+			Http.send();
+			
+		}
+		
+		function docontinue() {
+			const s=window.location.hostname+':'+window.location.port;
+			
+			const Http = new XMLHttpRequest();
+			const url='http://'+s+'/core?command=restart';
+			Http.open("GET", url);
+			Http.send();
+			
+		}
+
+		function getTable() {
+			const s=window.location.hostname+':'+window.location.port;
+			//console.log(window.location.hostname+':'+window.location.port);
+			fetch('http://'+s+'//modulevars?name='+moduleName)
+			.then((resp) => resp.json()) 
+			.then(function(data) {
+				//console.log(JSON.stringify(JSON.stringify(data)));
+				rows=data;
+				//console.log(rows);
+				//console.log(response.json());
+				//rows=response.json();
+				updateTableDiv(rows);
+				return rows;
+			}).then(function(myJson) {
+				//console.log(JSON.stringify(myJson));
+			});
+		}
+
+		function updateTable(msg) {
+			getTable();
+		}
+		
+		function updateTableDiv(rows) {
+			var html = "<table border='1|1' cellpadding=\"100\" >";
+			for (var i = 0; i < rows.length; i++) {
+				html += "<tr>";
+				html += "<td>&nbsp;" + rows[i].name + " &nbsp;</td>";
+				html += "<td>&nbsp; " + rows[i].value + "&nbsp; </td>";
+				html += "<td><button style='background-color: #008CBA;' onclick=updateValue('"+rows[i].name+"',"+rows[i].value+")>Edit</button></td>"
+				
+				html += "</tr>";
+
+			}
+			html += "</table>";
+			//console.log(html);
+			document.getElementById("table").innerHTML = html;
+		}
+
+	
+		
+		var webSocket = new WebSocket("ws://" + location.hostname + ":" + location.port + "/chat");
+		webSocket.onmessage = function (msg) { updateTable(msg); };
+		webSocket.onclose = function () { alert("WebSocket connection closed") };
+
+		
+		function updateValue(address,value) {
+			console.log(address);
+			var x=prompt("New value (decimal)", value);
+			if (x == null || x == "") {
+			    txt = "User cancelled the prompt.";
+			  } else {
+				  const s=window.location.hostname+':'+window.location.port;
+					//console.log(window.location.hostname+':'+window.location.port);
+					fetch('http://'+s+'/setmodulevar?name='+moduleVar+'&'+address+"="+x)
+					
+			  }
+			
+			
+			console.log(x);
+			
+		}
+		
+		
+		function  updateModule() {
+			 var x = document.getElementById("sel").value;
+			 moduleName=x;
+			document.getElementById("mytitle").innerHTML="Local variables table of "+moduleName;
+		}
+		
+		function updateModuleSelector(data) {
+			  if (data.length>0) moduleName=data[0].name;
+			  
+			  $.each(data, function(i, option) {
+			        $('#sel').append($('<option/>').attr("value", option.name).text(option.name));
+			    });
+			  
+			  updateModule();
+		}
+		
+		$(function() {
+		   
+			const s=window.location.hostname+':'+window.location.port;
+			
+		    fetch('http://'+s+'/modulelist')
+			.then((resp) => resp.json()) 
+			.then(function(data) {
+				console.log(JSON.stringify(JSON.stringify(data)));
+				rows=data;
+				console.log(rows);
+				//console.log(response.json());
+				//rows=response.json();
+				updateModuleSelector(rows);
+				return rows;
+			}).then(function(myJson) {
+				//console.log(JSON.stringify(myJson));
+			});
+		    
+		  
+		})
+	</script>
+</body>
+
+</html>

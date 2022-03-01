@@ -1,6 +1,6 @@
 {
-  "currentDataSetNameForDetectionOffLine":"attaque_test_ids",
-  "currentDataSetNameForRecording":"",
+  "currentDataSetNameForDetectionOffLine":"detect01",
+  "currentDataSetNameForRecording":"detect01",
   "currentDataSetNameForLearning":"apprentissageSet",
   "sendToBrowser":true,
   "sendToConsole":true,

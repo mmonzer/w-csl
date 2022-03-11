@@ -52,7 +52,8 @@
         "risk":"UNDEF",
         "country":"Local network",
         "related_tap":"TestTap1",
-        "os_cpe":"cpe:undefined:undefined:undefined:undefined"
+        "os_cpe":"cpe:undefined:undefined:undefined:undefined",
+        "os_cpe_tracked":true
       },
       "links_from": [
         "4e665d51-cd2a-4b1a-bd2b-61dd9f2a2cfb",
@@ -78,7 +79,7 @@
         "risk":"UNDEF",
         "country":"Local network",
         "related_tap":"TestTap2",
-        "os_cpe_tracked":false,
+        "os_cpe_tracked":true,
         "os_cpe":"cpe:undefined:microsoft:undefined:undefined"
       },
       "links_from": [
@@ -102,7 +103,7 @@
         "country":"Local network",
         "related_tap":"TestTap1",
         "os_cpe":"cpe:/o:microsoft:windows_10:1607",
-        "os_cpe_tracked":true,
+        "os_cpe_tracked":false,
         "os_cve_count":1
       },
       "links_from": [
@@ -126,7 +127,8 @@
         "likelihood":"UNDEF",
         "risk":"UNDEF",
         "country":"Local network",
-        "related_tap":"TestTap1"
+        "related_tap":"TestTap1",
+        "os_cpe_tracked":true
       },
       "links_from": [
         "546c87bd-f65e-4674-841f-a1b87520a091",

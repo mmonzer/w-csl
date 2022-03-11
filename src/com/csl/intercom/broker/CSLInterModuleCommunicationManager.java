@@ -3,8 +3,8 @@ package com.csl.intercom.broker;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.XApiCommands;
+import com.xcsl.interfaces.IApiCommands;
 import com.xcsl.json.Json;
 
 
@@ -41,7 +41,7 @@ public class CSLInterModuleCommunicationManager {
 	private String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
 
 	
-	Map<String,ApiCommands> listOfRegisteredAPI= new HashMap<String, ApiCommands>();
+	Map<String,IApiCommands> listOfRegisteredAPI= new HashMap<String, IApiCommands>();
 	Map<String,XApiCommands> listOfRegisteredExternalAPI= new HashMap<String, XApiCommands>();
 	Map<String,ApiMessageReceiver> listOfReceivers= new HashMap<>();
 	Map<String,ApiMessageSender> listOfSenders= new HashMap<>();
@@ -87,10 +87,10 @@ public class CSLInterModuleCommunicationManager {
 		return useBroker;
 	}
 
-	public void registerAPI(ApiCommands api) {
+	public void registerAPI(IApiCommands api) {
 		
-		if (isShowInfo()) System.out.println("REGISTER API FOR BROKER :"+api.getCleanApiName());
-		listOfRegisteredAPI.put(api.getCleanApiName(), api);
+		if (isShowInfo()) System.out.println("REGISTER API FOR BROKER :"+api.getName());
+		listOfRegisteredAPI.put(api.getName(), api);
 	}
 	
 	public void registerExternalAPI(XApiCommands api) {
@@ -101,10 +101,10 @@ public class CSLInterModuleCommunicationManager {
 	}
 	
 	
-	public void registerWebSocketHandler(ApiCommands api) {
+	public void registerWebSocketHandler(IApiCommands api) {
 	
-		if (isShowInfo()) System.out.println("REGISTER SOCKET FOR BROKER :"+api.getCleanApiName());
-		listOfRegisteredAPI.put(api.getCleanApiName(), api);
+		if (isShowInfo()) System.out.println("REGISTER SOCKET FOR BROKER :"+api.getName());
+		listOfRegisteredAPI.put(api.getName(), api);
 	}
 	
 	// start the MQTT listener
@@ -112,11 +112,11 @@ public class CSLInterModuleCommunicationManager {
 		
 		
 		if (isUseBroker()) {
-		for (Map.Entry<String,ApiCommands> entry : listOfRegisteredAPI.entrySet()) {
+		for (Map.Entry<String,IApiCommands> entry : listOfRegisteredAPI.entrySet()) {
 				
-			ApiCommands api=entry.getValue();
+			IApiCommands api=entry.getValue();
 			
-			ApiMessageReceiver receiver = new ApiMessageReceiver(moduleName,api.getCleanApiName(),api,
+			ApiMessageReceiver receiver = new ApiMessageReceiver(moduleName,api.getName(),api,
 					BROKER_TCP_LOCALHOST_1883,
 					getDebugLevel());
 			listOfReceivers.put(entry.getKey(),receiver);
@@ -136,7 +136,7 @@ public class CSLInterModuleCommunicationManager {
 		
 		if (isUseBroker()) {
 		
-		for (Map.Entry<String,ApiCommands> entry : listOfRegisteredAPI.entrySet()) {
+		for (Map.Entry<String,IApiCommands> entry : listOfRegisteredAPI.entrySet()) {
 				
 			ApiMessageReceiver receiver=listOfReceivers.get(entry.getKey());
 			if (receiver!=null) receiver.close();
@@ -186,7 +186,7 @@ public class CSLInterModuleCommunicationManager {
 	public Json executeLocalCommand(String apiName, Json jCmd) {
 		
 		
-		ApiCommands api = listOfRegisteredAPI.get(apiName);
+		IApiCommands api = listOfRegisteredAPI.get(apiName);
 		
 		if (api==null) return Json.object().set("error", "Invalid API:"+apiName);
 		
@@ -202,7 +202,7 @@ public class CSLInterModuleCommunicationManager {
 		
 		
 		// local command
-		ApiCommands api = listOfRegisteredAPI.get(apiName);
+		IApiCommands api = listOfRegisteredAPI.get(apiName);
 		
 		if (api!=null) {
 			Json r=api.execJcmd(jCmd);

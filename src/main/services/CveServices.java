@@ -8,9 +8,12 @@ import java.util.Set;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 
@@ -18,7 +21,9 @@ import main.extensions.CveUtils;
 import main.extensions.Utils;
 
 public class CveServices implements ICSLService {
-	ApiCommands apiCommands= new ApiCommands("");
+	//ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
+	
 	
 	String name="cve";
 	String configFileSectionName="cve_service";
@@ -54,7 +59,7 @@ public class CveServices implements ICSLService {
 		 */
 
 
-		addCmd("getCve", new JsonCmd() {
+		addCmd("getCve", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -127,7 +132,7 @@ public class CveServices implements ICSLService {
 		
 		
 		
-		addCmd("stats", new JsonCmd() {
+		addCmd("stats", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -155,7 +160,7 @@ public class CveServices implements ICSLService {
 				);
 		
 		
-		addCmd("status", new JsonCmd() {
+		addCmd("status", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -182,7 +187,7 @@ public class CveServices implements ICSLService {
 		/*
 		 * Permet à l'IHM de demander la mise à jour de la base de CVE en fonction de devices.json
 		 */
-		addCmd("updateCve", new JsonCmd() {
+		addCmd("updateCve", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -195,7 +200,7 @@ public class CveServices implements ICSLService {
 			}
 		});
 		
-		addCmd("testsave", new JsonCmd() {
+		addCmd("testsave", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -206,17 +211,17 @@ public class CveServices implements ICSLService {
 		return true;
 	}
 
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

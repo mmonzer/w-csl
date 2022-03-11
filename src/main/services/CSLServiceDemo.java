@@ -1,15 +1,17 @@
 package main.services;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
 import com.xcsl.json.Json;
 
 public class CSLServiceDemo implements ICSLService {
 	
 	
-	ApiCommands apiCommands= new ApiCommands("");
-	
+	//ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	
 	String name="#undef";
@@ -52,7 +54,7 @@ public class CSLServiceDemo implements ICSLService {
 	public boolean init(Json jConfig, String cslDir) {
 		
 		
-		addCmd("demo_cmd", new JsonCmd() {
+		addCmd("demo_cmd", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -67,12 +69,12 @@ public class CSLServiceDemo implements ICSLService {
 	}
 	
 
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		apiCommands.setName(name);
 		return apiCommands;
 	}

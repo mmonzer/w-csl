@@ -2,8 +2,8 @@
   {
     "level":"UNDEF",
     "msg":"ALERT",
-    "uuid":"c80d7921-86cf-4284-99bf-9189b1a70830",
-    "time":1643991925736,
+    "uuid":"6be2cda3-30f4-4e6b-b2dd-d9e1108cbd0a",
+    "time":1646233897915,
     "time_for_end_of_mask":0,
     "acked":false,
     "masked":false,

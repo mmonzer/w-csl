@@ -5,9 +5,11 @@ import com.csl.devdb.util.ApiDevice;
 import com.csl.devdb.util.DBOpParams;
 import com.csl.devdb.util.DevicesDBCompare;
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
 import com.xcsl.ids.IDSMainProcessor;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
@@ -17,13 +19,14 @@ public class CSLServiceDevicesDB implements ICSLService {
 
 	static boolean debug =true;
 	//static CSLAlertManager cslAlertManager = new CSLAlertManager("Intrusion detection");
-	ApiCommands apiCommands=new ApiCommands("/"+"devdb");
+	IApiCommands apiCommands=new ApiCommandsFactory().createApiCommands("/"+"devdb");
+			//new ApiCommands("/"+"devdb");
 	
 	
 	ApiDevice apiDevice= new ApiDevice();
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		return apiCommands;
 	}
@@ -100,7 +103,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 			
 		// operations : create, delete, rename, select, copy
 		
-		apiCommands.registerCmd("op", new JsonCmd() {
+		apiCommands.registerCmd("op", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -157,7 +160,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 		 * 
 		 ********************************************/
 		
-		apiCommands.registerCmd("add_device", new JsonCmd() {
+		apiCommands.registerCmd("add_device", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -200,7 +203,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 		
 		
 		
-		apiCommands.registerCmd("get_device", new JsonCmd() {
+		apiCommands.registerCmd("get_device", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -231,7 +234,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				);
 		
 		
-		apiCommands.registerCmd("update_device", new JsonCmd() {
+		apiCommands.registerCmd("update_device", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -263,7 +266,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				);
 		
 		
-		apiCommands.registerCmd("del_device", new JsonCmd() {
+		apiCommands.registerCmd("del_device", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -294,7 +297,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
 		
-		apiCommands.registerCmd("get_devices", new JsonCmd() {
+		apiCommands.registerCmd("get_devices", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -321,7 +324,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				.setResult("array of devices in Json",JsonCmdHelp.JSON)
 				);
 		
-		apiCommands.registerCmd("clear", new JsonCmd() {
+		apiCommands.registerCmd("clear", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				
@@ -344,7 +347,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				);
 			
 
-		apiCommands.registerCmd("test1", new JsonCmd() {
+		apiCommands.registerCmd("test1", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				
@@ -367,7 +370,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				);
 	
 	// operations : create, delete, rename, select, copy
-		apiCommands.registerCmd("add_learned_model_to_dbdevices", new JsonCmd() {
+		apiCommands.registerCmd("add_learned_model_to_dbdevices", new IJsonCmd() {
 
 				@Override
 				public Json exec(Json params) {
@@ -414,7 +417,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				
 		
 
-		apiCommands.registerCmd("debug", new JsonCmd() {
+		apiCommands.registerCmd("debug", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -453,7 +456,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 				);
 		
 			
-		apiCommands.registerCmd("backup", new JsonCmd() {
+		apiCommands.registerCmd("backup", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -474,7 +477,7 @@ public class CSLServiceDevicesDB implements ICSLService {
 		
 		
 		
-		apiCommands.registerCmd("save", new JsonCmd() {
+		apiCommands.registerCmd("save", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {

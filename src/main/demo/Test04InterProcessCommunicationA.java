@@ -3,7 +3,9 @@ package main.demo;
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.IJsonCmd;
 import com.xcsl.json.Json;
 
 
@@ -15,14 +17,14 @@ import com.xcsl.json.Json;
 public class Test04InterProcessCommunicationA {
 
 	
-	ApiCommands api= new ApiCommands("essai");
-	
+	//ApiCommands api= new ApiCommands("essai");
+	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
 	
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("IDS", new MosquittoConfig());
 	
 	public void init() {
 		
-		api.registerCmd("test", new JsonCmd() {
+		api.registerCmd("test", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {

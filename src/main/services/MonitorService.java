@@ -5,18 +5,21 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.xcsl.ids.IDSTrace;
 import com.xcsl.json.Json;
 
 public class MonitorService implements ICSLService {
 
 
-	ApiCommands apiCommands= new ApiCommands("");
+	//ApiCommands apiCommands= new ApiCommands("");
 	
-
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	String name="#undef";
 	String configFileSectionName="config_"+name;
 
@@ -64,7 +67,7 @@ public class MonitorService implements ICSLService {
 		
 		
 		
-		addCmd("stats_devices", new JsonCmd() {
+		addCmd("stats_devices", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -85,7 +88,7 @@ public class MonitorService implements ICSLService {
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
 		
-		addCmd("stats_taps", new JsonCmd() {
+		addCmd("stats_taps", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -163,17 +166,17 @@ public class MonitorService implements ICSLService {
 	}
 
 
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

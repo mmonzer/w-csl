@@ -5,10 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.xcsl.ids.IDSTrace;
 import com.xcsl.interfaces.IAlertDescriptor;
 import com.xcsl.json.Json;
@@ -16,7 +18,8 @@ import com.xcsl.json.Json;
 public class AlertsService implements ICSLService {
 
 
-	ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
+//			new ApiCommands("");
 	
 
 	String name="#undef";
@@ -65,7 +68,7 @@ public class AlertsService implements ICSLService {
 		
 		
 	
-		addCmd("get_list_active_alerts", new JsonCmd() {
+		addCmd("get_list_active_alerts", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -86,7 +89,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("get_number_active_alerts_by_level", new JsonCmd() {
+		addCmd("get_number_active_alerts_by_level", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -107,7 +110,7 @@ public class AlertsService implements ICSLService {
 				);
 		//get_list_active_alerts_count
 		
-		addCmd("get_list_acked_alerts", new JsonCmd() {
+		addCmd("get_list_acked_alerts", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -123,7 +126,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("get_list_masked_alerts", new JsonCmd() {
+		addCmd("get_list_masked_alerts", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -137,7 +140,7 @@ public class AlertsService implements ICSLService {
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
 		
-		addCmd("get_list_added_to_model_alerts", new JsonCmd() {
+		addCmd("get_list_added_to_model_alerts", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -152,7 +155,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("get_list_inactive_alerts", new JsonCmd() {
+		addCmd("get_list_inactive_alerts", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -168,7 +171,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("get_list_all_alerts", new JsonCmd() {
+		addCmd("get_list_all_alerts", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -203,7 +206,7 @@ public class AlertsService implements ICSLService {
 //				.setStatus(JsonCmdHelp.STATUS_TODO)
 //				);
 //		
-		addCmd("set_acked", new JsonCmd() {
+		addCmd("set_acked", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -219,7 +222,7 @@ public class AlertsService implements ICSLService {
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
 		
-		addCmd("set_masked", new JsonCmd() {
+		addCmd("set_masked", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -238,7 +241,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("set_added_to_model", new JsonCmd() {
+		addCmd("set_added_to_model", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -256,7 +259,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("stats", new JsonCmd() {
+		addCmd("stats", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -275,7 +278,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("clear_list_of_all_alerts", new JsonCmd() {
+		addCmd("clear_list_of_all_alerts", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -301,7 +304,7 @@ public class AlertsService implements ICSLService {
 		
 		
 		
-		addCmd("test_alert0", new JsonCmd() {
+		addCmd("test_alert0", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -333,7 +336,7 @@ public class AlertsService implements ICSLService {
 		
 		
 		
-		addCmd("test_alert1", new JsonCmd() {
+		addCmd("test_alert1", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -363,7 +366,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		
-		addCmd("test_alert2", new JsonCmd() {
+		addCmd("test_alert2", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -448,7 +451,7 @@ public class AlertsService implements ICSLService {
 
 		
 		// Gestion des alertes
-		addCmd("get_alerts_list", new JsonCmd() {
+		addCmd("get_alerts_list", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -463,7 +466,7 @@ public class AlertsService implements ICSLService {
 				);
 		
 		// 
-		addCmd("op_alert", new JsonCmd() {
+		addCmd("op_alert", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -531,17 +534,17 @@ public class AlertsService implements ICSLService {
 	}
 
 
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

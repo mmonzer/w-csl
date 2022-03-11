@@ -7,15 +7,19 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
-import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.xcsl.json.Json;
 
 import main.extensions.CpeSearch;
 
 public class CpeServices implements ICSLService {
-	ApiCommands apiCommands= new ApiCommands("");
+//	ApiCommands apiCommands= new ApiCommands("");
+	
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="cpe";
 	String configFileSectionName="cpe_service";
@@ -62,28 +66,28 @@ public class CpeServices implements ICSLService {
 		System.out.println("CPE functions opérational");
 
 		
-		addCmd("getPrefix", new JsonCmd() {
+		addCmd("getPrefix", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json result = Json.object();
 				return result.at("result",c.getPrefix());
 			}
 		});
-		addCmd("getVendor", new JsonCmd() {
+		addCmd("getVendor", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json result = Json.object();
 				return result.at("result",c.getVendor(params.get("prefix").asString()));
 			}
 		});		
-		addCmd("getProduct", new JsonCmd() {
+		addCmd("getProduct", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json result = Json.object();
 				return result.at("result",c.getProduct(params.get("prefix").asString(),params.get("vendor").asString()));
 			}
 		});	
-		addCmd("getVersion", new JsonCmd() {
+		addCmd("getVersion", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json result = Json.object();
@@ -93,17 +97,17 @@ public class CpeServices implements ICSLService {
 		return true;
 	}
 
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

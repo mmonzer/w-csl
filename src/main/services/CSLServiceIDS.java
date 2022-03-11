@@ -9,9 +9,12 @@ import com.csl.core.CSLContext;
 import com.csl.devdb.DevicesUtil;
 import com.csl.ids.IDSDataSetManager;
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.csl.modules.ModuleIDS;
 import com.csl.util.FileUtils;
 import com.xcsl.ids.IDSTrace;
@@ -24,7 +27,8 @@ import com.xcsl.learning.IDSLearnedRules;
 public class CSLServiceIDS implements ICSLService {
 
 
-	ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
+//	ApiCommands apiCommands= new ApiCommands("");
 	
 
 	String name="#undef";
@@ -68,7 +72,7 @@ public class CSLServiceIDS implements ICSLService {
 		
 	
 		
-		addCmd("stats_links", new JsonCmd() {
+		addCmd("stats_links", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -105,7 +109,7 @@ public class CSLServiceIDS implements ICSLService {
 				);
 		
 		
-		addCmd("stats_network", new JsonCmd() {
+		addCmd("stats_network", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -125,7 +129,7 @@ public class CSLServiceIDS implements ICSLService {
 				);
 		
 		
-		addCmd("test_alert", new JsonCmd() {
+		addCmd("test_alert", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -148,7 +152,7 @@ public class CSLServiceIDS implements ICSLService {
 		});
 
 
-		addCmd("set_param_boolean", new JsonCmd() {
+		addCmd("set_param_boolean", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -177,7 +181,7 @@ public class CSLServiceIDS implements ICSLService {
 				.setResult("return the result of the operation or error", JsonCmdHelp.STR)
 				);
 
-		addCmd("get_param_boolean", new JsonCmd() {
+		addCmd("get_param_boolean", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -201,7 +205,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("set_param_string", new JsonCmd() {
+		addCmd("set_param_string", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -225,7 +229,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("get_param_string", new JsonCmd() {
+		addCmd("get_param_string", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -263,7 +267,7 @@ public class CSLServiceIDS implements ICSLService {
 		//			}
 		//		});
 
-		addCmd("set_send_to_browser", new JsonCmd() {
+		addCmd("set_send_to_browser", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -278,7 +282,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("get_send_to_browser", new JsonCmd() {
+		addCmd("get_send_to_browser", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -306,7 +310,7 @@ public class CSLServiceIDS implements ICSLService {
 		//			}
 		//		});
 
-		addCmd("set_send_to_console", new JsonCmd() {
+		addCmd("set_send_to_console", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -321,7 +325,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("get_send_to_console", new JsonCmd() {
+		addCmd("get_send_to_console", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -384,7 +388,7 @@ public class CSLServiceIDS implements ICSLService {
 		//			}
 		//		});
 
-		addCmd("select_dataset", new JsonCmd() {
+		addCmd("select_dataset", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -407,7 +411,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("get_learned_rules", new JsonCmd() {
+		addCmd("get_learned_rules", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -427,7 +431,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 
-		addCmd("idsmode", new JsonCmd() {
+		addCmd("idsmode", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -448,7 +452,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 
-		addCmd("idsMode", new JsonCmd() {
+		addCmd("idsMode", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -474,7 +478,7 @@ public class CSLServiceIDS implements ICSLService {
 		});
 
 
-		addCmd("setIdsMode", new JsonCmd() {
+		addCmd("setIdsMode", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -503,7 +507,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("getIdsMode", new JsonCmd() {
+		addCmd("getIdsMode", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -526,7 +530,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 
-		addCmd("get_ids_config", new JsonCmd() {
+		addCmd("get_ids_config", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -544,7 +548,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 
-		addCmd("get_sys_config", new JsonCmd() {
+		addCmd("get_sys_config", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -571,7 +575,7 @@ public class CSLServiceIDS implements ICSLService {
 		});
 
 
-		addCmd("get_learned_rules", new JsonCmd() {
+		addCmd("get_learned_rules", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -611,7 +615,7 @@ public class CSLServiceIDS implements ICSLService {
 		//		});
 
 
-		addCmd("getDataSetList", new JsonCmd() {
+		addCmd("getDataSetList", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -630,7 +634,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : create, delete, rename, select, copy
-		addCmd("dataSetOperation", new JsonCmd() {
+		addCmd("dataSetOperation", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -686,7 +690,7 @@ public class CSLServiceIDS implements ICSLService {
 		 *	“password”:””     // Password SSH
 		 *
 		 */
-		addCmd("opTaps", new JsonCmd() {
+		addCmd("opTaps", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -737,7 +741,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : load, save, compile
-		addCmd("opRulesSet", new JsonCmd() {
+		addCmd("opRulesSet", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -765,7 +769,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : load, save, compile
-		addCmd("opSystemConfiguration", new JsonCmd() {
+		addCmd("opSystemConfiguration", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -792,7 +796,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : create, delete, rename, select, copy
-		addCmd("reset_learned_model", new JsonCmd() {
+		addCmd("reset_learned_model", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -815,7 +819,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : create, delete, rename, select, copy
-		addCmd("add_to_dbdevices", new JsonCmd() {
+		addCmd("add_to_dbdevices", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -861,7 +865,7 @@ public class CSLServiceIDS implements ICSLService {
 		 * 	2- the device db (with user modif)
 		 * 	3) the alerts model (list of alert with ok or risk level)
 		 */
-		addCmd("generate_ids_model", new JsonCmd() {
+		addCmd("generate_ids_model", new IJsonCmd() {
 
 					@Override
 					public Json exec(Json params) {
@@ -899,7 +903,7 @@ public class CSLServiceIDS implements ICSLService {
 				});
 		
 		// operations : create, delete, rename, select, copy
-		addCmd("get_learned_model_table", new JsonCmd() {
+		addCmd("get_learned_model_table", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -917,7 +921,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 		
-		addCmd("get_learned_model_dpi_table", new JsonCmd() {
+		addCmd("get_learned_model_dpi_table", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -931,7 +935,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("get_devices_table", new JsonCmd() {
+		addCmd("get_devices_table", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -952,7 +956,7 @@ public class CSLServiceIDS implements ICSLService {
 		});
 
 		
-		addCmd("get_devices_json", new JsonCmd() {
+		addCmd("get_devices_json", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -974,7 +978,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : create, delete, rename, select, copy
-		addCmd("start_learning", new JsonCmd() {
+		addCmd("start_learning", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -998,7 +1002,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 		// operations : create, delete, rename, select, copy
-		addCmd("cancel_learning", new JsonCmd() {
+		addCmd("cancel_learning", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1025,7 +1029,7 @@ public class CSLServiceIDS implements ICSLService {
 		});
 		
 		
-		addCmd("generate_rules", new JsonCmd() {
+		addCmd("generate_rules", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1060,7 +1064,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 			
-		addCmd("get_CSL_learning_args", new JsonCmd() {
+		addCmd("get_CSL_learning_args", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1104,7 +1108,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : create, delete, rename, select, copy
-		addCmd("start_detection_offline", new JsonCmd() {
+		addCmd("start_detection_offline", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1128,7 +1132,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 		// operations : create, delete, rename, select, copy
-		addCmd("cancel_detection_offline", new JsonCmd() {
+		addCmd("cancel_detection_offline", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1141,7 +1145,7 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
-		addCmd("get_CSL_detection_offline_args", new JsonCmd() {
+		addCmd("get_CSL_detection_offline_args", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1186,7 +1190,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : create, delete, rename, select, copy
-		addCmd("start_detection", new JsonCmd() {
+		addCmd("start_detection", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1206,7 +1210,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 		// operations : create, delete, rename, select, copy
-		addCmd("start_recording_only", new JsonCmd() {
+		addCmd("start_recording_only", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1233,7 +1237,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 		// operations : create, delete, rename, select, copy
-		addCmd("set_idle_mode", new JsonCmd() {
+		addCmd("set_idle_mode", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1252,7 +1256,7 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
-		addCmd("get_CSL_running_args", new JsonCmd() {
+		addCmd("get_CSL_running_args", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1304,7 +1308,7 @@ public class CSLServiceIDS implements ICSLService {
 
 		
 		// Gestion des alertes
-		addCmd("get_alerts_list", new JsonCmd() {
+		addCmd("get_alerts_list", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1315,7 +1319,7 @@ public class CSLServiceIDS implements ICSLService {
 		});
 		
 		// 
-		addCmd("op_alert", new JsonCmd() {
+		addCmd("op_alert", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -1381,17 +1385,17 @@ public class CSLServiceIDS implements ICSLService {
 	}
 
 
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

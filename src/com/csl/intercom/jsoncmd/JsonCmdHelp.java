@@ -3,9 +3,10 @@ package com.csl.intercom.jsoncmd;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.xcsl.json.Json;
 
-public class JsonCmdHelp {
+public class JsonCmdHelp implements IJsonCmdHelp {
 
 	static public String INT="int";
 	static public String LONG="long";
@@ -33,24 +34,28 @@ public class JsonCmdHelp {
 		
 	}
 	
+	@Override
 	public JsonCmdHelp setName(String s) {
 		name=s;
 		return this;
 	}
 	
-	public JsonCmdHelp setDesc(String s) {
+	@Override
+	public IJsonCmdHelp setDesc(String s) {
 		desc=s;
 		return this;
 	}
 	
-	public JsonCmdHelp setParam(String name, String desc, String type) {
+	@Override
+	public IJsonCmdHelp setParam(String name, String desc, String type) {
 		paramsdesc.put(name,desc);
 		paramstype.put(name,type);
 		
 		return this;
 	}
 	
-	public JsonCmdHelp setResult(String s, String type) {
+	@Override
+	public IJsonCmdHelp setResult(String s, String type) {
 		result=s;
 		resultType=type;
 		return this;
@@ -79,14 +84,17 @@ public class JsonCmdHelp {
 		return j;
 	}
 	
+	@Override
 	public boolean isHidden() {
 		return hidden;
 	}
 
+	@Override
 	public void setHidden(boolean hidden) {
 		this.hidden = hidden;
 	}
 
+	@Override
 	public Json toJson(Json mode) {
 	
 		Json j= Json.object();
@@ -127,13 +135,15 @@ public class JsonCmdHelp {
 		
 	}
 
-	public JsonCmdHelp hide() {
+	@Override
+	public IJsonCmdHelp hide() {
 		// TODO Auto-generated method stub
 		setHidden(true);
 		return this;
 	}
 	
-	public JsonCmdHelp setStatus(String s) {
+	@Override
+	public IJsonCmdHelp setStatus(String s) {
 		// TODO Auto-generated method stub
 		this.status=s;
 		return this;

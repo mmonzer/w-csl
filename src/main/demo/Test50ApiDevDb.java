@@ -3,6 +3,8 @@ package main.demo;
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiCommands;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 
@@ -15,8 +17,9 @@ import com.xcsl.json.JsonUtil;
 public class Test50ApiDevDb {
 
 
-	ApiCommands api= new ApiCommands("essai");
+	//IApiCommands api= new ApiCommands("essai");
 
+	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
 
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("DB", new MosquittoConfig());
 

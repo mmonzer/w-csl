@@ -15,9 +15,11 @@ import org.apache.commons.io.FileUtils;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
-import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.jcraft.jsch.JSchException;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
@@ -25,7 +27,9 @@ import com.xcsl.json.JsonUtil;
 import main.extensions.SshUtils;
 
 public class TapsServices implements ICSLService {
-	ApiCommands apiCommands= new ApiCommands("");
+	//ApiCommands apiCommands= new ApiCommands("");
+	
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="taps";
 	String configFileSectionName="ssh_service";	
@@ -493,7 +497,7 @@ public class TapsServices implements ICSLService {
 		localIP = config.at("localIpAddr").asString();
 		localPort = config.at("localPort").asString();
 
-		addCmd("newTap", new JsonCmd() {
+		addCmd("newTap", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				System.out.println("paramètres de newTap :"+params.toString());
@@ -511,7 +515,7 @@ public class TapsServices implements ICSLService {
 			}
 		});
 		
-		addCmd("tapNumber", new JsonCmd() {
+		addCmd("tapNumber", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json j = Json.object();
@@ -520,7 +524,7 @@ public class TapsServices implements ICSLService {
 			}
 		});	
 		
-		addCmd("deleteTap", new JsonCmd() {
+		addCmd("deleteTap", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				deleteTap(params.at("name").asString());
@@ -535,7 +539,7 @@ public class TapsServices implements ICSLService {
 			}
 		});	
 		
-		addCmd("setIp", new JsonCmd() {
+		addCmd("setIp", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				setIp(params.at("name").asString(), params.at("ip").asString());
@@ -550,7 +554,7 @@ public class TapsServices implements ICSLService {
 			}
 		});		
 		
-		addCmd("setUsernamePassword", new JsonCmd() {
+		addCmd("setUsernamePassword", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				setUsernamePassword(params.at("name").asString(), params.at("username").asString(),params.at("password").asString());
@@ -564,7 +568,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();
 			}
 		});
-		addCmd("setNetworkName", new JsonCmd() {
+		addCmd("setNetworkName", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				setNetworkName(params.at("name").asString(), params.at("networkName").asString());
@@ -578,7 +582,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();
 			}
 		});
-		addCmd("getConfFromTap", new JsonCmd() {
+		addCmd("getConfFromTap", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json result = Json.object();
@@ -603,7 +607,7 @@ public class TapsServices implements ICSLService {
 			}
 		});	
 		
-		addCmd("sendConfToTap", new JsonCmd() {
+		addCmd("sendConfToTap", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				switch(params.at("param").asString()) {
@@ -627,7 +631,7 @@ public class TapsServices implements ICSLService {
 			}
 		});		
 		
-		addCmd("getTapConf", new JsonCmd() {
+		addCmd("getTapConf", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -639,7 +643,7 @@ public class TapsServices implements ICSLService {
 			}
 		});		
 		
-		addCmd("getTapState", new JsonCmd() {
+		addCmd("getTapState", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json j = Json.object();
@@ -650,35 +654,35 @@ public class TapsServices implements ICSLService {
 		
 	
 		
-		addCmd("startTap", new JsonCmd() {
+		addCmd("startTap", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return startTaps(params.at("name").asString());
 			}
 		});		
 		
-		addCmd("stopTap", new JsonCmd() {
+		addCmd("stopTap", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return stopTaps(params.at("name").asString());
 			}
 		});			
 
-		addCmd("startSuricata", new JsonCmd() {
+		addCmd("startSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return startSuricata(params.at("name").asString());
 			}
 		});		
 		
-		addCmd("stopSuricata", new JsonCmd() {
+		addCmd("stopSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return stopSuricata(params.at("name").asString());
 			}
 		});		
 		
-		addCmd("reloadRules", new JsonCmd() {
+		addCmd("reloadRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return reloadRules(params.at("name").asString());
@@ -686,7 +690,7 @@ public class TapsServices implements ICSLService {
 		});	
 		
 		// Setter et getter de l'édition de Json graphique
-		addCmd("getProcessJson", new JsonCmd() {
+		addCmd("getProcessJson", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -697,7 +701,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();
 			}
 		});	
-		addCmd("getNetworkJson", new JsonCmd() {
+		addCmd("getNetworkJson", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -707,7 +711,7 @@ public class TapsServices implements ICSLService {
 				}
 				return Json.object();			}
 		});	
-		addCmd("setProcessJson", new JsonCmd() {
+		addCmd("setProcessJson", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -718,7 +722,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();
 			}
 		});	
-		addCmd("setNetworkJson", new JsonCmd() {
+		addCmd("setNetworkJson", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -730,7 +734,7 @@ public class TapsServices implements ICSLService {
 		});	
 		
 		// Same but for suricata
-		addCmd("getSuricataConf", new JsonCmd() {
+		addCmd("getSuricataConf", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json j = Json.object();
@@ -742,7 +746,7 @@ public class TapsServices implements ICSLService {
 				return j;
 			}
 		});	
-		addCmd("getBaseRules", new JsonCmd() {
+		addCmd("getBaseRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				System.out.println("coucou");
@@ -756,7 +760,7 @@ public class TapsServices implements ICSLService {
 				return j;
 			}
 		});	
-		addCmd("getGenRules", new JsonCmd() {
+		addCmd("getGenRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json j = Json.object();
@@ -768,7 +772,7 @@ public class TapsServices implements ICSLService {
 				return j;
 			}
 		});		
-		addCmd("setSuricataConf", new JsonCmd() {
+		addCmd("setSuricataConf", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -779,7 +783,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();
 			}
 		});	
-		addCmd("setBaseRules", new JsonCmd() {
+		addCmd("setBaseRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -790,7 +794,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();			
 			}
 		});	
-		addCmd("setGeneratedRules", new JsonCmd() {
+		addCmd("setGeneratedRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -800,7 +804,7 @@ public class TapsServices implements ICSLService {
 				}
 				return Json.object();			}
 		});	
-		addCmd("getSuricataLogs", new JsonCmd() {
+		addCmd("getSuricataLogs", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json result = Json.object();
@@ -815,7 +819,7 @@ public class TapsServices implements ICSLService {
 				return result;		
 			}
 		});		
-		addCmd("clearSuricataLogs", new JsonCmd() {
+		addCmd("clearSuricataLogs", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				clearLogs(params.at("name").asString());
@@ -829,14 +833,14 @@ public class TapsServices implements ICSLService {
 				return result;		
 			}
 		});	
-		addCmd("sendIncludes", new JsonCmd() {
+		addCmd("sendIncludes", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				sendIncludes(params.at("name").asString());
 				return Json.object();		
 			}
 		});		
-		addCmd("test", new JsonCmd() {
+		addCmd("test", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -846,7 +850,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();
 			}
 		});			
-		addCmd("setInclude", new JsonCmd() {
+		addCmd("setInclude", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 
@@ -872,7 +876,7 @@ public class TapsServices implements ICSLService {
 				return Json.object();		
 			}
 		});
-		addCmd("getIncludes", new JsonCmd() {
+		addCmd("getIncludes", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -917,17 +921,17 @@ public class TapsServices implements ICSLService {
 	}
 
 	
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

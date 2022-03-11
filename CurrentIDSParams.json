@@ -1,6 +1,6 @@
 {
   "currentDataSetNameForDetectionOffLine":"detect01",
-  "currentDataSetNameForRecording":"detect01",
+  "currentDataSetNameForRecording":"apprentissageSet",
   "currentDataSetNameForLearning":"apprentissageSet",
   "sendToBrowser":true,
   "sendToConsole":true,

@@ -12,6 +12,8 @@ import java.util.jar.JarInputStream;
 //import com.csl.core.CSLContext;
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 
@@ -30,7 +32,7 @@ public class JServiceLoader {
 	
 
 	static String userDir=System.getProperty("user.dir");
-	static List<ApiCommands> listOfAPIToRegister = new ArrayList<ApiCommands>();
+	static List<IApiCommands> listOfAPIToRegister = new ArrayList<IApiCommands>();
 	static List<XApiCommands> listOfXAPIToRegister = new ArrayList<XApiCommands>();
 
 
@@ -225,14 +227,14 @@ public class JServiceLoader {
 
 
 
-	static public void addApiCommands(ApiCommands api) {
+	static public void addApiCommands(IApiCommands api) {
 		// TODO Auto-generated method stub
 		System.out.println("Register api for http:"+api);
 		listOfAPIToRegister.add(api);
 		//System.out.println(listOfAPIToRegister);
 	}
 
-	static public List<ApiCommands> getApiCommandsList() {
+	static public List<IApiCommands> getApiCommandsList() {
 		return listOfAPIToRegister;
 	}
 

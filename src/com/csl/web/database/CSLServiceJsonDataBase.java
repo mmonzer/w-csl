@@ -8,11 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.intercom.jsoncmd.JsonCmd;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
 import com.csl.web.websockets.CSLWebSocket;
 import com.xcsl.ids.IDSTrace;
 import com.xcsl.json.Json;
@@ -28,12 +29,13 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 	static boolean debug =true;
 	//static CSLAlertManager cslAlertManager = new CSLAlertManager("Intrusion detection");
-	ApiCommands apiCommands=new ApiCommands("/"+"dbjson");
+	IApiCommands apiCommands=new ApiCommandsFactory().createApiCommands("/"+"dbjson");
+		//	new ApiCommands("/"+"dbjson");
 	
 	
 	
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		return apiCommands;
 	}
@@ -101,7 +103,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 	
 	
 		
-		apiCommands.registerCmd("dir_jsonfile", new JsonCmd() {
+		apiCommands.registerCmd("dir_jsonfile", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				
@@ -116,7 +118,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 				.setResult("return a Json array file the list of filenames",JsonCmdHelp.JSON)
 				);
 		
-		apiCommands.registerCmd("save_jsonfile", new JsonCmd() {
+		apiCommands.registerCmd("save_jsonfile", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				
@@ -149,7 +151,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 				.setResult("return error if any",JsonCmdHelp.JSON)
 				);
 		
-		apiCommands.registerCmd("load_jsonfile", new JsonCmd() {
+		apiCommands.registerCmd("load_jsonfile", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				

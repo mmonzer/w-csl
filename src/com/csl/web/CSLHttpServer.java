@@ -10,14 +10,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-//import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.xcsl.interfaces.IApiCommands;
 import com.csl.logger.CSLLogger;
 import com.csl.util.CSLConfigFileServer;
 import com.csl.web.auth.AuthentificationManager;
 import com.csl.web.auth.ServerConfig;
-import com.csl.web.htmlcommands.ExecJsonCommands;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.CSLWebSocketHandler;
 import com.xcsl.json.Json;
@@ -116,7 +115,7 @@ public class CSLHttpServer {
 
 	CSLConfigFileServer cslConfigFileServer=null;
 
-	ExecJsonCommands execJsonCommands=null;
+	//ExecJsonCommands execJsonCommands=null;
 
 	public void reinitServer(Json j) {
 
@@ -360,9 +359,9 @@ public class CSLHttpServer {
 
 		
 
-		for (ApiCommands api:JServiceLoader.getApiCommandsList()) {
+		for (IApiCommands api:JServiceLoader.getApiCommandsList()) {
 
-			String path=api.getCleanApiName();
+			String path=api.getName();
 			System.out.println("REGISTER API:<"+path+">");
 
 			// ne sert à rien
@@ -380,8 +379,8 @@ public class CSLHttpServer {
 			// tout est ds api
 			else*/
 			{
-				if (ADD_GET_ROUTE) addGetRoute(api.getPathFilterForGet(), api.getGetRoute());
-				addPostRoute(api.getPathNameForPost(), api.getPostRoute());
+				if (ADD_GET_ROUTE) addGetRoute(getPathFilterForGet(api),getGetRoute(api)); // api.getGetRoute());
+				addPostRoute(getPathNameForPost(api), getPostRoute(api)); // api.getPostRoute());
 			}
 		}
 
@@ -389,22 +388,7 @@ public class CSLHttpServer {
 		//if (send_console_output) ConsoleOutputSenderViaWebSocket.init();
 
 
-
-
-
-
-
-
 		//decomposer sous forme de fcts
-
-
-
-
-
-
-
-
-
 
 
 		sparkServer.after((req, res) -> {
@@ -443,6 +427,99 @@ public class CSLHttpServer {
 
 
 	}
+	
+	
+	public String getPathFilterForGet(IApiCommands api) {
+		String s=api.getPathFilter();
+		if (!s.startsWith("/")) s="/"+s;
+		return s;
+	}
+	
+	public String getPathNameForPost(IApiCommands api) {
+		String s=api.getName();
+		if (!s.startsWith("/")) s="/"+s;
+		return s;
+	}
+	
+	
+	public Route getPostRoute(IApiCommands api) {
+		return (req, res) -> execPostCommand(api,req, res);
+	}
+
+	public Route getGetRoute(IApiCommands api) {
+		return (req, res) -> renderGetCommand(api, req, res);
+	}
+	
+	
+	private String execPostCommand(IApiCommands api, Request req, Response res) {
+
+		//System.out.println("API POST : "+path);
+		String sresponse = req.body();
+		System.out.println("\n<" + sresponse+">");
+		System.out.println("path:" + req.pathInfo());
+
+		String result = "";
+
+		// if (s.compareToIgnoreCase("setfile")==0)
+
+		Json data = Json.read(sresponse);
+		Json cmd = data.get("cmd");
+		Json params = data.get("params");
+
+		if (cmd == null) {
+			System.out.println("Invalid jcmd:" + cmd);
+		}
+		if (params == null) {
+			params = Json.object();
+		}
+
+	//	if (debug) System.out.println("Exec " + cmd + " " + params);
+
+		
+		String cresult = api.exec(cmd.asString(), params).toString();
+
+		return cresult;
+	}
+	
+	private String renderGetCommand(IApiCommands api,  Request req, Response res) {
+
+		//System.out.println("API GET : "+path);
+		
+		Set<String> paramKeys = req.queryParams();
+
+		// String sresponse = req.body();
+
+		String s = req.pathInfo();
+		if (s.length() > 1)
+			s = s.substring(1);
+
+		//System.out.println("pathInfo="+s);
+		String cmd = "???";
+
+		List<String> varNames = new ArrayList<String>(paramKeys);
+
+		Json params = Json.object();
+		for (String name : varNames) {
+			String value = req.queryParams(name);
+			if (name.compareTo("cmd") == 0) {
+				cmd = value;
+			} 
+			if (name.compareTo("exec_jsoncmd") == 0) {
+				cmd = value;
+			}
+			else {
+				params.set(name, value);
+
+			}
+		}
+
+		System.out.println("Exec " + cmd + " " + params);
+
+		String cresult = api.exec(cmd, params).toString();
+
+		return cresult;
+	}
+	
 
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 

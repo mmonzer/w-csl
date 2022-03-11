@@ -26,7 +26,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import com.csl.intercom.jsoncmd.ApiCommands;
+import com.xcsl.interfaces.IApiCommands;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 
@@ -44,13 +44,13 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 	public String api="";
 
-	private ApiCommands apiCommands;
+	private IApiCommands apiCommands;
 	MqttClient clientToListen=null;
 	boolean subscribed=false;
 	
 	MqttClient clientToSend=null;
 	
-	public ApiMessageReceiver(String moduleName,String apiName,ApiCommands apiCommands,String brokerUrl, int debugLevel) {
+	public ApiMessageReceiver(String moduleName,String apiName,IApiCommands apiCommands,String brokerUrl, int debugLevel) {
 		
 		if (!brokerUrl.isEmpty()) BROKER_TCP_LOCALHOST_1883=brokerUrl;
 		

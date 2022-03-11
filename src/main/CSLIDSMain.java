@@ -1,9 +1,14 @@
 package main;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
 import com.csl.core.CSLContext;
 import com.csl.devdb.CSLServiceDevicesDB;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.xcsl.miniserver.ApiHttpServer;
 import com.csl.util.ProcessUtil;
 import com.csl.web.database.CSLServiceJsonDataBase;
 import com.xcsl.ids.IDSTrace;
@@ -210,7 +215,13 @@ public class CSLIDSMain {
 		CSLContext.instance.start();
 		
 		
-
+		
+		// Mini http server included in JAVA (for api)
+		ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
+				new InetSocketAddress(9000), 
+				JServiceLoader.getApiCommandsList(),
+				new ApiGetHelp());
+		
 		//JsonCommandsNmap.init(j.get("nmap_service"));
 
 		

@@ -1,9 +1,11 @@
 package main.services;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
-import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.xcsl.json.Json;
 
 public class CSLService implements ICSLService {
@@ -11,8 +13,8 @@ public class CSLService implements ICSLService {
 	
 	//HashMap<String, JsonCmd> cmds = new HashMap<String, JsonCmd>();
 
-	ApiCommands apiCommands= new ApiCommands("");
-	
+	//ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="#undef";
 	String configFileSectionName="config_"+name;;
@@ -56,7 +58,7 @@ public class CSLService implements ICSLService {
 	public boolean init(Json jConfig, String cslDir) {
 		
 		
-		addCmd("test", new JsonCmd() {
+		addCmd("test", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -76,17 +78,17 @@ public class CSLService implements ICSLService {
 	
 	
 	
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		return apiCommands;
 	}

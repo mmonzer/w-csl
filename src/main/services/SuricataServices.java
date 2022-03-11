@@ -11,15 +11,18 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
 import com.jcraft.jsch.JSchException;
 import com.xcsl.json.Json;
 
 import main.extensions.SshUtils;
 
 public class SuricataServices implements ICSLService {
-	ApiCommands apiCommands= new ApiCommands("");
+	//ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="suricata";
 	String configFileSectionName="ssh_service";
@@ -260,7 +263,7 @@ public class SuricataServices implements ICSLService {
 
 		
 		
-		addCmd("newSuricata", new JsonCmd() {
+		addCmd("newSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				System.out.println("paramètres de newSuricata :"+params.toString());
@@ -278,7 +281,7 @@ public class SuricataServices implements ICSLService {
 			}
 		});
 		
-		addCmd("renameSuricata", new JsonCmd() {
+		addCmd("renameSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				renameSuricata(params.at("name").asString(),params.at("newName").asString() );
@@ -293,7 +296,7 @@ public class SuricataServices implements ICSLService {
 			}
 		});		
 		
-		addCmd("deleteSuricata", new JsonCmd() {
+		addCmd("deleteSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				deleteSuricata(params.at("name").asString());
@@ -308,7 +311,7 @@ public class SuricataServices implements ICSLService {
 			}
 		});	
 		
-		addCmd("setSuricataIp", new JsonCmd() {
+		addCmd("setSuricataIp", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				setIp(params.at("name").asString(), params.at("ip").asString());
@@ -323,7 +326,7 @@ public class SuricataServices implements ICSLService {
 			}
 		});		
 		
-		addCmd("getSuricataRules", new JsonCmd() {
+		addCmd("getSuricataRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json result = getRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
@@ -338,7 +341,7 @@ public class SuricataServices implements ICSLService {
 			}
 		});	
 		
-		addCmd("sendSuricataRules", new JsonCmd() {
+		addCmd("sendSuricataRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				sendRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
@@ -353,7 +356,7 @@ public class SuricataServices implements ICSLService {
 			}
 		});		
 		
-		addCmd("getConfiguredSuricata", new JsonCmd() {
+		addCmd("getConfiguredSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {
@@ -365,7 +368,7 @@ public class SuricataServices implements ICSLService {
 			}
 		});		
 		
-		addCmd("getSuricataState", new JsonCmd() {
+		addCmd("getSuricataState", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				Json j = Json.object();
@@ -376,21 +379,21 @@ public class SuricataServices implements ICSLService {
 		
 
 		
-		addCmd("startSuricata", new JsonCmd() {
+		addCmd("startSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return startSuricata(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
 			}
 		});		
 		
-		addCmd("stopSuricata", new JsonCmd() {
+		addCmd("stopSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return stopSuricata(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
 			}
 		});		
 		
-		addCmd("reloadRules", new JsonCmd() {
+		addCmd("reloadRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return reloadRules(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
@@ -401,12 +404,12 @@ public class SuricataServices implements ICSLService {
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

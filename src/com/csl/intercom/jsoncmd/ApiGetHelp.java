@@ -3,12 +3,14 @@ package com.csl.intercom.jsoncmd;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.xcsl.interfaces.IApiGetHelp;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 
-public class ApiGetHelp {
+public class ApiGetHelp implements IApiGetHelp {
 
 
+	@Override
 	public String getHelp(List<String> apiNames, Json params) {
 
 		String s="";
@@ -37,11 +39,11 @@ public class ApiGetHelp {
 	}
 
 
-	public String getStyle(Json params) {
+	private String getStyle(Json params) {
 		return getStyle(params.has("print"));
 	}
 
-	public String generatePage(String sbody, Json params) {
+	private String generatePage(String sbody, Json params) {
 
 		String ns="<!DOCTYPE html>\n" + 
 				"<html>\n" + 
@@ -59,6 +61,7 @@ public class ApiGetHelp {
 		return ns;
 	}
 
+	@Override
 	public String getHelp(String apiName, Json params) {
 
 		String styletr=" style =\"width:100 mm\" ";
@@ -191,7 +194,7 @@ public class ApiGetHelp {
 
 	}
 
-	public String formatJson(Json j, boolean full,String url) {
+	private String formatJson(Json j, boolean full,String url) {
 		
 		boolean addlink=false;
 		String s=JsonUtil.prettyPrint(j);
@@ -210,7 +213,7 @@ public class ApiGetHelp {
 	}
 	
 
-	public Json getHelpInfoAsJson(String apiName, Json jparams) {
+	private Json getHelpInfoAsJson(String apiName, Json jparams) {
 
 
 		//Json jparams= Json.object();
@@ -227,7 +230,7 @@ public class ApiGetHelp {
 	
 	
 	
-	String getStyle(boolean fixedWidth) {
+	private String  getStyle(boolean fixedWidth) {
 	
 		String sw="width: 100%;";
 		if (fixedWidth) sw="width:170mm; table-layout:fixed";

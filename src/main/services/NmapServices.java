@@ -13,9 +13,11 @@ import org.apache.commons.net.util.SubnetUtils;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ICSLService;
-import com.csl.intercom.jsoncmd.JsonCmd;
-import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.interfaces.ICSLService;
+import com.xcsl.interfaces.IJsonCmd;
+import com.xcsl.interfaces.IJsonCmdHelp;
 import com.jcraft.jsch.JSchException;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
@@ -26,7 +28,9 @@ import main.extensions.Utils;
 
 public class NmapServices implements ICSLService {
 	
-	ApiCommands apiCommands= new ApiCommands("");
+	//ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
+	
 	
 	String name="nmap";
 	String configFileSectionName="nmap_service";
@@ -130,7 +134,7 @@ public class NmapServices implements ICSLService {
 		
 		// Fonction mise ici en attendant d'avoir une vrai fonction backend permettant de faire la meme chose (compter le nombre de liens en tout)
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		addCmd("getLinksNumber", new JsonCmd() {
+		addCmd("getLinksNumber", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -157,7 +161,7 @@ public class NmapServices implements ICSLService {
 		 * Permet de lancer nmap sur le sous réseau donné et de remplir le fichier devices.json en fonction du résultat de nmap.
 		 * Paramètre : un json de la forme {"list":["<ip1>"]}
 		 */
-		addCmd("launchNmap", new JsonCmd() {
+		addCmd("launchNmap", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -166,7 +170,7 @@ public class NmapServices implements ICSLService {
 			}
 		});
 		
-		addCmd("scanDevice", new JsonCmd() {
+		addCmd("scanDevice", new IJsonCmd() {
 			
 			@Override
 			public Json exec(Json params) {
@@ -275,17 +279,17 @@ public class NmapServices implements ICSLService {
 		return true;
 	}
 	
-	public String addCmd(String name, JsonCmd j) {
+	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
 	
-	public String addCmd(String name, JsonCmd j, JsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 
 	@Override
-	public ApiCommands getApiCommands() {
+	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
 		return apiCommands;

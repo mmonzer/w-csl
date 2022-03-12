@@ -8,15 +8,7 @@ import com.xcsl.json.Json;
 
 public class JsonCmdHelp implements IJsonCmdHelp {
 
-	static public String INT="int";
-	static public String LONG="long";
-	static public String STR="string";
-	static public String JSON="json";
-	static public String BOOL="boolean";
 	
-	static public String STATUS_TODO="TODO";
-	static public String STATUS_TOTEST="TO TEST";
-	static public String STATUS_OK="OK";
 	
 	
 	boolean hidden=false;

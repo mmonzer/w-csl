@@ -224,7 +224,11 @@ public class CSLAlertManager implements IAlertManager {
 		if (findAlert(alertDescriptor)!=null) return;
 
 
+	
 		System.out.println("ALERT="+alertDescriptor);
+		System.out.println("ALERT="+alertDescriptor.toJson());
+	
+		
 		listOfCurrentAlerts.add(alertDescriptor);
 		send(alertDescriptor,
 

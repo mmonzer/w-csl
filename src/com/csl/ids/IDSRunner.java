@@ -17,6 +17,7 @@ import com.xcsl.ids.IDSContext;
 import com.xcsl.ids.IDSMainProcessor;
 import com.xcsl.ids.IDSTrace;
 import com.xcsl.interfaces.IAlertManager;
+import com.xcsl.interfaces.IAlertSender;
 import com.xcsl.interfaces.ICSLLogger;
 import com.xcsl.interfaces.ICancelChecker;
 import com.xcsl.interfaces.ILearningProcessor;
@@ -653,10 +654,13 @@ public class IDSRunner implements IIDSRunner {
 		IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
 
 
-		IAlertManager alertManager = CSLContext.instance.getIDSMainProcessor().getAlertManager(); // new CSLAlertManager("IDS");
+		IAlertSender alertSender = CSLContext.instance.getIDSMainProcessor().getAlertManager(); // new CSLAlertManager("IDS");
 
-		return alertManager.execOpAlert(params); 
-
+		if (alertSender instanceof IAlertManager )
+			return ((IAlertManager)alertSender).execOpAlert(params); 
+		else {
+			return Json.object().set("error", "Not possible to execOpAlert");
+		}
 
 	}
 
@@ -677,8 +681,10 @@ public class IDSRunner implements IIDSRunner {
 
 
 
-		
-		IAlertManager alertViewer = CSLContext.instance.getIDSMainProcessor().getAlertManager(); // new CSLAlertManager("IDS");
+
+	//	IAlertSender alertSender = CSLContext.instance.getIDSMainProcessor().getAlertManager(); // new CSLAlertManager("IDS");
+
+	//	IAlertSender alertViewer =  CSLContext.instance.getIDSMainProcessor().getAlertManager(); // new CSLAlertManager("IDS");
 
 
 

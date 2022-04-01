@@ -85,7 +85,7 @@ public class CSLIDSMain {
 		
 		JServiceLoader.registerService(new CSLServiceDemo(), j, true);
 		//CSLServiceIDS cslServiceIDS= new CSLServiceIDS();
-		JServiceLoader.registerService(new AlertsService(), j, true);
+		JServiceLoader.registerService(new AlertsService(), j, true); 
 		JServiceLoader.registerService(new MonitorService(), j, true);
 		JServiceLoader.registerService(new CSLServiceIDS(), j, true);
 		

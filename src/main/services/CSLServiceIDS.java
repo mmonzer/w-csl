@@ -17,6 +17,7 @@ import com.xcsl.interfaces.IJsonCmd;
 import com.xcsl.interfaces.IJsonCmdHelp;
 import com.csl.modules.ModuleIDS;
 import com.csl.util.FileUtils;
+import com.csl.web.websockets.CSLWebSocket;
 import com.xcsl.ids.IDSTrace;
 import com.xcsl.ids.RulesEditor;
 import com.xcsl.interfaces.IAlertDescriptor;
@@ -69,7 +70,23 @@ public class CSLServiceIDS implements ICSLService {
 
 	public boolean init(Json jConfig, String cslDir) {
 		
-		
+		addCmd("test_console", new IJsonCmd() {
+
+			@Override
+			public Json exec(Json params) {
+				System.out.println("test console");
+				Json j=Json.object();
+				j.set("result", "test console:ok");
+				
+				Json j2 = Json.object();
+				j2.set("line", "Test console");
+				j2.set("console_id","learn");
+				//			CSLWebSocketForConsole.broadcastMessageJson("log", j);
+				CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j2 );
+				
+				return j;
+			}
+		});
 	
 		
 		addCmd("stats_links", new IJsonCmd() {

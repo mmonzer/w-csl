@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project W_CSL with Jar-in-Jar Loader">
+    <!--this file was created by Eclipse Runnable JAR file Export Wizard-->
+    <!--ANT 1.7 is required-->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="/Users/flausj/Documents/dev/wcsl2020"/>
+    <property name="dir.jarfile" value="/Users/flausj/Documents/dev/_csl/_suivi/SOFTCSL/demo20220401"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/cslmainx.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="main.CSLIDSMain"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ annotations-13.0.jar bson-4.2.0.jar commons-codec-1.9.jar commons-io-2.2.jar commons-io-2.6.jar commons-lang3-3.8.1.jar commons-logging-1.2.jar commons-net-3.3.jar fluent-hc-4.5.13.jar gson-2.8.6.jar httpclient-4.5.12.jar httpcore-4.4.13.jar javalin-2.4.0.jar jetty-all-9.4.14.v20181114-uber.jar jetty-util-9.4.28.v20200408.jar jjwt-0.9.1.jar jna-5.4.0.jar jsch-0.1.55.jar logback-classic-1.2.3.jar logback-core-1.2.3.jar lombok.jar mongo-java-driver-3.12.8.jar nrjavaserial-3.12.1.jar org.eclipse.paho.client.mqttv3-1.2.5.jar org.nmap4j-1.1.0.jar slf4j-api-1.7.25.jar slf4j-simple.jar spark-core-2.8.0.jar xcsl.jar jackson-annotations-2.11.2.jar jackson-core-2.11.2.jar jackson-databind-2.11.2.jar java-json.jar guava-30.0-jre.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="${dir.buildfile}/bin"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="annotations-13.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="bson-4.2.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="commons-codec-1.9.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="commons-io-2.2.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="commons-io-2.6.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="commons-lang3-3.8.1.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="commons-logging-1.2.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="commons-net-3.3.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="fluent-hc-4.5.13.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="gson-2.8.6.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="httpclient-4.5.12.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="httpcore-4.4.13.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="javalin-2.4.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jetty-all-9.4.14.v20181114-uber.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jetty-util-9.4.28.v20200408.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jjwt-0.9.1.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jna-5.4.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jsch-0.1.55.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="logback-classic-1.2.3.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="logback-core-1.2.3.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lombok.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="mongo-java-driver-3.12.8.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="nrjavaserial-3.12.1.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="org.eclipse.paho.client.mqttv3-1.2.5.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="org.nmap4j-1.1.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="slf4j-api-1.7.25.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="slf4j-simple.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="spark-core-2.8.0.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="xcsl.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jackson-annotations-2.11.2.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jackson-core-2.11.2.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="jackson-databind-2.11.2.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="java-json.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="guava-30.0-jre.jar"/>
+        </jar>
+    </target>
+</project>

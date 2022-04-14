@@ -221,6 +221,8 @@ public class CSLAlertManager implements IAlertManager {
 
 	public void sendAlert(IAlertDescriptor alertDescriptor,boolean toViewer, boolean toLog) {
 
+		
+		//System.err.println("zaza:"+alertDescriptor.toJson());
 		if (findAlert(alertDescriptor)!=null) return;
 
 
@@ -445,21 +447,26 @@ public class CSLAlertManager implements IAlertManager {
 
 		if (toViewer) {
 
-			if (this.alert_to_udp)
-				this.sendAlertToViewerUDP(msg);
+			
 			if (this.alert_to_web)
 				this.sendAlertToViewerWeb(alert) ; //uuid,time,level,message,props);
 		}
+		
+		if (this.alert_to_udp)
+			this.sendAlertToViewerUDP(alert.toJson());
 
 	}
 
-	private void sendAlertToViewerUDP(String msg) {
+	private void sendAlertToViewerUDP(Json jalert) {
 		if (iNetAddress==null) {
 			CSLLogger.instance.error("Invalid IP for alert viewer");
 		}
+		jalert.set("type","alert");
+
+		String msg=jalert.toString();
 		byte[]data = msg.getBytes();
 		DatagramSocket s;
-
+		
 		//System.err.println("SEND MSG:"+msg);
 
 		try {
@@ -937,8 +944,9 @@ public class CSLAlertManager implements IAlertManager {
 
 
 		a= alertFactory.createAlertDescriptor(1, "ALERT level 1", System.currentTimeMillis());
-		a.setMsg("This is a test green");
+		a.setMsg("This is a test green ");
 		a.setProp("p1", "34");
+		a.setProp("t",""+System.currentTimeMillis());
 		//a.setLevel(new AlertLevel(1));
 		sendAlert(a);
 		list.add(a.toJson());
@@ -946,6 +954,8 @@ public class CSLAlertManager implements IAlertManager {
 
 		a= alertFactory.createAlertDescriptor(2, "ALERT level 2", System.currentTimeMillis());
 		a.setMsg("This is a test yellow ");
+		a.setProp("t",""+System.currentTimeMillis());
+		
 		//a.setLevel(new AlertLevel(2));
 		sendAlert(a);
 		list.add(a.toJson());
@@ -953,6 +963,8 @@ public class CSLAlertManager implements IAlertManager {
 
 		a= alertFactory.createAlertDescriptor(3, "ALERT level 3", System.currentTimeMillis());
 		a.setMsg("This is a test orange");
+		a.setProp("t",""+System.currentTimeMillis());
+		
 		//a.setLevel(new AlertLevel(3));
 		sendAlert(a);
 		list.add(a.toJson());
@@ -960,6 +972,8 @@ public class CSLAlertManager implements IAlertManager {
 
 		a= alertFactory.createAlertDescriptor(4, "ALERT level 4", System.currentTimeMillis());
 		a.setMsg("This is a test red");
+		a.setProp("t",""+System.currentTimeMillis());
+		
 		//a.setLevel(new AlertLevel(4));
 		sendAlert(a);
 		list.add(a.toJson());

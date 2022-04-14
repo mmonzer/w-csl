@@ -1,37 +1,57 @@
-package main.debug;
+package main.xcom;
 
+import java.io.IOException;
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.websocket.ClientEndpoint;
 import javax.websocket.CloseReason;
 import javax.websocket.ContainerProvider;
+import javax.websocket.DeploymentException;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
+import com.xcsl.json.Json;
 
-/**
- * ChatServer Client
- *
- * @author Jiji_Sasidharan
- */
+
+
 @ClientEndpoint
 public class WebsocketClientEndpoint {
 
     Session userSession = null;
     private MessageHandler messageHandler;
-
+    private URI endpointURI;
+    
     public WebsocketClientEndpoint(URI endpointURI) {
-        try {
-            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-            container.connectToServer(this, endpointURI);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+       this.endpointURI=endpointURI;
+       
+       connect();
+       
+       
+	}
+       
+    
 
+    private void connect()  {
+    	System.out.println("Try to connect");
+    	 try {
+             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+             container.connectToServer(this, endpointURI);
+         } catch (Exception e) {
+            // throw new RuntimeException(e);
+         }
+    }
+    
     /**
      * Callback hook for Connection open events.
      *
@@ -41,6 +61,13 @@ public class WebsocketClientEndpoint {
     public void onOpen(Session userSession) {
         System.out.println("Opening websocket "+userSession.getRequestURI());
         this.userSession = userSession;
+       System.out.println("Timeout="+ userSession.getMaxIdleTimeout());
+        userSession.setMaxIdleTimeout(60000);
+         {
+    		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
+    		LocalDateTime now = LocalDateTime.now();  
+    		System.out.println(dtf.format(now));  
+    	}
     }
 
     /**
@@ -52,6 +79,8 @@ public class WebsocketClientEndpoint {
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
         System.out.println("closing websocket");
+        //System.out.println(userSession);
+        System.out.println(reason);
         this.userSession = null;
     }
 
@@ -94,4 +123,10 @@ public class WebsocketClientEndpoint {
 
         public void handleMessage(String message);
     }
+
+	public boolean isOpen() {
+		// TODO Auto-generated method stub
+		if (userSession==null) return false;
+		return userSession.isOpen();
+	}
 }

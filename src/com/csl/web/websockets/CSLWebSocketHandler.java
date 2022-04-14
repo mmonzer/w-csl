@@ -18,6 +18,7 @@ public class CSLWebSocketHandler {
     	CSLContext.instance.logInfo("Connection :"+user);
        
 
+    	System.out.println("Connect :"+user);
     	CSLWebSocket.addUser(user);
        
         
@@ -33,6 +34,7 @@ public class CSLWebSocketHandler {
     @OnWebSocketMessage
     public void onMessage(Session user, String message) {
       
+    	System.out.println("OnMessage user="+user+" message="+message);
     }
 
 }

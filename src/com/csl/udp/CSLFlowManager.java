@@ -16,7 +16,7 @@ public class CSLFlowManager {
 
 	int maxflows=10;
 	int maxsize=1000;
-	boolean traceAllMessages=false; 
+	boolean traceAllMessages=false;
 //	private CSLContext cslContext;
 
 	CSLUDPDataProcessor dataProcessor=null;

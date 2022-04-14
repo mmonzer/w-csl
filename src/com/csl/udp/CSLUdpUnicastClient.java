@@ -37,11 +37,14 @@ public class CSLUdpUnicastClient implements Runnable {
 		
 		try {
 			//clientSocket = new DatagramSocket(port) ;
-			clientSocket = new DatagramSocket(port,Inet4Address.getByName("127.0.0.1")) ;
+			clientSocket = new DatagramSocket(port); //,Inet4Address.getByName("127.0.0.1")) ;
 			
 			// Set a timeout of 3000 ms for the client.
 			//clientSocket.setSoTimeout(3000);
 			while (true) {
+				
+				
+				//System.out.println("JMF_receive packet");
 				/**
 				 * Create a byte array buffer to store incoming data. If the message length
 				 * exceeds the length of your buffer, then the message will be truncated. To avoid this,
@@ -64,7 +67,7 @@ public class CSLUdpUnicastClient implements Runnable {
 				 */
 				//CSLContext.context.logInfo("new message received "+datagramPacket.getData());
 				this.messageQueue.put(datagramPacket.getData());
-				//System.out.println('.');
+				System.out.println('.');
 			}
 		} catch (SocketException e) {
 			if (!closing) e.printStackTrace();

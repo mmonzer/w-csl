@@ -55,6 +55,10 @@ public class CSLUDPServer {
 	public void initUDPServer(Json j) { //String rootdir, int port, boolean verbose) {
 
 
+		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
+		if (!on) return;
+	
+		
 		if (initialized) {
 			System.err.println("already initialized");
 			System.exit(0);

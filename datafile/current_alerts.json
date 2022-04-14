@@ -1,9 +1,20 @@
 [
   {
+    "level":"HIGH",
+    "msg":"ALERT 3",
+    "uuid":"7fe93fbb-3434-4ef2-8f70-b70cde57ff63",
+    "time":1649942434797,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "meta_infos": []
+  },
+  {
     "level":"UNDEF",
     "msg":"ALERT",
-    "uuid":"6be2cda3-30f4-4e6b-b2dd-d9e1108cbd0a",
-    "time":1646233897915,
+    "uuid":"727da772-a0b8-4bb5-a1bd-fe17d148b984",
+    "time":1649942453574,
     "time_for_end_of_mask":0,
     "acked":false,
     "masked":false,
@@ -12,6 +23,294 @@
       {
         "key":"p1",
         "value":"34"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"TOLERABLE",
+    "msg":"This is a test green ",
+    "uuid":"0ea647ad-a3cf-4034-b10a-263c1f974598",
+    "time":1649942453576,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"p1",
+        "value":"34"
+      },
+      {
+        "key":"t",
+        "value":"1649942453576"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"MODERATE",
+    "msg":"This is a test yellow ",
+    "uuid":"5b1e15c5-7e4d-41b1-9e0e-5ffa2e9ba5cf",
+    "time":1649942453581,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942453581"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"HIGH",
+    "msg":"This is a test orange",
+    "uuid":"abfa6467-0ff0-4bcf-bcd0-62d397b14022",
+    "time":1649942453583,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942453583"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"CRITICAL",
+    "msg":"This is a test red",
+    "uuid":"504ce249-df48-4b56-ae45-f8265766d3db",
+    "time":1649942453585,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942453585"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"TOLERABLE",
+    "msg":"This is a test green ",
+    "uuid":"88fc43f2-28ed-47e7-989a-19f025eb1ffb",
+    "time":1649942456165,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"p1",
+        "value":"34"
+      },
+      {
+        "key":"t",
+        "value":"1649942456165"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"MODERATE",
+    "msg":"This is a test yellow ",
+    "uuid":"dfae318b-e934-4655-9cf0-250c3bf081a6",
+    "time":1649942456167,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942456167"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"HIGH",
+    "msg":"This is a test orange",
+    "uuid":"24d72663-3c7d-4c73-9d16-3fae28e1e900",
+    "time":1649942456168,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942456168"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"CRITICAL",
+    "msg":"This is a test red",
+    "uuid":"985fcec3-a165-469f-968a-3c36cb9b46b8",
+    "time":1649942456169,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942456169"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"TOLERABLE",
+    "msg":"This is a test green ",
+    "uuid":"e0660a4f-f036-4767-9e53-6f25e40eecad",
+    "time":1649942456960,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"p1",
+        "value":"34"
+      },
+      {
+        "key":"t",
+        "value":"1649942456960"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"MODERATE",
+    "msg":"This is a test yellow ",
+    "uuid":"6c5438a0-1f39-41eb-9744-bae5b476549a",
+    "time":1649942456962,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942456962"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"HIGH",
+    "msg":"This is a test orange",
+    "uuid":"276d85da-ed31-466d-a16b-ebc7317d6bdc",
+    "time":1649942456963,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942456963"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"CRITICAL",
+    "msg":"This is a test red",
+    "uuid":"d7afdec1-987f-4047-936a-e41ebe3746b0",
+    "time":1649942456964,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649942456964"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"TOLERABLE",
+    "msg":"This is a test green ",
+    "uuid":"5baf0f65-df9d-468a-ae13-a7af98260eb7",
+    "time":1649944989627,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"p1",
+        "value":"34"
+      },
+      {
+        "key":"t",
+        "value":"1649944989627"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"MODERATE",
+    "msg":"This is a test yellow ",
+    "uuid":"10d98f4f-287e-421f-83cd-8c92dc97af88",
+    "time":1649944989629,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649944989629"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"HIGH",
+    "msg":"This is a test orange",
+    "uuid":"d3591d23-057e-4b91-b3ba-a0b162867e28",
+    "time":1649944989630,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649944989630"
+      }
+    ],
+    "meta_infos": []
+  },
+  {
+    "level":"CRITICAL",
+    "msg":"This is a test red",
+    "uuid":"cacb5766-27a8-4639-9bc0-d4bbd976ea22",
+    "time":1649944989632,
+    "time_for_end_of_mask":0,
+    "acked":false,
+    "masked":false,
+    "added_to_model":false,
+    "props": [
+      {
+        "key":"t",
+        "value":"1649944989632"
       }
     ],
     "meta_infos": []

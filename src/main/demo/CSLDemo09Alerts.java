@@ -21,8 +21,8 @@ import com.xcsl.interfaces.IAlertDescriptor;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 
-import main.debug.WebsocketClientEndpoint;
 import main.util.CSLRunningArgs;
+import main.xcom.WebsocketClientEndpoint;
 
 
 

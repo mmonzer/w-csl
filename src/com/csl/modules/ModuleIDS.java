@@ -256,8 +256,8 @@ public class ModuleIDS implements IModule {
 			}
 			@Override
 			public int newElementOnQueue(Json jj) {
-				System.out.println("jmf_runninfg="+running);
-				System.out.println(jj);
+				//System.out.println("jmf_runninfg="+running);
+				//System.out.println(jj);
 				if (!running) {
 					IDSTrace.log(IDSTrace.UDP_TRACE, "IDS received object but not running ");
 					return ICSLFlowListener.REMOVE_FROM_QUEUE;

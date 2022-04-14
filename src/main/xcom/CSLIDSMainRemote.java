@@ -1,0 +1,259 @@
+package main.xcom;
+
+import java.net.ConnectException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.eclipse.jetty.websocket.api.Session;
+
+import com.csl.core.CSLContext;
+import com.csl.core.NoLogging;
+import com.csl.ids.IDSRunner;
+import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.web.database.CSLServiceJsonDataBase;
+import com.csl.web.websockets.CSLWebSocket;
+import com.csl.web.websockets.IMessageBroadcaster;
+import com.xcsl.ids.IDSTrace;
+import com.xcsl.interfaces.IApiCommands;
+import com.xcsl.json.Json;
+import com.xcsl.json.JsonUtil;
+
+import main.services.AlertsService;
+import main.services.CSLServiceDemo;
+import main.services.CSLServiceIDS;
+import main.services.MonitorService;
+import main.util.CSLRunningArgs;
+
+public class CSLIDSMainRemote {
+	
+	static WebsocketClientEndpoint clientEndPoint =null;
+			
+	static HashMap<String, IApiCommands> apiMap= new HashMap<String, IApiCommands>();
+	
+	static IMessageBroadcaster messageBroadcaster= 
+    		new IMessageBroadcaster() {
+				
+				@Override
+				public void broadcastMessageString(String socketName, String s) {
+					// TODO Auto-generated method stub
+					
+					System.out.println("Send string over ws:"+s);
+					if (clientEndPoint!=null) clientEndPoint.sendMessage("wss:"+socketName+":"+s);
+				}
+				
+				@Override
+				public void broadcastMessageJson(String socketName, Json j) {
+							    	
+					System.out.println("Send json over ws:"+j);
+					
+					if (clientEndPoint!=null) clientEndPoint.sendMessage("wsj:"+socketName+":"+j);
+			    	
+				}
+			};
+			
+	
+	static public void iniServices() {
+		
+		
+		for (IApiCommands api:JServiceLoader.getApiCommandsList()) {
+
+			String path=api.getName();
+			System.out.println("REGISTER API:<"+path+">");
+			apiMap.put(path.toLowerCase(), api);
+		}
+	}
+
+	static public void connectToServer() {
+		 try {
+	        	String s= "ws://" + "127.0.0.1" + ":" + "8000" + "/cmd";
+	        	
+	            clientEndPoint = new WebsocketClientEndpoint(new URI(s)); 
+	            if (!clientEndPoint.isOpen()) return;
+
+	            // add listener
+	            clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
+	                public void handleMessage(String message) {
+	                	
+	                	System.out.println("MESSAGE:"+message);
+	                	message=message.trim();
+	                	if (message.startsWith("{")
+	                			&& message.endsWith("}")) {
+	                		
+	                		Json j=Json.read(message);
+		                    System.out.println("received:"+j);
+		                    //if (j.get("database")==null) return;
+		                    //j=j.get("database");
+		                    String m_uuid="";
+		                    
+		                    String apiname= JsonUtil.getStringFromJson(j, "api", "");
+		                    Json result=Json.object().set("error","api not found ");
+			                 
+		                    if (apiname.isEmpty()) {
+		                    	
+		                    }
+		                    else {
+		                    	
+		                    	IApiCommands api = apiMap.get(apiname);
+		                    	Json jcmd=j.get("jcmd");
+		                    	if (jcmd==null) result.set("error","jcmd not found");
+		                    	
+		                    	if ((api!=null)&&(jcmd!=null)) result=api.execJcmd(jcmd);
+		                    }
+		                    
+		                    
+		                     
+		                    Json r= Json.object();
+		                    r.set("uuid",j.get("uuid"));
+		                    r.set("result", result);
+		                    System.out.println("****RESULT:"+r);
+		                    clientEndPoint.sendMessage("res:"+r);
+		                    
+	                	}
+	                	
+	                    
+	                }
+	            });
+	            
+	           
+
+	            for (String sx: apiMap.keySet()) {
+	            	   clientEndPoint.sendMessage("api:"+sx);
+	      	         
+	            }
+	          //  clientEndPoint.sendMessage("api:alerts");
+	            Thread.sleep(100);
+
+
+	        } catch (InterruptedException ex) {
+	            System.err.println("InterruptedException exception: " + ex.getMessage());
+	        } catch (URISyntaxException ex) {
+	            System.err.println("URISyntaxException exception: " + ex.getMessage());
+	        }
+		 	
+	}
+
+	
+	static public void  printTime() {
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
+		LocalDateTime now = LocalDateTime.now();  
+		System.out.println(dtf.format(now));  
+	}
+	
+	static public void startRemoteConnectTask() {
+	ScheduledExecutorService executorService;
+	executorService = Executors.newSingleThreadScheduledExecutor();
+	executorService.scheduleAtFixedRate(
+			new Runnable() {
+				public void run() {
+					boolean reconnect=false;
+					if (clientEndPoint!=null) {
+						if (!clientEndPoint.isOpen()) System.out.println("Session open="+clientEndPoint.isOpen());
+						reconnect=!clientEndPoint.isOpen();
+					}
+					else reconnect=true;
+					
+					if (reconnect) connectToServer();
+				}
+			},
+			0, 1, TimeUnit.SECONDS);
+	
+	}
+	
+	
+	static public void startTest() {
+		ScheduledExecutorService executorService;
+		executorService = Executors.newSingleThreadScheduledExecutor();
+		executorService.scheduleAtFixedRate(
+				new Runnable() {
+					public void run() {
+						Json j2 = Json.object();
+						j2.set("line", "Test console");
+						j2.set("console_id","learn");
+						//			CSLWebSocketForConsole.broadcastMessageJson("log", j);
+						
+						System.out.println(j2);
+						CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j2 );
+					
+					}
+				},
+				0, 1, TimeUnit.SECONDS);
+		
+		}
+	
+	
+	static void test() {
+		Json j2 = Json.object();
+		j2.set("line", "Test console");
+		j2.set("console_id","learn");
+		//			CSLWebSocketForConsole.broadcastMessageJson("log", j);
+		CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j2 );
+	
+	}
+	
+	
+    public static void main(String[] args) {
+    	
+    	
+    	
+    	org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+    	
+    	
+    	
+    	Json j =CSLContext.instance.getConfig();
+    	
+    	CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
+		
+		// Init idsrunner : should be set in cslcontext
+		//IDSRunner idsRunner= new IDSRunner(j, CSLRunningArgs.instance);
+		
+    	j.get("database_server_conf").set("on", false);
+    	j.get("web_server_conf").set("on", false);
+    	j.get("udp_server_conf").set("on", true);
+    	
+		
+
+		
+		CSLContext.instance.setDebug(true);
+		
+		
+		boolean USE_BROKER=false; //true;
+		JServiceLoader.setModuleName("IDS",new MosquittoConfig().setUseBroker(USE_BROKER));
+		
+		
+		JServiceLoader.registerService(new CSLServiceDemo(), j, true);
+		//CSLServiceIDS cslServiceIDS= new CSLServiceIDS();
+		JServiceLoader.registerService(new AlertsService(), j, true); 
+		//CSLContext.instance.setApiRemote("alerts");
+		//JServiceLoader.registerService(new MonitorService(), j, true);
+		JServiceLoader.registerService(new CSLServiceIDS(), j, true);
+		//CSLContext.instance.setApiRemote("ids");
+		
+		//JServiceLoader.registerService(new CSLServiceJsonDataBase(), j, true);
+		
+		
+		
+		iniServices();
+    	startRemoteConnectTask();
+    	CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
+   
+		
+		CSLContext.instance.postInit();
+    	
+    	CSLContext.instance.getIdsRunner().start();
+    	
+    	
+    	
+    	printTime();
+    	
+    	//startTest();
+    }
+}

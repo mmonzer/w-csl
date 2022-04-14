@@ -42,9 +42,14 @@ public class DataBaseServer {
 		// TODO Auto-generated method stub
 		//Json jConfig=CSLContext.context.getConfig().get("ihm_server_conf");
 
+		
+		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
+		if (!on) return;
+		
 		String datafilesubdir="datafile";
 
 
+		
 
 
 

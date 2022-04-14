@@ -730,7 +730,13 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 	}
 
 
-
+	public void setApiRemote(String apiname) {
+		if (getCslHttpServer()==null) return;
+		
+		getCslHttpServer().addRemoteApi(apiname);
+		
+	}
+	
 	public void postInit()   {
 
 

@@ -324,7 +324,7 @@ public class AlertsService implements ICSLService {
 				//CSLAlertManager.instance.sendAlert("HIGH","test alert","xxx=testval");
 				
 				Json list=Json.array();
-				return list.add(a3);
+				return list.add(a3.toJson());
 			}
 		},
 				new JsonCmdHelp()

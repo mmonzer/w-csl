@@ -6,7 +6,7 @@ import com.xcsl.json.Json;
 public class CSLUDPDataProcessor implements Runnable {
 	private final BlockingQueue<byte[]> messageQueue;
 	CSLFlowManager flowManager;
-	private boolean traceAllMessages=false;
+	private boolean traceAllMessages=true;
 	boolean interrupted=false;
 	
 

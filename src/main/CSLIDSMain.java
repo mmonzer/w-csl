@@ -63,6 +63,8 @@ public class CSLIDSMain {
 
 
 	public static void main(String[] args) {
+		
+		boolean remote=false;
 
 		System.out.println("Starting CSL IDS version  " + CSLContext.VERSION);
 	
@@ -86,8 +88,12 @@ public class CSLIDSMain {
 		JServiceLoader.registerService(new CSLServiceDemo(), j, true);
 		//CSLServiceIDS cslServiceIDS= new CSLServiceIDS();
 		JServiceLoader.registerService(new AlertsService(), j, true); 
+		if (remote) CSLContext.instance.setApiRemote("alerts");
+		
 		JServiceLoader.registerService(new MonitorService(), j, true);
+		
 		JServiceLoader.registerService(new CSLServiceIDS(), j, true);
+		if (remote) CSLContext.instance.setApiRemote("ids");
 		
 		JServiceLoader.registerService(new CSLServiceJsonDataBase(), j, true);
 
@@ -109,8 +115,7 @@ public class CSLIDSMain {
 
 		
 
-		// set the
-
+	
 	
 		CSLContext.instance.start();
 		
@@ -140,7 +145,7 @@ public class CSLIDSMain {
 		
 
 		
-		if (!test) {
+		if ((!test)&&(!remote)) {
 
 			//IDSRunner.instance.start(j, CSLRunningArgs.instance); //pworkingDir, configFile);
 			

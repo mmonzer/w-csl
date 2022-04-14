@@ -22,6 +22,7 @@ public class CSLWebSocket {
 	public static String WEB_SOCKET_CONSOLE="/console";
 	public static String WEB_SOCKET_DATABASE="/database";
 	public static String WEB_SOCKET_VARIABLES="/chat";
+	public static String WEB_SOCKET_CMD="/cmd";
 
 
 	static HashMap<String, String> websocketTags = new HashMap<String, String >();
@@ -30,7 +31,69 @@ public class CSLWebSocket {
     static Map<String,Map<Session, String>> allSocketsUsernameMap = new ConcurrentHashMap<>();
     static int nextUserNumber = 1; //Assign to username for next connecting user
 
+    static IMessageBroadcaster messageBroadcaster= 
+    		new IMessageBroadcaster() {
+				
+				@Override
+				public void broadcastMessageString(String socketName, String s) {
+					// TODO Auto-generated method stub
+					System.out.println("Broadcast str <"+socketName+">"+s);
+					Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
+					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
+				          try {
+				          	
+				          	IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND String "+s);
+				          	System.out.println("SEND String "+s);
+				              session.getRemote().sendString(s);
+				                  //.put("userlist", userUsernameMap.values())
+				             // ));
+				          } catch (Exception e) {
+				              e.printStackTrace();
+				          }
+				      });
+				}
+				
+				@Override
+				public void broadcastMessageJson(String socketName, Json j) {
+					// TODO Auto-generated method stub
+					
+					System.out.println("Broadcast json <"+socketName+">"+j);
+					String tag= websocketTags.get(socketName);
+			    	if (tag==null) {
+			    		System.err.println("Invalid socket name "+socketName);
+			    		return;
+			    	}
+			    	
+			    	Json jx=Json.object();
+			    	jx.set(tag, j);
+			    	String s=jx.toString();
+			    	
+			    	
+			    	if (VIA_BROKER) {
+			    		JServiceLoader.getCSLInterModuleCommunicationManager().sendSocketMsg(socketName, s);
+			    	}
+			    	else {
+			    	Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
+					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
+			            try {
+			            	
+			            	IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+s);
+			            	session.getRemote().sendString(s);
+			                
+			            } catch (Exception e) {
+			                e.printStackTrace();
+			            }
+			        });
+			    	}
+				}
+			};
+			
+			
     
+	static public void registerMessageBroadcaster(IMessageBroadcaster m) {
+		messageBroadcaster=m;
+	}
+			
     static public void registerAll() {
     	
     	
@@ -97,7 +160,7 @@ public class CSLWebSocket {
         
         String socketName=cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath());
         
-        System.out.println("connect :"+user+" to "+socketName);
+        System.out.println("connect :"+socketName+ " username:"+username);
     	
         Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
        
@@ -136,7 +199,7 @@ public class CSLWebSocket {
     	Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
 		socketUsernameMap.keySet().stream().forEach(session -> {
 			String name=socketUsernameMap.get(session);
-			//System.out.println("Refresh socket "+socketName+": "+name+" open:"+session.isOpen());
+			System.out.println("Refresh socket "+socketName+": "+name+" open:"+session.isOpen());
 			Json jx=Json.object();
 			jx.set("refresh", socketName);
 
@@ -153,32 +216,10 @@ public class CSLWebSocket {
     //Sends a message from one user to all users, along with a list of current usernames
     public static void broadcastMessageJson( String socketName, Json j) {
     	
-    	String tag= websocketTags.get(socketName);
-    	if (tag==null) {
-    		System.err.println("Invalid socket name "+socketName);
-    	}
     	
-    	Json jx=Json.object();
-    	jx.set(tag, j);
-    	String s=jx.toString();
+    	messageBroadcaster.broadcastMessageJson(socketName, j);
     	
     	
-    	if (VIA_BROKER) {
-    		JServiceLoader.getCSLInterModuleCommunicationManager().sendSocketMsg(socketName, s);
-    	}
-    	else {
-    	Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
-		socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
-            try {
-            	
-            	IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+s);
-            	session.getRemote().sendString(s);
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    	}
     }
     
     
@@ -186,19 +227,9 @@ public class CSLWebSocket {
   public static void broadcastMessageString( String socketName,  String s) {
   	
   	//System.out.println("Console out:"+j);
-  	
-	  Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
-	socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
-          try {
-          	
-          	IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND String "+s);
-          	System.out.println("SEND String "+s);
-              session.getRemote().sendString(s);
-                  //.put("userlist", userUsernameMap.values())
-             // ));
-          } catch (Exception e) {
-              e.printStackTrace();
-          }
-      });
+  	  
+	  messageBroadcaster.broadcastMessageString(socketName, s);
+	  
+	
   }
 }

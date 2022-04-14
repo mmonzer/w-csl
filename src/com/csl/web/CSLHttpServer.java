@@ -17,9 +17,12 @@ import com.csl.logger.CSLLogger;
 import com.csl.util.CSLConfigFileServer;
 import com.csl.web.auth.AuthentificationManager;
 import com.csl.web.auth.ServerConfig;
+import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
+import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.CSLWebSocketHandler;
 import com.xcsl.json.Json;
+import com.xcsl.json.JsonUtil;
 
 /*
 import static spark.Spark.after;
@@ -118,6 +121,10 @@ public class CSLHttpServer {
 	//ExecJsonCommands execJsonCommands=null;
 
 	public void reinitServer(Json j) {
+		
+		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
+		if (!on) return;
+	
 
 		if (sparkServer!=null) stop();
 		initialized=false;
@@ -127,6 +134,10 @@ public class CSLHttpServer {
 
 	public void initServer(Json j) { //String rootdir, int port, boolean verbose) {
 
+		
+		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
+		if (!on) return;
+	
 		ServerConfig sc= new ServerConfig(j);
 		initServer(sc);
 		
@@ -272,8 +283,10 @@ public class CSLHttpServer {
 			//DataBaseNotificationSenderViaWebSocket.init(this);
 			addWebsocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class);
 		}
-
-
+		if (sc.isJcmd_commands()) {
+			addWebsocket(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class);
+		}
+		
 		// PROTECTED ENDPOINT FOR DEVELOPER ROLE_PROPERTY
 		sparkServer.get("/apihelp", (request, response) -> {
 
@@ -476,7 +489,19 @@ public class CSLHttpServer {
 	//	if (debug) System.out.println("Exec " + cmd + " " + params);
 
 		
-		String cresult = api.exec(cmd.asString(), params).toString();
+		String cresult ="";
+		
+		if (listOfRemoteApi.contains(api.getName())) {
+			cresult= CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
+			System.out.println("REMOTE SERVER RESPONSE:"+cresult);
+			
+			
+		}
+		else {
+			cresult=  api.exec(cmd.asString(), params).toString();
+			System.out.println("SERVER RESPONSE:"+cresult);
+			
+		}
 
 		return cresult;
 	}
@@ -523,6 +548,8 @@ public class CSLHttpServer {
 
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
+	private List<String> listOfRemoteApi= new ArrayList<String>();
+
 	void startRefreshWebSocketTask(int n) {
 
 		if (n<=0) return;
@@ -536,6 +563,7 @@ public class CSLHttpServer {
 				if (serverConfig.isSend_console_output()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE); //CSLWebSocketForConsole.refresh();
 				if (serverConfig.isVars_commands()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES); //CSLWebSocketForVariables.refresh();
 				if (serverConfig.isDatabase_commands()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE); //CSLWebSocketForDatabase.refresh();
+				if (serverConfig.isJcmd_commands()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD); //CSLWebSocketForDatabase.refresh();
 
 			}
 		};
@@ -747,6 +775,11 @@ public class CSLHttpServer {
 	public boolean isDebug() {
 		// TODO Auto-generated method stub
 		return serverConfig.isDebug();
+	}
+
+	public void addRemoteApi(String apiname) {
+		// TODO Auto-generated method stub
+		listOfRemoteApi.add(apiname.toLowerCase());
 	}
 
 

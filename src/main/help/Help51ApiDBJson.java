@@ -17,7 +17,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.xcsl.json.Json;
 
-import main.debug.WebsocketClientEndpoint;
+import main.xcom.WebsocketClientEndpoint;
 
 
 

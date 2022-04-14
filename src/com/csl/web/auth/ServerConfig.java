@@ -28,6 +28,8 @@ public class ServerConfig {
 	private boolean vars_commands;
 	private boolean modbus_commands;
 	private boolean database_commands;
+	private boolean jcmd_commands;
+	
 	private boolean mx_commands;
 
 	private boolean send_alerts;
@@ -73,6 +75,7 @@ public class ServerConfig {
 
 		//json_commands = JsonUtil.getBooleanFromJson(j,"json_commands", false);
 		database_commands = JsonUtil.getBooleanFromJson(j,"database_commands", false);
+		jcmd_commands = JsonUtil.getBooleanFromJson(j,"jcmd_commands", true);
 
 		//config_file_commands = JsonUtil.getBooleanFromJson(j,"config_file_commands", false);
 		mx_commands = JsonUtil.getBooleanFromJson(j,"mx_commands", false);
@@ -162,6 +165,10 @@ public class ServerConfig {
 
 	public boolean isDatabase_commands() {
 		return database_commands;
+	}
+	
+	public boolean isJcmd_commands() {
+		return jcmd_commands;
 	}
 
 	public boolean isSend_alerts() {

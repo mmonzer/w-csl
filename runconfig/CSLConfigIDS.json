@@ -20,6 +20,7 @@
 	},	
 	
 	"database_server_conf": {
+		"on":true,
 		"datafile_subdir":"datafile"
 		
 	},	
@@ -85,7 +86,7 @@
 	"udp_server_conf": {
 		"on": true,
 		"verbose": true,
-		"trace_all_messages": false,
+		"trace_all_messages": true,
 		"port": 8001,
 		"max_input_queues": 10,
 		"max_size_of_input_queues": 100
@@ -258,7 +259,7 @@
 		"max_size_of_log_files": 10000,
 		"alert_to_web": true,
 		"alert_json_tag": "alert",
-		"alert_to_udp": false,
+		"alert_to_udp": true,
 		"do_not_resent_same_alert":true,
 		"alert_duration":10000
 	}

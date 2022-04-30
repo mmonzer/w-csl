@@ -115,6 +115,7 @@ public class CSLWebSocketForJcmd {
 	public static void broadcastMessageJson( String name, Json j) {
 
 
+		System.out.println("TEST_BROADCAST:"+name+j);
 		Session session=sessionMap.get(name);
 		if (session==null) {
 			try {
@@ -136,7 +137,8 @@ public class CSLWebSocketForJcmd {
 
 
 		try {
-			session.getRemote().sendString(s);
+	//		session.getRemote().sendString(s);
+			session.getRemote().sendStringByFuture(s);
 
 		} catch (Exception e) {
 			e.printStackTrace();

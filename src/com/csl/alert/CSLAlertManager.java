@@ -403,7 +403,8 @@ public class CSLAlertManager implements IAlertManager {
 			level="INFO";
 
 		}*/
-
+		if (this.alert_to_udp)
+			this.sendAlertToViewerUDP(alert.toJson());
 
 		if ((!toFile)&&(!toViewer)) return;
 
@@ -452,8 +453,7 @@ public class CSLAlertManager implements IAlertManager {
 				this.sendAlertToViewerWeb(alert) ; //uuid,time,level,message,props);
 		}
 		
-		if (this.alert_to_udp)
-			this.sendAlertToViewerUDP(alert.toJson());
+	
 
 	}
 

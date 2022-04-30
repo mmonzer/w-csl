@@ -1,5 +1,10 @@
 {
-	
+	"global":{
+		"remote":true,
+		"ip_server_remote2":"46.226.105.80",
+		"ip_server_remote":"127.0.0.1",
+		"port_server_remote":8000
+	},
 	
 	"nmap_service": {
 		"debug_mode":true,
@@ -250,7 +255,7 @@
 		"taps_dir":"taps"
 	},
 	"alert_viewer": {
-		"ip": "localhost",
+		"ip": "127.0.0.1",
 		"port": 4445,
 		"name": "My Alerts",
 		"logToFile": true,

@@ -13,6 +13,7 @@ import com.csl.util.ProcessUtil;
 import com.csl.web.database.CSLServiceJsonDataBase;
 import com.xcsl.ids.IDSTrace;
 import com.xcsl.json.Json;
+import com.xcsl.json.JsonUtil;
 
 import main.services.AlertsService;
 import main.services.CSLServiceDemo;
@@ -64,8 +65,7 @@ public class CSLIDSMain {
 
 	public static void main(String[] args) {
 		
-		boolean remote=false;
-
+	
 		System.out.println("Starting CSL IDS version  " + CSLContext.VERSION);
 	
 		
@@ -77,6 +77,9 @@ public class CSLIDSMain {
 		// Init idsrunner : should be set in cslcontext
 		//IDSRunner idsRunner= new IDSRunner(j, CSLRunningArgs.instance);
 		
+		boolean  remote=JsonUtil.getBooleanFromJson(j, "global/remote", false);
+
+		System.out.println("Remote mode :"+remote);
 		
 		CSLContext.instance.setDebug(true);
 		

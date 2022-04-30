@@ -613,14 +613,17 @@ public class IDSRunner implements IIDSRunner {
 
 
 
-		while (idsParams.isRunOnLineRecordOrDetect()&!isCanceling()) {
-			try {
-				Thread.sleep(10); // 10 ms delay
-				//		System.out.println(getIDSModeAsString());
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}  
+		int n=0;
+		while (idsParams.isRunOnLineRecordOrDetect()&&!isCanceling()) {
+			//try {
+			//	Thread.sleep(100); // 10 ms delay
+				Thread.yield();
+				System.out.println("xxXXIDS mode:"+getIDSModeAsString());
+				n++;
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}  
 		}
 
 		ids.setModeIdle();

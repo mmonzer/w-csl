@@ -1,4 +1,5 @@
-package main.xcom;
+package main;
+
 
 import java.net.ConnectException;
 import java.net.URI;
@@ -32,6 +33,7 @@ import main.services.CSLServiceDemo;
 import main.services.CSLServiceIDS;
 import main.services.MonitorService;
 import main.util.CSLRunningArgs;
+import main.xcom.WebsocketClientEndpoint;
 
 public class CSLIDSMainRemote {
 	

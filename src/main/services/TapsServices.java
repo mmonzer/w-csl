@@ -16,6 +16,7 @@ import org.apache.commons.io.FileUtils;
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.xcsl.interfaces.IApiCommands;
 import com.xcsl.interfaces.ICSLService;
 import com.xcsl.interfaces.IJsonCmd;
@@ -24,6 +25,7 @@ import com.jcraft.jsch.JSchException;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 
+import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
 import main.extensions.SshUtils;
 
 public class TapsServices implements ICSLService {
@@ -145,6 +147,8 @@ public class TapsServices implements ICSLService {
 	
 	private static void writeToFile(String s, String path) throws IOException {
 
+		System.out.println("write "+path);
+		System.out.println(s);
 	      FileWriter myWriter = new FileWriter(path);
 	      myWriter.write(s);
 	      myWriter.close();
@@ -206,11 +210,16 @@ public class TapsServices implements ICSLService {
 	
 	public static void setIp(String name, String ip) {
 		for(Json j : configuredTaps) {
+			
+			System.out.println("tap="+j);
 			if(j.at("idname").asString().contentEquals(name)) {
-				j.at("ip",ip);
+				j.set("ip",ip);
+				System.out.println(j);
+				System.out.println(configuredTaps);
+				
 			}
 		}
-		
+		System.out.println(configuredTaps);
 
 	}
 	
@@ -242,6 +251,7 @@ public class TapsServices implements ICSLService {
 
 		Json result = Json.object();
 		for(Json j : configuredTaps) {
+			System.out.println(j);
 			if(j.at("idname").asString().contentEquals(name)) {
 				String ip = j.at("ip").asString();
 				username = j.at("username").asString();
@@ -251,19 +261,19 @@ public class TapsServices implements ICSLService {
 				try {
 					switch (file) {
 						case "reseau":
-							ssh.getFile("/home/"+username+"/tapReseau/conf.json",idsconf+"/taps/"+name+"/tapReseau.json");
+							ssh.getFile("/home/"+username+"/csl/tapReseau/conf.json",idsconf+"/taps/"+name+"/tapReseau.json");
 							break;
 						case "process":
-							ssh.getFile("/home/"+username+"/tapProcess/CSLConfigTAPProcess.json",idsconf+"/taps/"+name+"/tapProcess.json");
+							ssh.getFile("/home/"+username+"/csl/tapProcess/CSLConfigTAPProcess.json",idsconf+"/taps/"+name+"/tapProcess.json");
 							break;
 						case "suricataconf":
-							ssh.getFile("/home/"+username+"/configSuricata/suricata/suricata.yaml",idsconf+"/taps/"+name+"/suricata.yaml");
+							ssh.getFile("/home/"+username+"/csl/configSuricata/suricata/suricata.yaml",idsconf+"/taps/"+name+"/suricata.yaml");
 							break;
 						case "genrules":
-							ssh.getFile("/home/"+username+"/configSuricata/suricata/rules/csl.rules",idsconf+"/taps/"+name+"/genrules.rules");
+							ssh.getFile("/home/"+username+"/csl/configSuricata/suricata/rules/csl.rules",idsconf+"/taps/"+name+"/genrules.rules");
 							break;
 						case "baserules":
-							ssh.getFile("/home/"+username+"/configSuricata/suricata/rules/cslbase.rules",idsconf+"/taps/"+name+"/baserules.rules");
+							ssh.getFile("/home/"+username+"/csl/configSuricata/suricata/rules/cslbase.rules",idsconf+"/taps/"+name+"/baserules.rules");
 							break;
 					}
 				} catch (IOException | JSchException e) {
@@ -288,19 +298,19 @@ public class TapsServices implements ICSLService {
 				try {
 					switch(file) {
 						case "reseau":
-							ssh.sendFile(idsconf+"/taps/"+name+"/tapReseau.json","/home/"+username+"/tapReseau/conf.json");
+							ssh.sendFile(idsconf+"/taps/"+name+"/tapReseau.json","/home/"+username+"/csl/tapReseau/conf.json");
 							break;
 						case "process":
-							ssh.sendFile(idsconf+"/taps/"+name+"/tapProcess.json","/home/"+username+"/tapProcess/CSLConfigTAPProcess.json");
+							ssh.sendFile(idsconf+"/taps/"+name+"/tapProcess.json","/home/"+username+"/csl/tapProcess/CSLConfigTAPProcess.json");
 							break;
 						case "suricataconf":
-							ssh.sendFile(idsconf+"/taps/"+name+"/suricata.yaml","/home/"+username+"/configSuricata/suricata/suricata.yaml");
+							ssh.sendFile(idsconf+"/taps/"+name+"/suricata.yaml","/home/"+username+"/csl/configSuricata/suricata/suricata.yaml");
 							break;
 						case "genrules":
-							ssh.sendFile(idsconf+"/taps/"+name+"/genrules.rules","/home/"+username+"/configSuricata/suricata/rules/csl.rules");
+							ssh.sendFile(idsconf+"/taps/"+name+"/genrules.rules","/home/"+username+"/csl/configSuricata/suricata/rules/csl.rules");
 							break;
 						case "baserules":
-							ssh.sendFile(idsconf+"/taps/"+name+"/baserules.rules","/home/"+username+"/configSuricata/suricata/rules/cslbase.rules");
+							ssh.sendFile(idsconf+"/taps/"+name+"/baserules.rules","/home/"+username+"/csl/configSuricata/suricata/rules/cslbase.rules");
 							break;
 					}
 				} catch (IOException | JSchException e) {
@@ -360,8 +370,8 @@ public class TapsServices implements ICSLService {
 	public static void setUsernamePassword(String name, String username, String password) {
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
-				j.at("password",password);
-				j.at("username",username);
+				j.set("password",password);
+				j.set("username",username);
 
 			}
 		}
@@ -474,6 +484,48 @@ public class TapsServices implements ICSLService {
 
 	
 	
+	
+	public String getTapName(Json j) {
+		
+		
+		String n=JsonUtil.getStringFromJson(j, "name", "");
+		return n;
+	
+		
+	}
+	
+	
+	public String tapNameHasError(Json j) {
+		
+		
+		String n=JsonUtil.getStringFromJson(j, "name", "");
+		
+		if (n.isEmpty()) return "No tap name";
+		
+		String x=idsconf+"/taps/"+n;
+		
+		File file = new File(x);
+		 
+        if (!file.isDirectory()) return "No directory for tap "+n;
+        
+		return "";
+		
+	}
+	
+	
+	public String missingParams(Json j,String ... params) {
+		
+		String e="";
+		for (String s:params) {
+			if (!j.has(s)) {
+				if (!e.isEmpty()) s=s+",";
+			}
+		}
+		
+		if (!e.isEmpty()) e="Missing params:"+e;
+		return e;
+	}
+	
 	@Override
 	public boolean init(Json config, String cslDir) {
 		System.out.println("Initializing SSH taps commands ..");
@@ -503,6 +555,9 @@ public class TapsServices implements ICSLService {
 				System.out.println("paramètres de newTap :"+params.toString());
 				System.out.println("nom utilisé :"+params.at("name").asString());
 
+				String error=(missingParams(params, "name"));
+				if (!error.isEmpty()) return  Json.object().set("error",error);
+				
 				newTap(params.at("name").asString());
 				Json write = Json.object();
 				write.at("write",configuredTaps);
@@ -513,7 +568,12 @@ public class TapsServices implements ICSLService {
 				}
 				return Json.object();
 			}
-		});
+		}, new JsonCmdHelp()
+				.setDesc("Creation of a new tap description")
+				.setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
+			//	.setResult("nothing", JsonCmdHelp.JSON)
+				.setStatus(JsonCmdHelp.STATUS_OK)
+				);
 		
 		addCmd("tapNumber", new IJsonCmd() {
 			@Override
@@ -542,6 +602,7 @@ public class TapsServices implements ICSLService {
 		addCmd("setIp", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
+				
 				setIp(params.at("name").asString(), params.at("ip").asString());
 				Json write = Json.object();
 				write.at("write",configuredTaps);
@@ -557,6 +618,7 @@ public class TapsServices implements ICSLService {
 		addCmd("setUsernamePassword", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
+				
 				setUsernamePassword(params.at("name").asString(), params.at("username").asString(),params.at("password").asString());
 				Json write = Json.object();
 				write.at("write",configuredTaps);
@@ -659,7 +721,12 @@ public class TapsServices implements ICSLService {
 			public Json exec(Json params) {
 				return startTaps(params.at("name").asString());
 			}
-		});		
+		}, new JsonCmdHelp()
+				.setDesc("Start tap")
+				.setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
+			//	.setResult("nothing", JsonCmdHelp.JSON)
+				.setStatus(JsonCmdHelp.STATUS_OK)
+				);		
 		
 		addCmd("stopTap", new IJsonCmd() {
 			@Override
@@ -764,6 +831,8 @@ public class TapsServices implements ICSLService {
 			@Override
 			public Json exec(Json params) {
 				Json j = Json.object();
+				
+				System.out.println("IDSCONF:"+idsconf);
 				try {
 					j.at("conf",readFile(idsconf+"/taps/"+params.at("name").asString()+"/genrules.rules"));
 				} catch (IOException e) {

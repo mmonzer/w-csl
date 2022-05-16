@@ -57,7 +57,7 @@ public class CSLWebSocket {
 				public void broadcastMessageJson(String socketName, Json j) {
 					// TODO Auto-generated method stub
 					
-					System.out.println("Broadcast json <"+socketName+">"+j);
+					//System.out.println("Broadcast json <"+socketName+">"+j);
 					String tag= websocketTags.get(socketName);
 			    	if (tag==null) {
 			    		System.err.println("Invalid socket name "+socketName);

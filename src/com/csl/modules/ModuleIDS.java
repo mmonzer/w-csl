@@ -10,6 +10,7 @@ import com.csl.interfaces.ICSLContext;
 import com.csl.interfaces.IModule;
 import com.csl.interfaces.IModuleContext;
 import com.csl.logger.FileLog;
+import com.csl.monitor.ActivityMonitor;
 import com.csl.web.websockets.CSLWebSocket;
 import com.xcsl.ids.IDSMainProcessor;
 import com.xcsl.ids.IDSTrace;
@@ -18,6 +19,7 @@ import com.xcsl.interfaces.ICSLFlowListener;
 import com.xcsl.interfaces.IResult;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
+
 
 
 /*   CONFIG
@@ -35,6 +37,9 @@ public class ModuleIDS implements IModule {
 	int port=9000;
 	String idOfTarget="???";
 	int flowNumber=0;
+	
+	ActivityMonitor activityMonitor = new ActivityMonitor();
+	
 	//boolean acquit=false;
 
 	//String idsModelDir="";
@@ -139,9 +144,10 @@ public class ModuleIDS implements IModule {
 //			CSLWebSocketForConsole.broadcastMessageJson("log", j);
 			CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j );
 		}
-		if (sendToConsole) System.out.println(jj);
+		//if (sendToConsole) System.out.println(jj);
 		
 	}
+	
 	
 	
 	public void openLogFiles() {
@@ -186,6 +192,8 @@ public class ModuleIDS implements IModule {
 		Json config=mcontext.getConfig();
 		Json j=context.getConfig();
 		
+		
+		activityMonitor.startTicTask();
 
 	//	this.logToFile= IDSRunner.instance.getIdsParams().isLogToFile();
 	//			JsonUtil.getBooleanFromJson(j,  "ids_conf/log_to_file", true) ; // if not read only in the table
@@ -290,11 +298,25 @@ public class ModuleIDS implements IModule {
 							if (idsDetectOn) idsMainProcessor.processVariables(jj);
 						}
 						else if (type.compareTo("EVT")==0) {
-							idsMainProcessor.processEvent(jj);
+							//idsMainProcessor.processEvent(jj);
 							//if (loggingOn) 
-								variablesLog.RecordLogMessage(jj.toString());
+							//	variablesLog.RecordLogMessage(jj.toString());
 							outDisplay(jj);
 							if (idsDetectOn) idsMainProcessor.processEvent(jj);
+						} 
+						else if (type.compareTo("EVE")==0) {
+							if (loggingOn) packetsLog.RecordLogMessage(jj.toString());
+							//	variablesLog.RecordLogMessage(jj.toString());
+							outDisplay(jj);
+							if (idsDetectOn) idsMainProcessor.processEvent(jj);
+						} 
+						else if (type.compareTo("TIC")==0) {
+							//if (loggingOn) packetsLog.RecordLogMessage(jj.toString());
+							//	variablesLog.RecordLogMessage(jj.toString());
+							//outDisplay(jj);
+							//if (idsDetectOn) idsMainProcessor.processEvent(jj);
+							
+							activityMonitor.processEvent(jj);
 						} 
 						else if (CSLContext.instance.isTestMode()) {
 							if (type.compareTo("CTRL")==0) {

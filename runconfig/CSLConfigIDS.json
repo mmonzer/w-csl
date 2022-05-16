@@ -1,6 +1,6 @@
 {
 	"global":{
-		"remote":true,
+		"remote":false,
 		"ip_server_remote2":"46.226.105.80",
 		"ip_server_remote":"127.0.0.1",
 		"port_server_remote":8000
@@ -91,7 +91,7 @@
 	"udp_server_conf": {
 		"on": true,
 		"verbose": true,
-		"trace_all_messages": true,
+		"trace_all_messages":false,
 		"port": 8001,
 		"max_input_queues": 10,
 		"max_size_of_input_queues": 100

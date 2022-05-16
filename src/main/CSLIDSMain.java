@@ -21,6 +21,7 @@ import main.services.CSLServiceIDS;
 import main.services.CpeServices;
 import main.services.CveServices;
 import main.services.MonitorService;
+import main.services.TapsServices;
 import main.util.CSLRunningArgs;
 
 public class CSLIDSMain {
@@ -78,7 +79,10 @@ public class CSLIDSMain {
 		//IDSRunner idsRunner= new IDSRunner(j, CSLRunningArgs.instance);
 		
 		boolean  remote=JsonUtil.getBooleanFromJson(j, "global/remote", false);
+		
 
+		//remote=false;
+		
 		System.out.println("Remote mode :"+remote);
 		
 		CSLContext.instance.setDebug(true);
@@ -94,6 +98,7 @@ public class CSLIDSMain {
 		if (remote) CSLContext.instance.setApiRemote("alerts");
 		
 		JServiceLoader.registerService(new MonitorService(), j, true);
+		if (remote) CSLContext.instance.setApiRemote("monitor");
 		
 		JServiceLoader.registerService(new CSLServiceIDS(), j, true);
 		if (remote) CSLContext.instance.setApiRemote("ids");
@@ -102,11 +107,13 @@ public class CSLIDSMain {
 
 		
 	//	JServiceLoader.registerService(new GraphServices(), j, true);
-		JServiceLoader.registerService(new CpeServices(), j, true);
+	JServiceLoader.registerService(new CpeServices(), j, true);
 		JServiceLoader.registerService(new CveServices(), j, true);
 	//	JServiceLoader.registerService(new NmapServices(), j, true);
-	//	JServiceLoader.registerService(new TapsServices(), j, true);
-	
+		JServiceLoader.registerService(new TapsServices(), j, true);
+		if (remote) CSLContext.instance.setApiRemote("taps");
+		
+		
 		
 		// Init Databaseserver, httpserver, udpserver, ...
 		

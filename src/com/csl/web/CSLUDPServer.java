@@ -38,7 +38,7 @@ public class CSLUDPServer {
 
 	private  String userDir="";
 
-	private  boolean traceAllMessages=true;
+	private  boolean traceAllMessages=false;
 
 	DatagramSocket dsocket=null;
 

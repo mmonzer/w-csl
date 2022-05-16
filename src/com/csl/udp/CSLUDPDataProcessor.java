@@ -6,7 +6,7 @@ import com.xcsl.json.Json;
 public class CSLUDPDataProcessor implements Runnable {
 	private final BlockingQueue<byte[]> messageQueue;
 	CSLFlowManager flowManager;
-	private boolean traceAllMessages=true;
+	private boolean traceAllMessages=false;
 	boolean interrupted=false;
 	
 
@@ -67,7 +67,16 @@ public class CSLUDPDataProcessor implements Runnable {
 
 					int n=Integer.parseInt(fn);
 
-					flowManager.addToFlow(n, jdata);
+					//flowManager.addToFlow(n, jdata);
+					
+					if (jdata.isArray()) {
+						for (Json jj:jdata.asJsonList()) {
+							flowManager.addToFlow(n, jj);
+						}
+					}
+					else
+						flowManager.addToFlow(n, jdata);
+					
 					
 				} catch (Exception e) {
 

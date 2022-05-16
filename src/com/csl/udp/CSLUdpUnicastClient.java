@@ -67,7 +67,7 @@ public class CSLUdpUnicastClient implements Runnable {
 				 */
 				//CSLContext.context.logInfo("new message received "+datagramPacket.getData());
 				this.messageQueue.put(datagramPacket.getData());
-				System.out.println('.');
+				//System.out.println('.');
 			}
 		} catch (SocketException e) {
 			if (!closing) e.printStackTrace();

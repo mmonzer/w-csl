@@ -81,7 +81,7 @@ public class CSLIDSMain {
 		boolean  remote=JsonUtil.getBooleanFromJson(j, "global/remote", false);
 		
 
-		//remote=false;
+		remote=true;
 		
 		System.out.println("Remote mode :"+remote);
 		
@@ -107,7 +107,7 @@ public class CSLIDSMain {
 
 		
 	//	JServiceLoader.registerService(new GraphServices(), j, true);
-	JServiceLoader.registerService(new CpeServices(), j, true);
+		JServiceLoader.registerService(new CpeServices(), j, true);
 		JServiceLoader.registerService(new CveServices(), j, true);
 	//	JServiceLoader.registerService(new NmapServices(), j, true);
 		JServiceLoader.registerService(new TapsServices(), j, true);
@@ -118,7 +118,7 @@ public class CSLIDSMain {
 		// Init Databaseserver, httpserver, udpserver, ...
 		
 		System.out.println(CSLContext.instance);
-		CSLContext.instance.postInit();
+		CSLContext.instance.postInit(true, !remote);
 
 		//JServiceLoader.startService(new CSLServiceDemo(), j, true);
 		System.out.println();

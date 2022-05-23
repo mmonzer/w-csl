@@ -81,7 +81,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~ && sh killTaps.sh";
+		String command = "cd ~/csl/scripts && sh killTaps.sh";
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -98,18 +98,51 @@ public class TapsServices implements ICSLService {
 	public static Json startTaps(String name) {
 		String id = "", password ="";
 		String ip = null;
+		
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
+				name=j.get("idname").asString();
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
 			}
 		}
+		System.out.println("Start tap:"+name+" "+ip);
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~ && sh launchTap.sh &";
+		String command = "cd ~/csl/scripts && sh launchTap.sh & exit";
 		String output = null;
 		try {
-			output = ssh.remoteExec(command);
+			output = ssh.remoteExecNoWait(command);
+		} catch (JSchException | IOException e) {
+			e.printStackTrace();
+		}
+		ssh.endConnection();
+
+		Json out = Json.object();
+		out.at("result", output);
+		return out;
+	}
+	
+	
+	public static Json startReplay(String name, String pcap) {
+		String id = "", password ="";
+		String ip = null;
+		
+		for(Json j : configuredTaps) {
+			if(j.at("idname").asString().contentEquals(name)) {
+				name=j.get("idname").asString();
+				ip = j.at("ip").asString();
+				id = j.at("username").asString();
+				password = j.at("password").asString();
+			}
+		}
+		System.out.println("Start script replay <"+pcap+"> on tap :"+name+" "+ip);
+		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		String command = "cd ~/csl/scripts && sh replay.sh "+pcap;
+		System.out.println("Command :"+command);
+		String output = null;
+		try {
+			output = ssh.remoteExecNoWait(command);
 		} catch (JSchException | IOException e) {
 			e.printStackTrace();
 		}
@@ -396,10 +429,10 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~ && sh launchSuricata.sh";
+		String command = "cd ~/csl/scripts && sh launchSuricata.sh";
 		String output = null;
 		try {
-			output = ssh.remoteExec(command);
+			output = ssh.remoteExecNoWait(command);
 		} catch (JSchException | IOException e) {
 			e.printStackTrace();
 		}
@@ -422,7 +455,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~ && sh killSuricata.sh";
+		String command = "cd ~/csl/scripts && sh killSuricata.sh";
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -734,6 +767,24 @@ public class TapsServices implements ICSLService {
 				return stopTaps(params.at("name").asString());
 			}
 		});			
+		
+		
+		addCmd("replay", new IJsonCmd() {
+			@Override
+			public Json exec(Json params) {
+				String name = JsonUtil.getStringFromJson(params, "name", "???");
+				String pcap = JsonUtil.getStringFromJson(params, "pcap_file", "???");
+				
+				return startReplay(name,pcap);
+			}
+		}, new JsonCmdHelp()
+				.setDesc("Start replay of a pcap")
+				.setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
+				.setParam("pcap_file", "name of file to replay (must be in /csl) ", JsonCmdHelp.STR)
+				
+			//	.setResult("nothing", JsonCmdHelp.JSON)
+				.setStatus(JsonCmdHelp.STATUS_OK)
+				);	
 
 		addCmd("startSuricata", new IJsonCmd() {
 			@Override

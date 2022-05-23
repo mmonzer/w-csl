@@ -1,28 +1,20 @@
 package main.xcom;
 
-import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jetty.websocket.api.Session;
-
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
-import com.csl.ids.IDSRunner;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.web.database.CSLServiceJsonDataBase;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
-import com.xcsl.ids.IDSTrace;
 import com.xcsl.interfaces.IApiCommands;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
@@ -30,7 +22,6 @@ import com.xcsl.json.JsonUtil;
 import main.services.AlertsService;
 import main.services.CSLServiceDemo;
 import main.services.CSLServiceIDS;
-import main.services.MonitorService;
 import main.util.CSLRunningArgs;
 
 public class CSLIDSMainRemote {
@@ -56,7 +47,7 @@ public class CSLIDSMainRemote {
 				@Override
 				public void broadcastMessageJson(String socketName, Json j) {
 							    	
-					System.out.println("Send json over ws:"+j);
+					//System.out.println("Send json over ws:"+j);
 					
 					if (clientEndPoint!=null) clientEndPoint.sendMessage("wsj:"+socketName+":"+j);
 			    	
@@ -267,7 +258,7 @@ public class CSLIDSMainRemote {
     	CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
    
 		
-		CSLContext.instance.postInit();
+		CSLContext.instance.postInit(false,true);
     	
     	CSLContext.instance.getIdsRunner().start();
     	

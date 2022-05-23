@@ -11,6 +11,7 @@ import com.csl.interfaces.IModule;
 import com.csl.interfaces.IModuleContext;
 import com.csl.logger.FileLog;
 import com.csl.monitor.ActivityMonitor;
+import com.csl.util.EveMessageUtill;
 import com.csl.web.websockets.CSLWebSocket;
 import com.xcsl.ids.IDSMainProcessor;
 import com.xcsl.ids.IDSTrace;
@@ -265,7 +266,7 @@ public class ModuleIDS implements IModule {
 			@Override
 			public int newElementOnQueue(Json jj) {
 				//System.out.println("jmf_runninfg="+running);
-				//System.out.println(jj);
+				//System.out.println("XXX:"+jj);
 				if (!running) {
 					IDSTrace.log(IDSTrace.UDP_TRACE, "IDS received object but not running ");
 					return ICSLFlowListener.REMOVE_FROM_QUEUE;
@@ -297,18 +298,22 @@ public class ModuleIDS implements IModule {
 							outDisplay(jj);
 							if (idsDetectOn) idsMainProcessor.processVariables(jj);
 						}
-						else if (type.compareTo("EVT")==0) {
-							//idsMainProcessor.processEvent(jj);
-							//if (loggingOn) 
-							//	variablesLog.RecordLogMessage(jj.toString());
-							outDisplay(jj);
-							if (idsDetectOn) idsMainProcessor.processEvent(jj);
-						} 
+//						else if (type.compareTo("EVT")==0) {
+//							//idsMainProcessor.processEvent(jj);
+//							//if (loggingOn) 
+//							//	variablesLog.RecordLogMessage(jj.toString());
+//							outDisplay(jj);
+//							if (idsDetectOn) idsMainProcessor.processEvent(jj);
+//						} 
 						else if (type.compareTo("EVE")==0) {
+							EveMessageUtill.reformatTimeStamp(jj);
 							if (loggingOn) packetsLog.RecordLogMessage(jj.toString());
 							//	variablesLog.RecordLogMessage(jj.toString());
-							outDisplay(jj);
-							if (idsDetectOn) idsMainProcessor.processEvent(jj);
+							//outDisplay(jj);
+							System.out.println("EVE:"+jj);
+							System.out.println(EveMessageUtill.getEveInfo(jj));
+							//if (idsDetectOn) 
+								idsMainProcessor.processSuricataEvent(jj);
 						} 
 						else if (type.compareTo("TIC")==0) {
 							//if (loggingOn) packetsLog.RecordLogMessage(jj.toString());

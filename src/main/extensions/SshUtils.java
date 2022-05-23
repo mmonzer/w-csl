@@ -97,6 +97,39 @@ public class SshUtils {
 		return result;
 	}
 	
+	
+	public String remoteExecNoWait(String command) throws JSchException, IOException {
+		ArrayList<String> resultPart = new ArrayList<String>();
+		Channel channel=session.openChannel("exec");
+		((ChannelExec)channel).setCommand(command);
+		channel.setInputStream(null);
+		((ChannelExec)channel).setErrStream(System.err);
+		InputStream in=channel.getInputStream();
+		channel.connect();
+		byte[] tmp=new byte[1024];
+		int n=0;
+		while(n<3){
+			while(in.available()>0){
+				int i=in.read(tmp, 0, 1024);
+				if(i<0)break;
+					resultPart.add(new String(tmp, 0, i));
+			}
+			if(channel.isClosed()){
+				if(in.available()>0) continue; 
+				//System.out.println("exit-status: "+channel.getExitStatus());
+				break;
+			}
+				try{Thread.sleep(1000);}catch(Exception ee){}
+				n++;
+		}
+		channel.disconnect();
+		session.disconnect();
+		String result = "";
+		for(String s : resultPart)
+		result = result+s+"\n";
+		return result;
+	}
+	
 	public void endConnection() {
 		this.session.disconnect();
 	}

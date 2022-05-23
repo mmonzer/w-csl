@@ -202,7 +202,7 @@ public class CSLTestService {
 	
 		
 		// Init Databaseserver, httpserver, udpserver, ...
-		CSLContext.instance.postInit();
+		CSLContext.instance.postInit(true, true);
 
 		//JServiceLoader.startService(new CSLServiceDemo(), j, true);
 		System.out.println();

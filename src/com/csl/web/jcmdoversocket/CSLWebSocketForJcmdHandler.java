@@ -1,12 +1,18 @@
 package com.csl.web.jcmdoversocket;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
+import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
+import com.csl.logger.CSLLogger;
 import com.csl.web.websockets.CSLWebSocket;
 import com.xcsl.json.Json;
 
@@ -36,7 +42,7 @@ public class CSLWebSocketForJcmdHandler {
     @OnWebSocketMessage
     public void onMessage(Session user, String message) {
       
-    	System.out.println("Jcmd module received message="+message);
+    	//System.out.println("Jcmd module received message="+message);
     	message=message.trim();
     	if (message.startsWith("api:")) {
     		String apiName=message.substring(4);
@@ -59,7 +65,7 @@ public class CSLWebSocketForJcmdHandler {
     			String tag= message.substring(0, n);
     			String msg= message.substring(n+1, message.length());
     		
-    		System.out.println("SEND TO SOCKET <"+tag+">:"+msg);
+    		//System.out.println("SEND TO SOCKET <"+tag+">:"+msg);
     		//System.err.println("TODO");
     		//String apiName=message.substring(4);
     		CSLWebSocket.broadcastMessageString(tag, msg);
@@ -77,11 +83,32 @@ public class CSLWebSocketForJcmdHandler {
     			String msg= message.substring(n+1, message.length());
     		Json j= Json.read(msg);
     		
-    		System.out.println("SEND TO SOCKET <"+tag+">:"+j);
+    		//System.out.println("SEND TO SOCKET <"+tag+">:"+j);
     		//System.err.println("TODO");
     		//String apiName=message.substring(4);
     		CSLWebSocket.broadcastMessageJson(tag,j);
     		}
+    		
+    	}
+    	else if (message.startsWith("alert:")) {
+    		message=message.substring(6);
+//    		int n=message.indexOf(":");
+//    		if (n<0) {
+//    			System.err.println("Invalid msg:"+message);
+//    		}
+//    		else {
+//    			String tag= message.substring(0, n);
+//    			String msg= message.substring(n+1, message.length());
+    		
+    		Json j= Json.read(message);
+    		System.err.println("FORWARD ALERT FROM CLIENT TO UDP="+j);
+    		((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).sendAlertToViewerUDP(j);
+    		
+    		//System.out.println("SEND TO SOCKET <"+tag+">:"+j);
+    		//System.err.println("TODO");
+    		//String apiName=message.substring(4);
+    		//CSLWebSocket.broadcastMessageJson(tag,j);
+    		//}
     		
     	}
     	else {
@@ -89,5 +116,8 @@ public class CSLWebSocketForJcmdHandler {
     	}
     	
     }
+    
+    
+   
 
 }

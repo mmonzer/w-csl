@@ -55,6 +55,8 @@ public class CSLUDPDataProcessor implements Runnable {
 
 					if (traceAllMessages) System.out.println(" Json msg:"+jsonObject);
 
+					// System.out.println(" JMFJson msg:"+jsonObject);
+
 					Json jdata=jsonObject.get("data");
 					String id=jsonObject.get("idOfTarget").asString();
 					String fn=jsonObject.get("flowNumber").asString();

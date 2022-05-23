@@ -15,12 +15,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.websocket.api.Session;
 
+import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
 import com.csl.ids.IDSRunner;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.database.CSLServiceJsonDataBase;
+import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
 import com.xcsl.ids.IDSTrace;
@@ -59,13 +61,24 @@ public class CSLIDSMainRemote {
 				@Override
 				public void broadcastMessageJson(String socketName, Json j) {
 							    	
-					System.out.println("Send json over ws:"+j);
+					//System.out.println("Send json over ws:"+j);
 					
 					if (clientEndPoint!=null) clientEndPoint.sendMessage("wsj:"+socketName+":"+j);
 			    	
 				}
 			};
 			
+	static IAlertForwarder alertForwarder= new IAlertForwarder() {
+		
+		@Override
+		public void sendAlert(Json alert) {
+			System.out.println("********Forward alert:\n"+alert+"\n*************");
+			if (clientEndPoint!=null) clientEndPoint.sendMessage("alert:"+alert);
+			
+		}
+	};
+	
+	
 	
 	static public void iniServices() {
 		
@@ -271,11 +284,15 @@ public class CSLIDSMainRemote {
     	CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
    
 		
-		CSLContext.instance.postInit();
+		CSLContext.instance.postInit(false,true);
     	
+		
+		CSLContext.instance.start();
+		
+		
     	CSLContext.instance.getIdsRunner().start();
     	
-    	
+    	((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
     	
     	printTime();
     	

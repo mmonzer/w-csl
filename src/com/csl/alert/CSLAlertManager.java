@@ -15,6 +15,7 @@ import com.csl.core.CSLUtil;
 import com.csl.devdb.DevicesDB;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLog;
+import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.xcsl.ids.IDSMainProcessor;
 import com.xcsl.ids.IDSTrace;
@@ -52,6 +53,11 @@ public class CSLAlertManager implements IAlertManager {
 
 	//Json config=null;
 	boolean FDEBUG=false;
+
+
+	// id client, send over udp use sockets
+	IAlertForwarder alertForwarder=null;
+
 
 	//public static String DEBUG="DEBUG";
 	public static String INFO="INFO";	
@@ -221,16 +227,16 @@ public class CSLAlertManager implements IAlertManager {
 
 	public void sendAlert(IAlertDescriptor alertDescriptor,boolean toViewer, boolean toLog) {
 
-		
+
 		//System.err.println("zaza:"+alertDescriptor.toJson());
 		if (findAlert(alertDescriptor)!=null) return;
 
 
-	
+
 		System.out.println("ALERT="+alertDescriptor);
 		System.out.println("ALERT="+alertDescriptor.toJson());
-	
-		
+
+
 		listOfCurrentAlerts.add(alertDescriptor);
 		send(alertDescriptor,
 
@@ -448,37 +454,51 @@ public class CSLAlertManager implements IAlertManager {
 
 		if (toViewer) {
 
-			
+
 			if (this.alert_to_web)
 				this.sendAlertToViewerWeb(alert) ; //uuid,time,level,message,props);
 		}
-		
-	
+
+
 
 	}
 
-	private void sendAlertToViewerUDP(Json jalert) {
-		if (iNetAddress==null) {
-			CSLLogger.instance.error("Invalid IP for alert viewer");
+	
+	public void registerAlertForwarder(IAlertForwarder af) {
+		this.alertForwarder=af;
+	}
+	
+	public void sendAlertToViewerUDP(Json jalert) {
+
+		// in client
+		if (alertForwarder !=null) {
+			alertForwarder.sendAlert(jalert);
 		}
-		jalert.set("type","alert");
+		else {   // in server
 
-		String msg=jalert.toString();
-		byte[]data = msg.getBytes();
-		DatagramSocket s;
-		
-		//System.err.println("SEND MSG:"+msg);
 
-		try {
-			s = new DatagramSocket();
-			s.connect(this.iNetAddress, port);
-			DatagramPacket payload = new DatagramPacket(data, data.length);
-			s.send(payload);
-			s.disconnect();
-			s.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (iNetAddress==null) {
+				CSLLogger.instance.error("Invalid IP for alert viewer");
+			}
+			jalert.set("type","alert");
+
+			String msg=jalert.toString();
+			byte[]data = msg.getBytes();
+			DatagramSocket s;
+
+			//System.err.println("SEND MSG:"+msg);
+
+			try {
+				s = new DatagramSocket();
+				s.connect(this.iNetAddress, port);
+				DatagramPacket payload = new DatagramPacket(data, data.length);
+				s.send(payload);
+				s.disconnect();
+				s.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 	}
@@ -955,7 +975,7 @@ public class CSLAlertManager implements IAlertManager {
 		a= alertFactory.createAlertDescriptor(2, "ALERT level 2", System.currentTimeMillis());
 		a.setMsg("This is a test yellow ");
 		a.setProp("t",""+System.currentTimeMillis());
-		
+
 		//a.setLevel(new AlertLevel(2));
 		sendAlert(a);
 		list.add(a.toJson());
@@ -964,7 +984,7 @@ public class CSLAlertManager implements IAlertManager {
 		a= alertFactory.createAlertDescriptor(3, "ALERT level 3", System.currentTimeMillis());
 		a.setMsg("This is a test orange");
 		a.setProp("t",""+System.currentTimeMillis());
-		
+
 		//a.setLevel(new AlertLevel(3));
 		sendAlert(a);
 		list.add(a.toJson());
@@ -973,7 +993,7 @@ public class CSLAlertManager implements IAlertManager {
 		a= alertFactory.createAlertDescriptor(4, "ALERT level 4", System.currentTimeMillis());
 		a.setMsg("This is a test red");
 		a.setProp("t",""+System.currentTimeMillis());
-		
+
 		//a.setLevel(new AlertLevel(4));
 		sendAlert(a);
 		list.add(a.toJson());

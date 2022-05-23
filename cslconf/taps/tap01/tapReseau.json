@@ -1,0 +1,32 @@
+{
+"tap_id":"001",
+"interface_name2":"any",
+"show_packets_number":"false",
+"interface_name":"enp0s3",
+"csl_node_ip5":"127.0.0.1",
+"csl_node_ip":"192.168.1.58",
+"csl_node_ip2":"195.83.81.183",
+"csl_node_port":8001,
+"log_to_file":"false",
+"log_to_file_protocols":"TCP;UDP;ICMP;UNKNOWN",
+"log_pcap":"false",
+"display_dpi":"true",
+"send_pkt_to_node":"true",
+"send_netinfo_to_node":"true",
+"send_to_db":"false",
+"csl_db_ip":"192.168.1.59",
+"csl_db_user":"xdev",
+"csl_db_pass":"couch123",
+"csl_db_name":"db_name",
+"mask_traffic_to_db":"true",
+"pcap_timeout":10,
+"pcap_filter":"",
+"pcap_subnet_filter":24,
+"data_dir":"myappdata",
+"max_size_of_log_files":100000000,
+"dpi_params": {
+		"modbus": {
+			"port":1502
+			}
+		}
+}

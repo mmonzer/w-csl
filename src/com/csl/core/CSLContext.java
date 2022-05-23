@@ -63,7 +63,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 	public static CSLLogger cslLogger= CSLLogger.instance;
 
 
-
+	boolean client=false, server=false;
 
 	CSLAlertManager cslAlertManager=null;
 	private IDSRunner idsRunner=null;
@@ -737,9 +737,12 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		
 	}
 	
-	public void postInit()   {
+	public void postInit(boolean server, boolean client)   {
 
 
+		this.server=server;
+		this.client=client;
+		
 		//	 private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LogExample.class);
 
 
@@ -755,18 +758,21 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		//ExternalCommands.instance.addMonitorCommands(
 		//		CSLContext.context.getConfig().get("external_commands"));
 
-
+		
 
 		//CSLConfigFileServer.instance.initConfigFileManager(getConfig().get("config_file_manager_conf"));
 
 		//CSLContext.instance.getDatabaseServer().init(getConfig().get("database_server_conf"));
-		getDatabaseServer().init(getConfig().get("database_server_conf"));
+		if (client)
+			getDatabaseServer().init(getConfig().get("database_server_conf"));
 
 		//CSLContext.instance.getCslHttpServer().initServer(getConfig().get("web_server_conf"));
-		getCslHttpServer().initServer(getConfig().get("web_server_conf"));
+		if (server)
+			getCslHttpServer().initServer(getConfig().get("web_server_conf"));
 		
 		//CSLContext.instance.getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));
-		getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));
+		if (client)
+			getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));
 
 
 
@@ -775,7 +781,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
 
 
-		initModules();  // by default only ModuleIDS
+		if (client) {
+			
+			initModules();  // by default only ModuleIDS
 
 		initTime();
 
@@ -785,15 +793,17 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
 		
 		idsRunner=new IDSRunner(idsParams, ids, this);
+		}
 
 	}
 	
 	
 	public void start() {
 		
-		getCslHttpServer().start();
-		getCslUDPServer().start();
-		startExec();
+		if (server) getCslHttpServer().start();
+		
+		if (client) getCslUDPServer().start();
+		if (client) startExec();
 		JServiceLoader.getCSLInterModuleCommunicationManager().start();
 		
 	}

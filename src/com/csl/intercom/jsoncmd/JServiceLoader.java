@@ -279,6 +279,9 @@ public class JServiceLoader {
 			System.out.println("Initializing service "+name);
 
 
+		if (!ok) {
+			System.err.println("cannot initialize "+name);
+		}
 
 
 		if (ok) {

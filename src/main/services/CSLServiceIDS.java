@@ -24,6 +24,7 @@ import com.xcsl.interfaces.IAlertDescriptor;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 import com.xcsl.learning.IDSLearnedRules;
+import com.xcsl.operation.IDSOperationManager;
 
 public class CSLServiceIDS implements ICSLService {
 
@@ -446,6 +447,33 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
+		addCmd("op_model_ids", new IJsonCmd() {
+
+			@Override
+			public Json exec(Json params) {
+				// TODO Auto-generated method stub
+
+
+
+
+				//Json j=CSLContext.instance.getIDSMainProcessor().getLearnedRules();
+						//getIdsRunner().getLearnedRulesAsJson();
+				
+				IDSLearnedRules z = CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
+				
+
+				IDSOperationManager opManager= new IDSOperationManager(z);
+				
+				Json j=opManager.exec(params);
+
+//				System.out.println(j);
+
+				return j;
+			}
+		});
+		
+		
+		
 
 
 		addCmd("idsmode", new IJsonCmd() {
@@ -466,6 +494,7 @@ public class CSLServiceIDS implements ICSLService {
 
 
 
+		
 
 
 
@@ -1046,40 +1075,40 @@ public class CSLServiceIDS implements ICSLService {
 		});
 		
 		
-		addCmd("generate_rules", new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-
-				System.out.println("Generate Rules:"+params);
-
-				// IDSLearnedRules z = DevicesUtil.getLearnedModelFromFile(CSLContext.instance.getIdsRunner().getIdsParams());
-				 
-				 IDSLearnedRules z = CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
-				 
-					
-				 System.out.println("Taps subdir:"+CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsDir());
-			     System.out.println("Taps IDs   :"+CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsIDs());
-			      
-			     String lines=z.toSuricataRules();
-			     System.out.println("Generated Suricata Rules");
-			     System.out.println(lines);
-			     
-			     // cslconf/taps/<nomTap>/genrules.rules
-			     for (String tapId:CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsIDs()) {
-			    	 String filename =CSLContext.instance.getCslConfDir()+File.separator+
-			    			 CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsDir()+File.separator+tapId+File.separator+"genrules.rules";
-			    	 System.out.println("  --> write rules to "+filename);
-			    	 FileUtils.writeFile(filename, lines);
-			    	 
-			     }
-				
-			       
-				Json result=Json.object();
-
-				return result;
-			}
-		});
+//		addCmd("generate_rules", new IJsonCmd() {
+//
+//			@Override
+//			public Json exec(Json params) {
+//
+//				System.out.println("Generate Rules:"+params);
+//
+//				// IDSLearnedRules z = DevicesUtil.getLearnedModelFromFile(CSLContext.instance.getIdsRunner().getIdsParams());
+//				 
+//				 IDSLearnedRules z = CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
+//				 
+//					
+//				 System.out.println("Taps subdir:"+CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsDir());
+//			     System.out.println("Taps IDs   :"+CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsIDs());
+//			      
+//			     String lines=z.toSuricataRules(Json.object());
+//			     System.out.println("Generated Suricata Rules");
+//			     System.out.println(lines);
+//			     
+//			     // cslconf/taps/<nomTap>/genrules.rules
+//			     for (String tapId:CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsIDs()) {
+//			    	 String filename =CSLContext.instance.getCslConfDir()+File.separator+
+//			    			 CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsDir()+File.separator+tapId+File.separator+"genrules.rules";
+//			    	 System.out.println("  --> write rules to "+filename);
+//			    	 FileUtils.writeFile(filename, lines);
+//			    	 
+//			     }
+//				
+//			       
+//				Json result=Json.object();
+//
+//				return result;
+//			}
+//		});
 			
 		addCmd("get_CSL_learning_args", new IJsonCmd() {
 

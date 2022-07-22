@@ -31,6 +31,21 @@ import main.extensions.SshUtils;
 public class TapsServices implements ICSLService {
 	//ApiCommands apiCommands= new ApiCommands("");
 	
+
+
+
+
+	private static final String START_TAPS = "cd ~/csl/scripts && sh launchTap.sh & exit";
+	private static final String STOP_TAPS = "cd ~/csl/scripts && sh killTaps.sh";
+
+	private static final String REPLAY = "cd ~/csl/scripts && sh replay.sh ";
+
+	
+	private static final String STOP_SURICATA = "cd ~/csl/scripts && sh killSuricata.sh";
+	private static final String START_SURICATA = "cd ~/csl/scripts && sh launchSuricata.sh";
+	private static final String CLEAR_SURICATA_LOG = "sudo rm /var/log/suricata/suricata.log";
+
+	
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="taps";
@@ -81,7 +96,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~/csl/scripts && sh killTaps.sh";
+		String command = STOP_TAPS;
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -109,7 +124,7 @@ public class TapsServices implements ICSLService {
 		}
 		System.out.println("Start tap:"+name+" "+ip);
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~/csl/scripts && sh launchTap.sh & exit";
+		String command = START_TAPS;
 		String output = null;
 		try {
 			output = ssh.remoteExecNoWait(command);
@@ -138,7 +153,7 @@ public class TapsServices implements ICSLService {
 		}
 		System.out.println("Start script replay <"+pcap+"> on tap :"+name+" "+ip);
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~/csl/scripts && sh replay.sh "+pcap;
+		String command = REPLAY+pcap;
 		System.out.println("Command :"+command);
 		String output = null;
 		try {
@@ -164,7 +179,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "sudo rm /var/log/suricata/suricata.log";
+		String command = CLEAR_SURICATA_LOG;
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -429,7 +444,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~/csl/scripts && sh launchSuricata.sh";
+		String command = START_SURICATA;
 		String output = null;
 		try {
 			output = ssh.remoteExecNoWait(command);
@@ -455,7 +470,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "cd ~/csl/scripts && sh killSuricata.sh";
+		String command = STOP_SURICATA;
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -727,6 +742,18 @@ public class TapsServices implements ICSLService {
 		});		
 		
 		addCmd("getTapConf", new IJsonCmd() {
+			@Override
+			public Json exec(Json params) {
+				try {
+					return readJsonFile(idsconf+"/taps/TapsConfiguration.json");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return Json.object();
+			}
+		});		
+		
+		addCmd("getTapsConfiguration", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				try {

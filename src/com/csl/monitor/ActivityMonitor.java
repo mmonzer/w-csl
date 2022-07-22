@@ -19,7 +19,13 @@ public class ActivityMonitor {
 	long data_size_total=0;
 	
 	
+	boolean showTicks=true;
+	
 	Map<String, Json> taps= new HashMap<String, Json>();
+	
+	
+//	
+	
 	
 	public void addTick(Json j) {
 	
@@ -52,6 +58,20 @@ public class ActivityMonitor {
 	
 	
 	
+	public boolean isShowTicks() {
+		return showTicks;
+	}
+
+
+
+
+	public void setShowTicks(boolean showTicks) {
+		this.showTicks = showTicks;
+	}
+
+
+
+
 	public void sendTickFromIDS(Json jj) {
 		
 		//System.out.println("send tick to hmi:"+jj);
@@ -66,7 +86,7 @@ public class ActivityMonitor {
 	public void processEvent(Json jj) {
 		
 		
-		System.out.println("Process tick:"+jj);
+		if (showTicks) System.out.println("Process tick:"+jj);
 		addTick(jj);
 	}
 	

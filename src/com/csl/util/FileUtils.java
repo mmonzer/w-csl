@@ -22,6 +22,10 @@ import com.xcsl.json.Json;
 
 public class FileUtils  {
 
+	
+	public static  String fileSeparator=File.separator;
+	
+	public static char separatorChar=File.separatorChar;
 
 
 	public static boolean fileExists(String dir, String filename) {
@@ -642,4 +646,27 @@ public class FileUtils  {
 	}
 
 
+	
+	static public List<String> readFileAsStringList(String filename) throws IOException {
+		BufferedReader br = null;
+		FileReader fr = null;
+
+		try {
+			fr = new FileReader(filename);
+			br = new BufferedReader(fr);
+			String nextLine = "";
+			List<String> list= new ArrayList<String>(); // StringBuilder sb = new StringBuilder();
+			while ((nextLine = br.readLine()) != null) {
+				list.add(nextLine);
+				//sb.append(nextLine); // note: BufferedReader strips the EOL character
+				//   so we add a new one!
+				//sb.append(EOL);
+			}
+			return list;
+		}
+		finally {
+			if (br != null) br.close();
+			if (fr != null) fr.close();
+		}
+	}
 }

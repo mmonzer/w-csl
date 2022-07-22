@@ -58,9 +58,15 @@ public class CSLUDPDataProcessor implements Runnable {
 					// System.out.println(" JMFJson msg:"+jsonObject);
 
 					Json jdata=jsonObject.get("data");
-					String id=jsonObject.get("idOfTarget").asString();
-					String fn=jsonObject.get("flowNumber").asString();
-					String fromPort=jsonObject.get("fromPort").asString();
+					//System.out.println("data="+jdata);
+					String id="cible";
+					if (jsonObject.has("idOfTarget")) id=jsonObject.get("idOfTarget").asString();
+					
+					String fn="1"; 
+					if (jsonObject.has("flowNumber") )  fn=jsonObject.get("flowNumber").asString();
+					
+					String fromPort="8001";
+					if (jsonObject.has("fromPort") ) fromPort=jsonObject.get("fromPort").asString();
 
 					if (fromPort!=null ) {
 						//	new UDPSend().sendMsg(msg);  // answer ok
@@ -69,6 +75,7 @@ public class CSLUDPDataProcessor implements Runnable {
 
 					int n=Integer.parseInt(fn);
 
+				//System.out.println("idOfTarget="+id+" fromPort="+fromPort+" flowNumber="+n);
 					//flowManager.addToFlow(n, jdata);
 					
 					if (jdata.isArray()) {

@@ -194,6 +194,12 @@ public class ModuleIDS implements IModule {
 		Json j=context.getConfig();
 		
 		
+		
+		
+		boolean showTicks=JsonUtil.getBooleanFromJson(j, "ids_conf/show_ticks", true);
+
+		activityMonitor.setShowTicks(showTicks);
+		
 		activityMonitor.startTicTask();
 
 	//	this.logToFile= IDSRunner.instance.getIdsParams().isLogToFile();
@@ -272,10 +278,13 @@ public class ModuleIDS implements IModule {
 					return ICSLFlowListener.REMOVE_FROM_QUEUE;
 				}
 				//while (!CSLContext.context.getFlowManager().isFlowEmpty(n_input))
+				
+				try
 				{
 				//	Json jj = CSLContext.context.getFlowManager().takeFromFlow(n_input);
 					if (CSLContext.instance.getIdsParams().isShowReceivedObject()) System.out.println("Received object:"+jj);
-					if (jj.has("type")) {
+					//if (DEBUG) System.out.println("Received object:"+jj);
+						if (jj.has("type")) {
 						//System.out.println(jj);
 						String type =jj.get("type").asString();
 						
@@ -287,6 +296,7 @@ public class ModuleIDS implements IModule {
 							}
 							outDisplay(jj);
 							//IDSContext.instance.processPacket(jj);
+							//System.out.println("Process:"+jj);
 							if (idsDetectOn) idsMainProcessor.processPacket(jj);
 							//System.out.println(jj);
 							//packetsLog.RecordLogMessage(jj.toString());
@@ -348,6 +358,10 @@ public class ModuleIDS implements IModule {
 						outDisplay(jj);
 					}
 						
+				}
+				catch (Exception e) {
+					System.out.println("Exception while processing "+jj);
+					System.out.println(e);
 				}
 				return ICSLFlowListener.REMOVE_FROM_QUEUE; // cancel next listeners
 			}

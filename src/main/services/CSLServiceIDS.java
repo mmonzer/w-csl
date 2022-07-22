@@ -466,7 +466,7 @@ public class CSLServiceIDS implements ICSLService {
 				
 				Json j=opManager.exec(params);
 
-//				System.out.println(j);
+				System.out.println(j);
 
 				return j;
 			}

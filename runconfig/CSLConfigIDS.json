@@ -64,29 +64,8 @@
 		"logJsonCommandsToFile": true,
 		"log_dir": "./idslogs/jcmds",
 		"log_prefix_filename": "JCMD",
-		"max_size_of_log_files": 10000,
-		"external_apis": [
-			{
-				"path": "/nmap/",
-				"server": "http://localhost:8050"
-			},
-			{
-				"path": "/cve/",
-				"server": "http://localhost:8051"
-			},			
-			{
-				"path": "/cpe/",
-				"server": "http://localhost:8052"
-			},
-			{
-				"path": "/suricata/",
-				"server": "http://localhost:8053"
-			},
-			{
-				"path": "/taps/",
-				"server": "http://localhost:8054"
-			}
-		]
+		"max_size_of_log_files": 10000
+		
 	},
 	"udp_server_conf": {
 		"on": true,
@@ -96,96 +75,8 @@
 		"max_input_queues": 10,
 		"max_size_of_input_queues": 100
 	},
-	"file_server_conf": {
-		"on": false,
-		"verbose": true,
-		"port": 8010,
-		"root_file_dir": "./idslogs"
-	},
-	"config_file_manager_conf": {
-		"on": true,
-		"verbose": true,
-		"show_modified_files": true,
-		"root_conf_dir": "./idsconf",
-		"conf_files": [
-			"demo.json",
-			"NewLearnedRules.json",
-			"RulesForDetection.txt",
-			"RulesForLearning.txt",
-			"LearnedRules.json",
-			"SystemConfiguration.json"
-		],
-		"max_number_of_version": 10
-	},
-	"external_commands": {
-		"remote_servers": [
-			{
-				"name": "taps",
-				"ip": "192.168.0.1"
-			}
-		],
-		"commands": [
-			{
-				"name": "xstart",
-				"mode": "remote",
-				"url": "http://localhost:8100/",
-				"remote_name": "start_logview",
-				"show_output": true,
-				"send_output_to_hmi": true
-			},
-			{
-				"name": "xstart_modbus",
-				"dir": "",
-				"mode": "script",
-				"sudo": true,
-				"script": "start_modbuspal.sh",
-				"kill_filter": "modbuspal",
-				"kill_script": "stop_modbuspal.sh",
-				"kill_if_running": true,
-				"show_output": true
-			},
-			{
-				"name": "xstart_modbus2",
-				"dir": "",
-				"mode": "script",
-				"sudo": false,
-				"script": "start_modbuspal.sh",
-				"kill_filter": "modbuspal",
-				"kill_script": "stop_modbuspal.sh",
-				"kill_if_running": true,
-				"show_output": true
-			},
-			{
-				"name": "start_test",
-				"dir": "/Users/flausj/Documents/dev",
-				"mode": "script",
-				"sudo": false,
-				"script": "start_test3.sh",
-				"kill_filter": "",
-				"kill_script": "",
-				"kill_if_running": true,
-				"show_output": true
-			},
-			{
-				"name": "start_logview",
-				"dir": "",
-				"mode": "jar",
-				"jar": "Logview.jar",
-				"kill_filter": "main.ProcessUtil",
-				"kill_if_running": true,
-				"show_output": true,
-				"send_output_to_hmi": true
-			},
-			{
-				"name": "start_all",
-				"mode": "macro",
-				"commands": [
-					"start_modbus",
-					"start_logview"
-				]
-			}
-		]
-	},
+
+	
 	"module_exec": {
 		"sampling_time": 1000,
 		"modules_package_name": "main.modules",
@@ -250,6 +141,7 @@
 		"idstrace_on": true,
 		"send_to_console": false,
 		"send_to_browser": true,
+		"show_ticks":false,
 		"kill_previous_instance": true,
 		"taps_id":["tap01"],
 		"taps_dir":"taps"

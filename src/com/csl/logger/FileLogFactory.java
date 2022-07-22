@@ -2,7 +2,7 @@ package com.csl.logger;
 
 import java.util.function.LongSupplier;
 
-import com.xcsl.defaultclasses.FileLog;
+import com.csl.defaultclasses.FileLog;
 import com.xcsl.interfaces.IFileLog;
 import com.xcsl.interfaces.IFileLogFactory;
 

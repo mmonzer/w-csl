@@ -70,10 +70,13 @@ public class CSLIDSMainRemote {
 		 try {
 	        	String s= "ws://" + SERVER_IP+":"+SERVER_PORT+ "/cmd";
 	        	
-	        	System.out.println("Connect to server");
+	        	System.out.print("Try to connect to server "+s);
 	            clientEndPoint = new WebsocketClientEndpoint(new URI(s)); 
-	            if (!clientEndPoint.isOpen()) return;
-
+	            if (!clientEndPoint.isOpen()) {
+	            	System.out.println("   --> failed");
+	            	return;
+	            }
+	            System.out.println("   --> connected");
 	            // add listener
 	            clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
 	                public void handleMessage(String message) {
@@ -165,13 +168,13 @@ public class CSLIDSMainRemote {
 				public void run() {
 					boolean reconnect=false;
 					if (clientEndPoint!=null) {
-						if (!clientEndPoint.isOpen()) System.out.println("Session open="+clientEndPoint.isOpen());
+						//if (!clientEndPoint.isOpen()) System.out.println("Session open="+clientEndPoint.isOpen());
 						reconnect=!clientEndPoint.isOpen();
 					}
 					else reconnect=true;
 					
 					if (reconnect) connectToServer();
-					else System.out.println("Connected");
+					//else System.out.println("Connected");
 				}
 			},
 			0, 1, TimeUnit.SECONDS);

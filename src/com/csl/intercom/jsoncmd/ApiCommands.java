@@ -223,6 +223,9 @@ public class ApiCommands implements IApiCommands {
 		j.set("cmd", cmd);
 		j.set("params",jparams);
 		return JServiceLoader.cslInterModuleCommunicationManager.executeCommand(api, j);
+		
+		
+		
 	}
 	
 	public Json readObjectFromDatabase(String name) {
@@ -230,6 +233,8 @@ public class ApiCommands implements IApiCommands {
 		p.set("name", name);
 	
 		String api="dbjson";
+		
+		//ici  
 		return execCmd(api,"load_jsonfile", p);
 	
 	}

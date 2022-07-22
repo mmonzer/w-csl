@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.csl.alert.CSLAlertFactory;
 import com.csl.alert.CSLAlertManager;
+import com.csl.defaultclasses.FileStoreService;
 import com.csl.ids.IDSParams;
 import com.csl.ids.IDSRunner;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -683,6 +684,10 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 				getConfig().get("ids_conf"),
 				getCslConfDir());
 		idsMainProcessor.setFileLogFactory(getFileLogFactory());
+		
+		fileUtils= new FileStoreService(getCslConfDir());
+		idsMainProcessor.setFileStoreServices(fileUtils);
+		
 		
 		//jConfig=null;  // forces reread
 		cslAlertManager= new CSLAlertManager(idsMainProcessor,    getConfig().get("alert_viewer"));

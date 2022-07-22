@@ -43,7 +43,7 @@ public class WebsocketClientEndpoint {
     
 
     private void connect()  {
-    	System.out.println("Try to connect");
+    //	System.out.println("Try to connect");
     	 try {
              WebSocketContainer container = ContainerProvider.getWebSocketContainer();
              container.connectToServer(this, endpointURI);

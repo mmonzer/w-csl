@@ -37,6 +37,7 @@ public class CSLUdpUnicastClient implements Runnable {
 		
 		try {
 			//clientSocket = new DatagramSocket(port) ;
+			System.out.println("XXXJMFUDP on prt :"+port);
 			clientSocket = new DatagramSocket(port); //,Inet4Address.getByName("127.0.0.1")) ;
 			
 			// Set a timeout of 3000 ms for the client.

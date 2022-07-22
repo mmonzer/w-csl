@@ -2,6 +2,7 @@ package main;
 
 
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
 import com.csl.ids.IDSRunner;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.database.CSLServiceJsonDataBase;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
@@ -29,6 +31,7 @@ import com.xcsl.ids.IDSTrace;
 import com.xcsl.interfaces.IApiCommands;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
+import com.xcsl.miniserver.ApiHttpServer;
 
 import main.services.AlertsService;
 import main.services.CSLServiceDemo;
@@ -55,7 +58,10 @@ public class CSLIDSMainRemote {
 					// TODO Auto-generated method stub
 					
 					System.out.println("Send string over ws:"+s);
-					if (clientEndPoint!=null) clientEndPoint.sendMessage("wss:"+socketName+":"+s);
+					if (clientEndPoint!=null) {
+						if (!clientEndPoint.isOpen()) return;
+						clientEndPoint.sendMessage("wss:"+socketName+":"+s);
+					}
 				}
 				
 				@Override
@@ -63,7 +69,10 @@ public class CSLIDSMainRemote {
 							    	
 					//System.out.println("Send json over ws:"+j);
 					
-					if (clientEndPoint!=null) clientEndPoint.sendMessage("wsj:"+socketName+":"+j);
+					if (clientEndPoint!=null) {
+						if (!clientEndPoint.isOpen()) return;
+						clientEndPoint.sendMessage("wsj:"+socketName+":"+j);
+					}
 			    	
 				}
 			};
@@ -73,7 +82,10 @@ public class CSLIDSMainRemote {
 		@Override
 		public void sendAlert(Json alert) {
 			System.out.println("********Forward alert:\n"+alert+"\n*************");
-			if (clientEndPoint!=null) clientEndPoint.sendMessage("alert:"+alert);
+			if (clientEndPoint!=null) {
+				if (!clientEndPoint.isOpen()) return;
+				clientEndPoint.sendMessage("alert:"+alert);
+			}
 			
 		}
 	};
@@ -95,10 +107,14 @@ public class CSLIDSMainRemote {
 		 try {
 	        	String s= "ws://" + SERVER_IP+":"+SERVER_PORT+ "/cmd";
 	        	
-	        	System.out.println("Connect to server");
+	        	System.out.print("Try to connect to server "+s);
 	            clientEndPoint = new WebsocketClientEndpoint(new URI(s)); 
-	            if (!clientEndPoint.isOpen()) return;
-
+	            if (!clientEndPoint.isOpen()) {
+	            	System.out.println("  --> failed");
+	            	return;
+	            }
+	            else System.out.println("   --> connected");
+	            
 	            // add listener
 	            clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
 	                public void handleMessage(String message) {
@@ -190,13 +206,13 @@ public class CSLIDSMainRemote {
 				public void run() {
 					boolean reconnect=false;
 					if (clientEndPoint!=null) {
-						if (!clientEndPoint.isOpen()) System.out.println("Session open="+clientEndPoint.isOpen());
+						//if (!clientEndPoint.isOpen()) System.out.println("Session open="+clientEndPoint.isOpen());
 						reconnect=!clientEndPoint.isOpen();
 					}
 					else reconnect=true;
 					
 					if (reconnect) connectToServer();
-					else System.out.println("Connected");
+					//else System.out.println("Connected");
 				}
 			},
 			0, 1, TimeUnit.SECONDS);
@@ -275,17 +291,24 @@ public class CSLIDSMainRemote {
 		//CSLContext.instance.setApiRemote("ids");
 		JServiceLoader.registerService(new TapsServices(), j, true);
 
-		//JServiceLoader.registerService(new CSLServiceJsonDataBase(), j, true);
+		JServiceLoader.registerService(new CSLServiceJsonDataBase(), j, true);
 		
 		
 		
 		iniServices();
-    	startRemoteConnectTask();
+    	
+		startRemoteConnectTask();
     	CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
    
 		
 		CSLContext.instance.postInit(false,true);
     	
+		
+		ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
+				new InetSocketAddress(9000), 
+				JServiceLoader.getApiCommandsList(),
+				new ApiGetHelp());
+	
 		
 		CSLContext.instance.start();
 		

@@ -422,21 +422,7 @@ public class CSLHttpServer {
 
 
 		//ici
-/*
-		Json jproxies=j.get("external_apis");
-		if (jproxies!=null) {
-			for (Json je:jproxies.asJsonList()) {
-				String path=JsonUtil.getStringFromJson(je, "path", "");
-				String server=JsonUtil.getStringFromJson(je, "server", "");
-				if (!path.isEmpty()&& ! server.isEmpty()) {
-					//ProxyServer.enableProxy("http://localhost:8050", "/api1/");
-					ProxyServer.enableProxy(sparkServer,server, path);
-					System.out.println("  proxies :"+path+" to "+server);
 
-				}
-			}
-		}
-*/
 
 
 	}

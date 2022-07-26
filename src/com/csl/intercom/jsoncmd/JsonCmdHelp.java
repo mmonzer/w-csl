@@ -3,6 +3,7 @@ package com.csl.intercom.jsoncmd;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.xcsl.interfaces.ICmdHelpProvider;
 import com.xcsl.interfaces.IJsonCmdHelp;
 import com.xcsl.json.Json;
 
@@ -21,7 +22,8 @@ public class JsonCmdHelp implements IJsonCmdHelp {
 	Map<String,String> paramstype= new HashMap<String, String>();
 	
 	String status="";
-			
+	ICmdHelpProvider helpProvider=null;
+	
 	public JsonCmdHelp() {
 		
 	}
@@ -89,6 +91,9 @@ public class JsonCmdHelp implements IJsonCmdHelp {
 	@Override
 	public Json toJson(Json mode) {
 	
+		
+		if (helpProvider!=null) return helpProvider.getHelp(mode);
+				
 		Json j= Json.object();
 		
 		j.set("cmd",name);
@@ -138,6 +143,14 @@ public class JsonCmdHelp implements IJsonCmdHelp {
 	public IJsonCmdHelp setStatus(String s) {
 		// TODO Auto-generated method stub
 		this.status=s;
+		return this;
+	}
+	
+	
+	@Override
+	public IJsonCmdHelp setHelpProvider(ICmdHelpProvider helpProvider) {
+		// TODO Auto-generated method stub
+		this.helpProvider=helpProvider;
 		return this;
 	}
 }

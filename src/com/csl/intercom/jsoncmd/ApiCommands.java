@@ -191,6 +191,10 @@ public class ApiCommands implements IApiCommands {
 		    	IJsonCmdHelp z = listOfCommandHelps.get(name);
 		    	if (!z.isHidden()) {
 		    		Json jz=z.toJson(params);
+		    		if (jz.isArray()) {
+		    			for (Json jjj:jz.asJsonList()) jlist.add(jjj);
+		    		}
+		    		else {
 		    		if (showExamples) {
 		    			Json ex=findExemple(jExamples, name);
 		    			if (ex!=null) {
@@ -200,6 +204,7 @@ public class ApiCommands implements IApiCommands {
 		    			}
 		    		}	
 		    		 jlist.add(jz);
+		    		}
 		    //	if (!z.isHidden()) jlist.add(listOfCommandHelps.get(name).toJson(params));
 		    	}
 		    }

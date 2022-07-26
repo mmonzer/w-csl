@@ -847,7 +847,7 @@ public class CSLAlertManager implements IAlertManager {
 				if (!a.isAdded_to_model()) idsMainProcessor.addAlertToModel(a, level); //.addToModel(level);
 			}
 			else {
-				if (a.isAdded_to_model()) idsMainProcessor.removeAlertFromModel(a); //a.removeFromModel();
+				if (a.isAdded_to_model()) idsMainProcessor.removeAlertFromModel(a,0); //a.removeFromModel();
 			}
 
 			return alertToJsonForHmi(a);

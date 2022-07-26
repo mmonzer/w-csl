@@ -447,6 +447,9 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
+		
+		IDSOperationManager opManager= new IDSOperationManager(CSLContext.instance.getIDSMainProcessor());
+		
 		addCmd("op_model_ids", new IJsonCmd() {
 
 			@Override
@@ -462,7 +465,6 @@ public class CSLServiceIDS implements ICSLService {
 				IDSLearnedRules z = CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
 				
 
-				IDSOperationManager opManager= new IDSOperationManager(z);
 				
 				Json j=opManager.exec(params);
 
@@ -470,7 +472,13 @@ public class CSLServiceIDS implements ICSLService {
 
 				return j;
 			}
-		});
+		},	new JsonCmdHelp()
+				.setDesc("Model operations")
+					
+				.setStatus(JsonCmdHelp.STATUS_OK)
+				.setHelpProvider(opManager)
+				
+		);
 		
 		
 		

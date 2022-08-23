@@ -182,7 +182,7 @@ public class CSLFlowManager {
 
 		//UDPSendTest server = new UDPSendTest();
 		// message queue is shared between UDP client and Data Processor
-		client = new CSLUdpUnicastClient(port, messageQueue);
+		client = new CSLUdpUnicastClient(port, messageQueue,traceAllMessages);
 		dataProcessor = new CSLUDPDataProcessor(this,messageQueue,traceAllMessages);
 
 		/**

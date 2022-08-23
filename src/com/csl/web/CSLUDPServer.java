@@ -76,7 +76,7 @@ public class CSLUDPServer {
 		debug=JsonUtil.getBooleanFromJson(j,"debug", false);
 		traceAllMessages=JsonUtil.getBooleanFromJson(j,"trace_all_messages", false);
 
-
+		//traceAllMessages=true;
 		initialized=true;
 
 		maxflows=JsonUtil.getIntFromJson(j,"max_input_queues",10);

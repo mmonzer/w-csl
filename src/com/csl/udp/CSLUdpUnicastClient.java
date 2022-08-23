@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
@@ -14,10 +15,12 @@ public class CSLUdpUnicastClient implements Runnable {
 	DatagramSocket clientSocket=null;
 	
 	boolean closing=false;
+	private boolean traceAll;
 	
-	public CSLUdpUnicastClient(int port, BlockingQueue<byte[]> messageQueue) {
+	public CSLUdpUnicastClient(int port, BlockingQueue<byte[]> messageQueue, boolean traceAll) {
 		this.port = port;
 		this.messageQueue = messageQueue;
+		this.traceAll=traceAll;
 	}
 
 	
@@ -27,6 +30,23 @@ public class CSLUdpUnicastClient implements Runnable {
 		clientSocket.close();
 		
 	}
+	
+	
+	 // A utility method to convert the byte array
+    // data into a string representation.
+    public static StringBuilder data(byte[] a)
+    {
+        if (a == null)
+            return null;
+        StringBuilder ret = new StringBuilder();
+        int i = 0;
+        while (a[i] != 0)
+        {
+            ret.append((char) a[i]);
+            i++;
+        }
+        return ret;
+    }
 	
 	@Override
 	public void run() {
@@ -38,8 +58,9 @@ public class CSLUdpUnicastClient implements Runnable {
 		try {
 			//clientSocket = new DatagramSocket(port) ;
 			System.out.println("XXXJMFUDP on prt :"+port);
-			clientSocket = new DatagramSocket(port); //,Inet4Address.getByName("127.0.0.1")) ;
-			
+			//clientSocket = new DatagramSocket(port); //,Inet4Address.getByName("127.0.0.1")) ;
+			clientSocket = new DatagramSocket(8001,InetAddress.getByName("192.168.56.1"));
+	    	
 			// Set a timeout of 3000 ms for the client.
 			//clientSocket.setSoTimeout(3000);
 			while (true) {
@@ -66,7 +87,7 @@ public class CSLUdpUnicastClient implements Runnable {
 				 * queue.The 'put' method will block if the message queue is full,
 				 * until there is space to store the new message.
 				 */
-				//CSLContext.context.logInfo("new message received "+datagramPacket.getData());
+				if (traceAll) System.out.println ("new message received "+data(datagramPacket.getData()));
 				this.messageQueue.put(datagramPacket.getData());
 				//System.out.println('.');
 			}

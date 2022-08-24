@@ -263,9 +263,9 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
 				return CSLContext.instance.getCSLAlertManager().getAlertStats();
 				
 
@@ -282,9 +282,9 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);
@@ -308,9 +308,9 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);
@@ -340,9 +340,9 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);

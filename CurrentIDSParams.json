@@ -2,7 +2,7 @@
   "currentDataSetNameForDetectionOffLine":"detect01",
   "currentDataSetNameForRecording":"apprentissageSet",
   "currentDataSetNameForLearning":"apprentissageSet",
-  "sendToBrowser":true,
+  "sendToBrowser":false,
   "sendToConsole":true,
   "idsMode":"IDLE"
 }

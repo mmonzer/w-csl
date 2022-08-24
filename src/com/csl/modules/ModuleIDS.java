@@ -321,7 +321,7 @@ public class ModuleIDS implements IModule {
 							//	variablesLog.RecordLogMessage(jj.toString());
 							//outDisplay(jj);
 							System.out.println("EVE:"+jj);
-							System.out.println(EveMessageUtill.getEveInfo(jj));
+							//System.out.println(EveMessageUtill.getEveInfo(jj));
 							//if (idsDetectOn) 
 								idsMainProcessor.processSuricataEvent(jj);
 						} 

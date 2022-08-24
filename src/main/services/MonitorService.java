@@ -71,9 +71,9 @@ public class MonitorService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("all", 103);
 				j.set("running",87);
@@ -92,9 +92,9 @@ public class MonitorService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("all", 5);
 				j.set("running",4);

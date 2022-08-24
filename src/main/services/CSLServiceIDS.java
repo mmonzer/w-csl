@@ -158,9 +158,10 @@ public class CSLServiceIDS implements ICSLService {
 				j.set("result", "ok");
 				j.set("value",1);
 
+				String ext=" #"+System.currentTimeMillis();
 			
 				
-				IAlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().createAlertDescriptor(3, "ALERT 3", System.currentTimeMillis());
+				IAlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().createAlertDescriptor(3, "ALERT 3 ["+ext+"]", System.currentTimeMillis());
 				
 				CSLContext.instance.getCSLAlertManager().sendAlert(a3);
 			

@@ -542,7 +542,7 @@ public class IDSParams {
 		this.sendToBrowser=JsonUtil.getBooleanFromJson(j,  "ids_conf/send_to_browser", false) ;
 		this.sendToConsole=JsonUtil.getBooleanFromJson(j,  "ids_conf/send_to_console", false) ;
 
-
+		
 		//this.relative_to_CSLConfig_dir=JsonUtil.getBooleanFromJson(j, "ids_conf/relative_to_CSLConfig_dir", false);
 
 		//		String prefix ="";
@@ -842,6 +842,9 @@ public class IDSParams {
 	//	public void setRunOnLineRecordOrDetect(boolean runOnLineRecordOrDetect) {
 	//		this.runOnLineRecordOrDetect = runOnLineRecordOrDetect;
 	//	}
+
+
+	
 
 
 	public void setShowReceivedObject(boolean showReceivedObject) {

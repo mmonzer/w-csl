@@ -93,6 +93,12 @@ public class ModuleIDS implements IModule {
 
 
 
+	public ActivityMonitor getActivityMonitor() {
+		return activityMonitor;
+	}
+
+
+
 	public void setSendToBrowser(boolean sendToBrowser) {
 		this.sendToBrowser = sendToBrowser;
 	}

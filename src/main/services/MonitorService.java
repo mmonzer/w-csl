@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.modules.ModuleIDS;
+import com.csl.monitor.ActivityMonitor;
 import com.xcsl.interfaces.IApiCommands;
 import com.xcsl.interfaces.ICSLService;
 import com.xcsl.interfaces.IJsonCmd;
@@ -71,6 +74,12 @@ public class MonitorService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
+				
+				
+				ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
+				ActivityMonitor activityMonitor = ids.getActivityMonitor();
+				
+				
 //				System.out.println("start exec ");
 //				System.out.println("Exec JCmd test_cmd :"+params);
 //				System.out.println("Fin exec");

@@ -170,6 +170,7 @@ public class CSLFlowManager {
 
 
 	public void startListener() {
+		String ip= CSLContext.instance.getCslUDPServer().getCurrentIPForUCP();
 		int port = CSLContext.instance.getCslUDPServer().getCurrentPortForUCP();
 			//CSLContext.context.logInfo("Listening udp to port :"+port);
 		IDSTrace.log(IDSTrace.UDP_TRACE, "Listening udp to port :"+port);
@@ -182,7 +183,7 @@ public class CSLFlowManager {
 
 		//UDPSendTest server = new UDPSendTest();
 		// message queue is shared between UDP client and Data Processor
-		client = new CSLUdpUnicastClient(port, messageQueue,traceAllMessages);
+		client = new CSLUdpUnicastClient(ip,port, messageQueue,traceAllMessages);
 		dataProcessor = new CSLUDPDataProcessor(this,messageQueue,traceAllMessages);
 
 		/**

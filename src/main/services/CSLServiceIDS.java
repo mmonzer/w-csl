@@ -24,6 +24,7 @@ import com.xcsl.interfaces.IAlertDescriptor;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
 import com.xcsl.learning.IDSLearnedRules;
+//import com.xcsl.operation.IDSOperationManager;
 import com.xcsl.operation.IDSOperationManager;
 
 public class CSLServiceIDS implements ICSLService {

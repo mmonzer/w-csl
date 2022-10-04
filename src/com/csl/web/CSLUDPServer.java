@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import com.csl.core.CSLContext;
 import com.csl.logger.CSLLogger;
 import com.csl.udp.CSLFlowManager;
+import com.csl.util.NetUtil;
 import com.xcsl.interfaces.ICSLFlowListener;
 import com.xcsl.json.Json;
 import com.xcsl.json.JsonUtil;
@@ -28,6 +29,8 @@ public class CSLUDPServer {
 	private int maxflows;
 
 
+	private String ip="127.0.0.1";
+	
 	private int port=-1;
 	private boolean verbose =false;
 	private boolean running =false;
@@ -83,7 +86,9 @@ public class CSLUDPServer {
 		maxsize=JsonUtil.getIntFromJson(j,"max_size_of_input_queues",100);
 
 		port = JsonUtil.getIntFromJson(j, "port",8001);
-
+		ip = JsonUtil.getStringFromJson(j, "ip","");
+		if (ip.isEmpty()) ip=NetUtil.findIPAddress();
+		if (ip.isEmpty()) ip="127.0.0.1";
 
 	
 		int port=getCurrentPortForUCP();
@@ -133,6 +138,7 @@ public class CSLUDPServer {
 			System.out.println("CSL UDP Server:");
 			System.out.println("===============");
 			System.out.println("  on  :"+running);
+			System.out.println("  ip  :"+ip);
 			System.out.println("  port:"+port);
 			System.out.println("  trace all messages:"+traceAllMessages);
 
@@ -168,6 +174,10 @@ public class CSLUDPServer {
 
 	public int getCurrentPortForUCP() {
 		return port;
+	}
+	
+	public String getCurrentIPForUCP() {
+		return ip;
 	}
 
 	private void setCurrentPortForUCP(int currentPortForUCP2) {

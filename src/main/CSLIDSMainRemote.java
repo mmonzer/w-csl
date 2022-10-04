@@ -37,6 +37,7 @@ import main.services.AlertsService;
 import main.services.CSLServiceDemo;
 import main.services.CSLServiceIDS;
 import main.services.MonitorService;
+import main.services.NmapServices;
 import main.services.TapsServices;
 import main.util.CSLRunningArgs;
 import main.xcom.WebsocketClientEndpoint;
@@ -292,7 +293,8 @@ public class CSLIDSMainRemote {
 		JServiceLoader.registerService(new TapsServices(), j, true);
 
 		JServiceLoader.registerService(new CSLServiceJsonDataBase(), j, true);
-		
+		JServiceLoader.registerService(new NmapServices(), j, true);
+			
 		
 		
 		iniServices();

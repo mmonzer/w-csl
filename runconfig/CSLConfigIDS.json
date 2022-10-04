@@ -71,6 +71,7 @@
 		"on": true,
 		"verbose": true,
 		"trace_all_messages":false,
+		"ip":"",
 		"port": 8001,
 		"max_input_queues": 10,
 		"max_size_of_input_queues": 100

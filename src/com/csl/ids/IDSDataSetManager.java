@@ -10,9 +10,10 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import com.xcsl.ids.IDSMainProcessor;
-import com.xcsl.json.Json;
-import com.xcsl.util.IDSUtil;
+
+import com.ucsl.json.Json;
+import com.ucsl.util.IDSUtil;
+import com.wcsl.ids.IDSMainProcessor;
 
 public class IDSDataSetManager {
 

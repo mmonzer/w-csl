@@ -11,9 +11,8 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.CSLHttpServer;
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 import spark.Request;
 import spark.Response;
@@ -110,8 +109,7 @@ public class DataBaseServer {
 
 
 		fileName=cleanDataFileName(fileName);
-		IDSTrace.log(IDSTrace.WEB_DATABASE,
-				"Save jsonfile:"+fileName);
+		//IDSTrace.log(IDSTrace.WEB_DATABASE,"Save jsonfile:"+fileName);
 
 		return jresult.toString();
 	}
@@ -303,8 +301,7 @@ public class DataBaseServer {
 
 
 		fileName=cleanDataFileName(fileName);
-		IDSTrace.log(IDSTrace.WEB_DATABASE,
-				"Save jsonfile:"+fileName);
+		//IDSTrace.log(IDSTrace.WEB_DATABASE,"Save jsonfile:"+fileName);
 
 		String result="";
 		Json j=Json.object();
@@ -313,8 +310,7 @@ public class DataBaseServer {
 		{
 
 			Json contents=data.get("contents");
-			IDSTrace.log(IDSTrace.WEB_DATABASE,
-					"Save Contents="+data.get("contents"));
+			//IDSTrace.log(IDSTrace.WEB_DATABASE,"Save Contents="+data.get("contents"));
 
 			String uuid=JsonUtil.getStringFromJson(data, "uuid","");
 
@@ -389,8 +385,7 @@ public class DataBaseServer {
 
 
 		String fileName=cleanDataFileName(name);
-		IDSTrace.log(IDSTrace.WEB_DATABASE,
-				"Load jsonfile:"+fileName);
+		//IDSTrace.log(IDSTrace.WEB_DATABASE,		"Load jsonfile:"+fileName);
 
 
 		String result="";
@@ -401,14 +396,12 @@ public class DataBaseServer {
 			j=readDataFile(fileName+".json");
 			//Json z=Json.read(result);
 			//j.set("contents",z);
-			IDSTrace.log(IDSTrace.WEB_DATABASE,
-					"File Contents="+result);
+			//IDSTrace.log(IDSTrace.WEB_DATABASE,"File Contents="+result);
 
 		} else {
 			j.set("contents",Json.object());
 			j.set("error", "No file with name:"+name);
-			IDSTrace.log(IDSTrace.WEB_DATABASE,
-					"File Load error="+j.toString());
+			//IDSTrace.log(IDSTrace.WEB_DATABASE,"File Load error="+j.toString());
 
 		}
 
@@ -419,8 +412,7 @@ public class DataBaseServer {
 
 	public Json deleteDataFileJson(String name) {
 		String fileName=cleanDataFileName(name);
-		IDSTrace.log(IDSTrace.WEB_DATABASE,
-				"Delete jsonfile:"+fileName);
+		//IDSTrace.log(IDSTrace.WEB_DATABASE,"Delete jsonfile:"+fileName);
 
 
 		String result=deleteDataFile(fileName+".json");

@@ -1,5 +1,7 @@
 package main.util;
 
+import static com.ucsl.util.FileUtils.readFile;
+
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -14,9 +16,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import com.xcsl.json.Json;
-
-import static com.xcsl.util.FileUtils.readFile;
+import com.ucsl.json.Json;
 
 public class AlertListener {
 	static String CONFIGURATION_FILE = "configuration.json";

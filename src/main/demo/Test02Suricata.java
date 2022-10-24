@@ -6,8 +6,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 import com.csl.core.CSLContext;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 
 public class Test02Suricata {

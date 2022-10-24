@@ -1,7 +1,7 @@
 package com.csl.intercom.jsoncmd;
 
-import com.xcsl.interfaces.IApiCommands;
-import com.xcsl.interfaces.IApiCommandsFactory;
+import com.ucsl.interfaces.IApiCommands;
+import com.ucsl.interfaces.IApiCommandsFactory;
 
 public class ApiCommandsFactory implements IApiCommandsFactory {
 

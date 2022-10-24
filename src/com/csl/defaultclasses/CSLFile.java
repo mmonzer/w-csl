@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import com.xcsl.interfaces.ICSLFile;
+import com.ucsl.interfaces.ICSLFile;
 
 public class CSLFile implements ICSLFile {
 	File f=null;

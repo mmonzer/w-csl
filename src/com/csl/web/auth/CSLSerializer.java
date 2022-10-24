@@ -1,6 +1,6 @@
 package com.csl.web.auth;
 
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 import io.jsonwebtoken.io.SerializationException;
 import io.jsonwebtoken.io.Serializer;

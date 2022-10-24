@@ -14,7 +14,7 @@ import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.logger.CSLLogger;
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 @WebSocket
 public class CSLWebSocketForJcmdHandler {

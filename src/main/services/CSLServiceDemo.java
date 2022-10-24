@@ -2,10 +2,10 @@ package main.services;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
-import com.xcsl.interfaces.IApiCommands;
-import com.xcsl.interfaces.ICSLService;
-import com.xcsl.interfaces.IJsonCmd;
-import com.xcsl.json.Json;
+import com.ucsl.interfaces.IApiCommands;
+import com.ucsl.interfaces.ICSLService;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.json.Json;
 
 public class CSLServiceDemo implements ICSLService {
 	

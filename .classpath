@@ -29,12 +29,12 @@
 	<classpathentry kind="lib" path="lib/slf4j-api-1.7.25.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-simple.jar"/>
 	<classpathentry kind="lib" path="lib/spark-core-2.8.0.jar"/>
-	<classpathentry kind="lib" path="lib/xcsl.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-annotations-2.11.2.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-core-2.11.2.jar"/>
 	<classpathentry kind="lib" path="lib/jackson-databind-2.11.2.jar"/>
 	<classpathentry kind="lib" path="lib/java-json.jar"/>
 	<classpathentry kind="lib" path="lib/guava-30.0-jre.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/Java SE 8 [1.8.0_192]"/>
+	<classpathentry kind="lib" path="lib/xminiserver.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

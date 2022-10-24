@@ -13,17 +13,18 @@ import com.csl.core.CSLContext;
 import com.csl.interfaces.IIDSRunner;
 import com.csl.modules.ModuleIDS;
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.ids.IDSContext;
-import com.xcsl.ids.IDSMainProcessor;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.interfaces.IAlertManager;
-import com.xcsl.interfaces.IAlertSender;
-import com.xcsl.interfaces.ICSLLogger;
-import com.xcsl.interfaces.ICancelChecker;
-import com.xcsl.interfaces.ILearningProcessor;
-import com.xcsl.interfaces.IOffLineDetectionProcessor;
-import com.xcsl.json.Json;
-import com.xcsl.learning.IDSLearnedRules;
+
+import com.ucsl.interfaces.IAlertManager;
+import com.ucsl.interfaces.IAlertSender;
+import com.ucsl.interfaces.ICSLLogger;
+import com.ucsl.interfaces.ICancelChecker;
+import com.ucsl.interfaces.IIDSLearnedRules;
+import com.ucsl.interfaces.IIDSMainProcessor;
+import com.ucsl.interfaces.IILearningProcessor;
+import com.ucsl.interfaces.ILearningProcessor;
+import com.ucsl.interfaces.IOffLineDetectionProcessor;
+import com.ucsl.json.Json;
+
 
 public class IDSRunner implements IIDSRunner {
 
@@ -371,7 +372,7 @@ public class IDSRunner implements IIDSRunner {
 		
 		//CSLContext.instance.getIDSMainProcessor().init();
 		
-		ILearningProcessor logAnalyzer =CSLContext.instance.getIDSMainProcessor()
+		IILearningProcessor logAnalyzer =CSLContext.instance.getIDSMainProcessor()
 				.getLogAnalyzer(idsParams.getFullPackets_dir_for_learning(), learnNetwork, learnSysModel);
 		
 		//LogAnalyzer logAnalyzer = new LogAnalyzer(idsParams.getIdsMainProcessor(), learnNetwork, learnSysModel);
@@ -436,7 +437,7 @@ public class IDSRunner implements IIDSRunner {
 		// idsLearningRules.readFromFile("idsdata","LEARNED_RULES99.json");
 
 		println(LEARN_TAG,"RESULT:");
-		println(LEARN_TAG,""+logAnalyzer.getIdsLearnedRules());
+		println(LEARN_TAG,""+logAnalyzer.saveLearnedRules());
 
 		println(LEARN_TAG,"========================================================================");
 		println(LEARN_TAG,"========================================================================");
@@ -467,7 +468,7 @@ public class IDSRunner implements IIDSRunner {
 
 	public   void execIdleMode() {
 		//ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-		IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
+		//IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
 
 
 		System.out.println("Exec idle");
@@ -496,7 +497,7 @@ public class IDSRunner implements IIDSRunner {
 
 	public   void execRecordOnly() {
 		//ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-		IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
+		//IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
 
 
 		//initIdsContext(idsContext,verbose);
@@ -548,25 +549,25 @@ public class IDSRunner implements IIDSRunner {
 		refreshHmi();
 
 
-		IDSMainProcessor idsMainProcessor = CSLContext.instance.getIDSMainProcessor();
+		IIDSMainProcessor idsMainProcessor = CSLContext.instance.getIDSMainProcessor();
 		
-		if (idsMainProcessor.getPacketPreprocessingRulesErrors().size() >0) {
+		if (idsMainProcessor.getErrors().size() >0) {
 		
 			println(DETECT_ONLINE_TAG,""+"Invalid rules, stopping 275");
 
-			for (String s : idsMainProcessor.getPacketPreprocessingRulesErrors())
+			for (String s : idsMainProcessor.getErrors())
 				println(DETECT_ONLINE_TAG,""+s);
-			for (String s : idsMainProcessor.getPacketPreprocessingRulesErrors())
+			for (String s : idsMainProcessor.getErrors())
 				System.out.println(s);
 			System.exit(0);
 		}
 
-		println(DETECT_ONLINE_TAG, idsMainProcessor.getIdsRulesSet().toStringAsTree());
-		System.out.println(idsMainProcessor.getIdsRulesSet().toStringAsTree());
+		println(DETECT_ONLINE_TAG, idsMainProcessor.getIdsRulesSetAsString());
+		//System.out.println(idsMainProcessor.getIdsRulesSet().toStringAsTree());
 
 		println(DETECT_ONLINE_TAG,""+idsMainProcessor.getIDSVariables());
 		println(DETECT_ONLINE_TAG,""+idsMainProcessor.getProcessVariables());
-		println(DETECT_ONLINE_TAG,""+idsMainProcessor.getLearnedRules());
+		println(DETECT_ONLINE_TAG,""+idsMainProcessor.getCurrentLearnedModel());
 
 	//	IAlertManager alertViewer = idsContext.getCslAlertManager(); // new CSLAlertManager("IDS");
 
@@ -582,7 +583,7 @@ public class IDSRunner implements IIDSRunner {
 
 
 
-		IDSTrace.setFlagOff(IDSTrace.UDP_TRACE);
+		//IDSTrace.setFlagOff(IDSTrace.UDP_TRACE);
 
 		//		scheduler.scheduleAtFixedRate(new Runnable() {
 		//
@@ -654,7 +655,7 @@ public class IDSRunner implements IIDSRunner {
 
 
 		//ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-		IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
+		//IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
 
 
 		IAlertSender alertSender = CSLContext.instance.getIDSMainProcessor().getAlertManager(); // new CSLAlertManager("IDS");
@@ -691,7 +692,7 @@ public class IDSRunner implements IIDSRunner {
 
 
 
-		IDSMainProcessor idsMainProcessor= CSLContext.instance.getIDSMainProcessor();
+		IIDSMainProcessor idsMainProcessor= CSLContext.instance.getIDSMainProcessor();
 		
 		//LogReplay logReplay = new LogReplay(idsParams.getFullPackets_dir_for_detection_offline(), idsMainProcessor);
 		
@@ -709,9 +710,9 @@ public class IDSRunner implements IIDSRunner {
 			//System.exit(0);
 		}
 
-		println(DETECT_OFFLINE_TAG,""+offLineDetectionProcessor.getIdsRulesSet().toStringAsTree());
+		//println(DETECT_OFFLINE_TAG,""+offLineDetectionProcessor.getIdsRulesSet().toStringAsTree());
 
-		println(DETECT_OFFLINE_TAG,""+offLineDetectionProcessor.getIdsVariables());
+		//println(DETECT_OFFLINE_TAG,""+offLineDetectionProcessor.getIdsVariables());
 		println(DETECT_OFFLINE_TAG,""+offLineDetectionProcessor.getProcessVariables());
 		println(DETECT_OFFLINE_TAG,""+offLineDetectionProcessor.getLearnedRules());
 
@@ -818,7 +819,7 @@ public class IDSRunner implements IIDSRunner {
 
 			// DSTrace.setFlagOn(IDSTrace.UDP_TRACE);
 
-			IDSTrace.log(IDSTrace.GENERAL, "test");
+			//IDSTrace.log(IDSTrace.GENERAL, "test");
 
 
 			System.out.println("");
@@ -847,14 +848,14 @@ public class IDSRunner implements IIDSRunner {
 			
 			System.out.println(CSLContext.instance.getIDSMainProcessor().getDirAndFileNamesInfo());
 			System.out.println("");
-			System.out.println(IDSTrace.paramsToString());
-			System.out.println("");
+			//System.out.println(IDSTrace.paramsToString());
+			//System.out.println("");
 
 
 
 			// do the init to get errors
 			//ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-			IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
+			//IDSContext idsContext = CSLContext.instance.getIDSMainProcessor().getIDSContext();
 
 			//initIdsContext(idsContext,verbose);
 			updateModuleIdsOutputFlags();
@@ -876,9 +877,10 @@ public class IDSRunner implements IIDSRunner {
 	}
 
 
-	public IDSLearnedRules getLearnedRules() {
+	public IIDSLearnedRules getLearnedRules() {
 
-		return  CSLContext.instance.getIDSMainProcessor().getIDSContext().getLearnedRules();
+		//return  CSLContext.instance.getIDSMainProcessor().getIDSContext().getLearnedRules();
+		return  CSLContext.instance.getIDSMainProcessor().getCurrentLearnedModel();
 
 		
 	}

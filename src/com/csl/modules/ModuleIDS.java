@@ -13,13 +13,12 @@ import com.csl.logger.FileLog;
 import com.csl.monitor.ActivityMonitor;
 import com.csl.util.EveMessageUtill;
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.ids.IDSMainProcessor;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.interfaces.ErrorResult;
-import com.xcsl.interfaces.ICSLFlowListener;
-import com.xcsl.interfaces.IResult;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.interfaces.ErrorResult;
+import com.ucsl.interfaces.ICSLFlowListener;
+import com.ucsl.interfaces.IIDSMainProcessor;
+import com.ucsl.interfaces.IResult;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 
 
@@ -61,7 +60,7 @@ public class ModuleIDS implements IModule {
 
 	
 	//IDSContext idsContext=null;
-	IDSMainProcessor idsMainProcessor=null;
+	IIDSMainProcessor idsMainProcessor=null;
 	
 	boolean running=false;
 	//boolean on=true;
@@ -280,7 +279,7 @@ public class ModuleIDS implements IModule {
 				//System.out.println("jmf_runninfg="+running);
 				//System.out.println("XXX:"+jj);
 				if (!running) {
-					IDSTrace.log(IDSTrace.UDP_TRACE, "IDS received object but not running ");
+					//IDSTrace.log(IDSTrace.UDP_TRACE, "IDS received object but not running ");
 					return ICSLFlowListener.REMOVE_FROM_QUEUE;
 				}
 				//while (!CSLContext.context.getFlowManager().isFlowEmpty(n_input))

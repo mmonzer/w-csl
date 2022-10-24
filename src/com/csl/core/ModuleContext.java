@@ -2,15 +2,16 @@ package com.csl.core;
 
 import com.csl.interfaces.IModule;
 import com.csl.interfaces.IModuleContext;
-import com.xcsl.json.Json;
-import com.xcsl.variables.VariablesTable;
+import com.ucsl.interfaces.IVariablesTable;
+import com.ucsl.json.Json;
+import com.wcsl.ids.VariableTableFactory;
 
 public class ModuleContext implements IModuleContext {
 	
 	private String name;
 	private  IModule module;
 	private  Class<IModule> clazz;
-	private  VariablesTable localVariablesTable=new VariablesTable();
+	private  IVariablesTable localVariablesTable=VariableTableFactory.instance.createVariableTable();
 	private  Json config;
 	
 	int inputPriority=0;
@@ -40,10 +41,10 @@ public class ModuleContext implements IModuleContext {
 	public void setModule(IModule module) {
 		this.module = module;
 	}
-	public VariablesTable getLocalVariablesTable() {
+	public IVariablesTable getLocalVariablesTable() {
 		return localVariablesTable;
 	}
-	public void setLocalVariablesTable(VariablesTable localVariablesTable) {
+	public void setLocalVariablesTable(IVariablesTable localVariablesTable) {
 		this.localVariablesTable = localVariablesTable;
 	}
 	public Json getConfig() {

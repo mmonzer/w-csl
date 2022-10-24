@@ -12,19 +12,18 @@ import java.util.Map;
 
 import com.csl.core.CSLContext;
 import com.csl.core.CSLUtil;
-import com.csl.devdb.DevicesDB;
+//import com.csl.devdb.DevicesDB;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLog;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.ids.IDSMainProcessor;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.interfaces.IAlertDescriptor;
-import com.xcsl.interfaces.IAlertFactory;
-import com.xcsl.interfaces.IAlertLevel;
-import com.xcsl.interfaces.IAlertManager;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.interfaces.IAlertDescriptor;
+import com.ucsl.interfaces.IAlertFactory;
+import com.ucsl.interfaces.IAlertLevel;
+import com.ucsl.interfaces.IAlertManager;
+import com.ucsl.interfaces.IIDSMainProcessor;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 /*  CONFIG
 
@@ -49,7 +48,7 @@ public class CSLAlertManager implements IAlertManager {
 
 	public IAlertFactory alertFactory=new CSLAlertFactory();
 
-	private IDSMainProcessor idsMainProcessor =null;
+	private IIDSMainProcessor idsMainProcessor =null;
 
 	//Json config=null;
 	boolean FDEBUG=false;
@@ -102,7 +101,7 @@ public class CSLAlertManager implements IAlertManager {
 
 
 
-	public CSLAlertManager(IDSMainProcessor x, Json jConfig) { 
+	public CSLAlertManager(IIDSMainProcessor x, Json jConfig) { 
 		this.idsMainProcessor=x;
 		this.idsMainProcessor.setAlertFactory( alertFactory);
 
@@ -112,7 +111,7 @@ public class CSLAlertManager implements IAlertManager {
 	public IAlertFactory getAlertFactory() {
 		return alertFactory;
 	}
-	public CSLAlertManager setIDSMainProcessor(IDSMainProcessor x) {
+	public CSLAlertManager setIDSMainProcessor(IIDSMainProcessor x) {
 		this.idsMainProcessor=x;
 		this.idsMainProcessor.setAlertFactory( alertFactory);
 		return this;
@@ -170,7 +169,7 @@ public class CSLAlertManager implements IAlertManager {
 			initFileLog();
 		}
 
-		IDSTrace.log(IDSTrace.ALERT, "send alerts to UDP:"+alert_to_udp+" WEB:"+alert_to_web+" LOGFILE:"+logToFile);
+		//IDSTrace.log(IDSTrace.ALERT, "send alerts to UDP:"+alert_to_udp+" WEB:"+alert_to_web+" LOGFILE:"+logToFile);
 
 		this.durationOfAlert=CSLUtil.getConfigIntegerValue(jConfig,  "alert_duration",5000); 
 		this.doNotResendSameAlert=CSLUtil.getConfigBooleanValue(jConfig,  "do_not_resent_same_alert",false); 
@@ -414,15 +413,15 @@ public class CSLAlertManager implements IAlertManager {
 
 		if ((!toFile)&&(!toViewer)) return;
 
-		if (IDSTrace.isDebug(IDSTrace.ALERT_PRINT )) {
-			String s="********[";
-			if (toFile) s=s+"F"; else s=s+" ";
-			if (toViewer) s=s+"V"; else s=s+" ";
-
-			s=s+"|"+alert.getLevelAsString()+"]"+alert.getMsg()+' '+"********";
-			System.out.println(s);
-			IDSTrace.log(IDSTrace.ALERT, s);
-		}
+//		if (IDSTrace.isDebug(IDSTrace.ALERT_PRINT )) {
+//			String s="********[";
+//			if (toFile) s=s+"F"; else s=s+" ";
+//			if (toViewer) s=s+"V"; else s=s+" ";
+//
+//			s=s+"|"+alert.getLevelAsString()+"]"+alert.getMsg()+' '+"********";
+//			System.out.println(s);
+//			IDSTrace.log(IDSTrace.ALERT, s);
+//		}
 
 
 		/*	Map<String, String> props = new HashMap<String, String>();
@@ -516,7 +515,7 @@ public class CSLAlertManager implements IAlertManager {
 
 		// private String alert_json_tag="alert";
 
-		IDSTrace.log(IDSTrace.ALERT,"Send alert tag="+alert_json_tag+" json="+jAlert.toString());
+		//IDSTrace.log(IDSTrace.ALERT,"Send alert tag="+alert_json_tag+" json="+jAlert.toString());
 		//CSLWebSocketForAlert.broadcastMessageJson(alert_json_tag, jAlert);
 
 		CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_ALERT, jAlert);
@@ -895,9 +894,9 @@ public class CSLAlertManager implements IAlertManager {
 		/*else if (op.compareToIgnoreCase("config1")==0) {
 			DevicesDB.instance.config1();
 		}*/
-		else if (op.compareToIgnoreCase("clear_devices")==0) {
-			clearDevices();
-		}
+//		else if (op.compareToIgnoreCase("clear_devices")==0) {
+//			clearDevices();
+//		}
 		else if (op.compareToIgnoreCase("debug_alert")==0) {
 			boolean b= JsonUtil.getBooleanFromJson(params, "value",false);
 
@@ -1019,8 +1018,8 @@ public class CSLAlertManager implements IAlertManager {
 	}
 
 
-	private void clearDevices() {
-		DevicesDB.instance.clear();
-
-	}
+//	private void clearDevices() {
+//		DevicesDB.instance.clear();
+//
+//	}
 }

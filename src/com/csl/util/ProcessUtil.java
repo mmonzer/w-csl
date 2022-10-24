@@ -15,9 +15,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import com.csl.core.CSLContext;
 import com.csl.logger.CSLLogger;
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 public class ProcessUtil {
 
@@ -235,13 +234,13 @@ public class ProcessUtil {
 		//			        }			        
 
 
-		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command startScript scriptName ="+scriptName);
+/*		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command startScript scriptName ="+scriptName);
 		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command startScript dir        ="+dir);
 		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command startScript filter     =<"+filter+">");
 		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command startScript sudo       ="+sudo);	
 		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command startScript show_output="+showOuput);
 		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command startScript      to_hmi="+send_output_to_hmi);
-
+*/
 
 		String cmd="./"+scriptName;
 		String info=cmd;
@@ -547,16 +546,19 @@ public class ProcessUtil {
 		}
 		File fdir = new File(dir);
 		if (!fdir.exists()) {
-			IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "*** ERROR *** Cannnot find directory:"+dir);
+			//IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "*** ERROR *** Cannnot find directory:"+dir);
+			
+			System.err.println("*** ERROR *** Cannnot find directory:"+dir);
 		}
 		if (!fdir.isDirectory()) {
-			IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "*** ERROR *** Not a directory:"+dir);
+			//IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "*** ERROR *** Not a directory:"+dir);
+			System.err.println("*** ERROR *** Not a directory:"+dir);
 		}
 
 		String mode = JsonUtil.getStringFromJson(j,"mode","");
 
 
-		IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command mode :"+mode);
+		//IDSTrace.log(IDSTrace.XTERNAL_COMMANDS, "External command mode :"+mode);
 
 		String filename="";
 		if (mode.compareToIgnoreCase("jar")==0) {

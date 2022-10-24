@@ -1,8 +1,8 @@
 package com.csl.ids;
 
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.interfaces.IConsole;
-import com.xcsl.json.Json;
+import com.ucsl.interfaces.IConsole;
+import com.ucsl.json.Json;
 
 public class IDSConsole implements IConsole {
 	

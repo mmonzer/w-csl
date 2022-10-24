@@ -14,7 +14,7 @@ import org.mitre.cpe.common.WellFormedName;
 import org.mitre.cpe.matching.CPENameMatcher;
 import org.mitre.cpe.naming.CPENameUnbinder;
 
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 public class Test01NVD {
 

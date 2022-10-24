@@ -2,7 +2,7 @@ package com.csl.interfaces;
 
 import java.util.Map;
 
-import com.xcsl.interfaces.IResult;
+import com.ucsl.interfaces.IResult;
 
 public interface IModule {
 

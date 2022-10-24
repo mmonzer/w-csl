@@ -8,11 +8,11 @@ import org.xml.sax.SAXException;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
-import com.xcsl.interfaces.IApiCommands;
-import com.xcsl.interfaces.ICSLService;
-import com.xcsl.interfaces.IJsonCmd;
-import com.xcsl.interfaces.IJsonCmdHelp;
-import com.xcsl.json.Json;
+import com.ucsl.interfaces.IApiCommands;
+import com.ucsl.interfaces.ICSLService;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.interfaces.IJsonCmdHelp;
+import com.ucsl.json.Json;
 
 import main.extensions.CpeSearch;
 

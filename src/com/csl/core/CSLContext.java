@@ -32,15 +32,16 @@ import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServer;
 import com.csl.web.CSLUDPServer;
 import com.csl.web.database.DataBaseServer;
-import com.xcsl.ids.IDSMainProcessor;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.interfaces.IAlertManager;
-import com.xcsl.interfaces.ICSLLogger;
-import com.xcsl.interfaces.IFileLogFactory;
-import com.xcsl.interfaces.IFileStoreService;
-import com.xcsl.interfaces.IResult;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.interfaces.IIDSMainProcessor;
+//mport com.xcsl.ids.IDSTrace;
+import com.ucsl.interfaces.IAlertManager;
+import com.ucsl.interfaces.ICSLLogger;
+import com.ucsl.interfaces.IFileLogFactory;
+import com.ucsl.interfaces.IFileStoreService;
+import com.ucsl.interfaces.IResult;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+import com.wcsl.ids.IDSMainProcessorFactory;
 
 import main.util.CSLRunningArgs;
 
@@ -155,7 +156,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
 	private IFileLogFactory fileLogFactory;
 
-	private IDSMainProcessor idsMainProcessor;
+	private IIDSMainProcessor idsMainProcessor;
 
 
 	
@@ -416,7 +417,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 			lastSystemCurrentTimeMillis=currentSamplingTime;
 
 			//System.out.println(".");
-			IDSTrace.log(IDSTrace.EXEC, "Exec:"+getTimeFromStartingTime()+"   Time="+(sdf.format(lastSystemCurrentTimeMillis)));
+			//idsMainProcessor.log(IDSTrace.EXEC, "Exec:"+getTimeFromStartingTime()+"   Time="+(sdf.format(lastSystemCurrentTimeMillis)));
 
 			execOneRunCycle();
 			//System.out.println("  Cycle :"+currentSamplingTime);
@@ -660,7 +661,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		
 		//System.out.println(JsonUtil.prettyPrint(jConfig));
 
-		IDSTrace.log(IDSTrace.GENERAL, "test");
+		//IDSTrace.log(IDSTrace.GENERAL, "test");
 
 		
 
@@ -677,12 +678,14 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		
 		
 		
-		IDSMainProcessor.setLogger(this);
+		//idsMainProcessor.setLogger(this);
 		
-		this.idsMainProcessor= new IDSMainProcessor(
-				
+		//this.idsMainProcessor= new IDSMainProcessor(
+		this.idsMainProcessor = 	IDSMainProcessorFactory.instance.createIDSMainProcessor(
 				getConfig().get("ids_conf"),
-				getCslConfDir());
+				getCslConfDir(),
+				this);
+		
 		idsMainProcessor.setFileLogFactory(getFileLogFactory());
 		
 		fileUtils= new FileStoreService(getCslConfDir());
@@ -701,9 +704,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		//Json j=getConfig();
 		if (cslRunningArgs.isHasIdsRunner()) {
 			//idsRunner= new IDSRunner(jConfig, cslRunningArgs, moduleIDS, this);
-			idsParams= new IDSParams(idsMainProcessor 
-					);
+			idsParams= new IDSParams(idsMainProcessor );
 					//CSLContext.instance.getUserDir()+File.separator+"idsdata");
+			
 			
 			idsParams.initFromJson(getConfig(), cslRunningArgs.getDataDir(), 
 					cslRunningArgs.getTestParam(),cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
@@ -729,7 +732,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		setCslHttpServer(new CSLHttpServer());
 		setCslUDPServer(new CSLUDPServer());
 		
-		IDSTrace.updateConfig(jConfig.get("ids_conf"));
+		//IDSTrace.updateConfig(jConfig.get("ids_conf"));
 		
 
 	}
@@ -1459,7 +1462,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 	}
 
 
-	public IDSMainProcessor getIDSMainProcessor() {
+	public IIDSMainProcessor getIDSMainProcessor() {
 		// TODO Auto-generated method stub
 		return idsMainProcessor;
 	}

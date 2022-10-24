@@ -12,8 +12,8 @@ import org.nmap4j_csl.Nmap4j;
 import org.nmap4j_csl.core.nmap.NMapExecutionException;
 import org.nmap4j_csl.core.nmap.NMapInitializationException;
 
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 public class ScanActif {
 	String nmapLocation; 

@@ -7,13 +7,12 @@ import java.nio.file.Paths;
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.xcsl.interfaces.IApiCommands;
-import com.xcsl.interfaces.ICSLService;
-import com.xcsl.interfaces.IJsonCmd;
-import com.xcsl.interfaces.IJsonCmdHelp;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.interfaces.IAlertDescriptor;
-import com.xcsl.json.Json;
+import com.ucsl.interfaces.IAlertDescriptor;
+import com.ucsl.interfaces.IApiCommands;
+import com.ucsl.interfaces.ICSLService;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.interfaces.IJsonCmdHelp;
+import com.ucsl.json.Json;
 
 public class AlertsService implements ICSLService {
 
@@ -513,14 +512,14 @@ public class AlertsService implements ICSLService {
 			result=readAnyFile(fullname);
 			Json z=Json.read(result);
 			j.set("contents",z);
-			IDSTrace.log(IDSTrace.WEB_DATABASE,
-					"File Contents="+result);
+//			IDSTrace.log(IDSTrace.WEB_DATABASE,
+//					"File Contents="+result);
 
 		} else {
 			j.set("contents",Json.object());
 			j.set("error", "Nof file with name:"+fullname);
-			IDSTrace.log(IDSTrace.WEB_DATABASE,
-					"File Load error="+j.toString());
+//			IDSTrace.log(IDSTrace.WEB_DATABASE,
+//					"File Load error="+j.toString());
 
 		}
 

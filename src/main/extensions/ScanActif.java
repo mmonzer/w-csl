@@ -20,8 +20,8 @@ import org.json.XML;
 
 import com.csl.core.CSLContext;
 import com.jcraft.jsch.JSchException;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 public class ScanActif {
 	String nmapLocation; 

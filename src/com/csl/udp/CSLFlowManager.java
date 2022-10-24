@@ -8,9 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.csl.core.CSLContext;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.interfaces.ICSLFlowListener;
-import com.xcsl.json.Json;
+import com.ucsl.interfaces.ICSLFlowListener;
+import com.ucsl.json.Json;
 
 public class CSLFlowManager {
 
@@ -173,7 +172,8 @@ public class CSLFlowManager {
 		String ip= CSLContext.instance.getCslUDPServer().getCurrentIPForUCP();
 		int port = CSLContext.instance.getCslUDPServer().getCurrentPortForUCP();
 			//CSLContext.context.logInfo("Listening udp to port :"+port);
-		IDSTrace.log(IDSTrace.UDP_TRACE, "Listening udp to port :"+port);
+		//IDSTrace.log(IDSTrace.UDP_TRACE,
+		//		""Listening udp to port :"+port);
 		
 		/**
 		 * The initial capacity for the blocking collection needs to be fine tuned

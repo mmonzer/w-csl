@@ -3,9 +3,9 @@ package com.csl.intercom.jsoncmd;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.xcsl.interfaces.ICmdHelpProvider;
-import com.xcsl.interfaces.IJsonCmdHelp;
-import com.xcsl.json.Json;
+import com.ucsl.interfaces.ICmdHelpProvider;
+import com.ucsl.interfaces.IJsonCmdHelp;
+import com.ucsl.json.Json;
 
 public class JsonCmdHelp implements IJsonCmdHelp {
 

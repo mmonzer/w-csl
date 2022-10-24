@@ -1,11 +1,12 @@
 package com.csl.ids;
 
 import com.csl.core.CSLContext;
-import com.xcsl.ids.IDSMainProcessor;
-import com.xcsl.interfaces.IConsole;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
-import com.xcsl.util.IDSUtil;
+
+import com.ucsl.interfaces.IConsole;
+import com.ucsl.interfaces.IIDSMainProcessor;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+import com.ucsl.util.IDSUtil;
 
 
 
@@ -127,10 +128,10 @@ public class IDSParams {
 	//boolean showConsoleOnHMI=true;
 	//boolean showAlertsOnHMI=true;
 
-	private IDSMainProcessor idsMainProcessor;
+	private IIDSMainProcessor idsMainProcessor;
 
 
-	public IDSParams(IDSMainProcessor idsMainProcessor) {
+	public IDSParams(IIDSMainProcessor idsMainProcessor) {
 
 		this.idsMainProcessor=idsMainProcessor;
 

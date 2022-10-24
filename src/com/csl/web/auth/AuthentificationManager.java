@@ -12,7 +12,7 @@ import com.csl.web.auth.controller.UserController;
 import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.User;
 import com.csl.web.auth.user.UserService;
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 import spark.Request;
 import spark.Response;

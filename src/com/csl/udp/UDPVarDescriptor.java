@@ -1,5 +1,5 @@
 package com.csl.udp;
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 
 public class UDPVarDescriptor {

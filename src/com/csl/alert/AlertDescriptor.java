@@ -4,11 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.xcsl.ids.risk.SeverityLevel;
-import com.xcsl.interfaces.IAlertDescriptor;
-import com.xcsl.interfaces.IAlertLevel;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.interfaces.IAlertDescriptor;
+import com.ucsl.interfaces.IAlertLevel;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 /*
  * 
@@ -177,16 +176,16 @@ public class AlertDescriptor implements IAlertDescriptor{
 	}
 
 
-	public AlertDescriptor(SeverityLevel level2, String message, String properties, long time) {
-
-		this.level=IAlertLevel.getAlertLevelFromInt(level2.getIndex());
-		this.msg=message;
-		
-		this.time=time;
-		uuid = UUID.randomUUID().toString();
-
-		parseProps(properties);
-	}
+//	public AlertDescriptor(SeverityLevel level2, String message, String properties, long time) {
+//
+//		this.level=IAlertLevel.getAlertLevelFromInt(level2.getIndex());
+//		this.msg=message;
+//		
+//		this.time=time;
+//		uuid = UUID.randomUUID().toString();
+//
+//		parseProps(properties);
+//	}
 
 	//		public AlertDescriptor(AlertInfoFromSysLearner a) {
 	//			// TODO Auto-generated constructor stub

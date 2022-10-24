@@ -1,31 +1,29 @@
 package main.services;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.csl.core.CSLContext;
 import com.csl.devdb.DevicesUtil;
+//import com.csl.devdb.DevicesUtil;
 import com.csl.ids.IDSDataSetManager;
-import com.csl.intercom.jsoncmd.ApiCommands;
+import com.csl.ids.IDSTapManager;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.xcsl.interfaces.IApiCommands;
-import com.xcsl.interfaces.ICSLService;
-import com.xcsl.interfaces.IJsonCmd;
-import com.xcsl.interfaces.IJsonCmdHelp;
 import com.csl.modules.ModuleIDS;
-import com.csl.util.FileUtils;
 import com.csl.web.websockets.CSLWebSocket;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.ids.RulesEditor;
-import com.xcsl.interfaces.IAlertDescriptor;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
-import com.xcsl.learning.IDSLearnedRules;
-//import com.xcsl.operation.IDSOperationManager;
-import com.xcsl.operation.IDSOperationManager;
+import com.ucsl.interfaces.IAlertDescriptor;
+import com.ucsl.interfaces.IApiCommands;
+import com.ucsl.interfaces.ICSLService;
+import com.ucsl.interfaces.IIDSOperationManager;
+import com.ucsl.interfaces.IIDSOperationManagerFactory;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.interfaces.IJsonCmdHelp;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+
+import com.wcsl.ids.IDSOperationManagerFactory;
 
 public class CSLServiceIDS implements ICSLService {
 
@@ -450,7 +448,8 @@ public class CSLServiceIDS implements ICSLService {
 		});
 
 		
-		IDSOperationManager opManager= new IDSOperationManager(CSLContext.instance.getIDSMainProcessor());
+		//IDSOperationManager opManager= new IDSOperationManager(CSLContext.instance.getIDSMainProcessor());
+		IIDSOperationManager opManager= IDSOperationManagerFactory.instance.createIDSOperationManagerFactory(CSLContext.instance.getIDSMainProcessor());
 		
 		addCmd("op_model_ids", new IJsonCmd() {
 
@@ -464,7 +463,7 @@ public class CSLServiceIDS implements ICSLService {
 				//Json j=CSLContext.instance.getIDSMainProcessor().getLearnedRules();
 						//getIdsRunner().getLearnedRulesAsJson();
 				
-				IDSLearnedRules z = CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
+				// CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
 				
 
 				
@@ -782,8 +781,10 @@ public class CSLServiceIDS implements ICSLService {
 				desc.set("type", type);
 
 
+				IDSTapManager t=	new IDSTapManager(CSLContext.instance.getIDSMainProcessor().getIdsMainProcessorParams());
+				
 				Json result=
-						CSLContext.instance.getIDSMainProcessor().getTapManager().exec(operation,idname, desc,text);
+						t.exec(operation,idname, desc,text);
 
 
 
@@ -802,7 +803,7 @@ public class CSLServiceIDS implements ICSLService {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC opRulesSet:"+params);
+				/*System.out.println("EXEC opRulesSet:"+params);
 				int  type= JsonUtil.getIntFromJson(params, "type", 2);
 				type= Math.max(1,  Math.min(type, 4));
 				String text =JsonUtil.getStringFromJson(params,"text","" );
@@ -820,6 +821,8 @@ public class CSLServiceIDS implements ICSLService {
 
 
 				return result;
+				*/
+				return Json.object();
 			}
 		});
 
@@ -830,7 +833,7 @@ public class CSLServiceIDS implements ICSLService {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC opSystemConfiguration:"+params);
+				/*System.out.println("EXEC opSystemConfiguration:"+params);
 				String text =JsonUtil.getStringFromJson(params,"text","" );
 				String operation= JsonUtil.getStringFromJson(params,"operation","" ).toLowerCase();
 				boolean returnResult = JsonUtil.getBooleanFromJson(params, "return_result", false);
@@ -846,7 +849,8 @@ public class CSLServiceIDS implements ICSLService {
 				System.out.println("RESULT:"+result);
 
 
-				return result;
+				return result;*/
+				return Json.object();
 			}
 		});
 
@@ -874,44 +878,44 @@ public class CSLServiceIDS implements ICSLService {
 		});
 
 
-		// operations : create, delete, rename, select, copy
-		addCmd("add_to_dbdevices", new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-
-				System.out.println("EXEC add_to_dbdevices:"+params);
-
-
-//				String filePath=
-//						CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-//						CSLContext.instance.getIdsRunner().getIdsParams().getLearnedRulesFileName();
-//				FileUtils.backupFileWithTimeStamp(filePath, CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-				
-				CSLContext.instance.getIDSMainProcessor().backupLearnedModel();
-
-//				String dirfilePathOps=
-//						CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-//						"internal";
-
-				//FileUtils.backupFileWithTimeStamp(dirfilePathOps+File.separator+"ops", CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-				//IDSTrace.log(IDSTrace.GENERAL, "test");
-				
-				CSLContext.instance.getIDSMainProcessor().backupFileInModelDir("internal", "ops");
-				
-				//Json ops=DevicesUtil.updateLearnedModelFromDevicesDB(CSLContext.instance.getIdsRunner().getIdsParams());
-
-				Json ops=DevicesUtil.updateDevicesDBFromLearnedModel(CSLContext.instance.getIDSMainProcessor());
-
-				//FileUtils.saveJsonToFile(dirfilePathOps, "ops", ops);
-				
-				CSLContext.instance.getIDSMainProcessor().saveJsonInModelDir("internal", "ops", ops);
-				
-				Json result=Json.object();
-
-				return result;
-			}
-		});
+//		// operations : create, delete, rename, select, copy
+//		addCmd("add_to_dbdevices", new IJsonCmd() {
+//
+//			@Override
+//			public Json exec(Json params) {
+//
+//				System.out.println("EXEC add_to_dbdevices:"+params);
+//
+//
+////				String filePath=
+////						CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
+////						CSLContext.instance.getIdsRunner().getIdsParams().getLearnedRulesFileName();
+////				FileUtils.backupFileWithTimeStamp(filePath, CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
+//				
+//				CSLContext.instance.getIDSMainProcessor().backupLearnedModel();
+//
+////				String dirfilePathOps=
+////						CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
+////						"internal";
+//
+//				//FileUtils.backupFileWithTimeStamp(dirfilePathOps+File.separator+"ops", CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
+//				//IDSTrace.log(IDSTrace.GENERAL, "test");
+//				
+//				CSLContext.instance.getIDSMainProcessor().backupFileInModelDir("internal", "ops");
+//				
+//				//Json ops=DevicesUtil.updateLearnedModelFromDevicesDB(CSLContext.instance.getIdsRunner().getIdsParams());
+//
+//				Json ops=DevicesUtil.updateDevicesDBFromLearnedModel(CSLContext.instance.getIDSMainProcessor());
+//
+//				//FileUtils.saveJsonToFile(dirfilePathOps, "ops", ops);
+//				
+//				CSLContext.instance.getIDSMainProcessor().saveJsonInModelDir("internal", "ops", ops);
+//				
+//				Json result=Json.object();
+//
+//				return result;
+//			}
+//		});
 		
 		
 		/*
@@ -921,43 +925,43 @@ public class CSLServiceIDS implements ICSLService {
 		 * 	2- the device db (with user modif)
 		 * 	3) the alerts model (list of alert with ok or risk level)
 		 */
-		addCmd("generate_ids_model", new IJsonCmd() {
-
-					@Override
-					public Json exec(Json params) {
-
-						System.out.println("EXEC add_to_dbdevices:"+params);
-
-
-//						String filePath=
-//								CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-//								CSLContext.instance.getIdsRunner().getIdsParams().getLearnedRulesFileName();
-//						FileUtils.backupFileWithTimeStamp(filePath, CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-
-						CSLContext.instance.getIDSMainProcessor().backupLearnedModel();
-						
-//						String dirfilePathOps=
-//								CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-//								"internal";
-						
-						
-						IDSTrace.log(IDSTrace.GENERAL, "test");
-						
-						
-
-						Json ops=DevicesUtil.updateLearnedModelFromDevicesDB(CSLContext.instance.getIDSMainProcessor());
-						
-						//FileUtils.backupFileWithTimeStamp(dirfilePathOps+File.separator+"ops", CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-
-						//Json ops=DevicesUtil.updateDevicesDB(CSLContext.instance.getIdsRunner().getIdsParams());
-
-						//FileUtils.saveJsonToFile(dirfilePathOps, "ops", ops);
-						Json result=Json.object();
-
-						return result;
-					}
-				});
-		
+//		addCmd("generate_ids_model", new IJsonCmd() {
+//
+//					@Override
+//					public Json exec(Json params) {
+//
+//						System.out.println("EXEC add_to_dbdevices:"+params);
+//
+//
+////						String filePath=
+////								CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
+////								CSLContext.instance.getIdsRunner().getIdsParams().getLearnedRulesFileName();
+////						FileUtils.backupFileWithTimeStamp(filePath, CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
+//
+//						CSLContext.instance.getIDSMainProcessor().backupLearnedModel();
+//						
+////						String dirfilePathOps=
+////								CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
+////								"internal";
+//						
+//						
+//						IDSTrace.log(IDSTrace.GENERAL, "test");
+//						
+//						
+//
+//						//Json ops=DevicesUtil.updateLearnedModelFromDevicesDB(CSLContext.instance.getIDSMainProcessor());
+//						
+//						//FileUtils.backupFileWithTimeStamp(dirfilePathOps+File.separator+"ops", CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
+//
+//						//Json ops=DevicesUtil.updateDevicesDB(CSLContext.instance.getIdsRunner().getIdsParams());
+//
+//						//FileUtils.saveJsonToFile(dirfilePathOps, "ops", ops);
+//						Json result=Json.object();
+//
+//						return result;
+//					}
+//				});
+//		
 		// operations : create, delete, rename, select, copy
 		addCmd("get_learned_model_table", new IJsonCmd() {
 
@@ -991,46 +995,46 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		addCmd("get_devices_table", new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-
-				System.out.println("EXEC get devices table:"+params);
-
-				try {
-					Json result =DevicesUtil.exportToJsonTable();
-
-					return result;
-				} catch (Exception e) {
-					System.out.println(e);
-					e.printStackTrace();
-				}
-
-				return Json.array();
-			}
-		});
+//		addCmd("get_devices_table", new IJsonCmd() {
+//
+//			@Override
+//			public Json exec(Json params) {
+//
+//				System.out.println("EXEC get devices table:"+params);
+//
+//				try {
+//					Json result =DevicesUtil.exportToJsonTable();
+//
+//					return result;
+//				} catch (Exception e) {
+//					System.out.println(e);
+//					e.printStackTrace();
+//				}
+//
+//				return Json.array();
+//			}
+//		});
 
 		
-		addCmd("get_devices_json", new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-
-				System.out.println("EXEC get devices json:"+params);
-
-				try {
-					Json result =DevicesUtil.exportToJson();
-
-					return result;
-				} catch (Exception e) {
-					System.out.println(e);
-					e.printStackTrace();
-				}
-
-				return Json.array();
-			}
-		});
+//		addCmd("get_devices_json", new IJsonCmd() {
+//
+//			@Override
+//			public Json exec(Json params) {
+//
+//				System.out.println("EXEC get devices json:"+params);
+//
+//				try {
+//					Json result =DevicesUtil.exportToJson();
+//
+//					return result;
+//				} catch (Exception e) {
+//					System.out.println(e);
+//					e.printStackTrace();
+//				}
+//
+//				return Json.array();
+//			}
+//		});
 
 
 		// operations : create, delete, rename, select, copy
@@ -1420,13 +1424,13 @@ public class CSLServiceIDS implements ICSLService {
 			result=readAnyFile(fullname);
 			Json z=Json.read(result);
 			j.set("contents",z);
-			IDSTrace.log(IDSTrace.WEB_DATABASE,
+			System.err.println(
 					"File Contents="+result);
 
 		} else {
 			j.set("contents",Json.object());
 			j.set("error", "Nof file with name:"+fullname);
-			IDSTrace.log(IDSTrace.WEB_DATABASE,
+			System.err.println(
 					"File Load error="+j.toString());
 
 		}

@@ -8,10 +8,9 @@ import com.csl.core.CSLContext;
 import com.csl.logger.CSLLogger;
 import com.csl.udp.CSLFlowManager;
 import com.csl.util.NetUtil;
-import com.xcsl.interfaces.ICSLFlowListener;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
-import com.xcsl.variables.CSLVariable;
+import com.ucsl.interfaces.ICSLFlowListener;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 
 /**
@@ -266,14 +265,14 @@ public class CSLUDPServer {
 		sendEncapsulatedMsg(host, port, msg);
 	}
 
-	public void sendVarValueTo(String host,int port,String idOdTarget, CSLVariable v, boolean acquit)   {
-		//mettre le flowNumber a -1 et utiliser
-		//nameOfVar
-		//data
-		String msg=encapsulateVariable(idOdTarget, v,acquit).toString();
-		sendEncapsulatedMsg(host, port, msg);
-
-	}
+//	public void sendVarValueTo(String host,int port,String idOdTarget, CSLVariable v, boolean acquit)   {
+//		//mettre le flowNumber a -1 et utiliser
+//		//nameOfVar
+//		//data
+//		String msg=encapsulateVariable(idOdTarget, v,acquit).toString();
+//		sendEncapsulatedMsg(host, port, msg);
+//
+//	}
 
 
 	 public Json encapsulateObject(String targetID, int n,Json j,boolean acquit) {
@@ -291,20 +290,20 @@ public class CSLUDPServer {
 
 	}
 
-	public Json encapsulateVariable(String targetID,CSLVariable v, boolean acquit) {
-		Json obj =Json.object();
-		obj.at("fromPort",getCurrentPortForUCP());
-		obj.at("idOfTarget", targetID);
-		obj.at("flowNumber", ""+(-1));
-		obj.at("nameOfVariable", v.getName());
-
-		if (acquit) obj.at("fromPort",getCurrentPortForUCP());
-
-		obj.at("data",v.getAsString());
-
-		return obj;
-
-	}
+//	public Json encapsulateVariable(String targetID,CSLVariable v, boolean acquit) {
+//		Json obj =Json.object();
+//		obj.at("fromPort",getCurrentPortForUCP());
+//		obj.at("idOfTarget", targetID);
+//		obj.at("flowNumber", ""+(-1));
+//		obj.at("nameOfVariable", v.getName());
+//
+//		if (acquit) obj.at("fromPort",getCurrentPortForUCP());
+//
+//		obj.at("data",v.getAsString());
+//
+//		return obj;
+//
+//	}
 
 
 	public void sendEncapsulatedMsg(String host, int port, String msg) {

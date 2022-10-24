@@ -4,16 +4,16 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import com.csl.core.CSLContext;
-import com.csl.devdb.CSLServiceDevicesDB;
+//import com.csl.devdb.CSLServiceDevicesDB;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.xcsl.miniserver.ApiHttpServer;
 import com.csl.util.ProcessUtil;
 import com.csl.web.database.CSLServiceJsonDataBase;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 import main.services.AlertsService;
 import main.services.CSLServiceDemo;
@@ -143,7 +143,7 @@ public class CSLIDSMain {
 		
 		boolean test=true;
 		
-		IDSTrace.log(IDSTrace.GENERAL, "test");
+		//IDSTrace.log(IDSTrace.GENERAL, "test");
 		
 		System.out.println();
 		

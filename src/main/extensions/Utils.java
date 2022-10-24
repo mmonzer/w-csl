@@ -14,7 +14,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 public class Utils {
 	static public String getServerURL() {

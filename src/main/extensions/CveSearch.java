@@ -15,7 +15,7 @@ import org.mitre.cpe.matching.CPENameMatcher;
 import org.mitre.cpe.naming.CPENameUnbinder;
 
 import com.csl.core.CSLContext;
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 import main.demo.CVEDescriptor;
 

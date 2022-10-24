@@ -7,8 +7,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.xcsl.json.Json;
-import com.xcsl.json.JsonUtil;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 public class CveUtils {
 	static Json devices;

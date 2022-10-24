@@ -1,8 +1,8 @@
 package com.csl.alert;
 
-import com.xcsl.interfaces.IAlertDescriptor;
-import com.xcsl.interfaces.IAlertFactory;
-import com.xcsl.json.Json;
+import com.ucsl.interfaces.IAlertDescriptor;
+import com.ucsl.interfaces.IAlertFactory;
+import com.ucsl.json.Json;
 
 public class CSLAlertFactory implements IAlertFactory {
 	

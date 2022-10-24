@@ -11,8 +11,7 @@ import org.eclipse.jetty.websocket.api.Session;
 
 import com.csl.intercom.broker.ISocketMsgListener;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.xcsl.ids.IDSTrace;
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 public class CSLWebSocket {
 	
@@ -42,7 +41,7 @@ public class CSLWebSocket {
 					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
 				          try {
 				          	
-				          	IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND String "+s);
+				          	//IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND String "+s);
 				          	System.out.println("SEND String "+s);
 				              session.getRemote().sendString(s);
 				                  //.put("userlist", userUsernameMap.values())
@@ -77,7 +76,7 @@ public class CSLWebSocket {
 					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
 			            try {
 			            	
-			            	IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+s);
+			            	//IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+s);
 			            	session.getRemote().sendString(s);
 			                
 			            } catch (Exception e) {
@@ -117,7 +116,7 @@ public class CSLWebSocket {
     				socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
     		            try {
     		            	
-    		            	IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+msg);
+    		            	//IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+msg);
     		            	session.getRemote().sendString(msg);
     		                
     		            } catch (Exception e) {

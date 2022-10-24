@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.mitre.cpe.common.WellFormedName;
 
-import com.xcsl.json.Json;
+import com.ucsl.json.Json;
 
 
 public class CVEDescriptor {

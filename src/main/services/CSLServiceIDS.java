@@ -12,17 +12,16 @@ import com.csl.ids.IDSTapManager;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.modules.ModuleIDS;
+import com.csl.util.RulesUtil;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IIDSOperationManager;
-import com.ucsl.interfaces.IIDSOperationManagerFactory;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-
 import com.wcsl.ids.IDSOperationManagerFactory;
 
 public class CSLServiceIDS implements ICSLService {
@@ -1389,6 +1388,24 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 		
+		
+		
+		addCmd("generate_suricata_rules", new IJsonCmd() {
+
+			@Override
+			public Json exec(Json params) {
+	
+				
+
+				Json devices=params.get("devices");
+				Json options=params.get("options");
+				
+				
+				Json rules = new RulesUtil().toSuricataRules(devices, options);
+				
+				return rules;
+			}
+		});
 		
 
 		return true;  // ok to start

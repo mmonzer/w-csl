@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WebsSockets</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+   
+   <script src="js/vendor/jquery.js"></script>
+   <script src="js/bootstrap-slider.js"></script>
+   
+    <script src="js/bootstrap.min.js"></script>
+   
+  	<link rel="stylesheet" type="text/css" href="css/bootstrap-slider.css">
+   <link rel="stylesheet" href="css/bootstrap.min.css">
+   	
+    <style>
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    #chart {
+      max-width: 600px;
+      max-height: 400px;
+    }
+    </style>
+    
+    <style>
+body {
+  font-family: Arial;
+  color: white;
+}
+
+/* Create three unequal columns that floats next to each other */
+.column {
+  float: left;
+  padding: 10px;
+  
+}
+
+.left, .right {
+  width: 25%;
+}
+
+.middle {
+  width: 50%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
+
+</head>
+<body>
+    
+    
+<div class="container-fluid">
+  <h1>Grid</h1>
+  <p>This example demonstrates a 50%/50% split on small, medium and large devices. On extra small devices, it will stack (100% width).</p>      
+  <p>Resize the browser window to see the effect.</p>      
+  <div class="row">
+    <div class="col-sm-3" style="background-color:yellow;">
+    <input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="20" data-slider-step="1" data-slider-value="14"/>
+   
+     <div id="chat" class="column right"> values   <!-- Built by JS --> </div>
+  
+     </div>
+    <div class="col-sm-6" style="background-color:pink;">
+ 
+ <div class="column middle" id="chart">
+  Chart
+  </div>
+     </div>
+  </div>
+</div>
+
+
+  
+  
+     
+     
+
+
+    
+     
+    <script src="websocketDemo.js"></script>
+     
+     
+    <script src="js/chart.js"></script>
+    
+   
+    
+    <script>
+ 
+    var lineArr = [];
+    var MAX_LENGTH = 30;
+    var duration = 500;
+    var chart = realTimeLineChart();
+
+    function randomNumberBounds(min, max) {
+    	return 0;
+      //return Math.floor(Math.random() * max) + min;
+    }
+
+    function seedData() {
+     // var now = new Date();
+     /* for (var i = 0; i < MAX_LENGTH; ++i) {
+        lineArr.push({
+          time: i*.1,
+          x: randomNumberBounds(0, 5),
+          y: randomNumberBounds(0, 2.5),
+          z: randomNumberBounds(0, 10)
+        });
+      }*/
+    }
+
+    function updateData() {
+      var now = new Date();
+
+      var lineData = {
+        time: dict["time"]/1000,
+        input: dict["input"],
+        output: dict["output"],
+        setpoint: dict["setpoint"]
+      };
+      lineArr.push(lineData);
+     // console.log(lineData);
+
+      if (lineArr.length > 30) {
+        lineArr.shift();
+      }
+      if (lineArr.length > 3) 
+      d3.select("#chart").datum(lineArr).call(chart);
+    }
+
+    function resize() {
+      if (d3.select("#chart svg").empty()) {
+        return;
+      }
+      chart.width(+d3.select("#chart").style("width").replace(/(px)/g, ""));
+      d3.select("#chart").call(chart);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      seedData();
+      window.setInterval(updateData, 1000);
+      d3.select("#chart").datum(lineArr).call(chart);
+      d3.select(window).on('resize', resize);
+      
+    /*  var data = new RealTimeData(2);
+
+      z=document.getElementById('myChart')
+      console.log("z="+z);
+      z.innerHTML="test";
+      var chart = $('#myChart').epoch({
+          type: 'time.line',
+          data: data.history(),
+          axes: ['left', 'bottom', 'right']
+      });
+
+      setInterval(function() { 
+    	  z=data.next(); console.log(z);
+    	  chart.push(z);
+		}, 1000);
+      chart.push(data.next());*/
+      
+
+   // With JQuery
+   $('#ex1').slider({
+   	formatter: function(value) {
+   		return 'Current value: ' + value;
+   	}
+   });
+
+   
+      
+    });
+    
+    
+    
+    
+
+   
+   
+    </script>
+</body>
+
+</html>

@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
@@ -27,6 +28,7 @@ import com.ucsl.json.JsonUtil;
 
 import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
 import main.extensions.SshUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class TapsServices implements ICSLService {
 	//ApiCommands apiCommands= new ApiCommands("");
@@ -949,8 +951,34 @@ public class TapsServices implements ICSLService {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				return Json.object();			}
-		});	
+				return Json.object();
+			}
+		});
+
+		/***
+		 * Update suricata rules in all taps
+		 */
+		addCmd("updateAllTapsSuricataRules", new IJsonCmd() {
+			@Override
+			public Json exec(Json params) {
+				try {
+					String rulesStr = StringUtils.join(params.at("rules").asList(), "\n");
+
+					for (Json tapConfig: configuredTaps){
+						String tapName = tapConfig.at("idname").asString();
+						writeToFile(rulesStr, idsconf + "/taps/" + tapName + "/genrules.rules");
+						sendConfToTap(tapName, "genrules");
+					}
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+
+				return Json.object();
+			}
+		});
+
 		addCmd("getSuricataLogs", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {

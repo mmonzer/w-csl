@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.csl.alert.CSLAlertFactory;
 import com.csl.alert.CSLAlertManager;
+import com.csl.core.CSLContext;
 import com.csl.defaultclasses.FileLogFactory;
 import com.csl.defaultclasses.FileStoreService;
 import com.ucsl.interfaces.IAlertDescriptor;
@@ -270,7 +271,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 					.setProp("severity", evtsInfo.get("severity").asString())
 					.setMetaInfo("suricata_info", getEveInfo(j));
 
-			
+			CSLContext.instance.getCSLAlertManager().sendAlert(alert);
 		
 		}
 		else {

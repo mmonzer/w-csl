@@ -192,6 +192,7 @@ public class ApiCommands implements IApiCommands {
 		    	IJsonCmdHelp z = listOfCommandHelps.get(name);
 		    	if (!z.isHidden()) {
 		    		Json jz=z.toJson(params);
+					if (jz == null) continue;
 		    		if (jz.isArray()) {
 		    			for (Json jjj:jz.asJsonList()) jlist.add(jjj);
 		    		}

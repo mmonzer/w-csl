@@ -71,12 +71,17 @@ links : [
 	}
 
 	public String port2str(Json j,String name) {
-		
-		
-		
+		return port2str(j, name, false);
+	}
+
+	public String port2str(Json j,String name, Boolean extraSpace) {
+		String space = "";
+		if (extraSpace) {
+			space = " ";
+		}
 		int p= JsonUtil.getIntFromJson(j,name, -1);
-		if (p==-1) return " any ";
-		return " "+p+" ";
+		if (p==-1) return space + "any" + space;
+		return space + p + space;
 	}
 	
 	
@@ -104,154 +109,136 @@ links : [
 	}
 	
 	// SURICATA GENERATION
-
 	public Json toSuricataRules(Json devices,Json options) {
+		String DBL_QT = "\"",
+				MSG = "msg:",
+				PASS = "PASS ",
+				ALERT = "ALERT ",
+				TCP = "TCP",
+				UDP = "UDP",
+				ANY = "any",
+				ANY_ANY = "any any",
+				SEMI_COL = ";",
+				SID = "sid:",
+				SPACE = " ";
+
+		String lines = "";
+
+		String msg_pass = JsonUtil.getStringFromJson(options, "msg_pass", "CSL pass");
+		String msg_alert = JsonUtil.getStringFromJson(options, "msg_alert", "CSL Alert");
+		String sid = JsonUtil.getStringFromJson(options, "sid", "9000099");
+		String rev = JsonUtil.getStringFromJson(options, "rev", "0.1");
+		long sidLong = Long.parseLong(sid);;
 
 
-
-		String lines="";
-
-
-
-
-
-
-
-		String msg_pass=JsonUtil.getStringFromJson(options, "msg_pass", "CSL pass");
-
-		String msg_alert=JsonUtil.getStringFromJson(options, "msg_alert", "CSL Alert");
-
-		//String msg=JsonUtil.getStringFromJson(options, "msg", "");
-
-		String sid=JsonUtil.getStringFromJson(options, "sid", "9000099");
-
-		String rev=JsonUtil.getStringFromJson(options, "rev", "0.1");
-
-
-
-		String xtraOptions="";
+		String xtraOptions = "";
 
 		for (Map.Entry<String, Json> e : options.asJsonMap().entrySet()) {
-
-			boolean skip=false;
-			if (e.getKey().compareToIgnoreCase("msg_pass")==0) skip=true;
-			if (e.getKey().compareToIgnoreCase("msg_alert")==0) skip=true;
+			boolean skip = false;
+			if (e.getKey().compareToIgnoreCase("msg_pass") == 0) skip = true;
+			else if (e.getKey().compareToIgnoreCase("msg_alert") == 0) skip = true;
+			else if (e.getKey().compareToIgnoreCase("sid") == 0) skip = true;
 
 			if (!skip) {
-				if (!xtraOptions.isEmpty()) xtraOptions=xtraOptions+";";
-				String value="";
-				if (e.getValue().isString()) value=e.getValue().asString();
-				else value=e.getValue().toString();
+				if (!xtraOptions.isEmpty()) xtraOptions = xtraOptions + ";";
+				String value = "";
+				if (e.getValue().isString()) value = e.getValue().asString();
+				else value = e.getValue().toString();
 
-				xtraOptions=xtraOptions+e.getKey().toString()+":"+value;
-
+				xtraOptions = xtraOptions + e.getKey().toString() + ":" + value;
 			}
+		}
 
+		if (xtraOptions.length() > 0) {
+			xtraOptions = SPACE + xtraOptions + SEMI_COL;
 		}
 
 
-		String sFirst="# Example rules for using the file handling and extraction functionality in Suricata"+"\n";
+		String sFirst = "# Example rules for using the file handling and extraction functionality in Suricata" + "\n";
+
+		Json j = Json.array();
+
+		for (Json device : devices.asJsonList()) {
+
+			String name = "#invalid descriptor";
 
 
+			String ip_src = JsonUtil.getStringFromJson(device, "ip", "x.x.x.x");
+			Json jjList = device.get("links");
 
-		Json j=Json.array();
+			for (Json jj : jjList.asJsonList()) {
 
-		for (Json device:devices.asJsonList()) {
+				Json jRule = Json.object();
 
-			String name="#invalid descriptor";
+				String ruleStr = "";
 
+				String permission = JsonUtil.getStringFromJson(jj, "permission", "");
+				int risk = permissionToRisk(permission);
 
-			
-			String ip_src= JsonUtil.getStringFromJson(device,"ip", "x.x.x.x");
-			
-			Json jjList=device.get("links");
-
-			for (Json jj:jjList.asJsonList()) {
-
-				Json jRule=Json.object();
-
-				String s="";
-
-				String permission= JsonUtil.getStringFromJson(jj,"permission", "");
-				int r= permissionToRisk(permission);
-				
-				if (r<=0) {
-					s="PASS "+jj.get("protocol").asString()+" "+ip_src
-					+port2str(device,"port_src")+" -> "+jj.get("ip_dst").asString()+" "
-	                                                  +port2str(jj, "port_dst")+ "  ("+"msg:"+msg_pass+";"+xtraOptions+")";
+				if (risk <= 0) {	// no risk
+					ruleStr = PASS + jj.get("protocol").asString() + SPACE + ip_src + SPACE
+							+ port2str(device, "port_src") + " -> " + jj.get("ip_dst").asString() + SPACE
+							+ port2str(jj, "port_dst") + " (" + MSG + DBL_QT + msg_pass + DBL_QT + SEMI_COL + xtraOptions + SPACE
+							+ SID + Long.toString(sidLong++) + SEMI_COL +
+							")";
+				} else {
+					ruleStr = ALERT + jj.get("protocol").asString() + SPACE + ip_src + SPACE
+							+ port2str(device, "port_src") + " -> " + jj.get("ip_dst").asString() + SPACE
+							+ port2str(jj, "port_dst") + " (" + MSG + DBL_QT + msg_alert + DBL_QT + SPACE + getRiskLitreal(risk) + SEMI_COL + xtraOptions + SPACE
+							+ SID + Long.toString(sidLong++) + SEMI_COL +
+							")";
 				}
 
-				else {
-					s="ALERT "+jj.get("protocol").asString()+" "+ip_src
-							+port2str(device,"port_src")+" -> "+jj.get("ip_dst").asString()+" "
-	                                          +port2str(jj,"port_dst")+ "  ("+"msg:"+msg_alert+ " "+getRiskLitreal(r)+";"+xtraOptions+")";
-				}
+				jRule.set("rule", ruleStr);
 
-				jRule.set("rule", s);
-
-				j.add(s);
+				j.add(ruleStr);
 
 			}
 
-			Json jRule=Json.object();
+			Json jRule = Json.object();
 
-			String s="ALERT "+"TCP"+" "+ip_src+" any "+" -> "+" any"+" "+"any"
-
-	                                          +"  ("+"msg:"+msg_alert+";"+xtraOptions+")";
+			String s = ALERT + TCP + SPACE + ip_src + SPACE + ANY + " -> " + ANY_ANY
+					+ " (" + MSG + DBL_QT + msg_alert + DBL_QT + SEMI_COL + xtraOptions + SPACE
+					+ SID + Long.toString(sidLong++) + SEMI_COL +
+					")";
 
 			jRule.set("rule", s);
-
 			j.add(s);
 
 
-
-			s="ALERT "+"UDP"+" "+ip_src+" any "+" -> "+" any"+" "+"any"
-
-	                                          +"  ("+"msg:"+msg_alert+";"+xtraOptions+")";
+			s = ALERT + UDP + SPACE + ip_src + SPACE + ANY + " -> " + ANY_ANY
+					+ " (" + MSG + DBL_QT + msg_alert + DBL_QT + SEMI_COL + xtraOptions + SPACE
+					+ SID + Long.toString(sidLong++) + SEMI_COL +
+					")";
 
 			jRule.set("rule", s);
-
 			j.add(s);
 
-			//return s;
 
+			if (!lines.isEmpty()) lines = lines + "\n";
 
-
-			if (!lines.isEmpty()) lines=lines+"\n";
-
-			lines=lines+s;
+			lines = lines + s;
 
 		}
 
-		lines=sFirst+lines;
+		lines = sFirst + lines;
 
-		lines=lines+"# "+"\n";
+		lines = lines + "# " + "\n";
 
-
-
-
-
-		String s="ALERT "+"UDP"+" "+"any any "+" -> "+" any"+" "+"any"
-
-	                                   +"  ("+"msg:"+msg_alert+";"+xtraOptions+")";
+		// alert other traffic UDP and TCP
+		String s = ALERT + UDP + SPACE + ANY_ANY + " -> " + ANY_ANY
+				+ " (" + MSG + DBL_QT + msg_alert + DBL_QT + SEMI_COL + xtraOptions + SPACE
+				+ SID + Long.toString(sidLong++) + SEMI_COL +
+				")";
 
 		j.add(s);
 
-		s="ALERT "+"TCP"+" "+"any any "+" -> "+" any"+" "+"any"
-
-	                                   +"  ("+"msg:"+msg_alert+";"+xtraOptions+")";
+		s = ALERT + TCP + SPACE + ANY_ANY + " -> " + ANY_ANY
+				+ " (" + MSG + DBL_QT + msg_alert + DBL_QT + SEMI_COL + xtraOptions + SPACE
+				+ SID + Long.toString(sidLong++) + SEMI_COL +
+				")";
 
 		j.add(s);
-
-
-
-		//System.out.println(j);
-
-
-
-		//return lines;
-
-
 
 		return j;
 

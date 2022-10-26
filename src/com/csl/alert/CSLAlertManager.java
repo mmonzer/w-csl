@@ -43,6 +43,8 @@ import com.ucsl.json.JsonUtil;
  * 
  */
 public class CSLAlertManager implements IAlertManager {
+	
+	public boolean NO_ALERT_FILTERING=true;
 
 	//public static CSLAlertManager instance = new CSLAlertManager();
 
@@ -228,6 +230,7 @@ public class CSLAlertManager implements IAlertManager {
 
 
 		//System.err.println("zaza:"+alertDescriptor.toJson());
+		
 		if (findAlert(alertDescriptor)!=null) return;
 
 
@@ -252,6 +255,9 @@ public class CSLAlertManager implements IAlertManager {
 
 	private IAlertDescriptor findAlert(IAlertDescriptor alert) {
 
+		
+		if (NO_ALERT_FILTERING ) return null;
+		
 		long t=CSLContext.instance.getTimeSystemCurrent();
 
 		for (IAlertDescriptor a:listOfCurrentAlerts) {

@@ -4,4 +4,5 @@ out/
 idslogs/
 cslconf/taps/
 w_csl.iml
+W_CSL.iml
 runconfig/CSLConfigIDS.json

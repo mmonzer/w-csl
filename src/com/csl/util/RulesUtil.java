@@ -164,27 +164,27 @@ links : [
 
 
 			String ip_src = JsonUtil.getStringFromJson(device, "ip", "x.x.x.x");
-			Json jjList = device.get("links");
+			Json linkList = device.get("links");
 
-			for (Json jj : jjList.asJsonList()) {
+			for (Json linkObj : linkList.asJsonList()) {
 
 				Json jRule = Json.object();
 
 				String ruleStr = "";
 
-				String permission = JsonUtil.getStringFromJson(jj, "permission", "");
+				String permission = JsonUtil.getStringFromJson(linkObj, "permission", "");
 				int risk = permissionToRisk(permission);
 
 				if (risk <= 0) {	// no risk
-					ruleStr = PASS + jj.get("protocol").asString() + SPACE + ip_src + SPACE
-							+ port2str(device, "port_src") + " -> " + jj.get("ip_dst").asString() + SPACE
-							+ port2str(jj, "port_dst") + " (" + MSG + DBL_QT + msg_pass + DBL_QT + SEMI_COL + xtraOptions + SPACE
+					ruleStr = PASS + linkObj.get("protocol").asString() + SPACE + ip_src + SPACE
+							+ port2str(linkObj, "port_src") + " -> " + linkObj.get("ip_dst").asString() + SPACE
+							+ port2str(linkObj, "port_dst") + " (" + MSG + DBL_QT + msg_pass + DBL_QT + SEMI_COL + xtraOptions + SPACE
 							+ SID + Long.toString(sidLong++) + SEMI_COL +
 							")";
 				} else {
-					ruleStr = ALERT + jj.get("protocol").asString() + SPACE + ip_src + SPACE
-							+ port2str(device, "port_src") + " -> " + jj.get("ip_dst").asString() + SPACE
-							+ port2str(jj, "port_dst") + " (" + MSG + DBL_QT + msg_alert + DBL_QT + SPACE + getRiskLitreal(risk) + SEMI_COL + xtraOptions + SPACE
+					ruleStr = ALERT + linkObj.get("protocol").asString() + SPACE + ip_src + SPACE
+							+ port2str(device, "port_src") + " -> " + linkObj.get("ip_dst").asString() + SPACE
+							+ port2str(linkObj, "port_dst") + " (" + MSG + DBL_QT + msg_alert + DBL_QT + SPACE + getRiskLitreal(risk) + SEMI_COL + xtraOptions + SPACE
 							+ SID + Long.toString(sidLong++) + SEMI_COL +
 							")";
 				}

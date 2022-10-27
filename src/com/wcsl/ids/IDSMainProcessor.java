@@ -264,7 +264,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 			IAlertDescriptor  alert=
 					getAlertFactory().createAlertDescriptor(
 							IAlertLevel.INFO.getLevelAsInt(),
-							"DEBUG <"+code+">:"+msg,
+							msg,
 							getIDSCurrentTimeMillis()
 							)
 					.setProp("category",evtsInfo.get("category").asString())

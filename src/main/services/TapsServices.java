@@ -500,7 +500,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
-		String command = "sudo kill -USR2 `cat ~/configSuricata/suricataPID`";
+		String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -795,9 +795,19 @@ public class TapsServices implements ICSLService {
 			public Json exec(Json params) {
 				return stopTaps(params.at("name").asString());
 			}
-		});			
-		
-		
+		});
+
+		addCmd("restartTap", new IJsonCmd() {
+			@Override
+			public Json exec(Json params) {
+
+				stopTaps(params.at("name").asString());
+				startTaps(params.at("name").asString());
+
+				return Json.object();
+			}
+		});
+
 		addCmd("replay", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -827,8 +837,42 @@ public class TapsServices implements ICSLService {
 			public Json exec(Json params) {
 				return stopSuricata(params.at("name").asString());
 			}
-		});		
-		
+		});
+
+		addCmd("reloadAllTapsRules", new IJsonCmd() {
+			@Override
+			public Json exec(Json params) {
+
+				List allTapsOutputs = new ArrayList();
+
+				for (Json j : configuredTaps) {
+					String ip = j.at("ip").asString();
+					String id = j.at("username").asString();
+					String password = j.at("password").asString();
+
+					SshUtils ssh = new SshUtils(id, password, ip, 22/*,knownHostFilePath*/);
+
+					String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
+					String output = null;
+
+					try {
+						output = ssh.remoteExec(command);
+					} catch (JSchException | IOException e) {
+						e.printStackTrace();
+					}
+					ssh.endConnection();
+
+					allTapsOutputs.add(output);
+
+
+				}
+
+				Json out = Json.object();
+				out.at("result", allTapsOutputs);
+				return out;
+			}
+		});
+
 		addCmd("reloadRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {

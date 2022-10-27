@@ -1,1 +1,7 @@
-bin/*
+bin/
+.idea/
+out/
+idslogs/
+cslconf/taps/
+w_csl.iml
+runconfig/CSLConfigIDS.json

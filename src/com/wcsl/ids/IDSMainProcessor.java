@@ -256,10 +256,18 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 			if (verbose) System.out.println("Suricita alert code <"+code+">:"+ msg);
 			if (verbose) System.out.println(JsonUtil.prettyPrint(evtsInfo));
 
-			//if (evtsInfo.has("msg")) 
-
-			
-			//ajouter erxtra info for suricata ds alter
+			//if (evtsInfo.has("msg"))
+			Json base_info = Json.object();
+			base_info.set("timestamp", evtsInfo.at("timestamp"));
+			base_info.set("flow_id", evtsInfo.at("flow_id"));
+			base_info.set("in_iface", evtsInfo.at("in_iface"));
+			base_info.set("event_type", evtsInfo.at("event_type"));
+			base_info.set("src_ip", evtsInfo.at("src_ip"));
+			base_info.set("src_port", evtsInfo.at("src_port"));
+			base_info.set("dest_ip", evtsInfo.at("dest_ip"));
+			base_info.set("dest_port", evtsInfo.at("dest_port"));
+			base_info.set("proto", evtsInfo.at("proto"));
+			//ajouter erxtra info for suricata ds alert
 			
 			IAlertDescriptor  alert=
 					getAlertFactory().createAlertDescriptor(
@@ -269,7 +277,8 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 							)
 					.setProp("category",evtsInfo.get("category").asString())
 					.setProp("severity", evtsInfo.get("severity").asString())
-					.setMetaInfo("suricata_info", getEveInfo(j));
+					.setMetaInfo("suricata_info", getEveInfo(j))
+					.setMetaInfo("base_info", base_info);
 
 			CSLContext.instance.getCSLAlertManager().sendAlert(alert);
 		

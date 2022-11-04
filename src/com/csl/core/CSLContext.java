@@ -485,8 +485,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 				}
 			}
 		}
-		System.out.println("[DEBUG] Config file");
-		System.out.println(jConfig.toString());
 	}
 
 	//	private Json loadConfigFile(String f) {

@@ -46,7 +46,6 @@ import com.wcsl.ids.IDSMainProcessorFactory;
 import main.util.CSLRunningArgs;
 
 
-
 public class CSLContext implements ICSLContext, ICSLLogger {
 
 	public static String VERSION="0.1.0-alpha1";
@@ -471,6 +470,23 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		}
 
 		jConfig=Json.read(content);
+
+		// Check the environment for existing variables
+		Map<String,String> env = System.getenv();
+
+		for (String section : jConfig.asJsonMap().keySet())
+		{
+			if (jConfig.at(section).isObject()) {
+				for (String var : jConfig.at(section).asJsonMap().keySet()) {
+					String env_var = "CSL_" + var.toUpperCase();
+					if (env.containsKey(env_var)) {
+						jConfig.at(section).set(var, env.get(env_var));
+					}
+				}
+			}
+		}
+		System.out.println("[DEBUG] Config file");
+		System.out.println(jConfig.toString());
 	}
 
 	//	private Json loadConfigFile(String f) {

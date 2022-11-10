@@ -14,4 +14,5 @@ COPY csldata/ csldata/
 COPY datafile/ datafile/ 
 COPY idsdata/ idsdata/ 
 COPY runconfig/ runconfig/
+COPY runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
 CMD ["java","-jar","cslmainserver.jar"]

@@ -478,7 +478,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		{
 			if (jConfig.at(section).isObject()) {
 				for (String var : jConfig.at(section).asJsonMap().keySet()) {
-					String env_var = "CSL_" + var.toUpperCase();
+					String separator = ".";
+					String env_var = "CSL" + separator + section.toUpperCase() + separator + var.toUpperCase();
 					if (env.containsKey(env_var)) {
 						jConfig.at(section).set(var, env.get(env_var));
 					}

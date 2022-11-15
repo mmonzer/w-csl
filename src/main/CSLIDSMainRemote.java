@@ -1,10 +1,7 @@
 package main;
 
 
-import java.net.ConnectException;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -277,6 +274,12 @@ public class CSLIDSMainRemote {
 		CSLContext.instance.setDebug(true);
 		
 		SERVER_IP= JsonUtil.getStringFromJson(j, "global/ip_server_remote", "127.0.0.1");
+		// Try to resolve host name (mainly for Docker hostnames)
+		try {
+			SERVER_IP = InetAddress.getByName(SERVER_IP).getHostAddress();
+		} catch (UnknownHostException e) {
+			System.out.println("[ERROR] " + e.getMessage());
+		}
 		SERVER_PORT= JsonUtil.getIntFromJson(j, "global/port_server_remote", 8000);
 		
 		boolean USE_BROKER=false; //true;

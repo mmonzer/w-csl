@@ -28,6 +28,7 @@ import com.ucsl.json.JsonUtil;
 
 import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
 import main.extensions.SshUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class TapsServices implements ICSLService {
@@ -90,14 +91,20 @@ public class TapsServices implements ICSLService {
 	public static Json stopTaps(String name) {
 		String id = "", password ="";
 		String ip = null;
+		int port = 22;
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
 		String command = STOP_TAPS;
 		String output = null;
 		try {
@@ -115,6 +122,7 @@ public class TapsServices implements ICSLService {
 	public static Json startTaps(String name) {
 		String id = "", password ="";
 		String ip = null;
+		int port = 22;
 		
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
@@ -122,10 +130,15 @@ public class TapsServices implements ICSLService {
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 			}
 		}
 		System.out.println("Start tap:"+name+" "+ip);
-		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
 		String command = START_TAPS;
 		String output = null;
 		try {
@@ -144,6 +157,7 @@ public class TapsServices implements ICSLService {
 	public static Json startReplay(String name, String pcap) {
 		String id = "", password ="";
 		String ip = null;
+		int port = 22;
 		
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
@@ -151,10 +165,15 @@ public class TapsServices implements ICSLService {
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 			}
 		}
 		System.out.println("Start script replay <"+pcap+"> on tap :"+name+" "+ip);
-		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
 		String command = REPLAY+pcap;
 		System.out.println("Command :"+command);
 		String output = null;
@@ -173,14 +192,20 @@ public class TapsServices implements ICSLService {
 	public static Json clearLogs(String name) {
 		String id = "", password ="";
 		String ip = null;
+		int port = 22;
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
 		String command = CLEAR_SURICATA_LOG;
 		String output = null;
 		try {
@@ -272,9 +297,25 @@ public class TapsServices implements ICSLService {
 		System.out.println(configuredTaps);
 
 	}
-	
+
+	public static void setPort(String name, int port) {
+		for(Json j : configuredTaps) {
+
+			System.out.println("tap="+j);
+			if(j.at("idname").asString().contentEquals(name)) {
+				j.set("port",port);
+				System.out.println(j);
+				System.out.println(configuredTaps);
+
+			}
+		}
+		System.out.println(configuredTaps);
+
+	}
+
 	public static Json getSuricataLogs(String name) {
 		String username = "", password ="";
+		int port = 22;
 
 		Json result = Json.object();
 		for(Json j : configuredTaps) {
@@ -282,8 +323,13 @@ public class TapsServices implements ICSLService {
 				String ip = j.at("ip").asString();
 				username = j.at("username").asString();
 				password = j.at("password").asString();
-				System.out.println("id "+username+" password "+password+" ip "+ip);
-				SshUtils ssh = new SshUtils(username,password,ip,22/*,knownHostFilePath*/);
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
+				System.out.println("id "+username+" password "+password+" ip "+ip+" port "+port);
+				SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
 				try {
 					ssh.getFile("/var/log/suricata/suricata.log",idsconf+"/taps/"+name+"/suricataLogs.txt");
 				} catch (IOException | JSchException e) {
@@ -298,6 +344,7 @@ public class TapsServices implements ICSLService {
 	
 	public static Json getConfFromtap(String name, String file) {
 		String username = "", password ="";
+		int port = 22;
 
 		Json result = Json.object();
 		for(Json j : configuredTaps) {
@@ -306,8 +353,13 @@ public class TapsServices implements ICSLService {
 				String ip = j.at("ip").asString();
 				username = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 				System.out.println("id "+username+" password "+password+" ip "+ip);
-				SshUtils ssh = new SshUtils(username,password,ip,22/*,knownHostFilePath*/);
+				SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
 				try {
 					switch (file) {
 						case "reseau":
@@ -338,13 +390,19 @@ public class TapsServices implements ICSLService {
 	
 	public static void sendConfToTap(String name, String file) {
 		String username = "", password ="";
+		int port = 22;
 
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
 				String ip = j.at("ip").asString();
 				username = j.at("username").asString();
 				password = j.at("password").asString();
-				SshUtils ssh = new SshUtils(username,password,ip,22/*,knownHostFilePath*/);
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
+				SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
 				try {
 					switch(file) {
 						case "reseau":
@@ -374,12 +432,18 @@ public class TapsServices implements ICSLService {
 	
 	public static void sendIncludes(String name) {
 		String username = "", password ="";
+		int port = 22;
 
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
 				String ip = j.at("ip").asString();
 				username = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 				// Declaration
 				try {
 					Json includes = j.at("includes");
@@ -394,7 +458,7 @@ public class TapsServices implements ICSLService {
 							}
 						}
 					}
-					SshUtils ssh = new SshUtils(username,password,ip,22/*,knownHostFilePath*/);
+					SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
 					ssh.remoteExec("sudo rm /home/"+username+"/configSuricata/suricata/rules/additionnalRules/*.rules");
 					ssh.endConnection();
 					String yamlFile = "";
@@ -402,12 +466,12 @@ public class TapsServices implements ICSLService {
 					for(String ruleFile : ruleFiles) {
 						System.out.println("Sending "+ruleFile);
 						yamlFile += "- /home/"+username+"/configSuricata/suricata/rules/additionnalRules/"+ruleFile+"\r\n";
-						ssh = new SshUtils(username,password,ip,22/*,knownHostFilePath*/);
+						ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
 						ssh.sendFile(idsconf+"/taps/rules/"+ruleFile,"/home/"+username+"/configSuricata/suricata/rules/additionnalRules/"+ruleFile);
 						ssh.endConnection();
 					}
 					writeToFile(yamlFile, idsconf+"/taps/"+name+"/includes.yaml");
-					ssh = new SshUtils(username,password,ip,22/*,knownHostFilePath*/);
+					ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
 					ssh.sendFile(idsconf+"/taps/"+name+"/includes.yaml","/home/"+username+"/configSuricata/suricata/includes.yaml");
 					ssh.endConnection();					
 				} catch (IOException | JSchException  e) {
@@ -436,6 +500,7 @@ public class TapsServices implements ICSLService {
 	}
 	public static Json startSuricata(String name) {
 		String id = "", password ="";
+		int port = 22;
 
 		String ip = null;
 		for(Json j : configuredTaps) {
@@ -443,9 +508,14 @@ public class TapsServices implements ICSLService {
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
 		String command = START_SURICATA;
 		String output = null;
 		try {
@@ -462,6 +532,7 @@ public class TapsServices implements ICSLService {
 	
 	public static Json stopSuricata(String name) {
 		String id = "", password ="";
+		int port = 22;
 
 		String ip = null;
 		for(Json j : configuredTaps) {
@@ -469,9 +540,14 @@ public class TapsServices implements ICSLService {
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
 		String command = STOP_SURICATA;
 		String output = null;
 		try {
@@ -490,6 +566,7 @@ public class TapsServices implements ICSLService {
 	
 	public static Json reloadRules(String name) {
 		String id = "", password ="";
+		int port = 22;
 
 		String ip = null;
 		for(Json j : configuredTaps) {
@@ -497,9 +574,14 @@ public class TapsServices implements ICSLService {
 				ip = j.at("ip").asString();
 				id = j.at("username").asString();
 				password = j.at("password").asString();
+				try {
+					port = j.at("port").asInteger();
+				} catch (NullPointerException e) {
+					System.out.println("Using default SSH port (22)");
+				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,22/*,knownHostFilePath*/);	
+		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
 		String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
 		String output = null;
 		try {
@@ -663,8 +745,24 @@ public class TapsServices implements ICSLService {
 				}
 				return Json.object();
 			}
-		});		
-		
+		});
+
+		addCmd("setPort", new IJsonCmd() {
+			@Override
+			public Json exec(Json params) {
+
+				setPort(params.at("name").asString(), params.at("port").asInteger());
+				Json write = Json.object();
+				write.at("write",configuredTaps);
+				try {
+					writeToFile(write.at("write").toString(), idsconf+"/taps/TapsConfiguration.json");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return Json.object();
+			}
+		});
+
 		addCmd("setUsernamePassword", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -849,8 +947,14 @@ public class TapsServices implements ICSLService {
 					String ip = j.at("ip").asString();
 					String id = j.at("username").asString();
 					String password = j.at("password").asString();
+					int port = 22;
+					try {
+						port = j.at("port").asInteger();
+					} catch (NullPointerException e) {
+						System.out.println("Using default SSH port (22)");
+					}
 
-					SshUtils ssh = new SshUtils(id, password, ip, 22/*,knownHostFilePath*/);
+					SshUtils ssh = new SshUtils(id, password, ip, port/*,knownHostFilePath*/);
 
 					String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
 					String output = null;

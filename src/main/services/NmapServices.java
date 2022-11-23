@@ -196,7 +196,13 @@ public class NmapServices implements ICSLService {
 						boolean accessible = true;
 						String result = "";
 						try {
-							SshUtils ssh = new SshUtils(j.at("username").asString(),j.at("password").asString(),j.at("ip").asString(),22 );
+							int port = 22;
+							try {
+								port = j.at("port").asInteger();
+							} catch (NullPointerException e) {
+								System.out.println("Using default SSH port (22)");
+							}
+							SshUtils ssh = new SshUtils(j.at("username").asString(),j.at("password").asString(),j.at("ip").asString(),port );
 							result = ssh.remoteExec("ip -o -f inet addr show $(cat /home/"+j.at("username").asString()+"/nmapInterface.txt) | awk '/scope global/ {print $4}'");
 						} catch (IOException e) {
 							accessible = false;

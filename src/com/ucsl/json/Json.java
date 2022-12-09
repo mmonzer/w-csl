@@ -2020,6 +2020,8 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public short asShort() { return Short.parseShort(val); }
 		public byte asByte() { return Byte.parseByte(val); }
 		public char asChar() { return val.charAt(0); }
+
+		public boolean asBoolean() { return Boolean.valueOf(val); }
 		@SuppressWarnings("unchecked")
 		public List<Object> asList() { return (List<Object>)(List<?>)Collections.singletonList(val); }
 		

@@ -36,7 +36,7 @@ public class CSLIDSMainServer {
 
         CSLContext.instance.setDebug(true);
 
-        boolean USE_BROKER = false; //true;
+        boolean USE_BROKER = false;
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
 

@@ -35,13 +35,14 @@ import main.util.CSLRunningArgs;
 import main.xcom.WebsocketClientEndpoint;
 
 public class CSLIDSMainClient {
-	
-	static String SERVER_IP="127.0.0.1";
-	static int SERVER_PORT=8000;
-	
-	static WebsocketClientEndpoint clientEndPoint =null;
-			
-	static HashMap<String, IApiCommands> apiMap= new HashMap<String, IApiCommands>();
+
+	static String SERVER_IP = "127.0.0.1";
+	static int SERVER_PORT = 8000;
+	static boolean USE_SSL = false;
+
+	static WebsocketClientEndpoint clientEndPoint = null;
+
+	static HashMap<String, IApiCommands> apiMap = new HashMap<String, IApiCommands>();
 	
 	static IMessageBroadcaster messageBroadcaster= 
     		new IMessageBroadcaster() {
@@ -97,90 +98,81 @@ public class CSLIDSMainClient {
 	}
 
 	static public void connectToServer() {
-		 try {
-	        	String s= "ws://" + SERVER_IP+":"+SERVER_PORT+ "/cmd";
-	        	
-	        	System.out.print("Try to connect to server "+s);
-	            clientEndPoint = new WebsocketClientEndpoint(new URI(s)); 
-	            if (!clientEndPoint.isOpen()) {
-	            	System.out.println("  --> failed");
-	            	return;
-	            }
-	            else System.out.println("   --> connected");
-	            
-	            // add listener
-	            clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
-	                public void handleMessage(String message) {
-	                	
-	                	System.out.println("MESSAGE:"+message);
-	                	message=message.trim();
-	                	if (message.startsWith("{")
-	                			&& message.endsWith("}")) {
-	                		
-	                		Json j=Json.read(message);
-		                    System.out.println("received:"+j);
-		                    //if (j.get("database")==null) return;
-		                    //j=j.get("database");
-		                    String m_uuid="";
-		                    
-		                    String apiname= JsonUtil.getStringFromJson(j, "api", "");
-		                      
-		                    
-		                    Runnable r=  new Runnable() {
-								public void run() {
-									Json result=Json.object().set("error","api not found ");
-						               
-									if (apiname.isEmpty()) {
-				                    	
-				                    }
-				                    else {
-				                    	
-				                    	IApiCommands api = apiMap.get(apiname);
-				                    	Json jcmd=j.get("jcmd");
-				                    	if (jcmd==null) result.set("error","jcmd not found");
-				                    	
-				                    	if ((api!=null)&&(jcmd!=null)) result=api.execJcmd(jcmd);
-				                    }
-				                    
-				                    
-				                     
-				                    Json r= Json.object();
-				                    r.set("uuid",j.get("uuid"));
-				                    r.set("result", result);
-				                    System.out.println("****RESULT:"+r);
-				                    clientEndPoint.sendMessage("res:"+r);
-				                    
+		try {
+			String wsProtocol = USE_SSL ? "wss" : "ws";
+			String s = wsProtocol + "://" + SERVER_IP + ":" + SERVER_PORT + "/cmd";
+
+			System.out.print("Try to connect to WS server " + s);
+			clientEndPoint = new WebsocketClientEndpoint(new URI(s));
+			if (!clientEndPoint.isOpen()) {
+				System.out.println("  --> failed");
+				return;
+			} else
+				System.out.println("   --> connected");
+
+			// add listener
+			clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
+				public void handleMessage(String message) {
+
+					System.out.println("MESSAGE:" + message);
+					message = message.trim();
+					if (message.startsWith("{") && message.endsWith("}")) {
+
+						Json j = Json.read(message);
+						System.out.println("received:" + j);
+						//if (j.get("database")==null) return;
+						//j=j.get("database");
+						String m_uuid = "";
+
+						String apiname = JsonUtil.getStringFromJson(j, "api", "");
+
+
+						Runnable r = new Runnable() {
+							public void run() {
+								Json result = Json.object().set("error", "api not found ");
+
+								if (apiname.isEmpty()) {
+
+								} else {
+
+									IApiCommands api = apiMap.get(apiname);
+									Json jcmd = j.get("jcmd");
+									if (jcmd == null) result.set("error", "jcmd not found");
+
+									if ((api != null) && (jcmd != null)) result = api.execJcmd(jcmd);
 								}
-							};
-							
-							Thread t= new Thread(r);
-							t.start();
-							
-							//tests ici
-		                    
-		                    
-	                	}
-	                	
-	                    
-	                }
-	            });
-	            
-	           
-
-	            for (String sx: apiMap.keySet()) {
-	            	   clientEndPoint.sendMessage("api:"+sx);
-	      	         
-	            }
-	          //  clientEndPoint.sendMessage("api:alerts");
-	            Thread.sleep(100);
 
 
-	        } catch (InterruptedException ex) {
-	            System.err.println("InterruptedException exception: " + ex.getMessage());
-	        } catch (URISyntaxException ex) {
-	            System.err.println("URISyntaxException exception: " + ex.getMessage());
-	        }
-		 	
+								Json r = Json.object();
+								r.set("uuid", j.get("uuid"));
+								r.set("result", result);
+								System.out.println("****RESULT:" + r);
+								clientEndPoint.sendMessage("res:" + r);
+
+							}
+						};
+
+						Thread t = new Thread(r);
+						t.start();
+
+					}
+				}
+			});
+
+
+			for (String sx : apiMap.keySet()) {
+				clientEndPoint.sendMessage("api:" + sx);
+
+			}
+			Thread.sleep(100);
+
+
+		} catch (InterruptedException ex) {
+			System.err.println("InterruptedException exception: " + ex.getMessage());
+		} catch (URISyntaxException ex) {
+			System.err.println("URISyntaxException exception: " + ex.getMessage());
+		}
+
 	}
 
 	
@@ -267,6 +259,7 @@ public class CSLIDSMainClient {
 			System.out.println("[ERROR] " + e.getMessage());
 		}
 		SERVER_PORT= JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 8000);
+		USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
 		
 		boolean USE_BROKER=false;
 

@@ -807,7 +807,7 @@ public class IDSRunner implements IIDSRunner {
 
 
 			//			if (idsParams.isKillPreviousInstance()) {
-			//				ProcessUtil.killProcess("main.CSLIDSMain");
+			//				ProcessUtil.killProcess("main.CSLIDSMainServer");
 			//				// String dir ="/Users/flausj/Documents/dev";
 			//				// String jarFile="Logview.jar";
 			//				//ProcessUtil.startJarIfNotRunning(".", "Logview.jar", false);

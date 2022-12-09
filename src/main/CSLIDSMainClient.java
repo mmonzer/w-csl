@@ -4,19 +4,14 @@ package main;
 import java.net.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jetty.websocket.api.Session;
-
 import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
-import com.csl.ids.IDSRunner;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -39,7 +34,7 @@ import main.services.TapsServices;
 import main.util.CSLRunningArgs;
 import main.xcom.WebsocketClientEndpoint;
 
-public class CSLIDSMainRemote {
+public class CSLIDSMainClient {
 	
 	static String SERVER_IP="127.0.0.1";
 	static int SERVER_PORT=8000;
@@ -250,80 +245,60 @@ public class CSLIDSMainRemote {
 	
 	
     public static void main(String[] args) {
-    	
-    	
-    	
-    	org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
-    	
-    	
-    	
-    	Json j =CSLContext.instance.getConfig();
-    	
-    	CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
-		
-		// Init idsrunner : should be set in cslcontext
-		//IDSRunner idsRunner= new IDSRunner(j, CSLRunningArgs.instance);
-		
-    	j.get("database_server_conf").set("on", false);
-    	j.get("web_server_conf").set("on", false);
-    	j.get("udp_server_conf").set("on", true);
-    	
-		
 
-		
+    	org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+
+    	Json configObj =CSLContext.instance.getConfig();
+    	CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
+
 		CSLContext.instance.setDebug(true);
-		
-		SERVER_IP= JsonUtil.getStringFromJson(j, "global/ip_server_remote", "127.0.0.1");
+
+		// This is the client, override configuration is needed not to launch servers
+    	configObj.get("database_server_conf").set("on", false);
+    	configObj.get("web_server_conf").set("on", false);
+    	configObj.get("udp_server_conf").set("on", true);
+
+		// The proxy server to connect
+		SERVER_IP = JsonUtil.getStringFromJson(configObj, "global/ip_server_remote", "127.0.0.1");
 		// Try to resolve host name (mainly for Docker hostnames)
 		try {
 			SERVER_IP = InetAddress.getByName(SERVER_IP).getHostAddress();
 		} catch (UnknownHostException e) {
 			System.out.println("[ERROR] " + e.getMessage());
 		}
-		SERVER_PORT= JsonUtil.getIntFromJson(j, "global/port_server_remote", 8000);
+		SERVER_PORT= JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 8000);
 		
-		boolean USE_BROKER=false; //true;
-		JServiceLoader.setModuleName("IDS",new MosquittoConfig().setUseBroker(USE_BROKER));
-		
-		
-		JServiceLoader.registerService(new CSLServiceDemo(), j, true);
-		//CSLServiceIDS cslServiceIDS= new CSLServiceIDS();
-		JServiceLoader.registerService(new AlertsService(), j, true); 
-		//CSLContext.instance.setApiRemote("alerts");
-		JServiceLoader.registerService(new MonitorService(), j, true);
-		JServiceLoader.registerService(new CSLServiceIDS(), j, true);
-		//CSLContext.instance.setApiRemote("ids");
-		JServiceLoader.registerService(new TapsServices(), j, true);
+		boolean USE_BROKER=false;
 
-		JServiceLoader.registerService(new CSLServiceJsonDataBase(), j, true);
-		JServiceLoader.registerService(new NmapServices(), j, true);
+		JServiceLoader.setModuleName("IDS",new MosquittoConfig().setUseBroker(USE_BROKER));
+
+		JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
+		JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
+		JServiceLoader.registerService(new AlertsService(), configObj, true);
+		JServiceLoader.registerService(new MonitorService(), configObj, true);
+		JServiceLoader.registerService(new TapsServices(), configObj, true);
+		JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
+
+		JServiceLoader.registerService(new NmapServices(), configObj, true);
 			
-		
-		
+
 		iniServices();
     	
-		startRemoteConnectTask();
+		startRemoteConnectTask();	// connect/reconnect
     	CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
    
 		
 		CSLContext.instance.postInit(false,true);
-    	
-		
-		ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
-				new InetSocketAddress(9000), 
-				JServiceLoader.getApiCommandsList(),
-				new ApiGetHelp());
-	
-		
 		CSLContext.instance.start();
-		
-		
+
     	CSLContext.instance.getIdsRunner().start();
-    	
     	((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
     	
-    	printTime();
-    	
-    	//startTest();
+
+		// FIXME: Client & Server are creating the same HTTP Server at the same port
+		ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
+				new InetSocketAddress(9000),
+				JServiceLoader.getApiCommandsList(),
+				new ApiGetHelp());
     }
 }

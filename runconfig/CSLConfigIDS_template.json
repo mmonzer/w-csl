@@ -2,7 +2,6 @@
 	"global":{
 		"remote":true,
 		"ip_server_remote":"127.0.0.1",
-		"ip_server_remote3":"127.0.0.1",
 		"port_server_remote":8000
 	},
 	

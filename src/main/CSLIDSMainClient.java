@@ -100,7 +100,11 @@ public class CSLIDSMainClient {
 	static public void connectToServer() {
 		try {
 			String wsProtocol = USE_SSL ? "wss" : "ws";
-			String s = wsProtocol + "://" + SERVER_IP + ":" + SERVER_PORT + "/cmd";
+			String s = null;
+			if (SERVER_PORT > 0) {
+				s = wsProtocol + "://" + SERVER_IP + ":" + SERVER_PORT + "/cmd";
+			} else
+				s = wsProtocol + "://" + SERVER_IP + "/cmd";
 
 			System.out.print("Try to connect to WS server " + s);
 			clientEndPoint = new WebsocketClientEndpoint(new URI(s));
@@ -252,13 +256,16 @@ public class CSLIDSMainClient {
 
 		// The proxy server to connect
 		SERVER_IP = JsonUtil.getStringFromJson(configObj, "global/ip_server_remote", "127.0.0.1");
+		Boolean force_host_name_resolution = JsonUtil.getBooleanFromJson(configObj, "global/force_host_name_resolution", false);
 		// Try to resolve host name (mainly for Docker hostnames)
-		try {
-			SERVER_IP = InetAddress.getByName(SERVER_IP).getHostAddress();
-		} catch (UnknownHostException e) {
-			System.out.println("[ERROR] " + e.getMessage());
+		if (force_host_name_resolution) {
+			try {
+				SERVER_IP = InetAddress.getByName(SERVER_IP).getHostAddress();
+			} catch (UnknownHostException e) {
+				System.out.println("[ERROR] " + e.getMessage());
+			}
 		}
-		SERVER_PORT= JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 8000);
+		SERVER_PORT= JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
 		USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
 		
 		boolean USE_BROKER=false;

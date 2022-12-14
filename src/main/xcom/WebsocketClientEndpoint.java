@@ -49,6 +49,7 @@ public class WebsocketClientEndpoint {
              container.connectToServer(this, endpointURI);
          } catch (Exception e) {
             // throw new RuntimeException(e);
+             System.err.println(e);
          }
     }
     

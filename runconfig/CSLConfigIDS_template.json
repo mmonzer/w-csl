@@ -2,7 +2,9 @@
 	"global":{
 		"remote":true,
 		"ip_server_remote":"127.0.0.1",
-		"port_server_remote":8000
+		"port_server_remote":8000,
+		"force_host_name_resolution": false,
+		"use_ssl": true
 	},
 	
 	"nmap_service": {

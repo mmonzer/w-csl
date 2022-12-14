@@ -15,4 +15,7 @@ COPY datafile/ datafile/
 COPY idsdata/ idsdata/ 
 COPY runconfig/ runconfig/
 COPY runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
-CMD ["java","-jar","cslmainclient.jar"]
+# CMD ["java","-jar","cslmainclient.jar"]
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+ENTRYPOINT [ "./entrypoint.sh", "cslmainclient.jar" ]

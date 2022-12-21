@@ -37,6 +37,8 @@ import main.xcom.WebsocketClientEndpoint;
 public class CSLIDSMainClient {
 
 	static String SERVER_IP = "127.0.0.1";
+	static String SERVER_URL_PREFIX = "";
+	static String API_KEY = "";
 	static int SERVER_PORT = 8000;
 	static boolean USE_SSL = false;
 
@@ -83,9 +85,11 @@ public class CSLIDSMainClient {
 			
 		}
 	};
-	
-	
-	
+
+
+	/***
+	 * Adds the < serviceName, service > to the apiMap hashmap from the JServiceLoader's commandsList (listOfAPIToRegister)
+	 */
 	static public void iniServices() {
 		
 		
@@ -97,17 +101,33 @@ public class CSLIDSMainClient {
 		}
 	}
 
+	/***
+	 * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
+	 * The messages received from the server are expected to follow the following format:
+	 * {
+	 *     api: <the service name>,
+	 *     jcmd: {
+	 *     		cmd: <command>,
+	 *     		params: {
+	 *				...
+	 *     		}
+	 *     }
+	 * }
+	 * NOTE that each message is handled by a new thread
+	 */
 	static public void connectToServer() {
 		try {
 			String wsProtocol = USE_SSL ? "wss" : "ws";
 			String s = null;
 			if (SERVER_PORT > 0) {
-				s = wsProtocol + "://" + SERVER_IP + ":" + SERVER_PORT + "/cmd";
+				s = wsProtocol + "://" + SERVER_IP + ":" + SERVER_PORT + SERVER_URL_PREFIX +"/cmd";
 			} else
-				s = wsProtocol + "://" + SERVER_IP + "/cmd";
+				s = wsProtocol + "://" + SERVER_IP + SERVER_URL_PREFIX + "/cmd";
 
 			System.out.print("Try to connect to WS server " + s);
+
 			clientEndPoint = new WebsocketClientEndpoint(new URI(s));
+			clientEndPoint.apiKey = API_KEY;
 			if (!clientEndPoint.isOpen()) {
 				System.out.println("  --> failed");
 				return;
@@ -185,7 +205,10 @@ public class CSLIDSMainClient {
 		LocalDateTime now = LocalDateTime.now();  
 		System.out.println(dtf.format(now));  
 	}
-	
+
+	/***
+	 * At a scheduled rate, check if the connection to the server socket (cmd) is open, if not try to connect
+	 */
 	static public void startRemoteConnectTask() {
 	ScheduledExecutorService executorService;
 	executorService = Executors.newSingleThreadScheduledExecutor();
@@ -249,6 +272,7 @@ public class CSLIDSMainClient {
 
 		CSLContext.instance.setDebug(true);
 
+		// region -- read configuration
 		// This is the client, override configuration is needed not to launch servers
     	configObj.get("database_server_conf").set("on", false);
     	configObj.get("web_server_conf").set("on", false);
@@ -256,6 +280,11 @@ public class CSLIDSMainClient {
 
 		// The proxy server to connect
 		SERVER_IP = JsonUtil.getStringFromJson(configObj, "global/ip_server_remote", "127.0.0.1");
+		SERVER_URL_PREFIX = JsonUtil.getStringFromJson(configObj, "global/server_remote_url_prefix", "");
+		if (SERVER_URL_PREFIX == null) {
+			SERVER_URL_PREFIX = "";
+		}
+
 		Boolean force_host_name_resolution = JsonUtil.getBooleanFromJson(configObj, "global/force_host_name_resolution", false);
 		// Try to resolve host name (mainly for Docker hostnames)
 		if (force_host_name_resolution) {
@@ -267,7 +296,9 @@ public class CSLIDSMainClient {
 		}
 		SERVER_PORT= JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
 		USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
-		
+		API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
+		// endregion -- read configuration
+
 		boolean USE_BROKER=false;
 
 		JServiceLoader.setModuleName("IDS",new MosquittoConfig().setUseBroker(USE_BROKER));
@@ -283,7 +314,7 @@ public class CSLIDSMainClient {
 			
 
 		iniServices();
-    	
+
 		startRemoteConnectTask();	// connect/reconnect
     	CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
    

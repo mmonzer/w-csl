@@ -1,8 +1,5 @@
 package com.csl.web;
 
-
-
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -41,11 +38,6 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 import spark.Service;
-
-
-
-
-
 
 
 /**
@@ -145,8 +137,8 @@ public class CSLHttpServer {
 		
 		am.addAuthentification(sparkServer);
 	}
-	
-	
+
+
 	public void initServer(ServerConfig sc) { //String rootdir, int port, boolean verbose) {
 
 		if (initialized) {
@@ -154,118 +146,28 @@ public class CSLHttpServer {
 			System.exit(0);
 		}
 
-		//if (j==null) return;
+		this.serverConfig = sc;
+		sparkServer = Service.ignite();
+		initialized = true;
 
-		this.serverConfig=sc;
-
-		sparkServer= Service.ignite();
-		initialized=true;
-		
-		//userDir=sc.getUserDir();
-				
 		if (!sc.isRunning()) return;
-		
-		/*userDir = System.getProperty("user.dir");
-
-		running=JsonUtil.getBooleanFromJson(j,"on", false);
-		if (!running) return;
-
-		//jCmdManager.init(j);
-
-
-		verbose=JsonUtil.getBooleanFromJson(j,"verbose", false);
-		debug=JsonUtil.getBooleanFromJson(j,"debug", false);
-
-		port = JsonUtil.getIntFromJson(j, "webserver_port",8000);
-
-		rootdir=JsonUtil.getStringFromJson(j, "web_rootdir","");
-		rootdir=replaceUserDir(rootdir, userDir);
-		if (!rootdir.isEmpty()) setExternalWebSiteRoot(rootdir);
-
-		//Json jConfig=CSLContext.context.getConfig().get("ihm_server_conf");
-		rootdir2=JsonUtil.getStringFromJson(j, "web_rootdir2","");
-		rootdir2=replaceUserDir(rootdir2, userDir);
-		if (!rootdir2.isEmpty()) setExternalWebSiteRoot(rootdir2);
-		//System.out.println("Set IHM web roor dir:"+rootdir2);
-
-		//Json jConfig=CSLContext.context.getConfig().get("ihm_server_conf");
-		rootdir3=JsonUtil.getStringFromJson(j, "web_rootdir3","");
-		rootdir3=replaceUserDir(rootdir3, userDir);
-		if (!rootdir3.isEmpty()) setExternalWebSiteRoot3(rootdir3);
-
-
-		
-
-		core_commands= JsonUtil.getBooleanFromJson(j,"core_commands", false);
-		//vars_commands (+ notifications of update)
-		vars_commands= JsonUtil.getBooleanFromJson(j,"vars_commands", false);
-
-		modbus_commands= JsonUtil.getBooleanFromJson(j,"modbus_commands", false);
-		//external_commands = JsonUtil.getBooleanFromJson(j,"external_commands", false);
-
-		//custom_commands = JsonUtil.getBooleanFromJson(j,"custom_commands", false);
-
-		//json_commands = JsonUtil.getBooleanFromJson(j,"json_commands", false);
-		database_commands = JsonUtil.getBooleanFromJson(j,"database_commands", false);
-
-		//config_file_commands = JsonUtil.getBooleanFromJson(j,"config_file_commands", false);
-		//mx_commands = JsonUtil.getBooleanFromJson(j,"mx_commands", false);
-
-		send_alerts= JsonUtil.getBooleanFromJson(j,"send_alerts", false);
-		send_console_output= JsonUtil.getBooleanFromJson(j,"send_console_output", false);
-
-		if (verbose) {
-			System.out.println("\nCSL Server:");
-			System.out.println("===========");
-			System.out.println("  on  :"+running);
-			System.out.println("  port:"+port);
-
-			System.out.println("  rootdir:"+rootdir);
-			System.out.println("  rootdir2:"+rootdir2);
-			System.out.println("  rootdir3:"+rootdir3);
-
-			System.out.println("  core_commands   :"+core_commands);
-			System.out.println("  vars_commands   :"+vars_commands);
-
-			System.out.println("  modbus_commands :"+modbus_commands);
-			//System.out.println("  external_commands:"+external_commands);
-			//System.out.println("  config_file_commands:"+config_file_commands);
-
-			//System.out.println("  json_commands:"+json_commands);
-			System.out.println("  database_commands:"+database_commands);
-
-			System.out.println("  send_alerts:"+send_alerts);
-			System.out.println("  send_console_outputs:"+send_console_output);
-
-		}
-*/
 
 		sparkServer.exception(Exception.class, (e, req, res) -> e.printStackTrace()); // print all exceptions
-
-
 		sparkServer.staticFiles.externalLocation(sc.getRootdir()); //userDir+"/public");
 		sparkServer.staticFiles.expireTime(600);
 
 		if (!sc.getRootdir2().isEmpty()) {
-			//if (!rootdir2.isEmpty())
-				sparkServer.staticFiles.externalLocation2(sc.getRootdir2());
+			sparkServer.staticFiles.externalLocation2(sc.getRootdir2());
 		}
 
-		
 		if (!sc.getRootdir3().isEmpty()) {
-				sparkServer.staticFiles.externalLocation3(sc.getRootdir3());
+			sparkServer.staticFiles.externalLocation3(sc.getRootdir3());
 		}
-//		if (!sc.getRootdir2().isEmpty()) {
-//			//if (!rootdir2.isEmpty())
-//				sparkServer.staticFiles.externalLocation2(sc.getRootdir2());
-//		}
 
-		
-		
 		sparkServer.port(sc.getPort()); //CSLContext.context.getCurrentPortForWEB());
 
-
-
+		// Websockets must be registered before regular HTTP routes
+		// region -- register websockets
 		CSLWebSocket.registerAll();
 		if (sc.isSend_alerts()) {
 			//AlertSenderViaWebSocket.init(this);
@@ -286,35 +188,35 @@ public class CSLHttpServer {
 		if (sc.isJcmd_commands()) {
 			addWebsocket(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class);
 		}
-		
+		// endregion -- register websockets
+
 		// PROTECTED ENDPOINT FOR DEVELOPER ROLE_PROPERTY
 		sparkServer.get("/apihelp", (request, response) -> {
 
-			
-			Json jj=Json.object();
-			Set<String> paramKeys= request.queryParams();
-			List<String> varNames= new ArrayList<String>(paramKeys);
+			Json jj = Json.object();
+			Set<String> paramKeys = request.queryParams();
+			List<String> varNames = new ArrayList<String>(paramKeys);
 
 
-			for (String name:varNames) {
+			for (String name : varNames) {
 				String[] z = request.queryParamsValues(name);
-				if (z!=null) jj.set(name,z[0]);
+				if (z != null) jj.set(name, z[0]);
 
 			}
 
 			jj.set("url", request.url());
-			
-			String fullUrl=request.url();
-			
+
+			String fullUrl = request.url();
+
 			if (request.queryString() != null) {
-				fullUrl=request.url()+'?'+request.queryString();
-		        
-		    }
+				fullUrl = request.url() + '?' + request.queryString();
+
+			}
 			jj.set("full_url", fullUrl);
-			
-			
-			String s= JServiceLoader.getApiHelpPage(jj);
-			response.type("text/html"); 
+
+
+			String s = JServiceLoader.getApiHelpPage(jj);
+			response.type("text/html");
 			response.body(s);
 			return s;
 
@@ -336,10 +238,20 @@ public class CSLHttpServer {
 			return "OK";
 		});
 
+		sparkServer.before("/cmd", (req, res) -> {
+			String body = req.body();
+			System.out.println("before cmd");
+			System.out.println(body);
+		});
+		sparkServer.before("/taps", (req, res) -> {
+			String body = req.body();
+			System.out.println("before taps");
+			System.out.println(body);
+		});
+		// Before-filters are evaluated before each request, and can read the request and read/modify the response.
+		// to stop execution, use halt()
 		sparkServer.before((req, res) -> {
-
-			if (sc.isDebug()) System.out.println("WEB_DEBUG:"+req.pathInfo()+"  "+req.requestMethod());
-
+			if (sc.isDebug()) System.out.println("WEB_DEBUG:" + req.pathInfo() + "  " + req.requestMethod());
 
 			res.header("Access-Control-Allow-Origin", "*");
 			res.header("Access-Control-Allow-Headers", "*");
@@ -347,54 +259,16 @@ public class CSLHttpServer {
 		});
 
 
+		for (IApiCommands api : JServiceLoader.getApiCommandsList()) {
 
+			String path = api.getName();
+			System.out.println("REGISTER API:<" + path + ">");
 
+			if (ADD_GET_ROUTE)
+				addGetRoute(getPathFilterForGet(api), getGetRoute(api)); // api.getGetRoute());
+			// FIXME else ?
+			addPostRoute(getPathNameForPost(api), getPostRoute(api)); // api.getPostRoute());
 
-
-	
-		
-		//if (external_commands) ExternalCommands.instance.init();
-
-		/*if (config_file_commands) {
-			cslConfigFileServer=new CSLConfigFileServer();
-			cslConfigFileServer.initCommandsOnServer(this);
-		}*/
-
-		//		if (database_commands) 
-		//			CSLContext.instance.getDatabaseServer().addRoute(this);
-		//		
-
-		/*if (json_commands) {
-			execJsonCommands = new ExecJsonCommands(this);
-			execJsonCommands.init(getJCmdManager());
-		}*/
-
-
-		
-
-		for (IApiCommands api:JServiceLoader.getApiCommandsList()) {
-
-			String path=api.getName();
-			System.out.println("REGISTER API:<"+path+">");
-
-			// ne sert à rien
-			/*if (path.isEmpty()) {
-				if (execJsonCommands==null) {
-					execJsonCommands = new ExecJsonCommands(this);
-					execJsonCommands.init(getJCmdManager());
-				}
-
-				for (String name:api.getListOfCommands())	{
-					System.err.println("Register cmd:"+name);
-					getJCmdManager().registerCmd(name, api.getJCmd(name));
-				}
-			}
-			// tout est ds api
-			else*/
-			{
-				if (ADD_GET_ROUTE) addGetRoute(getPathFilterForGet(api),getGetRoute(api)); // api.getGetRoute());
-				addPostRoute(getPathNameForPost(api), getPostRoute(api)); // api.getPostRoute());
-			}
 		}
 
 		//if (send_alerts) AlertSenderViaWebSocket.init();
@@ -403,27 +277,16 @@ public class CSLHttpServer {
 
 		//decomposer sous forme de fcts
 
-
+		// After-filters are evaluated after each request, and can read the request and read/modify the response:
 		sparkServer.after((req, res) -> {
+			if (sc.isDebug()) System.out.println("req:" + req.pathInfo());
 
-			if (sc.isDebug()) System.out.println("req:"+req.pathInfo());
-
-			//			if ((req.pathInfo().compareTo(WEB_SOCKET_VARIABLES)!=0)&&
-			//					(req.pathInfo().compareTo(WEB_SOCKET_ALERT)!=0)&&
-			//					(req.pathInfo().compareTo(WEB_SOCKET_DATABASE)!=0)&&
-			//					(req.pathInfo().compareTo(WEB_SOCKET_CONSOLE)!=0))
-			if (!isWebsocketPath(req.pathInfo()))
-			{
+			if (!isWebsocketPath(req.pathInfo())) {
 				if (res.body() == null) { // if we didn't try to return a rendered response
 					res.body(renderInvalid(req, res));
 				}
 			}
 		});
-
-
-		//ici
-
-
 
 	}
 	
@@ -471,9 +334,6 @@ public class CSLHttpServer {
 		if (params == null) {
 			params = Json.object();
 		}
-
-	//	if (debug) System.out.println("Exec " + cmd + " " + params);
-
 		
 		String cresult ="";
 		
@@ -494,17 +354,12 @@ public class CSLHttpServer {
 	
 	private String renderGetCommand(IApiCommands api,  Request req, Response res) {
 
-		//System.out.println("API GET : "+path);
-		
 		Set<String> paramKeys = req.queryParams();
-
-		// String sresponse = req.body();
 
 		String s = req.pathInfo();
 		if (s.length() > 1)
 			s = s.substring(1);
 
-		//System.out.println("pathInfo="+s);
 		String cmd = "???";
 
 		List<String> varNames = new ArrayList<String>(paramKeys);
@@ -534,22 +389,29 @@ public class CSLHttpServer {
 
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-	private List<String> listOfRemoteApi= new ArrayList<String>();
+	public static String ROUTE_MODE_GET = "get";
+	public static String ROUTE_MODE_POST = "post";
+	private final List<String> listOfRemoteApi = new ArrayList<String>();
 
 	void startRefreshWebSocketTask(int n) {
 
-		if (n<=0) return;
+		if (n <= 0) return;
 
-		Runnable  r= new Runnable() {
+		Runnable r = new Runnable() {
 
 			@Override
 			public void run() {
 				//System.out.println("refresh");
-				if (serverConfig.isSend_alerts()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT); //CSLWebSocketForAlert.refresh();
-				if (serverConfig.isSend_console_output()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE); //CSLWebSocketForConsole.refresh();
-				if (serverConfig.isVars_commands()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES); //CSLWebSocketForVariables.refresh();
-				if (serverConfig.isDatabase_commands()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE); //CSLWebSocketForDatabase.refresh();
-				if (serverConfig.isJcmd_commands()) CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD); //CSLWebSocketForDatabase.refresh();
+				if (serverConfig.isSend_alerts())
+					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT); //CSLWebSocketForAlert.refresh();
+				if (serverConfig.isSend_console_output())
+					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE); //CSLWebSocketForConsole.refresh();
+				if (serverConfig.isVars_commands())
+					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES); //CSLWebSocketForVariables.refresh();
+				if (serverConfig.isDatabase_commands())
+					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE); //CSLWebSocketForDatabase.refresh();
+				if (serverConfig.isJcmd_commands())
+					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD); //CSLWebSocketForDatabase.refresh();
 
 			}
 		};
@@ -557,31 +419,21 @@ public class CSLHttpServer {
 		scheduler.scheduleAtFixedRate(r, n, n, TimeUnit.SECONDS);
 	}
 
-
-
-	private String replaceUserDir(String dir,String userDir) {
+	private String replaceUserDir(String dir, String userDir) {
 
 		if (dir.startsWith(".")) {
-			return userDir+dir.substring(1);
+			return userDir + dir.substring(1);
 		}
 		return dir;
 	}
-
-	//private JCmdManager getJCmdManager() { return jCmdManager;}
-
-
 
 	public boolean isStarted() {
 		return started;
 	}
 
-
 	public void setStarted(boolean started) {
 		this.started = started;
 	}
-
-
-
 
 	public void start() {
 
@@ -593,34 +445,18 @@ public class CSLHttpServer {
 		CSLLogger.instance.info("current user dir = " + serverConfig.getUserDir());
 		setStarted(true);
 
-
-		//   DatabaseCommands.init(); 
-
-
-
-
-		//	exception(Exception.class, (e, req, res) -> e.printStackTrace()); // print all exceptions
-
-
-
-		;
-
 		sparkServer.init();
-
 
 		startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
 
-
 		if (serverConfig.isVerbose()) {
-			System.out.println("");
+			System.out.println();
 			System.out.println("Starting:");
 			System.out.println("=========");
 
-			System.out.println("  Web server listening on "+serverConfig.getPort());
+			System.out.println("  Web server listening on " + serverConfig.getPort());
 		}
 	}
-
-
 
 	// stop the server
 	public void stop() {
@@ -631,16 +467,8 @@ public class CSLHttpServer {
 		setStarted(false);
 	}
 
-
-
-
-
-	public static String ROUTE_MODE_GET="get";
-	public static String ROUTE_MODE_POST="post";
-
 	boolean isWebsocketPath(String path) {
-		if (listOfWebsocketPath.indexOf(path)<0) return false;
-		return true;
+		return listOfWebsocketPath.indexOf(path) >= 0;
 	}
 
 
@@ -655,54 +483,27 @@ public class CSLHttpServer {
 	//	}
 
 	public void addGetRoute(String path, Route r) {
-		System.err.println("  adding get path "+path);
-		sparkServer.get(path,r);	
+		System.err.println("  adding get path " + path);
+		sparkServer.get(path, r);
 	}
 
 	public void addPostRoute(String path, Route r) {
-		System.err.println("  adding post path "+path);
-		sparkServer.post(path,r);	
+		System.err.println("  adding post path " + path);
+		sparkServer.post(path, r);
 	}
 
-	public void addWebsocket(String path,Class<?> handler ) {
+	public void addWebsocket(String path, Class<?> handler) {
 
-		if (!path.startsWith("/")) path="/"+path;
+		if (!path.startsWith("/")) path = "/" + path;
 
-		if (listOfWebsocketPath.indexOf(path)<0)
+		if (listOfWebsocketPath.indexOf(path) < 0)
 			listOfWebsocketPath.add(path);
 		else {
-			System.err.println("websocket in use:"+path);
+			System.err.println("websocket in use:" + path);
 		}
 		sparkServer.webSocket(path, handler);
 	}
 
-
-//	private void setExternalWebSiteRoot(String string) {
-//		// TODO Auto-generated method stub
-//		if (isStarted()) {
-//			System.err.println("Cannot modify web ste root whe server is started :"+string);
-//		}
-//
-//		rootdir=string;
-//	}
-//	
-//	private void setExternalWebSiteRoot2(String string) {
-//		// TODO Auto-generated method stub
-//		if (isStarted()) {
-//			System.err.println("Cannot modify web ste root whe server is started :"+string);
-//		}
-//
-//		rootdir2=string;
-//	}
-//
-//	private void setExternalWebSiteRoot3(String string) {
-//		// TODO Auto-generated method stub
-//		if (isStarted()) {
-//			System.err.println("Cannot modify web ste root whe server is started :"+string);
-//		}
-//
-//		rootdir3=string;
-//	}
 
 	public int getCurrentPortForWEB() {
 		// TODO Auto-generated method stub
@@ -710,15 +511,12 @@ public class CSLHttpServer {
 	}
 
 
-
-
-
 	//    private static String renderEditTodo(Request req) {
 	//        return renderTemplate("velocity/editTodo.vm", new HashMap(){{ put("todo", TodoDao.find(req.params("id"))); }});
 	//    }
 	//
 	//    private static String renderTodos(Request req) {
-	//    	
+	//
 	//    	 String z = req.contentType();
 	//     	//BufferedReader br = request.getReader();
 	//     	String sresponse = "???";
@@ -726,7 +524,7 @@ public class CSLHttpServer {
 	//     	//System.out.println(z+"\n"+sresponse);
 	//     	//System.out.println( req.requestMethod());
 	//     	//System.out.println( req.pathInfo());
-	//    	
+	//
 	//        String statusStr = req.queryParams("status");
 	//        Map<String, Object> model = new HashMap<>();
 	//        model.put("todos", TodoDao.ofStatus(statusStr));
@@ -740,23 +538,10 @@ public class CSLHttpServer {
 	//        }
 	//        return renderTemplate("velocity/index.vm", model);
 	//    }
-	//    
+	//
 	private String renderInvalid(Request req, Response res) {
-
-		////System.out.println("Invalid : <"+req.pathInfo()+">");
-
-
 		return "CSL Server : Invalid command ";
 	}
-
-	//	public void addApiCommands(ApiCommands api) {
-	//		// TODO Auto-generated method stub
-	//		System.out.println("Register api for http:"+api);
-	//		listOfAPIToRegister.add(api);
-	//		System.out.println(listOfAPIToRegister);
-	//	}
-
-
 
 	public boolean isDebug() {
 		// TODO Auto-generated method stub
@@ -767,204 +552,5 @@ public class CSLHttpServer {
 		// TODO Auto-generated method stub
 		listOfRemoteApi.add(apiname.toLowerCase());
 	}
-
-
-
-
-
-
-
-
-
-
-	//	private static String renderTemplate(String template, Map model) {
-	//		return new VelocityTemplateEngine().render(new ModelAndView(model, template));
-	//	}
-	//
-	//	@FunctionalInterface
-	//	private interface ICRoute extends Route {
-	//		default Object handle(Request request, Response response) throws Exception {
-	//			handle(request);
-	//			return "";
-	//		}
-	//		void handle(Request request) throws Exception;
-	//	}
-	//
-	//	
-	//	private static String uploadFile(Request request) {
-	//		  // TO allow for multipart file uploads
-	//		  request.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(""));
-	//		  try {
-	//		    // "file" is the key of the form data with the file itself being the value
-	//		    Part filePart = request.raw().getPart("file");
-	//		    
-	//		    // The name of the file user uploaded
-	//		    String uploadedFileName = filePart.getSubmittedFileName();
-	//		    InputStream stream = filePart.getInputStream();
-	//		    // Write stream to file under storage folder
-	//		    Files.copy(stream, Paths.get("storage").resolve(uploadedFileName), StandardCopyOption.REPLACE_EXISTING);
-	//		  } catch (IOException | ServletException e) {
-	//		    return "Exception occurred while uploading file" + e.getMessage();
-	//		  }
-	//		  return "File successfully uploaded";
-	//		}
-	//		private static String downloadFile(String fileName) {
-	//		  Path filePath = Paths.get("storage").resolve(fileName);
-	//		  File file = filePath.toFile();
-	//		  if (file.exists()) {
-	//		    try {
-	//		      // Read from file and join all the lines into a string
-	//		      return Files.readAllLines(filePath).stream().collect(Collectors.joining());
-	//		    } catch (IOException e) {
-	//		      return "Exception occurred while reading file" + e.getMessage();
-	//		    }
-	//		  }
-	//		  return "File doesn't exist. Cannot download";
-	//		}
-	//		private static int countFiles() {
-	//		  // Count the number of files in the storage folder
-	//		  return new File("storage").listFiles().length;
-	//		}
-	//		private static String deleteFile(String fileName) {
-	//		  File file = Paths.get("storage").resolve(fileName).toFile();
-	//		  if (file.exists()) {
-	//		    file.delete();
-	//		    return "File deleted";
-	//		  } else {
-	//		    return "File " + fileName + " doesn't exist";
-	//		  }
-	//		}
-	//		
-
-	/*
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 */
-
-
-
-
-
-
-
-
-
-	//
-	//		
-	//	private static String save_jsonfile(Request req, Response res) {
-	//
-	//			
-	//			
-	//			String fileName=req.params(":file");
-	//			fileName=FileCommands.cleanFileName(fileName);
-	//			IDSTrace.log(IDSTrace.WEB_DATABASE,
-	//					"Save jsonfile:"+fileName);
-	//		
-	//			//System.out.println("Save file :"+fileName);
-	//
-	//			//System.out.println("POST : test");
-	//			String sresponse = req.body();
-	//			//System.out.println("\n"+sresponse);
-	//			//System.out.println("path:"+req.pathInfo()); 
-	//			
-	//			String result="";
-	//			
-	//			//if (s.compareToIgnoreCase("setfile")==0) 
-	//			{
-	//				Json data = Json.read(sresponse);
-	//				Json contents=data.get("contents");
-	//				IDSTrace.log(IDSTrace.WEB_DATABASE,
-	//						"Save Contents="+data.get("contents"));
-	//				
-	//				String uuid=JsonUtil.getStringFromJson(data, "uuid","");
-	//				
-	//				//String fileName=inputJson.get("filename").asString();
-	//				//String contents=inputJson.get("contents").asString();
-	//				
-	//				if ((fileName!=null)&&(contents!=null)) {
-	//					result=FileCommands.writeFile(fileName+".json", contents.toString());
-	//				
-	////					 Json j=Json.object();
-	////	    		        j.set("action","modified");
-	////	    		        j.set("name",fileName);
-	////	    		        j.set("uuid", uuid);
-	////	    		     CSLWebSocketForDatabase.broadcastMessageJson("database",j );
-	//					
-	//	    		     FileCommands.sendEventFileModified(fileName, uuid);
-	//					
-	//				} else {
-	//					if (fileName==null) result=result+"Invalid file name ";
-	//					if (contents==null) result=result+"Invalid contents ";
-	//			
-	//				}
-	//			}
-	//		
-	//			
-	//			Json j=Json.object();
-	//			j.set("result","ok");
-	//			
-	//			return j.toString();
-	//		}
-	//		
-	//		
-	//		
-	//		private static String load_jsonfile(Request req, Response res) {
-	//
-	//			
-	//			String fileName=req.params(":file");
-	//			//System.out.println("Load file :"+fileName);
-	//			fileName=FileCommands.cleanFileName(fileName);
-	//			IDSTrace.log(IDSTrace.WEB_DATABASE,
-	//					"Load jsonfile:"+fileName);
-	//		
-	//			
-	//			Set<String> paramKeys= req.queryParams();
-	//			
-	//			String sresponse = req.body();
-	//			//System.out.println("\n"+sresponse);
-	//			//System.out.println("path:"+req.pathInfo()); 
-	//			//String s=req.pathInfo();
-	//			//if (s.length()>1) s=s.substring(1);
-	//			
-	//			String result="";
-	//			
-	//			if (fileName!=null) {
-	//				result=FileCommands.readFile(fileName+".json");
-	//			} else {
-	//				result="No filename";
-	//			}
-	//			
-	//			System.out.println("File contents:"+result);
-	//			IDSTrace.log(IDSTrace.WEB_DATABASE,
-	//					"File Contents="+result);
-	//		
-	//			Json j=Json.object();
-	//			Json z=Json.read(result);
-	//			j.set("contents",z);
-	//			result=j.toString();
-	//			
-	//			//res.body(result);
-	//			res.body(result);
-	//			return result;
-	//		}
-	//
-
-
-
-	/*
-	 * 
-	 * 
-	 * 
-	 * 
-	 */
-
-
-
-
-
 
 }

@@ -488,6 +488,8 @@ public class CSLAlertManager implements IAlertManager {
 			jalert.set("type","alert");
 
 			String msg=jalert.toString();
+			// region -- forward alerts to the Alert Listener
+			// TODO: Send the alert directly to DB-API instead of using UDP Socket (This requires the implementation of authentication)
 			byte[]data = msg.getBytes();
 			DatagramSocket s;
 
@@ -504,6 +506,7 @@ public class CSLAlertManager implements IAlertManager {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			// endregion -- forward alerts to the Alert Listener
 		}
 
 	}

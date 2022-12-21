@@ -264,6 +264,18 @@ public class JServiceLoader {
 
 	(à exporter ds zcsl sec)*/
 
+	/***
+	 * Create an api for the registered service with a set of commands
+	 * to do so: it do the following:
+	 * 	- Adds the service name to the list of services
+	 * 	- Calls the init function of the service
+	 * 	- Adds the service commands
+	 * 	- Registers the api in the CSLInterModuleCommunicationManager
+	 * @param cslService implements ICSLService
+	 * @param j the configuration as json
+	 * @param trace whether to print debugging logs
+	 * @return
+	 */
 	static public boolean  registerService (ICSLService cslService, Json j, boolean trace) {
 
 

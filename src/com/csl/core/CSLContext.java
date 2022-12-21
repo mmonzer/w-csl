@@ -755,6 +755,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
 	/***
 	 * Set as distant API (to be called using socket --> CSLWebSocketForJcmd.execJCmd)
+	 * (Tells the CslHttpServer that this is a remote API)
 	 * @param apiname
 	 */
 	public void setApiRemote(String apiname) {

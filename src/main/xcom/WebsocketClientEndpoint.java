@@ -5,45 +5,49 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.websocket.ClientEndpoint;
-import javax.websocket.CloseReason;
-import javax.websocket.ContainerProvider;
-import javax.websocket.DeploymentException;
-import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
-import javax.websocket.WebSocketContainer;
+import javax.websocket.*;
 
 import com.ucsl.json.Json;
 
 
-
-@ClientEndpoint
+@ClientEndpoint(subprotocols = {"xsCrossfire"}, configurator = WebsocketClientEndpoint.Configurator.class)
 public class WebsocketClientEndpoint {
 
     Session userSession = null;
     private MessageHandler messageHandler;
     private URI endpointURI;
+    public static String apiKey = null;
+
+    public static class Configurator extends javax.websocket.ClientEndpointConfig.Configurator {
+        @Override
+        public void beforeRequest(Map<String, List<String>> headers)
+        {
+//            String API_KEY = "FQ0dekrg.N5G8tw9On2UHrrncoPdhlmJCeEN4gwTp";
+
+            if (apiKey != null) {
+                System.out.println(" (Adding Api-Key to the headers: " + apiKey + ")");
+                List<String> authvalues = new ArrayList<>();
+                authvalues.add("Api-Key " + apiKey);
+                headers.put("Authorization", authvalues);
+            }
+            super.beforeRequest(headers);
+        }
+    }
     
     public WebsocketClientEndpoint(URI endpointURI) {
        this.endpointURI=endpointURI;
        
        connect();
-       
-       
 	}
-       
-    
 
     private void connect()  {
-    //	System.out.println("Try to connect");
     	 try {
              WebSocketContainer container = ContainerProvider.getWebSocketContainer();
              container.connectToServer(this, endpointURI);

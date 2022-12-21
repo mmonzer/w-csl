@@ -50,10 +50,12 @@ public class CSLIDSMainServer {
         JServiceLoader.registerService(new CpeServices(), configObj, true);
         JServiceLoader.registerService(new CveServices(), configObj, true);
 
+        // set services as remote services (to be called through socket)
         CSLContext.instance.setApiRemote("ids");
         CSLContext.instance.setApiRemote("alerts");
         CSLContext.instance.setApiRemote("monitor");
         CSLContext.instance.setApiRemote("taps");
+//        CSLContext.instance.setApiRemote("demo");
 
         // Init Databaseserver, httpserver, udpserver, ...
 

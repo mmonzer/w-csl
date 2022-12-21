@@ -173,9 +173,9 @@ public final class AuthentificationManager {
 
     	//userService.register("user123", "$2a$10$9xHgxps5MJ85eBl74RMhsuORACRuvDngy.ftbB/3G9lWxMGDIz8lO", "John", "Lacey",false);
     	userService.register("user123", "123456", "John", "Lacey",true).assignRole(Role.INTEGRATOR).assignRole(Role.ADMIN);
-    	
-        new AuthController( sparkServer,userService, tokenService, debug).init();
-        new UserController(sparkServer,tokenService, debug).init();
+
+        new AuthController(sparkServer, userService, tokenService, debug).init();
+        new UserController(sparkServer, tokenService, debug).init();
 
         helpController=new HelpController(sparkServer, tokenService, true).init();
         
@@ -186,14 +186,12 @@ public final class AuthentificationManager {
         }, 60, 60, TimeUnit.SECONDS); // every minute
 
         
-        //Spark.get("/users", (req, res)  -> renderGetCommand(req,res));
-        
-      // Spark.post("*", (req, res)  -> renderPostCommand(req,res));
-        
-     
-        for (User u:userService.getUsers() ) {
-        	System.out.println(u);
-        	
+        // Spark.get("/users", (req, res)  -> renderGetCommand(req,res));
+        // Spark.post("*", (req, res)  -> renderPostCommand(req,res));
+
+
+        for (User u : userService.getUsers()) {
+            System.out.println(u);
         }
     }
 

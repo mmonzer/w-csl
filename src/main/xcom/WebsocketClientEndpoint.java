@@ -43,9 +43,14 @@ public class WebsocketClientEndpoint {
     
     public WebsocketClientEndpoint(URI endpointURI) {
        this.endpointURI=endpointURI;
-       
        connect();
 	}
+
+    public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
+        this.endpointURI=endpointURI;
+        this.apiKey = apiKey;
+        connect();
+    }
 
     private void connect()  {
     	 try {

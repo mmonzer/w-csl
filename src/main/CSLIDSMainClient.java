@@ -126,8 +126,7 @@ public class CSLIDSMainClient {
 
 			System.out.print("Try to connect to WS server " + s);
 
-			clientEndPoint = new WebsocketClientEndpoint(new URI(s));
-			clientEndPoint.apiKey = API_KEY;
+			clientEndPoint = new WebsocketClientEndpoint(new URI(s), API_KEY);
 			if (!clientEndPoint.isOpen()) {
 				System.out.println("  --> failed");
 				return;
@@ -297,6 +296,7 @@ public class CSLIDSMainClient {
 		SERVER_PORT= JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
 		USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
 		API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
+		System.out.println("API KEY is: " + API_KEY);
 		// endregion -- read configuration
 
 		boolean USE_BROKER=false;

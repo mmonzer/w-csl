@@ -49,9 +49,7 @@ public class TapsServices implements ICSLService {
 	private static final String START_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./launchSuricata.sh";
 	private static final String CLEAR_SURICATA_LOG = "sudo rm /var/log/suricata/suricata.log";
 	private static final String SURICATA_CONF_DIR = "/opt/csl/configSuricata";
-	// private static final String REMOVE_ADDITIONAL_RULES = "sudo rm "+SURICATA_CONF_DIR+"/suricata/rules/additionnalRules/*.rules";
 	private static final String REMOVE_ADDITIONAL_RULES = "cd " + SCRIPTS_DIR + " && sudo ./removeAdditionnalRules.sh";
-	// private static final String RELOAD_RULES = "sudo kill -USR2 `cat "+SURICATA_CONF_DIR+"/suricataPID`";
 	private static final String RELOAD_RULES = "cd " + SCRIPTS_DIR + " && sudo ./reloadSuricataRules.sh";
 
 	
@@ -589,7 +587,6 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		// String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
 		String command = RELOAD_RULES;
 		String output = null;
 		try {
@@ -600,7 +597,14 @@ public class TapsServices implements ICSLService {
 		ssh.endConnection();
 
 		Json out = Json.object();
-		out.at("result", output);
+		if (output.startsWith("{")) {
+			out.at("result",Json.read(output));
+		} else {
+			Json result = Json.object();
+			result.at("return", "error");
+			result.at("message", output);
+			out.at("result", result);
+		}
 		return out;
 	}
 
@@ -949,7 +953,7 @@ public class TapsServices implements ICSLService {
 			@Override
 			public Json exec(Json params) {
 
-				List allTapsOutputs = new ArrayList();
+				List<Json> allTapsOutputs = new ArrayList<>();
 
 				for (Json j : configuredTaps) {
 					String ip = j.at("ip").asString();
@@ -964,9 +968,8 @@ public class TapsServices implements ICSLService {
 
 					SshUtils ssh = new SshUtils(id, password, ip, port/*,knownHostFilePath*/);
 
-					// String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
 					String command = RELOAD_RULES;
-					String output = null;
+					String output = "";
 
 					try {
 						output = ssh.remoteExec(command);
@@ -975,9 +978,19 @@ public class TapsServices implements ICSLService {
 					}
 					ssh.endConnection();
 
-					allTapsOutputs.add(output);
+					Json result = Json.object();
+					result.at("idname",j.at("idname").asString());
 
+					if (output.startsWith("{")) {
+						result.at("result", Json.read(output));
+					} else {
+						Json res = Json.object();
+						res.at("return", "error");
+						res.at("message", output);
+						result.at("result", res);
+					}
 
+					allTapsOutputs.add(result);
 				}
 
 				Json out = Json.object();

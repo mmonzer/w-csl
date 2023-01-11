@@ -327,9 +327,9 @@ public class CSLIDSMainClient {
     	
 
 		// FIXME: Client & Server are creating the same HTTP Server at the same port
-		ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
-				new InetSocketAddress(9000),
-				JServiceLoader.getApiCommandsList(),
-				new ApiGetHelp());
+		// ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
+				// new InetSocketAddress(9000),
+				// JServiceLoader.getApiCommandsList(),
+				// new ApiGetHelp());
     }
 }

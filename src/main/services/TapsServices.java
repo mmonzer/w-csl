@@ -994,7 +994,7 @@ public class TapsServices implements ICSLService {
 					result.at("idname",j.at("idname").asString());
 					result.at("result", reloadRulesParseOutput(output));
 
-					if (result.at("result").has("NOK")) {
+					if (result.at("result").has("error")) {
 						gotError = true;
 					}
 

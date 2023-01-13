@@ -568,7 +568,27 @@ public class TapsServices implements ICSLService {
 	}
 	
 
-	
+
+	private static Json reloadRulesParseOutput(String output) {
+		if (output == null) {
+			return Json.object();
+		}
+		Json out = Json.object();
+		if (output.startsWith("{")) {
+			Json result = Json.read(output);
+			out.at("result", result);
+			if (!result.at("return").asString().equals("OK")) {
+				out.at("error",true);
+			}
+		} else {
+			Json result = Json.object();
+			result.at("return", "NOK");
+			result.at("message", output);
+			out.at("result", result);
+			out.at("error", true);
+		}
+		return out;
+	}
 	public static Json reloadRules(String name) {
 		String id = "", password ="";
 		int port = 22;
@@ -596,16 +616,7 @@ public class TapsServices implements ICSLService {
 		}
 		ssh.endConnection();
 
-		Json out = Json.object();
-		if (output.startsWith("{")) {
-			out.at("result",Json.read(output));
-		} else {
-			Json result = Json.object();
-			result.at("return", "error");
-			result.at("message", output);
-			out.at("result", result);
-		}
-		return out;
+		return reloadRulesParseOutput(output);
 	}
 
 
@@ -954,6 +965,7 @@ public class TapsServices implements ICSLService {
 			public Json exec(Json params) {
 
 				List<Json> allTapsOutputs = new ArrayList<>();
+				boolean gotError = false;
 
 				for (Json j : configuredTaps) {
 					String ip = j.at("ip").asString();
@@ -980,14 +992,10 @@ public class TapsServices implements ICSLService {
 
 					Json result = Json.object();
 					result.at("idname",j.at("idname").asString());
+					result.at("result", reloadRulesParseOutput(output));
 
-					if (output.startsWith("{")) {
-						result.at("result", Json.read(output));
-					} else {
-						Json res = Json.object();
-						res.at("return", "error");
-						res.at("message", output);
-						result.at("result", res);
+					if (result.at("result").has("NOK")) {
+						gotError = true;
 					}
 
 					allTapsOutputs.add(result);
@@ -995,6 +1003,9 @@ public class TapsServices implements ICSLService {
 
 				Json out = Json.object();
 				out.at("result", allTapsOutputs);
+				if (gotError) {
+					out.at("error", true);
+				}
 				return out;
 			}
 		});

@@ -1,41 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="mainTarget" name="Create Runnable Jar for Project W_CSL with Jar-in-Jar Loader">
+<project default="create_run_jar" name="Create Runnable Jar for Project W_CSL with Jar-in-Jar Loader">
     <!--this file was created by Eclipse Runnable JAR file Export Wizard-->
     <!--ANT 1.7 is required-->
     <!--define folder properties-->
     <property name="dir.buildfile" value="."/>
-    <property name="dir.workspace" value="."/>
-    <property name="dir.jarfile" value="."/>
-
-    <property name="dir.src" location="src" />
-    <property name="dir.build" location="bin" />
-    <property name="dir.lib" location="lib" />
-
-    <!-- Target for deleting the existing directories-->
-    <target name="clean">
-        <delete dir="${dir.build}" />
-    </target>
-
-    <path id="master-classpath">
-        <fileset dir="lib">
-            <include name="*.jar"/>
-        </fileset>
-        <pathelement path="${dir.build}"/>
-    </path>
-
-    <!-- Target for creating the new directories-->
-    <target name="makedir">
-        <mkdir dir="${dir.build}" />
-    </target>
-
-    <!-- Target for compiling the java code-->
-    <target name="compile" depends="clean, makedir">
-        <javac srcdir="${dir.src}" destdir="${dir.build}">
-            <classpath refid="master-classpath"/>
-        </javac>
-    </target>
-
-    <target name="create_run_jar" depends="compile">
+    <property name="dir.workspace" value="/Users/flausj/Documents/dev/wcsl2020"/>
+    <property name="dir.jarfile" value="/Users/flausj/Documents/dev/_csl/_suivi/SOFTCSL/demoremote20220425"/>
+    <target name="create_run_jar">
         <jar destfile="${dir.jarfile}/cslmainclient.jar">
             <manifest>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
@@ -81,30 +52,4 @@
             <zipfileset dir="${dir.buildfile}/lib" includes="guava-30.0-jre.jar"/>
         </jar>
     </target>
-    <target name="create_obf_jar" depends="create_run_jar">
-        <taskdef resource="proguard/ant/task.properties" classpath="${dir.jarfile}/proguard-ant.jar" />
-        <proguard>
-            -injars cslmainclient.jar
-            -outjars cslmainclient_obf.jar
-            -libraryjars ${dir.lib}
-            -libraryjars ${java.home}/jmods
-            -libraryjars ${dir.jarfile}/jar-in-jar-loader.zip
-
-            -keep public class main.CSLIDSMainClient { public static void main(java.lang.String[]); }
-            -keep public class org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader { public static void main(java.lang.String[]); }
-            -keep public class main.xcom.** { *; }
-            -keep public interface com.ucsl.interfaces.** { *; }
-
-            -keepattributes *Annotation*
-
-            -dontnote
-            -dontwarn
-        </proguard>
-    </target>
-
-    <!-- Defualt target to run all targets-->
-    <target name="mainTarget" depends="create_obf_jar">
-        <description>Main target</description>
-    </target>
-
 </project>

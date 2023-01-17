@@ -3,12 +3,12 @@ FROM eclipse-temurin:11-jdk as build-stage
 RUN apt-get update && apt-get install ant -y
 COPY . /usr/src/app
 WORKDIR /usr/src/app
-RUN ["ant","-f","/usr/src/app/exportjarclient.xml","create_obf_jar"]
+RUN ["ant","-f","build.xml"]
+RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/usr/src/app/exportjarclient.xml"]
 
 FROM eclipse-temurin:11-jdk as production-stage
 WORKDIR /usr/src/app
-# COPY --from=build-stage /usr/src/app/cslmainclient.jar ./cslmainclient.jar
-COPY --from=build-stage /usr/src/app/cslmainclient_obf.jar ./cslmainclient.jar
+COPY --from=build-stage /usr/src/app/cslmainclient.jar ./
 COPY cslconf/ cslconf/
 COPY csldata/ csldata/
 COPY datafile/ datafile/ 

@@ -20,8 +20,10 @@ import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
 
+import com.mongodb.util.JSON;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonMoreUtil;
 import com.ucsl.json.JsonUtil;
 import com.xcsl.miniserver.ApiHttpServer;
 
@@ -326,10 +328,13 @@ public class CSLIDSMainClient {
     	((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
     	
 
-		// FIXME: Client & Server are creating the same HTTP Server at the same port
-		ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
-				new InetSocketAddress(9000),
-				JServiceLoader.getApiCommandsList(),
-				new ApiGetHelp());
+
+		if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
+			// FIXME: Client & Server are creating the same HTTP Server at the same port
+			ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
+					new InetSocketAddress(9000),
+					JServiceLoader.getApiCommandsList(),
+					new ApiGetHelp());
+		}
     }
 }

@@ -38,15 +38,19 @@ public class TapsServices implements ICSLService {
 
 
 
-	private static final String START_TAPS = "cd ~/csl/scripts && sh launchTap.sh & exit";
-	private static final String STOP_TAPS = "cd ~/csl/scripts && sh killTaps.sh";
+	private static final String SCRIPTS_DIR = "~/csl/scripts";
+	private static final String START_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./launchTap.sh & exit";
+	private static final String STOP_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./killTaps.sh";
 
-	private static final String REPLAY = "cd ~/csl/scripts && sh replay.sh ";
+	private static final String REPLAY = "cd " + SCRIPTS_DIR + " && sudo ./replay.sh ";
 
 	
-	private static final String STOP_SURICATA = "cd ~/csl/scripts && sh killSuricata.sh";
-	private static final String START_SURICATA = "cd ~/csl/scripts && sh launchSuricata.sh";
+	private static final String STOP_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./killSuricata.sh";
+	private static final String START_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./launchSuricata.sh";
 	private static final String CLEAR_SURICATA_LOG = "sudo rm /var/log/suricata/suricata.log";
+	private static final String SURICATA_CONF_DIR = "/opt/csl/configSuricata";
+	private static final String REMOVE_ADDITIONAL_RULES = "cd " + SCRIPTS_DIR + " && sudo ./removeAdditionnalRules.sh";
+	private static final String RELOAD_RULES = "cd " + SCRIPTS_DIR + " && sudo ./reloadSuricataRules.sh";
 
 	
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
@@ -459,7 +463,8 @@ public class TapsServices implements ICSLService {
 						}
 					}
 					SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
-					ssh.remoteExec("sudo rm /home/"+username+"/configSuricata/suricata/rules/additionnalRules/*.rules");
+					// ssh.remoteExec("sudo rm /home/"+username+"/configSuricata/suricata/rules/additionnalRules/*.rules");
+					ssh.remoteExec(REMOVE_ADDITIONAL_RULES);
 					ssh.endConnection();
 					String yamlFile = "";
 					yamlFile += "%YAML 1.1\r\n---\r\n- csl.rules\r\n- cslbase.rules\r\n";
@@ -563,7 +568,27 @@ public class TapsServices implements ICSLService {
 	}
 	
 
-	
+
+	private static Json reloadRulesParseOutput(String output) {
+		if (output == null) {
+			return Json.object();
+		}
+		Json out = Json.object();
+		if (output.startsWith("{")) {
+			Json result = Json.read(output);
+			out.at("result", result);
+			if (!result.at("return").asString().equals("OK")) {
+				out.at("error",true);
+			}
+		} else {
+			Json result = Json.object();
+			result.at("return", "NOK");
+			result.at("message", output);
+			out.at("result", result);
+			out.at("error", true);
+		}
+		return out;
+	}
 	public static Json reloadRules(String name) {
 		String id = "", password ="";
 		int port = 22;
@@ -582,7 +607,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
+		String command = RELOAD_RULES;
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -591,9 +616,7 @@ public class TapsServices implements ICSLService {
 		}
 		ssh.endConnection();
 
-		Json out = Json.object();
-		out.at("result", output);
-		return out;
+		return reloadRulesParseOutput(output);
 	}
 
 
@@ -941,7 +964,8 @@ public class TapsServices implements ICSLService {
 			@Override
 			public Json exec(Json params) {
 
-				List allTapsOutputs = new ArrayList();
+				List<Json> allTapsOutputs = new ArrayList<>();
+				boolean gotError = false;
 
 				for (Json j : configuredTaps) {
 					String ip = j.at("ip").asString();
@@ -956,8 +980,8 @@ public class TapsServices implements ICSLService {
 
 					SshUtils ssh = new SshUtils(id, password, ip, port/*,knownHostFilePath*/);
 
-					String command = "sudo kill -USR2 `cat ~/csl/configSuricata/suricataPID`";
-					String output = null;
+					String command = RELOAD_RULES;
+					String output = "";
 
 					try {
 						output = ssh.remoteExec(command);
@@ -966,13 +990,22 @@ public class TapsServices implements ICSLService {
 					}
 					ssh.endConnection();
 
-					allTapsOutputs.add(output);
+					Json result = Json.object();
+					result.at("idname",j.at("idname").asString());
+					result.at("result", reloadRulesParseOutput(output));
 
+					if (result.at("result").has("error")) {
+						gotError = true;
+					}
 
+					allTapsOutputs.add(result);
 				}
 
 				Json out = Json.object();
 				out.at("result", allTapsOutputs);
+				if (gotError) {
+					out.at("error", true);
+				}
 				return out;
 			}
 		});

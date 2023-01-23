@@ -40,6 +40,10 @@ public class ScanActif {
 	boolean logMode = false;
 	String debugPath = "";
 	String logPath = "";
+
+	private static final String SCRIPTS_DIR = "~/csl/scripts";
+	private static final String SCAN_NETWORK = "cd " + SCRIPTS_DIR + " && sudo ./scanNetwork.sh";
+	private static final String SCAN_MACHINE = "cd " + SCRIPTS_DIR + " && sudo ./scanMachine.sh ";
 	/**
 	 * Constructeur de la classe ScanActif, la classe contient de méthodes permettant de scanner des sous réseau et des machines avec Nmap
 	 * @param debug Active ou non le débug
@@ -198,7 +202,8 @@ public class ScanActif {
 						ssh = new SshUtils(username,password,ipadd,22/*,knownHostFilePath*/);
 					}
 				}
-				output =ssh.remoteExec("sh /home/"+username+"/scanNetwork.sh");
+				//output =ssh.remoteExec("sh /home/"+username+"/scanNetwork.sh");
+				output =ssh.remoteExec(SCAN_NETWORK);
 				ssh.endConnection();
 			}
 			else {
@@ -474,7 +479,8 @@ public class ScanActif {
 					ssh = new SshUtils(username,password,ipadd,22/*,knownHostFilePath*/);
 				}
 			}
-			output =ssh.remoteExec("sh /home/"+username+"/scanMachine.sh "+ip);
+			// output =ssh.remoteExec("sh /home/"+username+"/scanMachine.sh "+ip);
+			 output =ssh.remoteExec(SCAN_MACHINE+ip);
 			ssh.endConnection();
 		}
 		else {

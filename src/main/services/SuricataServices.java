@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IApiCommands;
@@ -31,6 +30,14 @@ public class SuricataServices implements ICSLService {
 	static String localPort;
 	static String knownHostFilePath;
 
+	private static final String SURICATA_CONF_DIR = "~/csl/configSuricata";
+	private static final String STOP_SURICATA = "sudo kill -9 `cat "+SURICATA_CONF_DIR+"/suricataPID`";
+	private static final String RELOAD_RULES = "sudo kill -USR2 `cat "+SURICATA_CONF_DIR+"/suricataPID`";
+
+	private static String startSuricataCommand(String ip, String port) {
+		return "cd "+SURICATA_CONF_DIR+" && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
+				"sudo suricata -D -c "+SURICATA_CONF_DIR+"/suricata/suricata.yaml -i enp0s3 --pidfile "+SURICATA_CONF_DIR+"/suricataPID";
+	}
 	
 	
 	private static Json readJsonFile(String fileName) throws IOException {
@@ -66,7 +73,8 @@ public class SuricataServices implements ICSLService {
 	      myWriter.write(s);
 	      myWriter.close();
 	}
-	
+
+	// Not used anymore, its TapsServices.java's counterpart is
 	public static Json startSuricata(String id, String password, String name) {
 		String ip = null;
 		int port = 22;
@@ -81,8 +89,9 @@ public class SuricataServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		String command = "cd /home/"+id+"/configSuricata && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
-		"sudo suricata -D -c /home/"+id+"configSuricata/suricata/suricata.yaml -i enp0s3 --pidfile /home/"+id+"configSuricata/suricataPID";
+		// String command = "cd /home/"+id+"/configSuricata && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
+		// "sudo suricata -D -c /home/"+id+"configSuricata/suricata/suricata.yaml -i enp0s3 --pidfile /home/"+id+"configSuricata/suricataPID";
+		String command = startSuricataCommand(localIP, localPort);
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -108,7 +117,8 @@ public class SuricataServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		String command = "sudo kill -9 `cat /home/"+id+"configSuricata/suricataPID`";
+		// String command = "sudo kill -9 `cat /home/"+id+"configSuricata/suricataPID`";
+		String command = STOP_SURICATA;
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);
@@ -136,7 +146,8 @@ public class SuricataServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		String command = "sudo kill -USR2 `cat /home/"+id+"configSuricata/suricataPID`";
+		//String command = "sudo kill -USR2 `cat /home/"+id+"configSuricata/suricataPID`";
+		String command = RELOAD_RULES;
 		String output = null;
 		try {
 			output = ssh.remoteExec(command);

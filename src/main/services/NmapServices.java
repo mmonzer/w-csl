@@ -40,6 +40,8 @@ public class NmapServices implements ICSLService {
 	static boolean logMode = false;
 	static String debugPath = "";
 	static String logPath = "";
+
+	private static final String GET_TAP_NETWORK = "ip -o -f inet addr show $(cat ~/nmapInterface.txt) | awk '/scope global/ {print $4}'";
 	
 	public NmapServices() {
 		this.name="nmap";
@@ -203,13 +205,14 @@ public class NmapServices implements ICSLService {
 								System.out.println("Using default SSH port (22)");
 							}
 							SshUtils ssh = new SshUtils(j.at("username").asString(),j.at("password").asString(),j.at("ip").asString(),port );
-							result = ssh.remoteExec("ip -o -f inet addr show $(cat /home/"+j.at("username").asString()+"/nmapInterface.txt) | awk '/scope global/ {print $4}'");
+							// result = ssh.remoteExec("ip -o -f inet addr show $(cat /home/"+j.at("username").asString()+"/nmapInterface.txt) | awk '/scope global/ {print $4}'");
+							 result = ssh.remoteExec(GET_TAP_NETWORK);
 						} catch (IOException e) {
 							accessible = false;
 							e.printStackTrace();
 						} catch (JSchException e) {
 							accessible = false;
-							System.out.println("Le tap "+j.at("ip").asString()+" est innacessible pour le moment");
+							System.out.println("Le tap "+j.at("ip").asString()+" est inacessible pour le moment");
 						}
 						if(accessible) {
 							result = result.substring(0, result.length()-2);							

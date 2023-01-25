@@ -22,7 +22,7 @@ public class CSLWebSocketForJcmd {
 
 	public static  long uuidctr=0;
 	private static final String RESPONSE = "response";
-	public static long TIME_OUT=10000;
+	public static long TIME_OUT=30000;
 
 
 

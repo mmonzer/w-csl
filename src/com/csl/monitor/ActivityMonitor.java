@@ -22,6 +22,8 @@ public class ActivityMonitor {
 	boolean showTicks=true;
 	
 	Map<String, Json> taps= new HashMap<String, Json>();
+
+	ActivityHistory history = new ActivityHistory(30);
 	
 	
 //	
@@ -96,29 +98,31 @@ public class ActivityMonitor {
 	// build tic json
 	synchronized Json tic2Json() {
 
-				Json j = Json.object();
+				Json tick = Json.object();
 				// j.set("source", p.getSource().toString());
-				j.set("timestamp", System.currentTimeMillis());
-				j.set("type", "TIC");
+				tick.set("timestamp", System.currentTimeMillis());
+				tick.set("type", "TIC");
 				
-				j.set("nb_packets",nb_packets_total);
-				j.set("data_size",data_size_total);
+				tick.set("nb_packets",nb_packets_total);
+				tick.set("data_size",data_size_total);
 				
 				nb_packets_total=0;
 				data_size_total=0;
-				
-				
+
+
 				Json jtaps=Json.array();
 				for (Map.Entry<String, Json> entry : taps.entrySet()) {
 				 //   String key = entry.getKey();
 				    Json value = entry.getValue();
 				    jtaps.add(value);
 				}
-				j.set("taps",jtaps);
+				tick.set("taps",jtaps);
 				
 				
 				taps.clear();
-				return j;
+
+				history.addTick(tick);
+				return tick;
 			}
 			
 			
@@ -133,15 +137,18 @@ public class ActivityMonitor {
 			@Override
 			public void run() {
 				//System.out.println("TIC");
-				Json j = tic2Json();
+				Json tick = tic2Json();
 				
-				sendTickFromIDS(j);
+				sendTickFromIDS(tick);
 				
 			}
 		};
 		
 		scheduler.scheduleAtFixedRate(sendTic, 1, 1, TimeUnit.SECONDS);
 	}
-	
+
+	public Json getHistoryJson() {
+		return history.toJson();
+	}
 	
 }

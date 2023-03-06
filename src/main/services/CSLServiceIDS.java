@@ -12,6 +12,7 @@ import com.csl.ids.IDSTapManager;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.modules.ModuleIDS;
+import com.csl.monitor.ActivityMonitor;
 import com.csl.util.RulesUtil;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.interfaces.IAlertDescriptor;
@@ -92,30 +93,9 @@ public class CSLServiceIDS implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
-				Json j=Json.object();
-				j.set("nb_links", 50+(int)(Math.random()*50));
-				
-				Json jHisto= Json.array();
-				
-				long time=CSLContext.instance.getTimeSystemCurrent();
-				
-				int period =60;
-				Json times= Json.array();
-				
-				for (int i=0;i<10;i++) {
-					jHisto.add(50+(int)(Math.random()*50));
-					times.add(time-period*1000*(10-i));
-				}
-				
-				
-				j.set("histo",jHisto);
-				j.set("times",times );
-				j.set("period",period);
-
-				return j;
+				ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
+				ActivityMonitor monitor = ids.getActivityMonitor();
+				return monitor.getHistoryJson();
 			}
 		},
 				new JsonCmdHelp()

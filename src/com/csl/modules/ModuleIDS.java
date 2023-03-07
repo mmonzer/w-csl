@@ -195,15 +195,18 @@ public class ModuleIDS implements IModule {
 	public IResult init(ICSLContext context,IModuleContext mcontext) {
 		// TODO Auto-generated method stub
 		this.context=context;
-		Json config=mcontext.getConfig();
-		Json j=context.getConfig();
+//		Json config=mcontext.getConfig();
+		Json config=context.getConfig();
 		
 		
 		
 		
-		boolean showTicks=JsonUtil.getBooleanFromJson(j, "ids_conf/show_ticks", true);
+		boolean showTicks=JsonUtil.getBooleanFromJson(config, "ids_conf/show_ticks", true);
 
 		activityMonitor.setShowTicks(showTicks);
+
+		int maxHistSize = JsonUtil.getIntFromJson(config, "ids_conf/history_length", 60);
+		activityMonitor.setMaxHistorySize(maxHistSize);
 		
 		activityMonitor.startTicTask();
 

@@ -1,10 +1,10 @@
 package com.csl.monitor;
 
-import com.csl.core.CSLContext;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ActivityHistory {
     /**
@@ -13,9 +13,9 @@ public class ActivityHistory {
      */
     private int history_size = 10;
 
-    private ArrayList<Integer> histogram = new ArrayList<>(history_size+1);
-    private ArrayList<Integer> links = new ArrayList<>(history_size+1);
-    private ArrayList<Long> times = new ArrayList<>(history_size+1);
+    private List<Integer> histogram = new LinkedList<>();
+    private List<Integer> links = new LinkedList<>();
+    private List<Long> times = new LinkedList<>();
 
     ActivityHistory(int max_size) {
         history_size = max_size;
@@ -51,6 +51,32 @@ public class ActivityHistory {
         }
         long time = JsonUtil.getLongFromJson(tick, "timestamp", System.currentTimeMillis());
         addTick(nb_packets, nb_links, time);
+    }
+
+    public int currentHistorySize() {
+        /**
+         * Get the number of elements currently in the history
+         *
+         * @return the size of the history
+         */
+        return histogram.size();
+    }
+    public int maxHistorySize() {
+        /**
+         * Get the current maximum size of the history
+         *
+         * @return The current maximum size of the history
+         */
+        return history_size;
+    }
+
+    public void setHistorySize(int size) {
+        /**
+         * Change the maximum history size
+         *
+         * @param size The new maximum history size
+         */
+        this.history_size = Math.max(0, size);
     }
 
     public Json toJson() {
@@ -91,12 +117,11 @@ public class ActivityHistory {
         return Math.round(sum/(1000*(times.size()-1)));
     }
 
-    private <T> ArrayList<T> push_back(ArrayList<T> array, T value) {
-        ArrayList<T> res = new ArrayList<>(array);
-        res.add(value);
-        if (res.size() > history_size) {
-            res.remove(0);
+    private <T> List<T> push_back(List<T> array, T value) {
+        array.add(value);
+        if (array.size() > history_size) {
+            array.remove(0);
         }
-        return res;
+        return array;
     }
 }

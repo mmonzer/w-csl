@@ -23,7 +23,7 @@ public class ActivityMonitor {
 	
 	Map<String, Json> taps= new HashMap<String, Json>();
 
-	ActivityHistory history = new ActivityHistory(30);
+	ActivityHistory history = new ActivityHistory(60);
 	
 	
 //	
@@ -71,7 +71,32 @@ public class ActivityMonitor {
 		this.showTicks = showTicks;
 	}
 
+	public int getHistorySize() {
+		/**
+		 * Get the number of elements in the history
+		 *
+		 * @return the number of elements held in the history
+		 */
+		return history.currentHistorySize();
+	}
 
+	public int getMaxHistorySize() {
+		/**
+		 * Get the maximum number of elements in the history
+		 *
+		 * @return the maximum length of the history
+		 */
+		return history.maxHistorySize();
+	}
+
+	public void setMaxHistorySize(int size) {
+		/**
+		 * Set the maximum number of elements in the history
+		 *
+		 * @param size the new maximum length of the history
+		 */
+		history.setHistorySize(size);
+	}
 
 
 	public void sendTickFromIDS(Json jj) {

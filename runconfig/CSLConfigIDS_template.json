@@ -149,7 +149,8 @@
 		"show_ticks":false,
 		"kill_previous_instance": true,
 		"taps_id":["tap01"],
-		"taps_dir":"taps"
+		"taps_dir":"taps",
+		"history_length": 60
 	},
 	"alert_viewer": {
 		"ip": "127.0.0.1",

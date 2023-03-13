@@ -25,12 +25,7 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.xcsl.miniserver.ApiHttpServer;
 
-import main.services.AlertsService;
-import main.services.CSLServiceDemo;
-import main.services.CSLServiceIDS;
-import main.services.MonitorService;
-import main.services.NmapServices;
-import main.services.TapsServices;
+import main.services.*;
 import main.util.CSLRunningArgs;
 import main.xcom.WebsocketClientEndpoint;
 
@@ -308,6 +303,7 @@ public class CSLIDSMainClient {
         JServiceLoader.registerService(new MonitorService(), configObj, true);
         JServiceLoader.registerService(new TapsServices(), configObj, true);
         JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
+        JServiceLoader.registerService(new SnmpServices(), configObj, true);
 
         JServiceLoader.registerService(new NmapServices(), configObj, true);
 
@@ -328,7 +324,7 @@ public class CSLIDSMainClient {
         if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
             // FIXME: Client & Server are creating the same HTTP Server at the same port
             ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
-                    new InetSocketAddress(9000),
+                    new InetSocketAddress(9900),
                     JServiceLoader.getApiCommandsList(),
                     new ApiGetHelp());
         }

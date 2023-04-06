@@ -16,6 +16,7 @@
             </manifest>
             <zipfileset src="jar-in-jar-loader.zip"/>
             <fileset dir="${dir.buildfile}/bin"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="activemq-stomp-5.18.0.jar"/>
             <zipfileset dir="${dir.buildfile}/lib" includes="annotations-13.0.jar"/>
             <zipfileset dir="${dir.buildfile}/lib" includes="bson-4.2.0.jar"/>
             <zipfileset dir="${dir.buildfile}/lib" includes="commons-codec-1.9.jar"/>
@@ -50,6 +51,15 @@
             <zipfileset dir="${dir.buildfile}/lib" includes="jackson-databind-2.11.2.jar"/>
             <zipfileset dir="${dir.buildfile}/lib" includes="java-json.jar"/>
             <zipfileset dir="${dir.buildfile}/lib" includes="guava-30.0-jre.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-aop-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-beans-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-context-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-core-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-expression-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-jcl-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-messaging-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-web-5.2.22.RELEASE.jar"/>
+            <zipfileset dir="${dir.buildfile}/lib" includes="lib/spring-websocket-5.2.22.RELEASE.jar"/>
         </jar>
     </target>
 </project>

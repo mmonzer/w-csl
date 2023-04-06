@@ -303,7 +303,7 @@ public class CSLIDSMainClient {
         JServiceLoader.registerService(new MonitorService(), configObj, true);
         JServiceLoader.registerService(new TapsServices(), configObj, true);
         JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
-        JServiceLoader.registerService(new SnmpServices(), configObj, true);
+        JServiceLoader.registerService(new DiscoveryServices(), configObj, true);
 
         JServiceLoader.registerService(new NmapServices(), configObj, true);
 

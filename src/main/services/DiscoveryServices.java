@@ -14,11 +14,14 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -220,6 +223,24 @@ public class DiscoveryServices implements ICSLService {
     }
 
     /**
+     * Get the service of the status.
+     * @return A {@link Json} object contining information about the status of sub services.
+     */
+    public Json getStatus() {
+        Json status = Json.object();
+
+        Json entitiesList = listEntities();
+        if (entitiesList.isArray()) {
+            status.set("httpRestApi", "OK");
+        } else {
+            status.set("httpRestApi", "NOK");
+        }
+        status.set("websocket", scanWebSocketHandler.getStatus());
+
+        return status;
+    }
+
+    /**
      * Initialize the service, setting the list of known managers and registering the commands.
      *
      * @param jConfig The configuration of the service (that is, the relevant section of the config file)
@@ -253,6 +274,7 @@ public class DiscoveryServices implements ICSLService {
 //        addCmd("get_data", params -> params.has("start_time")
 //                                            ? getDataSince(params.at("start_time").asLong())
 //                                            : getData());
+        addCmd("get_status", params -> getStatus());
         addCmd("add_entity", params -> addEntity(
                 params.get("name").asString(),
                 params.get("ip").asString(),
@@ -407,6 +429,10 @@ public class DiscoveryServices implements ICSLService {
                 }
             }
         } catch (Exception e) {
+            if (e.getCause() instanceof ConnectException) {
+                res = Json.object("result", "NOK",
+                                    "error", "Connection error with CSL-Scan");
+            }
             e.printStackTrace(System.err);
         }
         return res;

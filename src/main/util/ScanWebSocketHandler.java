@@ -66,6 +66,21 @@ public class ScanWebSocketHandler {
     }
 
     /**
+     * Get the status of the websocket handling :
+     * - the
+     * @return
+     */
+    public Json getStatus() {
+        Json status = Json.object();
+
+        status.set("requestsWebSocket", (stompRequestsSession != null && stompRequestsSession.isConnected()) ? "OK" : "NOK");
+        status.set("notificationsWebSocket", (stompNotificationSession != null && stompNotificationSession.isConnected()) ? "OK" : "NOK");
+        status.set("scanRequestsQueue", scanRequestsQueue.size());
+
+        return status;
+    }
+
+    /**
      * Start scanning all registered entities
      * @return An id identifying the scan for further notice.
      */
@@ -81,6 +96,22 @@ public class ScanWebSocketHandler {
         }
     }
 
+    /**
+     * Actually start the scan, without checking the validity of the session.
+     * @param entities A list of entities to scan. May be null, resulting in a scan of all entities.
+     */
+    private void startScan(List<String> entities) {
+        if (entities == null || entities.isEmpty()) {
+            stompRequestsSession.send(websocketStartDiscoveryEndpoint, "");
+        } else {
+            stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(entities.toArray()));
+        }
+    }
+
+    /**
+     * Check if the websockets are connected, and tries to connect if not.
+     * Blocking, should be called asynchronously.
+     */
     private void connectStompSessionsIfNecessary() {
         if (stompNotificationSession == null || !stompNotificationSession.isConnected())  {
             try {
@@ -102,27 +133,28 @@ public class ScanWebSocketHandler {
         }
     }
 
+    /**
+     * Connect the notification socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
+     * Blocks so should be called asynchronously.
+     * @return The session we just created.
+     * @throws ExecutionException if connection failed.
+     * @throws InterruptedException if connection was interrupted.
+     */
     private StompSession subscribeToNotifications() throws ExecutionException, InterruptedException {
-        WebSocketClient webSocketClient = new StandardWebSocketClient();
-        SockJsClient sockJsClient = new SockJsClient(new ArrayList<>(Arrays.asList(new WebSocketTransport(webSocketClient))));
+        WebSocketStompClient stompClient = createStompClient();
 
-        WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setMessageConverter(new JsonMessageConverter());
-        stompClient.setTaskScheduler(new DefaultManagedTaskScheduler());
+        // Define the callbacks and return the future when it is realized.
         return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
             @Override
             public Type getPayloadType(StompHeaders headers) {
                 return super.getPayloadType(headers);
             }
 
-            public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                String pl = new String(payload);
-                exception.printStackTrace(System.err);
-            }
-
             @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                super.handleFrame(headers, payload);
+            public void handleFrame(StompHeaders headers, Object payloadRaw) {
+                super.handleFrame(headers, payloadRaw);
+                Json payload = (Json) payloadRaw;
+
                 if (payload != null) {
                     System.out.println("[STOMP] " + payload.toString());
                 } else {
@@ -138,14 +170,17 @@ public class ScanWebSocketHandler {
         }).get();
     }
 
+    /**
+     * Connect the requests socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
+     * Blocks so should be called asynchronously.
+     * @return The session we just created.
+     * @throws ExecutionException if connection failed.
+     * @throws InterruptedException if connection was interrupted.
+     */
     private StompSession connectToRequestsWebSocket() throws ExecutionException, InterruptedException {
-        WebSocketClient requestClient = new StandardWebSocketClient();
-        SockJsClient sockJsRequestClient = new SockJsClient(new ArrayList<>(Arrays.asList(new WebSocketTransport(requestClient))));
 
-        WebSocketStompClient requestStompClient = new WebSocketStompClient(sockJsRequestClient);
-        requestStompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        requestStompClient.setTaskScheduler(new DefaultManagedTaskScheduler());
-
+        WebSocketStompClient requestStompClient = createStompClient();
+        // Define the callbacks and return the future when it is realized.
         return requestStompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
@@ -167,18 +202,23 @@ public class ScanWebSocketHandler {
     }
 
     /**
-     * Actually start the scan, without checking the validity of the session.
-     * @param entities A list of entities to scan. May be null, resulting in a scan of all entities.
+     * Create the STOMP client with our custom message interpreter.
+     * @return a {@link WebSocketStompClient} suitable for our needs.
      */
-    private void startScan(List<String> entities) {
-        if (entities == null || entities.isEmpty()) {
-            stompRequestsSession.send(websocketStartDiscoveryEndpoint, "");
-        } else {
-            String[] entitiesArray = entities.toArray(new String[0]);
-            stompRequestsSession.send(websocketStartDiscoveryEndpoint, entitiesArray);
-        }
+    private WebSocketStompClient createStompClient() {
+        WebSocketClient client = new StandardWebSocketClient();
+        SockJsClient sockJsClient = new SockJsClient(new ArrayList<>(Arrays.asList(new WebSocketTransport(client))));
+
+        WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
+        stompClient.setMessageConverter(new JsonMessageConverter());
+        stompClient.setTaskScheduler(new DefaultManagedTaskScheduler());
+
+        return  stompClient;
     }
 
+    /**
+     * Try to execute all the scan requests in the queue.
+     */
     private void purgeScanRequestsQueue() {
         List<String> scanRequest;
         while ((scanRequest = scanRequestsQueue.poll()) != null) {
@@ -194,6 +234,9 @@ public class ScanWebSocketHandler {
         }
     }
 
+    /**
+     * Custom message converter to serialize and deserialize {@link Json} objects.
+     */
     private static class JsonMessageConverter extends AbstractMessageConverter {
         public JsonMessageConverter() {
             super(new MimeType("application", "json"));
@@ -201,22 +244,26 @@ public class ScanWebSocketHandler {
 
         @Override
         protected boolean supports(Class<?> clazz) {
-            return String.class.isAssignableFrom(clazz) || (clazz.isArray() && String.class.isAssignableFrom(clazz.getComponentType()));
+            return String.class.isAssignableFrom(clazz)
+                    || clazz.isArray() && String.class.isAssignableFrom(clazz.getComponentType())
+                    || Json.class.isAssignableFrom(clazz)
+                    ;
         }
 
         @Override
-        protected String convertToInternal(Object payload, MessageHeaders headers, Object conversionHint) {
-            if (payload instanceof String) {
-                return (String) payload;
+        protected Object convertToInternal(Object payload, MessageHeaders headers, Object conversionHint) {
+            if (payload instanceof Json) {
+                return ((Json) payload).toString().getBytes();
+            } else if (payload instanceof String) {
+                return ((String) payload).getBytes();
             } else if (payload instanceof byte[]) {
-                return new String((byte[]) payload);
+                return payload;
             } else if (payload instanceof String[]) {
-//                return "[" + String.join("\",\"", (String[]) payload) + "]";
                 Json result = Json.array();
                 for (String x: (String[]) payload) {
                     result.add(x);
                 }
-                return result.toString();
+                return result.toString().getBytes();
             } else {
                 throw new RuntimeException("Bad type");
             }

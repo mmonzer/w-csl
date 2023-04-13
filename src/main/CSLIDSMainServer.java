@@ -12,13 +12,7 @@ import com.csl.web.database.CSLServiceJsonDataBase;
 
 import com.ucsl.json.Json;
 
-import main.services.AlertsService;
-import main.services.CSLServiceDemo;
-import main.services.CSLServiceIDS;
-import main.services.CpeServices;
-import main.services.CveServices;
-import main.services.MonitorService;
-import main.services.TapsServices;
+import main.services.*;
 import main.util.CSLRunningArgs;
 
 public class CSLIDSMainServer {
@@ -49,12 +43,14 @@ public class CSLIDSMainServer {
 
         JServiceLoader.registerService(new CpeServices(), configObj, true);
         JServiceLoader.registerService(new CveServices(), configObj, true);
+        JServiceLoader.registerService(new DiscoveryServices(), configObj, true);
 
         // set services as remote services (to be called through socket)
         CSLContext.instance.setApiRemote("ids");
         CSLContext.instance.setApiRemote("alerts");
         CSLContext.instance.setApiRemote("monitor");
         CSLContext.instance.setApiRemote("taps");
+        CSLContext.instance.setApiRemote("discovery");
 //        CSLContext.instance.setApiRemote("demo");
 
         // Init Databaseserver, httpserver, udpserver, ...

@@ -1,3 +1,4 @@
 Dockerfile
 Dockerfile.srv
 bin/
+cacerts.jks

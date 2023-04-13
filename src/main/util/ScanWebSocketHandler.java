@@ -1,7 +1,8 @@
 package main.util;
 
 import com.ucsl.json.Json;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import com.ucsl.json.JsonUtil;
+import main.services.DiscoveryServices;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.*;
@@ -26,6 +27,7 @@ import java.util.concurrent.*;
  * Handle the WebSocket connections with CSL-Scan.
  */
 public class ScanWebSocketHandler {
+    private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
     private String scanManagerDiscoveryUrl;
@@ -44,7 +46,8 @@ public class ScanWebSocketHandler {
      * Create a new manager with the correct URL.
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(String scanManagerDiscoveryUrl) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl) {
+        this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
 
         // Schedule reconnection to websockets every 2 seconds
@@ -98,13 +101,13 @@ public class ScanWebSocketHandler {
 
     /**
      * Actually start the scan, without checking the validity of the session.
-     * @param entities A list of entities to scan. May be null, resulting in a scan of all entities.
+     * @param uuids A list of entities to scan. May be null, resulting in a scan of all entities.
      */
-    private void startScan(List<String> entities) {
-        if (entities == null || entities.isEmpty()) {
+    private void startScan(List<String> uuids) {
+        if (uuids == null || uuids.isEmpty()) {
             stompRequestsSession.send(websocketStartDiscoveryEndpoint, "");
         } else {
-            stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(entities.toArray()));
+            stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(uuids.toArray()));
         }
     }
 
@@ -159,6 +162,13 @@ public class ScanWebSocketHandler {
                     System.out.println("[STOMP] " + payload.toString());
                 } else {
                     System.out.println("[STOMP] null");
+                }
+                switch(JsonUtil.getStringFromJson(payload, "status", "NONE")) {
+                    case "READY_CHANGES":
+                        discoveryService.handleCpeItemChanges();
+                        break;
+                    default:
+                        break;
                 }
             }
 

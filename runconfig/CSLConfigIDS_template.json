@@ -9,7 +9,11 @@
 		"use_ssl": true,
 		"launch_web_api_server": false
 	},
-	
+	"discovery": {
+		"manager_ip": "host.docker.internal",
+		"manager_port": 8080,
+		"manager_protocol": "http"
+	},
 	"nmap_service": {
 		"debug_mode":true,
 		"debug_dir":"/home/anto/Documents/nmaplog/",

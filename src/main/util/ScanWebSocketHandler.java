@@ -5,8 +5,11 @@ import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.*;
-import org.springframework.messaging.simp.stomp.*;
+import org.springframework.messaging.converter.AbstractMessageConverter;
+import org.springframework.messaging.simp.stomp.StompFrameHandler;
+import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.scheduling.concurrent.DefaultManagedTaskScheduler;
 import org.springframework.util.MimeType;
 import org.springframework.web.client.ResourceAccessException;
@@ -17,11 +20,13 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
+
 
 /**
  * Handle the WebSocket connections with CSL-Scan.
@@ -30,11 +35,11 @@ public class ScanWebSocketHandler {
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
+    private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private String scanManagerDiscoveryUrl;
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
-    private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private StompFrameHandler stompNotificationHandler = new StompSessionHandlerAdapter() {
         @Override
         public void handleFrame(StompHeaders headers, Object payload) {
@@ -44,6 +49,7 @@ public class ScanWebSocketHandler {
 
     /**
      * Create a new manager with the correct URL.
+     *
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
     public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl) {
@@ -71,6 +77,7 @@ public class ScanWebSocketHandler {
     /**
      * Get the status of the websocket handling :
      * - the
+     *
      * @return
      */
     public Json getStatus() {
@@ -85,6 +92,7 @@ public class ScanWebSocketHandler {
 
     /**
      * Start scanning all registered entities
+     *
      * @return An id identifying the scan for further notice.
      */
     public Json requestScan(List<String> entities) {
@@ -101,6 +109,7 @@ public class ScanWebSocketHandler {
 
     /**
      * Actually start the scan, without checking the validity of the session.
+     *
      * @param uuids A list of entities to scan. May be null, resulting in a scan of all entities.
      */
     private void startScan(List<String> uuids) {
@@ -116,7 +125,7 @@ public class ScanWebSocketHandler {
      * Blocking, should be called asynchronously.
      */
     private void connectStompSessionsIfNecessary() {
-        if (stompNotificationSession == null || !stompNotificationSession.isConnected())  {
+        if (stompNotificationSession == null || !stompNotificationSession.isConnected()) {
             try {
                 stompNotificationSession = subscribeToNotifications();
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
@@ -130,7 +139,7 @@ public class ScanWebSocketHandler {
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
             try {
                 stompRequestsSession = connectToRequestsWebSocket();
-            } catch (InterruptedException | ExecutionException  e) {
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 stompRequestsSession = null;
             }
         }
@@ -139,11 +148,12 @@ public class ScanWebSocketHandler {
     /**
      * Connect the notification socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
      * Blocks so should be called asynchronously.
+     *
      * @return The session we just created.
-     * @throws ExecutionException if connection failed.
+     * @throws ExecutionException   if connection failed.
      * @throws InterruptedException if connection was interrupted.
      */
-    private StompSession subscribeToNotifications() throws ExecutionException, InterruptedException {
+    private StompSession subscribeToNotifications() throws ExecutionException, InterruptedException, TimeoutException {
         WebSocketStompClient stompClient = createStompClient();
 
         // Define the callbacks and return the future when it is realized.
@@ -159,11 +169,11 @@ public class ScanWebSocketHandler {
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
-                    System.out.println("[STOMP] " + payload.toString());
+                    System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
                 } else {
                     System.out.println("[STOMP] null");
                 }
-                switch(JsonUtil.getStringFromJson(payload, "status", "NONE")) {
+                switch (JsonUtil.getStringFromJson(payload, "status", "NONE")) {
                     case "READY_CHANGES":
                         discoveryService.handleCpeItemChanges();
                         break;
@@ -177,17 +187,18 @@ public class ScanWebSocketHandler {
                 super.afterConnected(session, connectedHeaders);
                 session.subscribe(websocketNotificationsEndpoint, this);
             }
-        }).get();
+        }).get(1000, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Connect the requests socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
      * Blocks so should be called asynchronously.
+     *
      * @return The session we just created.
-     * @throws ExecutionException if connection failed.
+     * @throws ExecutionException   if connection failed.
      * @throws InterruptedException if connection was interrupted.
      */
-    private StompSession connectToRequestsWebSocket() throws ExecutionException, InterruptedException {
+    private StompSession connectToRequestsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
 
         WebSocketStompClient requestStompClient = createStompClient();
         // Define the callbacks and return the future when it is realized.
@@ -196,7 +207,7 @@ public class ScanWebSocketHandler {
             public void handleFrame(StompHeaders headers, Object payload) {
                 super.handleFrame(headers, payload);
                 if (payload != null) {
-                    System.out.println("[STOMP] " + payload.toString());
+                    System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
                     // handle response
                 } else {
                     System.out.println("[STOMP] null");
@@ -208,11 +219,12 @@ public class ScanWebSocketHandler {
                 super.afterConnected(session, connectedHeaders);
                 purgeScanRequestsQueue();
             }
-        }).get();
+        }).get(1, TimeUnit.SECONDS);
     }
 
     /**
      * Create the STOMP client with our custom message interpreter.
+     *
      * @return a {@link WebSocketStompClient} suitable for our needs.
      */
     private WebSocketStompClient createStompClient() {
@@ -223,7 +235,7 @@ public class ScanWebSocketHandler {
         stompClient.setMessageConverter(new JsonMessageConverter());
         stompClient.setTaskScheduler(new DefaultManagedTaskScheduler());
 
-        return  stompClient;
+        return stompClient;
     }
 
     /**
@@ -247,7 +259,7 @@ public class ScanWebSocketHandler {
     /**
      * Custom message converter to serialize and deserialize {@link Json} objects.
      */
-    private static class JsonMessageConverter extends AbstractMessageConverter {
+    private class JsonMessageConverter extends AbstractMessageConverter {
         public JsonMessageConverter() {
             super(new MimeType("application", "json"));
         }
@@ -270,7 +282,7 @@ public class ScanWebSocketHandler {
                 return payload;
             } else if (payload instanceof String[]) {
                 Json result = Json.array();
-                for (String x: (String[]) payload) {
+                for (String x : (String[]) payload) {
                     result.add(x);
                 }
                 return result.toString().getBytes();

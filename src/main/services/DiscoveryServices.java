@@ -19,6 +19,7 @@ import org.eclipse.jetty.http.HttpMethod;
 import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class DiscoveryServices implements ICSLService {
     private ScanWebSocketHandler scanWebSocketHandler = null;
     private String dbapiUrl;
     private String apiKey;
+    private final ZoneId zoneId = ZoneId.of("Europe/Paris");
 
 
     public DiscoveryServices(String name, String configFileSectionName) {
@@ -377,7 +379,7 @@ public class DiscoveryServices implements ICSLService {
         int scanManagerPort = JsonUtil.getIntFromJson(jConfig, "manager_port", 8010);
 
         scanManagerProtocol = JsonUtil.getStringFromJson(jConfig, "manager_protocol", "http");
-        if (scanManagerProtocol == "https") {
+        if ("https".equals(scanManagerProtocol)) {
             scanManagerDiscoveryUrl = "wss://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
         } else {
             scanManagerDiscoveryUrl = "ws://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
@@ -448,7 +450,18 @@ public class DiscoveryServices implements ICSLService {
             }
         });
         addCmd("get_last_cpe_items", params -> {
-            handleCpeItemChanges();
+            String dateString = JsonUtil.getStringFromJson(params, "date", "");
+            if (!dateString.equals("")) {
+                Json changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
+                try {
+                    sendCpeItemsToDbapi(changes);
+                } catch (Exception e) {
+                    return Json.object("result", "NOK",
+                                       "error", "Could not send changes to DB-API");
+                }
+            } else {
+                handleCpeItemChanges();
+            }
             return Json.object("result", "OK");
         });
 
@@ -637,7 +650,8 @@ public class DiscoveryServices implements ICSLService {
         } else {
             lastUpdatedDateString = responseContents.toString();
         }
-        return OffsetDateTime.parse(lastUpdatedDateString, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toLocalDateTime();
+        OffsetDateTime lastUpdatedDateOffset = OffsetDateTime.parse(lastUpdatedDateString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        return lastUpdatedDateOffset.atZoneSameInstant(zoneId).toLocalDateTime();
     }
 
     private List<Json> getDbapiDevicesSince(LocalDateTime date) throws Exception {

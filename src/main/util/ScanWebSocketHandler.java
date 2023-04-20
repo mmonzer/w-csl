@@ -50,6 +50,7 @@ public class ScanWebSocketHandler {
     /**
      * Create a new manager with the correct URL.
      *
+     * @param discoveryService The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
     public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl) {
@@ -173,13 +174,14 @@ public class ScanWebSocketHandler {
                 } else {
                     System.out.println("[STOMP] null");
                 }
-                switch (JsonUtil.getStringFromJson(payload, "status", "NONE")) {
-                    case "READY_CHANGES":
-                        discoveryService.handleCpeItemChanges();
-                        break;
-                    default:
-                        break;
-                }
+//                switch (JsonUtil.getStringFromJson(payload, "status", "NONE")) {
+//                    case "READY_CHANGES":
+//                        discoveryService.handleCpeItemChanges();
+//                        break;
+//                    default:
+//                        break;
+//                }
+                discoveryService.handleCpeItemChanges();
             }
 
             @Override

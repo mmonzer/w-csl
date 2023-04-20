@@ -51,7 +51,6 @@ public class DiscoveryServices implements ICSLService {
     public DiscoveryServices(String name, String configFileSectionName) {
         this.name = name;
         this.configFileSectionName = configFileSectionName;
-        // TODO get the last modification date to DB-API
         this.lastCpeItemModification = LocalDateTime.parse("2023-04-10T10:25:01.808");
     }
 
@@ -337,7 +336,7 @@ public class DiscoveryServices implements ICSLService {
             lastChangesDate = getDbapiLastUpdateDate();
         } catch (Exception e) {
             lastChangesDate = lastCpeItemModification;
-            e.printStackTrace(System.err);
+            System.err.println("[Discovery] Could not get last update date from dbapi, falling back to " + lastCpeItemModification.toString());
         }
         Json changes = getCpeItemChangesSince(lastChangesDate);
         if (changes != null && changes.isArray()) {
@@ -348,6 +347,18 @@ public class DiscoveryServices implements ICSLService {
                 e.printStackTrace(System.err);
             }
         }
+    }
+
+    public Json handleDbapiDeviceChange(LocalDateTime date) {
+        // TODO finish the function
+        try {
+            List<Json> changes = getDbapiDevicesSince(date);
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return Json.object("result", "NOK",
+                    "error", "Could not get changes from DBAPI");
+        }
+        return Json.object();
     }
 
     /**
@@ -435,6 +446,10 @@ public class DiscoveryServices implements ICSLService {
             } else {
                 return scanWebSocketHandler.requestScan(new ArrayList<>());
             }
+        });
+        addCmd("get_last_cpe_items", params -> {
+            handleCpeItemChanges();
+            return Json.object("result", "OK");
         });
 
         // Test commands
@@ -590,11 +605,12 @@ public class DiscoveryServices implements ICSLService {
         return LocalDateTime.parse(JsonUtil.getStringFromJson(cpeItem, "updatedAt", lastCpeItemModification.toString()));
     }
 
-    private void sendCpeItemToManager(Json cpeItem) throws Exception {
+    private void sendCpeItemToDbapi(Json cpeItem) throws Exception {
         Json requestContents = Json.object("cpe_data", cpeItem);
-//        if (cpeItem.has("updatedAt")) {
-//            requestContents.set("discovered_date", cpeItem.get("updatedAt"));
-//        }
+        if (cpeItem.has("updatedAt")) {
+            requestContents.set("discovered_date", cpeItem.get("updatedAt"));
+        }
+        requestContents.set("device", cpeItem.get("entityUuid").asString());
         Request request = createDbapiRequest(HttpMethod.POST, "/cpe_discovered_items")
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
@@ -605,7 +621,7 @@ public class DiscoveryServices implements ICSLService {
 
     private void sendCpeItemsToDbapi(Json cpeItems) throws Exception {
         for (Json cpeItem : cpeItems.asJsonList()) {
-            sendCpeItemToManager(cpeItem);
+            sendCpeItemToDbapi(cpeItem);
         }
     }
 
@@ -622,6 +638,14 @@ public class DiscoveryServices implements ICSLService {
             lastUpdatedDateString = responseContents.toString();
         }
         return OffsetDateTime.parse(lastUpdatedDateString, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toLocalDateTime();
+    }
+
+    private List<Json> getDbapiDevicesSince(LocalDateTime date) throws Exception {
+        Request request = createDbapiRequest(HttpMethod.GET, "/devices/since");
+        request.param("date", date.toString());
+        Json response = Json.read(request.send().getContentAsString());
+
+        return response.asJsonList();
     }
 
     private Request createDbapiRequest(HttpMethod method, String endpoint) {

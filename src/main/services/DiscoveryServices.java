@@ -217,33 +217,6 @@ public class DiscoveryServices implements ICSLService {
         return apiCommands.registerCmd(name, cmd, help);
     }
 
-
-    /**
-     * Encode a list of parameters to be used as GET parameters.
-     *
-     * @param params A {@link Json} object containing a dictionary of parameters.
-     * @return A {@link String} with the encoded parameters.
-     */
-    static private String urlEncode(Json params) {
-        StringBuilder getArgs_builder = new StringBuilder();
-        boolean started = false;
-        for (Map.Entry<String, Json> entry : params.asJsonMap().entrySet()) {
-            if (!started) {
-                started = true;
-            } else {
-                getArgs_builder.append('&');
-            }
-            getArgs_builder.append(entry.getKey());
-            getArgs_builder.append("=");
-            if (entry.getValue().isString()) {
-                getArgs_builder.append(entry.getValue().asString());
-            } else {
-                getArgs_builder.append(entry.getValue().toString());
-            }
-        }
-        return getArgs_builder.toString();
-    }
-
     /**
      * Extract an entity's UUID
      *

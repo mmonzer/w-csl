@@ -20,8 +20,10 @@ import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +46,7 @@ public class DiscoveryServices implements ICSLService {
     private String scanManagerApiUrl;
     private String scanManagerProtocol;
     private LocalDateTime lastCpeItemModification;
+    private LocalDateTime lastDeviceModificationVerification = null;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     private String dbapiUrl;
     private String apiKey;
@@ -59,6 +62,161 @@ public class DiscoveryServices implements ICSLService {
     public DiscoveryServices() {
         this(defaultName, defaultConfigFileSectionName);
     }
+
+
+    /**
+     * Initialize the service, setting the list of known managers and registering the commands.
+     *
+     * @param jConfig The configuration of the service (that is, the relevant section of the config file)
+     * @param cslDir  The working directory
+     * @return True is the initialization was successful, false otherwise
+     */
+    @Override
+    public boolean init(Json jConfig, String cslDir) {
+        System.out.println("Initializing SNMP service ..");
+//        String idsconf = CSLContext.instance.getCslConfDir();
+
+        String scanManagerIp = JsonUtil.getStringFromJson(jConfig, "manager_ip", "localhost");
+        int scanManagerPort = JsonUtil.getIntFromJson(jConfig, "manager_port", 8010);
+
+        scanManagerProtocol = JsonUtil.getStringFromJson(jConfig, "manager_protocol", "http");
+        if ("https".equals(scanManagerProtocol)) {
+            scanManagerDiscoveryUrl = "wss://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
+        } else {
+            scanManagerDiscoveryUrl = "ws://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
+        }
+        scanManagerApiUrl = scanManagerProtocol + "://" + scanManagerIp + ":" + scanManagerPort + scanManagerApiBaseEndpoint;
+        try {
+            scanHttpClient.start();
+            dbapiHttpClient.start();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
+        scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
+
+        Json globalConfig = CSLContext.instance.getConfig().get("global");
+        if (globalConfig != null) {
+            dbapiUrl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "https://" : "http://";
+            dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
+            dbapiUrl += "/api";
+            apiKey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
+        } else {
+            dbapiUrl = "https://localhost/api";
+        }
+
+//        addCmd("scan_hosts", params -> scanHosts(params.get("ips")));
+//        addCmd("scans_status", params -> getScansStatus(params.get("ids")));
+//        addCmd("get_data", params -> params.has("start_time")
+//                                            ? getDataSince(params.at("start_time").asLong())
+//                                            : getData());
+        addCmd("get_status", params -> getStatus());
+        addCmd("add_entity", params -> addEntity(
+                        JsonUtil.getStringFromJson(params, "id", null),
+                        JsonUtil.getStringFromJson(params, "name", null),
+                        JsonUtil.getStringFromJson(params, "ip", null),
+                        JsonUtil.getIntFromJson(params, "port", 161),
+                        JsonUtil.getStringFromJson(params, "protocol", "SNMPV2c"),
+                        JsonUtil.getStringFromJson(params, "community", "public")
+                )
+        );
+        addCmd("list_entities", params -> listEntities());
+        addCmd("get_entity", params -> getEntity(params.get("id").asString()));
+        addCmd("update_entity", params -> updateEntity(
+                        params.get("id").asString(),
+                        JsonUtil.getStringFromJson(params, "name", null),
+                        JsonUtil.getStringFromJson(params, "ip", null),
+                        JsonUtil.getIntFromJson(params, "port", 0),
+                        JsonUtil.getStringFromJson(params, "protocol", null),
+                        JsonUtil.getStringFromJson(params, "community", null)
+                )
+        );
+        addCmd("delete_entity", params -> deleteEntity(params.get("id").asString()));
+        addCmd("get_all_cpes", params -> getAllCpes());
+        addCmd("get_entity_cpes", params -> getEntityCpes(params.get("id").asString()));
+        addCmd("get_cpes_since", params -> getCpeItemChangesSince(LocalDateTime.parse(JsonUtil.getStringFromJson(params, "date", null))));
+        addCmd("global_status", params -> getServiceStatus());
+        addCmd("scan_status", params -> getScanStatus(params.get("id").asString()));
+        addCmd("entity_scan_status", params -> getEntityScanStatus(params.get("id").asString()));
+        addCmd("start_scan", params -> {
+            List<String> entities = new ArrayList<>();
+            if (params.has("entities")) {
+                for (Json entity : params.get("entities").asJsonList()) {
+                    if (entity.isString()) {
+                        entities.add(entity.asString());
+                    }
+                }
+            }
+            return startScan(entities);
+        });
+        addCmd("synchronize_devices", params -> handleDbapiDeviceChange());
+        addCmd("get_last_cpe_items", params -> {
+            String dateString = JsonUtil.getStringFromJson(params, "date", "");
+            if (!dateString.equals("")) {
+                Json changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
+                try {
+                    sendCpeItemsToDbapi(changes);
+                } catch (Exception e) {
+                    return Json.object("result", "NOK",
+                            "error", "Could not send changes to DB-API");
+                }
+            } else {
+                handleCpeItemChanges();
+            }
+            return Json.object("result", "OK");
+        });
+
+        // Test commands
+        addCmd("get_entity_by_name", params -> {
+            String name = JsonUtil.getStringFromJson(params, "name", "");
+            return Json.object("uuid", getEntityUuid(getEntityByName(name)));
+        });
+
+        System.out.println("SNMP service operational");
+        return true;
+    }
+
+    @Override
+    public String getConfigFileSectionName() {
+        return configFileSectionName;
+    }
+
+    @Override
+    public IApiCommands getApiCommands() {
+        apiCommands.setName(name);
+        return apiCommands;
+    }
+
+    /**
+     * Stop the service.
+     *
+     * @return False.
+     */
+    @Override
+    public boolean terminate() {
+        try {
+            scanWebSocketHandler.stop();
+            scanHttpClient.stop();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
+        return false;
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name The name of the command.
+     * @param cmd  The callback to be executed when the command is invoked.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmd cmd) {
+        return apiCommands.registerCmd(name, cmd);
+    }
+
+    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
+        return apiCommands.registerCmd(name, cmd, help);
+    }
+
 
     /**
      * Encode a list of parameters to be used as GET parameters.
@@ -351,171 +509,64 @@ public class DiscoveryServices implements ICSLService {
         }
     }
 
-    public Json handleDbapiDeviceChange(LocalDateTime date) {
-        // TODO finish the function
+    private void sendNewDeviceToScanner(Json newDevice) throws Exception {
+        // first try to create the entity
+        Json result = getApiCommands().exec("add_entity", newDevice);
+        // if it failed, try to update it
+        if (result.has("error")) {
+            result = getApiCommands().exec("update_entity", newDevice);
+        }
+        if (result.has("error")) {
+            throw new Exception("Could not push the entity " + JsonUtil.getStringFromJson(newDevice, "id", "") + " to CSL-Scan.");
+        }
+    }
+
+    /**
+     * Handle the changes in the devices on DB-API.
+     *
+     * @return A {@link Json} containing the result (success or failure).
+     */
+    public Json handleDbapiDeviceChange() {
+        List<Json> newDevices;
+        List<String> failedDevices = new LinkedList<>();
+        LocalDateTime currentTime = LocalDateTime.now();
         try {
-            List<Json> changes = getDbapiDevicesSince(date);
+            newDevices = getDbapiDevicesSince(lastDeviceModificationVerification);
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Json.object("result", "NOK",
                     "error", "Could not get changes from DBAPI");
         }
-        return Json.object();
-    }
-
-    /**
-     * Initialize the service, setting the list of known managers and registering the commands.
-     *
-     * @param jConfig The configuration of the service (that is, the relevant section of the config file)
-     * @param cslDir  The working directory
-     * @return True is the initialization was successful, false otherwise
-     */
-    @Override
-    public boolean init(Json jConfig, String cslDir) {
-        System.out.println("Initializing SNMP service ..");
-//        String idsconf = CSLContext.instance.getCslConfDir();
-
-        String scanManagerIp = JsonUtil.getStringFromJson(jConfig, "manager_ip", "localhost");
-        int scanManagerPort = JsonUtil.getIntFromJson(jConfig, "manager_port", 8010);
-
-        scanManagerProtocol = JsonUtil.getStringFromJson(jConfig, "manager_protocol", "http");
-        if ("https".equals(scanManagerProtocol)) {
-            scanManagerDiscoveryUrl = "wss://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
-        } else {
-            scanManagerDiscoveryUrl = "ws://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
-        }
-        scanManagerApiUrl = scanManagerProtocol + "://" + scanManagerIp + ":" + scanManagerPort + scanManagerApiBaseEndpoint;
-        try {
-            scanHttpClient.start();
-            dbapiHttpClient.start();
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
-        scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
-
-        Json globalConfig = CSLContext.instance.getConfig().get("global");
-        if (globalConfig != null) {
-            dbapiUrl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "https://" : "http://";
-            dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
-            dbapiUrl += "/api";
-            apiKey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
-        } else {
-            dbapiUrl = "https://localhost/api";
-        }
-
-//        addCmd("scan_hosts", params -> scanHosts(params.get("ips")));
-//        addCmd("scans_status", params -> getScansStatus(params.get("ids")));
-//        addCmd("get_data", params -> params.has("start_time")
-//                                            ? getDataSince(params.at("start_time").asLong())
-//                                            : getData());
-        addCmd("get_status", params -> getStatus());
-        addCmd("add_entity", params -> addEntity(
-                        JsonUtil.getStringFromJson(params, "id", null),
-                        JsonUtil.getStringFromJson(params, "name", null),
-                        JsonUtil.getStringFromJson(params, "ip", null),
-                        JsonUtil.getIntFromJson(params, "port", 161),
-                        JsonUtil.getStringFromJson(params, "protocol", "SNMPV2c"),
-                        JsonUtil.getStringFromJson(params, "community", "public")
-                )
-        );
-        addCmd("list_entities", params -> listEntities());
-        addCmd("get_entity", params -> getEntity(params.get("id").asString()));
-        addCmd("update_entity", params -> updateEntity(
-                        params.get("id").asString(),
-                        JsonUtil.getStringFromJson(params, "name", null),
-                        JsonUtil.getStringFromJson(params, "ip", null),
-                        JsonUtil.getIntFromJson(params, "port", 0),
-                        JsonUtil.getStringFromJson(params, "protocol", null),
-                        JsonUtil.getStringFromJson(params, "community", null)
-                )
-        );
-        addCmd("delete_entity", params -> deleteEntity(params.get("id").asString()));
-        addCmd("get_all_cpes", params -> getAllCpes());
-        addCmd("get_entity_cpes", params -> getEntityCpes(params.get("id").asString()));
-        addCmd("get_cpes_since", params -> getCpeItemChangesSince(LocalDateTime.parse(JsonUtil.getStringFromJson(params, "date", null))));
-        addCmd("global_status", params -> getServiceStatus());
-        addCmd("scan_status", params -> getScanStatus(params.get("id").asString()));
-        addCmd("entity_scan_status", params -> getEntityScanStatus(params.get("id").asString()));
-        addCmd("start_scan", params -> {
-            if (params.has("entities")) {
-                List<String> entities = new ArrayList<>();
-                for (Json entity : params.get("entities").asJsonList()) {
-                    if (entity.isString()) {
-                        entities.add(entity.asString());
-                    }
-                }
-                return scanWebSocketHandler.requestScan(entities);
-            } else {
-                return scanWebSocketHandler.requestScan(new ArrayList<>());
+        lastDeviceModificationVerification = currentTime;
+        for (Json newDevice : newDevices) {
+            try {
+                sendNewDeviceToScanner(newDevice);
+            } catch (Exception e) {
+                failedDevices.add(JsonUtil.getStringFromJson(newDevice, "id", ""));
             }
-        });
-        addCmd("get_last_cpe_items", params -> {
-            String dateString = JsonUtil.getStringFromJson(params, "date", "");
-            if (!dateString.equals("")) {
-                Json changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
-                try {
-                    sendCpeItemsToDbapi(changes);
-                } catch (Exception e) {
-                    return Json.object("result", "NOK",
-                                       "error", "Could not send changes to DB-API");
-                }
-            } else {
-                handleCpeItemChanges();
-            }
-            return Json.object("result", "OK");
-        });
-
-        // Test commands
-        addCmd("get_entity_by_name", params -> {
-            String name = JsonUtil.getStringFromJson(params, "name", "");
-            return Json.object("uuid", getEntityUuid(getEntityByName(name)));
-        });
-
-        System.out.println("SNMP service operational");
-        return true;
-    }
-
-    @Override
-    public String getConfigFileSectionName() {
-        return configFileSectionName;
-    }
-
-    @Override
-    public IApiCommands getApiCommands() {
-        apiCommands.setName(name);
-        return apiCommands;
-    }
-
-    /**
-     * Stop the service.
-     *
-     * @return False.
-     */
-    @Override
-    public boolean terminate() {
-        try {
-            scanWebSocketHandler.stop();
-            scanHttpClient.stop();
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
         }
-        return false;
+        return failedDevices.isEmpty()
+                ? Json.object("result", "OK")
+                : Json.object(
+                "result", "NOK",
+                "error", Json.object("failed_devices", Json.array(failedDevices.toArray()))
+        );
     }
 
-    /**
-     * Register an API command.
-     *
-     * @param name The name of the command.
-     * @param cmd  The callback to be executed when the command is invoked.
-     * @return A {@link String}
-     */
-    public String addCmd(String name, IJsonCmd cmd) {
-        return apiCommands.registerCmd(name, cmd);
+
+    public Json startScan(List<String> entities) {
+        Json syncResult = handleDbapiDeviceChange();
+        if (syncResult.get("result").asString().equals("NOK")) {
+            return Json.object("result", "NOK",
+                    "error", Json.object(
+                            "reason", "Could not retrieve devices from DB-API",
+                            "failed_devices", syncResult.get("failed_devices")
+                    )
+            );
+        }
+        return scanWebSocketHandler.requestScan(entities);
     }
 
-    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
-        return apiCommands.registerCmd(name, cmd, help);
-    }
 
     /**
      * Send an HTTP request to the scanner.
@@ -530,24 +581,25 @@ public class DiscoveryServices implements ICSLService {
         Request request;
         String URI = scanManagerApiUrl + endpoint;
 
+        request = scanHttpClient.newRequest(URI);
+        request.method(method);
+        System.out.println(method.asString() + " " + URI);
+        System.out.println("Payload: " + params.toString());
         try {
             switch (method) {
                 case GET:
                 case DELETE:
-                    if (!params.asMap().isEmpty()) {
-                        URI = scanManagerApiUrl + endpoint + '?' + urlEncode(params);
+                    for (Map.Entry<String, Json> param : params.asJsonMap().entrySet()) {
+                        if (param.getValue().isString()) {
+                            request.param(param.getKey(), param.getValue().asString());
+                        } else {
+                            request.param(param.getKey(), param.getValue().toString());
+                        }
                     }
-                    request = scanHttpClient.newRequest(URI);
-                    request.method(method);
-                    System.out.println(method.asString() + " " + URI);
                     break;
 
                 case POST:
                 case PUT:
-                    System.out.println(method.asString() + " " + URI);
-                    System.out.println("Payload: " + params.toString());
-                    request = scanHttpClient.newRequest(URI);
-                    request.method(method);
                     request.content(new StringContentProvider(params.toString()), "application/json");
                     break;
 
@@ -562,6 +614,9 @@ public class DiscoveryServices implements ICSLService {
                     res = Json.object("result", response.getContentAsString());
                 }
             }
+        } catch (UnsupportedOperationException e) {
+            res = Json.object("result", "NOK",
+                    "error", e.getMessage());
         } catch (Exception e) {
             if (e.getCause() instanceof ConnectException) {
                 res = Json.object("result", "NOK",
@@ -650,21 +705,38 @@ public class DiscoveryServices implements ICSLService {
         } else {
             lastUpdatedDateString = responseContents.toString();
         }
-        OffsetDateTime lastUpdatedDateOffset = OffsetDateTime.parse(lastUpdatedDateString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        return lastUpdatedDateOffset.atZoneSameInstant(zoneId).toLocalDateTime();
+        return dbapiDateToLocal(lastUpdatedDateString);
     }
 
     private List<Json> getDbapiDevicesSince(LocalDateTime date) throws Exception {
+        OffsetDateTime dateUtc = null;
+        if (date != null) {
+            dateUtc = date.atOffset(ZoneOffset.UTC);
+        }
         Request request = createDbapiRequest(HttpMethod.GET, "/devices/since");
-        request.param("date", date.toString());
+        if (dateUtc != null) {
+            request.param("date", dateUtc.toString());
+        }
         Json response = Json.read(request.send().getContentAsString());
 
-        return response.asJsonList();
+        List<Json> devices = new ArrayList<>();
+        for (Json jsonDevice: response.asJsonList()) {
+            devices.add(jsonDevice);
+        }
+        return devices;
     }
 
     private Request createDbapiRequest(HttpMethod method, String endpoint) {
         return dbapiHttpClient.newRequest(dbapiUrl + endpoint)
                 .method(method)
                 .header(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
+    }
+
+    LocalDateTime dbapiDateToLocal(String dateTime) {
+        return dbapiDateToLocal(OffsetDateTime.parse(dateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+    }
+
+    LocalDateTime dbapiDateToLocal(OffsetDateTime dateTime) {
+        return dateTime.atZoneSameInstant(zoneId).toLocalDateTime();
     }
 }

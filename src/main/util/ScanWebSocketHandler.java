@@ -40,12 +40,13 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
-    private StompFrameHandler stompNotificationHandler = new StompSessionHandlerAdapter() {
-        @Override
-        public void handleFrame(StompHeaders headers, Object payload) {
-            System.out.println("[STOMP]" + payload.toString());
-        }
-    };
+    private final List<String> finishedScanStatus = new ArrayList<>(5) {{
+        add("READY_CHANGES");
+        add("READY_NO_CHANGES");
+        add("DISCARDED");
+        add("PARTIAL_ERROR");
+        add("ERROR");
+    }};
 
     /**
      * Create a new manager with the correct URL.
@@ -174,14 +175,9 @@ public class ScanWebSocketHandler {
                 } else {
                     System.out.println("[STOMP] null");
                 }
-//                switch (JsonUtil.getStringFromJson(payload, "status", "NONE")) {
-//                    case "READY_CHANGES":
-//                        discoveryService.handleCpeItemChanges();
-//                        break;
-//                    default:
-//                        break;
-//                }
-                discoveryService.handleCpeItemChanges();
+                if (finishedScanStatus.contains(JsonUtil.getStringFromJson(payload, "status", "NONE"))) {
+                        discoveryService.handleCpeItemChanges();
+                }
             }
 
             @Override

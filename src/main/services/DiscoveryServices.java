@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -504,7 +506,10 @@ public class DiscoveryServices implements ICSLService {
         List<String> failedDevices = new LinkedList<>();
         LocalDateTime currentTime = LocalDateTime.now();
         try {
-            newDevices = getDbapiDevicesSince(lastDeviceModificationVerification);
+            newDevices = buildNewDevices(
+                    getDbapiDevicesSince(lastDeviceModificationVerification),
+                    getDbapiConnectionsSince(lastDeviceModificationVerification)
+            );
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Json.object("result", "NOK",
@@ -686,17 +691,195 @@ public class DiscoveryServices implements ICSLService {
         if (date != null) {
             dateUtc = date.atOffset(ZoneOffset.UTC);
         }
-        Request request = createDbapiRequest(HttpMethod.GET, "/devices/since");
+        Request request = createDbapiRequest(HttpMethod.GET, "/devices");
         if (dateUtc != null) {
-            request.param("date", dateUtc.toString());
+            request.param("updated_at__gte", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
 
         List<Json> devices = new ArrayList<>();
         for (Json jsonDevice: response.asJsonList()) {
-            devices.add(jsonDevice);
+            Json device = parseDbapiDevice(jsonDevice);
+            devices.add(device);
         }
         return devices;
+    }
+
+    private List<Json> getDbapiConnectionsSince(LocalDateTime date) throws Exception {
+        OffsetDateTime dateUtc = null;
+        if (date != null) {
+            dateUtc = date.atOffset(ZoneOffset.UTC);
+        }
+        Request request = createDbapiRequest(HttpMethod.GET, "/connections");
+        if (dateUtc != null) {
+            request.param("updated_at__gte", dateUtc.toString());
+        }
+        Json response = Json.read(request.send().getContentAsString());
+        List<Json> connections = new ArrayList<>(response.asList().size());
+        for (Json jsonConnection: response.asJsonList()) {
+            Json connection = parseDbapiConnection(jsonConnection);
+            connections.add(connection);
+        }
+        return connections;
+    }
+
+    private List<Json> buildNewDevices(List<Json> devices, List<Json> connections) {
+        // List the uuids we have in both list
+        List<Integer> connectionUuidsInDevices = new ArrayList<>();
+        List<String> deviceUuidsInConnections = new ArrayList<>();
+
+        for (Json device: devices) {
+            Json connection = device.get("connection");
+            if (connection != null && !connection.isNull()) {
+                connectionUuidsInDevices.add(connection.asInteger());
+            }
+        }
+        for (Json connection: connections) {
+            for (Json device: connection.get("devices").asJsonList()) {
+                deviceUuidsInConnections.add(device.get("uuid").asString());
+            }
+        }
+
+        // Check for the ones missing on one side or the other
+        List<Integer> connectionsToGet = new ArrayList<>();
+        List<String> devicesToGet = new ArrayList<>();
+
+        for (int connectionId: connectionUuidsInDevices) {
+            if (getConnectionById(connections, connectionId) == null) {
+                connectionsToGet.add(connectionId);
+            }
+        }
+        for (String deviceId: deviceUuidsInConnections) {
+            if (getDeviceById(devices, deviceId) == null) {
+                devicesToGet.add(deviceId);
+            }
+        }
+
+        // Get the missing parts
+        try {
+            connections.addAll(fetchConnectionsFromDbapi(connectionsToGet));
+            devices.addAll(fetchDevicesFromDbapi(devicesToGet));
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            e.printStackTrace(System.err);
+        }
+
+        // build the entities to send
+        List<Json> protocols = null;
+        try {
+            protocols = fetchDiscoveryProtocolsFromDbapi();
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            e.printStackTrace(System.err);
+        }
+
+        List<Json> scanEntities = new ArrayList<>();
+        for (Json device: devices) {
+            if (!device.has("connection") || device.get("connection").isNull()) {
+                continue;
+            }
+            Json connection = getConnectionById(connections, device.get("connection").asInteger());
+            Json scanEntity = Json.object(
+                    "id", device.get("id"),
+                    "name", device.get("name"),
+                    "ip", device.get("ip"),
+                    "port", connection.get("port"),
+                    "protocol", getProtocolById(protocols, connection.get("protocol").asInteger()),
+                    "community", connection.get("community")
+            );
+            scanEntities.add(scanEntity);
+        }
+        return scanEntities;
+    }
+
+    private static Json getConnectionById(List<Json> connections, int id) {
+        for (Json connection: connections) {
+            if (connection.get("id").asInteger() == id) {
+                return connection;
+            }
+        }
+        return null;
+    }
+
+    private static Json getDeviceById(List<Json> devices, String id) {
+        for (Json device: devices) {
+            if (device.get("id").asString().equals(id)) {
+                return device;
+            }
+        }
+        return null;
+    }
+
+    private static String getProtocolById(List<Json> protocols, int id) {
+        for (Json protocol: protocols) {
+            if (protocol.get("id").asInteger() == id) {
+                String name = protocol.get("name").asString();
+                if (name.equals("SNMPv2c")) {
+                    return "SNMPV2c";
+                }
+                return name;
+            }
+        }
+        return null;
+    }
+
+    private static Json parseDbapiDevice(Json dbapiDevice) {
+        Json device = Json.object(
+                "id", dbapiDevice.get("uuid"),
+                "name", dbapiDevice.get("name"),
+                "ip", dbapiDevice.get("ipv4")
+        );
+        Json connectionsIdJson = dbapiDevice.get("connections");
+        Integer connectionId = null;
+        if (connectionsIdJson != null) {
+            if (connectionsIdJson.isArray() && !connectionsIdJson.asJsonList().isEmpty()) {
+                connectionId = connectionsIdJson.asJsonList().get(0).asInteger();
+            }
+        }
+        device.set("connection", connectionId);
+        return device;
+    }
+
+    private static Json parseDbapiConnection(Json dbapiConnection) {
+        Json connection = Json.object(
+                "id", dbapiConnection.get("id"),
+                "protocol", dbapiConnection.get("discovery_protocol"),
+                "port", dbapiConnection.get("port_number"),
+                "devices", dbapiConnection.get("custom_devices_uuid"),
+                "community", dbapiConnection.get("other_data").get("community")
+        );
+        return connection;
+    }
+
+    private List<Json> fetchConnectionsFromDbapi(List<Integer> ids) throws ExecutionException, InterruptedException, TimeoutException {
+        List<Json> connections = new ArrayList<>();
+        for (int id: ids) {
+            Request request = createDbapiRequest(HttpMethod.GET, "/connections");
+            request.param("id", String.valueOf(id));
+            Json response = Json.read(request.send().getContentAsString());
+            if (response.isArray()) {
+                connections.add(parseDbapiConnection(response.at(0)));
+            } else {
+                connections.add(parseDbapiConnection(response));
+            }
+        }
+        return connections;
+    }
+
+    private List<Json> fetchDevicesFromDbapi(List<String> uuids) throws ExecutionException, InterruptedException, TimeoutException {
+        List<Json> devices = new ArrayList<>();
+        if (uuids == null || uuids.isEmpty()) {
+            return devices;
+        }
+        Request request = createDbapiRequest(HttpMethod.GET, "/devices");
+        request.param("uuid", String.join(",", uuids));
+        for (Json device: Json.read(request.send().getContentAsString()).asJsonList()) {
+            devices.add(parseDbapiDevice(device));
+        }
+        return devices;
+    }
+
+    private List<Json> fetchDiscoveryProtocolsFromDbapi() throws ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.GET, "/cpe_discovery_api");
+        return Json.read(request.send().getContentAsString()).asJsonList();
     }
 
     private Request createDbapiRequest(HttpMethod method, String endpoint) {

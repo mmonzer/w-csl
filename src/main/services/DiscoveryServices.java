@@ -22,10 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -385,16 +382,26 @@ public class DiscoveryServices implements ICSLService {
      * @return A {@link Json} array containing the CPE items that have changed since the specified date, or all the items if date was null.
      */
     public Json getCpeItemChangesSince(LocalDateTime date) {
+        OffsetDateTime utcDate = localTimeToUtc(date);
         Json cpeItems = Json.array();
         if (date == null) {
             cpeItems = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object());
         } else {
-            cpeItems = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", date.toString()));
+            cpeItems = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", utcDate.toString()));
         }
-        if (!cpeItems.asList().isEmpty()) {
+        // Remove the items that have the *exact* same date as whe previously had
+        List<Json> cpeItemsList = cpeItems.asJsonList();
+        Iterator<Json> iterator = cpeItemsList.iterator();
+        while (iterator.hasNext()) {
+            Json cpeItem = iterator.next();
+            if (getCpeItemDateTime(cpeItem).atOffset(ZoneOffset.UTC).equals(utcDate)) {
+                iterator.remove();
+            }
+        }
+        if (!cpeItemsList.isEmpty()) {
             // Update lastCpeItemModification.
             // Currently, computed locally, should retrieve it from scan service latter.
-            for (Json cpeItem : cpeItems.asJsonList()) {
+            for (Json cpeItem : cpeItemsList) {
                 LocalDateTime cpeItemUpdateTime = getCpeItemDateTime(cpeItem);
                 if (cpeItemUpdateTime.isAfter(lastCpeItemModification)) {
                     lastCpeItemModification = cpeItemUpdateTime;
@@ -687,10 +694,7 @@ public class DiscoveryServices implements ICSLService {
     }
 
     private List<Json> getDbapiDevicesSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = null;
-        if (date != null) {
-            dateUtc = date.atOffset(ZoneOffset.UTC);
-        }
+        OffsetDateTime dateUtc = localTimeToUtc(date);
         Request request = createDbapiRequest(HttpMethod.GET, "/devices");
         if (dateUtc != null) {
             request.param("updated_at__gte", dateUtc.toString());
@@ -706,10 +710,7 @@ public class DiscoveryServices implements ICSLService {
     }
 
     private List<Json> getDbapiConnectionsSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = null;
-        if (date != null) {
-            dateUtc = date.atOffset(ZoneOffset.UTC);
-        }
+        OffsetDateTime dateUtc = localTimeToUtc(date);
         Request request = createDbapiRequest(HttpMethod.GET, "/connections");
         if (dateUtc != null) {
             request.param("updated_at__gte", dateUtc.toString());
@@ -844,7 +845,7 @@ public class DiscoveryServices implements ICSLService {
                 "protocol", dbapiConnection.get("discovery_protocol"),
                 "port", dbapiConnection.get("port_number"),
                 "devices", dbapiConnection.get("custom_devices_uuid"),
-                "community", dbapiConnection.get("other_data").get("community")
+                "community", dbapiConnection.get("other_data").get("snmp_community")
         );
         return connection;
     }
@@ -894,5 +895,11 @@ public class DiscoveryServices implements ICSLService {
 
     LocalDateTime dbapiDateToLocal(OffsetDateTime dateTime) {
         return dateTime.atZoneSameInstant(zoneId).toLocalDateTime();
+    }
+
+    OffsetDateTime localTimeToUtc(LocalDateTime localDateTime) {
+        if (localDateTime == null)  return null;
+        OffsetDateTime utcDateTime = OffsetDateTime.parse(localDateTime.atZone(zoneId).toInstant().toString());
+        return utcDateTime;
     }
 }

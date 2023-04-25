@@ -101,7 +101,8 @@ public class ScanWebSocketHandler {
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
             scanRequestsQueue.add(entities);
             return Json.object("result", "NOK",
-                    "details", "Scan service unavailable, added scan request to queue");
+                    "error", Json.object("reason", "Scan service unavailable, added scan request to queue")
+            );
         } else {
             startScan(entities);
             return Json.object("result", "OK",

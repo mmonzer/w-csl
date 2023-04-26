@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.broker.MqttBrokerHandler;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.logger.CSLLogger;
 import com.ucsl.interfaces.IApiCommands;
@@ -16,9 +17,7 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.net.ConnectException;
@@ -56,10 +55,11 @@ public class DiscoveryServices implements ICSLService {
     private String dbapiUrl;
     private String apiKey;
     private ZoneId zoneId;
-    private String mqttBrokerUrl;
-    private MqttClient mqttClient;
-    private String mqttTopic;
-    private ScheduledExecutorService mqttConnetionAttempts;
+//    private String mqttBrokerUrl;
+//    private MqttClient mqttClient;
+//    private String mqttTopic;
+//    private ScheduledExecutorService mqttConnetionAttempts;
+    MqttBrokerHandler mqttBroker = null;
 
     private static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>() {{
         put("discovery_protocol", "protocol");
@@ -153,10 +153,13 @@ public class DiscoveryServices implements ICSLService {
         }
 
         zoneId = ZoneId.of(JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris"));
-        mqttBrokerUrl = JsonUtil.getStringFromJson(globalConfig, "mqtt_broker_url", "tcp://localhost:1883");
+        if (useWebSocket) {
+            mqttBroker = CSLContext.instance.getMqttBroker();
+            mqttBroker.subscribeToTopic("device", (topic, mqttMessage) -> handleDbapiDeviceChange());
+        }
 
-        mqttConnetionAttempts = Executors.newScheduledThreadPool(1);
-        mqttConnetionAttempts.scheduleAtFixedRate(this::connectMqttIfNecessary, 0, 2, TimeUnit.SECONDS);
+//        mqttConnetionAttempts = Executors.newScheduledThreadPool(1);
+//        mqttConnetionAttempts.scheduleAtFixedRate(this::connectMqttIfNecessary, 0, 2, TimeUnit.SECONDS);
 
         addCmd("get_status", params -> getStatus());
         addCmd("add_entity", this::addEntity);
@@ -232,7 +235,7 @@ public class DiscoveryServices implements ICSLService {
                 scanWebSocketHandler.stop();
             }
             scanHttpClient.stop();
-            mqttClient.disconnect();
+//            mqttClient.disconnect();
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -265,22 +268,22 @@ public class DiscoveryServices implements ICSLService {
     /**
      * Try to connect to MQTT broker if not already connected.
      */
-    private void connectMqttIfNecessary() {
-        if (mqttClient == null || !mqttClient.isConnected()) {
-            try {
-                mqttClient = new MqttClient(
-                        mqttBrokerUrl,
-                        "CSL-concentrator",
-                        new MemoryPersistence());
-                MqttConnectOptions connectOptions = new MqttConnectOptions();
-                connectOptions.setCleanSession(true);
-                mqttClient.connect(connectOptions);
-                mqttClient.subscribe(mqttTopic);
-            } catch (MqttException e) {
-                mqttClient = null;
-            }
-        }
-    }
+//    private void connectMqttIfNecessary() {
+//        if (mqttClient == null || !mqttClient.isConnected()) {
+//            try {
+//                mqttClient = new MqttClient(
+//                        mqttBrokerUrl,
+//                        "CSL-concentrator",
+//                        new MemoryPersistence());
+//                MqttConnectOptions connectOptions = new MqttConnectOptions();
+//                connectOptions.setCleanSession(true);
+//                mqttClient.connect(connectOptions);
+//                mqttClient.subscribe(mqttTopic);
+//            } catch (MqttException e) {
+//                mqttClient = null;
+//            }
+//        }
+//    }
 
     /**
      * Extract an entity's UUID

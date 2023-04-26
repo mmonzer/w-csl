@@ -7,7 +7,9 @@
 		"force_host_name_resolution": false,
 		"api_key": "",
 		"use_ssl": true,
-		"launch_web_api_server": false
+		"launch_web_api_server": false,
+		"timezone": "Europe/Paris",
+		"mqtt_broker_url": "wss://localhost/mqtt"
 	},
 	"discovery": {
 		"manager_ip": "host.docker.internal",

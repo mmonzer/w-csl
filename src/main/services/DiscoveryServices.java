@@ -17,8 +17,6 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.net.ConnectException;
 import java.time.LocalDateTime;
@@ -50,7 +48,7 @@ public class DiscoveryServices implements ICSLService {
     private String scanManagerProtocol;
 //    private LocalDateTime lastCpeItemModification;
     private LocalDateTime lastDeviceModificationVerification = null;
-    private final boolean useWebSocket;
+    private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     private String dbapiUrl;
     private String apiKey;
@@ -93,19 +91,19 @@ public class DiscoveryServices implements ICSLService {
         add("authProtocolName");
     }};
 
-    public DiscoveryServices(String name, String configFileSectionName, boolean useWebSocket) {
+    public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
         this.name = name;
         this.configFileSectionName = configFileSectionName;
 //        this.lastCpeItemModification = LocalDateTime.parse("2023-04-10T10:25:01.808");
-        this.useWebSocket = useWebSocket;
+        this.isConcentrator = isConcentrator;
     }
 
     public DiscoveryServices() {
         this(defaultName, defaultConfigFileSectionName, true);
     }
 
-    public DiscoveryServices(boolean useWebSocket) {
-        this(defaultName, defaultConfigFileSectionName, useWebSocket);
+    public DiscoveryServices(boolean isConcentrator) {
+        this(defaultName, defaultConfigFileSectionName, isConcentrator);
     }
 
 
@@ -138,7 +136,7 @@ public class DiscoveryServices implements ICSLService {
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
-        if (useWebSocket) {
+        if (isConcentrator) {
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
         }
 
@@ -153,7 +151,7 @@ public class DiscoveryServices implements ICSLService {
         }
 
         zoneId = ZoneId.of(JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris"));
-        if (useWebSocket) {
+        if (isConcentrator) {
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic("device", (topic, mqttMessage) -> handleDbapiDeviceChange());
         }
@@ -231,7 +229,7 @@ public class DiscoveryServices implements ICSLService {
     @Override
     public boolean terminate() {
         try {
-            if (useWebSocket) {
+            if (isConcentrator) {
                 scanWebSocketHandler.stop();
             }
             scanHttpClient.stop();
@@ -580,7 +578,7 @@ public class DiscoveryServices implements ICSLService {
         } else {
             status.set("httpRestApi", "NOK");
         }
-        if (useWebSocket) {
+        if (isConcentrator) {
             status.set("websocket", scanWebSocketHandler.getStatus());
         }
 
@@ -696,7 +694,7 @@ public class DiscoveryServices implements ICSLService {
                     )
             );
         }
-        if (useWebSocket) {
+        if (isConcentrator) {
             return scanWebSocketHandler.requestScan(entities);
         } else {
             return Json.object("result", "NOK",

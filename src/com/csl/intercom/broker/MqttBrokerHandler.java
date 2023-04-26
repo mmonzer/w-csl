@@ -1,6 +1,7 @@
 package com.csl.intercom.broker;
 
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -26,7 +27,9 @@ public class MqttBrokerHandler implements AutoCloseable {
 
     public MqttBrokerHandler(Json config) {
         Json globalConfig = config.get("global");
-        this.brokerUri = globalConfig.get("mqtt_broker_url").asString();
+        brokerUri = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "wss://" : "ws://";
+        brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
+        brokerUri += "/mqtt";
         this.apiKey = globalConfig.get("api_key").asString();
         mqttConnectionAttempts = Executors.newScheduledThreadPool(1);
         mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 2, TimeUnit.SECONDS);

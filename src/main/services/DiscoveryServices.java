@@ -49,7 +49,7 @@ public class DiscoveryServices implements ICSLService {
     private String scanManagerDiscoveryUrl;
     private String scanManagerApiUrl;
     private String scanManagerProtocol;
-    private LocalDateTime lastCpeItemModification;
+//    private LocalDateTime lastCpeItemModification;
     private LocalDateTime lastDeviceModificationVerification = null;
     private final boolean useWebSocket;
     private ScanWebSocketHandler scanWebSocketHandler = null;
@@ -96,7 +96,7 @@ public class DiscoveryServices implements ICSLService {
     public DiscoveryServices(String name, String configFileSectionName, boolean useWebSocket) {
         this.name = name;
         this.configFileSectionName = configFileSectionName;
-        this.lastCpeItemModification = LocalDateTime.parse("2023-04-10T10:25:01.808");
+//        this.lastCpeItemModification = LocalDateTime.parse("2023-04-10T10:25:01.808");
         this.useWebSocket = useWebSocket;
     }
 
@@ -190,7 +190,8 @@ public class DiscoveryServices implements ICSLService {
                     sendCpeItemsToDbapi(changes);
                 } catch (Exception e) {
                     return Json.object("result", "NOK",
-                            "error", "Could not send changes to DB-API");
+                            "error", Json.object("reason", "Could not send changes to DB-API")
+                    );
                 }
             } else {
                 handleCpeItemChanges();
@@ -343,7 +344,7 @@ public class DiscoveryServices implements ICSLService {
         if (uuid == null || name == null || ip == null) {
             return Json.object(
                     "result", "NOK",
-                    "error", "The fields 'id', 'name' and 'ip' are required"
+                    "error", Json.object("reason", "The fields 'id', 'name' and 'ip' are required")
             );
         } else {
             return sendRequestToScanManager(HttpMethod.POST, "/entity/", Json.object(
@@ -378,7 +379,7 @@ public class DiscoveryServices implements ICSLService {
         if (uuid == null || name == null || ip == null) {
             return Json.object(
                     "result", "NOK",
-                    "error", "The fields 'id', 'name' and 'ip' are required"
+                    "error", Json.object("reason", "The fields 'id', 'name' and 'ip' are required")
             );
         } else {
             return sendRequestToScanManager(HttpMethod.POST, "/entity/", Json.object(
@@ -505,20 +506,21 @@ public class DiscoveryServices implements ICSLService {
         Iterator<Json> iterator = cpeItemsList.iterator();
         while (iterator.hasNext()) {
             Json cpeItem = iterator.next();
-            if (getCpeItemDateTime(cpeItem).atOffset(ZoneOffset.UTC).equals(utcDate)) {
+            LocalDateTime cpeItemUpdateDate = getCpeItemDateTime(cpeItem);
+            if (cpeItemUpdateDate != null && cpeItemUpdateDate.atOffset(ZoneOffset.UTC).equals(utcDate)) {
                 iterator.remove();
             }
         }
-        if (!cpeItemsList.isEmpty()) {
-            // Update lastCpeItemModification.
-            // Currently, computed locally, should retrieve it from scan service latter.
-            for (Json cpeItem : cpeItemsList) {
-                LocalDateTime cpeItemUpdateTime = getCpeItemDateTime(cpeItem);
-                if (cpeItemUpdateTime.isAfter(lastCpeItemModification)) {
-                    lastCpeItemModification = cpeItemUpdateTime;
-                }
-            }
-        }
+//        if (!cpeItemsList.isEmpty()) {
+//            // Update lastCpeItemModification.
+//            // Currently, computed locally, should retrieve it from scan service latter.
+//            for (Json cpeItem : cpeItemsList) {
+//                LocalDateTime cpeItemUpdateTime = getCpeItemDateTime(cpeItem);
+//                if (cpeItemUpdateTime.isAfter(lastCpeItemModification)) {
+//                    lastCpeItemModification = cpeItemUpdateTime;
+//                }
+//            }
+//        }
         return cpeItems;
     }
 
@@ -586,19 +588,19 @@ public class DiscoveryServices implements ICSLService {
      * The action to perform when a modification is notified on the CpeItems.
      */
     public void handleCpeItemChanges() {
-        LocalDateTime lastChangesDate;
+        LocalDateTime lastChangesDate = null;
         try {
             lastChangesDate = getDbapiLastUpdateDate();
         } catch (Exception e) {
-            lastChangesDate = lastCpeItemModification;
-            System.err.println("[Discovery] Could not get last update date from dbapi, falling back to " + lastCpeItemModification.toString());
+//            lastChangesDate = lastCpeItemModification;
+            System.err.println("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
         }
         Json changes = getCpeItemChangesSince(lastChangesDate);
         if (changes != null && changes.isArray()) {
             try {
                 sendCpeItemsToDbapi(changes);
             } catch (Exception e) {
-                lastCpeItemModification = lastChangesDate;
+//                lastCpeItemModification = lastChangesDate;
                 e.printStackTrace(System.err);
             }
         }
@@ -638,14 +640,12 @@ public class DiscoveryServices implements ICSLService {
                     getDbapiDevicesSince(lastDeviceModificationVerification),
                     getDbapiConnectionsSince(lastDeviceModificationVerification)
             );
-//            deletedDevices = getDbapiDeletedDevciesSince(lastDeviceModificationVerification);
-            deletedDevices = new ArrayList<>()
-//            {{ add("bf9ff4bd-11d1-4749-8c39-76667f84b3bb"); }}
-            ;
+            deletedDevices = getDbapiDeletedDevicesSince(lastDeviceModificationVerification);
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Json.object("result", "NOK",
-                    "error", "Could not get changes from DBAPI");
+                    "error", Json.object("reason", "Could not get changes from DBAPI")
+            );
         }
         lastDeviceModificationVerification = currentTime;
         for (Json newDevice : newDevices) {
@@ -667,7 +667,10 @@ public class DiscoveryServices implements ICSLService {
                 ? Json.object("result", "OK")
                 : Json.object(
                 "result", "NOK",
-                "error", Json.object("failed_devices", Json.array(failedDevices.toArray()))
+                "error", Json.object(
+                        "reason", "Failed to send updated devices to CSL-Scan",
+                        "failed_devices", Json.array(failedDevices.toArray())
+                )
         );
     }
 
@@ -747,11 +750,13 @@ public class DiscoveryServices implements ICSLService {
             }
         } catch (UnsupportedOperationException e) {
             res = Json.object("result", "NOK",
-                    "error", e.getMessage());
+                    "error", Json.object("reason", e.getMessage())
+            );
         } catch (Exception e) {
             if (e.getCause() instanceof ConnectException) {
                 res = Json.object("result", "NOK",
-                        "error", "Connection error with CSL-Scan");
+                        "error", Json.object("reason", "Connection error with CSL-Scan")
+                );
             }
             e.printStackTrace(System.err);
         }
@@ -807,7 +812,9 @@ public class DiscoveryServices implements ICSLService {
      * @return A {@link LocalDateTime} with the last modification date of the CPE Item
      */
     private LocalDateTime getCpeItemDateTime(Json cpeItem) {
-        return LocalDateTime.parse(JsonUtil.getStringFromJson(cpeItem, "updatedAt", lastCpeItemModification.toString()));
+//        return LocalDateTime.parse(JsonUtil.getStringFromJson(cpeItem, "updatedAt", lastCpeItemModification.toString()));
+        String cpeItemDate = JsonUtil.getStringFromJson(cpeItem, "updatedAt", null);
+        return cpeItemDate == null ? null : LocalDateTime.parse(cpeItemDate);
     }
 
     /**
@@ -915,11 +922,11 @@ public class DiscoveryServices implements ICSLService {
      * @return The {@link List<String>} of device uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    private List<String> getDbapiDeletedDevciesSince(LocalDateTime date) throws Exception {
+    private List<String> getDbapiDeletedDevicesSince(LocalDateTime date) throws Exception {
         OffsetDateTime dateUtc = localTimeToUtc(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/connections/deleted");
+        Request request = createDbapiRequest(HttpMethod.GET, "/devices/get_deleted_devices");
         if (dateUtc != null) {
-            request.param("updated_at__gte", dateUtc.toString());
+            request.param("deleted_date__gte", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
         List<String> deletedDevices = new ArrayList<>(response.asList().size());
@@ -927,7 +934,7 @@ public class DiscoveryServices implements ICSLService {
             if (deletedDevice.isString()) {
                 deletedDevices.add(deletedDevice.asString());
             } else if (deletedDevice.isObject()) {
-                deletedDevices.add(deletedDevice.get("uuid").asString());
+                deletedDevices.add(deletedDevice.get("object_id").asString());
             }
         }
         return deletedDevices;

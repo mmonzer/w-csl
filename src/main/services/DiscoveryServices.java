@@ -1,7 +1,9 @@
 package main.services;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.broker.MqttBrokerHandler;
+import com.csl.intercom.DbapiHandler;
+import com.csl.intercom.broker.CSLMqttBrokerHandler;
+import com.csl.intercom.broker.CSLMqttMessage;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.logger.CSLLogger;
 import com.ucsl.interfaces.IApiCommands;
@@ -15,7 +17,6 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 
 import java.net.ConnectException;
@@ -23,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -42,7 +42,6 @@ public class DiscoveryServices implements ICSLService {
     private final String configFileSectionName;
     private final String scanManagerApiBaseEndpoint = "/api";
     private final HttpClient scanHttpClient = new HttpClient();
-    private final HttpClient dbapiHttpClient = new HttpClient();
     private String scanManagerDiscoveryUrl;
     private String scanManagerApiUrl;
     private String scanManagerProtocol;
@@ -50,25 +49,13 @@ public class DiscoveryServices implements ICSLService {
     private LocalDateTime lastDeviceModificationVerification = null;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
-    private String dbapiUrl;
-    private String apiKey;
+//    private String apiKey;
+    private DbapiHandler dbapiHandler;
     private ZoneId zoneId;
-//    private String mqttBrokerUrl;
-//    private MqttClient mqttClient;
-//    private String mqttTopic;
-//    private ScheduledExecutorService mqttConnetionAttempts;
-    MqttBrokerHandler mqttBroker = null;
+    private CSLMqttBrokerHandler mqttBroker = null;
+    private ScheduledExecutorService synchronizationSchedule;
 
-    private static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>() {{
-        put("discovery_protocol", "protocol");
-        put("port_number", "port");
-        put("custom_devices_uuid", "devices");
-        put("snmp_community", "community");
-        put("username", "user");
-        put("password", "pass");
-        put("snmp_privacy_key", "privPassPhrase");
-        put("authentication_algorithm", "authProtocolName");
-    }};
+
     private static final Map<String, String> connectionInfoFields = new HashMap<>() {{
         put("queryProtocol", "queryProtocol");
         put("community", "community");
@@ -77,6 +64,7 @@ public class DiscoveryServices implements ICSLService {
         put("privPassPhrase", "privPassPhrase");
         put("securityLevel", "securityLevel");
         put("authProtocolName", "authProtocolName");
+        put("privProtocolName", "privProtocolName");
     }};
     private static final List<String> snmpv2cConnectionInfoFields = new ArrayList<>() {{
         add("queryProtocol");
@@ -89,12 +77,12 @@ public class DiscoveryServices implements ICSLService {
         add("privPassPhrase");
         add("securityLevel");
         add("authProtocolName");
+        add("privProtocolName");
     }};
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
         this.name = name;
         this.configFileSectionName = configFileSectionName;
-//        this.lastCpeItemModification = LocalDateTime.parse("2023-04-10T10:25:01.808");
         this.isConcentrator = isConcentrator;
     }
 
@@ -118,7 +106,6 @@ public class DiscoveryServices implements ICSLService {
     public boolean init(Json jConfig, String cslDir) {
         System.out.println("Initializing SNMP service ..");
         logger.warn("Hello from logger");
-//        String idsconf = CSLContext.instance.getCslConfDir();
 
         String scanManagerIp = JsonUtil.getStringFromJson(jConfig, "manager_ip", "localhost");
         int scanManagerPort = JsonUtil.getIntFromJson(jConfig, "manager_port", 8010);
@@ -132,7 +119,7 @@ public class DiscoveryServices implements ICSLService {
         scanManagerApiUrl = scanManagerProtocol + "://" + scanManagerIp + ":" + scanManagerPort + scanManagerApiBaseEndpoint;
         try {
             scanHttpClient.start();
-            dbapiHttpClient.start();
+//            dbapiHttpClient.start();
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -140,24 +127,18 @@ public class DiscoveryServices implements ICSLService {
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
         }
 
+        dbapiHandler = new DbapiHandler();
+
         Json globalConfig = CSLContext.instance.getConfig().get("global");
-        if (globalConfig != null) {
-            dbapiUrl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "https://" : "http://";
-            dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
-            dbapiUrl += "/api";
-            apiKey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
-        } else {
-            dbapiUrl = "https://localhost/api";
-        }
 
         zoneId = ZoneId.of(JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris"));
         if (isConcentrator) {
             mqttBroker = CSLContext.instance.getMqttBroker();
-            mqttBroker.subscribeToTopic("device", (topic, mqttMessage) -> handleDbapiDeviceChange());
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> handleDbapiDeviceChange());
         }
 
-//        mqttConnetionAttempts = Executors.newScheduledThreadPool(1);
-//        mqttConnetionAttempts.scheduleAtFixedRate(this::connectMqttIfNecessary, 0, 2, TimeUnit.SECONDS);
+        synchronizationSchedule = Executors.newScheduledThreadPool(1);
+        synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, 300, TimeUnit.SECONDS);
 
         addCmd("get_status", params -> getStatus());
         addCmd("add_entity", this::addEntity);
@@ -188,7 +169,7 @@ public class DiscoveryServices implements ICSLService {
             if (!dateString.equals("")) {
                 Json changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
                 try {
-                    sendCpeItemsToDbapi(changes);
+                    dbapiHandler.sendCpeItems(changes);
                 } catch (Exception e) {
                     return Json.object("result", "NOK",
                             "error", Json.object("reason", "Could not send changes to DB-API")
@@ -231,9 +212,9 @@ public class DiscoveryServices implements ICSLService {
         try {
             if (isConcentrator) {
                 scanWebSocketHandler.stop();
+                dbapiHandler.close();
             }
             scanHttpClient.stop();
-//            mqttClient.disconnect();
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -262,26 +243,6 @@ public class DiscoveryServices implements ICSLService {
     public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
         return apiCommands.registerCmd(name, cmd, help);
     }
-
-    /**
-     * Try to connect to MQTT broker if not already connected.
-     */
-//    private void connectMqttIfNecessary() {
-//        if (mqttClient == null || !mqttClient.isConnected()) {
-//            try {
-//                mqttClient = new MqttClient(
-//                        mqttBrokerUrl,
-//                        "CSL-concentrator",
-//                        new MemoryPersistence());
-//                MqttConnectOptions connectOptions = new MqttConnectOptions();
-//                connectOptions.setCleanSession(true);
-//                mqttClient.connect(connectOptions);
-//                mqttClient.subscribe(mqttTopic);
-//            } catch (MqttException e) {
-//                mqttClient = null;
-//            }
-//        }
-//    }
 
     /**
      * Extract an entity's UUID
@@ -321,7 +282,8 @@ public class DiscoveryServices implements ICSLService {
                         JsonUtil.getStringFromJson(entity, "pass", null),
                         JsonUtil.getStringFromJson(entity, "privPassPhrase", null),
                         JsonUtil.getStringFromJson(entity, "securityLevel", null),
-                        JsonUtil.getStringFromJson(entity, "authProtocolName", null)
+                        JsonUtil.getStringFromJson(entity, "authProtocolName", null),
+                        JsonUtil.getStringFromJson(entity, "privProtocolName", null)
                 );
 
             default:
@@ -373,10 +335,11 @@ public class DiscoveryServices implements ICSLService {
      * @param pass             The SNMP password of the entity.
      * @param privPassPhrase   The privacy pass phrase of the entity.
      * @param securityLevel    The security level (authPriv, noAuthNoPriv or authNoPriv).
-     * @param authProtocolName The authentication protocol (MD5 or SHA).
+     * @param authProtocolName The authentication protocol (AuthMD5 or SHA-256).
+     * @param privProtocolName The privacy protocol (PrivAES128 or PrivDES).
      * @return The result from the scanner.
      */
-    private Json addSnmpv3Entity(String uuid, String name, String ip, int port, String user, String pass, String privPassPhrase, String securityLevel, String authProtocolName) {
+    private Json addSnmpv3Entity(String uuid, String name, String ip, int port, String user, String pass, String privPassPhrase, String securityLevel, String authProtocolName, String privProtocolName) {
         if (uuid == null || name == null || ip == null) {
             return Json.object(
                     "result", "NOK",
@@ -394,7 +357,8 @@ public class DiscoveryServices implements ICSLService {
                             "pass", pass,
                             "privPassPhrase", privPassPhrase,
                             "securityLevel", securityLevel,
-                            "authProtocolName", authProtocolName
+                            "authProtocolName", authProtocolName,
+                            "privProtocolName", privProtocolName
                     ),
                     "isDeleted", false
             ));
@@ -512,16 +476,6 @@ public class DiscoveryServices implements ICSLService {
                 iterator.remove();
             }
         }
-//        if (!cpeItemsList.isEmpty()) {
-//            // Update lastCpeItemModification.
-//            // Currently, computed locally, should retrieve it from scan service latter.
-//            for (Json cpeItem : cpeItemsList) {
-//                LocalDateTime cpeItemUpdateTime = getCpeItemDateTime(cpeItem);
-//                if (cpeItemUpdateTime.isAfter(lastCpeItemModification)) {
-//                    lastCpeItemModification = cpeItemUpdateTime;
-//                }
-//            }
-//        }
         return cpeItems;
     }
 
@@ -586,22 +540,31 @@ public class DiscoveryServices implements ICSLService {
     }
 
     /**
+     * Synchronise the models :
+     *   - Devices
+     *   - CPE Items
+     */
+    public void syncAll() {
+        handleDbapiDeviceChange();
+        handleCpeItemChanges();
+    }
+
+    /**
      * The action to perform when a modification is notified on the CpeItems.
      */
     public void handleCpeItemChanges() {
         LocalDateTime lastChangesDate = null;
         try {
-            lastChangesDate = getDbapiLastUpdateDate();
+            lastChangesDate = dbapiHandler.getLastUpdateDate();
         } catch (Exception e) {
-//            lastChangesDate = lastCpeItemModification;
             System.err.println("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
         }
         Json changes = getCpeItemChangesSince(lastChangesDate);
         if (changes != null && changes.isArray()) {
             try {
-                sendCpeItemsToDbapi(changes);
+                dbapiHandler.sendCpeItems(changes);
+                mqttBroker.publish(CSLMqttBrokerHandler.Topic.CPE_ITEMS, CSLMqttMessage.message("synchronization_ended"));
             } catch (Exception e) {
-//                lastCpeItemModification = lastChangesDate;
                 e.printStackTrace(System.err);
             }
         }
@@ -638,10 +601,10 @@ public class DiscoveryServices implements ICSLService {
         LocalDateTime currentTime = LocalDateTime.now();
         try {
             newDevices = buildNewDevices(
-                    getDbapiDevicesSince(lastDeviceModificationVerification),
-                    getDbapiConnectionsSince(lastDeviceModificationVerification)
+                    dbapiHandler.getDevicesSince(lastDeviceModificationVerification),
+                    dbapiHandler.getConnectionsSince(lastDeviceModificationVerification)
             );
-            deletedDevices = getDbapiDeletedDevicesSince(lastDeviceModificationVerification);
+            deletedDevices = dbapiHandler.getDeletedDevicesSince(lastDeviceModificationVerification);
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Json.object("result", "NOK",
@@ -819,129 +782,6 @@ public class DiscoveryServices implements ICSLService {
     }
 
     /**
-     * Send a CPE Item to DB-API
-     *
-     * @param cpeItem The CPE Item to send
-     * @throws Exception If the sending fail
-     */
-    private void sendCpeItemToDbapi(Json cpeItem) throws Exception {
-        Json requestContents = Json.object("cpe_data", cpeItem);
-        if (cpeItem.has("updatedAt")) {
-            requestContents.set("discovered_date", cpeItem.get("updatedAt"));
-        }
-        requestContents.set("device", cpeItem.get("entityUuid").asString());
-        Request request = createDbapiRequest(HttpMethod.POST, "/cpe_discovered_items")
-                .content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
-        if (response.getStatus() != 201) {
-            throw new Exception("Error sending CpeItem to dbapi: got unexpected status " + response.getStatus());
-        }
-    }
-
-    /**
-     * Send a list of CPE Items to DB-API
-     *
-     * @param cpeItems A {@link List<Json>} with the CPE Items to send
-     * @throws Exception If any item failed
-     */
-    private void sendCpeItemsToDbapi(Json cpeItems) throws Exception {
-        for (Json cpeItem : cpeItems.asJsonList()) {
-            sendCpeItemToDbapi(cpeItem);
-        }
-    }
-
-    /**
-     * Fetch the last updated date of CPE Items in DB-API.
-     *
-     * @return The last update of CPE-Items in DB-API.
-     * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
-     */
-    private LocalDateTime getDbapiLastUpdateDate() throws Exception {
-        Request request = createDbapiRequest(HttpMethod.GET, "/cpe_discovered_items/get_last_discovered_date");
-        ContentResponse response = request.send();
-        Json responseContents = Json.read(response.getContentAsString());
-        String lastUpdatedDateString;
-        if (responseContents.isString()) {
-            lastUpdatedDateString = responseContents.asString();
-        } else if (responseContents.isObject()) {
-            lastUpdatedDateString = responseContents.get("updatedAt").asString();
-        } else {
-            lastUpdatedDateString = responseContents.toString();
-        }
-        return dbapiDateToLocal(lastUpdatedDateString);
-    }
-
-    /**
-     * Get the devices from DB-API that were changed since an optional date.
-     *
-     * @param date The date of start of modifications to fecth. May be null, in wich case fetches all devices.
-     * @return The {@link List<Json>} of devices that were changed since date.
-     * @throws Exception If the fetching failed.
-     */
-    private List<Json> getDbapiDevicesSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = localTimeToUtc(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/devices");
-        if (dateUtc != null) {
-            request.param("updated_at__gte", dateUtc.toString());
-        }
-        Json response = Json.read(request.send().getContentAsString());
-
-        List<Json> devices = new ArrayList<>();
-        for (Json jsonDevice : response.asJsonList()) {
-            Json device = parseDbapiDevice(jsonDevice);
-            devices.add(device);
-        }
-        return devices;
-    }
-
-    /**
-     * Get the connections from DB-API that were changed since an optional date.
-     *
-     * @param date The date of start of modifications to fecth. May be null, in wich case fetches all connections.
-     * @return The {@link List<Json>} of connections that were changed since date.
-     * @throws Exception If the fetching failed.
-     */
-    private List<Json> getDbapiConnectionsSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = localTimeToUtc(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/connections");
-        if (dateUtc != null) {
-            request.param("updated_at__gte", dateUtc.toString());
-        }
-        Json response = Json.read(request.send().getContentAsString());
-        List<Json> connections = new ArrayList<>(response.asList().size());
-        for (Json jsonConnection : response.asJsonList()) {
-            Json connection = parseDbapiConnection(jsonConnection);
-            connections.add(connection);
-        }
-        return connections;
-    }
-
-    /**
-     * Get the deleted devices from DB-API that were changed since an optional date.
-     *
-     * @param date The date of start of deletions to fecth. May be null, in wich case fetches all deletions.
-     * @return The {@link List<String>} of device uuids that were deleted since date.
-     * @throws Exception If the fetching failed.
-     */
-    private List<String> getDbapiDeletedDevicesSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = localTimeToUtc(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/devices/get_deleted_devices");
-        if (dateUtc != null) {
-            request.param("deleted_date__gte", dateUtc.toString());
-        }
-        Json response = Json.read(request.send().getContentAsString());
-        List<String> deletedDevices = new ArrayList<>(response.asList().size());
-        for (Json deletedDevice : response) {
-            if (deletedDevice.isString()) {
-                deletedDevices.add(deletedDevice.asString());
-            } else if (deletedDevice.isObject()) {
-                deletedDevices.add(deletedDevice.get("object_id").asString());
-            }
-        }
-        return deletedDevices;
-    }
-
-    /**
      * Create the list of entities to update on CSL-Scan.
      *
      * @param devices     The list of devices that were created or modified.
@@ -961,7 +801,7 @@ public class DiscoveryServices implements ICSLService {
         }
         for (Json connection : connections) {
             for (Json device : connection.get("devices").asJsonList()) {
-                deviceUuidsInConnections.add(device.get("uuid").asString());
+                deviceUuidsInConnections.add(device.asString());
             }
         }
         //endregion
@@ -971,12 +811,12 @@ public class DiscoveryServices implements ICSLService {
         List<String> devicesToGet = new ArrayList<>();
 
         for (int connectionId : connectionUuidsInDevices) {
-            if (getConnectionById(connections, connectionId) == null) {
+            if (dbapiHandler.getConnectionById(connections, connectionId) == null) {
                 connectionsToGet.add(connectionId);
             }
         }
         for (String deviceId : deviceUuidsInConnections) {
-            if (getDeviceById(devices, deviceId) == null) {
+            if (dbapiHandler.getDeviceById(devices, deviceId) == null) {
                 devicesToGet.add(deviceId);
             }
         }
@@ -984,8 +824,8 @@ public class DiscoveryServices implements ICSLService {
 
         //region Get the missing parts
         try {
-            connections.addAll(fetchConnectionsFromDbapi(connectionsToGet));
-            devices.addAll(fetchDevicesFromDbapi(devicesToGet));
+            connections.addAll(dbapiHandler.fetchConnections(connectionsToGet));
+            devices.addAll(dbapiHandler.fetchDevices(devicesToGet));
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace(System.err);
         }
@@ -994,7 +834,7 @@ public class DiscoveryServices implements ICSLService {
         //region Build the entities to send
         List<Json> protocols = null;
         try {
-            protocols = fetchDiscoveryProtocolsFromDbapi();
+            protocols = dbapiHandler.fetchDiscoveryProtocols();
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace(System.err);
         }
@@ -1004,13 +844,13 @@ public class DiscoveryServices implements ICSLService {
             if (!device.has("connection") || device.get("connection").isNull()) {
                 continue;
             }
-            Json connection = getConnectionById(connections, device.get("connection").asInteger());
+            Json connection = dbapiHandler.getConnectionById(connections, device.get("connection").asInteger());
             Json scanEntity = Json.object(
                     "id", device.get("id"),
                     "name", device.get("name"),
                     "ip", device.get("ip"),
                     "port", connection.get("port"),
-                    "protocol", getProtocolById(protocols, connection.get("protocol").asInteger()),
+                    "protocol", dbapiHandler.getProtocolById(protocols, connection.get("protocol").asInteger()),
                     "isDeleted", false
             );
             for (Map.Entry<String, String> connectionInfoField : connectionInfoFields.entrySet()) {
@@ -1027,236 +867,12 @@ public class DiscoveryServices implements ICSLService {
     }
 
     /**
-     * Get a connection in a {@link List<Json>} from its id.
-     *
-     * @param connections The list of connections to search
-     * @param id          The ID of the connection we seek.
-     * @return The {@link Json} of the connection we sought, or null if not found.
-     */
-    private static Json getConnectionById(List<Json> connections, int id) {
-        for (Json connection : connections) {
-            if (connection.get("id").asInteger() == id) {
-                return connection;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get a device in a {@link List<Json>} from its id.
-     *
-     * @param devices The list of devices to search
-     * @param id      The ID of the device we seek.
-     * @return The {@link Json} of the devices we sought, or null if not found.
-     */
-    private static Json getDeviceById(List<Json> devices, String id) {
-        for (Json device : devices) {
-            if (device.get("id").asString().equals(id)) {
-                return device;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get a protocol in a {@link List<Json>} from its id.
-     *
-     * @param protocols The list of protocols to search
-     * @param id        The ID of the protocol we seek.
-     * @return The {@link Json} of the protocols we sought, or null if not found.
-     */
-    private static String getProtocolById(List<Json> protocols, int id) {
-        String name;
-        for (Json protocol : protocols) {
-            if (protocol.get("id").asInteger() == id) {
-                name = protocol.get("name").asString().toLowerCase();
-                if (name.equals("snmpv1")) {
-                    return "SNMPV1";
-                } else if (name.equals("snmpv2c")) {
-                    return "SNMPV2c";
-                } else if (name.equals("snmpv3")) {
-                    return "SNMPV3";
-                }
-                return name;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Parse a device as received from DB-API and return a format suitable for our use.
-     *
-     * @param dbapiDevice The device as we got it from DB-API.
-     * @return A {@link Json} with a format suitable for further processing:
-     * <code>
-     * {
-     * "id": uuid (String),
-     * "name": name (String),
-     * "ip": IP address (String)
-     * }
-     * </code>
-     */
-    private static Json parseDbapiDevice(Json dbapiDevice) {
-        Json device = Json.object(
-                "id", dbapiDevice.get("uuid"),
-                "name", dbapiDevice.get("name")
-        );
-        if (dbapiDevice.has("ipv4")) {
-            device.set("ip", dbapiDevice.get("ipv4"));
-        } else if (dbapiDevice.has("ipv6")) {
-            device.set("ip", dbapiDevice.get("ipv6"));
-        }
-        Json connectionsIdJson = dbapiDevice.get("connections");
-        Integer connectionId = null;
-        if (connectionsIdJson != null) {
-            if (connectionsIdJson.isArray() && !connectionsIdJson.asJsonList().isEmpty()) {
-                connectionId = connectionsIdJson.asJsonList().get(0).asInteger();
-            }
-        }
-        device.set("connection", connectionId);
-        return device;
-    }
-
-    /**
-     * Parse a connection as received from DB-API and return a format suitable for our use.
-     *
-     * @param dbapiConnection The connection as we got it from DB-API.
-     * @return A {@link Json} with a format suitable for further processing:
-     * <code>
-     * {
-     * "id": uuid (int),
-     * "protocol": id (int),
-     * "port": port number (int),
-     * "devices": device uuids list ([String]),
-     * "community": SNMP community (String)
-     * }
-     * </code>
-     */
-    private static Json parseDbapiConnection(Json dbapiConnection) {
-        Json connection = Json.object(
-                "id", dbapiConnection.get("id")
-        );
-        for (Map.Entry<String, String> field : connectionFieldsDbapiToLocal.entrySet()) {
-            String key = field.getKey();
-            String value = field.getValue();
-            if (dbapiConnection.has(key) && !dbapiConnection.isNull()) {
-                connection.set(value, dbapiConnection.get(key));
-            }
-        }
-
-        Json otherData = dbapiConnection.get("other_data");
-        String authString = "noAuth";
-        String privacyString = "NoPriv";
-        if (otherData.has("privacy_algorithm")) {
-            privacyString = "Priv";
-        }
-        if (otherData.has("authentication_algorithm")) {
-            authString = "auth";
-        }
-        connection.set("securityLevel", authString + privacyString);
-
-        return connection;
-    }
-
-    /**
-     * Fetch a list of connections from DB-API.
-     *
-     * @param ids The {@link List<Integer>} of IDs of connections to retrieve from DB-API
-     * @return The {@link List<Json>} of connections fetched from DB-API
-     * @throws ExecutionException   If the fetch failed.
-     * @throws InterruptedException If the connection with DB-API was interrupted.
-     * @throws TimeoutException     If the connection with DB-API times out.
-     */
-    private List<Json> fetchConnectionsFromDbapi(List<Integer> ids) throws ExecutionException, InterruptedException, TimeoutException {
-        List<Json> connections = new ArrayList<>();
-        for (int id : ids) {
-            Request request = createDbapiRequest(HttpMethod.GET, "/connections");
-            request.param("id", String.valueOf(id));
-            Json response = Json.read(request.send().getContentAsString());
-            if (response.isArray()) {
-                connections.add(parseDbapiConnection(response.at(0)));
-            } else {
-                connections.add(parseDbapiConnection(response));
-            }
-        }
-        return connections;
-    }
-
-    /**
-     * Fetch a list of devices from DB-API.
-     *
-     * @param uuids The {@link List<Integer>} of IDs of devices to retrieve from DB-API
-     * @return The {@link List<Json>} of devices fetched from DB-API
-     * @throws ExecutionException   If the fetch failed.
-     * @throws InterruptedException If the connection with DB-API was interrupted.
-     * @throws TimeoutException     If the connection with DB-API times out.
-     */
-    private List<Json> fetchDevicesFromDbapi(List<String> uuids) throws ExecutionException, InterruptedException, TimeoutException {
-        List<Json> devices = new ArrayList<>();
-        if (uuids == null || uuids.isEmpty()) {
-            return devices;
-        }
-        Request request = createDbapiRequest(HttpMethod.GET, "/devices");
-        request.param("uuid", String.join(",", uuids));
-        for (Json device : Json.read(request.send().getContentAsString()).asJsonList()) {
-            devices.add(parseDbapiDevice(device));
-        }
-        return devices;
-    }
-
-    /**
-     * Fetch the list discovery protocols from DB-API.
-     *
-     * @return The {@link List<Json>} of protocols fetched from DB-API
-     * @throws ExecutionException   If the fetch failed.
-     * @throws InterruptedException If the connection with DB-API was interrupted.
-     * @throws TimeoutException     If the connection with DB-API times out.
-     */
-    private List<Json> fetchDiscoveryProtocolsFromDbapi() throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, "/cpe_discovery_api");
-        return Json.read(request.send().getContentAsString()).asJsonList();
-    }
-
-    /**
-     * Create a DB-API request. Most notably, adds the API key to the request header.
-     *
-     * @param method   The HTTP method to use (GET, POST, ...)
-     * @param endpoint The endpoint to contact in DB-API.
-     * @return The crafted {@link Request}.
-     */
-    private Request createDbapiRequest(HttpMethod method, String endpoint) {
-        return dbapiHttpClient.newRequest(dbapiUrl + endpoint)
-                .method(method)
-                .header(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
-    }
-
-    /**
-     * Translate a date from DB-API's datetime format to LocalDateTime.
-     *
-     * @param dateTime A serialized date as received from DB-API.
-     * @return The {@link LocalDateTime} corresponding to the date provided by DB-API.
-     */
-    LocalDateTime dbapiDateToLocal(String dateTime) {
-        return dbapiDateToLocal(OffsetDateTime.parse(dateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-    }
-
-    /**
-     * Translate a date from DB-API's datetime format to LocalDateTime.
-     *
-     * @param dateTime An {@link OffsetDateTime} date as received from DB-API.
-     * @return The {@link LocalDateTime} corresponding to the date provided by DB-API.
-     */
-    LocalDateTime dbapiDateToLocal(OffsetDateTime dateTime) {
-        return dateTime.atZoneSameInstant(zoneId).toLocalDateTime();
-    }
-
-    /**
      * Translate local date to UTC, as used by CSL-Scan.
      *
-     * @param localDateTime
-     * @return
+     * @param localDateTime The local date time.
+     * @return The same date time in UTC.
      */
-    OffsetDateTime localTimeToUtc(LocalDateTime localDateTime) {
+    private OffsetDateTime localTimeToUtc(LocalDateTime localDateTime) {
         if (localDateTime == null) return null;
         OffsetDateTime utcDateTime = OffsetDateTime.parse(localDateTime.atZone(zoneId).toInstant().toString());
         return utcDateTime;

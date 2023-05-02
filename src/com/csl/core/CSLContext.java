@@ -21,7 +21,7 @@ import com.csl.alert.CSLAlertManager;
 import com.csl.defaultclasses.FileStoreService;
 import com.csl.ids.IDSParams;
 import com.csl.ids.IDSRunner;
-import com.csl.intercom.broker.MqttBrokerHandler;
+import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.interfaces.ICSLContext;
 import com.csl.interfaces.IIDSRunner;
@@ -70,7 +70,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 	CSLAlertManager cslAlertManager=null;
 	private IDSRunner idsRunner=null;
 	private IDSParams idsParams=null;
-	private MqttBrokerHandler mqttBroker = null;
+	private CSLMqttBrokerHandler mqttBroker = null;
 
 	
 	DataBaseServer databaseServer=null;
@@ -851,6 +851,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		JServiceLoader.getCSLInterModuleCommunicationManager().stop();
 
 		if (idsRunner!=null) idsRunner.stop();
+		if (mqttBroker!=null) mqttBroker.close();
 
 
 	}
@@ -1489,9 +1490,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		return idsMainProcessor;
 	}
 
-	public MqttBrokerHandler getMqttBroker() {
+	public CSLMqttBrokerHandler getMqttBroker() {
 		if (mqttBroker == null) {
-			mqttBroker = new MqttBrokerHandler(getConfig());
+			mqttBroker = new CSLMqttBrokerHandler(getConfig());
 		}
 		return mqttBroker;
 	}

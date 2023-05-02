@@ -2,11 +2,7 @@ package com.csl.intercom.broker;
 
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import org.apache.commons.net.ntp.TimeStamp;
-import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.*;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -14,8 +10,31 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
-public class MqttBrokerHandler implements AutoCloseable {
+/**
+ * Handle the MQTT client.
+ */
+public class CSLMqttBrokerHandler implements AutoCloseable {
+    /**
+     * The known topics.
+     */
+    public enum Topic {
+        DEVICES("device"),
+        CPE_ITEMS("cpe_item");
+
+        private String name;
+
+        Topic(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
     private static final String clientId = "mqtt_agent_concentrator";
     private String apiKey;
     private String brokerUri;
@@ -25,7 +44,12 @@ public class MqttBrokerHandler implements AutoCloseable {
     private String organization = "None";
     private ScheduledExecutorService mqttConnectionAttempts;
 
-    public MqttBrokerHandler(Json config) {
+    /**
+     * Create a new {@link CSLMqttBrokerHandler} from the project's configuration.
+     *
+     * @param config The configuration of the project. Can be retrieved with <code>CSLContext.instance.getConfig()</code>.
+     */
+    public CSLMqttBrokerHandler(Json config) {
         Json globalConfig = config.get("global");
         brokerUri = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "wss://" : "ws://";
         brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
@@ -51,8 +75,8 @@ public class MqttBrokerHandler implements AutoCloseable {
         }
     }
 
-    public void subscribeToTopic(String topic, IMqttMessageListener callback) {
-        String fullTopic = organization + "/" + topic;
+    private void subscribeToTopic(String topic, IMqttMessageListener callback) {
+        String fullTopic = genFullTopic(topic);
         topics.put(fullTopic, callback);
         if (mqttClient != null && mqttClient.isConnected()) {
             try {
@@ -63,13 +87,51 @@ public class MqttBrokerHandler implements AutoCloseable {
         }
     }
 
+
+    /**
+     * Subscribe to a topic, with a callback to execute when a message is published in the topic.
+     * If connection is currently unavailable, store the request for latter subscription.
+     *
+     * @param topic    The {@link Topic} to subscribe to.
+     * @param callback The callback to execute. Takes two arguments (String, MqttMessage) and returns nothing.
+     */
+    public void subscribeToTopic(Topic topic, Consumer<CSLMqttMessage> callback) {
+        subscribeToTopic(topic.toString(), (s, message) -> callback.accept(CSLMqttMessage.parse(new String(message.getPayload()))));
+    }
+
+    private void publish(String topic, String message) throws MqttException {
+        String fullTopic = genFullTopic(topic);
+        if (mqttClient != null && mqttClient.isConnected()) {
+            mqttClient.publish(fullTopic, new MqttMessage(message.getBytes()));
+        }
+    }
+
+    /**
+     * Publish a message to a topic.
+     *
+     * @param topic   The {@link Topic} on which to send the message.
+     * @param message The contents of the message.
+     * @throws MqttException If the sending failed.
+     */
+    public void publish(Topic topic, CSLMqttMessage message) throws Exception {
+        try {
+            publish(topic.toString(), message.toString());
+        } catch (MqttException e) {
+            throw new Exception("MQTT error: " + e.getMessage());
+        }
+    }
+
+    private String genFullTopic(String topic) {
+        return organization + "/" + topic;
+    }
+
     private void connectToMqttClientIfNecessary() {
         if (mqttClient == null || !mqttClient.isConnected()) {
             try {
                 mqttClient = new MqttClient(brokerUri, clientId + Instant.now().toEpochMilli());
                 MqttConnectOptions connectOptions = new MqttConnectOptions();
                 mqttClient.connect(mqttConnectOptions);
-                for (Map.Entry<String, IMqttMessageListener> topic: topics.entrySet()) {
+                for (Map.Entry<String, IMqttMessageListener> topic : topics.entrySet()) {
                     mqttClient.subscribe(topic.getKey(), topic.getValue());
                 }
             } catch (MqttException e) {
@@ -78,4 +140,5 @@ public class MqttBrokerHandler implements AutoCloseable {
             }
         }
     }
+
 }

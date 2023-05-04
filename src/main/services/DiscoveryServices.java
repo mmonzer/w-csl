@@ -1,7 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.broker.CSLMqttMessage;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
@@ -47,6 +47,7 @@ public class DiscoveryServices implements ICSLService {
     private String scanManagerProtocol;
 //    private LocalDateTime lastCpeItemModification;
     private LocalDateTime lastDeviceModificationVerification = null;
+    private LocalDateTime lastCpeItemDeletionVerification = null;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
 //    private String apiKey;
@@ -547,6 +548,7 @@ public class DiscoveryServices implements ICSLService {
     public void syncAll() {
         handleDbapiDeviceChange();
         handleCpeItemChanges();
+        handleDeletedCpes();
     }
 
     /**
@@ -638,6 +640,34 @@ public class DiscoveryServices implements ICSLService {
         );
     }
 
+    private Json handleDeletedCpes() {
+        List<String> deletedCpes = null;
+        try {
+            LocalDateTime currentTime = LocalDateTime.now();
+            deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
+            lastCpeItemDeletionVerification = currentTime;
+        } catch (Exception e) {
+            return Json.object(
+                    "result", "NOK",
+                    "error", Json.object(
+                            "reason", "Failed to fetch deleted CPE Items",
+                            "details", e.getMessage()
+                    )
+            );
+        }
+        deleteCpeItemsFromScan(deletedCpes);
+        return Json.object("result", "OK");
+    }
+
+    private void deleteCpeItemFromScan(String id) {
+        sendRequestToScanManager(HttpMethod.DELETE, "/cpeItem/entity/" + id, Json.object());
+    }
+
+    private void deleteCpeItemsFromScan(List<String> ids) {
+        for (String id: ids) {
+            deleteCpeItemFromScan(id);
+        }
+    }
 
     /**
      * Synchronize devices between DB-API and CSL-Scan, and then request a new scan from DB-API.

@@ -1,8 +1,7 @@
-package com.csl.intercom;
+package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.dbapi.enums.Module;
-import com.csl.intercom.dbapi.enums.ScanAction;
+import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.client.HttpClient;
@@ -99,7 +98,7 @@ public class DbapiHandler implements AutoCloseable {
             requestContents.set("mongo_entity_id", cpeItem.get("uuid"));
         }
         requestContents.set("device", cpeItem.get("entityUuid").asString());
-        Request request = createDbapiRequest(HttpMethod.POST, "/cpe_discovered_items")
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
         if (response.getStatus() != 201) {
@@ -126,7 +125,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
      */
     public LocalDateTime getLastUpdateDate() throws Exception {
-        Request request = createDbapiRequest(HttpMethod.GET, "/cpe_discovered_items/get_last_discovered_date");
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CPE_ITEMS_LAST_DATE);
         ContentResponse response = request.send();
         Json responseContents = Json.read(response.getContentAsString());
         String lastUpdatedDateString;
@@ -149,7 +148,7 @@ public class DbapiHandler implements AutoCloseable {
      */
     public List<Json> getDevicesSince(LocalDateTime date) throws Exception {
         OffsetDateTime dateUtc = localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/devices");
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
         if (dateUtc != null) {
             request.param("updated_at__gte", dateUtc.toString());
         }
@@ -173,7 +172,7 @@ public class DbapiHandler implements AutoCloseable {
      */
     public List<Json> getConnectionsSince(LocalDateTime date) throws Exception {
         OffsetDateTime dateUtc = localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/connections");
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
         if (dateUtc != null) {
             request.param("updated_at__gte", dateUtc.toString());
         }
@@ -196,7 +195,7 @@ public class DbapiHandler implements AutoCloseable {
      */
     public List<String> getDeletedDevicesSince(LocalDateTime date) throws Exception {
         OffsetDateTime dateUtc = localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/devices/get_deleted_devices");
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES);
         if (dateUtc != null) {
             request.param("deleted_date__gte", dateUtc.toString());
         }
@@ -221,7 +220,7 @@ public class DbapiHandler implements AutoCloseable {
      */
     public List<String> getDeletedCpeItemsSince(LocalDateTime date) throws Exception {
         OffsetDateTime dateUtc = localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, "/cpe_items/get_deleted_cpe_items");
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_CPE_ITEMS);
         if (dateUtc != null) {
             request.param("deleted_date__gte", dateUtc.toString());
         }
@@ -234,7 +233,7 @@ public class DbapiHandler implements AutoCloseable {
             if (cpeItem.isString()) {
                 deletedCpeItems.add(cpeItem.asString());
             } else if (cpeItem.isObject()) {
-                deletedCpeItems.add(cpeItem.get("object_id").asString());
+                deletedCpeItems.add(cpeItem.get("object_repr").asString());
             }
         }
         return deletedCpeItems;
@@ -254,7 +253,7 @@ public class DbapiHandler implements AutoCloseable {
         if (uuids == null || uuids.isEmpty()) {
             return devices;
         }
-        Request request = createDbapiRequest(HttpMethod.GET, "/devices");
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
         request.param("uuid", String.join(",", uuids));
         for (Json device : Json.read(request.send().getContentAsString()).asJsonList()) {
             devices.add(parseDbapiDevice(device));
@@ -308,7 +307,7 @@ public class DbapiHandler implements AutoCloseable {
     public List<Json> fetchConnections(List<Integer> ids) throws ExecutionException, InterruptedException, TimeoutException {
         List<Json> connections = new ArrayList<>();
         for (int id : ids) {
-            Request request = createDbapiRequest(HttpMethod.GET, "/connections");
+            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
             request.param("id", String.valueOf(id));
             Json response = Json.read(request.send().getContentAsString());
             if (response.isArray()) {
@@ -387,41 +386,51 @@ public class DbapiHandler implements AutoCloseable {
      * @throws TimeoutException     If the connection with DB-API times out.
      */
     public List<Json> fetchDiscoveryProtocols() throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, "/cpe_discovery_api");
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS);
         return Json.read(request.send().getContentAsString()).asJsonList();
     }
 
-    private void notifyScan(LocalDateTime date, ScanAction action, String description, String result) throws Exception {
-        if (date == null) {
-            date = LocalDateTime.now();
+    public int notifyScanStarted(LocalDateTime startDate) {
+        Json params = Json.object("started_at", localDateToDbapi(startDate).toString());
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.SCAN_EVENTS)
+                .header(HttpHeader.CONTENT_TYPE, "application/json")
+                .content(new StringContentProvider(params.toString()));
+        try {
+            ContentResponse response = request.send();
+            return JsonUtil.getIntFromJson(Json.read(response.getContentAsString()), "id", 0);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            return 0;
         }
-        Json requestData = Json.object(
-                "module", Module.CPE_DISCOVERY.asInt(),
-                "action", action.asInt(),
-                "description", description,
-                "action_date", localDateToDbapi(date).toString()
+    }
+
+    public int notifyScanStarted() {
+        return notifyScanStarted(LocalDateTime.now());
+    }
+
+    /**
+     * Notify DB-API that a scan is finished.
+     *
+     * @param scan The scan that ended.
+     * @throws ExecutionException   If the sending failed.
+     * @throws InterruptedException If the sending was interrupted.
+     * @throws TimeoutException     If the sending timed out.
+     * @throws Exception            If received an unexpected HTTP status code (ie. != 200) or if the JSON was malformed.
+     */
+    public Json notifyScanFinished(ScanEntity scan) throws Exception {
+        Request request = createDbapiPatchRequest(DbapiEndpoint.SCAN_EVENTS, String.valueOf(scan.getDbapiId()));
+        Json params = Json.object(
+                "ended_at", localDateToDbapi(scan.getEndDate()).toString(),
+                "is_success", String.valueOf(scan.isSuccess())
         );
-        if (result != null) {
-            requestData.set("result", result);
+        if (scan.getDescription() != null) {
+            params.set("description", scan.getDescription());
         }
-        Request request = createDbapiRequest(HttpMethod.POST, "/cpe_discovered_items/scan_status")
-                .content(new StringContentProvider(requestData.toString()));
+        request.content(new StringContentProvider(params.toString()));
         ContentResponse response = request.send();
-        if (response.getStatus() >= 400) {
-            throw new Exception("Unexpected status code " + response.getStatus());
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code: " + response.getStatus());
         }
-    }
-
-    public void notifyScanStarted(LocalDateTime date) throws Exception {
-        notifyScan(date, ScanAction.STARTED, "Scan started", null);
-    }
-
-    public void notifyScanSuccess(LocalDateTime date) throws Exception {
-        notifyScan(date, ScanAction.ENDED, "Scan finished successfully", "success");
-    }
-
-    public void notifyScanFailure(LocalDateTime date) throws Exception {
-        notifyScan(date, ScanAction.ENDED, "Scan finished with errors", "fail");
+        return Json.read(response.getContentAsString());
     }
 
     /**
@@ -497,7 +506,66 @@ public class DbapiHandler implements AutoCloseable {
         return dbapiHttpClient.newRequest(dbapiUrl + endpoint)
                 .method(method)
                 .header(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
+    }
 
+    /**
+     * Create a DB-API request. Most notably, adds the API key to the request header.
+     *
+     * @param method   The HTTP method to use (GET, POST, ...)
+     * @param endpoint The endpoint to contact in DB-API.
+     * @return The crafted {@link Request}.
+     */
+    private Request createDbapiRequest(HttpMethod method, DbapiEndpoint endpoint) {
+        return createDbapiRequest(method, endpoint.getEndpoint());
+    }
+
+    /**
+     * Create a DB-API request. Most notably, adds the API key to the request header.
+     *
+     * @param method   The HTTP method to use (GET, POST, ...)
+     * @param endpoint The endpoint to contact in DB-API.
+     * @param id Additional argument.
+     * @return The crafted {@link Request}, pointing to the endpoint <code>endpoint/id</code>.
+     */
+    private Request createDbapiRequest(HttpMethod method, DbapiEndpoint endpoint, String id) {
+        return createDbapiRequest(method, endpoint.getEndpoint() + "/" + id);
+    }
+
+    /**
+     * Create a DB-API PATCH request. Most notably, adds the API key to the request header.
+     * Exists because PATCH is absent from the Jetty methods enum.
+     *
+     * @param endpoint The endpoint to contact in DB-API.
+     * @return The crafted {@link Request}.
+     */
+    private Request createDbapiPatchRequest(String endpoint) {
+        return dbapiHttpClient.newRequest(dbapiUrl + endpoint)
+                .method("PATCH")
+                .header(HttpHeader.CONTENT_TYPE, "application/json")
+                .header(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
+    }
+
+    /**
+     * Create a DB-API PATCH request. Most notably, adds the API key to the request header.
+     * Exists because PATCH is absent from the Jetty methods enum.
+     *
+     * @param endpoint The endpoint to contact in DB-API.
+     * @return The crafted {@link Request}.
+     */
+    private Request createDbapiPatchRequest(DbapiEndpoint endpoint) {
+        return createDbapiPatchRequest(endpoint.getEndpoint());
+    }
+
+    /**
+     * Create a DB-API PATCH request. Most notably, adds the API key to the request header.
+     * Exists because PATCH is absent from the Jetty methods enum.
+     *
+     * @param endpoint The endpoint to contact in DB-API.
+     * @param id Additional argument.
+     * @return The crafted {@link Request}, pointing to the endpoint <code>endpoint/id</code>.
+     */
+    private Request createDbapiPatchRequest(DbapiEndpoint endpoint, String id) {
+        return createDbapiPatchRequest(endpoint.getEndpoint() + '/' + id);
     }
 
     /**

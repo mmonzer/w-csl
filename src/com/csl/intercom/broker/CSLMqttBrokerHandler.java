@@ -35,13 +35,13 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         }
     }
 
-    private static final String clientId = "mqtt_agent_concentrator";
-    private String apiKey;
-    private String brokerUri;
-    private Map<String, IMqttMessageListener> topics = new HashMap<>();
+    private static final String clientId = "mqtt_agent_concentrator";       // MQTT client id's prefix
+    private String apiKey;                                                  // The API key to include in each message
+    private String organization = "None";                                   // The organization, default id None.
     private MqttClient mqttClient;
+    private String brokerUri;
+    private Map<String, IMqttMessageListener> topics = new HashMap<>();     // The topic we should subscribe to, together with callbacks to execute when a message is received on that topic
     private MqttConnectOptions mqttConnectOptions;
-    private String organization = "None";
     private ScheduledExecutorService mqttConnectionAttempts;
 
     /**

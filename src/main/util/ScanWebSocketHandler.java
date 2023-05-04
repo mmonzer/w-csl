@@ -1,12 +1,14 @@
 package main.util;
 
+import com.csl.core.CSLContext;
+import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.ScanEntity;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.AbstractMessageConverter;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
@@ -21,6 +23,8 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,17 +39,24 @@ public class ScanWebSocketHandler {
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
+    private ZoneId zoneId;
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private String scanManagerDiscoveryUrl;
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
-    private final List<String> finishedScanStatus = new ArrayList<>(5) {{
+    private static final DbapiHandler dbapiHandler = new DbapiHandler();
+    private List<ScanEntity> scans = new ArrayList<>();
+    private static final List<String> finishedScanStatus = new ArrayList<>(5) {{
         add("READY_CHANGES");
         add("READY_NO_CHANGES");
         add("DISCARDED");
         add("PARTIAL_ERROR");
         add("ERROR");
+    }};
+    private static final List<String> successScanStatus = new ArrayList<>(2) {{
+        add("READY_CHANGES");
+        add("READY_NO_CHANGES");
     }};
 
     /**
@@ -65,6 +76,8 @@ public class ScanWebSocketHandler {
                 0,
                 2,
                 TimeUnit.SECONDS);
+        Json config = CSLContext.instance.getConfig();
+        zoneId = ZoneId.of(JsonUtil.getStringFromJson(config.get("global"), "timezone", "Europe/Paris"));
     }
 
     /**
@@ -121,6 +134,9 @@ public class ScanWebSocketHandler {
         } else {
             stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(uuids.toArray()));
         }
+        LocalDateTime startDate = LocalDateTime.now();
+        int dbapiId = dbapiHandler.notifyScanStarted(startDate);
+        scans.add(ScanEntity.fromDbapiId(dbapiId, startDate));
     }
 
     /**
@@ -171,13 +187,44 @@ public class ScanWebSocketHandler {
                 super.handleFrame(headers, payloadRaw);
                 Json payload = (Json) payloadRaw;
 
+                String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
+                ScanEntity scan = getScanByScanId(scanId);
+                if (scan == null) {
+                    try {
+                        scan = getFirstScanWithoutScanId();
+                        scan.setScanId(scanId);
+                    } catch (NullPointerException e) {
+                        LocalDateTime startDate = scanToLocalTime(LocalDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
+                        if (startDate == null) {
+                            startDate = LocalDateTime.now();
+                        }
+                        int dbapiId = dbapiHandler.notifyScanStarted(startDate);
+                        scan = ScanEntity.fromDbapiId(dbapiId, startDate);
+                        scan.setScanId(scanId);
+                        scans.add(scan);
+                    }
+                }
+
                 if (payload != null) {
                     System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
                 } else {
                     System.out.println("[STOMP] null");
                 }
-                if (finishedScanStatus.contains(JsonUtil.getStringFromJson(payload, "status", "NONE"))) {
-                        discoveryService.handleCpeItemChanges();
+                String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
+                if (finishedScanStatus.contains(scanStatus)) {
+                    try {
+                        LocalDateTime endDate = LocalDateTime.now();
+                        if (successScanStatus.contains(scanStatus)) {
+                            scan.setFinished(true, endDate);
+                        } else {
+                            scan.setFinishedFail(payload.get("entitiesInError").toString(), endDate);
+                        }
+                        dbapiHandler.notifyScanFinished(scan);
+                        scans.remove(scan);
+                    } catch (Exception e) {
+                        e.printStackTrace(System.err);
+                    }
+                    discoveryService.handleCpeItemChanges();
                 }
             }
 
@@ -301,5 +348,36 @@ public class ScanWebSocketHandler {
                 throw new RuntimeException("Bad conversion");
             }
         }
+    }
+
+    private ScanEntity searchScan(Json.Function<ScanEntity, Boolean> predicate) {
+        for (ScanEntity scan: scans) {
+            if (predicate.apply(scan)) {
+                return scan;
+            }
+        }
+        return null;
+    }
+    private ScanEntity getScanByDbapiId(int dbapiId) {
+        return searchScan(scanEntity -> scanEntity.getDbapiId() == dbapiId);
+    }
+
+    private ScanEntity getScanByScanId(String scanId) {
+        return searchScan(scanEntity -> scanId.equals(scanEntity.getScanId()));
+    }
+
+    private ScanEntity getFirstScanWithoutScanId() {
+        return searchScan(scanEntity -> scanEntity.getScanId() == null);
+    }
+
+    /**
+     * Translate UTC time, as used bu CSL-Scan, to local time.
+     *
+     * @param scanTime The {@link LocalDateTime} to convert.
+     * @return The {@link LocalDateTime} corresponding to utcTime.
+     */
+    private LocalDateTime scanToLocalTime(LocalDateTime scanTime) {
+        if (scanTime == null)    return null;
+        return scanTime.atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalDateTime();
     }
 }

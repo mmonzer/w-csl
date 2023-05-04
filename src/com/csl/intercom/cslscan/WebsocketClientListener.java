@@ -1,4 +1,4 @@
-package com.csl.util;
+package com.csl.intercom.cslscan;
 
 import java.net.URI;
 import java.net.URISyntaxException;

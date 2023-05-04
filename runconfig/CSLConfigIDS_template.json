@@ -16,6 +16,9 @@
 		"manager_port": 8080,
 		"manager_protocol": "http"
 	},
+	"status": {
+		"send_notifications": true
+	},
 	"nmap_service": {
 		"debug_mode":true,
 		"debug_dir":"/home/anto/Documents/nmaplog/",

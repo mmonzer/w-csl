@@ -23,6 +23,7 @@ import com.csl.ids.IDSParams;
 import com.csl.ids.IDSRunner;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.intercom.status.StatusNotifier;
 import com.csl.interfaces.ICSLContext;
 import com.csl.interfaces.IIDSRunner;
 import com.csl.interfaces.IModule;
@@ -71,6 +72,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 	private IDSRunner idsRunner=null;
 	private IDSParams idsParams=null;
 	private CSLMqttBrokerHandler mqttBroker = null;
+	private StatusNotifier statusNotifier = null;
 
 	
 	DataBaseServer databaseServer=null;
@@ -852,6 +854,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
 		if (idsRunner!=null) idsRunner.stop();
 		if (mqttBroker!=null) mqttBroker.close();
+		if (statusNotifier!=null) statusNotifier.close();
 
 
 	}
@@ -1497,5 +1500,11 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		return mqttBroker;
 	}
 
+	public StatusNotifier getStatusNotifier() {
+		if (statusNotifier == null) {
+			statusNotifier = new StatusNotifier(false);
+		}
+		return statusNotifier;
+	}
 }
 

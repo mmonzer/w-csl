@@ -210,6 +210,8 @@ public class ModuleIDS implements IModule {
 		
 		activityMonitor.startTicTask();
 
+		CSLContext.instance.getStatusNotifier().registerStatusProvider("taps", activityMonitor);
+
 	//	this.logToFile= IDSRunner.instance.getIdsParams().isLogToFile();
 	//			JsonUtil.getBooleanFromJson(j,  "ids_conf/log_to_file", true) ; // if not read only in the table
 

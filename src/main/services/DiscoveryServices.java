@@ -5,6 +5,7 @@ import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.broker.CSLMqttMessage;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLLogger;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
@@ -32,7 +33,7 @@ import java.util.concurrent.*;
  * It should expose an API to request a scan and fetch the database.
  * It also allows to know the current status of the requested scans.
  */
-public class DiscoveryServices implements ICSLService {
+public class DiscoveryServices implements ICSLService, IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
@@ -187,6 +188,8 @@ public class DiscoveryServices implements ICSLService {
             String name = JsonUtil.getStringFromJson(params, "name", "");
             return Json.object("uuid", getEntityUuid(getEntityByName(name)));
         });
+
+        CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 
         System.out.println("SNMP service operational");
         return true;
@@ -519,6 +522,10 @@ public class DiscoveryServices implements ICSLService {
         return sendRequestToScanManager(HttpMethod.GET, "/status/entity/" + id, Json.object());
     }
 
+    private Json getScanManagerStatus() {
+        return sendRequestToScanManager(HttpMethod.GET, "/discovery/status", Json.object());
+    }
+
     /**
      * Get the service of the status.
      *
@@ -527,9 +534,11 @@ public class DiscoveryServices implements ICSLService {
     public Json getStatus() {
         Json status = Json.object();
 
-        Json entitiesList = listEntities();
-        if (entitiesList.isArray()) {
+//        Json entitiesList = listEntities();
+        Json scanManagerStatus = getScanManagerStatus();
+        if (scanManagerStatus.isObject()) {
             status.set("httpRestApi", "OK");
+            status.set("scanner", scanManagerStatus);
         } else {
             status.set("httpRestApi", "NOK");
         }

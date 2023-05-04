@@ -67,9 +67,11 @@ public class ActivityMonitor implements IStatusProvider {
 		LocalDateTime currentTime = LocalDateTime.now();
 		Json activeTaps = Json.array();
 		for (Map.Entry<String, LocalDateTime> tapLastActivity: tapsLastActivity.entrySet()) {
-			if (Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) <= inactivityDurationThreshold) {
-				activeTaps.add(tapLastActivity.getKey());
-			} else if (Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) > inactivityDurationDeletionThreshold) {
+			activeTaps.add(Json.object(
+				"id", tapLastActivity.getKey(),
+				"is_running", Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) <= inactivityDurationThreshold
+			));
+			if (Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) > inactivityDurationDeletionThreshold) {
 				tapsLastActivity.remove(tapLastActivity.getKey());
 			}
 		}

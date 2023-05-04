@@ -62,7 +62,7 @@ public class ScanWebSocketHandler {
     /**
      * Create a new manager with the correct URL.
      *
-     * @param discoveryService The parent {@link DiscoveryServices}, used to handle the necessary
+     * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
     public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl) {
@@ -91,16 +91,18 @@ public class ScanWebSocketHandler {
 
     /**
      * Get the status of the websocket handling :
-     * - the
+     * - the request websocket (connected of not)
+     * - the notifications websocket
+     * - the number of scans in the queue
      *
-     * @return
+     * @return a {@link Json} with the status information.
      */
     public Json getStatus() {
         Json status = Json.object();
 
-        status.set("requestsWebSocket", (stompRequestsSession != null && stompRequestsSession.isConnected()) ? "OK" : "NOK");
-        status.set("notificationsWebSocket", (stompNotificationSession != null && stompNotificationSession.isConnected()) ? "OK" : "NOK");
-        status.set("scanRequestsQueue", scanRequestsQueue.size());
+        status.set("is_requests_websocket_connected", stompRequestsSession != null && stompRequestsSession.isConnected());
+        status.set("is_notifications_websocket_connected", stompNotificationSession != null && stompNotificationSession.isConnected());
+        status.set("scan_requests_queue", scanRequestsQueue.size());
 
         return status;
     }
@@ -351,13 +353,14 @@ public class ScanWebSocketHandler {
     }
 
     private ScanEntity searchScan(Json.Function<ScanEntity, Boolean> predicate) {
-        for (ScanEntity scan: scans) {
+        for (ScanEntity scan : scans) {
             if (predicate.apply(scan)) {
                 return scan;
             }
         }
         return null;
     }
+
     private ScanEntity getScanByDbapiId(int dbapiId) {
         return searchScan(scanEntity -> scanEntity.getDbapiId() == dbapiId);
     }
@@ -377,7 +380,7 @@ public class ScanWebSocketHandler {
      * @return The {@link LocalDateTime} corresponding to utcTime.
      */
     private LocalDateTime scanToLocalTime(LocalDateTime scanTime) {
-        if (scanTime == null)    return null;
+        if (scanTime == null) return null;
         return scanTime.atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalDateTime();
     }
 }

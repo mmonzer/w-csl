@@ -46,12 +46,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private String scanManagerDiscoveryUrl;
     private String scanManagerApiUrl;
     private String scanManagerProtocol;
-//    private LocalDateTime lastCpeItemModification;
+    //    private LocalDateTime lastCpeItemModification;
     private LocalDateTime lastDeviceModificationVerification = null;
     private LocalDateTime lastCpeItemDeletionVerification = null;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
-//    private String apiKey;
+    //    private String apiKey;
     private DbapiHandler dbapiHandler;
     private ZoneId zoneId;
     private CSLMqttBrokerHandler mqttBroker = null;
@@ -537,13 +537,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 //        Json entitiesList = listEntities();
         Json scanManagerStatus = getScanManagerStatus();
         if (scanManagerStatus.isObject()) {
-            status.set("httpRestApi", "OK");
-            status.set("scanner", scanManagerStatus);
+            status.set("is_http_api_reachable", true);
+//            status.set("scanner", scanManagerStatus);
         } else {
-            status.set("httpRestApi", "NOK");
+            status.set("is_http_api_reachable", false);
+//            status.set("scanner", Json.nil());
         }
         if (isConcentrator) {
-            status.set("websocket", scanWebSocketHandler.getStatus());
+            Json websocketStatus = scanWebSocketHandler.getStatus();
+            boolean requests_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
+            boolean notifications_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
+            status.set("is_websocket_connected", requests_ws_status && notifications_ws_status);
         }
 
         return status;
@@ -551,8 +555,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
     /**
      * Synchronise the models :
-     *   - Devices
-     *   - CPE Items
+     * - Devices
+     * - CPE Items
      */
     public void syncAll() {
         handleDbapiDeviceChange();
@@ -673,7 +677,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     }
 
     private void deleteCpeItemsFromScan(List<String> ids) {
-        for (String id: ids) {
+        for (String id : ids) {
             deleteCpeItemFromScan(id);
         }
     }

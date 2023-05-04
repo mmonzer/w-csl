@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class StatusNotifier implements AutoCloseable{
+public class StatusNotifier implements AutoCloseable {
     private Map<String, IStatusProvider> providers = new HashMap<>();
     private boolean sendNotifications;
     private ScheduledExecutorService sender;
@@ -76,7 +76,6 @@ public class StatusNotifier implements AutoCloseable{
             }
         }
         return Json.object("line", notification, "type", ticType);
-//        return Json.object("line", notification, "type", "tick_ids");
     }
 
     /**

@@ -17,7 +17,8 @@
 		"manager_protocol": "http"
 	},
 	"status": {
-		"send_notifications": true
+		"send_notifications": true,
+		"notifications_period": 1
 	},
 	"nmap_service": {
 		"debug_mode":true,

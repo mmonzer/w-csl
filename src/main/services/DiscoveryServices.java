@@ -522,6 +522,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         return sendRequestToScanManager(HttpMethod.GET, "/status/entity/" + id, Json.object());
     }
 
+    /**
+     * Fetch CSL-Scan's status.
+     *
+     * @return A {@link Json} with CSL-Scan's status as it was received, or with an error in the 'error' field.
+     */
     private Json getScanManagerStatus() {
         return sendRequestToScanManager(HttpMethod.GET, "/discovery/status", Json.object());
     }
@@ -534,14 +539,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     public Json getStatus() {
         Json status = Json.object();
 
-//        Json entitiesList = listEntities();
         Json scanManagerStatus = getScanManagerStatus();
-        if (scanManagerStatus.isObject()) {
+        if (scanManagerStatus.isObject() && !scanManagerStatus.has("error")) {
             status.set("is_http_api_reachable", true);
-//            status.set("scanner", scanManagerStatus);
         } else {
             status.set("is_http_api_reachable", false);
-//            status.set("scanner", Json.nil());
         }
         if (isConcentrator) {
             Json websocketStatus = scanWebSocketHandler.getStatus();
@@ -724,8 +726,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         request = scanHttpClient.newRequest(URI);
         request.method(method);
-        System.out.println(method.asString() + " " + URI);
-        System.out.println("Payload: " + params.toString());
+//        System.out.println(method.asString() + " " + URI);
+//        System.out.println("Payload: " + params.toString());
         try {
             switch (method) {
                 case GET:

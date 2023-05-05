@@ -22,6 +22,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Manage HTTP communications with DB-API.
+ * Provides an interface for retrieving the devices, connections and so on,
+ * and to send information to it (CPE Items, a Scan's status, ...).
+ */
 public class DbapiHandler implements AutoCloseable {
     private String dbapiUrl;
     private String apiKey;
@@ -390,6 +395,12 @@ public class DbapiHandler implements AutoCloseable {
         return Json.read(request.send().getContentAsString()).asJsonList();
     }
 
+    /**
+     * Inform DB-API that a scan has started.
+     *
+     * @param startDate The starting time of the scan.
+     * @return The id attributed by DB-API to the scan object.
+     */
     public int notifyScanStarted(LocalDateTime startDate) {
         Json params = Json.object("started_at", localDateToDbapi(startDate).toString());
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.SCAN_EVENTS)
@@ -403,6 +414,11 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
+    /**
+     * Inform DB-API that a scan just started.
+     *
+     * @return The id attributed by DB-API to the scan object.
+     */
     public int notifyScanStarted() {
         return notifyScanStarted(LocalDateTime.now());
     }

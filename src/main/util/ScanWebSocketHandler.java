@@ -352,6 +352,11 @@ public class ScanWebSocketHandler {
         }
     }
 
+    /**
+     * Get the first scan matching a predicate in the <code>scans</code> list.
+     * @param predicate The predicate that a scan has to match.
+     * @return The first scan that matched the condition, or null.
+     */
     private ScanEntity searchScan(Json.Function<ScanEntity, Boolean> predicate) {
         for (ScanEntity scan : scans) {
             if (predicate.apply(scan)) {
@@ -361,14 +366,28 @@ public class ScanWebSocketHandler {
         return null;
     }
 
+    /**
+     * Get a scan from it DB-API id.
+     * @param dbapiId The id to seek.
+     * @return The scan with this id, or null if none is found.
+     */
     private ScanEntity getScanByDbapiId(int dbapiId) {
         return searchScan(scanEntity -> scanEntity.getDbapiId() == dbapiId);
     }
 
+    /**
+     * Get a scan from it CSL-Scan id.
+     * @param scanId The id to seek.
+     * @return The scan with this id, or null if none is found.
+     */
     private ScanEntity getScanByScanId(String scanId) {
         return searchScan(scanEntity -> scanId.equals(scanEntity.getScanId()));
     }
 
+    /**
+     * Get the first scan in the <code>scans</code> list that has no CSL-Scan id.
+     * @return
+     */
     private ScanEntity getFirstScanWithoutScanId() {
         return searchScan(scanEntity -> scanEntity.getScanId() == null);
     }

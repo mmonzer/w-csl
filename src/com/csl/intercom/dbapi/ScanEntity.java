@@ -4,7 +4,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a scan's status.
+ */
 public class ScanEntity {
+    /**
+     * The possible statuses a scan may be in.
+     */
     public enum Status {
         STARTED,
         FINISHED_SUCCESS,
@@ -15,8 +21,9 @@ public class ScanEntity {
             add(FINISHED_FAIL);
         }};
     }
-    private int dbapiId;
-    private String scanId;
+
+    private int dbapiId;                // The scan's id in DB-API
+    private String scanId;              // The scan's id in CSL-Scan
     private Status status;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
@@ -29,14 +36,18 @@ public class ScanEntity {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
     public ScanEntity(int dbapiId, String scanId) {
         this(dbapiId, scanId, Status.STARTED, LocalDateTime.now(), null);
     }
 
-    public static ScanEntity fromDbapiId(int dbapiId) {
-        return fromDbapiId(dbapiId, LocalDateTime.now());
-    }
-
+    /**
+     * Create a new {@link ScanEntity} from the starting date and the id given by DB-API.
+     *
+     * @param dbapiId   The id created by DB-API.
+     * @param startDate The start time of the scan.
+     * @return The newly created {@link ScanEntity}.
+     */
     public static ScanEntity fromDbapiId(int dbapiId, LocalDateTime startDate) {
         return new ScanEntity(dbapiId, null, Status.STARTED, startDate, null);
     }
@@ -89,25 +100,50 @@ public class ScanEntity {
         this.status = status;
     }
 
+    /**
+     * Change the status to finished (success or fail), and set the date of the scan's end.
+     *
+     * @param status  The new status (FINISHED_SUCCESS or FINISHED_FAIL).
+     * @param endDate The date of the scan's end.
+     */
     public void setFinished(Status status, LocalDateTime endDate) {
         this.status = status;
         this.endDate = endDate;
     }
 
+    /**
+     * Change the status to finished (success or fail), and set the date of the scan's end.
+     *
+     * @param success true if the scan finished successfully, false otherwise.
+     * @param endDate The date of the scan's end.
+     */
     public void setFinished(boolean success, LocalDateTime endDate) {
         setFinished(success ? Status.FINISHED_SUCCESS : Status.FINISHED_FAIL, endDate);
     }
 
+    /**
+     * Change the status to finished (success or fail), and set the date of the scan's end to now.
+     *
+     * @param success true if the scan finished successfully, false otherwise.
+     */
     public void setFinished(boolean success) {
         setFinished(success, LocalDateTime.now());
     }
 
-    public void setFinished(LocalDateTime endDate) {
+    /**
+     * Change the status to finished successfully, and set the date of the scan's end.
+     *
+     * @param endDate The date of the scan's end.
+     */
+    public void setFinishedSuccess(LocalDateTime endDate) {
         setFinished(true, endDate);
     }
 
-    public void setFinished() {
-        setFinished(LocalDateTime.now());
+    /**
+     * Change the status to finished successfully, and set the date of the scan's end to now.
+     */
+    public void setFinishedSuccess() {
+        setFinishedSuccess(LocalDateTime.now());
     }
 
     public void setFinishedFail(String description, LocalDateTime endDate) {
@@ -115,10 +151,20 @@ public class ScanEntity {
         this.description = description;
     }
 
+    /**
+     * Check if a scan is in progress.
+     *
+     * @return true if the scan is not finished, false otherwise.
+     */
     public boolean isRunning() {
         return status == Status.STARTED;
     }
 
+    /**
+     * Check if a scan finished successfully.
+     *
+     * @return true if the scan is finished successfully, false otherwise (still running or finished with a failure).
+     */
     public boolean isSuccess() {
         return this.status == Status.FINISHED_SUCCESS;
     }

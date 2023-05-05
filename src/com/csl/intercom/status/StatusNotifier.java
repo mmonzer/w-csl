@@ -11,6 +11,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Handle the status notifications,
+ * collects them from registered status providers and, if necessary, sends them on the server's WebSocket.
+ */
 public class StatusNotifier implements AutoCloseable {
     private Map<String, IStatusProvider> providers = new HashMap<>();
     private boolean sendNotifications;

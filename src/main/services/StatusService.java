@@ -10,6 +10,10 @@ import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
+/**
+ * Control the status notifications, mostly allow to remotely control the sending of them.
+ * Also provides a command to directly retrieve the status message.
+ */
 public class StatusService implements ICSLService {
     private String name = "status";
     private String configFileSectionName = "status";

@@ -1,4 +1,4 @@
-package main.util;
+package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.dbapi.DbapiHandler;

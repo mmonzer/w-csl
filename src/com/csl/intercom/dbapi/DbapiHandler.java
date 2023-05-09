@@ -118,8 +118,16 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If any item failed
      */
     public void sendCpeItems(Json cpeItems) throws Exception {
+        Json itemsInError = Json.array();
         for (Json cpeItem : cpeItems.asJsonList()) {
-            sendCpeItem(cpeItem);
+            try {
+                sendCpeItem(cpeItem);
+            } catch (Exception e) {
+                itemsInError.add(cpeItem.get("uuid"));
+            }
+        }
+        if (!itemsInError.asJsonList().isEmpty()) {
+            throw new Exception("Errors sending the following CPE Items: " + itemsInError.toString());
         }
     }
 

@@ -169,12 +169,18 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         addCmd("get_last_cpe_items", params -> {
             String dateString = JsonUtil.getStringFromJson(params, "date", "");
             if (!dateString.equals("")) {
-                Json changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
+                Json changes;
+                if (dateString.equals("all")) {
+                    changes = getCpeItemChangesSince(null);
+                } else {
+                    changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
+                }
                 try {
                     dbapiHandler.sendCpeItems(changes);
                 } catch (Exception e) {
                     return Json.object("result", "NOK",
-                            "error", Json.object("reason", "Could not send changes to DB-API")
+                            "error", Json.object("reason", "Could not send changes to DB-API",
+                                    "details", e.getMessage())
                     );
                 }
             } else {
@@ -572,7 +578,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     public void handleCpeItemChanges() {
         LocalDateTime lastChangesDate = null;
         try {
-            lastChangesDate = dbapiHandler.getLastUpdateDate();
+            lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
         } catch (Exception e) {
             System.err.println("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
         }

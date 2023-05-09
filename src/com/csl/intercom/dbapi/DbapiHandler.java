@@ -118,16 +118,16 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If any item failed
      */
     public void sendCpeItems(Json cpeItems) throws Exception {
-        Json itemsInError = Json.array();
+        Json failedItems = Json.array();
         for (Json cpeItem : cpeItems.asJsonList()) {
             try {
                 sendCpeItem(cpeItem);
             } catch (Exception e) {
-                itemsInError.add(cpeItem.get("uuid"));
+                failedItems.add(cpeItem.get("uuid"));
             }
         }
-        if (!itemsInError.asJsonList().isEmpty()) {
-            throw new Exception("Errors sending the following CPE Items: " + itemsInError.toString());
+        if (!failedItems.asJsonList().isEmpty()) {
+            throw new Exception("Errors sending the following CPE Items: " + failedItems.toString());
         }
     }
 
@@ -137,7 +137,7 @@ public class DbapiHandler implements AutoCloseable {
      * @return The last update of CPE-Items in DB-API.
      * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
      */
-    public LocalDateTime getLastUpdateDate() throws Exception {
+    public LocalDateTime getCpeItemsLastUpdateDate() throws Exception {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CPE_ITEMS_LAST_DATE);
         ContentResponse response = request.send();
         Json responseContents = Json.read(response.getContentAsString());

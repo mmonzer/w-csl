@@ -220,7 +220,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "<code>{\"success\": false, \"error\", {\"reason\": \"...\", \"failed_devices\": [...]}}</code> otherwise. The failed_devices field is present if devices were actually fetched from DB-API.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_last_cpe_items", params -> {
+        addCmd("send_last_cpe_items", params -> {
                     String dateString = JsonUtil.getStringFromJson(params, "date", "");
                     if (!dateString.equals("")) {
                         Json changes;

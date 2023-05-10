@@ -181,6 +181,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         addCmd("get_entity_cpes", params -> getEntityCpes(params.get("id").asString()),
                 new JsonCmdHelp().setDesc("Get an entity's CPE Items")
                         .setParam("id", "The entity's uuid", IJsonCmdHelp.STR)
+                        .setResult("The list of CPE Items of the entity, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
         addCmd("get_cpes_since", params -> getCpeItemChangesSince(LocalDateTime.parse(JsonUtil.getStringFromJson(params, "date", null))),
@@ -543,7 +544,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         Json response;
         Json cpeItems = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object()).get("result");
+            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object());
         } else {
             response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", utcDate.toString())).get("result");
         }

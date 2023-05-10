@@ -115,12 +115,12 @@ public class ScanWebSocketHandler {
     public Json requestScan(List<String> entities) {
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
             scanRequestsQueue.add(entities);
-            return Json.object("result", "NOK",
+            return Json.object("success", false,
                     "error", Json.object("reason", "Scan service unavailable, added scan request to queue")
             );
         } else {
             startScan(entities);
-            return Json.object("result", "OK",
+            return Json.object("success", true,
                     "details", "Scan started successfully");
         }
     }

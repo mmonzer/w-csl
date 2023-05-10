@@ -2,6 +2,7 @@ package main.services;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.StatusNotifier;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
@@ -27,12 +28,21 @@ public class StatusService implements ICSLService {
         notifier = CSLContext.instance.getStatusNotifier();
         notifier.setSendNotifications(JsonUtil.getBooleanFromJson(jConfig, "send_notifications", false));
 
-        addCmd("get_status", params -> notifier.getNotification());
+        addCmd("get_status", params -> notifier.getNotification(),
+                new JsonCmdHelp().setDesc("Get a status notification, created for the occasion")
+                        .setResult("A status notification's contents.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
         addCmd("set_should_send_notifications", params -> {
-            boolean shouldSend = JsonUtil.getBooleanFromJson(params, "send", true);
-            notifier.setSendNotifications(shouldSend);
-            return Json.object("result", "OK");
-        });
+                    boolean shouldSend = JsonUtil.getBooleanFromJson(params, "send", true);
+                    notifier.setSendNotifications(shouldSend);
+                    return Json.object("success", true);
+                },
+                new JsonCmdHelp().setDesc("Change the sending behaviour of status notifications")
+                        .setParam("send","true if notifications should be sent periodically, false otherwise.",IJsonCmdHelp.BOOL)
+                        .setResult("<code>{ \"success\": true }</code> if the new behaviour was successfully applied.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
 
         System.out.println("Status service operational");
         return true;

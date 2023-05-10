@@ -449,7 +449,16 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @return A {@link Json} containing the specified entity.
      */
     public Json getEntity(String id) {
-        return sendRequestToScanManager(HttpMethod.GET, "/entity/" + id, Json.object());
+        Json response = sendRequestToScanManager(HttpMethod.GET, "/entity/" + id, Json.object());
+        if (response.get("status_code").asInteger() != 200) {
+            return Json.object("success", false,
+                    "error", Json.object("reason", "Could not get the entity",
+                            "details", response.get("result"))
+            );
+        } else {
+            response.delAt("status_code");
+            return response;
+        }
     }
 
     /**
@@ -546,13 +555,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         if (date == null) {
             response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object());
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", utcDate.toString())).get("result");
+            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", utcDate.toString()));
         }
         if (response.get("success").asBoolean() && response.get("status_code").asInteger() == 200) {
             cpeItems = response.get("result");
         } else {
             return Json.object("success", false,
-                    "error", Json.object("reason", "Could not retrieve CPE Items from CSL-Scan")
+                    "error", Json.object("reason", "Could not retrieve CPE Items from CSL-Scan",
+                            "details", response.get("result"))
             );
         }
         // Remove the items that have the *exact* same date as whe previously had

@@ -8,6 +8,7 @@ import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLLogger;
+import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
@@ -699,15 +700,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     public Json handleDbapiDeviceChange() {
         List<Json> newDevices;
-        List<String> deletedDevices;
+        List<String> deletedDevices = new ArrayList<>();
         List<String> failedDevices = new LinkedList<>();
         LocalDateTime currentTime = LocalDateTime.now();
         try {
-            newDevices = buildNewDevices(
+            Pair<List<Json>, List<String>> buildResult = buildNewDevices(
                     dbapiHandler.getDevicesSince(lastDeviceModificationVerification),
                     dbapiHandler.getConnectionsSince(lastDeviceModificationVerification)
             );
-            deletedDevices = dbapiHandler.getDeletedDevicesSince(lastDeviceModificationVerification);
+            newDevices = buildResult.getFirst();
+//            deletedDevices.addAll(buildResult.getSecond());
+            deletedDevices.addAll(dbapiHandler.getDeletedDevicesSince(lastDeviceModificationVerification));
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Json.object("success", false,
@@ -945,10 +948,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      *
      * @param devices     The list of devices that were created or modified.
      * @param connections The list of connections that were created or modified.
-     * @return A {@link List<Json>} with the entities to send to CSL-Scan.
+     * @return A {@link Json} with the entities to send to CSL-Scan and the ones to delete, in the format
+     *      <code>
+     *          {
+     *              "scan_entities": [Json objects],
+     *              "devices_to_delete": [id (strings)]
+     *          }
+     *      </code>
      */
-    private List<Json> buildNewDevices(List<Json> devices, List<Json> connections) {
+    private Pair<List<Json>, List<String>> buildNewDevices(List<Json> devices, List<Json> connections) {
         //region List the uuids we have in both list
+        List<String> devicesToDelete = new ArrayList<>();
         List<Integer> connectionUuidsInDevices = new ArrayList<>();
         List<String> deviceUuidsInConnections = new ArrayList<>();
 
@@ -956,6 +966,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             Json connection = device.get("connection");
             if (connection != null && !connection.isNull()) {
                 connectionUuidsInDevices.add(connection.asInteger());
+            } else {
+                devicesToDelete.add(device.get("id").asString());
             }
         }
         for (Json connection : connections) {
@@ -1022,7 +1034,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             scanEntities.add(scanEntity);
         }
         //endregion
-        return scanEntities;
+        return new Pair<>(scanEntities, devicesToDelete);
     }
 
     /**

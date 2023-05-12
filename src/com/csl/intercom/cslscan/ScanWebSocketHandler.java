@@ -213,6 +213,7 @@ public class ScanWebSocketHandler {
                     System.out.println("[STOMP] null");
                 }
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
+                discoveryService.handleCpeItemChanges();
                 if (finishedScanStatus.contains(scanStatus)) {
                     try {
                         LocalDateTime endDate = LocalDateTime.now();
@@ -226,7 +227,6 @@ public class ScanWebSocketHandler {
                     } catch (Exception e) {
                         e.printStackTrace(System.err);
                     }
-                    discoveryService.handleCpeItemChanges();
                 }
             }
 

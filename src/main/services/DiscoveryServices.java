@@ -457,6 +457,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             "details", response.get("result"))
             );
         } else {
+            // The status code is not relevant for the http response.
             response.delAt("status_code");
             return response;
         }

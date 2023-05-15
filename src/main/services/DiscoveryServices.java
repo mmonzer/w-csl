@@ -1,9 +1,8 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.dbapi.DbapiHandler;
-import com.csl.intercom.broker.CSLMqttBrokerHandler;
-import com.csl.intercom.broker.CSLMqttMessage;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
@@ -15,7 +14,6 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
@@ -56,7 +54,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     //    private String apiKey;
     private DbapiHandler dbapiHandler;
     private ZoneId zoneId;
-    private CSLMqttBrokerHandler mqttBroker = null;
+    //    private CSLMqttBrokerHandler mqttBroker = null;
     private ScheduledExecutorService synchronizationSchedule;
 
 
@@ -136,10 +134,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         zoneId = ZoneId.of(JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris"));
-        if (isConcentrator) {
-            mqttBroker = CSLContext.instance.getMqttBroker();
-            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> handleDbapiDeviceChange());
-        }
+//        if (isConcentrator) {
+//            mqttBroker = CSLContext.instance.getMqttBroker();
+//            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> handleDbapiDeviceChange());
+//        }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
         synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, 300, TimeUnit.SECONDS);
@@ -668,7 +666,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         if (changes != null && changes.isArray()) {
             try {
                 dbapiHandler.sendCpeItems(changes);
-                mqttBroker.publish(CSLMqttBrokerHandler.Topic.CPE_ITEMS, CSLMqttMessage.message("synchronization_ended"));
+//                mqttBroker.publish(CSLMqttBrokerHandler.Topic.CPE_ITEMS, CSLMqttMessage.message("synchronization_ended"));
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
@@ -950,12 +948,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @param devices     The list of devices that were created or modified.
      * @param connections The list of connections that were created or modified.
      * @return A {@link Json} with the entities to send to CSL-Scan and the ones to delete, in the format
-     *      <code>
-     *          {
-     *              "scan_entities": [Json objects],
-     *              "devices_to_delete": [id (strings)]
-     *          }
-     *      </code>
+     * <code>
+     * {
+     * "scan_entities": [Json objects],
+     * "devices_to_delete": [id (strings)]
+     * }
+     * </code>
      */
     private Pair<List<Json>, List<String>> buildNewDevices(List<Json> devices, List<Json> connections) {
         //region List the uuids we have in both list

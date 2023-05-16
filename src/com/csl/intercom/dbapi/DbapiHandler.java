@@ -32,6 +32,7 @@ public class DbapiHandler implements AutoCloseable {
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
     private ZoneId zoneId;
+    static private int lastScanId = 0;
 
     private static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>() {{
         put("discovery_protocol", "protocol");
@@ -94,7 +95,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItem The CPE Item to send
      * @throws Exception If the sending fail
      */
-    public void sendCpeItem(Json cpeItem) throws Exception {
+    public void sendCpeItem(Json cpeItem, boolean isLast) throws Exception {
         Json requestContents = Json.object("cpe_data", cpeItem);
         if (cpeItem.has("updatedAt")) {
             requestContents.set("discovered_date", cpeItem.get("updatedAt"));
@@ -103,11 +104,16 @@ public class DbapiHandler implements AutoCloseable {
             requestContents.set("mongo_entity_id", cpeItem.get("uuid"));
         }
         requestContents.set("device", cpeItem.get("entityUuid").asString());
+        requestContents.set("event_id", lastScanId);
+        requestContents.set("is_last_item", isLast);
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
         if (response.getStatus() != 201) {
             throw new Exception("Error sending CpeItem to dbapi: got unexpected status " + response.getStatus());
+        } else {
+            //TODO remove
+            System.out.println("Stop here");
         }
     }
 
@@ -119,9 +125,18 @@ public class DbapiHandler implements AutoCloseable {
      */
     public void sendCpeItems(Json cpeItems) throws Exception {
         Json failedItems = Json.array();
-        for (Json cpeItem : cpeItems.asJsonList()) {
+        List<Json> cpeItemsList = cpeItems.asJsonList();
+        int cpeItemsNumber = cpeItemsList.size();
+        int cpeItemsCount = 0;
+
+        for (Json cpeItem : cpeItemsList) {
+            cpeItemsCount++;
             try {
-                sendCpeItem(cpeItem);
+                //TODO remove
+                if (cpeItemsCount == cpeItemsNumber) {
+                    System.out.println("stop here");
+                }
+                sendCpeItem(cpeItem, cpeItemsCount == cpeItemsNumber);
             } catch (Exception e) {
                 failedItems.add(cpeItem.get("uuid"));
             }
@@ -411,12 +426,14 @@ public class DbapiHandler implements AutoCloseable {
      */
     public int notifyScanStarted(LocalDateTime startDate) {
         Json params = Json.object("started_at", localDateToDbapi(startDate).toString());
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.SCAN_EVENTS)
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.SCAN_EVENT_CREATION)
                 .header(HttpHeader.CONTENT_TYPE, "application/json")
                 .content(new StringContentProvider(params.toString()));
         try {
             ContentResponse response = request.send();
-            return JsonUtil.getIntFromJson(Json.read(response.getContentAsString()), "id", 0);
+            int id = JsonUtil.getIntFromJson(Json.read(response.getContentAsString()), "id", 0);
+            this.lastScanId = id;
+            return id;
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             return 0;
         }
@@ -440,8 +457,8 @@ public class DbapiHandler implements AutoCloseable {
      * @throws TimeoutException     If the sending timed out.
      * @throws Exception            If received an unexpected HTTP status code (ie. != 200) or if the JSON was malformed.
      */
-    public Json notifyScanFinished(ScanEntity scan) throws Exception {
-        Request request = createDbapiPatchRequest(DbapiEndpoint.SCAN_EVENTS, String.valueOf(scan.getDbapiId()));
+    public void notifyScanFinished(ScanEntity scan) throws Exception {
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
         Json params = Json.object(
                 "ended_at", localDateToDbapi(scan.getEndDate()).toString(),
                 "is_success", String.valueOf(scan.isSuccess())
@@ -454,7 +471,6 @@ public class DbapiHandler implements AutoCloseable {
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code: " + response.getStatus());
         }
-        return Json.read(response.getContentAsString());
     }
 
     /**

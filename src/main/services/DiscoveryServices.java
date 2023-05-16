@@ -684,7 +684,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         // first try to create the entity
         Json result = addEntity(newDevice);
         // if it failed, try to update it
-        if (!result.get("sucess").asBoolean()) {
+        if (!result.get("success").asBoolean()) {
             result = updateEntity(newDevice);
         }
         if (!result.get("success").asBoolean()) {

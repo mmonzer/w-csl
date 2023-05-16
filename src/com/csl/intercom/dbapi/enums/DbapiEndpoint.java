@@ -8,6 +8,7 @@ public enum DbapiEndpoint {
     EVENTS("/events"),
     CPE_ITEMS_LAST_DATE(EVENTS.getEndpoint() + "/last_discovery_date"),
     DELETED_CPE_ITEMS(CPE_ITEMS.getEndpoint() + "/get_deleted_cpe_items"),
+    NO_NEW_CPE_ITEM(CPE_ITEMS.getEndpoint() + "/notify_sync_ended_with_no_discovered_cpe"),
     DEVICES("/devices"),
     DELETED_DEVICES(DEVICES.getEndpoint() + "/get_deleted_devices"),
     CONNECTIONS("/connections"),

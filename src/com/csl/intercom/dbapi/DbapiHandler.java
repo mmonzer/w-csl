@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manage HTTP communications with DB-API.
@@ -32,7 +33,7 @@ public class DbapiHandler implements AutoCloseable {
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
     private ZoneId zoneId;
-    static private int lastScanId = 0;
+    static private AtomicInteger lastScanId = new AtomicInteger(0);
 
     private static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>() {{
         put("discovery_protocol", "protocol");
@@ -104,16 +105,22 @@ public class DbapiHandler implements AutoCloseable {
             requestContents.set("mongo_entity_id", cpeItem.get("uuid"));
         }
         requestContents.set("device", cpeItem.get("entityUuid").asString());
-        requestContents.set("event_id", lastScanId);
+        requestContents.set("event_id", lastScanId.get());
         requestContents.set("is_last_item", isLast);
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
         if (response.getStatus() != 201) {
             throw new Exception("Error sending CpeItem to dbapi: got unexpected status " + response.getStatus());
-        } else {
-            //TODO remove
-            System.out.println("Stop here");
+        }
+    }
+
+    private void notifyNoNewCpe() {
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.NO_NEW_CPE_ITEM);
+        try {
+            request.send();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
         }
     }
 
@@ -129,13 +136,12 @@ public class DbapiHandler implements AutoCloseable {
         int cpeItemsNumber = cpeItemsList.size();
         int cpeItemsCount = 0;
 
+        if (cpeItemsCount == 0) {
+            notifyNoNewCpe();
+        }
         for (Json cpeItem : cpeItemsList) {
             cpeItemsCount++;
             try {
-                //TODO remove
-                if (cpeItemsCount == cpeItemsNumber) {
-                    System.out.println("stop here");
-                }
                 sendCpeItem(cpeItem, cpeItemsCount == cpeItemsNumber);
             } catch (Exception e) {
                 failedItems.add(cpeItem.get("uuid"));
@@ -432,7 +438,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             ContentResponse response = request.send();
             int id = JsonUtil.getIntFromJson(Json.read(response.getContentAsString()), "id", 0);
-            this.lastScanId = id;
+            this.lastScanId.set(id);
             return id;
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             return 0;

@@ -47,10 +47,10 @@ public class DbapiHandler implements AutoCloseable {
         put("privacy_algorithm", "privProtocolName");
     }};
     private static final Map<String, String> authAlgorithmDbapiToScan = new HashMap<>() {{
-        put("SHA224", "AuthHMAC128SHA224");
-        put("SHA256", "AuthHMAC192SHA256");
-        put("SHA384", "AuthHMAC256SHA384");
-        put("SHA512", "AuthHMAC384SHA512");
+        put("SHA-224", "AuthHMAC128SHA224");
+        put("SHA-256", "AuthHMAC192SHA256");
+        put("SHA-384", "AuthHMAC256SHA384");
+        put("SHA-512", "AuthHMAC384SHA512");
         put("SHA", "AuthSHA");
         put("SHA2", "AuthSHA2");
         put("MD5", "AuthMD5");

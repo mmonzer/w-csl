@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
@@ -54,7 +55,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     //    private String apiKey;
     private DbapiHandler dbapiHandler;
     private ZoneId zoneId;
-    //    private CSLMqttBrokerHandler mqttBroker = null;
+    private CSLMqttBrokerHandler mqttBroker = null;
     private ScheduledExecutorService synchronizationSchedule;
 
 
@@ -134,10 +135,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         zoneId = ZoneId.of(JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris"));
-//        if (isConcentrator) {
-//            mqttBroker = CSLContext.instance.getMqttBroker();
-//            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> handleDbapiDeviceChange());
-//        }
+        if (isConcentrator) {
+            mqttBroker = CSLContext.instance.getMqttBroker();
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> handleDbapiDeviceChange());
+        }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
         synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, 300, TimeUnit.SECONDS);

@@ -56,7 +56,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         brokerUri += "/mqtt";
         this.apiKey = globalConfig.get("api_key").asString();
         mqttConnectionAttempts = Executors.newScheduledThreadPool(1);
-        mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 2, TimeUnit.SECONDS);
+        mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 10, TimeUnit.SECONDS);
         mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setCleanSession(true);
         mqttConnectOptions.setUserName(apiKey);

@@ -115,15 +115,6 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
-    private void notifyNoNewCpe() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.NO_NEW_CPE_ITEM);
-        try {
-            request.send();
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
-    }
-
     /**
      * Send a list of CPE Items to DB-API
      *
@@ -136,9 +127,6 @@ public class DbapiHandler implements AutoCloseable {
         int cpeItemsNumber = cpeItemsList.size();
         int cpeItemsCount = 0;
 
-        if (cpeItemsCount == 0) {
-            notifyNoNewCpe();
-        }
         for (Json cpeItem : cpeItemsList) {
             cpeItemsCount++;
             try {
@@ -480,6 +468,18 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
+     * Send a request to DB-API to inform it the current scan provided no new CPE Item.
+     */
+    public void notifyNoNewCpe() {
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.NO_NEW_CPE_ITEM);
+        try {
+            request.send();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
+    }
+
+    /**
      * Parse a connection as received from DB-API and return a format suitable for our use.
      *
      * @param dbapiConnection The connection as we got it from DB-API.
@@ -570,7 +570,7 @@ public class DbapiHandler implements AutoCloseable {
      *
      * @param method   The HTTP method to use (GET, POST, ...)
      * @param endpoint The endpoint to contact in DB-API.
-     * @param id Additional argument.
+     * @param id       Additional argument.
      * @return The crafted {@link Request}, pointing to the endpoint <code>endpoint/id</code>.
      */
     private Request createDbapiRequest(HttpMethod method, DbapiEndpoint endpoint, String id) {
@@ -607,7 +607,7 @@ public class DbapiHandler implements AutoCloseable {
      * Exists because PATCH is absent from the Jetty methods enum.
      *
      * @param endpoint The endpoint to contact in DB-API.
-     * @param id Additional argument.
+     * @param id       Additional argument.
      * @return The crafted {@link Request}, pointing to the endpoint <code>endpoint/id</code>.
      */
     private Request createDbapiPatchRequest(DbapiEndpoint endpoint, String id) {

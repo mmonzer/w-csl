@@ -223,6 +223,10 @@ public class ScanWebSocketHandler {
                             scan.setFinishedFail(payload.get("entitiesInError").toString(), endDate);
                         }
                         dbapiHandler.notifyScanFinished(scan);
+                        Json newCpeItems = discoveryService.getCpeItemChangesSince(scan.getStartDate());
+                        if (JsonUtil.getBooleanFromJson(newCpeItems, "success", false) && newCpeItems.get("result").asList().isEmpty()) {
+                            dbapiHandler.notifyNoNewCpe();
+                        }
                         scans.remove(scan);
                     } catch (Exception e) {
                         e.printStackTrace(System.err);

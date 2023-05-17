@@ -213,9 +213,9 @@ public class ScanWebSocketHandler {
                     System.out.println("[STOMP] null");
                 }
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
-                discoveryService.handleCpeItemChanges();
                 if (finishedScanStatus.contains(scanStatus)) {
                     try {
+                        // Put the end date in the scan information and notify DB-API the scan ended.
                         LocalDateTime endDate = LocalDateTime.now();
                         if (successScanStatus.contains(scanStatus)) {
                             scan.setFinished(true, endDate);
@@ -223,14 +223,22 @@ public class ScanWebSocketHandler {
                             scan.setFinishedFail(payload.get("entitiesInError").toString(), endDate);
                         }
                         dbapiHandler.notifyScanFinished(scan);
+                        discoveryService.handleCpeItemChanges();
+
+                        // Check if we discovered new CPE items in the scan and if not, notify DB-API there was no new item.
                         Json newCpeItems = discoveryService.getCpeItemChangesSince(scan.getStartDate());
-                        if (JsonUtil.getBooleanFromJson(newCpeItems, "success", false) && newCpeItems.get("result").asList().isEmpty()) {
+                        if (JsonUtil.getBooleanFromJson(newCpeItems, "success", false)
+                                && newCpeItems.get("result").asList().isEmpty()) {
                             dbapiHandler.notifyNoNewCpe();
                         }
+                        dbapiHandler.notifySynchronisationEnded(scan);
                         scans.remove(scan);
                     } catch (Exception e) {
                         e.printStackTrace(System.err);
                     }
+                } else {
+                    dbapiHandler.setLastScanProgress(JsonUtil.getDoubleFromJson(payload, "completion", 0.0));
+                    discoveryService.handleCpeItemChanges();
                 }
             }
 

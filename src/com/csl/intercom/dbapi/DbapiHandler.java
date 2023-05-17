@@ -2,6 +2,7 @@ package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.client.HttpClient;
@@ -34,6 +35,7 @@ public class DbapiHandler implements AutoCloseable {
     private HttpClient dbapiHttpClient = new HttpClient();
     private ZoneId zoneId;
     static private AtomicInteger lastScanId = new AtomicInteger(0);
+    static private AtomicDouble lastScanProgress = new AtomicDouble(0);
 
     private static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>() {{
         put("discovery_protocol", "protocol");
@@ -91,26 +93,60 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
+     * Create the contents of a CPE item POST request to DB-API.
+     *
+     * @param cpeItem The CPE Item to send
+     * @return The contents of the request to send.
+     */
+    private Json createCpeItemRequestContents(Json cpeItem) {
+        Json contents = Json.object("cpe_data", cpeItem);
+        if (cpeItem.has("updatedAt")) {
+            contents.set("discovered_date", cpeItem.get("updatedAt"));
+        }
+        if (cpeItem.has("uuid")) {
+            contents.set("mongo_entity_id", cpeItem.get("uuid"));
+        }
+        contents.set("device", cpeItem.get("entityUuid").asString());
+        return contents;
+    }
+
+    /**
      * Send a CPE Item to DB-API
      *
      * @param cpeItem The CPE Item to send
      * @throws Exception If the sending fail
      */
     public void sendCpeItem(Json cpeItem, boolean isLast) throws Exception {
-        Json requestContents = Json.object("cpe_data", cpeItem);
-        if (cpeItem.has("updatedAt")) {
-            requestContents.set("discovered_date", cpeItem.get("updatedAt"));
-        }
-        if (cpeItem.has("uuid")) {
-            requestContents.set("mongo_entity_id", cpeItem.get("uuid"));
-        }
-        requestContents.set("device", cpeItem.get("entityUuid").asString());
-        requestContents.set("event_id", lastScanId.get());
-        requestContents.set("is_last_item", isLast);
+        Json requestContents = createCpeItemRequestContents(cpeItem);
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
         if (response.getStatus() != 201) {
+            throw new Exception("Error sending CpeItem to dbapi: got unexpected status " + response.getStatus());
+        }
+    }
+
+    /**
+     * Send a CPE Item to DB-API
+     *
+     * @param cpeItems The CPE Items to send in a Json array
+     * @throws Exception If the sending fail
+     */
+    private void sendCpeItemsBatch(List<Json> cpeItems) throws Exception {
+        Json cpeItemsArray = Json.array();
+        for (Json cpeItem: cpeItems) {
+            cpeItemsArray.add(createCpeItemRequestContents(cpeItem));
+        }
+
+        Json requestContents = Json.object(
+                "progress", lastScanProgress.get(),
+                "event_id", lastScanId.get(),
+                "discovered_cpe_list", cpeItemsArray
+        );
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_CPE_ITEMS)
+                .content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
             throw new Exception("Error sending CpeItem to dbapi: got unexpected status " + response.getStatus());
         }
     }
@@ -124,20 +160,30 @@ public class DbapiHandler implements AutoCloseable {
     public void sendCpeItems(Json cpeItems) throws Exception {
         Json failedItems = Json.array();
         List<Json> cpeItemsList = cpeItems.asJsonList();
-        int cpeItemsNumber = cpeItemsList.size();
-        int cpeItemsCount = 0;
+//        int cpeItemsNumber = cpeItemsList.size();
+//        int cpeItemsCount = 0;
 
-        for (Json cpeItem : cpeItemsList) {
-            cpeItemsCount++;
-            try {
-                sendCpeItem(cpeItem, cpeItemsCount == cpeItemsNumber);
-            } catch (Exception e) {
+        try {
+            sendCpeItemsBatch(cpeItemsList);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            for (Json cpeItem: cpeItemsList) {
                 failedItems.add(cpeItem.get("uuid"));
             }
+            throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
         }
-        if (!failedItems.asJsonList().isEmpty()) {
-            throw new Exception("Errors sending the following CPE Items: " + failedItems.toString());
-        }
+
+//        for (Json cpeItem : cpeItemsList) {
+//            cpeItemsCount++;
+//            try {
+//                sendCpeItem(cpeItem, cpeItemsCount == cpeItemsNumber);
+//            } catch (Exception e) {
+//                failedItems.add(cpeItem.get("uuid"));
+//            }
+//        }
+//        if (!failedItems.asJsonList().isEmpty()) {
+//            throw new Exception("Errors sending the following CPE Items: " + failedItems.toString());
+//        }
     }
 
     /**
@@ -468,6 +514,28 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
+     * Notify DB-API we have sent all the CPE Items discovered by a scan.
+     *
+     * @param scan The scan that ended.
+     * @throws ExecutionException   If the sending failed.
+     * @throws InterruptedException If the sending was interrupted.
+     * @throws TimeoutException     If the sending timed out.
+     * @throws Exception            If received an unexpected HTTP status code (ie. != 200) or if the JSON was malformed.
+     */
+    public void notifySynchronisationEnded(ScanEntity scan) throws Exception {
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
+        Json params = Json.object(
+                "is_synchronization_ended", true
+        );
+
+        request.content(new StringContentProvider(params.toString()));
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code: " + response.getStatus());
+        }
+    }
+
+    /**
      * Send a request to DB-API to inform it the current scan provided no new CPE Item.
      */
     public void notifyNoNewCpe() {
@@ -644,5 +712,9 @@ public class DbapiHandler implements AutoCloseable {
         if (localDateTime == null) return null;
         OffsetDateTime utcDateTime = OffsetDateTime.parse(localDateTime.atZone(zoneId).toInstant().toString());
         return utcDateTime;
+    }
+
+    public void setLastScanProgress(double progress) {
+        lastScanProgress.set(progress);
     }
 }

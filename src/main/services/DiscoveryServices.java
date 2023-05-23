@@ -562,17 +562,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         if (response.get("success").asBoolean() && response.get("status_code").asInteger() == 200) {
             cpeItems = response.get("result");
         } else {
-//            return Json.object("success", false,
-//                    "error", Json.object("reason", "Could not retrieve CPE Items from CSL-Scan",
-//                            "details", response.get("result"))
-//            );
             return null;
         }
         // Remove the items that have the *exact* same date as whe previously had
-//        List<Json> cpeItemsList = cpeItems.asJsonList();
-//        Iterator<Json> iterator = cpeItemsList.iterator();
-//        while (iterator.hasNext()) {
-//            Json cpeItem = iterator.next();
 //            LocalDateTime cpeItemUpdateDate = getCpeItemDateTime(cpeItem);
 //            if (cpeItemUpdateDate != null && cpeItemUpdateDate.atOffset(ZoneOffset.UTC).equals(utcDate)) {
 //                iterator.remove();
@@ -581,7 +573,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         List<CpeItem> cpeItemsList = new ArrayList<>(cpeItems.asJsonList().size());
         for (Json cpeItem: cpeItems.asJsonList()) {
             CpeItem parsedCpeItem = CpeItem.fromScanCpeItem(cpeItem);
-            if (!parsedCpeItem.getDiscoveredDate().equals(utcDate)) {
+            if (!parsedCpeItem.getDiscoveredDate().equals(date)) {
                 cpeItemsList.add(parsedCpeItem);
             }
         }
@@ -947,8 +939,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @param cpeItem The CPE Item we want to read
      * @return A {@link LocalDateTime} with the last modification date of the CPE Item
      */
-    private LocalDateTime getCpeItemDateTime(Json cpeItem) {
-//        return LocalDateTime.parse(JsonUtil.getStringFromJson(cpeItem, "updatedAt", lastCpeItemModification.toString()));
+    public static LocalDateTime getCpeItemDateTime(Json cpeItem) {
         String cpeItemDate = JsonUtil.getStringFromJson(cpeItem, "updatedAt", null);
         return cpeItemDate == null ? null : LocalDateTime.parse(cpeItemDate);
     }

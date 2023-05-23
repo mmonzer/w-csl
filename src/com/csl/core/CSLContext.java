@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -73,6 +74,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 	private IDSParams idsParams=null;
 	private CSLMqttBrokerHandler mqttBroker = null;
 	private StatusNotifier statusNotifier = null;
+	private ZoneId zoneId = null;
 
 	
 	DataBaseServer databaseServer=null;
@@ -1505,6 +1507,15 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 			statusNotifier = new StatusNotifier(false);
 		}
 		return statusNotifier;
+	}
+
+	public ZoneId getZoneId() {
+		if (zoneId == null) {
+			Json globalConfig = getConfig().get("global");
+			String timeZoneString = JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris");
+			zoneId = ZoneId.of(timeZoneString);
+		}
+		return zoneId;
 	}
 }
 

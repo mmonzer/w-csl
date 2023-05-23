@@ -1,8 +1,13 @@
 package com.csl.intercom.cslscan;
 
+import com.csl.core.CSLContext;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 
 /**
@@ -13,6 +18,7 @@ public class CpeItem {
     private LocalDateTime discoveredDate;
     private String mongoEntityId;
     private String deviceId;
+    static private ZoneId zoneId = CSLContext.instance.getZoneId();
 
     // The fields to include in the cpeData array
     private static Set<String> dataFields = new HashSet<>(10) {{
@@ -66,7 +72,7 @@ public class CpeItem {
         String deviceId;
 
         try {
-            discoveredDate = LocalDateTime.parse(data.get("updatedAt").asString());
+            discoveredDate = scanDateToLocal(data.get("updatedAt").asString());
             mongoEntityId = data.get("uuid").asString();
             deviceId = data.get("entityUuid").asString();
         } catch (NullPointerException e) {
@@ -90,5 +96,13 @@ public class CpeItem {
 
     public String getDeviceId() {
         return deviceId;
+    }
+
+    static private LocalDateTime scanDateToLocal(LocalDateTime date) {
+        return date.atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalDateTime();
+    }
+
+    static private LocalDateTime scanDateToLocal(String date) {
+        return scanDateToLocal(LocalDateTime.parse(date));
     }
 }

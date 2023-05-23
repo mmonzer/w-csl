@@ -2,6 +2,7 @@ package main.services;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
+import com.csl.intercom.cslscan.CpeItem;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
@@ -173,7 +174,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true/false }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_all_cpes", params -> getAllCpes(),
+        addCmd("get_all_cpes", params -> Json.object("success", true, "result", Json.array(getAllCpes().toArray())),
                 new JsonCmdHelp().setDesc("Get the CPE Items in CSL-Scan")
                         .setResult("The list of CPE Items, in the format <code>{\"success\": true, \"result\": [...]}", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
@@ -184,7 +185,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("The list of CPE Items of the entity, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_cpes_since", params -> getCpeItemChangesSince(LocalDateTime.parse(JsonUtil.getStringFromJson(params, "date", null))),
+        addCmd("get_cpes_since", params -> Json.object("success", true, "result", Json.array(getCpeItemChangesSince(LocalDateTime.parse(JsonUtil.getStringFromJson(params, "date", null))).toArray())),
                 new JsonCmdHelp().setDesc("Retrieve CPE Items that change strictly after a specified date")
                         .setParam("date", "in ISO format, example: 2023-04-13T13:56:56.66 (local date format)", IJsonCmdHelp.STR)
                         .setResult("The list of CPE Items that changed strictly after <code>date</code>, in the format" +
@@ -224,11 +225,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         addCmd("send_last_cpe_items", params -> {
                     String dateString = JsonUtil.getStringFromJson(params, "date", "");
                     if (!dateString.equals("")) {
-                        Json changes;
+                        List<CpeItem> changes;
                         if (dateString.equals("all")) {
-                            changes = getCpeItemChangesSince(null).get("result");
+                            changes = getCpeItemChangesSince(null);
                         } else {
-                            changes = getCpeItemChangesSince(LocalDateTime.parse(dateString)).get("result");
+                            changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
                         }
                         try {
                             dbapiHandler.sendCpeItems(changes);
@@ -539,7 +540,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      *
      * @return A {@link Json} array containing all the SNMP objects discovered so far by the scanner.
      */
-    public Json getAllCpes() {
+    public List<CpeItem> getAllCpes() {
         return getCpeItemChangesSince(null);
     }
 
@@ -549,7 +550,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @param date The date to start receiving notifications. May be null to retrieve all the items.
      * @return A {@link Json} array containing the CPE items that have changed since the specified date, or all the items if date was null.
      */
-    public Json getCpeItemChangesSince(LocalDateTime date) {
+    public List<CpeItem> getCpeItemChangesSince(LocalDateTime date) {
         OffsetDateTime utcDate = localTimeToUtc(date);
         Json response;
         Json cpeItems = Json.array();
@@ -561,22 +562,31 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         if (response.get("success").asBoolean() && response.get("status_code").asInteger() == 200) {
             cpeItems = response.get("result");
         } else {
-            return Json.object("success", false,
-                    "error", Json.object("reason", "Could not retrieve CPE Items from CSL-Scan",
-                            "details", response.get("result"))
-            );
+//            return Json.object("success", false,
+//                    "error", Json.object("reason", "Could not retrieve CPE Items from CSL-Scan",
+//                            "details", response.get("result"))
+//            );
+            return null;
         }
         // Remove the items that have the *exact* same date as whe previously had
-        List<Json> cpeItemsList = cpeItems.asJsonList();
-        Iterator<Json> iterator = cpeItemsList.iterator();
-        while (iterator.hasNext()) {
-            Json cpeItem = iterator.next();
-            LocalDateTime cpeItemUpdateDate = getCpeItemDateTime(cpeItem);
-            if (cpeItemUpdateDate != null && cpeItemUpdateDate.atOffset(ZoneOffset.UTC).equals(utcDate)) {
-                iterator.remove();
+//        List<Json> cpeItemsList = cpeItems.asJsonList();
+//        Iterator<Json> iterator = cpeItemsList.iterator();
+//        while (iterator.hasNext()) {
+//            Json cpeItem = iterator.next();
+//            LocalDateTime cpeItemUpdateDate = getCpeItemDateTime(cpeItem);
+//            if (cpeItemUpdateDate != null && cpeItemUpdateDate.atOffset(ZoneOffset.UTC).equals(utcDate)) {
+//                iterator.remove();
+//            }
+//        }
+        List<CpeItem> cpeItemsList = new ArrayList<>(cpeItems.asJsonList().size());
+        for (Json cpeItem: cpeItems.asJsonList()) {
+            CpeItem parsedCpeItem = CpeItem.fromScanCpeItem(cpeItem);
+            if (!parsedCpeItem.getDiscoveredDate().equals(utcDate)) {
+                cpeItemsList.add(parsedCpeItem);
             }
         }
-        return Json.object("success", true, "result", cpeItems);
+//        return Json.object("success", true, "result", cpeItems);
+        return cpeItemsList;
     }
 
     /**
@@ -663,8 +673,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         } catch (Exception e) {
             System.err.println("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
         }
-        Json changes = getCpeItemChangesSince(lastChangesDate).get("result");
-        if (changes != null && changes.isArray()) {
+        List<CpeItem> changes = getCpeItemChangesSince(lastChangesDate);
+        if (changes != null) {
             try {
                 dbapiHandler.sendCpeItems(changes);
 //                mqttBroker.publish(CSLMqttBrokerHandler.Topic.CPE_ITEMS, CSLMqttMessage.message("synchronization_ended"));

@@ -1,0 +1,94 @@
+package com.csl.intercom.cslscan;
+
+import com.ucsl.json.Json;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+/**
+ * Class to retain the required fields of a CPE Items.
+ */
+public class CpeItem {
+    private Json cpeData;
+    private LocalDateTime discoveredDate;
+    private String mongoEntityId;
+    private String deviceId;
+
+    // The fields to include in the cpeData array
+    private static Set<String> dataFields = new HashSet<>(10) {{
+        add("part");
+        add("vendor");
+        add("product");
+        add("version");
+        add("update");
+        add("edition");
+        add("lang");
+        add("softwareEdition");
+        add("targetSoftware");
+        add("others");
+    }};
+
+    /**
+     * Create an object from the direct data. Should not be used directly, thus is private.
+     * Create an object with a factory method instead.
+     *
+     * @param cpeData The {@link Json} object with the data. Will be sanitized before being included.
+     * @param discoveredDate The date of discovery.
+     * @param mongoEntityId The uuid of the CPI Item in CSL-Scan's Mongodb.
+     * @param deviceId The uuid of the device associated with this CPE Item.
+     */
+    private CpeItem(Json cpeData, LocalDateTime discoveredDate, String mongoEntityId, String deviceId) {
+        this.cpeData = Json.object();
+        this.discoveredDate = discoveredDate;
+        this.mongoEntityId = mongoEntityId;
+        this.deviceId = deviceId;
+
+//        for (Map.Entry<String, Json> entry: cpeData.asJsonMap().entrySet()) {
+//            if (dataFields.contains(entry.getKey())) {
+//                this.cpeData.set(entry.getKey(), entry.getValue());
+//            }
+//        }
+        for (String field: dataFields) {
+            this.cpeData.set(field, cpeData.get(field));
+        }
+    }
+
+    /**
+     * Create a CpeItem based on the {@link Json} received from CSL-Scan.
+     *
+     * @param data The {@link Json} received from CSL-Scan.
+     * @return The newly created CpeItem.
+     * @throws IllegalArgumentException if mandatory fields are missing in the provided data.
+     */
+    public static CpeItem fromScanCpeItem(Json data) throws IllegalArgumentException {
+        LocalDateTime discoveredDate;
+        String mongoEntityId;
+        String deviceId;
+
+        try {
+            discoveredDate = LocalDateTime.parse(data.get("updatedAt").asString());
+            mongoEntityId = data.get("uuid").asString();
+            deviceId = data.get("entityUuid").asString();
+        } catch (NullPointerException e) {
+            throw new IllegalArgumentException("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item");
+        }
+
+        return new CpeItem(data, discoveredDate, mongoEntityId, deviceId);
+    }
+
+    public Json getCpeData() {
+        return cpeData;
+    }
+
+    public LocalDateTime getDiscoveredDate() {
+        return discoveredDate;
+    }
+
+    public String getMongoEntityId() {
+        return mongoEntityId;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+}

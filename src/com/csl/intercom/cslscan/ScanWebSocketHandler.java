@@ -226,9 +226,8 @@ public class ScanWebSocketHandler {
                         discoveryService.handleCpeItemChanges();
 
                         // Check if we discovered new CPE items in the scan and if not, notify DB-API there was no new item.
-                        Json newCpeItems = discoveryService.getCpeItemChangesSince(scan.getStartDate());
-                        if (JsonUtil.getBooleanFromJson(newCpeItems, "success", false)
-                                && newCpeItems.get("result").asList().isEmpty()) {
+                        List<CpeItem> newCpeItems = discoveryService.getCpeItemChangesSince(scan.getStartDate());
+                        if (newCpeItems != null && newCpeItems.isEmpty()) {
                             dbapiHandler.notifyNoNewCpe();
                         }
                         dbapiHandler.notifySynchronisationEnded(scan);

@@ -1,6 +1,7 @@
 package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.CpeItem;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
@@ -98,16 +99,33 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItem The CPE Item to send
      * @return The contents of the request to send.
      */
-    private Json createCpeItemRequestContents(Json cpeItem) {
-        Json contents = Json.object("cpe_data", cpeItem);
-        if (cpeItem.has("updatedAt")) {
-            contents.set("discovered_date", cpeItem.get("updatedAt"));
-        }
-        if (cpeItem.has("uuid")) {
-            contents.set("mongo_entity_id", cpeItem.get("uuid"));
-        }
-        contents.set("device", cpeItem.get("entityUuid").asString());
-        return contents;
+    private Json serializeCpeItemForDbapi(CpeItem cpeItem) {
+        return Json.object(
+                "cpe_data", cpeItem.getCpeData(),
+                "discovered_date", localDateToDbapi(cpeItem.getDiscoveredDate()).toString(),
+                "mongo_entity_id", cpeItem.getMongoEntityId(),
+                "device", cpeItem.getDeviceId()
+        );
+    }
+
+    /**
+     * Create the contents of a CPE item POST request to DB-API.
+     *
+     * @param cpeItem The CPE Item to send
+     * @return The contents of the request to send.
+     */
+    private Json serializeCpeItemForDbapi(Json cpeItem) {
+//        Json contents = Json.object("cpe_data", cpeItem);
+//        CpeItem cpeItem1 = CpeItem.fromScanCpeItem(cpeItem);
+//        if (cpeItem.has("updatedAt")) {
+//            contents.set("discovered_date", cpeItem.get("updatedAt"));
+//        }
+//        if (cpeItem.has("uuid")) {
+//            contents.set("mongo_entity_id", cpeItem.get("uuid"));
+//        }
+//        contents.set("device", cpeItem.get("entityUuid").asString());
+//        return contents;
+        return serializeCpeItemForDbapi(CpeItem.fromScanCpeItem(cpeItem));
     }
 
     /**
@@ -117,7 +135,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the sending fail
      */
     public void sendCpeItem(Json cpeItem, boolean isLast) throws Exception {
-        Json requestContents = createCpeItemRequestContents(cpeItem);
+        Json requestContents = serializeCpeItemForDbapi(cpeItem);
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
@@ -127,21 +145,47 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
+     * Takes a list of {@link CpeItem} and regroups them by device id.
+     *
+     * @param cpeItems The list of {@link CpeItem} to classify.
+     * @return A Map that associates a device id with the list of {@link CpeItem}s that have this id.
+     */
+    private Map<String, List<CpeItem>> classifyCpeItemsByDevice(List<CpeItem> cpeItems) {
+        Map<String, List<CpeItem>> result = new HashMap<>();
+        for (CpeItem cpeItem : cpeItems) {
+            String deviceId = cpeItem.getDeviceId();
+            if (!result.containsKey(deviceId)) {
+                result.put(deviceId, new ArrayList<>());
+            }
+            result.get(deviceId).add(cpeItem);
+        }
+        return result;
+    }
+
+    /**
      * Send a CPE Item to DB-API
      *
      * @param cpeItems The CPE Items to send in a Json array
      * @throws Exception If the sending fail
      */
-    private void sendCpeItemsBatch(List<Json> cpeItems) throws Exception {
+    private void sendCpeItemsBatch(List<CpeItem> cpeItems) throws Exception {
+        Map<String, List<CpeItem>> classifiedCpeItems = classifyCpeItemsByDevice(cpeItems);
         Json cpeItemsArray = Json.array();
-        for (Json cpeItem: cpeItems) {
-            cpeItemsArray.add(createCpeItemRequestContents(cpeItem));
+        for (Map.Entry<String, List<CpeItem>> deviceCpeItems: classifiedCpeItems.entrySet()) {
+            Json deviceCpeItemsArray = Json.array();
+            for (CpeItem cpeItem : deviceCpeItems.getValue()) {
+                deviceCpeItemsArray.add(serializeCpeItemForDbapi(cpeItem));
+            }
+            cpeItemsArray.add(Json.object(
+                    "device", deviceCpeItems.getKey(),
+                    "discovered_cpe_list", deviceCpeItemsArray
+            ));
         }
 
         Json requestContents = Json.object(
                 "progress", lastScanProgress.get(),
                 "event_id", lastScanId.get(),
-                "discovered_cpe_list", cpeItemsArray
+                "discovered_cpe_map", cpeItemsArray
         );
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
@@ -157,18 +201,18 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems A {@link List <Json>} with the CPE Items to send
      * @throws Exception If any item failed
      */
-    public void sendCpeItems(Json cpeItems) throws Exception {
+    public void sendCpeItems(List<CpeItem> cpeItems) throws Exception {
         Json failedItems = Json.array();
-        List<Json> cpeItemsList = cpeItems.asJsonList();
+//        List<Json> cpeItemsList = cpeItems.asJsonList();
 //        int cpeItemsNumber = cpeItemsList.size();
 //        int cpeItemsCount = 0;
 
         try {
-            sendCpeItemsBatch(cpeItemsList);
+            sendCpeItemsBatch(cpeItems);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            for (Json cpeItem: cpeItemsList) {
-                failedItems.add(cpeItem.get("uuid"));
+            for (CpeItem cpeItem: cpeItems) {
+                failedItems.add(cpeItem.getMongoEntityId());
             }
             throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
         }

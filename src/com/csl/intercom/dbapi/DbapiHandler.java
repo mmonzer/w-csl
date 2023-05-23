@@ -185,7 +185,7 @@ public class DbapiHandler implements AutoCloseable {
         Json requestContents = Json.object(
                 "progress", lastScanProgress.get(),
                 "event_id", lastScanId.get(),
-                "discovered_cpe_map", cpeItemsArray
+                "discovered_cpe_dict_arr", cpeItemsArray
         );
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");

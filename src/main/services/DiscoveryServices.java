@@ -2,8 +2,10 @@ package main.services;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
-import com.csl.intercom.cslscan.CpeItem;
+import com.csl.intercom.cslscan.ScanConstants;
+import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
+import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
@@ -16,17 +18,12 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
 
-import java.net.ConnectException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -42,46 +39,15 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
     private final String configFileSectionName;
-    private final String scanManagerApiBaseEndpoint = "/api";
-    private final HttpClient scanHttpClient = new HttpClient();
-    private String scanManagerDiscoveryUrl;
-    private String scanManagerApiUrl;
-    private String scanManagerProtocol;
-    //    private LocalDateTime lastCpeItemModification;
-    private LocalDateTime lastDeviceModificationVerification = null;
-    private LocalDateTime lastCpeItemDeletionVerification = null;
+    private OffsetDateTime lastDeviceModificationVerification = null;
+    private OffsetDateTime lastCpeItemDeletionVerification = null;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     //    private String apiKey;
-    private DbapiHandler dbapiHandler;
-    private ZoneId zoneId;
+    private DbapiHandler dbapiHandler = null;
+    private ScanApiHandler scanApiHandler = null;
     private CSLMqttBrokerHandler mqttBroker = null;
     private ScheduledExecutorService synchronizationSchedule;
-
-
-    private static final Map<String, String> connectionInfoFields = new HashMap<>() {{
-        put("queryProtocol", "queryProtocol");
-        put("community", "community");
-        put("user", "user");
-        put("pass", "pass");
-        put("privPassPhrase", "privPassPhrase");
-        put("securityLevel", "securityLevel");
-        put("authProtocolName", "authProtocolName");
-        put("privProtocolName", "privProtocolName");
-    }};
-    private static final List<String> snmpv2cConnectionInfoFields = new ArrayList<>() {{
-        add("queryProtocol");
-        add("community");
-    }};
-    private static final List<String> snmpv3ConnectionInfoFields = new ArrayList<>() {{
-        add("queryProtocol");
-        add("user");
-        add("pass");
-        add("privPassPhrase");
-        add("securityLevel");
-        add("authProtocolName");
-        add("privProtocolName");
-    }};
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
         this.name = name;
@@ -113,28 +79,23 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         String scanManagerIp = JsonUtil.getStringFromJson(jConfig, "manager_ip", "localhost");
         int scanManagerPort = JsonUtil.getIntFromJson(jConfig, "manager_port", 8010);
 
-        scanManagerProtocol = JsonUtil.getStringFromJson(jConfig, "manager_protocol", "http");
+        String scanManagerProtocol = JsonUtil.getStringFromJson(jConfig, "manager_protocol", "http");
+        String scanManagerDiscoveryUrl;
         if ("https".equals(scanManagerProtocol)) {
             scanManagerDiscoveryUrl = "wss://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
         } else {
             scanManagerDiscoveryUrl = "ws://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
         }
-        scanManagerApiUrl = scanManagerProtocol + "://" + scanManagerIp + ":" + scanManagerPort + scanManagerApiBaseEndpoint;
-        try {
-            scanHttpClient.start();
-//            dbapiHttpClient.start();
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
+        String scanManagerApiUrl = scanManagerProtocol + "://" + scanManagerIp + ":" + scanManagerPort + "/api";
         if (isConcentrator) {
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
         }
 
         dbapiHandler = new DbapiHandler();
+        scanApiHandler = new ScanApiHandler(scanManagerApiUrl);
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
-        zoneId = ZoneId.of(JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris"));
         if (isConcentrator) {
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> handleDbapiDeviceChange());
@@ -154,20 +115,20 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "}" +
                                 "</code>", IJsonCmdHelp.JSON).setStatus(IJsonCmdHelp.STATUS_OK));
 //        addCmd("add_entity", this::addEntity);
-        addCmd("list_entities", params -> listEntities().toJson(),
+        addCmd("list_entities", params -> scanApiHandler.listEntities().toJson(),
                 new JsonCmdHelp().setDesc("Retieve the entities registered in CSL-Scan")
                         .setResult("The list of entities' information as returned by CSL-Scan, in the format" +
                                 "<code>{\"success\": true, \"result\": [...]}</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_entity", params -> getEntity(params.get("id").asString()).toJson(),
+        addCmd("get_entity", params -> scanApiHandler.getEntity(params.get("id").asString()).toJson(),
                 new JsonCmdHelp().setDesc("Retrieve a specific entity from CSL-Scan")
                         .setParam("id", "The uuid of the entity to retrieve", IJsonCmdHelp.STR)
                         .setResult("The entity as returned by CSL-Scan", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 //        addCmd("update_entity", this::updateEntity);
-        addCmd("delete_entity", params -> deleteEntity(params.get("id").asString()).toJson(),
+        addCmd("delete_entity", params -> scanApiHandler.deleteEntity(params.get("id").asString()).toJson(),
                 new JsonCmdHelp().setDesc("Remove a specific entity from CSL-Scan")
                         .setParam("id", "The uuid of the entity to delete", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true/false }</code>", IJsonCmdHelp.JSON)
@@ -178,13 +139,13 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("The list of CPE Items, in the format <code>{\"success\": true, \"result\": [...]}", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_entity_cpes", params -> getEntityCpes(params.get("id").asString()).toJson(),
+        addCmd("get_entity_cpes", params -> scanApiHandler.getEntityCpes(params.get("id").asString()).toJson(),
                 new JsonCmdHelp().setDesc("Get an entity's CPE Items")
                         .setParam("id", "The entity's uuid", IJsonCmdHelp.STR)
                         .setResult("The list of CPE Items of the entity, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_cpes_since", params -> Json.object("success", true, "result", Json.array(getCpeItemChangesSince(LocalDateTime.parse(JsonUtil.getStringFromJson(params, "date", null))).toArray())),
+        addCmd("get_cpes_since", params -> Json.object("success", true, "result", Json.array(scanApiHandler.getCpeItemChangesSince(OffsetDateTime.parse(JsonUtil.getStringFromJson(params, "date", null))).toArray())),
                 new JsonCmdHelp().setDesc("Retrieve CPE Items that change strictly after a specified date")
                         .setParam("date", "in ISO format, example: 2023-04-13T13:56:56.66 (local date format)", IJsonCmdHelp.STR)
                         .setResult("The list of CPE Items that changed strictly after <code>date</code>, in the format" +
@@ -192,7 +153,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 //        addCmd("global_status", params -> getServiceStatus());
-        addCmd("scan_status", params -> getScanStatus(params.get("id").asString()).toJson(),
+        addCmd("scan_status", params -> scanApiHandler.getScanStatus(params.get("id").asString()).toJson(),
                 new JsonCmdHelp().setDesc("Get the status of a specific scan")
                         .setParam("id", "The uuid of the scan to inquire", JsonCmdHelp.STR)
                         .setResult("The status of the scan, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
@@ -226,9 +187,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (!dateString.equals("")) {
                         List<CpeItem> changes;
                         if (dateString.equals("all")) {
-                            changes = getCpeItemChangesSince(null);
+                            changes = scanApiHandler.getCpeItemChangesSince(null);
                         } else {
-                            changes = getCpeItemChangesSince(LocalDateTime.parse(dateString));
+                            changes = scanApiHandler.getCpeItemChangesSince(OffsetDateTime.parse(dateString));
                         }
                         try {
                             dbapiHandler.sendCpeItems(changes);
@@ -281,7 +242,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 scanWebSocketHandler.stop();
                 dbapiHandler.close();
             }
-            scanHttpClient.stop();
+            scanApiHandler.close();
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -311,6 +272,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         return apiCommands.registerCmd(name, cmd, help);
     }
 
+    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {
+        return scanApiHandler.getCpeItemChangesSince(date);
+    }
+
     /**
      * Extract an entity's UUID
      *
@@ -322,290 +287,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     }
 
     /**
-     * Create a new entity in the scanner
-     *
-     * @param entity A {@link Json} containing the entity to add. Fields 'id', 'name' and 'ip' are required.
-     * @return A {@link Json} containing the newly created entity, as handed by the scanner
-     */
-    public JsonApiResponse addEntity(Json entity) {
-        String protocol = JsonUtil.getStringFromJson(entity, "protocol", "");
-        switch (protocol.toLowerCase()) {
-            case "snmpv2c":
-                return addSnmpv2cEntity(
-                        JsonUtil.getStringFromJson(entity, "id", null),
-                        JsonUtil.getStringFromJson(entity, "name", null),
-                        JsonUtil.getStringFromJson(entity, "ip", null),
-                        JsonUtil.getIntFromJson(entity, "port", 161),
-                        JsonUtil.getStringFromJson(entity, "community", "public")
-                );
-
-            case "snmpv3":
-                return addSnmpv3Entity(
-                        JsonUtil.getStringFromJson(entity, "id", null),
-                        JsonUtil.getStringFromJson(entity, "name", null),
-                        JsonUtil.getStringFromJson(entity, "ip", null),
-                        JsonUtil.getIntFromJson(entity, "port", 161),
-                        JsonUtil.getStringFromJson(entity, "user", null),
-                        JsonUtil.getStringFromJson(entity, "pass", null),
-                        JsonUtil.getStringFromJson(entity, "privPassPhrase", null),
-                        JsonUtil.getStringFromJson(entity, "securityLevel", null),
-                        JsonUtil.getStringFromJson(entity, "authProtocolName", null),
-                        JsonUtil.getStringFromJson(entity, "privProtocolName", null)
-                );
-
-            default:
-                return JsonApiResponse.error("Unsupported protocol: " + protocol);
-        }
-    }
-
-    /**
-     * Send a new SNMPv2c entity to CSL-Scan.
-     *
-     * @param uuid      The unique id of the new entity.
-     * @param name      The name of the entity.
-     * @param ip        The IP address of the entity.
-     * @param port      The SNMP port on which to contact the entity.
-     * @param community The SNMP community of the entity.
-     * @return The result from the scanner.
-     */
-    private JsonApiResponse addSnmpv2cEntity(String uuid, String name, String ip, int port, String community) {
-        if (uuid == null || name == null || ip == null) {
-            return JsonApiResponse.error("The fields 'id', 'name' and 'ip' are required");
-        } else {
-            return sendRequestToScanManager(HttpMethod.POST, "/entity/", Json.object(
-                    "uuid", uuid,
-                    "name", name,
-                    "ipAddress", ip,
-                    "port", port,
-                    "connectionInfo", Json.object(
-                            "queryProtocol", "SNMPV2c",
-                            "community", community
-                    ),
-                    "isDeleted", false
-            ));
-        }
-    }
-
-    /**
-     * Send a new SNMPv3 entity to CSL-Scan.
-     *
-     * @param uuid             The unique id of the new entity.
-     * @param name             The name of the entity.
-     * @param ip               The IP address of the entity.
-     * @param port             The SNMP port on which to contact the entity.
-     * @param user             The username for the entity.
-     * @param pass             The SNMP password of the entity.
-     * @param privPassPhrase   The privacy pass phrase of the entity.
-     * @param securityLevel    The security level (authPriv, noAuthNoPriv or authNoPriv).
-     * @param authProtocolName The authentication protocol (AuthMD5 or SHA-256).
-     * @param privProtocolName The privacy protocol (PrivAES128 or PrivDES).
-     * @return The result from the scanner.
-     */
-    private JsonApiResponse addSnmpv3Entity(String uuid, String name, String ip, int port, String user, String pass, String privPassPhrase, String securityLevel, String authProtocolName, String privProtocolName) {
-        if (uuid == null || name == null || ip == null) {
-            return JsonApiResponse.error("The fields 'id', 'name' and 'ip' are required");
-        } else {
-            return sendRequestToScanManager(HttpMethod.POST, "/entity/", Json.object(
-                    "uuid", uuid,
-                    "name", name,
-                    "ipAddress", ip,
-                    "port", port,
-                    "connectionInfo", Json.object(
-                            "queryProtocol", "SNMPV3",
-                            "user", user,
-                            "pass", pass,
-                            "privPassPhrase", privPassPhrase,
-                            "securityLevel", securityLevel,
-                            "authProtocolName", authProtocolName,
-                            "privProtocolName", privProtocolName
-                    ),
-                    "isDeleted", false
-            ));
-        }
-    }
-
-    /**
-     * Get the list of configured entities in the scanner.
-     *
-     * @return A {@link Json} array containing the all the configured entities in the scanner.
-     */
-    public JsonApiResponse listEntities() {
-        return sendRequestToScanManager(HttpMethod.GET, "/entity/", Json.object());
-    }
-
-    /**
-     * Get a specific entity.
-     *
-     * @param id The unique identifier created by the scanner, as returned at creation or in a list.
-     * @return A {@link Json} containing the specified entity.
-     */
-    public JsonApiResponse getEntity(String id) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/" + id, Json.object());
-        int statusCode;
-        try {
-            statusCode = response.getExtra().get("status_code").asInteger();
-        } catch (Exception e) {
-            return response;
-        }
-        if (statusCode != 200) {
-            return JsonApiResponse.error("Could not get the entity" + id);
-        } else {
-            return response;
-        }
-    }
-
-    /**
-     * Change fields in an already existing entity, leaves unchanged the ones not provided (ie, that are null).
-     *
-     * @param entity A {@link Json} with the entity's new information. The 'id' field is required.
-     * @return The old version of the entity, not reflecting the changes made.
-     */
-    public JsonApiResponse updateEntity(Json entity) {
-        Map<String, Json> entityMap = entity.asJsonMap();
-        String id = JsonUtil.getStringFromJson(entity, "id", null);
-        Json params;
-        try {
-            JsonApiResponse entityResponse = getEntity(id);
-            params = entityResponse.getResult();
-        } catch (Exception e) {
-            return JsonApiResponse.error("Could not retrieve entity " + id);
-        }
-        String name = JsonUtil.getStringFromJson(entity, "name", null);
-        if (name != null) {
-            params.set("name", name);
-        }
-        String ip = JsonUtil.getStringFromJson(entity, "ip", null);
-        if (ip != null) {
-            params.set("ipAddress", ip);
-        }
-        int port = JsonUtil.getIntFromJson(entity, "port", 0);
-        if (port != 0) {
-            params.set("port", port);
-        }
-        for (Map.Entry<String, String> connectionInfo : connectionInfoFields.entrySet()) {
-            String key = connectionInfo.getKey();
-            String value = connectionInfo.getValue();
-            if (entityMap.containsKey(key)) {
-                params.get("connectionInfo").set(connectionInfoFields.get(value), entity.get(key));
-            }
-        }
-        switch (entity.get("protocol").asString().toLowerCase()) {
-            case "snmpv2c":
-                for (String field : connectionInfoFields.values()) {
-                    if (!snmpv2cConnectionInfoFields.contains(field) && params.get("connectionInfo").has(field)) {
-                        params.get("connectionInfo").delAt(field);
-                    }
-                }
-                break;
-
-            case "snmpv3":
-                for (String field : connectionInfoFields.values()) {
-                    if (!snmpv3ConnectionInfoFields.contains(field) && params.get("connectionInfo").has(field)) {
-                        params.get("connectionInfo").delAt(field);
-                    }
-                }
-                break;
-        }
-        return sendRequestToScanManager(HttpMethod.PUT, "/entity/" + id, params);
-    }
-
-    /**
-     * Delete an entity from the scanner.
-     *
-     * @param id The unique identifier of the entity, as returned at creation or in a list.
-     * @return An empty object on success, an error message on failure.
-     */
-    public JsonApiResponse deleteEntity(String id) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE, "/entity/" + id, Json.object());
-        boolean success = response.isSuccess();
-        Json result = response.getResult();
-        if (success) {
-            if (response.getExtra().get("status_code").asInteger() == 404) {
-                return JsonApiResponse.error("Could not find entity " + id + " in CSL-Scan (got 404)");
-            }
-            return JsonApiResponse.success();
-        } else {
-            return JsonApiResponse.error("Could not delete the entity " + id + " from CSL-Scan");
-        }
-    }
-
-    /**
      * Get all the detected SNMP objects found.
      *
      * @return A {@link Json} array containing all the SNMP objects discovered so far by the scanner.
      */
     public List<CpeItem> getAllCpes() {
-        return getCpeItemChangesSince(null);
-    }
-
-    /**
-     * Get the CPE items that have changed since the specified date.
-     *
-     * @param date The date to start receiving notifications. May be null to retrieve all the items.
-     * @return A {@link Json} array containing the CPE items that have changed since the specified date, or all the items if date was null.
-     */
-    public List<CpeItem> getCpeItemChangesSince(LocalDateTime date) {
-        OffsetDateTime utcDate = localTimeToUtc(date);
-        JsonApiResponse response;
-        Json cpeItems = Json.array();
-        if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object());
-        } else {
-            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", utcDate.toString()));
-        }
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
-            cpeItems = response.getResult();
-        } else {
-            return null;
-        }
-        List<CpeItem> cpeItemsList = new ArrayList<>(cpeItems.asJsonList().size());
-        for (Json cpeItem : cpeItems.asJsonList()) {
-            CpeItem parsedCpeItem = CpeItem.fromScanCpeItem(cpeItem);
-            // Remove the items that have the *exact* same date as whe previously had
-            if (!parsedCpeItem.getDiscoveredDate().equals(date)) {
-                cpeItemsList.add(parsedCpeItem);
-            }
-        }
-        return cpeItemsList;
-    }
-
-    /**
-     * Get all the SNMP objects discovered on a particular entity.
-     *
-     * @param id The unique identifier of the entity, as returned at creation or in a list.
-     * @return A {@link Json} array containing all the SNMP objects discovered so far by the scanner on this entity.
-     */
-    public JsonApiResponse getEntityCpes(String id) {
-        return sendRequestToScanManager(HttpMethod.GET, "/cpeItem/entity/" + id, Json.object());
-    }
-
-    /**
-     * Get the status of a specific scan task.
-     *
-     * @param id The unique id of the task.
-     * @return The status of the scan.
-     */
-    public JsonApiResponse getScanStatus(String id) {
-        return sendRequestToScanManager(HttpMethod.GET, "/discovery/status/" + id, Json.object());
-    }
-
-    /**
-     * Get the status of an entity's scan
-     *
-     * @param id The entity's unique id.
-     * @return The status of the scan.
-     */
-    public JsonApiResponse getEntityScanStatus(String id) {
-        return sendRequestToScanManager(HttpMethod.GET, "/status/entity/" + id, Json.object());
-    }
-
-    /**
-     * Fetch CSL-Scan's status.
-     *
-     * @return A {@link JsonApiResponse} with CSL-Scan's status as it was received, or with an error in the 'error' field.
-     */
-    private JsonApiResponse getScanManagerStatus() {
-        return sendRequestToScanManager(HttpMethod.GET, "/discovery/status", Json.object());
+        return scanApiHandler.getCpeItemChangesSince(null);
     }
 
     /**
@@ -616,7 +303,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     public Json getStatus() {
         Json status = Json.object();
 
-        if (getScanManagerStatus().isSuccess()) {
+        if (scanApiHandler.getStatus().isSuccess()) {
             status.set("is_http_api_reachable", true);
         } else {
             status.set("is_http_api_reachable", false);
@@ -646,13 +333,13 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * The action to perform when a modification is notified on the CpeItems.
      */
     public void handleCpeItemChanges() {
-        LocalDateTime lastChangesDate = null;
+        OffsetDateTime lastChangesDate = null;
         try {
             lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
         } catch (Exception e) {
             System.err.println("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
         }
-        List<CpeItem> changes = getCpeItemChangesSince(lastChangesDate);
+        List<CpeItem> changes = scanApiHandler.getCpeItemChangesSince(lastChangesDate);
         if (changes != null) {
             try {
                 dbapiHandler.sendCpeItems(changes);
@@ -672,11 +359,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     private void sendNewDeviceToScanner(Json newDevice) throws Exception {
         // first try to create the entity
-        JsonApiResponse result = addEntity(newDevice);
-        // if it failed, try to update it
-        if (!result.isSuccess()) {
-            result = updateEntity(newDevice);
-        }
+        JsonApiResponse result = scanApiHandler.createOrUpdateEntity(newDevice);
         if (!result.isSuccess()) {
             throw new Exception("Could not push the entity " + JsonUtil.getStringFromJson(newDevice, "id", "") + " to CSL-Scan.");
         }
@@ -691,7 +374,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         List<Json> newDevices;
         List<String> deletedDevices = new ArrayList<>();
         List<String> failedDevices = new LinkedList<>();
-        LocalDateTime currentTime = LocalDateTime.now();
+        OffsetDateTime currentTime = OffsetDateTime.now();
         try {
             Pair<List<Json>, List<String>> buildResult = buildNewDevices(
                     dbapiHandler.getDevicesSince(lastDeviceModificationVerification),
@@ -715,7 +398,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         for (String deletedDevice : deletedDevices) {
             try {
-                deleteEntity(deletedDevice);
+                scanApiHandler.deleteEntity(deletedDevice);
             } catch (Exception e) {
                 failedDevices.add(deletedDevice);
             }
@@ -738,7 +421,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private JsonApiResponse handleDeletedCpes() {
         List<String> deletedCpes = null;
         try {
-            LocalDateTime currentTime = LocalDateTime.now();
+            OffsetDateTime currentTime = OffsetDateTime.now();
             deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
             lastCpeItemDeletionVerification = currentTime;
         } catch (Exception e) {
@@ -746,28 +429,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     Json.object("exception", e.getMessage())
             );
         }
-        deleteCpeItemsFromScan(deletedCpes);
+        scanApiHandler.deleteCpeItemsFromScan(deletedCpes);
         return JsonApiResponse.success();
-    }
-
-    /**
-     * Request the deletion of a CPE Item to CSL-Scan.
-     *
-     * @param id The uuid of the CPE Item to delete.
-     */
-    private void deleteCpeItemFromScan(String id) {
-        sendRequestToScanManager(HttpMethod.DELETE, "/cpeItem/entity/" + id, Json.object());
-    }
-
-    /**
-     * Request multiple deletions of CPE Items to CSL-Scan.
-     *
-     * @param ids The list of CPE Items to delete.
-     */
-    private void deleteCpeItemsFromScan(List<String> ids) {
-        for (String id : ids) {
-            deleteCpeItemFromScan(id);
-        }
     }
 
     /**
@@ -791,125 +454,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         }
     }
 
-
-    /**
-     * Send an HTTP request to the scanner.
-     *
-     * @param method   The HTTP method to use (GET, POST, PUT, ...)
-     * @param endpoint The endpoint on the API to use.
-     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
-     * @return The response to the request.
-     */
-    private JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params) {
-        JsonApiResponse res = JsonApiResponse.error(null);
-        Request request;
-        String URI = scanManagerApiUrl + endpoint;
-
-        request = scanHttpClient.newRequest(URI);
-        request.method(method);
-//        System.out.println(method.asString() + " " + URI);
-//        System.out.println("Payload: " + params.toString());
-        try {
-            switch (method) {
-                case GET:
-                case DELETE:
-                    for (Map.Entry<String, Json> param : params.asJsonMap().entrySet()) {
-                        if (param.getValue().isString()) {
-                            request.param(param.getKey(), param.getValue().asString());
-                        } else {
-                            request.param(param.getKey(), param.getValue().toString());
-                        }
-                    }
-                    break;
-
-                case POST:
-                case PUT:
-                    request.content(new StringContentProvider(params.toString()), "application/json");
-                    break;
-
-                default:
-                    throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());
-            }
-            ContentResponse response = request.send();
-            if (response.getContent().length > 0) {
-                if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
-                    res = JsonApiResponse.result(
-                            Json.read(response.getContentAsString()),
-                            Json.object("status_code", response.getStatus())
-                    );
-                } else {
-                    res = JsonApiResponse.result(Json.object("value", response.getContentAsString()),
-                            Json.object("status_code", response.getStatus())
-                    );
-                }
-            } else {
-                res = JsonApiResponse.result(null,
-                        Json.object("status_code", response.getStatus())
-                );
-            }
-        } catch (UnsupportedOperationException e) {
-            res = JsonApiResponse.error(e.getMessage());
-        } catch (Exception e) {
-            if (e.getCause() instanceof ConnectException) {
-                res = JsonApiResponse.error("Connection error with CSL-Scan");
-            }
-            e.printStackTrace(System.err);
-        }
-        return res;
-    }
-
-    /**
-     * Contact the scan service to retrieve an entity through by its name.
-     * Stops at the first match, thus ignores extra results if the name is duplicated.
-     *
-     * @param name The name to seek in the entities
-     * @return null if the scan service is down, "" if the name was not found.
-     */
-    public Json getEntityByName(String name) {
-        Json entities = listEntities().getResult();
-        if (entities == null || !entities.isArray()) {
-            return null;
-        }
-        Json result = Json.object();
-        for (Json entity : entities.asJsonList()) {
-            if (JsonUtil.getStringFromJson(entity, "name", "").equals(name)) {
-                result = entity;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Contact the scan service to retrieve an entity through by its IP address.
-     * Stops at the first match, thus ignores extra results if the IP address is duplicated.
-     *
-     * @param ipAddress The IP address to seek in the entities
-     * @return null if the scan service is down, "" if the address was not found.
-     */
-    public Json getEntityByIp(String ipAddress) {
-        Json entities = listEntities().getResult();
-        if (entities == null || !entities.isArray()) {
-            return null;
-        }
-        Json result = Json.object();
-        for (Json entity : entities.asJsonList()) {
-            if (JsonUtil.getStringFromJson(entity, "ipAddress", "").equals(ipAddress)) {
-                result = entity;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Extract a CPE Item's modification date from its {@link Json} form
-     *
-     * @param cpeItem The CPE Item we want to read
-     * @return A {@link LocalDateTime} with the last modification date of the CPE Item
-     */
-    public static LocalDateTime getCpeItemDateTime(Json cpeItem) {
-        String cpeItemDate = JsonUtil.getStringFromJson(cpeItem, "updatedAt", null);
-        return cpeItemDate == null ? null : LocalDateTime.parse(cpeItemDate);
-    }
 
     /**
      * Create the list of entities to update on CSL-Scan.
@@ -992,7 +536,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     "protocol", dbapiHandler.getProtocolById(protocols, connection.get("protocol").asInteger()),
                     "isDeleted", false
             );
-            for (Map.Entry<String, String> connectionInfoField : connectionInfoFields.entrySet()) {
+            for (Map.Entry<String, String> connectionInfoField : ScanConstants.connectionInfoFields.entrySet()) {
                 String key = connectionInfoField.getKey();
                 String value = connectionInfoField.getValue();
                 if (connection.has(key)) {
@@ -1005,15 +549,4 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         return new Pair<>(scanEntities, devicesToDelete);
     }
 
-    /**
-     * Translate local date to UTC, as used by CSL-Scan.
-     *
-     * @param localDateTime The local date time.
-     * @return The same date time in UTC.
-     */
-    private OffsetDateTime localTimeToUtc(LocalDateTime localDateTime) {
-        if (localDateTime == null) return null;
-        OffsetDateTime utcDateTime = OffsetDateTime.parse(localDateTime.atZone(zoneId).toInstant().toString());
-        return utcDateTime;
-    }
 }

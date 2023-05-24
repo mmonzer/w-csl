@@ -1,7 +1,7 @@
 package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.cslscan.CpeItem;
+import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
@@ -13,10 +13,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,38 +31,8 @@ public class DbapiHandler implements AutoCloseable {
     private String dbapiUrl;
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
-    private ZoneId zoneId;
     static private AtomicInteger lastScanId = new AtomicInteger(0);
     static private AtomicDouble lastScanProgress = new AtomicDouble(0);
-
-    private static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>() {{
-        put("discovery_protocol", "protocol");
-        put("port_number", "port");
-        put("connected_devices", "devices");
-        put("snmp_community", "community");
-        put("username", "user");
-        put("read_only_password", "pass");
-        put("snmp_privacy_key", "privPassPhrase");
-        put("authentication_algorithm", "authProtocolName");
-        put("privacy_algorithm", "privProtocolName");
-    }};
-    private static final Map<String, String> authAlgorithmDbapiToScan = new HashMap<>() {{
-        put("SHA-224", "AuthHMAC128SHA224");
-        put("SHA-256", "AuthHMAC192SHA256");
-        put("SHA-384", "AuthHMAC256SHA384");
-        put("SHA-512", "AuthHMAC384SHA512");
-        put("SHA", "AuthSHA");
-        put("SHA2", "AuthSHA2");
-        put("MD5", "AuthMD5");
-    }};
-
-    private static final Map<String, String> privAlgorithmeDbapiToScan = new HashMap<>() {{
-        put("AES", "PrivAES128");
-        put("AES-128", "PrivAES128");
-        put("AES-192", "PrivAES192");
-        put("AES-256", "PrivAES256");
-        put("DES", "PrivDES");
-    }};
 
     public DbapiHandler() {
         this(CSLContext.instance.getConfig());
@@ -77,7 +44,6 @@ public class DbapiHandler implements AutoCloseable {
         dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
         dbapiUrl += "/api";
         apiKey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
-        zoneId = ZoneId.of(JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris"));
         try {
             dbapiHttpClient.start();
         } catch (Exception e) {
@@ -102,46 +68,9 @@ public class DbapiHandler implements AutoCloseable {
     private Json serializeCpeItemForDbapi(CpeItem cpeItem) {
         return Json.object(
                 "cpe_data", cpeItem.getCpeData(),
-                "discovered_date", localDateToDbapi(cpeItem.getDiscoveredDate()).toString(),
-                "mongo_entity_id", cpeItem.getMongoEntityId(),
-                "device", cpeItem.getDeviceId()
+                "discovered_date", DbapiUtils.localDateToDbapi(cpeItem.getDiscoveredDate()).toString(),
+                "mongo_entity_id", cpeItem.getMongoEntityId()
         );
-    }
-
-    /**
-     * Create the contents of a CPE item POST request to DB-API.
-     *
-     * @param cpeItem The CPE Item to send
-     * @return The contents of the request to send.
-     */
-    private Json serializeCpeItemForDbapi(Json cpeItem) {
-//        Json contents = Json.object("cpe_data", cpeItem);
-//        CpeItem cpeItem1 = CpeItem.fromScanCpeItem(cpeItem);
-//        if (cpeItem.has("updatedAt")) {
-//            contents.set("discovered_date", cpeItem.get("updatedAt"));
-//        }
-//        if (cpeItem.has("uuid")) {
-//            contents.set("mongo_entity_id", cpeItem.get("uuid"));
-//        }
-//        contents.set("device", cpeItem.get("entityUuid").asString());
-//        return contents;
-        return serializeCpeItemForDbapi(CpeItem.fromScanCpeItem(cpeItem));
-    }
-
-    /**
-     * Send a CPE Item to DB-API
-     *
-     * @param cpeItem The CPE Item to send
-     * @throws Exception If the sending fail
-     */
-    public void sendCpeItem(Json cpeItem, boolean isLast) throws Exception {
-        Json requestContents = serializeCpeItemForDbapi(cpeItem);
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CPE_ITEMS)
-                .content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
-        if (response.getStatus() != 201) {
-            throw new Exception("Error sending CpeItem to dbapi: got unexpected status " + response.getStatus());
-        }
     }
 
     /**
@@ -203,9 +132,6 @@ public class DbapiHandler implements AutoCloseable {
      */
     public void sendCpeItems(List<CpeItem> cpeItems) throws Exception {
         Json failedItems = Json.array();
-//        List<Json> cpeItemsList = cpeItems.asJsonList();
-//        int cpeItemsNumber = cpeItemsList.size();
-//        int cpeItemsCount = 0;
 
         try {
             sendCpeItemsBatch(cpeItems);
@@ -216,18 +142,6 @@ public class DbapiHandler implements AutoCloseable {
             }
             throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
         }
-
-//        for (Json cpeItem : cpeItemsList) {
-//            cpeItemsCount++;
-//            try {
-//                sendCpeItem(cpeItem, cpeItemsCount == cpeItemsNumber);
-//            } catch (Exception e) {
-//                failedItems.add(cpeItem.get("uuid"));
-//            }
-//        }
-//        if (!failedItems.asJsonList().isEmpty()) {
-//            throw new Exception("Errors sending the following CPE Items: " + failedItems.toString());
-//        }
     }
 
     /**
@@ -236,7 +150,7 @@ public class DbapiHandler implements AutoCloseable {
      * @return The last update of CPE-Items in DB-API.
      * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
      */
-    public LocalDateTime getCpeItemsLastUpdateDate() throws Exception {
+    public OffsetDateTime getCpeItemsLastUpdateDate() throws Exception {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CPE_ITEMS_LAST_DATE);
         ContentResponse response = request.send();
         Json responseContents = Json.read(response.getContentAsString());
@@ -248,7 +162,7 @@ public class DbapiHandler implements AutoCloseable {
         } else {
             lastUpdatedDateString = responseContents.toString();
         }
-        return dbapiDateToLocal(lastUpdatedDateString);
+        return DbapiUtils.dbapiDateToLocal(lastUpdatedDateString);
     }
 
     /**
@@ -258,8 +172,8 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<Json>} of devices that were changed since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Json> getDevicesSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = localDateToDbapi(date);
+    public List<Json> getDevicesSince(OffsetDateTime date) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
         if (dateUtc != null) {
             request.param("updated_at__gte", dateUtc.toString());
@@ -282,8 +196,8 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<Json>} of connections that were changed since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Json> getConnectionsSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = localDateToDbapi(date);
+    public List<Json> getConnectionsSince(OffsetDateTime date) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
         if (dateUtc != null) {
             request.param("updated_at__gte", dateUtc.toString());
@@ -305,8 +219,8 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of device uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<String> getDeletedDevicesSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = localDateToDbapi(date);
+    public List<String> getDeletedDevicesSince(OffsetDateTime date) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES);
         if (dateUtc != null) {
             request.param("deleted_date__gte", dateUtc.toString());
@@ -330,8 +244,8 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of CPE Item uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<String> getDeletedCpeItemsSince(LocalDateTime date) throws Exception {
-        OffsetDateTime dateUtc = localDateToDbapi(date);
+    public List<String> getDeletedCpeItemsSince(OffsetDateTime date) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_CPE_ITEMS);
         if (dateUtc != null) {
             request.param("deleted_date__gte", dateUtc.toString());
@@ -508,8 +422,8 @@ public class DbapiHandler implements AutoCloseable {
      * @param startDate The starting time of the scan.
      * @return The id attributed by DB-API to the scan object.
      */
-    public int notifyScanStarted(LocalDateTime startDate) {
-        Json params = Json.object("started_at", localDateToDbapi(startDate).toString());
+    public int notifyScanStarted(OffsetDateTime startDate) {
+        Json params = Json.object("started_at", DbapiUtils.localDateToDbapi(startDate).toString());
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.SCAN_EVENT_CREATION)
                 .header(HttpHeader.CONTENT_TYPE, "application/json")
                 .content(new StringContentProvider(params.toString()));
@@ -529,7 +443,7 @@ public class DbapiHandler implements AutoCloseable {
      * @return The id attributed by DB-API to the scan object.
      */
     public int notifyScanStarted() {
-        return notifyScanStarted(LocalDateTime.now());
+        return notifyScanStarted(OffsetDateTime.now());
     }
 
     /**
@@ -544,7 +458,7 @@ public class DbapiHandler implements AutoCloseable {
     public void notifyScanFinished(ScanEntity scan) throws Exception {
         Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
         Json params = Json.object(
-                "ended_at", localDateToDbapi(scan.getEndDate()).toString(),
+                "ended_at", DbapiUtils.localDateToDbapi(scan.getEndDate()).toString(),
                 "is_success", String.valueOf(scan.isSuccess())
         );
         if (scan.getDescription() != null) {
@@ -610,15 +524,15 @@ public class DbapiHandler implements AutoCloseable {
         Json connection = Json.object(
                 "id", dbapiConnection.get("id")
         );
-        for (Map.Entry<String, String> field : connectionFieldsDbapiToLocal.entrySet()) {
+        for (Map.Entry<String, String> field : DbapiConstants.connectionFieldsDbapiToLocal.entrySet()) {
             String key = field.getKey();
             String value = field.getValue();
             if (dbapiConnection.has(key) && !dbapiConnection.get(key).isNull()) {
                 Json dbapiField = dbapiConnection.get(key);
                 if (key.equals("authentication_algorithm")) {
-                    connection.set(value, authAlgorithmDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
+                    connection.set(value, DbapiConstants.authAlgorithmDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
                 } else if (key.equals("privacy_algorithm")) {
-                    connection.set(value, privAlgorithmeDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
+                    connection.set(value, DbapiConstants.privAlgorithmeDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
                 } else {
                     connection.set(value, dbapiField);
                 }
@@ -635,15 +549,15 @@ public class DbapiHandler implements AutoCloseable {
             authString = "auth";
         }
         connection.set("securityLevel", authString + privacyString);
-        for (Map.Entry<String, String> field : connectionFieldsDbapiToLocal.entrySet()) {
+        for (Map.Entry<String, String> field : DbapiConstants.connectionFieldsDbapiToLocal.entrySet()) {
             String key = field.getKey();
             String value = field.getValue();
             if (otherData.has(key) && !otherData.get(key).isNull()) {
                 Json dbapiField = otherData.get(key);
                 if (key.equals("authentication_algorithm")) {
-                    connection.set(value, authAlgorithmDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
+                    connection.set(value, DbapiConstants.authAlgorithmDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
                 } else if (key.equals("privacy_algorithm")) {
-                    connection.set(value, privAlgorithmeDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
+                    connection.set(value, DbapiConstants.privAlgorithmeDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
                 } else {
                     connection.set(value, dbapiField);
                 }
@@ -724,38 +638,6 @@ public class DbapiHandler implements AutoCloseable {
      */
     private Request createDbapiPatchRequest(DbapiEndpoint endpoint, String id) {
         return createDbapiPatchRequest(endpoint.getEndpoint() + '/' + id);
-    }
-
-    /**
-     * Translate a date from DB-API's datetime format to LocalDateTime.
-     *
-     * @param dateTime A serialized date as received from DB-API.
-     * @return The {@link LocalDateTime} corresponding to the date provided by DB-API.
-     */
-    private LocalDateTime dbapiDateToLocal(String dateTime) {
-        return dbapiDateToLocal(OffsetDateTime.parse(dateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-    }
-
-    /**
-     * Translate a date from DB-API's datetime format to LocalDateTime.
-     *
-     * @param dateTime An {@link OffsetDateTime} date as received from DB-API.
-     * @return The {@link LocalDateTime} corresponding to the date provided by DB-API.
-     */
-    private LocalDateTime dbapiDateToLocal(OffsetDateTime dateTime) {
-        return dateTime.atZoneSameInstant(zoneId).toLocalDateTime();
-    }
-
-    /**
-     * Translate local date to UTC, as used by CSL-Scan.
-     *
-     * @param localDateTime The local date time.
-     * @return The same date time in UTC.
-     */
-    private OffsetDateTime localDateToDbapi(LocalDateTime localDateTime) {
-        if (localDateTime == null) return null;
-        OffsetDateTime utcDateTime = OffsetDateTime.parse(localDateTime.atZone(zoneId).toInstant().toString());
-        return utcDateTime;
     }
 
     public void setLastScanProgress(double progress) {

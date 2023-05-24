@@ -1,8 +1,8 @@
-package com.csl.intercom.cslscan;
+package com.csl.intercom.cslscan.models;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.ScanUtils;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -15,7 +15,7 @@ import java.util.*;
  */
 public class CpeItem {
     private Json cpeData;
-    private LocalDateTime discoveredDate;
+    private OffsetDateTime discoveredDate;
     private String mongoEntityId;
     private String deviceId;
     static private ZoneId zoneId = CSLContext.instance.getZoneId();
@@ -43,7 +43,7 @@ public class CpeItem {
      * @param mongoEntityId The uuid of the CPI Item in CSL-Scan's Mongodb.
      * @param deviceId The uuid of the device associated with this CPE Item.
      */
-    private CpeItem(Json cpeData, LocalDateTime discoveredDate, String mongoEntityId, String deviceId) {
+    private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId) {
         this.cpeData = Json.object();
         this.discoveredDate = discoveredDate;
         this.mongoEntityId = mongoEntityId;
@@ -67,12 +67,12 @@ public class CpeItem {
      * @throws IllegalArgumentException if mandatory fields are missing in the provided data.
      */
     public static CpeItem fromScanCpeItem(Json data) throws IllegalArgumentException {
-        LocalDateTime discoveredDate;
+        OffsetDateTime discoveredDate;
         String mongoEntityId;
         String deviceId;
 
         try {
-            discoveredDate = scanDateToLocal(data.get("updatedAt").asString());
+            discoveredDate = ScanUtils.getCpeItemDateTime(data);
             mongoEntityId = data.get("uuid").asString();
             deviceId = data.get("entityUuid").asString();
         } catch (NullPointerException e) {
@@ -86,7 +86,7 @@ public class CpeItem {
         return cpeData;
     }
 
-    public LocalDateTime getDiscoveredDate() {
+    public OffsetDateTime getDiscoveredDate() {
         return discoveredDate;
     }
 
@@ -96,13 +96,5 @@ public class CpeItem {
 
     public String getDeviceId() {
         return deviceId;
-    }
-
-    static private LocalDateTime scanDateToLocal(LocalDateTime date) {
-        return date.atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalDateTime();
-    }
-
-    static private LocalDateTime scanDateToLocal(String date) {
-        return scanDateToLocal(LocalDateTime.parse(date));
     }
 }

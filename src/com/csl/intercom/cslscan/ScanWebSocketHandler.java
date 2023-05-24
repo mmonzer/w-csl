@@ -1,6 +1,7 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.ScanEntity;
 import com.ucsl.json.Json;
@@ -24,13 +25,14 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 
 /**
@@ -134,7 +136,7 @@ public class ScanWebSocketHandler {
         } else {
             stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(uuids.toArray()));
         }
-        LocalDateTime startDate = LocalDateTime.now();
+        OffsetDateTime startDate = OffsetDateTime.now();
         int dbapiId = dbapiHandler.notifyScanStarted(startDate);
         scans.add(ScanEntity.fromDbapiId(dbapiId, startDate));
     }
@@ -194,9 +196,9 @@ public class ScanWebSocketHandler {
                         scan = getFirstScanWithoutScanId();
                         scan.setScanId(scanId);
                     } catch (NullPointerException e) {
-                        LocalDateTime startDate = scanToLocalTime(LocalDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
+                        OffsetDateTime startDate = ScanUtils.scanTimeToLocal(LocalDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
                         if (startDate == null) {
-                            startDate = LocalDateTime.now();
+                            startDate = OffsetDateTime.now();
                         }
                         int dbapiId = dbapiHandler.notifyScanStarted(startDate);
                         scan = ScanEntity.fromDbapiId(dbapiId, startDate);
@@ -214,7 +216,7 @@ public class ScanWebSocketHandler {
                 if (finishedScanStatus.contains(scanStatus)) {
                     try {
                         // Put the end date in the scan information and notify DB-API the scan ended.
-                        LocalDateTime endDate = LocalDateTime.now();
+                        OffsetDateTime endDate = OffsetDateTime.now();
                         if (successScanStatus.contains(scanStatus)) {
                             scan.setFinished(true, endDate);
                         } else {
@@ -363,10 +365,11 @@ public class ScanWebSocketHandler {
 
     /**
      * Get the first scan matching a predicate in the <code>scans</code> list.
+     *
      * @param predicate The predicate that a scan has to match.
      * @return The first scan that matched the condition, or null.
      */
-    private ScanEntity searchScan(Json.Function<ScanEntity, Boolean> predicate) {
+    private ScanEntity searchScan(Function<ScanEntity, Boolean> predicate) {
         for (ScanEntity scan : scans) {
             if (predicate.apply(scan)) {
                 return scan;
@@ -377,6 +380,7 @@ public class ScanWebSocketHandler {
 
     /**
      * Get a scan from it DB-API id.
+     *
      * @param dbapiId The id to seek.
      * @return The scan with this id, or null if none is found.
      */
@@ -386,6 +390,7 @@ public class ScanWebSocketHandler {
 
     /**
      * Get a scan from it CSL-Scan id.
+     *
      * @param scanId The id to seek.
      * @return The scan with this id, or null if none is found.
      */
@@ -395,20 +400,10 @@ public class ScanWebSocketHandler {
 
     /**
      * Get the first scan in the <code>scans</code> list that has no CSL-Scan id.
+     *
      * @return
      */
     private ScanEntity getFirstScanWithoutScanId() {
         return searchScan(scanEntity -> scanEntity.getScanId() == null);
-    }
-
-    /**
-     * Translate UTC time, as used bu CSL-Scan, to local time.
-     *
-     * @param scanTime The {@link LocalDateTime} to convert.
-     * @return The {@link LocalDateTime} corresponding to utcTime.
-     */
-    private LocalDateTime scanToLocalTime(LocalDateTime scanTime) {
-        if (scanTime == null) return null;
-        return scanTime.atOffset(ZoneOffset.UTC).atZoneSameInstant(zoneId).toLocalDateTime();
     }
 }

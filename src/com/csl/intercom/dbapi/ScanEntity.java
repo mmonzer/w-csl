@@ -1,6 +1,7 @@
 package com.csl.intercom.dbapi;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,11 +26,11 @@ public class ScanEntity {
     private int dbapiId;                // The scan's id in DB-API
     private String scanId;              // The scan's id in CSL-Scan
     private Status status;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private OffsetDateTime startDate;
+    private OffsetDateTime endDate;
     private String description = null;  // Description of failure
 
-    public ScanEntity(int dbapiId, String scanId, Status status, LocalDateTime startDate, LocalDateTime endDate) {
+    public ScanEntity(int dbapiId, String scanId, Status status, OffsetDateTime startDate, OffsetDateTime endDate) {
         this.dbapiId = dbapiId;
         this.scanId = scanId;
         this.status = status;
@@ -38,7 +39,7 @@ public class ScanEntity {
     }
 
     public ScanEntity(int dbapiId, String scanId) {
-        this(dbapiId, scanId, Status.STARTED, LocalDateTime.now(), null);
+        this(dbapiId, scanId, Status.STARTED, OffsetDateTime.now(), null);
     }
 
     /**
@@ -48,7 +49,7 @@ public class ScanEntity {
      * @param startDate The start time of the scan.
      * @return The newly created {@link ScanEntity}.
      */
-    public static ScanEntity fromDbapiId(int dbapiId, LocalDateTime startDate) {
+    public static ScanEntity fromDbapiId(int dbapiId, OffsetDateTime startDate) {
         return new ScanEntity(dbapiId, null, Status.STARTED, startDate, null);
     }
 
@@ -64,11 +65,11 @@ public class ScanEntity {
         return status;
     }
 
-    public LocalDateTime getStartDate() {
+    public OffsetDateTime getStartDate() {
         return startDate;
     }
 
-    public LocalDateTime getEndDate() {
+    public OffsetDateTime getEndDate() {
         if (Status.finishedStates.contains(this.status)) {
             return endDate;
         } else {
@@ -92,7 +93,7 @@ public class ScanEntity {
         this.scanId = scanId;
     }
 
-    public void setStartDate(LocalDateTime startDate) {
+    public void setStartDate(OffsetDateTime startDate) {
         this.startDate = startDate;
     }
 
@@ -106,7 +107,7 @@ public class ScanEntity {
      * @param status  The new status (FINISHED_SUCCESS or FINISHED_FAIL).
      * @param endDate The date of the scan's end.
      */
-    public void setFinished(Status status, LocalDateTime endDate) {
+    public void setFinished(Status status, OffsetDateTime endDate) {
         this.status = status;
         this.endDate = endDate;
     }
@@ -117,7 +118,7 @@ public class ScanEntity {
      * @param success true if the scan finished successfully, false otherwise.
      * @param endDate The date of the scan's end.
      */
-    public void setFinished(boolean success, LocalDateTime endDate) {
+    public void setFinished(boolean success, OffsetDateTime endDate) {
         setFinished(success ? Status.FINISHED_SUCCESS : Status.FINISHED_FAIL, endDate);
     }
 
@@ -127,7 +128,7 @@ public class ScanEntity {
      * @param success true if the scan finished successfully, false otherwise.
      */
     public void setFinished(boolean success) {
-        setFinished(success, LocalDateTime.now());
+        setFinished(success, OffsetDateTime.now());
     }
 
     /**
@@ -135,7 +136,7 @@ public class ScanEntity {
      *
      * @param endDate The date of the scan's end.
      */
-    public void setFinishedSuccess(LocalDateTime endDate) {
+    public void setFinishedSuccess(OffsetDateTime endDate) {
         setFinished(true, endDate);
     }
 
@@ -143,10 +144,10 @@ public class ScanEntity {
      * Change the status to finished successfully, and set the date of the scan's end to now.
      */
     public void setFinishedSuccess() {
-        setFinishedSuccess(LocalDateTime.now());
+        setFinishedSuccess(OffsetDateTime.now());
     }
 
-    public void setFinishedFail(String description, LocalDateTime endDate) {
+    public void setFinishedFail(String description, OffsetDateTime endDate) {
         setFinished(Status.FINISHED_FAIL, endDate);
         this.description = description;
     }

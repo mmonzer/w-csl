@@ -6,6 +6,7 @@ import com.csl.intercom.dbapi.ScanEntity;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
+import main.services.JsonApiResponse;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.AbstractMessageConverter;
@@ -112,16 +113,13 @@ public class ScanWebSocketHandler {
      *
      * @return An id identifying the scan for further notice.
      */
-    public Json requestScan(List<String> entities) {
+    public JsonApiResponse requestScan(List<String> entities) {
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
             scanRequestsQueue.add(entities);
-            return Json.object("success", false,
-                    "error", Json.object("reason", "Scan service unavailable, added scan request to queue")
-            );
+            return JsonApiResponse.error("Scan service unavailable, added scan request to queue");
         } else {
             startScan(entities);
-            return Json.object("success", true,
-                    "details", "Scan started successfully");
+            return JsonApiResponse.success();
         }
     }
 

@@ -36,7 +36,7 @@ public class StatusService implements ICSLService {
         addCmd("set_should_send_notifications", params -> {
                     boolean shouldSend = JsonUtil.getBooleanFromJson(params, "send", true);
                     notifier.setSendNotifications(shouldSend);
-                    return Json.object("success", true);
+                    return JsonApiResponse.success().toJson();
                 },
                 new JsonCmdHelp().setDesc("Change the sending behaviour of status notifications")
                         .setParam("send","true if notifications should be sent periodically, false otherwise.",IJsonCmdHelp.BOOL)

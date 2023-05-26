@@ -808,6 +808,10 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		if (client)
 			getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));
 
+		// The server should not send status notifications
+		if (server)
+			getStatusNotifier().setSendNotifications(false);
+
 
 
 		// not in used by default

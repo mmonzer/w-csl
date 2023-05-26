@@ -1,6 +1,8 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.intercom.cslscan.models.CpeItem;
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.Device;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -41,40 +43,41 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     /**
-     * Create a new entity in the scanner
+     * Create a new device in the scanner
      *
-     * @param entity A {@link Json} containing the entity to add. Fields 'id', 'name' and 'ip' are required.
-     * @return A {@link Json} containing the newly created entity, as handed by the scanner
+     * @param device A {@link Json} containing the device to add. Fields 'id', 'name' and 'ip' are required.
+     * @return A {@link Json} containing the newly created device, as handed by the scanner
      */
-    public JsonApiResponse addEntity(Json entity) {
-        String protocol = JsonUtil.getStringFromJson(entity, "protocol", "");
-        switch (protocol.toLowerCase()) {
-            case "snmpv2c":
-                return addSnmpv2cEntity(
-                        JsonUtil.getStringFromJson(entity, "id", null),
-                        JsonUtil.getStringFromJson(entity, "name", null),
-                        JsonUtil.getStringFromJson(entity, "ip", null),
-                        JsonUtil.getIntFromJson(entity, "port", 161),
-                        JsonUtil.getStringFromJson(entity, "community", "public")
-                );
-
-            case "snmpv3":
-                return addSnmpv3Entity(
-                        JsonUtil.getStringFromJson(entity, "id", null),
-                        JsonUtil.getStringFromJson(entity, "name", null),
-                        JsonUtil.getStringFromJson(entity, "ip", null),
-                        JsonUtil.getIntFromJson(entity, "port", 161),
-                        JsonUtil.getStringFromJson(entity, "user", null),
-                        JsonUtil.getStringFromJson(entity, "pass", null),
-                        JsonUtil.getStringFromJson(entity, "privPassPhrase", null),
-                        JsonUtil.getStringFromJson(entity, "securityLevel", null),
-                        JsonUtil.getStringFromJson(entity, "authProtocolName", null),
-                        JsonUtil.getStringFromJson(entity, "privProtocolName", null)
-                );
-
-            default:
-                return JsonApiResponse.error("Unsupported protocol: " + protocol);
-        }
+    public JsonApiResponse addEntity(Device device) {
+        return sendRequestToScanManager(HttpMethod.POST, "/entity/", device.serializeForScanner());
+//        String protocol = JsonUtil.getStringFromJson(device, "protocol", "");
+//        switch (protocol.toLowerCase()) {
+//            case "snmpv2c":
+//                return addSnmpv2cEntity(
+//                        JsonUtil.getStringFromJson(device, "id", null),
+//                        JsonUtil.getStringFromJson(device, "name", null),
+//                        JsonUtil.getStringFromJson(device, "ip", null),
+//                        JsonUtil.getIntFromJson(device, "port", 161),
+//                        JsonUtil.getStringFromJson(device, "community", "public")
+//                );
+//
+//            case "snmpv3":
+//                return addSnmpv3Entity(
+//                        JsonUtil.getStringFromJson(device, "id", null),
+//                        JsonUtil.getStringFromJson(device, "name", null),
+//                        JsonUtil.getStringFromJson(device, "ip", null),
+//                        JsonUtil.getIntFromJson(device, "port", 161),
+//                        JsonUtil.getStringFromJson(device, "user", null),
+//                        JsonUtil.getStringFromJson(device, "pass", null),
+//                        JsonUtil.getStringFromJson(device, "privPassPhrase", null),
+//                        JsonUtil.getStringFromJson(device, "securityLevel", null),
+//                        JsonUtil.getStringFromJson(device, "authProtocolName", null),
+//                        JsonUtil.getStringFromJson(device, "privProtocolName", null)
+//                );
+//
+//            default:
+//                return JsonApiResponse.error("Unsupported protocol: " + protocol);
+//        }
     }
 
     /**
@@ -174,64 +177,19 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     /**
-     * Change fields in an already existing entity, leaves unchanged the ones not provided (ie, that are null).
+     * Change fields in an already existing device, overwriting every field.
      *
-     * @param entity A {@link Json} with the entity's new information. The 'id' field is required.
-     * @return The old version of the entity, not reflecting the changes made.
+     * @param device A {@link Json} with the device's new information.
+     * @return The old version of the device, not reflecting the changes made.
      */
-    public JsonApiResponse updateEntity(Json entity) {
-        Map<String, Json> entityMap = entity.asJsonMap();
-        String id = JsonUtil.getStringFromJson(entity, "id", null);
-        Json params;
-        try {
-            JsonApiResponse entityResponse = getEntity(id);
-            params = entityResponse.getResult();
-        } catch (Exception e) {
-            return JsonApiResponse.error("Could not retrieve entity " + id);
-        }
-        String name = JsonUtil.getStringFromJson(entity, "name", null);
-        if (name != null) {
-            params.set("name", name);
-        }
-        String ip = JsonUtil.getStringFromJson(entity, "ip", null);
-        if (ip != null) {
-            params.set("ipAddress", ip);
-        }
-        int port = JsonUtil.getIntFromJson(entity, "port", 0);
-        if (port != 0) {
-            params.set("port", port);
-        }
-        for (Map.Entry<String, String> connectionInfo : ScanConstants.connectionInfoFields.entrySet()) {
-            String key = connectionInfo.getKey();
-            String value = connectionInfo.getValue();
-            if (entityMap.containsKey(key)) {
-                params.get("connectionInfo").set(ScanConstants.connectionInfoFields.get(value), entity.get(key));
-            }
-        }
-        switch (entity.get("protocol").asString().toLowerCase()) {
-            case "snmpv2c":
-                for (String field : ScanConstants.connectionInfoFields.values()) {
-                    if (!ScanConstants.snmpv2cConnectionInfoFields.contains(field) && params.get("connectionInfo").has(field)) {
-                        params.get("connectionInfo").delAt(field);
-                    }
-                }
-                break;
-
-            case "snmpv3":
-                for (String field : ScanConstants.connectionInfoFields.values()) {
-                    if (!ScanConstants.snmpv3ConnectionInfoFields.contains(field) && params.get("connectionInfo").has(field)) {
-                        params.get("connectionInfo").delAt(field);
-                    }
-                }
-                break;
-        }
-        return sendRequestToScanManager(HttpMethod.PUT, "/entity/" + id, params);
+    public JsonApiResponse updateEntity(Device device) {
+        return addEntity(device);
     }
 
-    public JsonApiResponse createOrUpdateEntity(Json entity) {
-        JsonApiResponse response = addEntity(entity);
+    public JsonApiResponse createOrUpdateEntity(Device device) {
+        JsonApiResponse response = addEntity(device);
         if (!response.isSuccess()) {
-            response = updateEntity(entity);
+            response = updateEntity(device);
         }
         return response;
     }

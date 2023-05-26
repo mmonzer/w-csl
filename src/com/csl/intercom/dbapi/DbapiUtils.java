@@ -1,8 +1,12 @@
 package com.csl.intercom.dbapi;
 
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.Device;
+
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class DbapiUtils {
     /**
@@ -31,7 +35,31 @@ public class DbapiUtils {
      * @param localDateTime The local date time.
      * @return The same date time in UTC.
      */
-    static OffsetDateTime localDateToDbapi(OffsetDateTime localDateTime) {
+    public static OffsetDateTime localDateToDbapi(OffsetDateTime localDateTime) {
         return localDateTime;
+    }
+
+    /**
+     * Get a connection from its id from a list of connection.
+     * @param connections The list of connections to filter.
+     * @param id The id we seek.
+     * @return The connection with the corresponding id if any, null otherwise.
+     */
+    public static Connection getConnectionById(List<Connection> connections, int id) {
+        for (Connection connection: connections) {
+            if (connection.getId() == id) {
+                return connection;
+            }
+        }
+        return null;
+    }
+
+    public static Device getDeviceById(List<Device> devices, String id) {
+        for (Device device: devices) {
+            if (device.getId().equals(id)) {
+                return device;
+            }
+        }
+        return null;
     }
 }

@@ -3,6 +3,9 @@ package com.csl.intercom.dbapi;
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.Device;
+import com.csl.intercom.dbapi.models.ScanEntity;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -172,7 +175,7 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<Json>} of devices that were changed since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Json> getDevicesSince(OffsetDateTime date) throws Exception {
+    public List<Device> getDevicesSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
         if (dateUtc != null) {
@@ -180,10 +183,12 @@ public class DbapiHandler implements AutoCloseable {
         }
         Json response = Json.read(request.send().getContentAsString());
 
-        List<Json> devices = new ArrayList<>();
+        List<Device> devices = new ArrayList<>();
         for (Json jsonDevice : response.asJsonList()) {
-            Json device = parseDbapiDevice(jsonDevice);
-            devices.add(device);
+            Device device = Device.fromJson(jsonDevice);
+            if (device != null) {
+                devices.add(device);
+            }
         }
         return devices;
     }
@@ -196,17 +201,19 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<Json>} of connections that were changed since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Json> getConnectionsSince(OffsetDateTime date) throws Exception {
+    public List<Connection> getConnectionsSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
         if (dateUtc != null) {
             request.param("updated_at__gte", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
-        List<Json> connections = new ArrayList<>(response.asList().size());
+        List<Connection> connections = new ArrayList<>(response.asList().size());
         for (Json jsonConnection : response.asJsonList()) {
-            Json connection = parseDbapiConnection(jsonConnection);
-            connections.add(connection);
+            Connection connection = Connection.fromJson(jsonConnection);
+            if (connection != null) {
+                connections.add(connection);
+            }
         }
         return connections;
     }
@@ -274,51 +281,20 @@ public class DbapiHandler implements AutoCloseable {
      * @throws InterruptedException If the connection with DB-API was interrupted.
      * @throws TimeoutException     If the connection with DB-API times out.
      */
-    public List<Json> fetchDevices(List<String> uuids) throws ExecutionException, InterruptedException, TimeoutException {
-        List<Json> devices = new ArrayList<>();
+    public List<Device> fetchDevices(List<String> uuids) throws ExecutionException, InterruptedException, TimeoutException {
+        List<Device> devices = new ArrayList<>();
         if (uuids == null || uuids.isEmpty()) {
             return devices;
         }
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
         request.param("uuid", String.join(",", uuids));
-        for (Json device : Json.read(request.send().getContentAsString()).asJsonList()) {
-            devices.add(parseDbapiDevice(device));
-        }
-        return devices;
-    }
-
-    /**
-     * Parse a device as received from DB-API and return a format suitable for our use.
-     *
-     * @param dbapiDevice The device as we got it from DB-API.
-     * @return A {@link Json} with a format suitable for further processing:
-     * <code>
-     * {
-     * "id": uuid (String),
-     * "name": name (String),
-     * "ip": IP address (String)
-     * }
-     * </code>
-     */
-    private static Json parseDbapiDevice(Json dbapiDevice) {
-        Json device = Json.object(
-                "id", dbapiDevice.get("uuid"),
-                "name", dbapiDevice.get("name")
-        );
-        if (dbapiDevice.has("ipv4")) {
-            device.set("ip", dbapiDevice.get("ipv4"));
-        } else if (dbapiDevice.has("ipv6")) {
-            device.set("ip", dbapiDevice.get("ipv6"));
-        }
-        Json connectionsIdJson = dbapiDevice.get("connections");
-        Integer connectionId = null;
-        if (connectionsIdJson != null) {
-            if (connectionsIdJson.isArray() && !connectionsIdJson.asJsonList().isEmpty()) {
-                connectionId = connectionsIdJson.asJsonList().get(0).asInteger();
+        for (Json jsonDevice : Json.read(request.send().getContentAsString()).asJsonList()) {
+            Device device = Device.fromJson(jsonDevice);
+            if (device != null) {
+                devices.add(device);
             }
         }
-        device.set("connection", connectionId);
-        return device;
+        return devices;
     }
 
     /**
@@ -330,77 +306,23 @@ public class DbapiHandler implements AutoCloseable {
      * @throws InterruptedException If the connection with DB-API was interrupted.
      * @throws TimeoutException     If the connection with DB-API times out.
      */
-    public List<Json> fetchConnections(List<Integer> ids) throws ExecutionException, InterruptedException, TimeoutException {
-        List<Json> connections = new ArrayList<>();
+    public List<Connection> fetchConnections(List<Integer> ids) throws ExecutionException, InterruptedException, TimeoutException {
+        List<Connection> connections = new ArrayList<>();
         for (int id : ids) {
             Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
             request.param("id", String.valueOf(id));
             Json response = Json.read(request.send().getContentAsString());
+            Connection connection;
             if (response.isArray()) {
-                connections.add(parseDbapiConnection(response.at(0)));
+                connection = Connection.fromJson(response.at(0));
             } else {
-                connections.add(parseDbapiConnection(response));
+                connection = Connection.fromJson(response);
+            }
+            if (connection != null) {
+                connections.add(connection);
             }
         }
         return connections;
-    }
-
-    /**
-     * Get a connection in a {@link List<Json>} from its id.
-     *
-     * @param connections The list of connections to search
-     * @param id          The ID of the connection we seek.
-     * @return The {@link Json} of the connection we sought, or null if not found.
-     */
-    public static Json getConnectionById(List<Json> connections, int id) {
-        for (Json connection : connections) {
-            if (connection.get("id").asInteger() == id) {
-                return connection;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get a device in a {@link List<Json>} from its id.
-     *
-     * @param devices The list of devices to search
-     * @param id      The ID of the device we seek.
-     * @return The {@link Json} of the devices we sought, or null if not found.
-     */
-    public static Json getDeviceById(List<Json> devices, String id) {
-        for (Json device : devices) {
-            if (device.get("id").asString().equals(id)) {
-                return device;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get a protocol in a {@link List<Json>} from its id.
-     *
-     * @param protocols The list of protocols to search
-     * @param id        The ID of the protocol we seek.
-     * @return The {@link Json} of the protocols we sought, or null if not found.
-     */
-    public static String getProtocolById(List<Json> protocols, int id) {
-        String name;
-        for (Json protocol : protocols) {
-            if (protocol.get("id").asInteger() == id) {
-                name = protocol.get("name").asString().toLowerCase();
-                switch (name) {
-                    case "snmpv1":
-                        return "SNMPV1";
-                    case "snmpv2c":
-                        return "SNMPV2c";
-                    case "snmpv3":
-                        return "SNMPV3";
-                }
-                return name;
-            }
-        }
-        return null;
     }
 
     /**
@@ -503,68 +425,6 @@ public class DbapiHandler implements AutoCloseable {
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
-    }
-
-    /**
-     * Parse a connection as received from DB-API and return a format suitable for our use.
-     *
-     * @param dbapiConnection The connection as we got it from DB-API.
-     * @return A {@link Json} with a format suitable for further processing:
-     * <code>
-     * {
-     * "id": uuid (int),
-     * "protocol": id (int),
-     * "port": port number (int),
-     * "devices": device uuids list ([String]),
-     * "community": SNMP community (String)
-     * }
-     * </code>
-     */
-    private static Json parseDbapiConnection(Json dbapiConnection) {
-        Json connection = Json.object(
-                "id", dbapiConnection.get("id")
-        );
-        for (Map.Entry<String, String> field : DbapiConstants.connectionFieldsDbapiToLocal.entrySet()) {
-            String key = field.getKey();
-            String value = field.getValue();
-            if (dbapiConnection.has(key) && !dbapiConnection.get(key).isNull()) {
-                Json dbapiField = dbapiConnection.get(key);
-                if (key.equals("authentication_algorithm")) {
-                    connection.set(value, DbapiConstants.authAlgorithmDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
-                } else if (key.equals("privacy_algorithm")) {
-                    connection.set(value, DbapiConstants.privAlgorithmeDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
-                } else {
-                    connection.set(value, dbapiField);
-                }
-            }
-        }
-
-        Json otherData = dbapiConnection.get("read_only_other_data");
-        String authString = "noAuth";
-        String privacyString = "NoPriv";
-        if (otherData.has("privacy_algorithm")) {
-            privacyString = "Priv";
-        }
-        if (otherData.has("authentication_algorithm")) {
-            authString = "auth";
-        }
-        connection.set("securityLevel", authString + privacyString);
-        for (Map.Entry<String, String> field : DbapiConstants.connectionFieldsDbapiToLocal.entrySet()) {
-            String key = field.getKey();
-            String value = field.getValue();
-            if (otherData.has(key) && !otherData.get(key).isNull()) {
-                Json dbapiField = otherData.get(key);
-                if (key.equals("authentication_algorithm")) {
-                    connection.set(value, DbapiConstants.authAlgorithmDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
-                } else if (key.equals("privacy_algorithm")) {
-                    connection.set(value, DbapiConstants.privAlgorithmeDbapiToScan.getOrDefault(dbapiField.asString(), dbapiField.asString()));
-                } else {
-                    connection.set(value, dbapiField);
-                }
-            }
-        }
-
-        return connection;
     }
 
     /**

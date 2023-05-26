@@ -49,11 +49,6 @@ public class CpeItem {
         this.mongoEntityId = mongoEntityId;
         this.deviceId = deviceId;
 
-//        for (Map.Entry<String, Json> entry: cpeData.asJsonMap().entrySet()) {
-//            if (dataFields.contains(entry.getKey())) {
-//                this.cpeData.set(entry.getKey(), entry.getValue());
-//            }
-//        }
         for (String field: dataFields) {
             this.cpeData.set(field, cpeData.get(field));
         }

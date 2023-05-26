@@ -25,7 +25,7 @@ public class DbapiConstants {
         put("MD5", "AuthMD5");
     }};
     public static final Map<String, String> privAlgorithmeDbapiToScan = new HashMap<>() {{
-        put("AES", "PrivAES128");
+        put("AES", "PrivAES127");
         put("AES-128", "PrivAES128");
         put("AES-192", "PrivAES192");
         put("AES-256", "PrivAES256");

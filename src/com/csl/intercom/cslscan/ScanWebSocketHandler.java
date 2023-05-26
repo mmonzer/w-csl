@@ -3,7 +3,7 @@ package com.csl.intercom.cslscan;
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
-import com.csl.intercom.dbapi.ScanEntity;
+import com.csl.intercom.dbapi.models.ScanEntity;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;

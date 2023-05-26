@@ -2,11 +2,13 @@ package main.services;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
-import com.csl.intercom.cslscan.ScanConstants;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiUtils;
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
@@ -23,7 +25,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -354,14 +355,13 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * Send a device to CSL-Scan.
      * First tries to create a new one, and on failure tries to modify the device (assuming it already exists).
      *
-     * @param newDevice The {@link Json} containing the device to send.
+     * @param newDevice The device to send.
      * @throws Exception If we were not able to send the device to CSL-Scan, that is neither creating a new one nor modify an existing one worked.
      */
-    private void sendNewDeviceToScanner(Json newDevice) throws Exception {
-        // first try to create the entity
+    private void sendNewDeviceToScanner(Device newDevice) throws Exception {
         JsonApiResponse result = scanApiHandler.createOrUpdateEntity(newDevice);
         if (!result.isSuccess()) {
-            throw new Exception("Could not push the entity " + JsonUtil.getStringFromJson(newDevice, "id", "") + " to CSL-Scan.");
+            throw new Exception("Could not push the entity " + newDevice.getId() + " to CSL-Scan.");
         }
     }
 
@@ -371,28 +371,28 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @return A {@link Json} containing the result (success or failure).
      */
     public JsonApiResponse handleDbapiDeviceChange() {
-        List<Json> newDevices;
+        List<Device> newDevices;
         List<String> deletedDevices = new ArrayList<>();
         List<String> failedDevices = new LinkedList<>();
         OffsetDateTime currentTime = OffsetDateTime.now();
         try {
-            Pair<List<Json>, List<String>> buildResult = buildNewDevices(
+            Pair<List<Device>, List<String>> buildResult = buildNewDevices(
                     dbapiHandler.getDevicesSince(lastDeviceModificationVerification),
                     dbapiHandler.getConnectionsSince(lastDeviceModificationVerification)
             );
             newDevices = buildResult.getFirst();
-//            deletedDevices.addAll(buildResult.getSecond());
+            deletedDevices.addAll(buildResult.getSecond());
             deletedDevices.addAll(dbapiHandler.getDeletedDevicesSince(lastDeviceModificationVerification));
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return JsonApiResponse.error("Could not get changes from DBAPI");
         }
         lastDeviceModificationVerification = currentTime;
-        for (Json newDevice : newDevices) {
+        for (Device newDevice : newDevices) {
             try {
                 sendNewDeviceToScanner(newDevice);
             } catch (Exception e) {
-                failedDevices.add(JsonUtil.getStringFromJson(newDevice, "id", ""));
+                failedDevices.add(newDevice.getId());
             }
         }
 
@@ -468,24 +468,22 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * }
      * </code>
      */
-    private Pair<List<Json>, List<String>> buildNewDevices(List<Json> devices, List<Json> connections) {
+    private Pair<List<Device>, List<String>> buildNewDevices(List<Device> devices, List<Connection> connections) {
         //region List the uuids we have in both list
         List<String> devicesToDelete = new ArrayList<>();
         List<Integer> connectionUuidsInDevices = new ArrayList<>();
         List<String> deviceUuidsInConnections = new ArrayList<>();
 
-        for (Json device : devices) {
-            Json connection = device.get("connection");
-            if (connection != null && !connection.isNull()) {
-                connectionUuidsInDevices.add(connection.asInteger());
+        for (Device device : devices) {
+            List<Integer> connectionsIds = device.getConnectionsIds();
+            if (connectionsIds.isEmpty()) {
+                devicesToDelete.add(device.getId());
             } else {
-                devicesToDelete.add(device.get("id").asString());
+                connectionUuidsInDevices.addAll(connectionsIds);
             }
         }
-        for (Json connection : connections) {
-            for (Json device : connection.get("devices").asJsonList()) {
-                deviceUuidsInConnections.add(device.asString());
-            }
+        for (Connection connection : connections) {
+            deviceUuidsInConnections.addAll(connection.getDevicesIds());
         }
         //endregion
 
@@ -494,12 +492,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         List<String> devicesToGet = new ArrayList<>();
 
         for (int connectionId : connectionUuidsInDevices) {
-            if (dbapiHandler.getConnectionById(connections, connectionId) == null) {
+            if (DbapiUtils.getConnectionById(connections, connectionId) == null) {
                 connectionsToGet.add(connectionId);
             }
         }
         for (String deviceId : deviceUuidsInConnections) {
-            if (dbapiHandler.getDeviceById(devices, deviceId) == null) {
+            if (DbapiUtils.getDeviceById(devices, deviceId) == null) {
                 devicesToGet.add(deviceId);
             }
         }
@@ -514,39 +512,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         }
         //endregion
 
-        //region Build the entities to send
-        List<Json> protocols = null;
-        try {
-            protocols = dbapiHandler.fetchDiscoveryProtocols();
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            e.printStackTrace(System.err);
-        }
+        // Fill the connections into devices
+        devices.forEach(device -> device.setConnections(connections));
 
-        List<Json> scanEntities = new ArrayList<>();
-        for (Json device : devices) {
-            if (!device.has("connection") || device.get("connection").isNull()) {
-                continue;
-            }
-            Json connection = dbapiHandler.getConnectionById(connections, device.get("connection").asInteger());
-            Json scanEntity = Json.object(
-                    "id", device.get("id"),
-                    "name", device.get("name"),
-                    "ip", device.get("ip"),
-                    "port", connection.get("port"),
-                    "protocol", dbapiHandler.getProtocolById(protocols, connection.get("protocol").asInteger()),
-                    "isDeleted", false
-            );
-            for (Map.Entry<String, String> connectionInfoField : ScanConstants.connectionInfoFields.entrySet()) {
-                String key = connectionInfoField.getKey();
-                String value = connectionInfoField.getValue();
-                if (connection.has(key)) {
-                    scanEntity.set(value, connection.get(key));
-                }
-            }
-            scanEntities.add(scanEntity);
-        }
-        //endregion
-        return new Pair<>(scanEntities, devicesToDelete);
+        return new Pair<>(devices, devicesToDelete);
     }
 
 }

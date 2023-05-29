@@ -17,10 +17,10 @@ public class ScanUtils {
      * @param localDateTime The local date time.
      * @return The same date time in UTC.
      */
-    public static OffsetDateTime localTimeToScan(LocalDateTime localDateTime) {
+    public static LocalDateTime localTimeToScan(OffsetDateTime localDateTime) {
         if (localDateTime == null) return null;
-        OffsetDateTime utcDateTime = localDateTime.atOffset(ZoneOffset.UTC);
-        return utcDateTime;
+//        OffsetDateTime utcDateTime = localDateTime.atOffset(ZoneOffset.UTC);
+        return localDateTime.atZoneSameInstant(ScanConstants.zoneId).toLocalDateTime();
     }
 
     /**
@@ -30,7 +30,8 @@ public class ScanUtils {
      * @return The same date in UTC format.
      */
     public static OffsetDateTime scanTimeToLocal(LocalDateTime localDateTime) {
-        return localDateTime.atOffset(ZoneOffset.UTC);
+        return localDateTime.atZone(ScanConstants.zoneId).toInstant().atOffset(ZoneOffset.UTC);
+//        return localDateTime.atOffset(ZoneOffset.UTC);
     }
 
     /**

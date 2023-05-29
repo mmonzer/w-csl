@@ -136,9 +136,9 @@ public class ScanWebSocketHandler {
         } else {
             stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(uuids.toArray()));
         }
-        OffsetDateTime startDate = OffsetDateTime.now();
-        int dbapiId = dbapiHandler.notifyScanStarted(startDate);
-        scans.add(ScanEntity.fromDbapiId(dbapiId, startDate));
+//        OffsetDateTime startDate = OffsetDateTime.now();
+//        int dbapiId = dbapiHandler.notifyScanStarted(startDate);
+//        scans.add(ScanEntity.fromDbapiId(dbapiId, startDate));
     }
 
     /**
@@ -197,6 +197,8 @@ public class ScanWebSocketHandler {
                         scan.setScanId(scanId);
                     } catch (NullPointerException e) {
                         OffsetDateTime startDate = ScanUtils.scanTimeToLocal(LocalDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
+//                        OffsetDateTime startDate = OffsetDateTime.now();
+
                         if (startDate == null) {
                             startDate = OffsetDateTime.now();
                         }

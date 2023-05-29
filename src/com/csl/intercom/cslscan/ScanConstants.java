@@ -1,11 +1,16 @@
 package com.csl.intercom.cslscan;
 
+import com.csl.core.CSLContext;
+import com.ucsl.json.JsonUtil;
+
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ScanConstants {
+    public static final ZoneId zoneId = ZoneId.of(JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "timezone", "Europe/Paris"));
     public static final Map<String, String> connectionInfoFields = new HashMap<>() {{
         put("queryProtocol", "queryProtocol");
         put("community", "community");

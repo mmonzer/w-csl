@@ -285,7 +285,7 @@ public class ScanApiHandler implements AutoCloseable {
         if (date == null) {
             response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object());
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", date.toString()));
+            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", ScanUtils.localTimeToScan(date).toString()));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             cpeItems = response.getResult();
@@ -406,7 +406,7 @@ public class ScanApiHandler implements AutoCloseable {
             if (e.getCause() instanceof ConnectException) {
                 res = JsonApiResponse.error("Connection error with CSL-Scan");
             }
-            e.printStackTrace(System.err);
+//            e.printStackTrace(System.err);
         }
         return res;
     }

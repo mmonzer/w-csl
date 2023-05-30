@@ -13,7 +13,7 @@
 	},
 	"discovery": {
 		"manager_ip": "host.docker.internal",
-		"manager_port": 8080,
+		"manager_port": 8081,
 		"manager_protocol": "http"
 	},
 	"status": {

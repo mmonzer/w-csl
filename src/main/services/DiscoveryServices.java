@@ -40,7 +40,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
     private final String configFileSectionName;
-    private OffsetDateTime lastDeviceModificationVerification = null;
     private OffsetDateTime lastCpeItemDeletionVerification = null;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
@@ -376,18 +375,19 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         List<String> failedDevices = new LinkedList<>();
         OffsetDateTime currentTime = OffsetDateTime.now();
         try {
+            OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
             Pair<List<Device>, List<String>> buildResult = buildNewDevices(
-                    dbapiHandler.getDevicesSince(lastDeviceModificationVerification),
-                    dbapiHandler.getConnectionsSince(lastDeviceModificationVerification)
+                    dbapiHandler.getDevicesSince(lastDeviceModification),
+                    dbapiHandler.getConnectionsSince(lastDeviceModification)
             );
             newDevices = buildResult.getFirst();
             deletedDevices.addAll(buildResult.getSecond());
-            deletedDevices.addAll(dbapiHandler.getDeletedDevicesSince(lastDeviceModificationVerification));
+            deletedDevices.addAll(dbapiHandler.getDeletedDevicesSince(lastDeviceModification));
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return JsonApiResponse.error("Could not get changes from DBAPI");
         }
-        lastDeviceModificationVerification = currentTime;
+//        lastDeviceModificationVerification = currentTime;
         for (Device newDevice : newDevices) {
             try {
                 sendNewDeviceToScanner(newDevice);

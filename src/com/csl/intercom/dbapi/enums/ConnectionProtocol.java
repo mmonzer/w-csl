@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi.enums;
 import com.csl.intercom.dbapi.models.Connection;
 
 public enum ConnectionProtocol {
+    SNMPv1("SNMPv1", "SNMPV1"),
     SNMPv2c("SNMPv2c", "SNMPV2c"),
     SNMPv3("SNMPv3", "SNMPV3"),
     ;

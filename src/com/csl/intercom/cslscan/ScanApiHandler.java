@@ -13,6 +13,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 
 import java.net.ConnectException;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -409,5 +410,15 @@ public class ScanApiHandler implements AutoCloseable {
 //            e.printStackTrace(System.err);
         }
         return res;
+    }
+
+    public OffsetDateTime getLastLastEntityUpdateDate() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/last_update", Json.object());
+        try {
+            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            return ScanUtils.scanTimeToLocal(LocalDateTime.parse(dateString));
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 }

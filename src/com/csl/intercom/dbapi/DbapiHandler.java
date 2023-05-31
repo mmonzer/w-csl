@@ -3,9 +3,11 @@ package com.csl.intercom.dbapi;
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
+import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.ScanEntity;
+import com.csl.intercom.dbapi.models.ScansList;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -34,6 +36,7 @@ public class DbapiHandler implements AutoCloseable {
     private String dbapiUrl;
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
+    private ScansList scansList = ScansList.instance;
     static private AtomicInteger lastScanId = new AtomicInteger(0);
     static private AtomicDouble lastScanProgress = new AtomicDouble(0);
 
@@ -114,9 +117,15 @@ public class DbapiHandler implements AutoCloseable {
             ));
         }
 
+        ScanEntity scan = scansList.getRunningScan();
+        if (scan == null) {
+            scan = scansList.getFinishedScan();
+            // If we found no running scans and no finished scan, we do not send the CPE Items
+            if (scan == null) return;
+        }
         Json requestContents = Json.object(
-                "progress", lastScanProgress.get(),
-                "event_id", lastScanId.get(),
+                "progress", scan.getProgress(),
+                "event_id", scan.getDbapiId(),
                 "discovered_cpe_dict_arr", cpeItemsArray
         );
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_CPE_ITEMS)
@@ -351,9 +360,7 @@ public class DbapiHandler implements AutoCloseable {
                 .content(new StringContentProvider(params.toString()));
         try {
             ContentResponse response = request.send();
-            int id = JsonUtil.getIntFromJson(Json.read(response.getContentAsString()), "id", 0);
-            this.lastScanId.set(id);
-            return id;
+            return JsonUtil.getIntFromJson(Json.read(response.getContentAsString()), "id", 0);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             return 0;
         }
@@ -378,11 +385,20 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception            If received an unexpected HTTP status code (ie. != 200) or if the JSON was malformed.
      */
     public void notifyScanFinished(ScanEntity scan) throws Exception {
+        // Do nothing if the scan is not actually finished.
+        if (!scan.isFinished()) return;
         Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
-        Json params = Json.object(
-                "ended_at", DbapiUtils.localDateToDbapi(scan.getEndDate()).toString(),
-                "is_success", String.valueOf(scan.isSuccess())
-        );
+        Json params = Json.object("ended_at", DbapiUtils.localDateToDbapi(scan.getEndDate()).toString());
+        FinishedScanStatus status;
+        if (scan.isSuccess()) {
+            status = FinishedScanStatus.FINISHED_SUCCESS;
+        } else if (scan.isFailure()) {
+            status = FinishedScanStatus.FINISHED_ERROR;
+        } else {
+            status = FinishedScanStatus.DISCARDED;
+        }
+        params.set("status", status.getDbapiCode());
+
         if (scan.getDescription() != null) {
             params.set("description", scan.getDescription());
         }
@@ -400,7 +416,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws ExecutionException   If the sending failed.
      * @throws InterruptedException If the sending was interrupted.
      * @throws TimeoutException     If the sending timed out.
-     * @throws Exception            If received an unexpected HTTP status code (ie. != 200) or if the JSON was malformed.
+     * @throws Exception            If received an unexpected HTTP status code (i.e. != 200) or if the JSON was malformed.
      */
     public void notifySynchronisationEnded(ScanEntity scan) throws Exception {
         Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));

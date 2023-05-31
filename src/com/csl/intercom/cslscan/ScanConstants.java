@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ScanConstants {
-    public static final ZoneId zoneId = ZoneId.of(JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "timezone", "Europe/Paris"));
+    public static final ZoneId zoneId = ZoneId.of(JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_timezone", "UTC"));
     public static final Map<String, String> connectionInfoFields = new HashMap<>() {{
         put("queryProtocol", "queryProtocol");
         put("community", "community");

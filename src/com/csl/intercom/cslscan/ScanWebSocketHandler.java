@@ -4,6 +4,7 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
+import com.csl.intercom.dbapi.models.ScansList;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
@@ -32,7 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
-import java.util.function.Function;
 
 
 /**
@@ -49,15 +49,16 @@ public class ScanWebSocketHandler {
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
     private static final DbapiHandler dbapiHandler = new DbapiHandler();
-    private List<ScanEntity> scans = new ArrayList<>();
-    private static final List<String> finishedScanStatus = new ArrayList<>(5) {{
+//    private List<ScanEntity> scans = new ArrayList<>();
+    private ScansList scansList = ScansList.instance;
+    private static final List<String> finishedScanStatuses = new ArrayList<>(5) {{
         add("READY_CHANGES");
         add("READY_NO_CHANGES");
         add("DISCARDED");
         add("PARTIAL_ERROR");
         add("ERROR");
     }};
-    private static final List<String> successScanStatus = new ArrayList<>(2) {{
+    private static final List<String> successScanStatuses = new ArrayList<>(2) {{
         add("READY_CHANGES");
         add("READY_NO_CHANGES");
     }};
@@ -190,23 +191,18 @@ public class ScanWebSocketHandler {
                 Json payload = (Json) payloadRaw;
 
                 String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
-                ScanEntity scan = getScanByScanId(scanId);
+                ScanEntity scan = scansList.getScanByScanId(scanId);
                 if (scan == null) {
-                    try {
-                        scan = getFirstScanWithoutScanId();
-                        scan.setScanId(scanId);
-                    } catch (NullPointerException e) {
-                        OffsetDateTime startDate = ScanUtils.scanTimeToLocal(LocalDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
-//                        OffsetDateTime startDate = OffsetDateTime.now();
 
-                        if (startDate == null) {
-                            startDate = OffsetDateTime.now();
-                        }
-                        int dbapiId = dbapiHandler.notifyScanStarted(startDate);
-                        scan = ScanEntity.fromDbapiId(dbapiId, startDate);
-                        scan.setScanId(scanId);
-                        scans.add(scan);
+                    OffsetDateTime startDate = ScanUtils.scanTimeToLocal(LocalDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
+
+                    if (startDate == null) {
+                        startDate = OffsetDateTime.now();
                     }
+                    int dbapiId = dbapiHandler.notifyScanStarted(startDate);
+                    scan = ScanEntity.fromDbapiId(dbapiId, startDate);
+                    scan.setScanId(scanId);
+                    scansList.add(scan);
                 }
 
                 if (payload != null) {
@@ -215,12 +211,14 @@ public class ScanWebSocketHandler {
                     System.out.println("[STOMP] null");
                 }
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
-                if (finishedScanStatus.contains(scanStatus)) {
+                if (finishedScanStatuses.contains(scanStatus)) {
                     try {
                         // Put the end date in the scan information and notify DB-API the scan ended.
                         OffsetDateTime endDate = OffsetDateTime.now();
-                        if (successScanStatus.contains(scanStatus)) {
-                            scan.setFinished(true, endDate);
+                        if (successScanStatuses.contains(scanStatus)) {
+                            scan.setFinishedSuccess(endDate);
+                        } else if (scanStatus.equals("DISCARDED")) {
+                            scan.setDiscarded(endDate);
                         } else {
                             scan.setFinishedFail(payload.get("entitiesInError").toString(), endDate);
                         }
@@ -233,12 +231,12 @@ public class ScanWebSocketHandler {
                             dbapiHandler.notifyNoNewCpe();
                         }
                         dbapiHandler.notifySynchronisationEnded(scan);
-                        scans.remove(scan);
+                        scansList.remove(scan);
                     } catch (Exception e) {
                         e.printStackTrace(System.err);
                     }
                 } else {
-                    dbapiHandler.setLastScanProgress(JsonUtil.getDoubleFromJson(payload, "completion", 0.0));
+                    scan.setProgress(JsonUtil.getDoubleFromJson(payload, "completion", 0.0));
                     discoveryService.handleCpeItemChanges();
                 }
             }
@@ -365,47 +363,47 @@ public class ScanWebSocketHandler {
         }
     }
 
-    /**
-     * Get the first scan matching a predicate in the <code>scans</code> list.
-     *
-     * @param predicate The predicate that a scan has to match.
-     * @return The first scan that matched the condition, or null.
-     */
-    private ScanEntity searchScan(Function<ScanEntity, Boolean> predicate) {
-        for (ScanEntity scan : scans) {
-            if (predicate.apply(scan)) {
-                return scan;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get a scan from it DB-API id.
-     *
-     * @param dbapiId The id to seek.
-     * @return The scan with this id, or null if none is found.
-     */
-    private ScanEntity getScanByDbapiId(int dbapiId) {
-        return searchScan(scanEntity -> scanEntity.getDbapiId() == dbapiId);
-    }
-
-    /**
-     * Get a scan from it CSL-Scan id.
-     *
-     * @param scanId The id to seek.
-     * @return The scan with this id, or null if none is found.
-     */
-    private ScanEntity getScanByScanId(String scanId) {
-        return searchScan(scanEntity -> scanId.equals(scanEntity.getScanId()));
-    }
-
-    /**
-     * Get the first scan in the <code>scans</code> list that has no CSL-Scan id.
-     *
-     * @return
-     */
-    private ScanEntity getFirstScanWithoutScanId() {
-        return searchScan(scanEntity -> scanEntity.getScanId() == null);
-    }
+//    /**
+//     * Get the first scan matching a predicate in the <code>scans</code> list.
+//     *
+//     * @param predicate The predicate that a scan has to match.
+//     * @return The first scan that matched the condition, or null.
+//     */
+//    private ScanEntity searchScan(Function<ScanEntity, Boolean> predicate) {
+//        for (ScanEntity scan : scans) {
+//            if (predicate.apply(scan)) {
+//                return scan;
+//            }
+//        }
+//        return null;
+//    }
+//
+//    /**
+//     * Get a scan from it DB-API id.
+//     *
+//     * @param dbapiId The id to seek.
+//     * @return The scan with this id, or null if none is found.
+//     */
+//    private ScanEntity getScanByDbapiId(int dbapiId) {
+//        return searchScan(scanEntity -> scanEntity.getDbapiId() == dbapiId);
+//    }
+//
+//    /**
+//     * Get a scan from it CSL-Scan id.
+//     *
+//     * @param scanId The id to seek.
+//     * @return The scan with this id, or null if none is found.
+//     */
+//    private ScanEntity getScanByScanId(String scanId) {
+//        return searchScan(scanEntity -> scanId.equals(scanEntity.getScanId()));
+//    }
+//
+//    /**
+//     * Get the first scan in the <code>scans</code> list that has no CSL-Scan id.
+//     *
+//     * @return
+//     */
+//    private ScanEntity getFirstScanWithoutScanId() {
+//        return searchScan(scanEntity -> scanEntity.getScanId() == null);
+//    }
 }

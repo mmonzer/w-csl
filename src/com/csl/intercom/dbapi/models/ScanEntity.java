@@ -13,12 +13,17 @@ public class ScanEntity {
      */
     public enum Status {
         STARTED,
+        PENDING,
+        RUNNING,
         FINISHED_SUCCESS,
-        FINISHED_FAIL;
+        FINISHED_FAIL,
+        DISCARDED,
+        ;
 
         public static final List<Status> finishedStates = new ArrayList<>() {{
             add(FINISHED_SUCCESS);
             add(FINISHED_FAIL);
+            add(DISCARDED);
         }};
     }
 
@@ -28,6 +33,7 @@ public class ScanEntity {
     private OffsetDateTime startDate;
     private OffsetDateTime endDate;
     private String description = null;  // Description of failure
+    private double progress = 0.0;
 
     public ScanEntity(int dbapiId, String scanId, Status status, OffsetDateTime startDate, OffsetDateTime endDate) {
         this.dbapiId = dbapiId;
@@ -84,6 +90,10 @@ public class ScanEntity {
         }
     }
 
+    public double getProgress() {
+        return progress;
+    }
+
     public void setDbapiId(int dbapiId) {
         this.dbapiId = dbapiId;
     }
@@ -112,31 +122,12 @@ public class ScanEntity {
     }
 
     /**
-     * Change the status to finished (success or fail), and set the date of the scan's end.
-     *
-     * @param success true if the scan finished successfully, false otherwise.
-     * @param endDate The date of the scan's end.
-     */
-    public void setFinished(boolean success, OffsetDateTime endDate) {
-        setFinished(success ? Status.FINISHED_SUCCESS : Status.FINISHED_FAIL, endDate);
-    }
-
-    /**
-     * Change the status to finished (success or fail), and set the date of the scan's end to now.
-     *
-     * @param success true if the scan finished successfully, false otherwise.
-     */
-    public void setFinished(boolean success) {
-        setFinished(success, OffsetDateTime.now());
-    }
-
-    /**
      * Change the status to finished successfully, and set the date of the scan's end.
      *
      * @param endDate The date of the scan's end.
      */
     public void setFinishedSuccess(OffsetDateTime endDate) {
-        setFinished(true, endDate);
+        setFinished(Status.FINISHED_SUCCESS, endDate);
     }
 
     /**
@@ -149,6 +140,18 @@ public class ScanEntity {
     public void setFinishedFail(String description, OffsetDateTime endDate) {
         setFinished(Status.FINISHED_FAIL, endDate);
         this.description = description;
+    }
+
+    public void setDiscarded(OffsetDateTime endDate) {
+        setFinished(Status.DISCARDED, endDate);
+    }
+
+    public void setDiscarded() {
+        setDiscarded(OffsetDateTime.now());
+    }
+
+    public void setProgress(double progress) {
+        this.progress = progress;
     }
 
     /**
@@ -167,5 +170,16 @@ public class ScanEntity {
      */
     public boolean isSuccess() {
         return this.status == Status.FINISHED_SUCCESS;
+    }
+
+    public boolean isFailure() {
+        return this.status == Status.FINISHED_FAIL;
+    }
+    public boolean isDiscarded() {
+        return this.status == Status.DISCARDED;
+    }
+
+    public boolean isFinished() {
+        return this.isSuccess() || this.isFailure() || this.isDiscarded();
     }
 }

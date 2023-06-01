@@ -55,6 +55,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
         brokerUri += "/mqtt";
         this.apiKey = globalConfig.get("api_key").asString();
+        System.setProperty("org.eclipse.paho.client.mqttv3.MqttLockFileDir", "MQTT_files/");
         mqttConnectionAttempts = Executors.newScheduledThreadPool(1);
         mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 10, TimeUnit.SECONDS);
         mqttConnectOptions = new MqttConnectOptions();
@@ -128,8 +129,10 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
     private void connectToMqttClientIfNecessary() {
         if (mqttClient == null || !mqttClient.isConnected()) {
             try {
+                if (mqttClient != null) {
+                    mqttClient.disconnect();
+                }
                 mqttClient = new MqttClient(brokerUri, clientId + Instant.now().toEpochMilli());
-                MqttConnectOptions connectOptions = new MqttConnectOptions();
                 mqttClient.connect(mqttConnectOptions);
                 for (Map.Entry<String, IMqttMessageListener> topic : topics.entrySet()) {
                     mqttClient.subscribe(topic.getKey(), topic.getValue());

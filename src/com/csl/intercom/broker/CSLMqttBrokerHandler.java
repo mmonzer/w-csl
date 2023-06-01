@@ -4,6 +4,10 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.paho.client.mqttv3.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +59,6 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
         brokerUri += "/mqtt";
         this.apiKey = globalConfig.get("api_key").asString();
-        System.setProperty("org.eclipse.paho.client.mqttv3.MqttLockFileDir", "MQTT_files/");
         mqttConnectionAttempts = Executors.newScheduledThreadPool(1);
         mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 10, TimeUnit.SECONDS);
         mqttConnectOptions = new MqttConnectOptions();
@@ -129,9 +132,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
     private void connectToMqttClientIfNecessary() {
         if (mqttClient == null || !mqttClient.isConnected()) {
             try {
-                if (mqttClient != null) {
-                    mqttClient.disconnect();
-                }
+                removeLockFiles();
                 mqttClient = new MqttClient(brokerUri, clientId + Instant.now().toEpochMilli());
                 mqttClient.connect(mqttConnectOptions);
                 for (Map.Entry<String, IMqttMessageListener> topic : topics.entrySet()) {
@@ -144,4 +145,34 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         }
     }
 
+    /**
+     * Remove the existing lock files of the MQTT client.
+     * These should be located in subdirectories of the working directory.
+     */
+    private static void removeLockFiles() {
+        String regex = clientId + ".*";
+        try {
+            Path workDir = Paths.get("");
+            Files.walkFileTree(workDir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    String dirName = dir.getFileName().toString();
+                    if (dirName.matches(regex)) {
+                        // Remove the contents of the directory if it exists, should be only one file : .lck
+                        Files.deleteIfExists(Path.of(dirName + "/.lck"));
+                        // Delete the directory itself
+                        Files.delete(dir);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            System.err.println("Could not delete MQTT lock files");
+        }
+    }
 }

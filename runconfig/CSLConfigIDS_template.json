@@ -7,7 +7,8 @@
 		"force_host_name_resolution": false,
 		"api_key": "",
 		"use_ssl": true,
-		"launch_web_api_server": false
+		"launch_web_api_server": false,
+		"web_api_server_port": 9900
 	},
 	"discovery": {
 		"manager_ip": "host.docker.internal",

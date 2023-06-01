@@ -324,8 +324,9 @@ public class CSLIDSMainClient {
 
         if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
             // FIXME: Client & Server are creating the same HTTP Server at the same port
+            int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);
             ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
-                    new InetSocketAddress(9900),
+                    new InetSocketAddress(port),
                     JServiceLoader.getApiCommandsList(),
                     new ApiGetHelp());
         }

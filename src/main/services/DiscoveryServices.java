@@ -21,6 +21,7 @@ import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -98,7 +99,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         if (isConcentrator) {
             mqttBroker = CSLContext.instance.getMqttBroker();
-            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> handleDbapiDeviceChange());
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
+                System.out.println("[DEBUG " + LocalDateTime.now() + "] Received device change notification");
+                handleDbapiDeviceChange();
+            });
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);

@@ -14,7 +14,6 @@ import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -30,7 +29,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Manage HTTP communications with DB-API.
@@ -84,12 +82,15 @@ public class DbapiHandler implements AutoCloseable {
         );
     }
 
-    private void deleteCpeItemFromDbapi(String id) {
-        Request request = createDbapiRequest(HttpMethod.DELETE, DbapiEndpoint.CPE_ITEMS.getEndpoint() + "/" + id);
+    private void deleteCpeItemsFromDbapi(List<CpeItem> deletedItems) {
+        Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(CpeItem::getMongoEntityId).toArray()));
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DELETE_CPE_ITEMS.getEndpoint())
+                .header(HttpHeader.CONTENT_TYPE, "application/json")
+                .content(new StringContentProvider(contents.toString()));
         try {
             request.send();
         } catch (Exception e) {
-            System.err.println(LocalDateTime.now().toString() + "Could not delete the CPE Item " + id + " from DB-API.");
+            System.err.println("[" + LocalDateTime.now().toString() + "] Could not delete the CPE Items from DB-API.");
         }
     }
 
@@ -120,7 +121,7 @@ public class DbapiHandler implements AutoCloseable {
     private void sendCpeItemsBatch(List<CpeItem> cpeItems) throws Exception {
         Map<String, List<CpeItem>> classifiedCpeItems = classifyCpeItemsByDevice(cpeItems);
         Json cpeItemsArray = Json.array();
-        for (Map.Entry<String, List<CpeItem>> deviceCpeItems: classifiedCpeItems.entrySet()) {
+        for (Map.Entry<String, List<CpeItem>> deviceCpeItems : classifiedCpeItems.entrySet()) {
             Json deviceCpeItemsArray = Json.array();
             for (CpeItem cpeItem : deviceCpeItems.getValue()) {
                 deviceCpeItemsArray.add(serializeCpeItemForDbapi(cpeItem));
@@ -159,14 +160,16 @@ public class DbapiHandler implements AutoCloseable {
     public void sendCpeItems(List<CpeItem> cpeItems) throws Exception {
         Json failedItems = Json.array();
         List<CpeItem> newItems = cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)).collect(Collectors.toList());
-        Stream<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted);
+        List<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted).collect(Collectors.toList());
 
         try {
-            sendCpeItemsBatch(cpeItems);
-            deletedItems.forEach(cpeItem -> deleteCpeItemFromDbapi(cpeItem.getMongoEntityId()));
+            sendCpeItemsBatch(newItems);
+           if (!deletedItems.isEmpty()) {
+                deleteCpeItemsFromDbapi(deletedItems);
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            for (CpeItem cpeItem: cpeItems) {
+            for (CpeItem cpeItem : cpeItems) {
                 failedItems.add(cpeItem.getMongoEntityId());
             }
             throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
@@ -279,7 +282,7 @@ public class DbapiHandler implements AutoCloseable {
      */
     public List<String> getDeletedCpeItemsSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_CPE_ITEMS);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS);
         if (dateUtc != null) {
             request.param("deleted_date__gte", dateUtc.toString());
         }

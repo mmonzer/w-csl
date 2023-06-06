@@ -15,9 +15,10 @@ import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Class to handle communication with CSL-Scan's HTTP API.
@@ -50,100 +51,6 @@ public class ScanApiHandler implements AutoCloseable {
      */
     public JsonApiResponse addEntity(Device device) {
         return sendRequestToScanManager(HttpMethod.POST, "/entity/", device.serializeForScanner());
-//        String protocol = JsonUtil.getStringFromJson(device, "protocol", "");
-//        switch (protocol.toLowerCase()) {
-//            case "snmpv2c":
-//                return addSnmpv2cEntity(
-//                        JsonUtil.getStringFromJson(device, "id", null),
-//                        JsonUtil.getStringFromJson(device, "name", null),
-//                        JsonUtil.getStringFromJson(device, "ip", null),
-//                        JsonUtil.getIntFromJson(device, "port", 161),
-//                        JsonUtil.getStringFromJson(device, "community", "public")
-//                );
-//
-//            case "snmpv3":
-//                return addSnmpv3Entity(
-//                        JsonUtil.getStringFromJson(device, "id", null),
-//                        JsonUtil.getStringFromJson(device, "name", null),
-//                        JsonUtil.getStringFromJson(device, "ip", null),
-//                        JsonUtil.getIntFromJson(device, "port", 161),
-//                        JsonUtil.getStringFromJson(device, "user", null),
-//                        JsonUtil.getStringFromJson(device, "pass", null),
-//                        JsonUtil.getStringFromJson(device, "privPassPhrase", null),
-//                        JsonUtil.getStringFromJson(device, "securityLevel", null),
-//                        JsonUtil.getStringFromJson(device, "authProtocolName", null),
-//                        JsonUtil.getStringFromJson(device, "privProtocolName", null)
-//                );
-//
-//            default:
-//                return JsonApiResponse.error("Unsupported protocol: " + protocol);
-//        }
-    }
-
-    /**
-     * Send a new SNMPv2c entity to CSL-Scan.
-     *
-     * @param uuid      The unique id of the new entity.
-     * @param name      The name of the entity.
-     * @param ip        The IP address of the entity.
-     * @param port      The SNMP port on which to contact the entity.
-     * @param community The SNMP community of the entity.
-     * @return The result from the scanner.
-     */
-    private JsonApiResponse addSnmpv2cEntity(String uuid, String name, String ip, int port, String community) {
-        if (uuid == null || name == null || ip == null) {
-            return JsonApiResponse.error("The fields 'id', 'name' and 'ip' are required");
-        } else {
-            return sendRequestToScanManager(HttpMethod.POST, "/entity/", Json.object(
-                    "uuid", uuid,
-                    "name", name,
-                    "ipAddress", ip,
-                    "port", port,
-                    "connectionInfo", Json.object(
-                            "queryProtocol", "SNMPV2c",
-                            "community", community
-                    ),
-                    "isDeleted", false
-            ));
-        }
-    }
-
-    /**
-     * Send a new SNMPv3 entity to CSL-Scan.
-     *
-     * @param uuid             The unique id of the new entity.
-     * @param name             The name of the entity.
-     * @param ip               The IP address of the entity.
-     * @param port             The SNMP port on which to contact the entity.
-     * @param user             The username for the entity.
-     * @param pass             The SNMP password of the entity.
-     * @param privPassPhrase   The privacy pass phrase of the entity.
-     * @param securityLevel    The security level (authPriv, noAuthNoPriv or authNoPriv).
-     * @param authProtocolName The authentication protocol (AuthMD5 or SHA-256).
-     * @param privProtocolName The privacy protocol (PrivAES128 or PrivDES).
-     * @return The result from the scanner.
-     */
-    private JsonApiResponse addSnmpv3Entity(String uuid, String name, String ip, int port, String user, String pass, String privPassPhrase, String securityLevel, String authProtocolName, String privProtocolName) {
-        if (uuid == null || name == null || ip == null) {
-            return JsonApiResponse.error("The fields 'id', 'name' and 'ip' are required");
-        } else {
-            return sendRequestToScanManager(HttpMethod.POST, "/entity/", Json.object(
-                    "uuid", uuid,
-                    "name", name,
-                    "ipAddress", ip,
-                    "port", port,
-                    "connectionInfo", Json.object(
-                            "queryProtocol", "SNMPV3",
-                            "user", user,
-                            "pass", pass,
-                            "privPassPhrase", privPassPhrase,
-                            "securityLevel", securityLevel,
-                            "authProtocolName", authProtocolName,
-                            "privProtocolName", privProtocolName
-                    ),
-                    "isDeleted", false
-            ));
-        }
     }
 
     /**
@@ -292,15 +199,12 @@ public class ScanApiHandler implements AutoCloseable {
         } else {
             return null;
         }
-        List<CpeItem> cpeItemsList = new ArrayList<>(cpeItems.asJsonList().size());
-        for (Json cpeItem : cpeItems.asJsonList()) {
-            CpeItem parsedCpeItem = CpeItem.parseFromScanCpeItem(cpeItem);
-            // Remove the items that have the *exact* same date as whe previously had
-            if (!parsedCpeItem.getDiscoveredDate().equals(date)) {
-                cpeItemsList.add(parsedCpeItem);
-            }
-        }
-        return cpeItemsList;
+
+        // Parse the items, filter those whose updated date is *exactly* the last updated date, and return the resulting list.
+        return cpeItems.asJsonList().stream()
+                .map(CpeItem::parseFromScanCpeItem)
+                .filter(Predicate.not(cpeItem -> cpeItem.getDiscoveredDate().equals(date)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -411,6 +315,11 @@ public class ScanApiHandler implements AutoCloseable {
         return res;
     }
 
+    /**
+     * Get the last updated date of the devices in CSL-Scan.
+     *
+     * @return The date of the last entities update in CSL-Scan.
+     */
     public OffsetDateTime getLastLastEntityUpdateDate() {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/last_update", Json.object());
         try {

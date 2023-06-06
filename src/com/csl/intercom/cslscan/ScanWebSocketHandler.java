@@ -112,7 +112,8 @@ public class ScanWebSocketHandler {
     }
 
     /**
-     * Start scanning all registered entities
+     * Start scanning all registered entities.
+     * Note: the notifications will be handled by the callback {@code handleFrame()} defined in {@code subscribeToNotifications()}
      *
      * @return An id identifying the scan for further notice.
      */
@@ -128,6 +129,7 @@ public class ScanWebSocketHandler {
 
     /**
      * Actually start the scan, without checking the validity of the session.
+     * Note: the notifications will be handled by the callback {@code handleFrame()} defined in {@code subscribeToNotifications()}
      *
      * @param uuids A list of entities to scan. May be null, resulting in a scan of all entities.
      */
@@ -180,11 +182,6 @@ public class ScanWebSocketHandler {
 
         // Define the callbacks and return the future when it is realized.
         return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
-            @Override
-            public Type getPayloadType(StompHeaders headers) {
-                return super.getPayloadType(headers);
-            }
-
             @Override
             public void handleFrame(StompHeaders headers, Object payloadRaw) {
                 super.handleFrame(headers, payloadRaw);
@@ -362,48 +359,4 @@ public class ScanWebSocketHandler {
             }
         }
     }
-
-//    /**
-//     * Get the first scan matching a predicate in the <code>scans</code> list.
-//     *
-//     * @param predicate The predicate that a scan has to match.
-//     * @return The first scan that matched the condition, or null.
-//     */
-//    private ScanEntity searchScan(Function<ScanEntity, Boolean> predicate) {
-//        for (ScanEntity scan : scans) {
-//            if (predicate.apply(scan)) {
-//                return scan;
-//            }
-//        }
-//        return null;
-//    }
-//
-//    /**
-//     * Get a scan from it DB-API id.
-//     *
-//     * @param dbapiId The id to seek.
-//     * @return The scan with this id, or null if none is found.
-//     */
-//    private ScanEntity getScanByDbapiId(int dbapiId) {
-//        return searchScan(scanEntity -> scanEntity.getDbapiId() == dbapiId);
-//    }
-//
-//    /**
-//     * Get a scan from it CSL-Scan id.
-//     *
-//     * @param scanId The id to seek.
-//     * @return The scan with this id, or null if none is found.
-//     */
-//    private ScanEntity getScanByScanId(String scanId) {
-//        return searchScan(scanEntity -> scanId.equals(scanEntity.getScanId()));
-//    }
-//
-//    /**
-//     * Get the first scan in the <code>scans</code> list that has no CSL-Scan id.
-//     *
-//     * @return
-//     */
-//    private ScanEntity getFirstScanWithoutScanId() {
-//        return searchScan(scanEntity -> scanEntity.getScanId() == null);
-//    }
 }

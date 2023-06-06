@@ -1,7 +1,6 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -295,7 +294,7 @@ public class ScanApiHandler implements AutoCloseable {
         }
         List<CpeItem> cpeItemsList = new ArrayList<>(cpeItems.asJsonList().size());
         for (Json cpeItem : cpeItems.asJsonList()) {
-            CpeItem parsedCpeItem = CpeItem.fromScanCpeItem(cpeItem);
+            CpeItem parsedCpeItem = CpeItem.parseFromScanCpeItem(cpeItem);
             // Remove the items that have the *exact* same date as whe previously had
             if (!parsedCpeItem.getDiscoveredDate().equals(date)) {
                 cpeItemsList.add(parsedCpeItem);

@@ -64,7 +64,7 @@ public class CpeItem {
      * @return The newly created CpeItem.
      * @throws IllegalArgumentException if mandatory fields are missing in the provided data.
      */
-    public static CpeItem fromScanCpeItem(Json data) throws IllegalArgumentException {
+    public static CpeItem parseFromScanCpeItem(Json data) throws IllegalArgumentException {
         OffsetDateTime discoveredDate;
         String mongoEntityId;
         String deviceId;

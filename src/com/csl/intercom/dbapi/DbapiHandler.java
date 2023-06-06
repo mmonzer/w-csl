@@ -14,10 +14,12 @@ import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +28,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Manage HTTP communications with DB-API.
@@ -77,6 +82,15 @@ public class DbapiHandler implements AutoCloseable {
                 "discovered_date", DbapiUtils.localDateToDbapi(cpeItem.getDiscoveredDate()).toString(),
                 "mongo_entity_id", cpeItem.getMongoEntityId()
         );
+    }
+
+    private void deleteCpeItemFromDbapi(String id) {
+        Request request = createDbapiRequest(HttpMethod.DELETE, DbapiEndpoint.CPE_ITEMS.getEndpoint() + "/" + id);
+        try {
+            request.send();
+        } catch (Exception e) {
+            System.err.println(LocalDateTime.now().toString() + "Could not delete the CPE Item " + id + " from DB-API.");
+        }
     }
 
     /**
@@ -144,9 +158,12 @@ public class DbapiHandler implements AutoCloseable {
      */
     public void sendCpeItems(List<CpeItem> cpeItems) throws Exception {
         Json failedItems = Json.array();
+        List<CpeItem> newItems = cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)).collect(Collectors.toList());
+        Stream<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted);
 
         try {
             sendCpeItemsBatch(cpeItems);
+            deletedItems.forEach(cpeItem -> deleteCpeItemFromDbapi(cpeItem.getMongoEntityId()));
         } catch (Exception e) {
             System.err.println(e.getMessage());
             for (CpeItem cpeItem: cpeItems) {

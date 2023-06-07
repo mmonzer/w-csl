@@ -17,21 +17,19 @@ public class ScanUtils {
      * @param localDateTime The local date time.
      * @return The same date time in UTC.
      */
-    public static LocalDateTime localTimeToScan(OffsetDateTime localDateTime) {
-        if (localDateTime == null) return null;
-//        OffsetDateTime utcDateTime = localDateTime.atOffset(ZoneOffset.UTC);
-        return localDateTime.atZoneSameInstant(ScanConstants.zoneId).toLocalDateTime();
+    public static OffsetDateTime localTimeToScan(OffsetDateTime localDateTime) {
+        return localDateTime;
     }
 
     /**
      * Translate time received from CSL-Scan in UTC, as used locally.
      *
-     * @param localDateTime The parsed date as received from CSL-Scan.
+     * @param scanDateTime The parsed date as received from CSL-Scan.
      * @return The same date in UTC format.
      */
-    public static OffsetDateTime scanTimeToLocal(LocalDateTime localDateTime) {
-        return localDateTime.atZone(ScanConstants.zoneId).toInstant().atOffset(ZoneOffset.UTC);
-//        return localDateTime.atOffset(ZoneOffset.UTC);
+    public static OffsetDateTime scanTimeToLocal(OffsetDateTime scanDateTime) {
+        return scanDateTime;
+//        return scanDateTime.atOffset(ZoneOffset.UTC);
     }
 
     /**
@@ -42,6 +40,23 @@ public class ScanUtils {
      */
     public static OffsetDateTime getCpeItemDateTime(Json cpeItem) {
         String cpeItemDate = JsonUtil.getStringFromJson(cpeItem, "updatedAt", null);
-        return cpeItemDate == null ? null : scanTimeToLocal(LocalDateTime.parse(cpeItemDate));
+        return cpeItemDate == null ? null : scanTimeToLocal(OffsetDateTime.parse(cpeItemDate));
+    }
+
+    /**
+     * Extract the scan's progress of a notification sent by CSL-Scan.
+     *
+     * @param notification The notification sent by CSL-Scan.
+     * @return The progress of the scan, between 0 and 1, defaulting to 0.
+     */
+    public static double getProgressFromScanNotification(Json notification) {
+        double progress = JsonUtil.getDoubleFromJson(notification, "completion", 0.0);
+        if (progress < 0) {
+            progress = 0.0;
+        }
+        if (progress > 1) {
+            progress = 1.0;
+        }
+        return progress;
     }
 }

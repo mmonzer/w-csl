@@ -20,10 +20,7 @@ import org.eclipse.jetty.http.HttpMethod;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,19 +66,10 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
-     * Create the contents of a CPE item POST request to DB-API.
+     * Remove a list of CPE Items from DB-API.
      *
-     * @param cpeItem The CPE Item to send
-     * @return The contents of the request to send.
+     * @param deletedItems The list of CPE Items to remove in DB-API.
      */
-    private Json serializeCpeItemForDbapi(CpeItem cpeItem) {
-        return Json.object(
-                "cpe_data", cpeItem.getCpeData(),
-                "discovered_date", DbapiUtils.localDateToDbapi(cpeItem.getDiscoveredDate()).toString(),
-                "mongo_entity_id", cpeItem.getMongoEntityId()
-        );
-    }
-
     private void deleteCpeItemsFromDbapi(List<CpeItem> deletedItems) {
         Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(CpeItem::getMongoEntityId).toArray()));
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DELETE_CPE_ITEMS.getEndpoint())
@@ -122,10 +110,9 @@ public class DbapiHandler implements AutoCloseable {
         Map<String, List<CpeItem>> classifiedCpeItems = classifyCpeItemsByDevice(cpeItems);
         Json cpeItemsArray = Json.array();
         for (Map.Entry<String, List<CpeItem>> deviceCpeItems : classifiedCpeItems.entrySet()) {
-            Json deviceCpeItemsArray = Json.array();
-            for (CpeItem cpeItem : deviceCpeItems.getValue()) {
-                deviceCpeItemsArray.add(serializeCpeItemForDbapi(cpeItem));
-            }
+            Json deviceCpeItemsArray = Json.array(
+                    deviceCpeItems.getValue().stream().map(CpeItem::serializeForDbapi).toArray()
+            );
             cpeItemsArray.add(Json.object(
                     "device", deviceCpeItems.getKey(),
                     "discovered_cpe_list", deviceCpeItemsArray
@@ -163,15 +150,13 @@ public class DbapiHandler implements AutoCloseable {
         List<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted).collect(Collectors.toList());
 
         try {
-            sendCpeItemsBatch(newItems);
-           if (!deletedItems.isEmpty()) {
+            if (!deletedItems.isEmpty()) {
                 deleteCpeItemsFromDbapi(deletedItems);
             }
+            sendCpeItemsBatch(newItems);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            for (CpeItem cpeItem : cpeItems) {
-                failedItems.add(cpeItem.getMongoEntityId());
-            }
+            cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
         }
     }
@@ -212,13 +197,10 @@ public class DbapiHandler implements AutoCloseable {
         }
         Json response = Json.read(request.send().getContentAsString());
 
-        List<Device> devices = new ArrayList<>();
-        for (Json jsonDevice : response.asJsonList()) {
-            Device device = Device.fromJson(jsonDevice);
-            if (device != null) {
-                devices.add(device);
-            }
-        }
+        List<Device> devices = response.asJsonList().stream()
+                .map(Device::fromJson)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         return devices;
     }
 
@@ -237,14 +219,10 @@ public class DbapiHandler implements AutoCloseable {
             request.param("updated_at__gte", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
-        List<Connection> connections = new ArrayList<>(response.asList().size());
-        for (Json jsonConnection : response.asJsonList()) {
-            Connection connection = Connection.fromJson(jsonConnection);
-            if (connection != null) {
-                connections.add(connection);
-            }
-        }
-        return connections;
+        return response.asJsonList().stream()
+                .map(Connection::fromJson)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
 
@@ -317,12 +295,11 @@ public class DbapiHandler implements AutoCloseable {
         }
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
         request.param("uuid", String.join(",", uuids));
-        for (Json jsonDevice : Json.read(request.send().getContentAsString()).asJsonList()) {
-            Device device = Device.fromJson(jsonDevice);
-            if (device != null) {
-                devices.add(device);
-            }
-        }
+        Json response = Json.read(request.send().getContentAsString());
+        response.asJsonList().stream()
+                .map(Device::fromJson)
+                .filter(Objects::nonNull)
+                .forEach(devices::add);
         return devices;
     }
 
@@ -534,9 +511,5 @@ public class DbapiHandler implements AutoCloseable {
      */
     private Request createDbapiPatchRequest(DbapiEndpoint endpoint, String id) {
         return createDbapiPatchRequest(endpoint.getEndpoint() + '/' + id);
-    }
-
-    public void setLastScanProgress(double progress) {
-        lastScanProgress.set(progress);
     }
 }

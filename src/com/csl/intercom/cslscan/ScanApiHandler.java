@@ -324,7 +324,7 @@ public class ScanApiHandler implements AutoCloseable {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/last_update", Json.object());
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
-            return ScanUtils.scanTimeToLocal(LocalDateTime.parse(dateString));
+            return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             return null;
         }

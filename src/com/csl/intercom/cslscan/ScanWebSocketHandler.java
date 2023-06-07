@@ -42,7 +42,6 @@ public class ScanWebSocketHandler {
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
-    private ZoneId zoneId;
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private String scanManagerDiscoveryUrl;
     private ScheduledExecutorService webSocketsConnectionAttempts;
@@ -80,8 +79,6 @@ public class ScanWebSocketHandler {
                 0,
                 2,
                 TimeUnit.SECONDS);
-        Json config = CSLContext.instance.getConfig();
-        zoneId = ZoneId.of(JsonUtil.getStringFromJson(config.get("global"), "timezone", "Europe/Paris"));
     }
 
     /**
@@ -139,9 +136,6 @@ public class ScanWebSocketHandler {
         } else {
             stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(uuids.toArray()));
         }
-//        OffsetDateTime startDate = OffsetDateTime.now();
-//        int dbapiId = dbapiHandler.notifyScanStarted(startDate);
-//        scans.add(ScanEntity.fromDbapiId(dbapiId, startDate));
     }
 
     /**
@@ -187,11 +181,12 @@ public class ScanWebSocketHandler {
                 super.handleFrame(headers, payloadRaw);
                 Json payload = (Json) payloadRaw;
 
+                //region Handle scan events
                 String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
                 ScanEntity scan = scansList.getScanByScanId(scanId);
                 if (scan == null) {
 
-                    OffsetDateTime startDate = ScanUtils.scanTimeToLocal(LocalDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
+                    OffsetDateTime startDate = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
 
                     if (startDate == null) {
                         startDate = OffsetDateTime.now();
@@ -201,6 +196,7 @@ public class ScanWebSocketHandler {
                     scan.setScanId(scanId);
                     scansList.add(scan);
                 }
+                //endregion Handle scan events
 
                 if (payload != null) {
                     System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
@@ -233,7 +229,8 @@ public class ScanWebSocketHandler {
                         e.printStackTrace(System.err);
                     }
                 } else {
-                    scan.setProgress(JsonUtil.getDoubleFromJson(payload, "completion", 0.0));
+                    double scanProgress = ScanUtils.getProgressFromScanNotification(payload);
+                    scan.setProgress(scanProgress);
                     discoveryService.handleCpeItemChanges();
                 }
             }
@@ -315,7 +312,7 @@ public class ScanWebSocketHandler {
     /**
      * Custom message converter to serialize and deserialize {@link Json} objects.
      */
-    private class JsonMessageConverter extends AbstractMessageConverter {
+    private static class JsonMessageConverter extends AbstractMessageConverter {
         public JsonMessageConverter() {
             super(new MimeType("application", "json"));
         }

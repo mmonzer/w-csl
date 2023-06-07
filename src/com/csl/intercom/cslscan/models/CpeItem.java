@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan.models;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanUtils;
+import com.csl.intercom.dbapi.DbapiUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
@@ -20,6 +21,7 @@ public class CpeItem {
     private String mongoEntityId;
     private String deviceId;
     private boolean isDeleted;
+    private boolean isMain;
     static private ZoneId zoneId = CSLContext.instance.getZoneId();
 
     // The fields to include in the cpeData array
@@ -45,12 +47,13 @@ public class CpeItem {
      * @param mongoEntityId The uuid of the CPI Item in CSL-Scan's Mongodb.
      * @param deviceId The uuid of the device associated with this CPE Item.
      */
-    private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId, boolean isDeleted) {
+    private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId, boolean isDeleted, boolean isMain) {
         this.cpeData = Json.object();
         this.discoveredDate = discoveredDate;
         this.mongoEntityId = mongoEntityId;
         this.deviceId = deviceId;
         this.isDeleted = isDeleted;
+        this.isMain = isMain;
 
         for (String field: dataFields) {
             this.cpeData.set(field, cpeData.get(field));
@@ -65,21 +68,30 @@ public class CpeItem {
      * @throws IllegalArgumentException if mandatory fields are missing in the provided data.
      */
     public static CpeItem parseFromScanCpeItem(Json data) throws IllegalArgumentException {
-        OffsetDateTime discoveredDate;
-        String mongoEntityId;
-        String deviceId;
-        boolean isDeleted;
+        OffsetDateTime discoveredDate = null;
+        String mongoEntityId = null;
+        String deviceId = null;
+        boolean isDeleted = false;
+        boolean isMain = false;
 
         try {
             discoveredDate = ScanUtils.getCpeItemDateTime(data);
             mongoEntityId = data.get("uuid").asString();
             deviceId = data.get("entityUuid").asString();
             isDeleted = JsonUtil.getBooleanFromJson(data, "deleted", false);
+            Json isMainJson = data.get("isMain");
+            if (isMainJson == null || isMainJson.isNull()) {
+                isMain = false;
+            } else {
+                isMain = isMainJson.asBoolean();
+            }
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item");
+        } catch (Throwable e) {
+            System.err.println("Stop here");
         }
 
-        return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted);
+        return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted, isMain);
     }
 
     public Json getCpeData() {
@@ -100,5 +112,18 @@ public class CpeItem {
 
     public boolean isDeleted() {
         return isDeleted;
+    }
+
+    public boolean isMain() {
+        return isMain;
+    }
+
+    public Json serializeForDbapi() {
+        return Json.object(
+                "cpe_data", this.cpeData,
+                "discovered_date", DbapiUtils.localDateToDbapi(this.discoveredDate).toString(),
+                "mongo_entity_id", this.mongoEntityId
+//                "is_main_configuration", this.isMain
+        );
     }
 }

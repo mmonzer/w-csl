@@ -100,7 +100,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         if (isConcentrator) {
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
-                System.out.println("[DEBUG " + LocalDateTime.now() + "] Received device change notification");
                 handleDbapiDeviceChange();
             });
         }

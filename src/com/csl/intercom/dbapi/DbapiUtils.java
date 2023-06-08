@@ -15,7 +15,7 @@ public class DbapiUtils {
      * @param dateTime A serialized date as received from DB-API.
      * @return The {@link LocalDateTime} corresponding to the date provided by DB-API.
      */
-    static OffsetDateTime dbapiDateToLocal(String dateTime) {
+    public static OffsetDateTime dbapiDateToLocal(String dateTime) {
         return dbapiDateToLocal(OffsetDateTime.parse(dateTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME));
     }
 
@@ -25,7 +25,7 @@ public class DbapiUtils {
      * @param dateTime An {@link OffsetDateTime} date as received from DB-API.
      * @return The {@link LocalDateTime} corresponding to the date provided by DB-API.
      */
-    private static OffsetDateTime dbapiDateToLocal(OffsetDateTime dateTime) {
+    public static OffsetDateTime dbapiDateToLocal(OffsetDateTime dateTime) {
         return dateTime;
     }
 

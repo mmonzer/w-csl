@@ -1,8 +1,11 @@
 package com.csl.intercom.dbapi.models;
 
+import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiUtils;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,12 +20,14 @@ public class Device {
     private String ipAddress;
     private List<Integer> connectionsIds;
     private List<Connection> connections = new ArrayList<>();
+    private OffsetDateTime updatedDate;
 
-    protected Device(String id, String name, String ipAddress, List<Integer> connectionsIds) {
+    protected Device(String id, String name, String ipAddress, List<Integer> connectionsIds, OffsetDateTime updatedDate) {
         this.id = id;
         this.name = name;
         this.ipAddress = ipAddress;
         this.connectionsIds = connectionsIds;
+        this.updatedDate = updatedDate;
     }
 
     /**
@@ -47,9 +52,10 @@ public class Device {
             for (Json connectionId: connectionsJson) {
                 connections.add(connectionId.asInteger());
             }
+            OffsetDateTime updatedDate = DbapiUtils.dbapiDateToLocal(JsonUtil.getStringFromJson(deviceJson, "updated_at", null));
 
-            return new Device(id, name, ipAddress, connections);
-        } catch (NullPointerException e) {
+            return new Device(id, name, ipAddress, connections, updatedDate);
+        } catch (NullPointerException | UnsupportedOperationException e) {
             return null;
         }
     }
@@ -64,7 +70,8 @@ public class Device {
         Json result = Json.object(
                 "uuid", this.id,
                 "name", this.name,
-                "ipAddress", this.ipAddress
+                "ipAddress", this.ipAddress,
+                "updatedAt", ScanUtils.localTimeToScan(this.updatedDate).toString()
         );
         Json connectionsInfo = Json.array();
         for (Connection connection: this.connections) {

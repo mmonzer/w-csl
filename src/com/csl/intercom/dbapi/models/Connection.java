@@ -32,6 +32,8 @@ public abstract class Connection {
             return null;
         }
         switch (protocol) {
+            case SNMPv1:
+                return SNMPv1Connection.fromJson(connectionJson);
             case SNMPv2c:
                 return SNMPv2cConnection.fromJson(connectionJson);
 

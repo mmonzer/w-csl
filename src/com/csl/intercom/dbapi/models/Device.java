@@ -72,7 +72,7 @@ public class Device {
         }
         if (!connectionsInfo.asList().isEmpty()) {
             result.set("connectionInfos", connectionsInfo);
-            result.set("port", connectionsInfo.asJsonList().get(0).get("port"));
+//            result.set("port", connectionsInfo.asJsonList().get(0).get("port"));
         }
 
         return result;

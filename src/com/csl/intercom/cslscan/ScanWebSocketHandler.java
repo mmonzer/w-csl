@@ -50,17 +50,8 @@ public class ScanWebSocketHandler {
     private static final DbapiHandler dbapiHandler = new DbapiHandler();
 //    private List<ScanEntity> scans = new ArrayList<>();
     private ScansList scansList = ScansList.instance;
-    private static final List<String> finishedScanStatuses = new ArrayList<>(5) {{
-        add("READY_CHANGES");
-        add("READY_NO_CHANGES");
-        add("DISCARDED");
-        add("PARTIAL_ERROR");
-        add("ERROR");
-    }};
-    private static final List<String> successScanStatuses = new ArrayList<>(2) {{
-        add("READY_CHANGES");
-        add("READY_NO_CHANGES");
-    }};
+
+
 
     /**
      * Create a new manager with the correct URL.
@@ -191,6 +182,7 @@ public class ScanWebSocketHandler {
                     if (startDate == null) {
                         startDate = OffsetDateTime.now();
                     }
+                    scansList.sanitizeScans();
                     int dbapiId = dbapiHandler.notifyScanStarted(startDate);
                     scan = ScanEntity.fromDbapiId(dbapiId, startDate);
                     scan.setScanId(scanId);
@@ -204,11 +196,11 @@ public class ScanWebSocketHandler {
                     System.out.println("[STOMP] null");
                 }
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
-                if (finishedScanStatuses.contains(scanStatus)) {
+                if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
                     try {
                         // Put the end date in the scan information and notify DB-API the scan ended.
                         OffsetDateTime endDate = OffsetDateTime.now();
-                        if (successScanStatuses.contains(scanStatus)) {
+                        if (ScanConstants.successScanStatuses.contains(scanStatus)) {
                             scan.setFinishedSuccess(endDate);
                         } else if (scanStatus.equals("DISCARDED")) {
                             scan.setDiscarded(endDate);

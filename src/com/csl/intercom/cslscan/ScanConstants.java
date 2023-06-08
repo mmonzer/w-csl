@@ -33,4 +33,17 @@ public class ScanConstants {
         add("authProtocolName");
         add("privProtocolName");
     }};
+
+    public static final List<String> finishedScanStatuses = new ArrayList<>(5) {{
+        add("READY_CHANGES");
+        add("READY_NO_CHANGES");
+        add("DISCARDED");
+        add("PARTIAL_ERROR");
+        add("ERROR");
+    }};
+
+    public static final List<String> successScanStatuses = new ArrayList<>(2) {{
+        add("READY_CHANGES");
+        add("READY_NO_CHANGES");
+    }};
 }

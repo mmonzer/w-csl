@@ -5,7 +5,6 @@ import com.ucsl.json.JsonUtil;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 /**
  * Class containing static functions for various tasks related to CSL-Scan.
@@ -58,5 +57,22 @@ public class ScanUtils {
             progress = 1.0;
         }
         return progress;
+    }
+
+    public static String generateScanApiUrlFromConfig(Json discoveryConfig) {
+        String scanManagerProtocol = JsonUtil.getStringFromJson(discoveryConfig, "manager_protocol", "http");
+        String scanManagerIp = JsonUtil.getStringFromJson(discoveryConfig, "manager_ip", "localhost");
+        int scanManagerPort = JsonUtil.getIntFromJson(discoveryConfig, "manager_port", 8010);
+
+        return scanManagerProtocol + "://" + scanManagerIp + ":" + scanManagerPort + "/api";
+    }
+
+    public static String generateScanDiscoveryUrlFromConfig(Json discoveryConfig) {
+        String scanManagerProtocol = JsonUtil.getStringFromJson(discoveryConfig, "manager_protocol", "http");
+        String scanManagerIp = JsonUtil.getStringFromJson(discoveryConfig, "manager_ip", "localhost");
+        int scanManagerPort = JsonUtil.getIntFromJson(discoveryConfig, "manager_port", 8010);
+        String websocketProtocol = "https".equals(scanManagerProtocol) ? "wss" : "ws";
+
+        return  websocketProtocol + "://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
     }
 }

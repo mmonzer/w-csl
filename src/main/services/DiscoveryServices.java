@@ -3,6 +3,7 @@ package main.services;
 import com.csl.core.CSLContext;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
+import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
@@ -77,17 +78,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         System.out.println("Initializing SNMP service ..");
         logger.warn("Hello from logger");
 
-        String scanManagerIp = JsonUtil.getStringFromJson(jConfig, "manager_ip", "localhost");
-        int scanManagerPort = JsonUtil.getIntFromJson(jConfig, "manager_port", 8010);
 
-        String scanManagerProtocol = JsonUtil.getStringFromJson(jConfig, "manager_protocol", "http");
-        String scanManagerDiscoveryUrl;
-        if ("https".equals(scanManagerProtocol)) {
-            scanManagerDiscoveryUrl = "wss://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
-        } else {
-            scanManagerDiscoveryUrl = "ws://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
-        }
-        String scanManagerApiUrl = scanManagerProtocol + "://" + scanManagerIp + ":" + scanManagerPort + "/api";
+        String scanManagerApiUrl = ScanUtils.generateScanApiUrlFromConfig(jConfig);
+        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
+
         if (isConcentrator) {
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
         }
@@ -479,11 +473,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         for (Device device : devices) {
             List<Integer> connectionsIds = device.getConnectionsIds();
-            if (connectionsIds.isEmpty()) {
-                devicesToDelete.add(device.getId());
-            } else {
+//            if (connectionsIds.isEmpty()) {
+//                devicesToDelete.add(device.getId());
+//            } else {
                 connectionUuidsInDevices.addAll(connectionsIds);
-            }
+//            }
         }
         for (Connection connection : connections) {
             deviceUuidsInConnections.addAll(connection.getDevicesIds());

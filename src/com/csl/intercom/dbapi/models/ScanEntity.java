@@ -34,6 +34,7 @@ public class ScanEntity {
     private OffsetDateTime endDate;
     private String description = null;  // Description of failure
     private double progress = 0.0;
+    private boolean syncPending = false;
 
     public ScanEntity(int dbapiId, String scanId, Status status, OffsetDateTime startDate, OffsetDateTime endDate) {
         this.dbapiId = dbapiId;

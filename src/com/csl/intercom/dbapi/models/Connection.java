@@ -40,6 +40,9 @@ public abstract class Connection {
             case SNMPv3:
                 return SNMPv3Connection.fromJson(connectionJson);
 
+            case RemotePowershell:
+                return RemotePowershellConnection.fromJson(connectionJson);
+
             default:
                 return null;
         }

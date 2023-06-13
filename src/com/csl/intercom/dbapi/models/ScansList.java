@@ -1,34 +1,52 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanConstants;
-import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 public class ScansList {
     static public ScansList instance = new ScansList();
-    Map<String, ScanEntity> scanEntities = new HashMap<>();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
+    Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
+    private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
+    private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private DbapiHandler dbapiHandler = new DbapiHandler();
+    private ScheduledExecutorService scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService scansListSanitizer = Executors.newSingleThreadScheduledExecutor();
+
+    {
+        scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
+        scansListSanitizer.scheduleAtFixedRate(this::sanitizeScans, 0, 5, TimeUnit.MINUTES);
+    }
+
+    public void createOrUpdate(ScanEntity scan) {
+        this.add(scan);
+    }
 
     public synchronized void add(ScanEntity scan) {
-        scanEntities.put(scan.getScanId(), scan);
+        String id = scan.getScanId();
+        if (!this.scanEntities.containsKey(id)) {
+            this.sanitizeScans();
+        }
+        this.scanEntities.put(id, scan);
+        if (!this.modifiedScans.contains(id)) {
+            this.modifiedScans.add(id);
+        }
     }
 
-    public void remove(String scanId) {
-        scanEntities.remove(scanId);
+    private void remove(String scanId) {
+        this.scanEntities.remove(scanId);
     }
 
-    public void remove(ScanEntity scan) {
+    private void remove(ScanEntity scan) {
         this.remove(scan.getScanId());
     }
 
@@ -37,7 +55,7 @@ public class ScansList {
     }
 
     private ScanEntity searchScan(Function<ScanEntity, Boolean> predicate) {
-        for (ScanEntity scan: scanEntities.values()) {
+        for (ScanEntity scan : scanEntities.values()) {
             if (predicate.apply(scan)) {
                 return scan;
             }
@@ -59,7 +77,7 @@ public class ScansList {
     }
 
     public void sanitizeScans() {
-        for (ScanEntity scan: scanEntities.values()) {
+        for (ScanEntity scan : scanEntities.values()) {
             Json status = getScanStatus(scan.getScanId());
             String statusString = getStatusStringFromStatus(status);
             if (ScanConstants.finishedScanStatuses.contains(statusString)) {
@@ -83,6 +101,37 @@ public class ScansList {
         }
     }
 
+    private void handleScan(String id) {
+        ScanEntity scan = scanEntities.get(id);
+        if (scan != null) {
+            handleScan(scan);
+        }
+    }
+
+    private void handleScan(ScanEntity scan) {
+        // If the scan has no DB-API id, create one for it and assign it to the scan
+        if (scan.getDbapiId() == 0) {
+            scan.setDbapiId(dbapiHandler.notifyScanStarted(scan.getStartDate()));
+        }
+
+        this.scanApiHandler.sendNewCpeItemsToDbapi(this.dbapiHandler);
+
+        if (scan.isFinished()) {
+            try {
+                this.dbapiHandler.notifyScanFinished(scan);
+                this.remove(scan);
+            } catch (Exception e) {
+                System.err.println("Could not notify DB-API the scan " + scan.getScanId() + " ended.");
+            }
+        }
+    }
+
+    private void handleScans() {
+        while (!modifiedScans.isEmpty()) {
+            handleScan(this.modifiedScans.poll());
+        }
+    }
+
     private Json getScanStatus(String id) {
         JsonApiResponse response = scanApiHandler.getScanStatus(id);
         return response.isSuccess() ? response.getResult() : null;
@@ -91,6 +140,7 @@ public class ScansList {
     private String getStatusStringFromStatus(Json status) {
         return JsonUtil.getStringFromJson(status, "status", "ERROR");
     }
+
     private String getScanDescriptionFromStatus(Json status) {
         return JsonUtil.getStringFromJson(status, "message", "");
     }

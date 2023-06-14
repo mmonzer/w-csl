@@ -19,11 +19,11 @@ public class ScansList {
     private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private DbapiHandler dbapiHandler = new DbapiHandler();
-    private ScheduledExecutorService scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService scansHandlingTask = null;
     private ScheduledExecutorService scansListSanitizer = Executors.newSingleThreadScheduledExecutor();
 
     {
-        scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
+//        scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
         scansListSanitizer.scheduleAtFixedRate(this::sanitizeScans, 0, 5, TimeUnit.MINUTES);
     }
 
@@ -39,6 +39,22 @@ public class ScansList {
         this.scanEntities.put(id, scan);
         if (!this.modifiedScans.contains(id)) {
             this.modifiedScans.add(id);
+        }
+        if (scansHandlingTask == null) {
+            scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
+        }
+
+        if (scansHandlingTask.isShutdown() || scansHandlingTask.isTerminated()) {
+            // Leave time (1 minute) for the possibly running tasks to terminate, and after that timeout kill the tasks.
+            try {
+                if (!scansHandlingTask.awaitTermination(1, TimeUnit.MINUTES)) {
+                    scansHandlingTask.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                scansHandlingTask.shutdownNow();
+//                Thread.currentThread().interrupt();
+            }
+            scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
         }
     }
 

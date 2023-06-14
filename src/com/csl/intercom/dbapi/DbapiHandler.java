@@ -542,7 +542,6 @@ public class DbapiHandler implements AutoCloseable {
         List<Device> newDevices;
         List<String> deletedDevices = new ArrayList<>();
         List<String> failedDevices = new LinkedList<>();
-        OffsetDateTime currentTime = OffsetDateTime.now();
         try {
             OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
             Pair<List<Device>, List<String>> buildResult = buildNewDevices(

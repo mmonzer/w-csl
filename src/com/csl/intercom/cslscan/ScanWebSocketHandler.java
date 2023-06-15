@@ -167,23 +167,31 @@ public class ScanWebSocketHandler {
                 super.handleFrame(headers, payloadRaw);
                 Json payload = (Json) payloadRaw;
 
+                //region Log the notification
                 if (payload != null) {
                     System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
                 } else {
                     System.out.println("[STOMP] null");
                 }
+                //endregion Log the notification
 
                 String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
+
+                //region Create or update the scan entity
+                // Check if we already know the scan
                 ScanEntity scan = scansList.getScanByScanId(scanId);
 
                 if (scan == null) {
+                    // If we did not already see the scan, create a new Scan Entity
                     OffsetDateTime startDate = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
                     if (startDate == null) {
                         startDate = OffsetDateTime.now();
                     }
                     scan = ScanEntity.fromScanId(scanId, startDate);
                 }
+                //endregion Create or update the scan entity
 
+                //region Fill in the new information of the scan
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
                 if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
                     // Put the end date in the scan information and notify DB-API the scan ended.
@@ -195,20 +203,13 @@ public class ScanWebSocketHandler {
                     } else {
                         scan.setFinishedFail(payload.get("entitiesInError").toString(), endDate);
                     }
-
-                    // Check if we discovered new CPE items in the scan and if not, notify DB-API there was no new item.
-//                        List<CpeItem> newCpeItems = discoveryService.getCpeItemChangesSince(scan.getStartDate());
-//                        if (newCpeItems != null && newCpeItems.isEmpty()) {
-//                            dbapiHandler.notifyNoNewCpe();
-//                        }
-//                        dbapiHandler.notifySynchronisationEnded(scan);
-//                        scansList.remove(scan);
                 } else if ("PENDING".equals(scanStatus)) {
                     scan.setStatus(ScanEntity.Status.PENDING);
                 } else {
                     double scanProgress = ScanUtils.getProgressFromScanNotification(payload);
                     scan.setProgress(scanProgress);
                 }
+                //endregion Fill in the new information of the scan
                 scansList.createOrUpdate(scan);
             }
 

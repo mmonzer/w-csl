@@ -52,7 +52,10 @@ public abstract class Connection {
      * @return The serialized version of the connection ready to be included in a CSL-Scan's entity.
      */
     public Json serializeForScanner() {
-        return Json.object("queryProtocol", this.protocol.scanName());
+        return Json.object(
+                "queryProtocol", this.protocol.scanName(),
+                "uuid", this.id
+        );
     }
 
     public int getId() {

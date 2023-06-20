@@ -166,7 +166,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @param id The uuid of the CPE Item to delete.
      */
     public void deleteCpeItemFromScan(String id) {
-        sendRequestToScanManager(HttpMethod.DELETE, "/cpeItem/entity/" + id, Json.object());
+        sendRequestToScanManager(HttpMethod.DELETE, "/cpeItem/" + id, Json.object());
     }
 
     /**

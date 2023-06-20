@@ -35,7 +35,7 @@ public class ScanEntity {
     private String description = null;  // Description of failure
     private double progress = 0.0;
 
-    public ScanEntity(int dbapiId, String scanId, Status status, OffsetDateTime startDate, OffsetDateTime endDate) {
+    protected ScanEntity(int dbapiId, String scanId, Status status, OffsetDateTime startDate, OffsetDateTime endDate) {
         this.dbapiId = dbapiId;
         this.scanId = scanId;
         this.status = status;
@@ -56,6 +56,10 @@ public class ScanEntity {
      */
     public static ScanEntity fromDbapiId(int dbapiId, OffsetDateTime startDate) {
         return new ScanEntity(dbapiId, null, Status.STARTED, startDate, null);
+    }
+
+    public static ScanEntity fromScanId(String scanId, OffsetDateTime startDate) {
+        return new ScanEntity(0, scanId, Status.STARTED, startDate, null);
     }
 
     public int getDbapiId() {

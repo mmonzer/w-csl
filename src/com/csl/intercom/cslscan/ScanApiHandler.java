@@ -1,9 +1,13 @@
 package com.csl.intercom.cslscan;
 
+import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.models.CpeItem;
+import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Device;
+import com.csl.intercom.dbapi.models.ScanEntity;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -28,6 +32,9 @@ public class ScanApiHandler implements AutoCloseable {
     private HttpClient httpClient = new HttpClient();
     private static ZoneId zoneId = ZoneId.of("Europe/Paris");
 
+    public ScanApiHandler() {
+        this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
+    }
     public ScanApiHandler(String scanManagerUrl) {
         this.scanManagerUrl = scanManagerUrl;
 
@@ -327,6 +334,28 @@ public class ScanApiHandler implements AutoCloseable {
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             return null;
+        }
+    }
+
+    /**
+     * The action to perform when a modification is notified on the CpeItems.
+     *
+     * @param dbapiHandler The interface of DB-API's API.
+     */
+    public void sendNewCpeItemsToDbapi(DbapiHandler dbapiHandler) {
+        OffsetDateTime lastChangesDate = null;
+        try {
+            lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
+        } catch (Exception e) {
+            System.err.println("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
+        }
+        List<CpeItem> changes = getCpeItemChangesSince(lastChangesDate);
+        if (changes != null) {
+            try {
+                dbapiHandler.sendCpeItems(changes);
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
+            }
         }
     }
 }

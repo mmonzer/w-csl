@@ -1,7 +1,5 @@
 package com.csl.intercom.cslscan;
 
-import com.csl.core.CSLContext;
-import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.dbapi.models.ScansList;
@@ -25,10 +23,8 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
-import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,9 +45,8 @@ public class ScanWebSocketHandler {
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
     private static final DbapiHandler dbapiHandler = new DbapiHandler();
-//    private List<ScanEntity> scans = new ArrayList<>();
+    private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private ScansList scansList = ScansList.instance;
-
 
 
     /**
@@ -176,59 +171,51 @@ public class ScanWebSocketHandler {
                 super.handleFrame(headers, payloadRaw);
                 Json payload = (Json) payloadRaw;
 
-                //region Handle scan events
-                String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
-                ScanEntity scan = scansList.getScanByScanId(scanId);
-                if (scan == null) {
-
-                    OffsetDateTime startDate = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
-
-                    if (startDate == null) {
-                        startDate = OffsetDateTime.now();
-                    }
-                    scansList.sanitizeScans();
-                    int dbapiId = dbapiHandler.notifyScanStarted(startDate);
-                    scan = ScanEntity.fromDbapiId(dbapiId, startDate);
-                    scan.setScanId(scanId);
-                    scansList.add(scan);
-                }
-                //endregion Handle scan events
-
+                //region Log the notification
                 if (payload != null) {
                     System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
                 } else {
                     System.out.println("[STOMP] null");
                 }
+                //endregion Log the notification
+
+                String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
+
+                //region Get or Create Scan Entity
+                // Check if we already know the scan
+                ScanEntity scan = scansList.getScanByScanId(scanId);
+
+                if (scan == null) {
+                    // If we did not already see the scan, create a new Scan Entity
+                    OffsetDateTime startDate = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(JsonUtil.getStringFromJson(payload, "createdAt", null)));
+                    if (startDate == null) {
+                        startDate = OffsetDateTime.now();
+                    }
+                    scan = ScanEntity.fromScanId(scanId, startDate);
+                }
+                //endregion Get or Create Scan Entity
+
+                //region Update the scan's info (status, progress)
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
                 if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
-                    try {
-                        // Put the end date in the scan information and notify DB-API the scan ended.
-                        OffsetDateTime endDate = OffsetDateTime.now();
-                        if (ScanConstants.successScanStatuses.contains(scanStatus)) {
-                            scan.setFinishedSuccess(endDate);
-                        } else if (scanStatus.equals("DISCARDED")) {
-                            scan.setDiscarded(endDate);
-                        } else {
-                            scan.setFinishedFail(payload.get("entitiesInError").toString(), endDate);
-                        }
-                        dbapiHandler.notifyScanFinished(scan);
-                        discoveryService.handleCpeItemChanges();
-
-                        // Check if we discovered new CPE items in the scan and if not, notify DB-API there was no new item.
-                        List<CpeItem> newCpeItems = discoveryService.getCpeItemChangesSince(scan.getStartDate());
-                        if (newCpeItems != null && newCpeItems.isEmpty()) {
-                            dbapiHandler.notifyNoNewCpe();
-                        }
-                        dbapiHandler.notifySynchronisationEnded(scan);
-                        scansList.remove(scan);
-                    } catch (Exception e) {
-                        e.printStackTrace(System.err);
+                    // Put the end date in the scan information and notify DB-API the scan ended.
+                    OffsetDateTime endDate = OffsetDateTime.now();
+                    if (ScanConstants.successScanStatuses.contains(scanStatus)) {
+                        scan.setFinishedSuccess(endDate);
+                    } else if (scanStatus.equals("DISCARDED")) {
+                        scan.setDiscarded(endDate);
+                    } else {
+                        scan.setFinishedFail(payload.get("entitiesInError").toString(), endDate);
                     }
+                } else if ("PENDING".equals(scanStatus)) {
+                    scan.setStatus(ScanEntity.Status.PENDING);
                 } else {
                     double scanProgress = ScanUtils.getProgressFromScanNotification(payload);
                     scan.setProgress(scanProgress);
-                    discoveryService.handleCpeItemChanges();
                 }
+                //endregion Update the scan's info (status, progress)
+
+                scansList.createOrUpdate(scan);
             }
 
             @Override

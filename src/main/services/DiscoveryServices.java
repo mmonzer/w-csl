@@ -7,14 +7,10 @@ import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
-import com.csl.intercom.dbapi.DbapiUtils;
-import com.csl.intercom.dbapi.models.Connection;
-import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLLogger;
-import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
@@ -22,10 +18,8 @@ import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -79,7 +73,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         logger.warn("Hello from logger");
 
 
-        String scanManagerApiUrl = ScanUtils.generateScanApiUrlFromConfig(jConfig);
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
 
         if (isConcentrator) {
@@ -87,14 +80,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         }
 
         dbapiHandler = new DbapiHandler();
-        scanApiHandler = new ScanApiHandler(scanManagerApiUrl);
+        scanApiHandler = new ScanApiHandler();
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         if (isConcentrator) {
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
-                handleDbapiDeviceChange();
+                dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             });
         }
 
@@ -173,7 +166,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("synchronize_devices", params -> handleDbapiDeviceChange().toJson(),
+        addCmd("synchronize_devices", params -> dbapiHandler.sendNewDevicesToScanner(scanApiHandler).toJson(),
                 new JsonCmdHelp().setDesc("Synchronize devices between DB-API and CSL-Scan.")
                         .setResult("<code>{\"success\": true }</code> if the synchronisation went without error," +
                                 "<code>{\"success\": false, \"error\", {\"reason\": \"...\", \"failed_devices\": [...]}}</code> otherwise. The failed_devices field is present if devices were actually fetched from DB-API.", IJsonCmdHelp.JSON)
@@ -196,7 +189,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             ).toJson();
                         }
                     } else {
-                        handleCpeItemChanges();
+                        scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
                     }
                     return JsonApiResponse.success().toJson();
                 },
@@ -321,91 +314,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * - CPE Items
      */
     public void syncAll() {
-        handleDbapiDeviceChange();
-        handleCpeItemChanges();
+        dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+        scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
         handleDeletedCpes();
-    }
-
-    /**
-     * The action to perform when a modification is notified on the CpeItems.
-     */
-    public void handleCpeItemChanges() {
-        OffsetDateTime lastChangesDate = null;
-        try {
-            lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
-        } catch (Exception e) {
-            System.err.println("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
-        }
-        List<CpeItem> changes = scanApiHandler.getCpeItemChangesSince(lastChangesDate);
-        if (changes != null) {
-            try {
-                dbapiHandler.sendCpeItems(changes);
-//                mqttBroker.publish(CSLMqttBrokerHandler.Topic.CPE_ITEMS, CSLMqttMessage.message("synchronization_ended"));
-            } catch (Exception e) {
-                e.printStackTrace(System.err);
-            }
-        }
-    }
-
-    /**
-     * Send a device to CSL-Scan.
-     * First tries to create a new one, and on failure tries to modify the device (assuming it already exists).
-     *
-     * @param newDevice The device to send.
-     * @throws Exception If we were not able to send the device to CSL-Scan, that is neither creating a new one nor modify an existing one worked.
-     */
-    private void sendNewDeviceToScanner(Device newDevice) throws Exception {
-        JsonApiResponse result = scanApiHandler.createOrUpdateEntity(newDevice);
-        if (!result.isSuccess()) {
-            throw new Exception("Could not push the entity " + newDevice.getId() + " to CSL-Scan.");
-        }
-    }
-
-    /**
-     * Handle the changes in the devices on DB-API.
-     *
-     * @return A {@link Json} containing the result (success or failure).
-     */
-    public JsonApiResponse handleDbapiDeviceChange() {
-        List<Device> newDevices;
-        List<String> deletedDevices = new ArrayList<>();
-        List<String> failedDevices = new LinkedList<>();
-        OffsetDateTime currentTime = OffsetDateTime.now();
-        try {
-            OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
-            Pair<List<Device>, List<String>> buildResult = buildNewDevices(
-                    dbapiHandler.getDevicesSince(lastDeviceModification),
-                    dbapiHandler.getConnectionsSince(lastDeviceModification)
-            );
-            newDevices = buildResult.getFirst();
-            deletedDevices.addAll(buildResult.getSecond());
-            deletedDevices.addAll(dbapiHandler.getDeletedDevicesSince(lastDeviceModification));
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            return JsonApiResponse.error("Could not get changes from DBAPI");
-        }
-//        lastDeviceModificationVerification = currentTime;
-        for (Device newDevice : newDevices) {
-            try {
-                sendNewDeviceToScanner(newDevice);
-            } catch (Exception e) {
-                failedDevices.add(newDevice.getId());
-            }
-        }
-
-        for (String deletedDevice : deletedDevices) {
-            try {
-                scanApiHandler.deleteEntity(deletedDevice);
-            } catch (Exception e) {
-                failedDevices.add(deletedDevice);
-            }
-        }
-        return failedDevices.isEmpty()
-                ? JsonApiResponse.success()
-                : JsonApiResponse.error(
-                "Failed to send updated devices to CSL-Scan",
-                Json.object("failed_devices", Json.array(failedDevices.toArray()))
-        );
     }
 
     /**
@@ -437,7 +348,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @return The result of the scan request, in a {@link JsonApiResponse}
      */
     public JsonApiResponse startScan(List<String> entities) {
-        JsonApiResponse syncResult = handleDbapiDeviceChange();
+        JsonApiResponse syncResult = dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
         if (!syncResult.isSuccess()) {
             return JsonApiResponse.error(
                     "Could not retrieve devices from DB-API",
@@ -451,68 +362,5 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         }
     }
 
-
-    /**
-     * Create the list of entities to update on CSL-Scan.
-     *
-     * @param devices     The list of devices that were created or modified.
-     * @param connections The list of connections that were created or modified.
-     * @return A {@link Json} with the entities to send to CSL-Scan and the ones to delete, in the format
-     * <code>
-     * {
-     * "scan_entities": [Json objects],
-     * "devices_to_delete": [id (strings)]
-     * }
-     * </code>
-     */
-    private Pair<List<Device>, List<String>> buildNewDevices(List<Device> devices, List<Connection> connections) {
-        //region List the uuids we have in both list
-        List<String> devicesToDelete = new ArrayList<>();
-        List<Integer> connectionUuidsInDevices = new ArrayList<>();
-        List<String> deviceUuidsInConnections = new ArrayList<>();
-
-        for (Device device : devices) {
-            List<Integer> connectionsIds = device.getConnectionsIds();
-//            if (connectionsIds.isEmpty()) {
-//                devicesToDelete.add(device.getId());
-//            } else {
-                connectionUuidsInDevices.addAll(connectionsIds);
-//            }
-        }
-        for (Connection connection : connections) {
-            deviceUuidsInConnections.addAll(connection.getDevicesIds());
-        }
-        //endregion
-
-        //region Check for the ones missing on one side or the other
-        List<Integer> connectionsToGet = new ArrayList<>();
-        List<String> devicesToGet = new ArrayList<>();
-
-        for (int connectionId : connectionUuidsInDevices) {
-            if (DbapiUtils.getConnectionById(connections, connectionId) == null) {
-                connectionsToGet.add(connectionId);
-            }
-        }
-        for (String deviceId : deviceUuidsInConnections) {
-            if (DbapiUtils.getDeviceById(devices, deviceId) == null) {
-                devicesToGet.add(deviceId);
-            }
-        }
-        //endregion
-
-        //region Get the missing parts
-        try {
-            connections.addAll(dbapiHandler.fetchConnections(connectionsToGet));
-            devices.addAll(dbapiHandler.fetchDevices(devicesToGet));
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            e.printStackTrace(System.err);
-        }
-        //endregion
-
-        // Fill the connections into devices
-        devices.forEach(device -> device.setConnections(connections));
-
-        return new Pair<>(devices, devicesToDelete);
-    }
 
 }

@@ -1,6 +1,7 @@
 package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
@@ -8,9 +9,11 @@ import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.dbapi.models.ScansList;
+import com.csl.util.Pair;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
@@ -36,7 +39,6 @@ public class DbapiHandler implements AutoCloseable {
     private String dbapiUrl;
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
-    private ScansList scansList = ScansList.instance;
     static private AtomicInteger lastScanId = new AtomicInteger(0);
     static private AtomicDouble lastScanProgress = new AtomicDouble(0);
 
@@ -107,6 +109,14 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the sending fail
      */
     private void sendCpeItemsBatch(List<CpeItem> cpeItems) throws Exception {
+        ScansList scansList = ScansList.instance;
+        ScanEntity scan = scansList.getRunningScan();
+        if (scan == null) {
+            scan = scansList.getFinishedScan();
+            // If we found no running scans and no finished scan, we do not send the CPE Items
+            if (scan == null) return;
+        }
+
         Map<String, List<CpeItem>> classifiedCpeItems = classifyCpeItemsByDevice(cpeItems);
         Json cpeItemsArray = Json.array();
         for (Map.Entry<String, List<CpeItem>> deviceCpeItems : classifiedCpeItems.entrySet()) {
@@ -119,12 +129,6 @@ public class DbapiHandler implements AutoCloseable {
             ));
         }
 
-        ScanEntity scan = scansList.getRunningScan();
-        if (scan == null) {
-            scan = scansList.getFinishedScan();
-            // If we found no running scans and no finished scan, we do not send the CPE Items
-            if (scan == null) return;
-        }
         Json requestContents = Json.object(
                 "progress", scan.getProgress(),
                 "event_id", scan.getDbapiId(),
@@ -511,5 +515,130 @@ public class DbapiHandler implements AutoCloseable {
      */
     private Request createDbapiPatchRequest(DbapiEndpoint endpoint, String id) {
         return createDbapiPatchRequest(endpoint.getEndpoint() + '/' + id);
+    }
+
+    /**
+     * Send a device to CSL-Scan.
+     * First tries to create a new one, and on failure tries to modify the device (assuming it already exists).
+     *
+     * @param newDevice      The device to send.
+     * @param scanApiHandler The interface of the scanner's API.
+     * @throws Exception If we were not able to send the device to CSL-Scan, that is neither creating a new one nor modify an existing one worked.
+     */
+    private void sendNewDeviceToScanner(Device newDevice, ScanApiHandler scanApiHandler) throws Exception {
+        JsonApiResponse result = scanApiHandler.createOrUpdateEntity(newDevice);
+        if (!result.isSuccess()) {
+            throw new Exception("Could not push the entity " + newDevice.getId() + " to CSL-Scan.");
+        }
+    }
+
+    /**
+     * Handle the changes in the devices on DB-API.
+     *
+     * @param scanApiHandler The interface of the scanner's API.
+     * @return A {@link Json} containing the result (success or failure).
+     */
+    public JsonApiResponse sendNewDevicesToScanner(ScanApiHandler scanApiHandler) {
+        List<Device> newDevices;
+        List<String> deletedDevices = new ArrayList<>();
+        List<String> failedDevices = new LinkedList<>();
+        try {
+            OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
+            Pair<List<Device>, List<String>> buildResult = buildNewDevices(
+                    getDevicesSince(lastDeviceModification),
+                    getConnectionsSince(lastDeviceModification)
+            );
+            newDevices = buildResult.getFirst();
+            deletedDevices.addAll(buildResult.getSecond());
+            deletedDevices.addAll(getDeletedDevicesSince(lastDeviceModification));
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return JsonApiResponse.error("Could not get changes from DBAPI");
+        }
+//        lastDeviceModificationVerification = currentTime;
+        for (Device newDevice : newDevices) {
+            try {
+                sendNewDeviceToScanner(newDevice, scanApiHandler);
+            } catch (Exception e) {
+                failedDevices.add(newDevice.getId());
+            }
+        }
+
+        for (String deletedDevice : deletedDevices) {
+            try {
+                scanApiHandler.deleteEntity(deletedDevice);
+            } catch (Exception e) {
+                failedDevices.add(deletedDevice);
+            }
+        }
+        return failedDevices.isEmpty()
+                ? JsonApiResponse.success()
+                : JsonApiResponse.error(
+                "Failed to send updated devices to CSL-Scan",
+                Json.object("failed_devices", Json.array(failedDevices.toArray()))
+        );
+    }
+
+    /**
+     * Create the list of entities to update on CSL-Scan.
+     *
+     * @param devices     The list of devices that were created or modified.
+     * @param connections The list of connections that were created or modified.
+     * @return A {@link Json} with the entities to send to CSL-Scan and the ones to delete, in the format
+     * <code>
+     * {
+     * "scan_entities": [Json objects],
+     * "devices_to_delete": [id (strings)]
+     * }
+     * </code>
+     */
+    private Pair<List<Device>, List<String>> buildNewDevices(List<Device> devices, List<Connection> connections) {
+        //region List the uuids we have in both list
+        List<String> devicesToDelete = new ArrayList<>();
+        List<Integer> connectionUuidsInDevices = new ArrayList<>();
+        List<String> deviceUuidsInConnections = new ArrayList<>();
+
+        for (Device device : devices) {
+            List<Integer> connectionsIds = device.getConnectionsIds();
+//            if (connectionsIds.isEmpty()) {
+//                devicesToDelete.add(device.getId());
+//            } else {
+            connectionUuidsInDevices.addAll(connectionsIds);
+//            }
+        }
+        for (Connection connection : connections) {
+            deviceUuidsInConnections.addAll(connection.getDevicesIds());
+        }
+        //endregion
+
+        //region Check for the ones missing on one side or the other
+        List<Integer> connectionsToGet = new ArrayList<>();
+        List<String> devicesToGet = new ArrayList<>();
+
+        for (int connectionId : connectionUuidsInDevices) {
+            if (DbapiUtils.getConnectionById(connections, connectionId) == null) {
+                connectionsToGet.add(connectionId);
+            }
+        }
+        for (String deviceId : deviceUuidsInConnections) {
+            if (DbapiUtils.getDeviceById(devices, deviceId) == null) {
+                devicesToGet.add(deviceId);
+            }
+        }
+        //endregion
+
+        //region Get the missing parts
+        try {
+            connections.addAll(fetchConnections(connectionsToGet));
+            devices.addAll(fetchDevices(devicesToGet));
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            e.printStackTrace(System.err);
+        }
+        //endregion
+
+        // Fill the connections into devices
+        devices.forEach(device -> device.setConnections(connections));
+
+        return new Pair<>(devices, devicesToDelete);
     }
 }

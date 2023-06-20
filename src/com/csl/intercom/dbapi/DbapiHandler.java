@@ -8,6 +8,7 @@ import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.dbapi.models.ScansList;
+import com.csl.util.Pair;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -134,7 +135,7 @@ public class DbapiHandler implements AutoCloseable {
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
         if (response.getStatus() != 200) {
-            throw new Exception("Error sending CpeItem to dbapi: got unexpected status " + response.getStatus());
+            throw new Exception("Error sending CpeItem Batch to dbapi: got unexpected status " + response.getStatus());
         }
     }
 
@@ -258,7 +259,7 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of CPE Item uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<String> getDeletedCpeItemsSince(OffsetDateTime date) throws Exception {
+    public List<Pair<String, OffsetDateTime>> getDeletedCpeItemsSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS);
         if (dateUtc != null) {
@@ -268,14 +269,13 @@ public class DbapiHandler implements AutoCloseable {
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code " + response.getStatus());
         }
-        List<String> deletedCpeItems = new ArrayList<>();
-        for (Json cpeItem : Json.read(response.getContentAsString()).asJsonList()) {
-            if (cpeItem.isString()) {
-                deletedCpeItems.add(cpeItem.asString());
-            } else if (cpeItem.isObject()) {
-                deletedCpeItems.add(cpeItem.get("object_repr").asString());
-            }
-        }
+        List<Pair<String, OffsetDateTime>> deletedCpeItems = Json.read(response.getContentAsString()).asJsonList().stream()
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                .collect(Collectors.toList());
+//        for (Json cpeItem : Json.read(response.getContentAsString()).asJsonList()) {
+//            Pair<String, OffsetDateTime> deletedCpeItem = new Pair<>(cpeItem.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(cpeItem.get("deleted_date").asString()));
+//            deletedCpeItems.add(deletedCpeItem);
+//        }
         return deletedCpeItems;
     }
 

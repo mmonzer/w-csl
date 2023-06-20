@@ -416,9 +416,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * { "result": "NOK", "error": { "reason": ..., "details": ...}} otherwise.
      */
     private JsonApiResponse handleDeletedCpes() {
-        List<String> deletedCpes = null;
+        List<Pair<String, OffsetDateTime>> deletedCpes = null;
         try {
             OffsetDateTime currentTime = OffsetDateTime.now();
+//            OffsetDateTime lastCpeItemDeletionVerification = scanApiHandler.getLastCpeItemsDeletionDate();
             deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
             lastCpeItemDeletionVerification = currentTime;
         } catch (Exception e) {

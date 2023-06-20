@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan;
 
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.models.Device;
+import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -172,11 +173,25 @@ public class ScanApiHandler implements AutoCloseable {
     /**
      * Request multiple deletions of CPE Items to CSL-Scan.
      *
-     * @param ids The list of CPE Items to delete.
+     * @param deletedCpes The list of CPE Items to delete.
      */
-    public void deleteCpeItemsFromScan(List<String> ids) {
-        for (String id : ids) {
+    public void deleteCpeItemsFromScan(List<Pair<String, OffsetDateTime>> deletedCpes) {
+        OffsetDateTime maxDate = OffsetDateTime.MIN;
+
+        // Delete the CPE items from the scanner and find the latest deletion date
+        for (Pair<String, OffsetDateTime> deletedCpe : deletedCpes) {
+            String id = deletedCpe.getFirst();
+            OffsetDateTime date = deletedCpe.getSecond();
+            if (date != null && date.isAfter(maxDate)) {
+                maxDate = date;
+            }
             deleteCpeItemFromScan(id);
+        }
+
+        try {
+            setLastCpeItemsDeletionDate(maxDate);
+        } catch (Exception e) {
+            System.err.println("Could not set the last CPE items deletion date");
         }
     }
 
@@ -327,6 +342,68 @@ public class ScanApiHandler implements AutoCloseable {
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             return null;
+        }
+    }
+
+    /**
+     * Get the last deletion date of the CPE items in CSL-Scan.
+     *
+     * @return The date of the last CPE items deletion in CSL-Scan.
+     */
+    public OffsetDateTime getLastCpeItemsDeletionDate() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/last_deletion", Json.object());
+        try {
+            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
+        } catch (NullPointerException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get the last deletion date of the entities in CSL-Scan.
+     *
+     * @return The date of the last entities deletion in CSL-Scan.
+     */
+    public OffsetDateTime getLastEntitiesDeletionDate() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/last_deletion", Json.object());
+        try {
+            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
+        } catch (NullPointerException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Set the last updated date of the devices in CSL-Scan.
+     *
+     * @param date The date of the last entities update in CSL-Scan.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public void setLastCpeItemsDeletionDate(OffsetDateTime date) throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(
+                HttpMethod.POST, "/cpeItem/last_deletion",
+                Json.object("cpeItemsLastDeletion", ScanUtils.localTimeToScan(date).toString())
+        );
+        if (response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception("Error while setting last CPE items deletion date: " + response.getResult());
+        }
+    }
+
+    /**
+     * Set the last deletion date of the entities in CSL-Scan.
+     *
+     * @param date The date of the last entities deletion in CSL-Scan.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public void setLastEntitiesDeletionDate(OffsetDateTime date) throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(
+                HttpMethod.POST, "/entity/last_deletion",
+                Json.object("entitiesLastDeletion", ScanUtils.localTimeToScan(date))
+        );
+        if (response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception("Error while setting last entities deletion date: " + response.getResult());
         }
     }
 }

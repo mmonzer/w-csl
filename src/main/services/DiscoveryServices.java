@@ -11,6 +11,7 @@ import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLLogger;
+import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
@@ -36,7 +37,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
     private final String configFileSectionName;
-    private OffsetDateTime lastCpeItemDeletionVerification = null;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     //    private String apiKey;
@@ -329,10 +329,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private JsonApiResponse handleDeletedCpes() {
         List<Pair<String, OffsetDateTime>> deletedCpes = null;
         try {
-            OffsetDateTime currentTime = OffsetDateTime.now();
-//            OffsetDateTime lastCpeItemDeletionVerification = scanApiHandler.getLastCpeItemsDeletionDate();
+            OffsetDateTime lastCpeItemDeletionVerification = scanApiHandler.getLastCpeItemsDeletionDate();
             deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
-            lastCpeItemDeletionVerification = currentTime;
         } catch (Exception e) {
             return JsonApiResponse.error("Failed to fetch deleted CPE Items",
                     Json.object("exception", e.getMessage())

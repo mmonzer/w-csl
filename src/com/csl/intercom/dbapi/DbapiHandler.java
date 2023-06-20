@@ -237,20 +237,18 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of device uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<String> getDeletedDevicesSince(OffsetDateTime date) throws Exception {
+    public List<Pair<String, OffsetDateTime>> getDeletedDevicesSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES);
         if (dateUtc != null) {
             request.param("deleted_date__gte", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
-        List<String> deletedDevices = new ArrayList<>(response.asList().size());
+        List<Pair<String, OffsetDateTime>> deletedDevices = new ArrayList<>(response.asList().size());
         for (Json deletedDevice : response) {
-            if (deletedDevice.isString()) {
-                deletedDevices.add(deletedDevice.asString());
-            } else if (deletedDevice.isObject()) {
-                deletedDevices.add(deletedDevice.get("object_id").asString());
-            }
+            String uuid = deletedDevice.get("object_id").asString();
+            OffsetDateTime deletedDate = DbapiUtils.dbapiDateToLocal(deletedDevice.get("deleted_at").asString());
+            deletedDevices.add(new Pair<>(uuid, deletedDate));
         }
         return deletedDevices;
     }
@@ -272,14 +270,9 @@ public class DbapiHandler implements AutoCloseable {
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code " + response.getStatus());
         }
-        List<Pair<String, OffsetDateTime>> deletedCpeItems = Json.read(response.getContentAsString()).asJsonList().stream()
+        return Json.read(response.getContentAsString()).asJsonList().stream()
                 .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
                 .collect(Collectors.toList());
-//        for (Json cpeItem : Json.read(response.getContentAsString()).asJsonList()) {
-//            Pair<String, OffsetDateTime> deletedCpeItem = new Pair<>(cpeItem.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(cpeItem.get("deleted_date").asString()));
-//            deletedCpeItems.add(deletedCpeItem);
-//        }
-        return deletedCpeItems;
     }
 
     /**
@@ -539,22 +532,24 @@ public class DbapiHandler implements AutoCloseable {
      */
     public JsonApiResponse sendNewDevicesToScanner(ScanApiHandler scanApiHandler) {
         List<Device> newDevices;
-        List<String> deletedDevices = new ArrayList<>();
+        List<Pair<String, OffsetDateTime>> deletedDevices;
         List<String> failedDevices = new LinkedList<>();
+        //region Get changes from DB-API
         try {
             OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
-            Pair<List<Device>, List<String>> buildResult = buildNewDevices(
+            newDevices = buildNewDevices(
                     getDevicesSince(lastDeviceModification),
                     getConnectionsSince(lastDeviceModification)
             );
-            newDevices = buildResult.getFirst();
-            deletedDevices.addAll(buildResult.getSecond());
-            deletedDevices.addAll(getDeletedDevicesSince(lastDeviceModification));
+            OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
+            deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return JsonApiResponse.error("Could not get changes from DBAPI");
         }
-//        lastDeviceModificationVerification = currentTime;
+        //endregion Get changes from DB-API
+
+        //region Send changed devices to CSL-Scan
         for (Device newDevice : newDevices) {
             try {
                 sendNewDeviceToScanner(newDevice, scanApiHandler);
@@ -562,14 +557,38 @@ public class DbapiHandler implements AutoCloseable {
                 failedDevices.add(newDevice.getId());
             }
         }
+        //endregion Send changed devices to CSL-Scan
 
-        for (String deletedDevice : deletedDevices) {
+        //region Delete devices from CSL-Scan
+        OffsetDateTime maxDate = OffsetDateTime.MIN;
+        boolean hasFailed = false;
+
+        // Delete devices from CSL-Scan and get the max deletion date
+        for (Pair<String, OffsetDateTime> deletedDevice : deletedDevices) {
+            String uuid = deletedDevice.getFirst();
+            OffsetDateTime deletionDate = deletedDevice.getSecond();
             try {
-                scanApiHandler.deleteEntity(deletedDevice);
+                scanApiHandler.deleteEntity(uuid);
+                if (deletionDate.isAfter(maxDate)) {
+                    maxDate = deletionDate;
+                }
             } catch (Exception e) {
-                failedDevices.add(deletedDevice);
+                failedDevices.add(uuid);
+                hasFailed = true;
             }
         }
+
+        // If the devices were deleted successfully, and at least one was deleted, update the last entities deletion date
+        if (!deletedDevices.isEmpty() && !hasFailed) {
+            try {
+                scanApiHandler.setLastEntitiesDeletionDate(maxDate);
+            } catch (Exception e) {
+                return JsonApiResponse.error("Could not update the last entities deletion date");
+            }
+        }
+
+        //endregion Delete devices from CSL-Scan
+
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()
                 : JsonApiResponse.error(
@@ -591,24 +610,19 @@ public class DbapiHandler implements AutoCloseable {
      * }
      * </code>
      */
-    private Pair<List<Device>, List<String>> buildNewDevices(List<Device> devices, List<Connection> connections) {
+    private List<Device> buildNewDevices(List<Device> devices, List<Connection> connections) {
         //region List the uuids we have in both list
-        List<String> devicesToDelete = new ArrayList<>();
         List<Integer> connectionUuidsInDevices = new ArrayList<>();
         List<String> deviceUuidsInConnections = new ArrayList<>();
 
         for (Device device : devices) {
             List<Integer> connectionsIds = device.getConnectionsIds();
-//            if (connectionsIds.isEmpty()) {
-//                devicesToDelete.add(device.getId());
-//            } else {
             connectionUuidsInDevices.addAll(connectionsIds);
-//            }
         }
         for (Connection connection : connections) {
             deviceUuidsInConnections.addAll(connection.getDevicesIds());
         }
-        //endregion
+        //endregion List the uuids we have in both list
 
         //region Check for the ones missing on one side or the other
         List<Integer> connectionsToGet = new ArrayList<>();
@@ -624,7 +638,7 @@ public class DbapiHandler implements AutoCloseable {
                 devicesToGet.add(deviceId);
             }
         }
-        //endregion
+        //endregion Check for the ones missing on one side or the other
 
         //region Get the missing parts
         try {
@@ -633,11 +647,11 @@ public class DbapiHandler implements AutoCloseable {
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace(System.err);
         }
-        //endregion
+        //endregion Get the missing parts
 
         // Fill the connections into devices
         devices.forEach(device -> device.setConnections(connections));
 
-        return new Pair<>(devices, devicesToDelete);
+        return devices;
     }
 }

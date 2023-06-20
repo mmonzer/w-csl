@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 public class ScanApiHandler implements AutoCloseable {
     private String scanManagerUrl;
     private HttpClient httpClient = new HttpClient();
-    private static ZoneId zoneId = ZoneId.of("Europe/Paris");
 
     public ScanApiHandler() {
         this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
@@ -381,6 +380,12 @@ public class ScanApiHandler implements AutoCloseable {
      */
     public OffsetDateTime getLastCpeItemsDeletionDate() {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/last_deletion", Json.object());
+
+        // If the response's status code is not 200, return null
+        if (response.getExtra().get("status_code").asInteger() != 200) {
+            return null;
+        }
+
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
@@ -429,7 +434,7 @@ public class ScanApiHandler implements AutoCloseable {
     public void setLastEntitiesDeletionDate(OffsetDateTime date) throws Exception {
         JsonApiResponse response = sendRequestToScanManager(
                 HttpMethod.POST, "/entity/last_deletion",
-                Json.object("entitiesLastDeletion", ScanUtils.localTimeToScan(date))
+                Json.object("entitiesLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
         if (response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception("Error while setting last entities deletion date: " + response.getResult());

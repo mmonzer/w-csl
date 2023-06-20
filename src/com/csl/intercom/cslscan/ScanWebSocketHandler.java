@@ -12,6 +12,7 @@ import main.services.JsonApiResponse;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.AbstractMessageConverter;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
@@ -106,10 +107,13 @@ public class ScanWebSocketHandler {
      * @return An id identifying the scan for further notice.
      */
     public JsonApiResponse requestScan(List<String> entities) {
+        // Check if ws to csl-scan is already connected
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
+            // not connected to csl-scan --> add this request to the queue
             scanRequestsQueue.add(entities);
             return JsonApiResponse.error("Scan service unavailable, added scan request to queue");
         } else {
+            // request the startScan to the csl-scan
             startScan(entities);
             return JsonApiResponse.success();
         }
@@ -232,6 +236,18 @@ public class ScanWebSocketHandler {
                 super.afterConnected(session, connectedHeaders);
                 session.subscribe(websocketNotificationsEndpoint, this);
             }
+
+            @Override
+            public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+                System.err.println("Transport Error " + exception);
+                super.handleException(session, command, headers, payload, exception);
+            }
+
+            @Override
+            public void handleTransportError(StompSession session, Throwable exception) {
+                System.err.println("Transport Error " + exception);
+            }
+
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 

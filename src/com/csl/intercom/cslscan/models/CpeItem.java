@@ -22,7 +22,7 @@ public class CpeItem {
     private String deviceId;
     private boolean isDeleted;
     private boolean isMain;
-    static private ZoneId zoneId = CSLContext.instance.getZoneId();
+    private int discoveryConnectionId;
 
     // The fields to include in the cpeData array
     private static Set<String> dataFields = new HashSet<>(10) {{
@@ -47,13 +47,14 @@ public class CpeItem {
      * @param mongoEntityId The uuid of the CPI Item in CSL-Scan's Mongodb.
      * @param deviceId The uuid of the device associated with this CPE Item.
      */
-    private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId, boolean isDeleted, boolean isMain) {
+    private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId, boolean isDeleted, boolean isMain, int discoveryConnectionId) {
         this.cpeData = Json.object();
         this.discoveredDate = discoveredDate;
         this.mongoEntityId = mongoEntityId;
         this.deviceId = deviceId;
         this.isDeleted = isDeleted;
         this.isMain = isMain;
+        this.discoveryConnectionId = discoveryConnectionId;
 
         for (String field: dataFields) {
             this.cpeData.set(field, cpeData.get(field));
@@ -73,6 +74,7 @@ public class CpeItem {
         String deviceId = null;
         boolean isDeleted = false;
         boolean isMain = false;
+        int discoveryConnectionId = 0;
 
         try {
             discoveredDate = ScanUtils.getCpeItemDateTime(data);
@@ -85,13 +87,18 @@ public class CpeItem {
             } else {
                 isMain = isMainJson.asBoolean();
             }
+            try {
+                discoveryConnectionId = Integer.parseInt(JsonUtil.getStringFromJson(data, "connectionInfoUuid", "0"));
+            } catch (NumberFormatException e) {
+                discoveryConnectionId = -1;
+            }
         } catch (NullPointerException e) {
             throw new IllegalArgumentException("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item");
         } catch (Throwable e) {
             System.err.println("Stop here");
         }
 
-        return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted, isMain);
+        return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted, isMain, discoveryConnectionId);
     }
 
     public Json getCpeData() {
@@ -124,6 +131,7 @@ public class CpeItem {
                 "discovered_date", DbapiUtils.localDateToDbapi(this.discoveredDate).toString(),
                 "mongo_entity_id", this.mongoEntityId
 //                "is_main_configuration", this.isMain
+//                "connection_id", discoveryConnectionId > 0 ? Integer.valueOf(discoveryConnectionId) : null
         );
     }
 }

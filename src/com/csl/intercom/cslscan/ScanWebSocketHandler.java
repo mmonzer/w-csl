@@ -177,7 +177,7 @@ public class ScanWebSocketHandler {
 
                 String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
 
-                //region Create or update the scan entity
+                //region Get or Create Scan Entity
                 // Check if we already know the scan
                 ScanEntity scan = scansList.getScanByScanId(scanId);
 
@@ -189,9 +189,9 @@ public class ScanWebSocketHandler {
                     }
                     scan = ScanEntity.fromScanId(scanId, startDate);
                 }
-                //endregion Create or update the scan entity
+                //endregion Get or Create Scan Entity
 
-                //region Fill in the new information of the scan
+                //region Update the scan's info (status, progress)
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
                 if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
                     // Put the end date in the scan information and notify DB-API the scan ended.
@@ -209,7 +209,8 @@ public class ScanWebSocketHandler {
                     double scanProgress = ScanUtils.getProgressFromScanNotification(payload);
                     scan.setProgress(scanProgress);
                 }
-                //endregion Fill in the new information of the scan
+                //endregion Update the scan's info (status, progress)
+
                 scansList.createOrUpdate(scan);
             }
 

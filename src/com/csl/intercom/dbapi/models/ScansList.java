@@ -19,7 +19,9 @@ import java.util.function.Function;
  */
 public class ScansList {
     static public ScansList instance = new ScansList();
+    // The list of scans, indexed by their id (this list contains all the running scans).
     private Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
+    // The list of scans that have been modified since the last time they were handled --> need to be handled.
     private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private DbapiHandler dbapiHandler = new DbapiHandler();

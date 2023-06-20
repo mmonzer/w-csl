@@ -353,7 +353,6 @@ public class ScanApiHandler implements AutoCloseable {
         if (changes != null) {
             try {
                 dbapiHandler.sendCpeItems(changes);
-//                mqttBroker.publish(CSLMqttBrokerHandler.Topic.CPE_ITEMS, CSLMqttMessage.message("synchronization_ended"));
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }

@@ -17,6 +17,8 @@ public enum DbapiEndpoint {
     DISCOVERY_PROTOCOLS("/cpe_discovery_api"),
     SCAN_EVENT_CREATION(EVENTS.getEndpoint() + "/create_discovery_scan_event"),
     SCAN_EVENT_UPDATE(EVENTS.getEndpoint() + "/%d/update_discovery_scan_event"),
+    ORGANIZATIONS("/organization_api_key"),
+    GET_ORGANIZATION_NAME(ORGANIZATIONS.getEndpoint() + "/get_organization_name_from_api_key"),
     ;
 
     private final String endpoint;

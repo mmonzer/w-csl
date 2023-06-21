@@ -445,6 +445,22 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
+     * Get the organization name from DB-API.
+     *
+     * @return The organization name. Defaults to "None" if the request failed.
+     */
+    public String getOrganizationName() {
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_ORGANIZATION_NAME);
+        try {
+            ContentResponse response = request.send();
+            return response.getContentAsString();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return "None";
+        }
+    }
+
+    /**
      * Create a DB-API request. Most notably, adds the API key to the request header.
      *
      * @param method   The HTTP method to use (GET, POST, ...)

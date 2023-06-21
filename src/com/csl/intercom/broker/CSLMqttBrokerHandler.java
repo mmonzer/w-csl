@@ -1,8 +1,11 @@
 package com.csl.intercom.broker;
 
+import com.csl.intercom.dbapi.DbapiHandler;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import main.services.JsonApiResponse;
 import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +14,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +63,13 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
         brokerUri += "/mqtt";
         this.apiKey = globalConfig.get("api_key").asString();
+
+        // Get the organization name, or "None" if it doesn't exist.
+        try (DbapiHandler dbapiHandler = new DbapiHandler(config)) {
+            this.organization = dbapiHandler.getOrganizationName();
+        } catch (Exception e) {
+            this.organization = "None";
+        }
         mqttConnectionAttempts = Executors.newScheduledThreadPool(1);
         mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 10, TimeUnit.SECONDS);
         mqttConnectOptions = new MqttConnectOptions();
@@ -133,7 +144,8 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         if (mqttClient == null || !mqttClient.isConnected()) {
             try {
                 removeLockFiles();
-                mqttClient = new MqttClient(brokerUri, clientId + Instant.now().toEpochMilli());
+                MemoryPersistence persistence = new MemoryPersistence();
+                mqttClient = new MqttClient(brokerUri, clientId + UUID.randomUUID(), persistence);
                 mqttClient.connect(mqttConnectOptions);
                 for (Map.Entry<String, IMqttMessageListener> topic : topics.entrySet()) {
                     mqttClient.subscribe(topic.getKey(), topic.getValue());

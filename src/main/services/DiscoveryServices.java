@@ -89,6 +89,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             });
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CONFIGURATIONS, message -> {
+                handleDeletedCpes();
+            });
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);

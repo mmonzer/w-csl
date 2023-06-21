@@ -125,13 +125,23 @@ public class CpeItem {
         return isMain;
     }
 
+    /**
+     * Serialize the CpeItem to a {@link Json} object that can be sent to CSL-Scan.
+     *
+     * @return The {@link Json} object that can be sent to CSL-Scan.
+     */
     public Json serializeForDbapi() {
-        return Json.object(
+        Json serialization = Json.object(
                 "cpe_data", this.cpeData,
                 "discovered_date", DbapiUtils.localDateToDbapi(this.discoveredDate).toString(),
                 "mongo_entity_id", this.mongoEntityId
 //                "is_main_configuration", this.isMain
-//                "connection_id", discoveryConnectionId > 0 ? Integer.valueOf(discoveryConnectionId) : null
         );
+
+        // Add the connection's id if it is valid
+        if (this.discoveryConnectionId > 0) {
+            serialization.set("connection_id", this.discoveryConnectionId);
+        }
+        return serialization;
     }
 }

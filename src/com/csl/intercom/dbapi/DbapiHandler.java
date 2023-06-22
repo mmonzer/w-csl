@@ -197,7 +197,7 @@ public class DbapiHandler implements AutoCloseable {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
         if (dateUtc != null) {
-            request.param("updated_at__gte", dateUtc.toString());
+            request.param("updated_at__gt", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
 
@@ -220,7 +220,7 @@ public class DbapiHandler implements AutoCloseable {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
         if (dateUtc != null) {
-            request.param("updated_at__gte", dateUtc.toString());
+            request.param("updated_at__gt", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
         return response.asJsonList().stream()
@@ -241,7 +241,7 @@ public class DbapiHandler implements AutoCloseable {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES);
         if (dateUtc != null) {
-            request.param("deleted_date__gte", dateUtc.toString());
+            request.param("deleted_date__gt", dateUtc.toString());
         }
         Json response = Json.read(request.send().getContentAsString());
         List<Pair<String, OffsetDateTime>> deletedDevices = new ArrayList<>(response.asList().size());
@@ -254,7 +254,7 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
-     * Get the deleted devices from DB-API that were changed since an optional date.
+     * Get the deleted CPE Items from DB-API that were changed since an optional date.
      *
      * @param date The date of start of deletions to fecth. May be null, in wich case fetches all deletions.
      * @return The {@link List<String>} of CPE Item uuids that were deleted since date.
@@ -264,7 +264,7 @@ public class DbapiHandler implements AutoCloseable {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS);
         if (dateUtc != null) {
-            request.param("deleted_date__gte", dateUtc.toString());
+            request.param("deleted_date__gt", dateUtc.toString());
         }
         ContentResponse response = request.send();
         if (response.getStatus() != 200) {

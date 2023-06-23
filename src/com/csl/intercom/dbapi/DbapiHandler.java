@@ -533,7 +533,7 @@ public class DbapiHandler implements AutoCloseable {
     public JsonApiResponse sendNewDevicesToScanner(ScanApiHandler scanApiHandler) {
         List<Device> newDevices;
         List<Pair<String, OffsetDateTime>> deletedDevices;
-        List<String> failedDevices = new LinkedList<>();
+        List<String> failedDevices = new ArrayList<>();
         //region Get changes from DB-API
         try {
             OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
@@ -559,35 +559,12 @@ public class DbapiHandler implements AutoCloseable {
         }
         //endregion Send changed devices to CSL-Scan
 
-        //region Delete devices from CSL-Scan
-        OffsetDateTime maxDate = OffsetDateTime.MIN;
-        boolean hasFailed = false;
-
-        // Delete devices from CSL-Scan and get the max deletion date
-        for (Pair<String, OffsetDateTime> deletedDevice : deletedDevices) {
-            String uuid = deletedDevice.getFirst();
-            OffsetDateTime deletionDate = deletedDevice.getSecond();
-            try {
-                scanApiHandler.deleteEntity(uuid);
-                if (deletionDate.isAfter(maxDate)) {
-                    maxDate = deletionDate;
-                }
-            } catch (Exception e) {
-                failedDevices.add(uuid);
-                hasFailed = true;
-            }
+        // Delete devices from CSL-Scan
+        try {
+            failedDevices.addAll(scanApiHandler.deleteEntities(deletedDevices));
+        } catch (Exception e) {
+            return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }
-
-        // If the devices were deleted successfully, and at least one was deleted, update the last entities deletion date
-        if (!deletedDevices.isEmpty() && !hasFailed) {
-            try {
-                scanApiHandler.setLastEntitiesDeletionDate(maxDate);
-            } catch (Exception e) {
-                return JsonApiResponse.error("Could not update the last entities deletion date");
-            }
-        }
-
-        //endregion Delete devices from CSL-Scan
 
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()

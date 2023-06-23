@@ -1,31 +1,20 @@
 package com.csl.intercom.cslscan.models;
 
-import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Class to retain the required fields of a CPE Items.
  */
 public class CpeItem {
-    private Json cpeData;
-    private OffsetDateTime discoveredDate;
-    private String mongoEntityId;
-    private String deviceId;
-    private boolean isDeleted;
-    private boolean isMain;
-    private int discoveryConnectionId;
-
     // The fields to include in the cpeData array
-    private static Set<String> dataFields = new HashSet<>(10) {{
+    private static final Set<String> dataFields = new HashSet<>(10) {{
         add("part");
         add("vendor");
         add("product");
@@ -37,15 +26,22 @@ public class CpeItem {
         add("targetSoftware");
         add("others");
     }};
+    private final Json cpeData;
+    private final OffsetDateTime discoveredDate;
+    private final String mongoEntityId;
+    private final String deviceId;
+    private final boolean isDeleted;
+    private final boolean isMain;
+    private final int discoveryConnectionId;
 
     /**
      * Create an object from the direct data. Should not be used directly, thus is private.
      * Create an object with a factory method instead.
      *
-     * @param cpeData The {@link Json} object with the data. Will be sanitized before being included.
+     * @param cpeData        The {@link Json} object with the data. Will be sanitized before being included.
      * @param discoveredDate The date of discovery.
-     * @param mongoEntityId The uuid of the CPI Item in CSL-Scan's Mongodb.
-     * @param deviceId The uuid of the device associated with this CPE Item.
+     * @param mongoEntityId  The uuid of the CPI Item in CSL-Scan's Mongodb.
+     * @param deviceId       The uuid of the device associated with this CPE Item.
      */
     private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId, boolean isDeleted, boolean isMain, int discoveryConnectionId) {
         this.cpeData = Json.object();
@@ -56,7 +52,7 @@ public class CpeItem {
         this.isMain = isMain;
         this.discoveryConnectionId = discoveryConnectionId;
 
-        for (String field: dataFields) {
+        for (String field : dataFields) {
             this.cpeData.set(field, cpeData.get(field));
         }
     }
@@ -82,20 +78,20 @@ public class CpeItem {
             deviceId = data.get("entityUuid").asString();
             isDeleted = JsonUtil.getBooleanFromJson(data, "deleted", false);
             Json isMainJson = data.get("isMain");
-            if (isMainJson == null || isMainJson.isNull()) {
-                isMain = false;
-            } else {
+            // isMain is optional, so we need to check if it is null, and if it is, leave it as false
+            if (isMainJson != null && !isMainJson.isNull()) {
                 isMain = isMainJson.asBoolean();
             }
+
+            // Get the connection's id if it is valid
             try {
                 discoveryConnectionId = Integer.parseInt(JsonUtil.getStringFromJson(data, "connectionInfoUuid", "0"));
             } catch (NumberFormatException e) {
                 discoveryConnectionId = -1;
             }
         } catch (NullPointerException e) {
+            // If any of the fields are missing, throw an exception
             throw new IllegalArgumentException("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item");
-        } catch (Throwable e) {
-            System.err.println("Stop here");
         }
 
         return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted, isMain, discoveryConnectionId);

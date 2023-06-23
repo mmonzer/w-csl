@@ -351,6 +351,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @return The result of the scan request, in a {@link JsonApiResponse}
      */
     public JsonApiResponse startScan(List<String> entities) {
+        // Synchronize devices between DB-API and CSL-Scan
         JsonApiResponse syncResult = dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
         if (!syncResult.isSuccess()) {
             return JsonApiResponse.error(
@@ -358,6 +359,16 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     Json.object("failed_devices", syncResult.getError().getDetails().get("failed_devices"))
             );
         }
+
+        // Get deleted CPE Items from DB-API and delete them from CSL-Scan
+        JsonApiResponse cpeDeletionResult = handleDeletedCpes();
+        if (!cpeDeletionResult.isSuccess()) {
+            return JsonApiResponse.error(
+                    "Could not delete CPE Items in CSL-Scan",
+                    Json.object("exception", cpeDeletionResult.getError().getDetails().get("exception"))
+            );
+        }
+
         if (isConcentrator) {
             return scanWebSocketHandler.requestScan(entities);
         } else {

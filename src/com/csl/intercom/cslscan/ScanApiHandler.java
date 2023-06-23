@@ -4,11 +4,9 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Device;
-import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -17,9 +15,8 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 
 import java.net.ConnectException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -35,6 +32,7 @@ public class ScanApiHandler implements AutoCloseable {
     public ScanApiHandler() {
         this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
     }
+
     public ScanApiHandler(String scanManagerUrl) {
         this.scanManagerUrl = scanManagerUrl;
 
@@ -106,6 +104,33 @@ public class ScanApiHandler implements AutoCloseable {
             response = updateEntity(device);
         }
         return response;
+    }
+
+    public List<String> deleteEntities(List<Pair<String, OffsetDateTime>> deletedDevices) throws Exception {
+        OffsetDateTime maxDate = OffsetDateTime.MIN;
+        List<String> failedDevices = new ArrayList<>();
+        boolean hasFailed = false;
+
+        // Delete devices from CSL-Scan and get the max deletion date
+        for (Pair<String, OffsetDateTime> deletedDevice : deletedDevices) {
+            String uuid = deletedDevice.getFirst();
+            OffsetDateTime deletionDate = deletedDevice.getSecond();
+            try {
+                deleteEntity(uuid);
+                if (deletionDate.isAfter(maxDate)) {
+                    maxDate = deletionDate;
+                }
+            } catch (Exception e) {
+                failedDevices.add(uuid);
+                hasFailed = true;
+            }
+        }
+
+        // If the devices were deleted successfully, and at least one was deleted, update the last entities deletion date
+        if (!deletedDevices.isEmpty() && !hasFailed) {
+            setLastEntitiesDeletionDate(maxDate);
+        }
+        return failedDevices;
     }
 
     /**
@@ -194,10 +219,12 @@ public class ScanApiHandler implements AutoCloseable {
             deleteCpeItemFromScan(id);
         }
 
-        try {
-            setLastCpeItemsDeletionDate(maxDate);
-        } catch (Exception e) {
-            System.err.println("Could not set the last CPE items deletion date");
+        if (!deletedCpes.isEmpty()) {
+            try {
+                setLastCpeItemsDeletionDate(maxDate);
+            } catch (Exception e) {
+                System.err.println("Could not set the last CPE items deletion date");
+            }
         }
     }
 

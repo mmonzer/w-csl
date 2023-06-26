@@ -378,8 +378,10 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception            If received an unexpected HTTP status code (ie. != 200) or if the JSON was malformed.
      */
     public void notifyScanFinished(ScanEntity scan) throws Exception {
-        // Do nothing if the scan is not actually finished.
+        // Do nothing if the scan is not actually finished or was not registered in DB-API.
         if (!scan.isFinished()) return;
+        if (scan.getDbapiId() <= 0) return;
+
         Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
         Json params = Json.object("ended_at", DbapiUtils.localDateToDbapi(scan.getEndDate()).toString());
         FinishedScanStatus status;

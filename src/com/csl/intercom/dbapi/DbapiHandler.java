@@ -10,7 +10,6 @@ import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.dbapi.models.ScansList;
 import com.csl.util.Pair;
-import com.google.common.util.concurrent.AtomicDouble;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -26,7 +25,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -39,8 +37,7 @@ public class DbapiHandler implements AutoCloseable {
     private String dbapiUrl;
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
-    static private AtomicInteger lastScanId = new AtomicInteger(0);
-    static private AtomicDouble lastScanProgress = new AtomicDouble(0);
+    private int maxPageSize = 1000;
 
     public DbapiHandler() {
         this(CSLContext.instance.getConfig());
@@ -262,17 +259,35 @@ public class DbapiHandler implements AutoCloseable {
      */
     public List<Pair<String, OffsetDateTime>> getDeletedCpeItemsSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS);
-        if (dateUtc != null) {
-            request.param("deleted_date__gt", dateUtc.toString());
+        List<Pair<String, OffsetDateTime>> deletedCpeItems = new ArrayList<>();
+
+        int offset = 0;
+        boolean hasMore = true;
+        while (hasMore) {
+            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS)
+                    .param("offset", String.valueOf(offset))
+                    .param("limit", String.valueOf(this.maxPageSize));
+            if (dateUtc != null) {
+                request.param("deleted_date__gt", dateUtc.toString());
+            }
+
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                throw new Exception("Unexpected status code " + response.getStatus());
+            }
+
+            List<Json> deletedCpeItemsPageJson = Json.read(response.getContentAsString()).asJsonList();
+
+            // If the list is smaller than the max page size, there are no more pages
+            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
+
+            deletedCpeItemsPageJson.stream()
+                    .map(json -> new Pair<>(json.get("object_id").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                    .forEach(deletedCpeItems::add);
+
+            offset += this.maxPageSize;
         }
-        ContentResponse response = request.send();
-        if (response.getStatus() != 200) {
-            throw new Exception("Unexpected status code " + response.getStatus());
-        }
-        return Json.read(response.getContentAsString()).asJsonList().stream()
-                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
-                .collect(Collectors.toList());
+        return deletedCpeItems;
     }
 
     /**

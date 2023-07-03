@@ -477,6 +477,8 @@ public class DbapiHandler implements AutoCloseable {
             if (result == null || result.isEmpty()) {
                 return "None";
             } else {
+                if (result.startsWith("\"") && result.endsWith("\""))
+                    return result.substring(1, result.length() - 1);
                 return result;
             }
         } catch (Exception e) {

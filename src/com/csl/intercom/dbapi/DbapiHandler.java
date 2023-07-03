@@ -469,6 +469,22 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
+    public String getMqttTopicPrefix() {
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_MQTT_TOPIC_PREFIX);
+        try {
+            ContentResponse response = request.send();
+            String result = response.getContentAsString();
+            if (result == null || result.isEmpty()) {
+                return "None";
+            } else {
+                return result;
+            }
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return "None";
+        }
+    }
+
     /**
      * Create a DB-API request. Most notably, adds the API key to the request header.
      *

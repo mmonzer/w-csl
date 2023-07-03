@@ -68,7 +68,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
 
         // Get the organization name, or "None" if it doesn't exist.
         try (DbapiHandler dbapiHandler = new DbapiHandler(config)) {
-            this.organization = dbapiHandler.getOrganizationName();
+            this.organization = dbapiHandler.getMqttTopicPrefix();
         } catch (Exception e) {
             this.organization = "None";
         }

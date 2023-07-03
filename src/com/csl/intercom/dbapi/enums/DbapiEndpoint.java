@@ -19,6 +19,7 @@ public enum DbapiEndpoint {
     SCAN_EVENT_UPDATE(EVENTS.getEndpoint() + "/%d/update_discovery_scan_event"),
     ORGANIZATIONS("/organization_api_key"),
     GET_ORGANIZATION_NAME(ORGANIZATIONS.getEndpoint() + "/get_organization_name_from_api_key"),
+    GET_MQTT_TOPIC_PREFIX(ORGANIZATIONS.getEndpoint() + "/get_mqtt_topic_prefix"),
     ;
 
     private final String endpoint;

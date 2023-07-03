@@ -205,7 +205,12 @@ public class ScansList {
      * @return The message of the scan, or an empty String if not present in the JSON.
      */
     private String getScanDescriptionFromStatus(Json status) {
-        return JsonUtil.getStringFromJson(status, "message", "");
+        Json message = status.get("message");
+        if (message == null || !message.isString()) {
+            return "";
+        } else {
+            return message.asString();
+        }
     }
 
     /**

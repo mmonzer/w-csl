@@ -11,6 +11,7 @@ import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLLogger;
+import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
@@ -36,7 +37,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
     private final String configFileSectionName;
-    private OffsetDateTime lastCpeItemDeletionVerification = null;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     //    private String apiKey;
@@ -88,6 +88,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+            });
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
+                handleDeletedCpes();
             });
         }
 
@@ -327,11 +330,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * { "result": "NOK", "error": { "reason": ..., "details": ...}} otherwise.
      */
     private JsonApiResponse handleDeletedCpes() {
-        List<String> deletedCpes = null;
+        List<Pair<String, OffsetDateTime>> deletedCpes = null;
         try {
-            OffsetDateTime currentTime = OffsetDateTime.now();
+            OffsetDateTime lastCpeItemDeletionVerification = scanApiHandler.getLastCpeItemsDeletionDate();
             deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
-            lastCpeItemDeletionVerification = currentTime;
         } catch (Exception e) {
             return JsonApiResponse.error("Failed to fetch deleted CPE Items",
                     Json.object("exception", e.getMessage())
@@ -348,6 +350,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * @return The result of the scan request, in a {@link JsonApiResponse}
      */
     public JsonApiResponse startScan(List<String> entities) {
+        // Synchronize devices between DB-API and CSL-Scan
         JsonApiResponse syncResult = dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
         if (!syncResult.isSuccess()) {
             return JsonApiResponse.error(
@@ -355,6 +358,16 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     Json.object("failed_devices", syncResult.getError().getDetails().get("failed_devices"))
             );
         }
+
+        // Get deleted CPE Items from DB-API and delete them from CSL-Scan
+        JsonApiResponse cpeDeletionResult = handleDeletedCpes();
+        if (!cpeDeletionResult.isSuccess()) {
+            return JsonApiResponse.error(
+                    "Could not delete CPE Items in CSL-Scan",
+                    Json.object("exception", cpeDeletionResult.getError().getDetails().get("exception"))
+            );
+        }
+
         if (isConcentrator) {
             return scanWebSocketHandler.requestScan(entities);
         } else {

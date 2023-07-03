@@ -29,7 +29,9 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      */
     public enum Topic {
         DEVICES("device"),
-        CPE_ITEMS("cpe_item");
+        CPE_ITEMS("cpe_discovered_item"),
+        CONFIGURATIONS("configuration")
+        ;
 
         private String name;
 

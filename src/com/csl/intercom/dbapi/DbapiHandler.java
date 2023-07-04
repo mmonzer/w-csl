@@ -282,7 +282,7 @@ public class DbapiHandler implements AutoCloseable {
             hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
 
             deletedCpeItemsPageJson.stream()
-                    .map(json -> new Pair<>(json.get("object_id").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                    .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
                     .forEach(deletedCpeItems::add);
 
             offset += this.maxPageSize;

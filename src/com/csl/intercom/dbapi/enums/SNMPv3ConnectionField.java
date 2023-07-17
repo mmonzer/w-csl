@@ -5,8 +5,8 @@ public enum SNMPv3ConnectionField {
     USERNAME("username", "user"),
     PASSWORD("read_only_password", "pass"),
     PASSPHRASE("snmp_privacy_key", "privPassPhrase"),
-    AUTHENTICATION_ALGORITHM("authentication_algorithm", "authProtocolName"),
-    PRIVACY_ALGORITHM("privacy_algorithm", "privProtocolName"),
+    AUTHENTICATION_ALGORITHM("snmp_authentication_algorithm", "authProtocolName"),
+    PRIVACY_ALGORITHM("snmp_privacy_algorithm", "privProtocolName"),
     ;
 
     private String dbapiName;

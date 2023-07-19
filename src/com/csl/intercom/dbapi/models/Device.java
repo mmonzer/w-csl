@@ -75,7 +75,10 @@ public class Device {
         );
         Json connectionsInfo = Json.array();
         for (Connection connection: this.connections) {
-            connectionsInfo.add(connection.serializeForScanner());
+            if(connection.isSimulated() == false){
+                connectionsInfo.add(connection.serializeForScanner());
+            }
+
         }
         if (!connectionsInfo.asList().isEmpty()) {
             result.set("connectionInfos", connectionsInfo);

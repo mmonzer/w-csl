@@ -18,8 +18,8 @@ public class SNMPv3Connection extends Connection {
     private SNMPv3PrivacyAlgorithm privacyAlgorithm;
     private String securityLevel;
 
-    protected SNMPv3Connection(int id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm) {
-        super(id, devices, ConnectionProtocol.SNMPv3);
+    protected SNMPv3Connection(int id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm, Boolean isSimulated) {
+        super(id, devices, ConnectionProtocol.SNMPv3, isSimulated);
         this.port = port;
         this.username = username;
         this.password = password;
@@ -59,8 +59,9 @@ public class SNMPv3Connection extends Connection {
             for (Json device: connectionJson.get("connected_devices").asJsonList()) {
                 devices.add(device.asString());
             }
+            Boolean isSimulated = connectionJson.get("is_simulated").asBoolean();
 
-            return new SNMPv3Connection(id, port, devices, username, password, passphrase, authenticationAlgo, privacyAlgo);
+            return new SNMPv3Connection(id, port, devices, username, password, passphrase, authenticationAlgo, privacyAlgo, isSimulated);
         } catch (Throwable e) {
             return null;
         }

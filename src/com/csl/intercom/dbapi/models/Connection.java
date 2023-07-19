@@ -13,11 +13,20 @@ public abstract class Connection {
     private int id;
     private List<String> devicesIds;
     private ConnectionProtocol protocol;
+    private Boolean isSimulated;
 
     protected Connection(int id, List<String> devicesIds, ConnectionProtocol protocol) {
         this.id = id;
         this.devicesIds = devicesIds;
         this.protocol = protocol;
+        this.isSimulated = false;
+    }
+
+    protected Connection(int id, List<String> devicesIds, ConnectionProtocol protocol, boolean isSimulated) {
+        this.id = id;
+        this.devicesIds = devicesIds;
+        this.protocol = protocol;
+        this.isSimulated = isSimulated;
     }
 
     /**
@@ -28,6 +37,7 @@ public abstract class Connection {
      */
     public static Connection fromJson(Json connectionJson) {
         ConnectionProtocol protocol = ConnectionProtocol.fromDbapiName(connectionJson.get("discovery_protocol_name").asString());
+
         if (protocol == null) {
             return null;
         }
@@ -71,5 +81,9 @@ public abstract class Connection {
 
     public List<String> getDevicesIds() {
         return devicesIds;
+    }
+
+    public Boolean isSimulated() {
+        return isSimulated;
     }
 }

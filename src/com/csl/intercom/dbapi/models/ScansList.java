@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanConstants;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.util.SchedulerUtil;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -231,11 +232,13 @@ public class ScansList {
                     Thread.currentThread().interrupt();
                 }
                 scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
-                scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
+//                scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
+                SchedulerUtil.scheduleAtFixedRatedWithTimeout(scansHandlingTask, this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
             }
         } else {
             scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
-            scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
+//            scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
+            SchedulerUtil.scheduleAtFixedRatedWithTimeout(scansHandlingTask, this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
         }
     }
 }

@@ -37,7 +37,7 @@ public class DbapiHandler implements AutoCloseable {
     private String dbapiUrl;
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
-    private int maxPageSize = 1000;
+    private final int maxPageSize = 1000;
 
     public DbapiHandler() {
         this(CSLContext.instance.getConfig());
@@ -236,16 +236,24 @@ public class DbapiHandler implements AutoCloseable {
      */
     public List<Pair<String, OffsetDateTime>> getDeletedDevicesSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES);
-        if (dateUtc != null) {
-            request.param("deleted_date__gt", dateUtc.toString());
-        }
-        Json response = Json.read(request.send().getContentAsString());
-        List<Pair<String, OffsetDateTime>> deletedDevices = new ArrayList<>(response.asList().size());
-        for (Json deletedDevice : response) {
-            String uuid = deletedDevice.get("object_id").asString();
-            OffsetDateTime deletedDate = DbapiUtils.dbapiDateToLocal(deletedDevice.get("deleted_at").asString());
-            deletedDevices.add(new Pair<>(uuid, deletedDate));
+        List<Pair<String, OffsetDateTime>> deletedDevices = new ArrayList<>();
+        boolean hasMore = true;
+        int offset = 0;
+        while (hasMore) {
+            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES)
+                    .param("offset", String.valueOf(offset))
+                    .param("limit", String.valueOf(this.maxPageSize));
+            if (dateUtc != null) {
+                request.param("deleted_date__gt", dateUtc.toString());
+            }
+            Json response = Json.read(request.send().getContentAsString());
+            for (Json deletedDevice : response.get("results").asJsonList()) {
+                String uuid = deletedDevice.get("object_id").asString();
+                OffsetDateTime deletedDate = DbapiUtils.dbapiDateToLocal(deletedDevice.get("deleted_at").asString());
+                deletedDevices.add(new Pair<>(uuid, deletedDate));
+            }
+            hasMore = !response.get("next").isNull();
+            offset += this.maxPageSize;
         }
         return deletedDevices;
     }
@@ -276,10 +284,12 @@ public class DbapiHandler implements AutoCloseable {
                 throw new Exception("Unexpected status code " + response.getStatus());
             }
 
-            List<Json> deletedCpeItemsPageJson = Json.read(response.getContentAsString()).asJsonList();
+            Json responseContents = Json.read(response.getContentAsString());
+            List<Json> deletedCpeItemsPageJson = responseContents.get("results").asJsonList();
 
             // If the list is smaller than the max page size, there are no more pages
-            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
+//            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
+            hasMore = !responseContents.get("next").isNull();
 
             deletedCpeItemsPageJson.stream()
                     .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))

@@ -1,3 +1,6 @@
+ARG GIT_COMMIT=unknown
+ARG GIT_BRANCH=unknown
+
 FROM eclipse-temurin:11-jdk as build-stage
 
 RUN apt-get update && apt-get install ant -y
@@ -7,6 +10,14 @@ RUN ["ant","-f","build.xml"]
 RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/usr/src/app/exportjarserver.xml"]
 
 FROM eclipse-temurin:11-jdk as production-stage
+ARG GIT_COMMIT
+ARG GIT_BRANCH
+# define the GIT environment variables
+ENV GIT_COMMIT=$GIT_COMMIT
+ENV GIT_BRANCH=$GIT_BRANCH
+# define the GIT labels
+LABEL git.commit.id=$GIT_COMMIT
+LABEL git.branch=$GIT_BRANCH
 WORKDIR /usr/src/app
 COPY --from=build-stage /usr/src/app/cslmainserver.jar ./
 COPY cslconf/ cslconf/

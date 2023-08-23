@@ -1,6 +1,7 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Device;
@@ -465,6 +466,25 @@ public class ScanApiHandler implements AutoCloseable {
         );
         if (response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception("Error while setting last entities deletion date: " + response.getResult());
+        }
+    }
+
+    /**
+     * Drop a collection in CSL-Scan.
+     */
+    public void dropCollection(ScanCollection collection) throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE, "/" + collection.getName() + "/drop", Json.object());
+        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception("Could not drop collection " + collection.getName() + " in CSL-Scan");
+        }
+    }
+
+    /**
+     * Drop all collections in CSL-Scan.
+     */
+    public void dropAllCollections() throws Exception {
+        for (ScanCollection collection : ScanCollection.values()) {
+            dropCollection(collection);
         }
     }
 }

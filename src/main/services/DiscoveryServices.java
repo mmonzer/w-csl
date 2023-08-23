@@ -205,6 +205,22 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "The details field should contain the list of failed items if relevant.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
+        addCmd("drop_all_collections", params -> {
+                    try {
+                        scanApiHandler.dropAllCollections();
+                        return JsonApiResponse.success().toJson();
+                    } catch (Exception e) {
+                        e.printStackTrace(System.err);
+                        return JsonApiResponse.error("Could not drop collections",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Drop all collections in DB-API")
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 

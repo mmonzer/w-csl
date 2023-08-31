@@ -1,5 +1,6 @@
 ARG GIT_COMMIT=unknown
 ARG GIT_BRANCH=unknown
+ARG APP_VERSION=unknown
 
 FROM eclipse-temurin:11-jdk as build-stage
 
@@ -12,12 +13,15 @@ RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/us
 FROM eclipse-temurin:11-jdk as production-stage
 ARG GIT_COMMIT
 ARG GIT_BRANCH
+ARG APP_VERSION
 # define the GIT environment variables
 ENV GIT_COMMIT=$GIT_COMMIT
 ENV GIT_BRANCH=$GIT_BRANCH
+ENV APP_VERSION=$APP_VERSION
 # define the GIT labels
 LABEL git.commit.id=$GIT_COMMIT
 LABEL git.branch=$GIT_BRANCH
+LABEL app.version=$APP_VERSION
 WORKDIR /usr/src/app
 COPY --from=build-stage /usr/src/app/cslmainclient.jar ./
 COPY cslconf/ cslconf/

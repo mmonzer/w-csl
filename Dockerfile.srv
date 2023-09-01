@@ -11,6 +11,16 @@ RUN ["ant","-f","build.xml"]
 RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/usr/src/app/exportjarserver.xml"]
 
 FROM eclipse-temurin:11-jdk as production-stage
+WORKDIR /usr/src/app
+COPY --from=build-stage /usr/src/app/cslmainserver.jar ./
+COPY cslconf/ cslconf/
+COPY csldata/ csldata/
+COPY datafile/ datafile/ 
+COPY idsdata/ idsdata/ 
+COPY runconfig/ runconfig/
+COPY runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
+COPY entrypoint.sh .
+
 ARG GIT_COMMIT
 ARG GIT_BRANCH
 ARG APP_VERSION
@@ -22,15 +32,6 @@ ENV APP_VERSION=$APP_VERSION
 LABEL git.commit.id=$GIT_COMMIT
 LABEL git.branch=$GIT_BRANCH
 LABEL app.version=$APP_VERSION
-WORKDIR /usr/src/app
-COPY --from=build-stage /usr/src/app/cslmainserver.jar ./
-COPY cslconf/ cslconf/
-COPY csldata/ csldata/
-COPY datafile/ datafile/ 
-COPY idsdata/ idsdata/ 
-COPY runconfig/ runconfig/
-COPY runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
-# CMD ["java","-jar","cslmainserver.jar"]
-COPY entrypoint.sh .
+
 RUN chmod +x entrypoint.sh
 ENTRYPOINT [ "./entrypoint.sh", "cslmainserver.jar" ]

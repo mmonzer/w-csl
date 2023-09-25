@@ -6,6 +6,7 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
+import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
@@ -22,7 +23,9 @@ import com.ucsl.json.JsonUtil;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -217,6 +220,93 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Drop all collections in DB-API")
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("get_entity_http_connections", params -> {
+                    List<EntityHttpConnection> entityHttpConnections = scanApiHandler.getAllEntityHttpConnections();
+                    if (entityHttpConnections == null) {
+                        return JsonApiResponse.error("Could not fetch entity HTTP connections from CSL-Scan",
+                                Json.object("exception", "Could not fetch entity HTTP connections from CSL-Scan")
+                        ).toJson();
+                    } else {
+                        return JsonApiResponse.result(Json.array(entityHttpConnections.stream().map(EntityHttpConnection::serializeForDbapi).toArray())).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get all entity HTTP connections from CSL-Scan")
+                        .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("get_entity_http_connection", params -> {
+                    Json uuidJson = params.get("uuid");
+                    String uuid;
+                    if (uuidJson == null) {
+                        uuid = null;
+                    } else if (uuidJson.isString()) {
+                        uuid = uuidJson.asString();
+                    } else if (uuidJson.isNumber()) {
+                        uuid = String.valueOf(uuidJson.asInteger());
+                    } else {
+                        uuid = null;
+                    }
+
+                    if (uuid == null) {
+                        return JsonApiResponse.error("Missing required parameter uuid",
+                                Json.object("exception", "Missing parameter uuid, of type string or integer")
+                        ).toJson();
+                    }
+                    EntityHttpConnection entityHttpConnection = scanApiHandler.getEntityHttpConnection(uuid);
+                    if (entityHttpConnection == null) {
+                        return JsonApiResponse.error("Could not fetch entity HTTP connection from CSL-Scan",
+                                Json.object("exception", "Could not fetch entity HTTP connection from CSL-Scan")
+                        ).toJson();
+                    } else {
+                        return JsonApiResponse.result(entityHttpConnection.serializeForDbapi()).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan")
+                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.INT)
+                        .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("delete_entity_http_connection", params -> {
+                    Json uuidJson = params.get("uuid");
+                    String uuid;
+                    if (uuidJson == null) {
+                        uuid = null;
+                    } else if (uuidJson.isString()) {
+                        uuid = uuidJson.asString();
+                    } else if (uuidJson.isNumber()) {
+                        uuid = String.valueOf(uuidJson.asInteger());
+                    } else {
+                        uuid = null;
+                    }
+                    return scanApiHandler.deleteEntityHttpConnection(uuid).toJson();
+                },
+                new JsonCmdHelp().setDesc("Delete an EntityHttpConnection from CSL-Scan")
+                        .setParam("uuid", "The uuid of the EntityHttpConnection to delete", IJsonCmdHelp.INT)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("add_entity_http_connection", params -> {
+                    Json entityHttpConnectionJson = params.get("entity_http_connection");
+                    if (entityHttpConnectionJson == null) {
+                        return JsonApiResponse.error("Missing required parameter entity_http_connection",
+                                Json.object("exception", "Missing parameter entity_http_connection, of type object")
+                        ).toJson();
+                    }
+                    EntityHttpConnection entityHttpConnection = EntityHttpConnection.fromDbapiJson(entityHttpConnectionJson);
+                    if (entityHttpConnection == null) {
+                        return JsonApiResponse.error("Could not parse entity_http_connection",
+                                Json.object("exception", "Could not parse entity_http_connection")
+                        ).toJson();
+                    }
+                    return scanApiHandler.createOrUpdateEntityHttpConnection(entityHttpConnection).toJson();
+                },
+                new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
+                        .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)

@@ -1,8 +1,10 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.CpeItem;
+import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.util.Pair;
@@ -56,7 +58,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} containing the newly created device, as handed by the scanner
      */
     public JsonApiResponse addEntity(Device device) {
-        return sendRequestToScanManager(HttpMethod.POST, "/entity/", device.serializeForScanner());
+        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY, device.serializeForScanner());
     }
 
     /**
@@ -65,7 +67,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} array containing the all the configured entities in the scanner.
      */
     public JsonApiResponse listEntities() {
-        return sendRequestToScanManager(HttpMethod.GET, "/entity/", Json.object());
+        return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY, Json.object());
     }
 
     /**
@@ -75,7 +77,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} containing the specified entity.
      */
     public JsonApiResponse getEntity(String id) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/" + id, Json.object());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+                String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id), Json.object());
         int statusCode;
         try {
             statusCode = response.getExtra().get("status_code").asInteger();
@@ -141,7 +144,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @return An empty object on success, an error message on failure.
      */
     public JsonApiResponse deleteEntity(String id) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE, "/entity/" + id, Json.object());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE,
+                String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id), Json.object());
         boolean success = response.isSuccess();
         Json result = response.getResult();
         if (success) {
@@ -161,7 +165,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} array containing all the SNMP objects discovered so far by the scanner on this entity.
      */
     public JsonApiResponse getEntityCpes(String id) {
-        return sendRequestToScanManager(HttpMethod.GET, "/cpeItem/entity/" + id, Json.object());
+        return sendRequestToScanManager(HttpMethod.GET,
+                String.format(ScanApiEndpoint.ENTITY_CPE_ITEMS.endpoint(), id), Json.object());
     }
 
     /**
@@ -171,7 +176,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The status of the scan.
      */
     public JsonApiResponse getScanStatus(String id) {
-        return sendRequestToScanManager(HttpMethod.GET, "/discovery/status/" + id, Json.object());
+        return sendRequestToScanManager(HttpMethod.GET,
+                String.format(ScanApiEndpoint.DISCOVERY_STATUS_DETAILS.endpoint(), id), Json.object());
     }
 
     /**
@@ -181,7 +187,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The status of the scan.
      */
     public JsonApiResponse getEntityScanStatus(String id) {
-        return sendRequestToScanManager(HttpMethod.GET, "/status/entity/" + id, Json.object());
+        return sendRequestToScanManager(HttpMethod.GET,
+                String.format(ScanApiEndpoint.ENTITY_SCAN_STATUS.endpoint(), id), Json.object());
     }
 
     /**
@@ -190,7 +197,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link JsonApiResponse} with CSL-Scan's status as it was received, or with an error in the 'error' field.
      */
     public JsonApiResponse getStatus() {
-        return sendRequestToScanManager(HttpMethod.GET, "/discovery/status", Json.object());
+        return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_STATUS, Json.object());
     }
 
     /**
@@ -199,7 +206,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @param id The uuid of the CPE Item to delete.
      */
     public void deleteCpeItemFromScan(String id) {
-        sendRequestToScanManager(HttpMethod.DELETE, "/cpeItem/" + id, Json.object());
+        sendRequestToScanManager(HttpMethod.DELETE,
+                String.format(ScanApiEndpoint.CPE_ITEM_DETAILS.endpoint(), id), Json.object());
     }
 
     /**
@@ -239,9 +247,9 @@ public class ScanApiHandler implements AutoCloseable {
         JsonApiResponse response;
         Json cpeItems = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object());
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object());
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/", Json.object("date", ScanUtils.localTimeToScan(date).toString()));
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString()));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             cpeItems = response.getResult();
@@ -296,6 +304,54 @@ public class ScanApiHandler implements AutoCloseable {
             }
         }
         return result;
+    }
+
+    /**
+     * Get the list of EntityHttpConnection objects from CSL-Scan.
+     *
+     * @return A {@link List<EntityHttpConnection>} containing all the EntityHttpConnection objects from CSL-Scan.
+     */
+    public List<EntityHttpConnection> getAllEntityHttpConnections() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+                ScanApiEndpoint.ENTITY_HTTP_CONNECTION, Json.object());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            return response.getResult().asJsonList().stream()
+                    .map(EntityHttpConnection::fromScannerJson)
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Get an {@link EntityHttpConnection} object from CSL-Scan from its uuid.
+     *
+     * @param uuid The uuid of the EntityHttpConnection object to retrieve.
+     * @return The {@link EntityHttpConnection} object from CSL-Scan with the specified uuid.
+     */
+    public EntityHttpConnection getEntityHttpConnection(String uuid) {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+                String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            return EntityHttpConnection.fromScannerJson(response.getResult());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Delete an {@link EntityHttpConnection} object from CSL-Scan from its uuid.
+     *
+     * @param uuid The uuid of the EntityHttpConnection object to delete.
+     * @return The {@link JsonApiResponse} from CSL-Scan.
+     */
+    public JsonApiResponse deleteEntityHttpConnection(String uuid) {
+        return sendRequestToScanManager(HttpMethod.DELETE,
+                String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object());
+    }
+
+    public JsonApiResponse createOrUpdateEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
+        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION, entityHttpConnection.serializeForScanner());
     }
 
     /**
@@ -364,13 +420,18 @@ public class ScanApiHandler implements AutoCloseable {
         return res;
     }
 
+    private JsonApiResponse sendRequestToScanManager(HttpMethod method, ScanApiEndpoint endpoint, Json params) {
+        return sendRequestToScanManager(method, endpoint.endpoint(), params);
+    }
+
     /**
      * Get the last updated date of the devices in CSL-Scan.
      *
      * @return The date of the last entities update in CSL-Scan.
      */
     public OffsetDateTime getLastLastEntityUpdateDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/last_update", Json.object());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+                ScanApiEndpoint.ENTITY_LAST_UPDATE, Json.object());
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
@@ -407,7 +468,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The date of the last CPE items deletion in CSL-Scan.
      */
     public OffsetDateTime getLastCpeItemsDeletionDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/cpeItem/last_deletion", Json.object());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+                ScanApiEndpoint.CPE_ITEM_LAST_DELETION, Json.object());
 
         // If the response's status code is not 200, return null
         if (response.getExtra().get("status_code").asInteger() != 200) {
@@ -428,7 +490,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The date of the last entities deletion in CSL-Scan.
      */
     public OffsetDateTime getLastEntitiesDeletionDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, "/entity/last_deletion", Json.object());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+                ScanApiEndpoint.ENTITY_LAST_DELETION, Json.object());
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
@@ -445,7 +508,7 @@ public class ScanApiHandler implements AutoCloseable {
      */
     public void setLastCpeItemsDeletionDate(OffsetDateTime date) throws Exception {
         JsonApiResponse response = sendRequestToScanManager(
-                HttpMethod.POST, "/cpeItem/last_deletion",
+                HttpMethod.POST, ScanApiEndpoint.CPE_ITEM_LAST_DELETION,
                 Json.object("cpeItemsLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
         if (response.getExtra().get("status_code").asInteger() != 200) {
@@ -461,7 +524,7 @@ public class ScanApiHandler implements AutoCloseable {
      */
     public void setLastEntitiesDeletionDate(OffsetDateTime date) throws Exception {
         JsonApiResponse response = sendRequestToScanManager(
-                HttpMethod.POST, "/entity/last_deletion",
+                HttpMethod.POST, ScanApiEndpoint.ENTITY_LAST_DELETION,
                 Json.object("entitiesLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
         if (response.getExtra().get("status_code").asInteger() != 200) {
@@ -473,7 +536,8 @@ public class ScanApiHandler implements AutoCloseable {
      * Drop a collection in CSL-Scan.
      */
     public void dropCollection(ScanCollection collection) throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE, "/" + collection.getName() + "/drop", Json.object());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE,
+                String.format(ScanApiEndpoint.DROP_COLLECTION.endpoint(), collection.getName()), Json.object());
         if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception("Could not drop collection " + collection.getName() + " in CSL-Scan");
         }

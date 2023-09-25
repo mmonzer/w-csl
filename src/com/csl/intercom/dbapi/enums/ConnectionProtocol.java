@@ -7,6 +7,7 @@ public enum ConnectionProtocol {
     SNMPv2c("SNMPv2c", "SNMPV2c"),
     SNMPv3("SNMPv3", "SNMPV3"),
     RemotePowershell("Powershell", "POWERSHELL"),
+    HTTP("HTTP", "HTTP"),
     ;
 
     private String dbapiName;

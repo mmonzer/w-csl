@@ -53,6 +53,9 @@ public abstract class Connection {
             case RemotePowershell:
                 return RemotePowershellConnection.fromJson(connectionJson);
 
+            case HTTP:
+                return HttpConnection.fromJson(connectionJson);
+
             default:
                 return null;
         }

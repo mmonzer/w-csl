@@ -74,13 +74,15 @@ public class HttpConnection extends Connection {
         this.stagesConfig.entrySet().forEach(entry -> stagesConfigSerialized.set(entry.getKey().toString(), entry.getValue().serializeForScanner()));
 
         Json result = super.serializeForScanner();
-        result.set(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName(), entityHttpConnectionUuid);
-        result.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), authenticationMethod.name());
-        result.set(HttpConnectionField.USERNAME.scanName(), username);
-        result.set(HttpConnectionField.PASSWORD.scanName(), password);
-        result.set(HttpConnectionField.TOKEN.scanName(), token);
-        result.set(HttpConnectionField.HEADERS.scanName(), headers);
-        result.set(HttpConnectionField.QUERY_PARAMS.scanName(), queryParams);
+        result.set("uuid", this.getId());
+        result.set(HttpConnectionField.PORT.scanName(), this.port);
+        result.set(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName(), this.entityHttpConnectionUuid);
+        result.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authenticationMethod.name());
+        result.set(HttpConnectionField.USERNAME.scanName(), this.username);
+        result.set(HttpConnectionField.PASSWORD.scanName(), this.password);
+        result.set(HttpConnectionField.TOKEN.scanName(), this.token);
+        result.set(HttpConnectionField.HEADERS.scanName(), this.headers);
+        result.set(HttpConnectionField.QUERY_PARAMS.scanName(), this.queryParams);
         result.set(HttpConnectionField.STAGES_CONFIG.scanName(), stagesConfigSerialized);
 
         return result;

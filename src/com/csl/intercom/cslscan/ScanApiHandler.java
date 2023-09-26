@@ -201,6 +201,19 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     /**
+     * Test if an existing connection is valid.
+     *
+     * @param deviceUuid     The uuid of the device to test.
+     * @param connectionUuid The uuid of the connection to test.
+     * @return A {@link JsonApiResponse} with CSL-Scan's response.
+     */
+    public JsonApiResponse testConnection(String deviceUuid, String connectionUuid) {
+        return sendRequestToScanManager(HttpMethod.GET,
+                String.format(ScanApiEndpoint.ENTITY_TEST_CONNECTION.endpoint(), deviceUuid),
+                Json.object("connection_uuid", connectionUuid));
+    }
+
+    /**
      * Request the deletion of a CPE Item to CSL-Scan.
      *
      * @param id The uuid of the CPE Item to delete.

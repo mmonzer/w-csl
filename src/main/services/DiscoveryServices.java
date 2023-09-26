@@ -266,7 +266,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan")
-                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.INT)
+                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.STR)
                         .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
@@ -285,7 +285,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     return scanApiHandler.deleteEntityHttpConnection(uuid).toJson();
                 },
                 new JsonCmdHelp().setDesc("Delete an EntityHttpConnection from CSL-Scan")
-                        .setParam("uuid", "The uuid of the EntityHttpConnection to delete", IJsonCmdHelp.INT)
+                        .setParam("uuid", "The uuid of the EntityHttpConnection to delete", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
@@ -311,6 +311,24 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
+        addCmd("test_connection", params -> {
+                    String deviceUuid = JsonUtil.getStringFromJson(params, "device_uuid", null);
+                    String connectionUuid = JsonUtil.getStringFromJson(params, "connection_uuid", null);
+                    if (deviceUuid == null || connectionUuid == null) {
+                        return JsonApiResponse.error("Missing required parameter device_uuid or connection_uuid",
+                                Json.object("exception", "Missing parameter device_uuid or connection_uuid, of type string")
+                        ).toJson();
+                    } else {
+                        return scanApiHandler.testConnection(deviceUuid, connectionUuid).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Test if an existing connection is valid")
+                        .setParam("device_uuid", "The uuid of the device to test the connection on", IJsonCmdHelp.STR)
+                        .setParam("connection_uuid", "The uuid of the connection to test", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
+                                "where result contains \"true\" (as a String) if the connection is valid," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK));
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 

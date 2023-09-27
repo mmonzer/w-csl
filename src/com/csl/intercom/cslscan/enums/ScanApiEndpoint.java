@@ -5,7 +5,8 @@ public enum ScanApiEndpoint {
     ENTITY_DETAILS(ENTITY.endpoint() + "%s"),
     ENTITY_LAST_UPDATE(ENTITY.endpoint() + "last_update"),
     ENTITY_LAST_DELETION(ENTITY.endpoint() + "last_deletion"),
-    ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection/%s"),
+    ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection"),
+    ENTITY_TEST_EXISTING_CONNECTION(ENTITY_TEST_CONNECTION.endpoint() + "/%s"),
     CPE_ITEM("/cpeItem/"),
     CPE_ITEM_DETAILS(CPE_ITEM.endpoint() + "%s"),
     CPE_ITEM_LAST_DELETION(CPE_ITEM.endpoint() + "last_deletion"),
@@ -15,7 +16,7 @@ public enum ScanApiEndpoint {
     ENTITY_SCAN_STATUS("/status/entity/%s"),
     ENTITY_HTTP_CONNECTION("/entityHttpConnection/"),
     ENTITY_HTTP_CONNECTION_DETAILS(ENTITY_HTTP_CONNECTION.endpoint() + "%s"),
-    DROP_COLLECTION("/%s/drop")
+    DROP_COLLECTION("/%s/drop"),
     ;
 
     private String endpoint;

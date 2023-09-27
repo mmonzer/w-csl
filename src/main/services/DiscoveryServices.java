@@ -8,6 +8,8 @@ import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
@@ -313,18 +315,49 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         );
         addCmd("test_connection", params -> {
                     String deviceUuid = JsonUtil.getStringFromJson(params, "device_uuid", null);
-                    String connectionUuid = JsonUtil.getStringFromJson(params, "connection_uuid", null);
-                    if (deviceUuid == null || connectionUuid == null) {
-                        return JsonApiResponse.error("Missing required parameter device_uuid or connection_uuid",
+                    String connectionId;
+                    Json connectionIdJson = params.get("connection_id");
+                    if (connectionIdJson != null && connectionIdJson.isString()) {
+                        connectionId = connectionIdJson.asString();
+                    } else if (connectionIdJson != null && connectionIdJson.isNumber()) {
+                        connectionId = String.valueOf(connectionIdJson.asInteger());
+                    } else {
+                        connectionId = null;
+                    }
+                    if (deviceUuid == null || connectionId == null) {
+                        return JsonApiResponse.error("Missing required parameter device_uuid or connection_id",
                                 Json.object("exception", "Missing parameter device_uuid or connection_uuid, of type string")
                         ).toJson();
                     } else {
-                        return scanApiHandler.testConnection(deviceUuid, connectionUuid).toJson();
+                        return scanApiHandler.testConnection(deviceUuid, connectionId).toJson();
                     }
                 },
                 new JsonCmdHelp().setDesc("Test if an existing connection is valid")
                         .setParam("device_uuid", "The uuid of the device to test the connection on", IJsonCmdHelp.STR)
-                        .setParam("connection_uuid", "The uuid of the connection to test", IJsonCmdHelp.STR)
+                        .setParam("connection_id", "The id of the connection to test", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
+                                "where result contains \"true\" (as a String) if the connection is valid," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK));
+        addCmd("test_new_connection", params -> {
+                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
+                    Json connectionJson = params.get("connection");
+                    connectionJson.set("id", 0);
+                    connectionJson.set("connected_devices", Json.array(0));
+                    Connection connection = Connection.fromJson(connectionJson);
+                    if (ipAddress == null || connection == null) {
+                        return JsonApiResponse.error("Missing required parameter device or connection",
+                                Json.object("exception", "Missing parameter device or connection, of type object")
+                        ).toJson();
+                    } else {
+                        Device device = Device.fromIpAddress(ipAddress);
+                        device.setConnections(List.of(connection));
+                        return scanApiHandler.testConnection(device).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Test if a new connection is valid")
+                        .setParam("ip_address", "The IP address to test the connection on", IJsonCmdHelp.STR)
+                        .setParam("connection", "The connection to test", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)

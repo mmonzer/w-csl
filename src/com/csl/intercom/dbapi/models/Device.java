@@ -61,6 +61,16 @@ public class Device {
     }
 
     /**
+     * Create a mock device from an IP address.
+     *
+     * @param ipAddress The IP address of the device.
+     * @return A mock device with the specified IP address.
+     */
+    public static Device fromIpAddress(String ipAddress) {
+        return new Device("mock_device", "Mock device", ipAddress, List.of(0), OffsetDateTime.now());
+    }
+
+    /**
      * Serialize the device in a suitable format to send to CSL-Scan.
      * Should be called only after setConnections was called.
      *

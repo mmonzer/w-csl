@@ -6,6 +6,7 @@ import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
@@ -209,8 +210,21 @@ public class ScanApiHandler implements AutoCloseable {
      */
     public JsonApiResponse testConnection(String deviceUuid, String connectionUuid) {
         return sendRequestToScanManager(HttpMethod.GET,
-                String.format(ScanApiEndpoint.ENTITY_TEST_CONNECTION.endpoint(), deviceUuid),
+                String.format(ScanApiEndpoint.ENTITY_TEST_EXISTING_CONNECTION.endpoint(), deviceUuid),
                 Json.object("connection_uuid", connectionUuid));
+    }
+
+    /**
+     * Test if a connection is valid.
+     * The connection does not need to exist in CSL-Scan.
+     *
+     * @param device The device to test. We assume it contains a connection. Only the first connection will be tested.
+     * @return A {@link JsonApiResponse} with CSL-Scan's response.
+     */
+    public JsonApiResponse testConnection(Device device) {
+        return sendRequestToScanManager(HttpMethod.POST,
+                ScanApiEndpoint.ENTITY_TEST_CONNECTION,
+                device.serializeForScanner());
     }
 
     /**

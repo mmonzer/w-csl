@@ -9,6 +9,7 @@ import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.ConnectionProtocol;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
@@ -25,9 +26,7 @@ import com.ucsl.json.JsonUtil;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -344,7 +343,13 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     Json connectionJson = params.get("connection");
                     connectionJson.set("id", 0);
                     connectionJson.set("connected_devices", Json.array(0));
-                    Connection connection = Connection.fromJson(connectionJson);
+                    List<ConnectionProtocol> protocols;
+                    try {
+                        protocols = dbapiHandler.fetchDiscoveryProtocols();
+                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Connection connection = Connection.fromJson(connectionJson, protocols);
                     if (ipAddress == null || connection == null) {
                         return JsonApiResponse.error("Missing required parameter device or connection",
                                 Json.object("exception", "Missing parameter device or connection, of type object")

@@ -1,7 +1,9 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.intercom.dbapi.enums.ConnectionProtocol;
+import com.csl.intercom.dbapi.enums.HttpConnectionField;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 
@@ -12,17 +14,17 @@ import java.util.List;
 public abstract class Connection {
     private int id;
     private List<String> devicesIds;
-    private ConnectionProtocol protocol;
+    private StaticConnectionProtocol protocol;
     private Boolean isSimulated;
 
-    protected Connection(int id, List<String> devicesIds, ConnectionProtocol protocol) {
+    protected Connection(int id, List<String> devicesIds, StaticConnectionProtocol protocol) {
         this.id = id;
         this.devicesIds = devicesIds;
         this.protocol = protocol;
         this.isSimulated = false;
     }
 
-    protected Connection(int id, List<String> devicesIds, ConnectionProtocol protocol, boolean isSimulated) {
+    protected Connection(int id, List<String> devicesIds, StaticConnectionProtocol protocol, boolean isSimulated) {
         this.id = id;
         this.devicesIds = devicesIds;
         this.protocol = protocol;
@@ -35,8 +37,16 @@ public abstract class Connection {
      * @param connectionJson The serialized connection as handed by DB-API.
      * @return An instance of the correct child if the parsing was successful, or null.
      */
-    public static Connection fromJson(Json connectionJson) {
-        ConnectionProtocol protocol = ConnectionProtocol.fromDbapiName(connectionJson.get("discovery_protocol_name").asString());
+    public static Connection fromJson(Json connectionJson, List<ConnectionProtocol> protocols) {
+        ConnectionProtocol connectionProtocol;
+        StaticConnectionProtocol protocol;
+        try {
+            int protocolId = connectionJson.get("discovery_protocol").asInteger();
+            connectionProtocol = ConnectionProtocol.getProtocolById(protocols, protocolId);
+            protocol = connectionProtocol.getStaticConnectionProtocol();
+        } catch (UnsupportedOperationException | NullPointerException e) {
+            return null;
+        }
 
         if (protocol == null) {
             return null;
@@ -54,7 +64,7 @@ public abstract class Connection {
                 return RemotePowershellConnection.fromJson(connectionJson);
 
             case HTTP:
-                return HttpConnection.fromJson(connectionJson);
+                return HttpConnection.fromJson(connectionJson, connectionProtocol);
 
             default:
                 return null;
@@ -78,7 +88,7 @@ public abstract class Connection {
         return id;
     }
 
-    public ConnectionProtocol getProtocol() {
+    public StaticConnectionProtocol getProtocol() {
         return protocol;
     }
 

@@ -1,9 +1,8 @@
 package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.cslscan.models.EntityHttpConnectionStage;
-import com.csl.intercom.dbapi.enums.ConnectionProtocol;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
-import com.mongodb.util.JSON;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
@@ -23,7 +22,7 @@ public class HttpConnection extends Connection {
     private Map<Integer, StageConfig> stagesConfig;
 
     protected HttpConnection(int id, int port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
-        super(id, devices, ConnectionProtocol.HTTP, isSimulated);
+        super(id, devices, StaticConnectionProtocol.HTTP, isSimulated);
         this.entityHttpConnectionUuid = entityHttpConnectionUuid;
         this.port = port;
         this.authenticationMethod = authenticationMethod;
@@ -35,7 +34,14 @@ public class HttpConnection extends Connection {
         this.stagesConfig = stagesConfig;
     }
 
-    public static HttpConnection fromJson(Json jsonConnection) {
+    /**
+     * Parse the JSON serialization received from DB-API. This method requires the connection protocol to find the right template.
+     *
+     * @param jsonConnection The serialized connection as handed by DB-API.
+     * @param protocol The connection protocol corresponding to this connection.
+     * @return An instance of {@link HttpConnection} if the parsing was successful, null otherwise.
+     */
+    public static HttpConnection fromJson(Json jsonConnection, ConnectionProtocol protocol) {
         try {
             int id = jsonConnection.get("id").asInteger();
             int port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asInteger();
@@ -44,7 +50,7 @@ public class HttpConnection extends Connection {
 
             Json otherData = jsonConnection.get("read_only_other_data");
             EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(otherData.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());
-            String entityHttpConnectionUuid = otherData.get(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.dbapiName()).asString();
+            String entityHttpConnectionUuid = protocol.getConnectionTemplateId();
             String token = JsonUtil.getStringFromJson(otherData, HttpConnectionField.TOKEN.dbapiName(), null);
             Boolean isSimulated = jsonConnection.get("is_simulated").asBoolean();
 

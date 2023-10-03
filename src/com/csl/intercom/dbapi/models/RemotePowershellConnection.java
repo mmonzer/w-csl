@@ -1,11 +1,9 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.intercom.dbapi.enums.ConnectionProtocol;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
 import com.ucsl.json.Json;
-import org.apache.commons.lang3.ObjectUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +13,7 @@ public class RemotePowershellConnection extends Connection {
     private String password;
 
     protected RemotePowershellConnection(int id, int port, List<String> devices, String username, String password) {
-        super(id, devices, ConnectionProtocol.RemotePowershell);
+        super(id, devices, StaticConnectionProtocol.RemotePowershell);
         this.port = port;
         this.username = username;
         this.password = password;

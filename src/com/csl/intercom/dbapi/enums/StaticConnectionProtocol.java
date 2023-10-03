@@ -1,8 +1,6 @@
 package com.csl.intercom.dbapi.enums;
 
-import com.csl.intercom.dbapi.models.Connection;
-
-public enum ConnectionProtocol {
+public enum StaticConnectionProtocol {
     SNMPv1("SNMPv1", "SNMPV1"),
     SNMPv2c("SNMPv2c", "SNMPV2c"),
     SNMPv3("SNMPv3", "SNMPV3"),
@@ -13,7 +11,7 @@ public enum ConnectionProtocol {
     private String dbapiName;
     private String scanName;
 
-    private ConnectionProtocol(String dbapiName, String scanName) {
+    private StaticConnectionProtocol(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;
         this.scanName = scanName;
     }
@@ -26,8 +24,8 @@ public enum ConnectionProtocol {
         return scanName;
     }
 
-    public static ConnectionProtocol fromDbapiName(String dbapiName) {
-        for (ConnectionProtocol protocol: ConnectionProtocol.values()) {
+    public static StaticConnectionProtocol fromDbapiName(String dbapiName) {
+        for (StaticConnectionProtocol protocol: StaticConnectionProtocol.values()) {
             if (protocol.dbapiName.equals(dbapiName)) {
                 return protocol;
             }

@@ -5,10 +5,7 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
-import com.csl.intercom.dbapi.models.Connection;
-import com.csl.intercom.dbapi.models.Device;
-import com.csl.intercom.dbapi.models.ScanEntity;
-import com.csl.intercom.dbapi.models.ScansList;
+import com.csl.intercom.dbapi.models.*;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -213,7 +210,7 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<Json>} of connections that were changed since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Connection> getConnectionsSince(OffsetDateTime date) throws Exception {
+    public List<Connection> getConnectionsSince(OffsetDateTime date, List<ConnectionProtocol> protocols) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
         if (dateUtc != null) {
@@ -221,7 +218,7 @@ public class DbapiHandler implements AutoCloseable {
         }
         Json response = Json.read(request.send().getContentAsString());
         return response.asJsonList().stream()
-                .map(Connection::fromJson)
+                .map(json -> Connection.fromJson(json, protocols))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
@@ -333,7 +330,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws InterruptedException If the connection with DB-API was interrupted.
      * @throws TimeoutException     If the connection with DB-API times out.
      */
-    public List<Connection> fetchConnections(List<Integer> ids) throws ExecutionException, InterruptedException, TimeoutException {
+    public List<Connection> fetchConnections(List<Integer> ids, List<ConnectionProtocol> protocols) throws ExecutionException, InterruptedException, TimeoutException {
         List<Connection> connections = new ArrayList<>();
         for (int id : ids) {
             Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
@@ -341,9 +338,9 @@ public class DbapiHandler implements AutoCloseable {
             Json response = Json.read(request.send().getContentAsString());
             Connection connection;
             if (response.isArray()) {
-                connection = Connection.fromJson(response.at(0));
+                connection = Connection.fromJson(response.at(0), protocols);
             } else {
-                connection = Connection.fromJson(response);
+                connection = Connection.fromJson(response, protocols);
             }
             if (connection != null) {
                 connections.add(connection);
@@ -360,9 +357,11 @@ public class DbapiHandler implements AutoCloseable {
      * @throws InterruptedException If the connection with DB-API was interrupted.
      * @throws TimeoutException     If the connection with DB-API times out.
      */
-    public List<Json> fetchDiscoveryProtocols() throws ExecutionException, InterruptedException, TimeoutException {
+    public List<ConnectionProtocol> fetchDiscoveryProtocols() throws ExecutionException, InterruptedException, TimeoutException {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS);
-        return Json.read(request.send().getContentAsString()).asJsonList();
+        return Json.read(request.send().getContentAsString()).asJsonList().stream()
+                .map(ConnectionProtocol::fromJson)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -598,9 +597,11 @@ public class DbapiHandler implements AutoCloseable {
         //region Get changes from DB-API
         try {
             OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
+            List<ConnectionProtocol> protocols = fetchDiscoveryProtocols();
             newDevices = buildNewDevices(
                     getDevicesSince(lastDeviceModification),
-                    getConnectionsSince(lastDeviceModification)
+                    getConnectionsSince(lastDeviceModification, protocols),
+                    protocols
             );
             OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
             deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
@@ -652,7 +653,7 @@ public class DbapiHandler implements AutoCloseable {
      * }
      * </code>
      */
-    private List<Device> buildNewDevices(List<Device> devices, List<Connection> connections) {
+    private List<Device> buildNewDevices(List<Device> devices, List<Connection> connections, List<ConnectionProtocol> protocols) {
         //region List the uuids we have in both list
         List<Integer> connectionUuidsInDevices = new ArrayList<>();
         List<String> deviceUuidsInConnections = new ArrayList<>();
@@ -684,7 +685,7 @@ public class DbapiHandler implements AutoCloseable {
 
         //region Get the missing parts
         try {
-            connections.addAll(fetchConnections(connectionsToGet));
+            connections.addAll(fetchConnections(connectionsToGet, protocols));
             devices.addAll(fetchDevices(devicesToGet));
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace(System.err);

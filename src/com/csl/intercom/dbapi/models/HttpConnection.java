@@ -94,6 +94,34 @@ public class HttpConnection extends Connection {
         return result;
     }
 
+    public String getEntityHttpConnectionUuid() {
+        return entityHttpConnectionUuid;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public EntityHttpConnectionStage.HttpAuthenticationMethod getAuthenticationMethod() {
+        return authenticationMethod;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public Map<Integer, StageConfig> getStagesConfig() {
+        return stagesConfig;
+    }
+
     public static class StageConfig {
         private int port = 0;
         private EntityHttpConnectionStage.HttpAuthenticationMethod authMethod = null;
@@ -135,6 +163,18 @@ public class HttpConnection extends Connection {
             json.get(HttpConnectionField.QUERY_PARAMS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.queryParams.put(key, value.asString()));
 
             return stageConfig;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
         }
     }
 }

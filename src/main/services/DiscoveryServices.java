@@ -8,9 +8,10 @@ import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.dbapi.DbapiHandler;
-import com.csl.intercom.dbapi.models.Connection;
-import com.csl.intercom.dbapi.models.ConnectionProtocol;
-import com.csl.intercom.dbapi.models.Device;
+import com.csl.intercom.dbapi.enums.HttpConnectionField;
+import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
+import com.csl.intercom.dbapi.enums.SNMPv3ConnectionField;
+import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
@@ -26,6 +27,7 @@ import com.ucsl.json.JsonUtil;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -341,6 +343,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         addCmd("test_new_connection", params -> {
                     String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
                     Json connectionJson = params.get("connection");
+                    Json baseConnectionIdJson = params.get("base_connection_id");
+
                     connectionJson.set("id", 0);
                     connectionJson.set("connected_devices", Json.array(0));
                     List<ConnectionProtocol> protocols;
@@ -349,6 +353,55 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     } catch (ExecutionException | InterruptedException | TimeoutException e) {
                         throw new RuntimeException(e);
                     }
+
+                    // Fetch the password from the base connection if needed
+                    if (baseConnectionIdJson != null && baseConnectionIdJson.isNumber()) {
+                        try {
+                            Connection baseConnection = dbapiHandler.fetchConnections(List.of(baseConnectionIdJson.asInteger()), protocols).get(0);
+                            switch (baseConnection.getProtocol()) {
+                                case SNMPv3:
+                                    if (!connectionJson.has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
+                                        connectionJson.set(SNMPv3ConnectionField.PASSWORD.dbapiName(), ((SNMPv3Connection) baseConnection).getPassword());
+                                    }
+                                    if (!connectionJson.get("read_only_other_data").has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
+                                        connectionJson.get("read_only_other_data").set(SNMPv3ConnectionField.PASSPHRASE.dbapiName(), ((SNMPv3Connection) baseConnection).getPassphrase());
+                                    }
+                                    break;
+                                case RemotePowershell:
+                                    if (!connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
+                                        connectionJson.set(RemotePowershellConnectionField.PASSWORD.dbapiName(), ((RemotePowershellConnection) baseConnection).getPassword());
+                                    }
+                                    break;
+                                case HTTP:
+                                    if (!connectionJson.has(HttpConnectionField.PASSWORD.dbapiName())) {
+                                        connectionJson.set(HttpConnectionField.PASSWORD.dbapiName(), ((HttpConnection) baseConnection).getPassword());
+                                    }
+                                    // Add the password of the base connection to the stages config
+                                    Map<Integer, HttpConnection.StageConfig> baseStagesConfig = ((HttpConnection) baseConnection).getStagesConfig();
+                                    for (Map.Entry<String, Json> stageConfig : connectionJson.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
+                                        try {
+                                            String stagePassword = baseStagesConfig.get(Integer.parseInt(stageConfig.getKey())).getPassword();
+                                            if (stagePassword != null) {
+                                                if (!stageConfig.getValue().has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
+                                                    stageConfig.getValue().set(SNMPv3ConnectionField.PASSWORD.dbapiName(), stagePassword);
+                                                }
+                                            }
+                                        } catch (NullPointerException e) {
+                                            continue;
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    break;
+
+                            }
+                        } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException | NullPointerException e) {
+                            return JsonApiResponse.error("Could not fetch base connection",
+                                    Json.object("exception", e.getMessage())
+                            ).toJson();
+                        }
+                    }
+
                     Connection connection = Connection.fromJson(connectionJson, protocols);
                     if (ipAddress == null || connection == null) {
                         return JsonApiResponse.error("Missing required parameter device or connection",
@@ -363,6 +416,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Test if a new connection is valid")
                         .setParam("ip_address", "The IP address to test the connection on", IJsonCmdHelp.STR)
                         .setParam("connection", "The connection to test", IJsonCmdHelp.JSON)
+                        .setParam("base_connection_id", "The id of the base connection to fetch the password from", IJsonCmdHelp.INT)
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)

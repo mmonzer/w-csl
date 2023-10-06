@@ -80,4 +80,16 @@ public class SNMPv3Connection extends Connection {
 
         return result;
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getPassphrase() {
+        return passphrase;
+    }
 }

@@ -378,7 +378,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                     }
                                     // Add the password of the base connection to the stages config
                                     Map<Integer, HttpConnection.StageConfig> baseStagesConfig = ((HttpConnection) baseConnection).getStagesConfig();
-                                    for (Map.Entry<String, Json> stageConfig : connectionJson.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
+                                    for (Map.Entry<String, Json> stageConfig : connectionJson.get("read_only_other_data").get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
                                         try {
                                             String stagePassword = baseStagesConfig.get(Integer.parseInt(stageConfig.getKey())).getPassword();
                                             if (stagePassword != null) {

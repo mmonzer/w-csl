@@ -150,17 +150,21 @@ public class HttpConnection extends Connection {
 
         public static StageConfig fromJson(Json json) {
             StageConfig stageConfig = new StageConfig();
-            stageConfig.port = json.get(HttpConnectionField.PORT.dbapiName()).asInteger();
-            stageConfig.authMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(json.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());
-            stageConfig.username = json.get(HttpConnectionField.USERNAME.dbapiName()).asString();
-            stageConfig.password = json.get(HttpConnectionField.PASSWORD.dbapiName()).asString();
-            stageConfig.token = json.get(HttpConnectionField.TOKEN.dbapiName()).asString();
+            stageConfig.port = JsonUtil.getIntFromJson(json, HttpConnectionField.PORT.dbapiName(), 0);
+            stageConfig.authMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, HttpConnectionField.AUTHENTICATION_METHOD.dbapiName(), EntityHttpConnectionStage.HttpAuthenticationMethod.NONE.name()));
+            stageConfig.username = JsonUtil.getStringFromJson(json, HttpConnectionField.USERNAME.dbapiName(), null);
+            stageConfig.password = JsonUtil.getStringFromJson(json, HttpConnectionField.PASSWORD.dbapiName(), null);
+            stageConfig.token = JsonUtil.getStringFromJson(json, HttpConnectionField.TOKEN.dbapiName(), null);
 
             stageConfig.headers = new HashMap<>();
-            json.get(HttpConnectionField.HEADERS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.headers.put(key, value.asString()));
+            if (json.has(HttpConnectionField.HEADERS.dbapiName())) {
+                json.get(HttpConnectionField.HEADERS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.headers.put(key, value.asString()));
+            }
 
             stageConfig.queryParams = new HashMap<>();
-            json.get(HttpConnectionField.QUERY_PARAMS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.queryParams.put(key, value.asString()));
+            if (json.has(HttpConnectionField.QUERY_PARAMS.dbapiName())) {
+                json.get(HttpConnectionField.QUERY_PARAMS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.queryParams.put(key, value.asString()));
+            }
 
             return stageConfig;
         }

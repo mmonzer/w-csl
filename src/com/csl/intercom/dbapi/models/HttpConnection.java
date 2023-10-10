@@ -21,7 +21,7 @@ public class HttpConnection extends Connection {
     private Map<String, String> queryParams;
     private Map<Integer, StageConfig> stagesConfig;
 
-    protected HttpConnection(int id, int port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
+    public HttpConnection(int id, int port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
         super(id, devices, StaticConnectionProtocol.HTTP, isSimulated);
         this.entityHttpConnectionUuid = entityHttpConnectionUuid;
         this.port = port;
@@ -77,18 +77,34 @@ public class HttpConnection extends Connection {
     @Override
     public Json serializeForScanner() {
         Json stagesConfigSerialized = Json.object();
-        this.stagesConfig.entrySet().forEach(entry -> stagesConfigSerialized.set(entry.getKey().toString(), entry.getValue().serializeForScanner()));
+        if (this.stagesConfig != null) {
+            this.stagesConfig.entrySet().forEach(entry -> stagesConfigSerialized.set(entry.getKey().toString(), entry.getValue().serializeForScanner()));
+        }
 
         Json result = super.serializeForScanner();
         result.set("uuid", this.getId());
         result.set(HttpConnectionField.PORT.scanName(), this.port);
-        result.set(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName(), this.entityHttpConnectionUuid);
-        result.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authenticationMethod.name());
-        result.set(HttpConnectionField.USERNAME.scanName(), this.username);
-        result.set(HttpConnectionField.PASSWORD.scanName(), this.password);
-        result.set(HttpConnectionField.TOKEN.scanName(), this.token);
-        result.set(HttpConnectionField.HEADERS.scanName(), this.headers);
-        result.set(HttpConnectionField.QUERY_PARAMS.scanName(), this.queryParams);
+        if (this.entityHttpConnectionUuid != null) {
+            result.set(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName(), this.entityHttpConnectionUuid);
+        }
+        if (this.authenticationMethod != null) {
+            result.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authenticationMethod.name());
+        }
+        if (this.username != null) {
+            result.set(HttpConnectionField.USERNAME.scanName(), this.username);
+        }
+        if (this.password != null) {
+            result.set(HttpConnectionField.PASSWORD.scanName(), this.password);
+        }
+        if (this.token != null) {
+            result.set(HttpConnectionField.TOKEN.scanName(), this.token);
+        }
+        if (this.headers != null) {
+            result.set(HttpConnectionField.HEADERS.scanName(), this.headers);
+        }
+        if (this.queryParams != null) {
+            result.set(HttpConnectionField.QUERY_PARAMS.scanName(), this.queryParams);
+        }
         result.set(HttpConnectionField.STAGES_CONFIG.scanName(), stagesConfigSerialized);
 
         return result;
@@ -102,6 +118,11 @@ public class HttpConnection extends Connection {
         return port;
     }
 
+    public HttpConnection setPort(int port) {
+        this.port = port;
+        return this;
+    }
+
     public EntityHttpConnectionStage.HttpAuthenticationMethod getAuthenticationMethod() {
         return authenticationMethod;
     }
@@ -110,16 +131,49 @@ public class HttpConnection extends Connection {
         return username;
     }
 
+    public HttpConnection setUsername(String username) {
+        this.username = username;
+        return this;
+    }
+
     public String getPassword() {
         return password;
+    }
+
+    public HttpConnection setPassword(String password) {
+        this.password = password;
+        return this;
     }
 
     public String getToken() {
         return token;
     }
 
+    public HttpConnection setToken(String token) {
+        this.token = token;
+        return this;
+    }
+
     public Map<Integer, StageConfig> getStagesConfig() {
         return stagesConfig;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public HttpConnection setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+        return this;
+    }
+
+    public Map<String, String> getQueryParams() {
+        return queryParams;
+    }
+
+    public HttpConnection setQueryParams(Map<String, String> queryParams) {
+        this.queryParams = queryParams;
+        return this;
     }
 
     public static class StageConfig {
@@ -179,6 +233,10 @@ public class HttpConnection extends Connection {
 
         public String getPassword() {
             return password;
+        }
+
+        public String getToken() {
+            return token;
         }
     }
 }

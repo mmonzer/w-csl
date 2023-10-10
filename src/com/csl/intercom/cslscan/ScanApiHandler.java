@@ -8,6 +8,7 @@ import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
+import com.csl.intercom.dbapi.models.HttpConnection;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -577,5 +578,36 @@ public class ScanApiHandler implements AutoCloseable {
         for (ScanCollection collection : ScanCollection.values()) {
             dropCollection(collection);
         }
+    }
+
+    public JsonApiResponse fetchHttpConnectionStage(String ipAddress, int port, String username, String password, String token, EntityHttpConnection entityHttpConnection) {
+        JsonApiResponse response = JsonApiResponse.error("Could not fetch stage page");
+        try {
+            Device device = Device.fromIpAddress(ipAddress);
+            Connection connection = new HttpConnection(
+                    0,
+                    port,
+                    List.of("0"),
+                    "0",
+                    null,
+                    username,
+                    password,
+                    token,
+                    null,
+                    null,
+                    null,
+                    false
+            );
+            device.setConnections(List.of(connection));
+
+            Json body = Json.object(
+                    "stage", entityHttpConnection.getStages().get(0).serializeForScanner(),
+                    "entity", device.serializeForScanner()
+            );
+            response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_STAGE, body);
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
+        return response;
     }
 }

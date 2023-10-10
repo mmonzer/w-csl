@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.cslscan.models.EntityHttpConnectionStage;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -339,7 +340,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK));
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
         addCmd("test_new_connection", params -> {
                     String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
                     Json connectionJson = params.get("connection");
@@ -395,7 +397,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                     break;
 
                             }
-                        } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException | NullPointerException e) {
+                        } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException |
+                                 NullPointerException e) {
                             return JsonApiResponse.error("Could not fetch base connection",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
@@ -420,7 +423,42 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK));
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("fetch_http_connection_stage", params -> {
+                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
+                    int port = JsonUtil.getIntFromJson(params, "port", 0);
+                    String username = JsonUtil.getStringFromJson(params, "username", null);
+                    String password = JsonUtil.getStringFromJson(params, "password", null);
+                    String token = JsonUtil.getStringFromJson(params, "token", null);
+
+                    Json stageJson = params.get("stage");
+                    // Use the default values for the headers and query params, thus mark them as usable for CSL-Scan
+                    stageJson.get("headers").asJsonList().forEach(header -> header.set("value", header.set("isInput", false)));
+                    stageJson.get("queryParams").asJsonList().forEach(header -> header.set("value", header.set("isInput", false)));
+
+                    EntityHttpConnectionStage entityHttpConnectionStage = EntityHttpConnectionStage.fromDbapiJson(stageJson);
+                    EntityHttpConnection entityHttpConnection = new EntityHttpConnection().addStage(entityHttpConnectionStage);
+
+                    if (ipAddress == null || port == 0 || entityHttpConnectionStage == null) {
+                        return JsonApiResponse.error("Missing required parameter ip_address, port or stage",
+                                Json.object("exception", "Missing parameter ip_address, port or stage, of type string, int or object")
+                        ).toJson();
+                    } else {
+                        return scanApiHandler.fetchHttpConnectionStage(ipAddress, port, username, password, token, entityHttpConnection).toJson();
+//                        return JsonApiResponse.error("Not implemented yet").toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Try to fetch the contents of a stage in the Http Connection API")
+                        .setParam("stage", "The stage to fetch", IJsonCmdHelp.JSON)
+                        .setParam("ip_address", "The IP address to test", IJsonCmdHelp.STR)
+                        .setParam("port", "The port to test", IJsonCmdHelp.INT)
+                        .setParam("username", "The username to test. Optional.", IJsonCmdHelp.STR)
+                        .setParam("password", "The password to test. Optional.", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true, \"result\": { \"value\": { \"page\": \"...\", \"status\": int }</code> if the operation went without error, " +
+                                "where result contains \"true\" (as a String) if the connection is valid," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+        );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 

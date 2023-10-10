@@ -3,6 +3,7 @@ package com.csl.intercom.cslscan.models;
 import com.csl.intercom.cslscan.enums.EntityHttpConnectionField;
 import com.ucsl.json.Json;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,5 +64,22 @@ public class EntityHttpConnection {
             e.printStackTrace(System.err);
             return null;
         }
+    }
+
+    /**
+     * Add a stage to the connection.
+     * @param stage The stage to add.
+     * @return The connection itself.
+     */
+    public EntityHttpConnection addStage(EntityHttpConnectionStage stage) {
+        if (this.stages == null) {
+            this.stages = new ArrayList<>();
+        }
+        this.stages.add(stage);
+        return this;
+    }
+
+    public List<EntityHttpConnectionStage> getStages() {
+        return stages;
     }
 }

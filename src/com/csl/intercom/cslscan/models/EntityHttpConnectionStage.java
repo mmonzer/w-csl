@@ -182,11 +182,15 @@ public class EntityHttpConnectionStage {
          * @return An OptionalInputField instance
          */
         public static OptionalInputField<String, String> fromDbapiJson(Json json) {
+            Json keyJson = json.get("key");
+            Json valueJson = json.get("value");
+            Json isOptionalJson = json.get("isOptional");
+            Json isInputJson = json.get("isInput");
             return new OptionalInputField<>(
-                    json.get("key").asString(),
-                    json.get("value").asString(),
-                    json.get("isOptional").asBoolean(),
-                    json.get("isInput").asBoolean()
+                    keyJson != null && keyJson.isString() ? keyJson.asString() : "",
+                    valueJson != null && valueJson.isString() ? valueJson.asString() : "",
+                    isOptionalJson != null && isOptionalJson.isBoolean() ? isOptionalJson.asBoolean() : false,
+                    isInputJson != null && isInputJson.isBoolean() ? isInputJson.asBoolean() : false
             );
         }
 

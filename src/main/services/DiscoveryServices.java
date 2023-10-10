@@ -434,8 +434,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
                     Json stageJson = params.get("stage");
                     // Use the default values for the headers and query params, thus mark them as usable for CSL-Scan
-                    stageJson.get("headers").asJsonList().forEach(header -> header.set("value", header.set("isInput", false)));
-                    stageJson.get("queryParams").asJsonList().forEach(header -> header.set("value", header.set("isInput", false)));
+                    if (stageJson.has("headers") && stageJson.get("headers").isArray()) {
+                        stageJson.get("headers").asJsonList().forEach(header -> header.set("isInput", false));
+                    }
+                    if (stageJson.has("queryParams") && stageJson.get("queryParams").isArray()) {
+                        stageJson.get("queryParams").asJsonList().forEach(header -> header.set("isInput", false));
+                    }
 
                     EntityHttpConnectionStage entityHttpConnectionStage = EntityHttpConnectionStage.fromDbapiJson(stageJson);
                     EntityHttpConnection entityHttpConnection = new EntityHttpConnection().addStage(entityHttpConnectionStage);

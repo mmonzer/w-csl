@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.EntityHttpConnectionStageField;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.http.HttpMethod;
 
 import java.util.List;
@@ -71,20 +72,26 @@ public class EntityHttpConnectionStage {
      */
     public static EntityHttpConnectionStage fromDbapiJson(Json json) {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
-        stage.protocol = HttpProtocol.valueOf(json.get(EntityHttpConnectionStageField.PROTOCOL.dbapiName()).asString());
-        stage.method = HttpMethod.valueOf(json.get(EntityHttpConnectionStageField.METHOD.dbapiName()).asString());
-        stage.authenticationMethod = HttpAuthenticationMethod.valueOf(json.get(EntityHttpConnectionStageField.AUTHENTICATION_METHOD.dbapiName()).asString());
-        stage.path = json.get(EntityHttpConnectionStageField.PATH.dbapiName()).asString();
-        stage.contentType = json.get(EntityHttpConnectionStageField.CONTENT_TYPE.dbapiName()).asString();
-        stage.body = json.get(EntityHttpConnectionStageField.BODY.dbapiName()).asString();
-        stage.jsParser = json.get(EntityHttpConnectionStageField.JS_PARSER.dbapiName()).asString();
+        stage.protocol = HttpProtocol.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.PROTOCOL.dbapiName(), "HTTP"));
+        stage.method = HttpMethod.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.METHOD.dbapiName(), "GET"));
+        stage.authenticationMethod = HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.AUTHENTICATION_METHOD.dbapiName(), "NONE"));
+        stage.path = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.PATH.dbapiName(), "");
+        stage.contentType = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.CONTENT_TYPE.dbapiName(), "");
+        stage.body = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.BODY.dbapiName(), "");
+        stage.jsParser = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.JS_PARSER.dbapiName(), "");
 
-        List<Json> headersJson = json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).asJsonList();
+        List<Json> headersJson = List.of();
+        if (json.has(EntityHttpConnectionStageField.HEADERS.dbapiName()) && json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).isObject()) {
+            headersJson = json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).asJsonList();
+        }
         stage.headers = headersJson.stream()
                 .map(OptionalInputField::fromDbapiJson)
                 .collect(Collectors.toList());
 
-        List<Json> queryParamsJson = json.get(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()).asJsonList();
+        List<Json> queryParamsJson = List.of();
+        if (json.has(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()) && json.get(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()).isObject()) {
+            queryParamsJson = json.get(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()).asJsonList();
+        }
         stage.queryParams = queryParamsJson.stream()
                 .map(OptionalInputField::fromDbapiJson)
                 .collect(Collectors.toList());

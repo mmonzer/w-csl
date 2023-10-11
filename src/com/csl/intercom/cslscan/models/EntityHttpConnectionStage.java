@@ -5,6 +5,7 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.http.HttpMethod;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -80,16 +81,16 @@ public class EntityHttpConnectionStage {
         stage.body = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.BODY.dbapiName(), "");
         stage.jsParser = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.JS_PARSER.dbapiName(), "");
 
-        List<Json> headersJson = List.of();
-        if (json.has(EntityHttpConnectionStageField.HEADERS.dbapiName()) && json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).isObject()) {
+        List<Json> headersJson = new ArrayList<>();
+        if (json.has(EntityHttpConnectionStageField.HEADERS.dbapiName()) && json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).isArray()) {
             headersJson = json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).asJsonList();
         }
         stage.headers = headersJson.stream()
                 .map(OptionalInputField::fromDbapiJson)
                 .collect(Collectors.toList());
 
-        List<Json> queryParamsJson = List.of();
-        if (json.has(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()) && json.get(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()).isObject()) {
+        List<Json> queryParamsJson = new ArrayList<>();
+        if (json.has(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()) && json.get(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()).isArray()) {
             queryParamsJson = json.get(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()).asJsonList();
         }
         stage.queryParams = queryParamsJson.stream()

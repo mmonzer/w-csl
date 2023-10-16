@@ -16,18 +16,20 @@ public class HttpConnection extends Connection {
     private EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod;
     private String username;
     private String password;
+    private String realm;
     private String token;
     private Map<String, String> headers;
     private Map<String, String> queryParams;
     private Map<Integer, StageConfig> stagesConfig;
 
-    public HttpConnection(int id, int port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
+    public HttpConnection(int id, int port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String realm, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
         super(id, devices, StaticConnectionProtocol.HTTP, isSimulated);
         this.entityHttpConnectionUuid = entityHttpConnectionUuid;
         this.port = port;
         this.authenticationMethod = authenticationMethod;
         this.username = username;
         this.password = password;
+        this.realm = realm;
         this.token = token;
         this.headers = headers;
         this.queryParams = queryParams;
@@ -52,6 +54,7 @@ public class HttpConnection extends Connection {
             EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(otherData.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());
             String entityHttpConnectionUuid = protocol.getConnectionTemplateId();
             String token = JsonUtil.getStringFromJson(otherData, HttpConnectionField.TOKEN.dbapiName(), null);
+            String realm = JsonUtil.getStringFromJson(otherData, HttpConnectionField.REALM.dbapiName(), null);
             Boolean isSimulated = jsonConnection.get("is_simulated").asBoolean();
 
             Map<String, String> headers = new HashMap<>();
@@ -67,7 +70,7 @@ public class HttpConnection extends Connection {
                     .map(Json::asString)
                     .collect(java.util.stream.Collectors.toList());
 
-            return new HttpConnection(id, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, token, headers, queryParams, stagesConfig, isSimulated);
+            return new HttpConnection(id, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, headers, queryParams, stagesConfig, isSimulated);
         } catch (Throwable e) {
             e.printStackTrace(System.err);
             return null;
@@ -95,6 +98,9 @@ public class HttpConnection extends Connection {
         }
         if (this.password != null) {
             result.set(HttpConnectionField.PASSWORD.scanName(), this.password);
+        }
+        if (this.realm != null) {
+            result.set(HttpConnectionField.REALM.scanName(), this.realm);
         }
         if (this.token != null) {
             result.set(HttpConnectionField.TOKEN.scanName(), this.token);

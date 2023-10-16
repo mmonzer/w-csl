@@ -8,6 +8,7 @@ public enum HttpConnectionField {
     AUTHENTICATION_METHOD("authMethod", "authMethod"),
     USERNAME("username", "username"),
     PASSWORD("read_only_password", "password"),
+    REALM("realm", "realm"),
     TOKEN("token", "token"),
     HEADERS("headers", "headers"),
 

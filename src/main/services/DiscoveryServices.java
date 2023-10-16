@@ -430,6 +430,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     int port = JsonUtil.getIntFromJson(params, "port", 0);
                     String username = JsonUtil.getStringFromJson(params, "username", null);
                     String password = JsonUtil.getStringFromJson(params, "password", null);
+                    String realm = JsonUtil.getStringFromJson(params, "realm", null);
                     String token = JsonUtil.getStringFromJson(params, "token", null);
 
                     Json stageJson = params.get("stage");
@@ -449,7 +450,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 Json.object("exception", "Missing parameter ip_address, port or stage, of type string, int or object")
                         ).toJson();
                     } else {
-                        return scanApiHandler.fetchHttpConnectionStage(ipAddress, port, username, password, token, entityHttpConnection).toJson();
+                        return scanApiHandler.fetchHttpConnectionStage(ipAddress, port, username, password, realm, token, entityHttpConnection).toJson();
 //                        return JsonApiResponse.error("Not implemented yet").toJson();
                     }
                 },

@@ -1,6 +1,7 @@
 package com.csl.intercom.cslscan.enums;
 
 public enum EntityHttpConnectionStageField {
+    NAME("stageName", "name"),
     PROTOCOL("protocol", "protocol"),
     METHOD("method", "method"),
     AUTHENTICATION_METHOD("authenticationMethod", "authenticationMethod"),

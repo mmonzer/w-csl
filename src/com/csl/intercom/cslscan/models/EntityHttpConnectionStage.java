@@ -162,20 +162,26 @@ public class EntityHttpConnectionStage {
         private V value;
         private boolean isOptional;
         private boolean isInput;
+        private boolean isVisible;
+        private boolean isEditable;
 
-        public OptionalInputField(K key, V value, boolean isOptional, boolean isInput) {
+        public OptionalInputField(K key, V value, boolean isOptional, boolean isInput, boolean isVisible, boolean isEditable) {
             this.key = key;
             this.value = value;
             this.isOptional = isOptional;
             this.isInput = isInput;
+            this.isVisible = isVisible;
+            this.isEditable = isEditable;
         }
 
         public Json serializeForScanner() {
             return Json.object(
                     "key", key,
                     "value", value,
-                    "optional", isOptional,
-                    "input", isInput
+                    "isOptional", isOptional,
+                    "isInput", isInput,
+                    "isVisible", isVisible,
+                    "isEditable", isEditable
             );
         }
 
@@ -184,7 +190,9 @@ public class EntityHttpConnectionStage {
                     "key", key,
                     "value", value,
                     "isOptional", isOptional,
-                    "isInput", isInput
+                    "isInput", isInput,
+                    "isVisible", isVisible,
+                    "isEditable", isEditable
             );
         }
 
@@ -199,11 +207,15 @@ public class EntityHttpConnectionStage {
             Json valueJson = json.get("value");
             Json isOptionalJson = json.get("isOptional");
             Json isInputJson = json.get("isInput");
+            Json isVisibleJson = json.get("isVisible");
+            Json isEditableJson = json.get("isEditable");
             return new OptionalInputField<>(
                     keyJson != null && keyJson.isString() ? keyJson.asString() : "",
                     valueJson != null && valueJson.isString() ? valueJson.asString() : "",
                     isOptionalJson != null && isOptionalJson.isBoolean() ? isOptionalJson.asBoolean() : false,
-                    isInputJson != null && isInputJson.isBoolean() ? isInputJson.asBoolean() : false
+                    isInputJson != null && isInputJson.isBoolean() ? isInputJson.asBoolean() : false,
+                    isVisibleJson != null && isVisibleJson.isBoolean() ? isVisibleJson.asBoolean() : true,
+                    isEditableJson != null && isEditableJson.isBoolean() ? isEditableJson.asBoolean() : true
             );
         }
 
@@ -218,7 +230,9 @@ public class EntityHttpConnectionStage {
                     json.get("key").asString(),
                     json.get("value").asString(),
                     json.get("optional").asBoolean(),
-                    json.get("input").asBoolean()
+                    json.get("input").asBoolean(),
+                    json.get("visible").asBoolean(),
+                    json.get("editable").asBoolean()
             );
         }
     }

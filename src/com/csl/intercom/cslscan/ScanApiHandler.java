@@ -378,8 +378,14 @@ public class ScanApiHandler implements AutoCloseable {
                 String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object());
     }
 
-    public JsonApiResponse createOrUpdateEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
+    public JsonApiResponse createEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
         return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION, entityHttpConnection.serializeForScanner());
+    }
+
+    public JsonApiResponse updateEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
+        return sendRequestToScanManager(HttpMethod.PUT,
+                String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), entityHttpConnection.getUuid()),
+                entityHttpConnection.serializeForScanner());
     }
 
     /**
@@ -421,6 +427,9 @@ public class ScanApiHandler implements AutoCloseable {
                     throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());
             }
             ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                return JsonApiResponse.error("Error while sending request to CSL-Scan", Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
+            }
             if (response.getContent().length > 0) {
                 if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
                     res = JsonApiResponse.result(

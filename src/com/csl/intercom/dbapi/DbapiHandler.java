@@ -3,6 +3,8 @@ package com.csl.intercom.dbapi;
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
+import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
@@ -362,6 +364,32 @@ public class DbapiHandler implements AutoCloseable {
         return Json.read(request.send().getContentAsString()).asJsonList().stream()
                 .map(ConnectionProtocol::fromJson)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Create a discovery protocol in DB-API. Used when updating an HTTP template.
+     *
+     * @param entityHttpConnection The created HTTP template.
+     * @throws Exception If the creation failed.
+     */
+    public void createDiscoveryProtocol(EntityHttpConnection entityHttpConnection) throws Exception {
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DISCOVERY_PROTOCOLS);
+        Json requestContents = Json.object(
+                ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
+                ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
+                ConnectionProtocolField.DEFAULT_PORT.dbapiName(), 443,
+                ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid()
+        );
+        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Error creating discovery protocol: got unexpected status " + response.getStatus());
+        }
+    }
+
+    public void updateDiscoveryProtocol(EntityHttpConnection entityHttpConnection) {
+        // Waiting for implementation in DB-API
+        return;
     }
 
     /**

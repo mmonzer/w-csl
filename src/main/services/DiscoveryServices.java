@@ -296,18 +296,42 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         );
         addCmd("add_entity_http_connection", params -> {
                     Json entityHttpConnectionJson = params.get("entity_http_connection");
-                    if (entityHttpConnectionJson == null) {
-                        return JsonApiResponse.error("Missing required parameter entity_http_connection",
-                                Json.object("exception", "Missing parameter entity_http_connection, of type object")
-                        ).toJson();
-                    }
                     EntityHttpConnection entityHttpConnection = EntityHttpConnection.fromDbapiJson(entityHttpConnectionJson);
                     if (entityHttpConnection == null) {
                         return JsonApiResponse.error("Could not parse entity_http_connection",
                                 Json.object("exception", "Could not parse entity_http_connection")
                         ).toJson();
                     }
-                    return scanApiHandler.createOrUpdateEntityHttpConnection(entityHttpConnection).toJson();
+                    JsonApiResponse response;
+                    if (entityHttpConnection.getUuid() == null) {
+                        response = scanApiHandler.createEntityHttpConnection(entityHttpConnection);
+                        if (response.isSuccess()) {
+                            EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
+                            try {
+                                if (createdEntityHttpConnection == null) {
+                                    throw new Exception("Could not parse the created entity_http_connection");
+                                }
+                                dbapiHandler.createDiscoveryProtocol(createdEntityHttpConnection);
+                            } catch (Exception e) {
+                                scanApiHandler.deleteEntityHttpConnection(createdEntityHttpConnection.getUuid());
+                                response = JsonApiResponse.error("Could not create discovery protocol",
+                                        Json.object("exception", e.getMessage())
+                                );
+                            }
+                        }
+                    } else {
+                        EntityHttpConnection previousEntityHttpConnection = scanApiHandler.getEntityHttpConnection(entityHttpConnection.getUuid());
+                        response = scanApiHandler.updateEntityHttpConnection(entityHttpConnection);
+                        try {
+                            dbapiHandler.updateDiscoveryProtocol(entityHttpConnection);
+                        } catch (Exception e) {
+                            scanApiHandler.updateEntityHttpConnection(previousEntityHttpConnection);
+                            response = JsonApiResponse.error("Could not update discovery protocol",
+                                    Json.object("exception", e.getMessage())
+                            );
+                        }
+                    }
+                    return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
                         .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)

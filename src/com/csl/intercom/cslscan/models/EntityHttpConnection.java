@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.EntityHttpConnectionField;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ public class EntityHttpConnection {
     public static EntityHttpConnection fromDbapiJson(Json json) {
         EntityHttpConnection entityHttpConnection = new EntityHttpConnection();
         try {
-            entityHttpConnection.uuid = json.get(EntityHttpConnectionField.UUID.dbapiName()).asString();
+            entityHttpConnection.uuid = JsonUtil.getStringFromJson(json, EntityHttpConnectionField.UUID.dbapiName(), null);
             entityHttpConnection.name = json.get(EntityHttpConnectionField.NAME.dbapiName()).asString();
             entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList().stream()
                     .map(EntityHttpConnectionStage::fromDbapiJson)
@@ -81,5 +82,13 @@ public class EntityHttpConnection {
 
     public List<EntityHttpConnectionStage> getStages() {
         return stages;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public String getName() {
+        return name;
     }
 }

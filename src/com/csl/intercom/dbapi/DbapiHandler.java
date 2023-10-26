@@ -382,14 +382,53 @@ public class DbapiHandler implements AutoCloseable {
         );
         request.content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
-        if (response.getStatus() != 200) {
+        if (response.getStatus() >= 400) {
             throw new Exception("Error creating discovery protocol: got unexpected status " + response.getStatus());
         }
     }
 
-    public void updateDiscoveryProtocol(EntityHttpConnection entityHttpConnection) {
-        // Waiting for implementation in DB-API
-        return;
+    /**
+     * Update a discovery protocol in DB-API. Used when updating an HTTP template.
+     *
+     * @param entityHttpConnection The updated HTTP template.
+     * @throws Exception If the update failed.
+     */
+    public void updateDiscoveryProtocol(EntityHttpConnection entityHttpConnection) throws Exception {
+        String templateId = entityHttpConnection.getUuid();
+        ConnectionProtocol protocol = getDiscoveryProtocolByTemplateId(templateId);
+        if (protocol == null) {
+            createDiscoveryProtocol(entityHttpConnection);
+        } else {
+            int protocolId = protocol.getId();
+            Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
+            Json requestContents = Json.object(
+                    ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
+                    ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
+                    ConnectionProtocolField.DEFAULT_PORT.dbapiName(), 443,
+                    ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid()
+            );
+            request.content(new StringContentProvider(requestContents.toString()), "application/json");
+            ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                throw new Exception("Error updating discovery protocol: got unexpected status " + response.getStatus());
+            }
+        }
+    }
+
+    public ConnectionProtocol getDiscoveryProtocolByTemplateId(String id) {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
+        request.param("connection_template_id", id);
+        try {
+            Json response = Json.read(request.send().getContentAsString());
+            if (response.isArray()) {
+                return ConnectionProtocol.fromJson(response.at(0));
+            } else {
+                return ConnectionProtocol.fromJson(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return null;
+        }
     }
 
     /**

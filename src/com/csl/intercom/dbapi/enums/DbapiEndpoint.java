@@ -16,6 +16,8 @@ public enum DbapiEndpoint {
     DELETED_DEVICES(DELETED_OBJECTS.getEndpoint() + "/get_deleted_devices"),
     CONNECTIONS("/connections"),
     DISCOVERY_PROTOCOLS("/cpe_discovery_api"),
+    DISCOVERY_PROTOCOLS_DETAILS(DISCOVERY_PROTOCOLS.getEndpoint() + "/%d"),
+    DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID(DISCOVERY_PROTOCOLS.getEndpoint() + "/get_dynamic_discovery_protocol"),
     SCAN_EVENT_CREATION(EVENTS.getEndpoint() + "/create_discovery_scan_event"),
     SCAN_EVENT_UPDATE(EVENTS.getEndpoint() + "/%d/update_discovery_scan_event"),
     ORGANIZATIONS("/organization_api_key"),

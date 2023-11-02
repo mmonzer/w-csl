@@ -488,6 +488,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "where result contains \"true\" (as a String) if the connection is valid," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
         );
+        addCmd("get_predefined_http_variables", params -> scanApiHandler.getPredefinedHttpVariables().toJson(),
+                new JsonCmdHelp().setDesc("Get the list of predefined HTTP variables")
+                        .setResult("The list of predefined HTTP variables, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 

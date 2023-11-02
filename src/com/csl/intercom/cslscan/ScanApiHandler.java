@@ -620,4 +620,8 @@ public class ScanApiHandler implements AutoCloseable {
         }
         return response;
     }
+
+    public JsonApiResponse getPredefinedHttpVariables() {
+        return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
+    }
 }

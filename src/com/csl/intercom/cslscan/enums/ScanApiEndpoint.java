@@ -17,6 +17,7 @@ public enum ScanApiEndpoint {
     ENTITY_HTTP_CONNECTION("/entityHttpConnection/"),
     ENTITY_HTTP_CONNECTION_DETAILS(ENTITY_HTTP_CONNECTION.endpoint() + "%s"),
     ENTITY_HTTP_CONNECTION_FETCH_STAGE(ENTITY_HTTP_CONNECTION.endpoint() + "fetchStagePage"),
+    ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES(ENTITY_HTTP_CONNECTION.endpoint() + "fetchPredefinedVariables"),
     DROP_COLLECTION("/%s/drop"),
     ;
 

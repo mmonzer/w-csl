@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan.enums;
 
 public enum EntityHttpConnectionField {
     UUID("uuid", "uuid"),
+    VARIABLES("variables", "variables"),
     NAME("name", "name"),
     STAGES("stages", "stages");
 

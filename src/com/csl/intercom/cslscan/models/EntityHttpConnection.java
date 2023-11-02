@@ -5,12 +5,15 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class EntityHttpConnection {
     private String uuid;
     private String name;
+    private Map<String, Json> variables;
     private List<EntityHttpConnectionStage> stages;
 
     public Json serializeForScanner() {
@@ -18,9 +21,13 @@ public class EntityHttpConnection {
                 .map(EntityHttpConnectionStage::serializeForScanner)
                 .collect(Json::array, Json::add, Json::add);
 
+       Json variablesSerialized = Json.object();
+       this.variables.forEach(variablesSerialized::set);
+
         return Json.object(
                 EntityHttpConnectionField.UUID.scanName(), uuid,
                 EntityHttpConnectionField.NAME.scanName(), name,
+                EntityHttpConnectionField.VARIABLES.scanName(), variablesSerialized,
                 EntityHttpConnectionField.STAGES.scanName(), stagesSerialized
         );
     }
@@ -30,9 +37,13 @@ public class EntityHttpConnection {
                 .map(EntityHttpConnectionStage::serializeForDbapi)
                 .collect(Json::array, Json::add, Json::add);
 
+        Json variablesSerialized = Json.object();
+        this.variables.forEach(variablesSerialized::set);
+
         return Json.object(
                 EntityHttpConnectionField.UUID.dbapiName(), uuid,
                 EntityHttpConnectionField.NAME.dbapiName(), name,
+                EntityHttpConnectionField.VARIABLES.dbapiName(), variablesSerialized,
                 EntityHttpConnectionField.STAGES.dbapiName(), stagesSerialized
         );
     }
@@ -45,6 +56,12 @@ public class EntityHttpConnection {
             entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList().stream()
                     .map(EntityHttpConnectionStage::fromDbapiJson)
                     .collect(Collectors.toList());
+            if (json.has(EntityHttpConnectionField.VARIABLES.dbapiName()) && json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).isObject()) {
+                entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).asJsonMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            } else {
+                entityHttpConnection.variables = new HashMap<>();
+            }
             return entityHttpConnection;
         } catch (Throwable e) {
             e.printStackTrace(System.err);
@@ -60,6 +77,12 @@ public class EntityHttpConnection {
             entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.scanName()).asJsonList().stream()
                     .map(EntityHttpConnectionStage::fromScannerJson)
                     .collect(Collectors.toList());
+            if (json.has(EntityHttpConnectionField.VARIABLES.scanName()) && json.get(EntityHttpConnectionField.VARIABLES.scanName()).isObject()) {
+                entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.scanName()).asJsonMap().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            } else {
+                entityHttpConnection.variables = new HashMap<>();
+            }
             return entityHttpConnection;
         } catch (Throwable e) {
             e.printStackTrace(System.err);

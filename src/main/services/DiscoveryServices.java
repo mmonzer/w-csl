@@ -457,25 +457,40 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     String realm = JsonUtil.getStringFromJson(params, "realm", null);
                     String token = JsonUtil.getStringFromJson(params, "token", null);
 
-                    Json stageJson = params.get("stage");
+                    Json templateJson = params.get("entity_http_connection");
                     // Use the default values for the headers and query params, thus mark them as usable for CSL-Scan
-                    if (stageJson.has("headers") && stageJson.get("headers").isArray()) {
-                        stageJson.get("headers").asJsonList().forEach(header -> header.set("isInput", false));
+                    if (templateJson != null && templateJson.has("stages") && templateJson.get("stages").isArray()) {
+                        for (Json stage : templateJson.get("stages").asJsonList()) {
+                            if (stage.has("headers") && stage.get("headers").isArray()) {
+                                stage.get("headers").asJsonList().forEach(header -> header.set("isInput", true));
+                            }
+                            if (stage.has("queryParams") && stage.get("queryParams").isArray()) {
+                                stage.get("queryParams").asJsonList().forEach(header -> header.set("isInput", true));
+                            }
+                        }
                     }
-                    if (stageJson.has("queryParams") && stageJson.get("queryParams").isArray()) {
-                        stageJson.get("queryParams").asJsonList().forEach(header -> header.set("isInput", false));
+                    EntityHttpConnection entityHttpConnection = EntityHttpConnection.fromDbapiJson(templateJson);
+
+                    Integer stageIndex;
+                    if (params.has("stageIndex")) {
+                        Json stageIndexJson = params.get("stageIndex");
+                        if (stageIndexJson.isNumber()) {
+                            stageIndex = params.get("stageIndex").asInteger();
+                        } else if (stageIndexJson.isString()) {
+                            stageIndex = Integer.parseInt(stageIndexJson.asString());
+                        } else {
+                            stageIndex = null;
+                        }
+                    } else {
+                        stageIndex = null;
                     }
 
-                    EntityHttpConnectionStage entityHttpConnectionStage = EntityHttpConnectionStage.fromDbapiJson(stageJson);
-                    EntityHttpConnection entityHttpConnection = new EntityHttpConnection().addStage(entityHttpConnectionStage);
-
-                    if (ipAddress == null || port == 0 || entityHttpConnectionStage == null) {
+                    if (ipAddress == null || port == 0 || entityHttpConnection == null) {
                         return JsonApiResponse.error("Missing required parameter ip_address, port or stage",
                                 Json.object("exception", "Missing parameter ip_address, port or stage, of type string, int or object")
                         ).toJson();
                     } else {
-                        return scanApiHandler.fetchHttpConnectionStage(ipAddress, port, username, password, realm, token, entityHttpConnection).toJson();
-//                        return JsonApiResponse.error("Not implemented yet").toJson();
+                        return scanApiHandler.fetchHttpConnectionStage(ipAddress, port, username, password, realm, token, entityHttpConnection, stageIndex).toJson();
                     }
                 },
                 new JsonCmdHelp().setDesc("Try to fetch the contents of a stage in the Http Connection API")

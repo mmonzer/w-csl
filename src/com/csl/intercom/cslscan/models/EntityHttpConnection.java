@@ -52,7 +52,7 @@ public class EntityHttpConnection {
         EntityHttpConnection entityHttpConnection = new EntityHttpConnection();
         try {
             entityHttpConnection.uuid = JsonUtil.getStringFromJson(json, EntityHttpConnectionField.UUID.dbapiName(), null);
-            entityHttpConnection.name = json.get(EntityHttpConnectionField.NAME.dbapiName()).asString();
+            entityHttpConnection.name = JsonUtil.getStringFromJson(json, EntityHttpConnectionField.NAME.dbapiName(), null);
             entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList().stream()
                     .map(EntityHttpConnectionStage::fromDbapiJson)
                     .collect(Collectors.toList());

@@ -609,6 +609,9 @@ public class ScanApiHandler implements AutoCloseable {
                     false
             );
             device.setConnections(List.of(connection));
+            if (stageIndex == null) {
+                stageIndex = entityHttpConnection.getStages().size() - 1;
+            }
 
             Json body = Json.object(
                     "entityHttpConnection", entityHttpConnection.serializeForScanner(),

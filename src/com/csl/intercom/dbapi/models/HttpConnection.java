@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class HttpConnection extends Connection {
     private String entityHttpConnectionUuid;
-    private int port;
+    private String port;
     private EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod;
     private String username;
     private String password;
@@ -22,7 +22,7 @@ public class HttpConnection extends Connection {
     private Map<String, String> queryParams;
     private Map<Integer, StageConfig> stagesConfig;
 
-    public HttpConnection(int id, int port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String realm, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
+    public HttpConnection(int id, String port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String realm, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
         super(id, devices, StaticConnectionProtocol.HTTP, isSimulated);
         this.entityHttpConnectionUuid = entityHttpConnectionUuid;
         this.port = port;
@@ -46,7 +46,7 @@ public class HttpConnection extends Connection {
     public static HttpConnection fromJson(Json jsonConnection, ConnectionProtocol protocol) {
         try {
             int id = jsonConnection.get("id").asInteger();
-            int port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asInteger();
+            String port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asString();
             String username = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.USERNAME.dbapiName(), null);
             String password = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.PASSWORD.dbapiName(), null);
 
@@ -120,11 +120,11 @@ public class HttpConnection extends Connection {
         return entityHttpConnectionUuid;
     }
 
-    public int getPort() {
+    public String getPort() {
         return port;
     }
 
-    public HttpConnection setPort(int port) {
+    public HttpConnection setPort(String port) {
         this.port = port;
         return this;
     }

@@ -589,7 +589,7 @@ public class ScanApiHandler implements AutoCloseable {
         }
     }
 
-    public JsonApiResponse fetchHttpConnectionStage(String ipAddress, int port, String username, String password, String realm, String token, EntityHttpConnection entityHttpConnection, Integer stageIndex) {
+    public JsonApiResponse fetchHttpConnectionStage(String ipAddress, String port, String username, String password, String realm, String token, EntityHttpConnection entityHttpConnection, Integer stageIndex) {
         JsonApiResponse response = JsonApiResponse.error("Could not fetch stage page");
         try {
             Device device = Device.fromIpAddress(ipAddress);

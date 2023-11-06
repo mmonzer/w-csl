@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 public class EntityHttpConnectionStage {
     private String name;
     private String ip_address;
+    private String port;
     private HttpProtocol protocol;
     private HttpMethod method;
     private HttpAuthenticationMethod authenticationMethod;
@@ -35,6 +36,7 @@ public class EntityHttpConnectionStage {
         return Json.object(
                 EntityHttpConnectionStageField.NAME.scanName(), this.name,
                 EntityHttpConnectionStageField.IP_ADDRESS.scanName(), this.ip_address,
+                EntityHttpConnectionStageField.PORT.scanName(), this.port,
                 EntityHttpConnectionStageField.PROTOCOL.scanName(), this.protocol.name(),
                 EntityHttpConnectionStageField.METHOD.scanName(), this.method.name(),
                 EntityHttpConnectionStageField.AUTHENTICATION_METHOD.scanName(), this.authenticationMethod.name(),
@@ -59,6 +61,7 @@ public class EntityHttpConnectionStage {
         return Json.object(
                 EntityHttpConnectionStageField.NAME.dbapiName(), this.name,
                 EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), this.ip_address,
+                EntityHttpConnectionStageField.PORT.dbapiName(), this.port,
                 EntityHttpConnectionStageField.PROTOCOL.dbapiName(), this.protocol.name(),
                 EntityHttpConnectionStageField.METHOD.dbapiName(), this.method.name(),
                 EntityHttpConnectionStageField.AUTHENTICATION_METHOD.dbapiName(), this.authenticationMethod.name(),
@@ -81,6 +84,7 @@ public class EntityHttpConnectionStage {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
         stage.name = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.NAME.dbapiName(), "");
         stage.ip_address = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), "${device.ipAddress}");
+        stage.port = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.PORT.dbapiName(), "${connection.port}");
         stage.protocol = HttpProtocol.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.PROTOCOL.dbapiName(), "HTTP"));
         stage.method = HttpMethod.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.METHOD.dbapiName(), "GET"));
         stage.authenticationMethod = HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.AUTHENTICATION_METHOD.dbapiName(), "NONE"));
@@ -118,6 +122,7 @@ public class EntityHttpConnectionStage {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
         stage.name = json.get(EntityHttpConnectionStageField.NAME.scanName()).asString();
         stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.scanName()).asString();
+        stage.port = json.get(EntityHttpConnectionStageField.PORT.scanName()).asString();
         stage.protocol = HttpProtocol.valueOf(json.get(EntityHttpConnectionStageField.PROTOCOL.scanName()).asString());
         stage.method = HttpMethod.valueOf(json.get(EntityHttpConnectionStageField.METHOD.scanName()).asString());
         stage.authenticationMethod = HttpAuthenticationMethod.valueOf(json.get(EntityHttpConnectionStageField.AUTHENTICATION_METHOD.scanName()).asString());

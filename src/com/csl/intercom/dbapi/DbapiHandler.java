@@ -415,6 +415,24 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
+    /**
+     * Delete a discovery protocol in DB-API. Used when deleting an HTTP template.
+     *
+     * @param uuid The UUID of the HTTP template to delete.
+     * @throws Exception If the deletion failed.
+     */
+    public void deleteDiscoveryProtocol(String uuid) throws Exception {
+        ConnectionProtocol protocol = getDiscoveryProtocolByTemplateId(uuid);
+        if (protocol != null) {
+            int protocolId = protocol.getId();
+            Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
+            ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                throw new Exception("Error deleting discovery protocol: got unexpected status " + response.getStatus());
+            }
+        }
+    }
+
     public ConnectionProtocol getDiscoveryProtocolByTemplateId(String id) {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
         request.param("connection_template_id", id);

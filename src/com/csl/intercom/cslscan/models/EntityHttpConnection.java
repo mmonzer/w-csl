@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class EntityHttpConnection {
     private String uuid;
     private String name;
-    private Map<String, Json> variables;
+    private Map<String, HttpApiVariable> variables;
     private List<EntityHttpConnectionStage> stages;
 
     public Json serializeForScanner() {
@@ -22,7 +22,7 @@ public class EntityHttpConnection {
                 .collect(Json::array, Json::add, Json::add);
 
        Json variablesSerialized = Json.object();
-       this.variables.forEach(variablesSerialized::set);
+       this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForScanner()));
 
         return Json.object(
                 EntityHttpConnectionField.UUID.scanName(), uuid,
@@ -38,7 +38,7 @@ public class EntityHttpConnection {
                 .collect(Json::array, Json::add, Json::add);
 
         Json variablesSerialized = Json.object();
-        this.variables.forEach(variablesSerialized::set);
+        this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForDbapi()));
 
         return Json.object(
                 EntityHttpConnectionField.UUID.dbapiName(), uuid,
@@ -58,7 +58,7 @@ public class EntityHttpConnection {
                     .collect(Collectors.toList());
             if (json.has(EntityHttpConnectionField.VARIABLES.dbapiName()) && json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).asJsonMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        .collect(Collectors.toMap(Map.Entry::getKey, jsonEntry -> HttpApiVariable.fromDbapiJson(jsonEntry.getValue())));
             } else {
                 entityHttpConnection.variables = new HashMap<>();
             }
@@ -79,7 +79,7 @@ public class EntityHttpConnection {
                     .collect(Collectors.toList());
             if (json.has(EntityHttpConnectionField.VARIABLES.scanName()) && json.get(EntityHttpConnectionField.VARIABLES.scanName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.scanName()).asJsonMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        .collect(Collectors.toMap(Map.Entry::getKey, jsonEntry -> HttpApiVariable.fromScannerJson(jsonEntry.getValue())));
             } else {
                 entityHttpConnection.variables = new HashMap<>();
             }

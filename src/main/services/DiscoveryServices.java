@@ -286,7 +286,21 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     } else {
                         uuid = null;
                     }
-                    return scanApiHandler.deleteEntityHttpConnection(uuid).toJson();
+                    EntityHttpConnection entityHttpConnection = scanApiHandler.getEntityHttpConnection(uuid);
+                    try {
+                        JsonApiResponse response = scanApiHandler.deleteEntityHttpConnection(uuid);
+                        if (response.isSuccess()) {
+                            dbapiHandler.deleteDiscoveryProtocol(uuid);
+                        } else {
+                            scanApiHandler.createEntityHttpConnection(entityHttpConnection);
+                            return response.toJson();
+                        }
+                    } catch (Exception e) {
+                        return JsonApiResponse.error("Could not delete entity HTTP connection from CSL-Scan",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                    return JsonApiResponse.success().toJson();
                 },
                 new JsonCmdHelp().setDesc("Delete an EntityHttpConnection from CSL-Scan")
                         .setParam("uuid", "The uuid of the EntityHttpConnection to delete", IJsonCmdHelp.STR)

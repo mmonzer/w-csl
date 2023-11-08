@@ -44,7 +44,7 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.CONTENT_TYPE.scanName(), this.contentType,
                 EntityHttpConnectionStageField.HEADERS.scanName(), headersSerialized,
                 EntityHttpConnectionStageField.QUERY_PARAMS.scanName(), queryParamsSerialized,
-                EntityHttpConnectionStageField.BODY, this.body,
+                EntityHttpConnectionStageField.BODY.scanName(), this.body,
                 EntityHttpConnectionStageField.JS_PARSER.scanName(), this.jsParser
         );
     }

@@ -379,13 +379,33 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public JsonApiResponse createEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
-        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION, entityHttpConnection.serializeForScanner());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION, entityHttpConnection.serializeForScanner());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
+            if (createdEntityHttpConnection != null) {
+                return JsonApiResponse.result(createdEntityHttpConnection.serializeForDbapi(), response.getExtra());
+            } else {
+                return JsonApiResponse.error("Could not create the entity http connection", Json.object("error", "Could not deserialize the entity http connection"));
+            }
+        } else {
+            return JsonApiResponse.error("Could not create the entity http connection", response.getError().getDetails());
+        }
     }
 
     public JsonApiResponse updateEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
-        return sendRequestToScanManager(HttpMethod.PUT,
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT,
                 String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), entityHttpConnection.getUuid()),
                 entityHttpConnection.serializeForScanner());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
+            if (createdEntityHttpConnection != null) {
+                return JsonApiResponse.result(createdEntityHttpConnection.serializeForDbapi(), response.getExtra());
+            } else {
+                return JsonApiResponse.error("Could not update the entity http connection", Json.object("error", "Could not deserialize the entity http connection"));
+            }
+        } else {
+            return JsonApiResponse.error("Could not update the entity http connection", response.getError().getDetails());
+        }
     }
 
     /**

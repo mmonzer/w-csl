@@ -47,8 +47,16 @@ public class HttpConnection extends Connection {
         try {
             int id = jsonConnection.get("id").asInteger();
             String port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asString();
-            String username = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.USERNAME.dbapiName(), null);
-            String password = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.PASSWORD.dbapiName(), null);
+            String username = null;
+            try {
+                username = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.USERNAME.dbapiName(), null);
+            } catch (UnsupportedOperationException ignored) {
+            }
+            String password = null;
+            try {
+                password = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.PASSWORD.dbapiName(), null);
+            } catch (UnsupportedOperationException ignored) {
+            }
 
             Json otherData = jsonConnection.get("read_only_other_data");
             EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(otherData.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());

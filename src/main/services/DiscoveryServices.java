@@ -320,7 +320,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (entityHttpConnection.getUuid() == null) {
                         response = scanApiHandler.createEntityHttpConnection(entityHttpConnection);
                         if (response.isSuccess()) {
-                            EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
+                            EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromDbapiJson(response.getResult());
                             try {
                                 if (createdEntityHttpConnection == null) {
                                     throw new Exception("Could not parse the created entity_http_connection");

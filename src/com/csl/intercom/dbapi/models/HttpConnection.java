@@ -59,7 +59,10 @@ public class HttpConnection extends Connection {
             }
 
             Json otherData = jsonConnection.get("read_only_other_data");
-            EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(otherData.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());
+            EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = null;
+            if (otherData.has(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName())) {
+                authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(otherData.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());
+            }
             String entityHttpConnectionUuid = protocol.getConnectionTemplateId();
             String token = JsonUtil.getStringFromJson(otherData, HttpConnectionField.TOKEN.dbapiName(), null);
             String realm = JsonUtil.getStringFromJson(otherData, HttpConnectionField.REALM.dbapiName(), null);

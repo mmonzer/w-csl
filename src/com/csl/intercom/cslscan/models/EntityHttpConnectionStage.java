@@ -22,6 +22,7 @@ public class EntityHttpConnectionStage {
     private List<OptionalInputField<String, String>> queryParams;
     private String body;
     private String jsParser;
+    private boolean isEnabled;
 
 
     public Json serializeForScanner() {
@@ -45,7 +46,8 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.HEADERS.scanName(), headersSerialized,
                 EntityHttpConnectionStageField.QUERY_PARAMS.scanName(), queryParamsSerialized,
                 EntityHttpConnectionStageField.BODY.scanName(), this.body,
-                EntityHttpConnectionStageField.JS_PARSER.scanName(), this.jsParser
+                EntityHttpConnectionStageField.JS_PARSER.scanName(), this.jsParser,
+                EntityHttpConnectionStageField.ENABLED.scanName(), this.isEnabled
         );
     }
 
@@ -70,7 +72,8 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.HEADERS.dbapiName(), headersSerialized,
                 EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName(), queryParamsSerialized,
                 EntityHttpConnectionStageField.BODY.dbapiName(), this.body,
-                EntityHttpConnectionStageField.JS_PARSER.dbapiName(), this.jsParser
+                EntityHttpConnectionStageField.JS_PARSER.dbapiName(), this.jsParser,
+                EntityHttpConnectionStageField.ENABLED.dbapiName(), this.isEnabled
         );
     }
 
@@ -92,6 +95,7 @@ public class EntityHttpConnectionStage {
         stage.contentType = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.CONTENT_TYPE.dbapiName(), "");
         stage.body = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.BODY.dbapiName(), "");
         stage.jsParser = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.JS_PARSER.dbapiName(), "");
+        stage.isEnabled = JsonUtil.getBooleanFromJson(json, EntityHttpConnectionStageField.ENABLED.dbapiName(), true);
 
         List<Json> headersJson = new ArrayList<>();
         if (json.has(EntityHttpConnectionStageField.HEADERS.dbapiName()) && json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).isArray()) {
@@ -130,6 +134,7 @@ public class EntityHttpConnectionStage {
         stage.contentType = json.get(EntityHttpConnectionStageField.CONTENT_TYPE.scanName()).asString();
         stage.body = json.get(EntityHttpConnectionStageField.BODY.scanName()).asString();
         stage.jsParser = json.get(EntityHttpConnectionStageField.JS_PARSER.scanName()).asString();
+        stage.isEnabled = json.get(EntityHttpConnectionStageField.ENABLED.scanName()).asBoolean();
 
         List<Json> headersJson = json.get(EntityHttpConnectionStageField.HEADERS.scanName()).asJsonList();
         stage.headers = headersJson.stream()

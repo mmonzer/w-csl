@@ -104,6 +104,6 @@ public class ConnectionProtocol {
      * @return The protocol with the given id, or null if not found.
      */
     public static ConnectionProtocol getProtocolById(List<ConnectionProtocol> protocols, int id) {
-        return protocols.stream().filter(p -> p.id == id).findFirst().orElse(null);
+        return protocols.stream().filter(p -> p != null && p.id == id).findFirst().orElse(null);
     }
 }

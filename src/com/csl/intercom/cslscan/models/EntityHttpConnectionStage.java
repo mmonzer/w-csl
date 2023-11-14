@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class EntityHttpConnectionStage {
+    private String uuid;
     private String name;
     private String ip_address;
     private String port;
@@ -69,6 +70,7 @@ public class EntityHttpConnectionStage {
                 .collect(Json::array, Json::add, Json::add);
 
         return Json.object(
+                EntityHttpConnectionStageField.UUID.dbapiName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.dbapiName(), this.name,
                 EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), this.ip_address,
                 EntityHttpConnectionStageField.PORT.dbapiName(), this.port,
@@ -172,6 +174,8 @@ public class EntityHttpConnectionStage {
      */
     public static EntityHttpConnectionStage fromScannerJson(Json json) {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
+
+        stage.uuid = json.get(EntityHttpConnectionStageField.UUID.scanName()).asString();
         stage.name = json.get(EntityHttpConnectionStageField.NAME.scanName()).asString();
         stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.scanName()).asString();
         stage.port = json.get(EntityHttpConnectionStageField.PORT.scanName()).asString();

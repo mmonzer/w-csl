@@ -1,6 +1,7 @@
 package com.csl.intercom.cslscan.enums;
 
 public enum EntityHttpConnectionStageField {
+    UUID("uuid", "uuid"),
     NAME("stageName", "name"),
     IP_ADDRESS("ipAddress", "ipAddress"),
     PORT("port", "port"),
@@ -17,7 +18,7 @@ public enum EntityHttpConnectionStageField {
     QUERY_PARAMS("queryParams", "queryParams"),
     BODY("body", "body"),
     JS_PARSER("jsParser", "jsParser"),
-    ENABLED("enabled", "enabled"),
+    ENABLED("isEnabled", "enabled"),
     ;
     private String dbapiName;
     private String scanName;

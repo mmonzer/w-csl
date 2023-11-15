@@ -10,9 +10,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class EntityHttpConnectionStage {
+    private String uuid;
     private String name;
     private String ip_address;
     private String port;
+    private String username;
+    private String password;
+    private String realm;
+    private String token;
     private HttpProtocol protocol;
     private HttpMethod method;
     private HttpAuthenticationMethod authenticationMethod;
@@ -23,6 +28,7 @@ public class EntityHttpConnectionStage {
     private String body;
     private String jsParser;
     private boolean isEnabled;
+    private boolean isVisible;
 
 
     public Json serializeForScanner() {
@@ -35,9 +41,14 @@ public class EntityHttpConnectionStage {
                 .collect(Json::array, Json::add, Json::add);
 
         return Json.object(
+                EntityHttpConnectionStageField.UUID.scanName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.scanName(), this.name,
                 EntityHttpConnectionStageField.IP_ADDRESS.scanName(), this.ip_address,
                 EntityHttpConnectionStageField.PORT.scanName(), this.port,
+                EntityHttpConnectionStageField.USERNAME.scanName(), this.username,
+                EntityHttpConnectionStageField.PASSWORD.scanName(), this.password,
+                EntityHttpConnectionStageField.REALM.scanName(), this.realm,
+                EntityHttpConnectionStageField.TOKEN.scanName(), this.token,
                 EntityHttpConnectionStageField.PROTOCOL.scanName(), this.protocol.name(),
                 EntityHttpConnectionStageField.METHOD.scanName(), this.method.name(),
                 EntityHttpConnectionStageField.AUTHENTICATION_METHOD.scanName(), this.authenticationMethod.name(),
@@ -47,7 +58,8 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.QUERY_PARAMS.scanName(), queryParamsSerialized,
                 EntityHttpConnectionStageField.BODY.scanName(), this.body,
                 EntityHttpConnectionStageField.JS_PARSER.scanName(), this.jsParser,
-                EntityHttpConnectionStageField.ENABLED.scanName(), this.isEnabled
+                EntityHttpConnectionStageField.ENABLED.scanName(), this.isEnabled,
+                EntityHttpConnectionStageField.VISIBLE.scanName(), this.isVisible
         );
     }
 
@@ -61,9 +73,14 @@ public class EntityHttpConnectionStage {
                 .collect(Json::array, Json::add, Json::add);
 
         return Json.object(
+                EntityHttpConnectionStageField.UUID.dbapiName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.dbapiName(), this.name,
                 EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), this.ip_address,
                 EntityHttpConnectionStageField.PORT.dbapiName(), this.port,
+                EntityHttpConnectionStageField.USERNAME.dbapiName(), this.username,
+                EntityHttpConnectionStageField.PASSWORD.dbapiName(), this.password,
+                EntityHttpConnectionStageField.REALM.dbapiName(), this.realm,
+                EntityHttpConnectionStageField.TOKEN.dbapiName(), this.token,
                 EntityHttpConnectionStageField.PROTOCOL.dbapiName(), this.protocol.name(),
                 EntityHttpConnectionStageField.METHOD.dbapiName(), this.method.name(),
                 EntityHttpConnectionStageField.AUTHENTICATION_METHOD.dbapiName(), this.authenticationMethod.name(),
@@ -73,7 +90,8 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName(), queryParamsSerialized,
                 EntityHttpConnectionStageField.BODY.dbapiName(), this.body,
                 EntityHttpConnectionStageField.JS_PARSER.dbapiName(), this.jsParser,
-                EntityHttpConnectionStageField.ENABLED.dbapiName(), this.isEnabled
+                EntityHttpConnectionStageField.ENABLED.dbapiName(), this.isEnabled,
+                EntityHttpConnectionStageField.VISIBLE.dbapiName(), this.isVisible
         );
     }
 
@@ -85,9 +103,50 @@ public class EntityHttpConnectionStage {
      */
     public static EntityHttpConnectionStage fromDbapiJson(Json json) {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
+        if (json.has(EntityHttpConnectionStageField.UUID.dbapiName()) && json.get(EntityHttpConnectionStageField.UUID.dbapiName()).isString()) {
+            stage.uuid = json.get(EntityHttpConnectionStageField.UUID.dbapiName()).asString();
+        } else {
+            stage.uuid = null;
+        }
         stage.name = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.NAME.dbapiName(), "");
-        stage.ip_address = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), "${device.ipAddress}");
-        stage.port = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.PORT.dbapiName(), "${connection.port}");
+        if (json.has(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()) && json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).isString()) {
+            stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).asString();
+        } else {
+            stage.ip_address = "${device.ipAddress}";
+        }
+
+        if (json.has(EntityHttpConnectionStageField.PORT.dbapiName()) && json.get(EntityHttpConnectionStageField.PORT.dbapiName()).isString()) {
+            stage.port = json.get(EntityHttpConnectionStageField.PORT.dbapiName()).asString();
+        } else if (json.has(EntityHttpConnectionStageField.PORT.dbapiName()) && json.get(EntityHttpConnectionStageField.PORT.dbapiName()).isNumber()) {
+            stage.port = json.get(EntityHttpConnectionStageField.PORT.dbapiName()).asInteger() + "";
+        } else {
+            stage.port = "${connection.port}";
+        }
+
+        if (json.has(EntityHttpConnectionStageField.USERNAME.dbapiName()) && json.get(EntityHttpConnectionStageField.USERNAME.dbapiName()).isString()) {
+            stage.username = json.get(EntityHttpConnectionStageField.USERNAME.dbapiName()).asString();
+        } else {
+            stage.username = "${connection.username}";
+        }
+
+        if (json.has(EntityHttpConnectionStageField.PASSWORD.dbapiName()) && json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).isString()) {
+            stage.password = json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).asString();
+        } else {
+            stage.password = "${connection.password}";
+        }
+
+        if (json.has(EntityHttpConnectionStageField.REALM.dbapiName()) && json.get(EntityHttpConnectionStageField.REALM.dbapiName()).isString()) {
+            stage.realm = json.get(EntityHttpConnectionStageField.REALM.dbapiName()).asString();
+        } else {
+            stage.realm = "${connection.realm}";
+        }
+
+        if (json.has(EntityHttpConnectionStageField.TOKEN.dbapiName()) && json.get(EntityHttpConnectionStageField.TOKEN.dbapiName()).isString()) {
+            stage.token = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.TOKEN.dbapiName(), "${connection.token}");
+        } else {
+            stage.token = "${connection.token}";
+        }
+
         stage.protocol = HttpProtocol.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.PROTOCOL.dbapiName(), "HTTP"));
         stage.method = HttpMethod.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.METHOD.dbapiName(), "GET"));
         stage.authenticationMethod = HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.AUTHENTICATION_METHOD.dbapiName(), "NONE"));
@@ -96,6 +155,7 @@ public class EntityHttpConnectionStage {
         stage.body = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.BODY.dbapiName(), "");
         stage.jsParser = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.JS_PARSER.dbapiName(), "");
         stage.isEnabled = JsonUtil.getBooleanFromJson(json, EntityHttpConnectionStageField.ENABLED.dbapiName(), true);
+        stage.isVisible = JsonUtil.getBooleanFromJson(json, EntityHttpConnectionStageField.VISIBLE.dbapiName(), true);
 
         List<Json> headersJson = new ArrayList<>();
         if (json.has(EntityHttpConnectionStageField.HEADERS.dbapiName()) && json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).isArray()) {
@@ -124,9 +184,23 @@ public class EntityHttpConnectionStage {
      */
     public static EntityHttpConnectionStage fromScannerJson(Json json) {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
+
+        stage.uuid = json.get(EntityHttpConnectionStageField.UUID.scanName()).asString();
         stage.name = json.get(EntityHttpConnectionStageField.NAME.scanName()).asString();
         stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.scanName()).asString();
         stage.port = json.get(EntityHttpConnectionStageField.PORT.scanName()).asString();
+        if (json.get(EntityHttpConnectionStageField.USERNAME.scanName()).isString() && !json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString().equals("")) {
+            stage.username = json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString();
+        }
+        if (json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).isString() && !json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).asString().equals("")) {
+            stage.password = json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).asString();
+        }
+        if (json.get(EntityHttpConnectionStageField.REALM.scanName()).isString() && !json.get(EntityHttpConnectionStageField.REALM.scanName()).asString().equals("")) {
+            stage.realm = json.get(EntityHttpConnectionStageField.REALM.scanName()).asString();
+        }
+        if (json.get(EntityHttpConnectionStageField.TOKEN.scanName()).isString() && !json.get(EntityHttpConnectionStageField.TOKEN.scanName()).asString().equals("")) {
+            stage.token = json.get(EntityHttpConnectionStageField.TOKEN.scanName()).asString();
+        }
         stage.protocol = HttpProtocol.valueOf(json.get(EntityHttpConnectionStageField.PROTOCOL.scanName()).asString());
         stage.method = HttpMethod.valueOf(json.get(EntityHttpConnectionStageField.METHOD.scanName()).asString());
         stage.authenticationMethod = HttpAuthenticationMethod.valueOf(json.get(EntityHttpConnectionStageField.AUTHENTICATION_METHOD.scanName()).asString());
@@ -135,6 +209,7 @@ public class EntityHttpConnectionStage {
         stage.body = json.get(EntityHttpConnectionStageField.BODY.scanName()).asString();
         stage.jsParser = json.get(EntityHttpConnectionStageField.JS_PARSER.scanName()).asString();
         stage.isEnabled = json.get(EntityHttpConnectionStageField.ENABLED.scanName()).asBoolean();
+        stage.isVisible = json.get(EntityHttpConnectionStageField.VISIBLE.scanName()).asBoolean();
 
         List<Json> headersJson = json.get(EntityHttpConnectionStageField.HEADERS.scanName()).asJsonList();
         stage.headers = headersJson.stream()

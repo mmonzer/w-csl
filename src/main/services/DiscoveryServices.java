@@ -229,7 +229,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
         addCmd("get_entity_http_connections", params -> {
-                    List<EntityHttpConnection> entityHttpConnections = scanApiHandler.getAllEntityHttpConnections();
+                    List<EntityHttpConnection> entityHttpConnections = scanApiHandler.getAllEntityHttpConnections(true);
                     if (entityHttpConnections == null) {
                         return JsonApiResponse.error("Could not fetch entity HTTP connections from CSL-Scan",
                                 Json.object("exception", "Could not fetch entity HTTP connections from CSL-Scan")
@@ -239,6 +239,20 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get all entity HTTP connections from CSL-Scan")
+                        .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("get_entity_http_connections_full", params -> {
+                    List<EntityHttpConnection> entityHttpConnections = scanApiHandler.getAllEntityHttpConnections(false);
+                    if (entityHttpConnections == null) {
+                        return JsonApiResponse.error("Could not fetch entity HTTP connections from CSL-Scan",
+                                Json.object("exception", "Could not fetch entity HTTP connections from CSL-Scan")
+                        ).toJson();
+                    } else {
+                        return JsonApiResponse.result(Json.array(entityHttpConnections.stream().map(EntityHttpConnection::serializeForDbapi).toArray())).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get all entity HTTP connections from CSL-Scan, also showing non-visible stages")
                         .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
@@ -260,7 +274,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 Json.object("exception", "Missing parameter uuid, of type string or integer")
                         ).toJson();
                     }
-                    EntityHttpConnection entityHttpConnection = scanApiHandler.getEntityHttpConnection(uuid);
+                    EntityHttpConnection entityHttpConnection = scanApiHandler.getEntityHttpConnection(uuid, true);
                     if (entityHttpConnection == null) {
                         return JsonApiResponse.error("Could not fetch entity HTTP connection from CSL-Scan",
                                 Json.object("exception", "Could not fetch entity HTTP connection from CSL-Scan")
@@ -270,6 +284,38 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan")
+                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.STR)
+                        .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("get_entity_http_connection_full", params -> {
+                    Json uuidJson = params.get("uuid");
+                    String uuid;
+                    if (uuidJson == null) {
+                        uuid = null;
+                    } else if (uuidJson.isString()) {
+                        uuid = uuidJson.asString();
+                    } else if (uuidJson.isNumber()) {
+                        uuid = String.valueOf(uuidJson.asInteger());
+                    } else {
+                        uuid = null;
+                    }
+
+                    if (uuid == null) {
+                        return JsonApiResponse.error("Missing required parameter uuid",
+                                Json.object("exception", "Missing parameter uuid, of type string or integer")
+                        ).toJson();
+                    }
+                    EntityHttpConnection entityHttpConnection = scanApiHandler.getEntityHttpConnection(uuid, false);
+                    if (entityHttpConnection == null) {
+                        return JsonApiResponse.error("Could not fetch entity HTTP connection from CSL-Scan",
+                                Json.object("exception", "Could not fetch entity HTTP connection from CSL-Scan")
+                        ).toJson();
+                    } else {
+                        return JsonApiResponse.result(entityHttpConnection.serializeForDbapi()).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan, also showing non-visible stages")
                         .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.STR)
                         .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
@@ -286,7 +332,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     } else {
                         uuid = null;
                     }
-                    EntityHttpConnection entityHttpConnection = scanApiHandler.getEntityHttpConnection(uuid);
+                    EntityHttpConnection entityHttpConnection = scanApiHandler.getEntityHttpConnection(uuid, false);
                     try {
                         JsonApiResponse response = scanApiHandler.deleteEntityHttpConnection(uuid);
                         if (response.isSuccess()) {
@@ -334,7 +380,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             }
                         }
                     } else {
-                        EntityHttpConnection previousEntityHttpConnection = scanApiHandler.getEntityHttpConnection(entityHttpConnection.getUuid());
+                        EntityHttpConnection previousEntityHttpConnection = scanApiHandler.getEntityHttpConnection(entityHttpConnection.getUuid(), false);
                         response = scanApiHandler.updateEntityHttpConnection(entityHttpConnection);
                         try {
                             dbapiHandler.updateDiscoveryProtocol(entityHttpConnection);

@@ -339,9 +339,9 @@ public class ScanApiHandler implements AutoCloseable {
      *
      * @return A {@link List<EntityHttpConnection>} containing all the EntityHttpConnection objects from CSL-Scan.
      */
-    public List<EntityHttpConnection> getAllEntityHttpConnections() {
+    public List<EntityHttpConnection> getAllEntityHttpConnections(boolean visibleOnly) {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
-                ScanApiEndpoint.ENTITY_HTTP_CONNECTION, Json.object());
+                ScanApiEndpoint.ENTITY_HTTP_CONNECTION, Json.object("visibleOnly", visibleOnly));
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             return response.getResult().asJsonList().stream()
                     .map(EntityHttpConnection::fromScannerJson)
@@ -357,9 +357,9 @@ public class ScanApiHandler implements AutoCloseable {
      * @param uuid The uuid of the EntityHttpConnection object to retrieve.
      * @return The {@link EntityHttpConnection} object from CSL-Scan with the specified uuid.
      */
-    public EntityHttpConnection getEntityHttpConnection(String uuid) {
+    public EntityHttpConnection getEntityHttpConnection(String uuid, boolean visibleOnly) {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
-                String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object());
+                String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object("visibleOnly", visibleOnly));
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             return EntityHttpConnection.fromScannerJson(response.getResult());
         } else {

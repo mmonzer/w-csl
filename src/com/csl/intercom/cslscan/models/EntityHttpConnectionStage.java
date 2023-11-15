@@ -28,6 +28,7 @@ public class EntityHttpConnectionStage {
     private String body;
     private String jsParser;
     private boolean isEnabled;
+    private boolean isVisible;
 
 
     public Json serializeForScanner() {
@@ -40,6 +41,7 @@ public class EntityHttpConnectionStage {
                 .collect(Json::array, Json::add, Json::add);
 
         return Json.object(
+                EntityHttpConnectionStageField.UUID.scanName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.scanName(), this.name,
                 EntityHttpConnectionStageField.IP_ADDRESS.scanName(), this.ip_address,
                 EntityHttpConnectionStageField.PORT.scanName(), this.port,
@@ -56,7 +58,8 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.QUERY_PARAMS.scanName(), queryParamsSerialized,
                 EntityHttpConnectionStageField.BODY.scanName(), this.body,
                 EntityHttpConnectionStageField.JS_PARSER.scanName(), this.jsParser,
-                EntityHttpConnectionStageField.ENABLED.scanName(), this.isEnabled
+                EntityHttpConnectionStageField.ENABLED.scanName(), this.isEnabled,
+                EntityHttpConnectionStageField.VISIBLE.scanName(), this.isVisible
         );
     }
 
@@ -87,7 +90,8 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName(), queryParamsSerialized,
                 EntityHttpConnectionStageField.BODY.dbapiName(), this.body,
                 EntityHttpConnectionStageField.JS_PARSER.dbapiName(), this.jsParser,
-                EntityHttpConnectionStageField.ENABLED.dbapiName(), this.isEnabled
+                EntityHttpConnectionStageField.ENABLED.dbapiName(), this.isEnabled,
+                EntityHttpConnectionStageField.VISIBLE.dbapiName(), this.isVisible
         );
     }
 
@@ -99,6 +103,11 @@ public class EntityHttpConnectionStage {
      */
     public static EntityHttpConnectionStage fromDbapiJson(Json json) {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
+        if (json.has(EntityHttpConnectionStageField.UUID.dbapiName()) && json.get(EntityHttpConnectionStageField.UUID.dbapiName()).isString()) {
+            stage.uuid = json.get(EntityHttpConnectionStageField.UUID.dbapiName()).asString();
+        } else {
+            stage.uuid = null;
+        }
         stage.name = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.NAME.dbapiName(), "");
         if (json.has(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()) && json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).isString()) {
             stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).asString();
@@ -146,6 +155,7 @@ public class EntityHttpConnectionStage {
         stage.body = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.BODY.dbapiName(), "");
         stage.jsParser = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.JS_PARSER.dbapiName(), "");
         stage.isEnabled = JsonUtil.getBooleanFromJson(json, EntityHttpConnectionStageField.ENABLED.dbapiName(), true);
+        stage.isVisible = JsonUtil.getBooleanFromJson(json, EntityHttpConnectionStageField.VISIBLE.dbapiName(), true);
 
         List<Json> headersJson = new ArrayList<>();
         if (json.has(EntityHttpConnectionStageField.HEADERS.dbapiName()) && json.get(EntityHttpConnectionStageField.HEADERS.dbapiName()).isArray()) {
@@ -199,6 +209,7 @@ public class EntityHttpConnectionStage {
         stage.body = json.get(EntityHttpConnectionStageField.BODY.scanName()).asString();
         stage.jsParser = json.get(EntityHttpConnectionStageField.JS_PARSER.scanName()).asString();
         stage.isEnabled = json.get(EntityHttpConnectionStageField.ENABLED.scanName()).asBoolean();
+        stage.isVisible = json.get(EntityHttpConnectionStageField.VISIBLE.scanName()).asBoolean();
 
         List<Json> headersJson = json.get(EntityHttpConnectionStageField.HEADERS.scanName()).asJsonList();
         stage.headers = headersJson.stream()

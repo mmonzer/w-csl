@@ -19,6 +19,7 @@ public enum EntityHttpConnectionStageField {
     BODY("body", "body"),
     JS_PARSER("jsParser", "jsParser"),
     ENABLED("isEnabled", "enabled"),
+    VISIBLE("isVisible", "visible"),
     ;
     private String dbapiName;
     private String scanName;

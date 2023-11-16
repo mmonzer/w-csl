@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 public class EntityHttpConnectionStage {
     private String uuid;
     private String name;
+    private String url;
     private String ip_address;
     private String port;
     private String username;
@@ -44,6 +45,7 @@ public class EntityHttpConnectionStage {
                 EntityHttpConnectionStageField.UUID.scanName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.scanName(), this.name,
                 EntityHttpConnectionStageField.IP_ADDRESS.scanName(), this.ip_address,
+                EntityHttpConnectionStageField.URL.scanName(), this.url,
                 EntityHttpConnectionStageField.PORT.scanName(), this.port,
                 EntityHttpConnectionStageField.USERNAME.scanName(), this.username,
                 EntityHttpConnectionStageField.PASSWORD.scanName(), this.password,
@@ -75,6 +77,7 @@ public class EntityHttpConnectionStage {
         return Json.object(
                 EntityHttpConnectionStageField.UUID.dbapiName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.dbapiName(), this.name,
+                EntityHttpConnectionStageField.URL.dbapiName(), this.url,
                 EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), this.ip_address,
                 EntityHttpConnectionStageField.PORT.dbapiName(), this.port,
                 EntityHttpConnectionStageField.USERNAME.dbapiName(), this.username,
@@ -108,7 +111,19 @@ public class EntityHttpConnectionStage {
         } else {
             stage.uuid = null;
         }
-        stage.name = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.NAME.dbapiName(), "");
+
+        if (json.has(EntityHttpConnectionStageField.NAME.dbapiName()) && json.get(EntityHttpConnectionStageField.NAME.dbapiName()).isString()) {
+            stage.name = json.get(EntityHttpConnectionStageField.NAME.dbapiName()).asString();
+        } else {
+            stage.name = "";
+        }
+
+        if (json.has(EntityHttpConnectionStageField.URL.dbapiName()) && json.get(EntityHttpConnectionStageField.URL.dbapiName()).isString()) {
+            stage.url = json.get(EntityHttpConnectionStageField.URL.dbapiName()).asString();
+        } else {
+            stage.url = "";
+        }
+
         if (json.has(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()) && json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).isString()) {
             stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).asString();
         } else {
@@ -187,6 +202,7 @@ public class EntityHttpConnectionStage {
 
         stage.uuid = json.get(EntityHttpConnectionStageField.UUID.scanName()).asString();
         stage.name = json.get(EntityHttpConnectionStageField.NAME.scanName()).asString();
+        stage.url = json.get(EntityHttpConnectionStageField.URL.scanName()).asString();
         stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.scanName()).asString();
         stage.port = json.get(EntityHttpConnectionStageField.PORT.scanName()).asString();
         if (json.get(EntityHttpConnectionStageField.USERNAME.scanName()).isString() && !json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString().equals("")) {

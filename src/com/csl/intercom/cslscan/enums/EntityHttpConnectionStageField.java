@@ -3,6 +3,7 @@ package com.csl.intercom.cslscan.enums;
 public enum EntityHttpConnectionStageField {
     UUID("uuid", "uuid"),
     NAME("stageName", "name"),
+    URL("url", "url"),
     IP_ADDRESS("ipAddress", "ipAddress"),
     PORT("port", "port"),
     USERNAME("username", "username"),

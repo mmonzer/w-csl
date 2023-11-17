@@ -645,6 +645,31 @@ public class ScanApiHandler implements AutoCloseable {
         return response;
     }
 
+    public JsonApiResponse testEntityHttpConnection(
+            String entityHttpConnectionId,
+            EntityHttpConnection entityHttpConnection,
+            String deviceId,
+            Device device,
+            Integer connectionId) {
+        Json requestBody = Json.object();
+        if (entityHttpConnectionId != null) {
+            requestBody.set("entityHttpConnectionId", entityHttpConnectionId);
+        }
+        if (entityHttpConnection != null) {
+            requestBody.set("entityHttpConnection", entityHttpConnection.serializeForScanner());
+        }
+        if (deviceId != null) {
+            requestBody.set("deviceId", deviceId);
+        }
+        if (device != null) {
+            requestBody.set("entity", device.serializeForScanner());
+        }
+        if (connectionId != null) {
+            requestBody.set("connectionInfoId", String.valueOf(connectionId));
+        }
+        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_TEST, requestBody);
+    }
+
     public JsonApiResponse getPredefinedHttpVariables() {
         return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
     }

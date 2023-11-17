@@ -7,7 +7,6 @@ import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.EntityHttpConnectionStage;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -567,6 +566,83 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Get the list of predefined HTTP variables")
                         .setResult("The list of predefined HTTP variables, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("test_http_template", params -> {
+                    String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);
+                    Integer connectionId = null;
+                    if (params.has("connection_id")) {
+                        Json connectionIdJson = params.get("connection_id");
+                        if (connectionIdJson.isNumber()) {
+                            connectionId = connectionIdJson.asInteger();
+                        } else if (connectionIdJson.isString()) {
+                            connectionId = Integer.parseInt(connectionIdJson.asString());
+                        }
+                    }
+                    String templateId = JsonUtil.getStringFromJson(params, "template_uuid", null);
+                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
+                    Json connectionJson = params.get("connection");
+                    Json templateJson = params.get("template");
+
+                    EntityHttpConnection entityHttpConnection = null;
+                    Device device = null;
+                    Connection connection = null;
+                    List<ConnectionProtocol> protocols;
+                    try {
+                        protocols = dbapiHandler.fetchDiscoveryProtocols();
+                    } catch (Exception e) {
+                        return JsonApiResponse.error("Could not fetch discovery protocols from DB-API",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+
+                    if (connectionJson != null) {
+                        connectionJson.set("id", connectionId != null ? connectionId : 0);
+                        connectionJson.set("connected_devices", Json.array(deviceId != null ? deviceId : 0));
+                        connection = Connection.fromJson(connectionJson, protocols);
+                    } else if (connectionId != null) {
+                        try {
+                            List<Connection> connections = dbapiHandler.fetchConnections(List.of(connectionId), protocols);
+                            if (!connections.isEmpty()) {
+                                connection = connections.get(0);
+                            }
+                        } catch (Exception e) {
+                            return JsonApiResponse.error("Could not fetch connection from DB-API",
+                                    Json.object("exception", e.getMessage())
+                            ).toJson();
+                        }
+                    }
+
+                    if (ipAddress != null && connection != null) {
+                        device = Device.fromIpAddress(ipAddress).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
+                        device.setConnections(List.of(connection));
+                    } else if (deviceId != null && connection != null) {
+                        try {
+                            List<Device> devices = dbapiHandler.fetchDevices(List.of(deviceId));
+                            if (!devices.isEmpty()) {
+                                device = devices.get(0).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
+                                device.setConnections(List.of(connection));
+                            }
+                        } catch (Exception e) {
+                            return JsonApiResponse.error("Could not fetch device from DB-API",
+                                    Json.object("exception", e.getMessage())
+                            ).toJson();
+                        }
+                    }
+                    if (templateJson != null) {
+                        entityHttpConnection = EntityHttpConnection.fromDbapiJson(templateJson);
+                    }
+                    return scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId).toJson();
+                },
+                new JsonCmdHelp().setDesc("Test an HTTP template")
+                        .setParam("ip_address", "The IP address to test the connection on - optional", IJsonCmdHelp.STR)
+                        .setParam("device_uuid", "The uuid of the device to test the connection on - optional", IJsonCmdHelp.STR)
+                        .setParam("connection_id", "The id of the connection to test - optional", IJsonCmdHelp.INT)
+                        .setParam("connection", "The connection to test - optional", IJsonCmdHelp.JSON)
+                        .setParam("template_uuid", "The uuid of the template to test", IJsonCmdHelp.STR)
+                        .setParam("template", "The template to test - optional", IJsonCmdHelp.JSON)
+                        .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
+                        "where result contains <code>{ \"success\": true }</code> if the template is valid," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
         );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);

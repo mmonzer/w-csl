@@ -114,6 +114,11 @@ public class Device {
         return connectionsIds;
     }
 
+    public Device setConnectionsIds(List<Integer> connectionsIds) {
+        this.connectionsIds = connectionsIds;
+        return this;
+    }
+
     public void setConnections(List<Connection> connections) {
         for (int id: connectionsIds) {
             Connection connection = DbapiUtils.getConnectionById(connections, id);

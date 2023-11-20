@@ -114,4 +114,12 @@ public class EntityHttpConnection {
     public String getName() {
         return name;
     }
+
+    public enum Part {
+        CONTEXT_INITIALIZATION,
+        QUERY,
+        JS_PARSER,
+        VARIABLES_EXTRACTION,
+        CPE_PARSING,
+    }
 }

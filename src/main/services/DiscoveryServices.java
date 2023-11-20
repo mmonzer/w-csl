@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -521,10 +522,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (templateJson != null && templateJson.has("stages") && templateJson.get("stages").isArray()) {
                         for (Json stage : templateJson.get("stages").asJsonList()) {
                             if (stage.has("headers") && stage.get("headers").isArray()) {
-                                stage.get("headers").asJsonList().forEach(header -> header.set("isInput", true));
+                                stage.get("headers").asJsonList().forEach(header -> header.set("isInput", false));
                             }
                             if (stage.has("queryParams") && stage.get("queryParams").isArray()) {
-                                stage.get("queryParams").asJsonList().forEach(header -> header.set("isInput", true));
+                                stage.get("queryParams").asJsonList().forEach(header -> header.set("isInput", false));
                             }
                         }
                     }
@@ -631,7 +632,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (templateJson != null) {
                         entityHttpConnection = EntityHttpConnection.fromDbapiJson(templateJson);
                     }
-                    return scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId).toJson();
+                    EntityHttpConnectionTestResult result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
+                    if (result == null) {
+                        return JsonApiResponse.error("Could not test entity HTTP connection",
+                                Json.object("exception", "Could not test entity HTTP connection")
+                        ).toJson();
+                    } else {
+                        return JsonApiResponse.result(result.serializeForDbapi()).toJson();
+                    }
                 },
                 new JsonCmdHelp().setDesc("Test an HTTP template")
                         .setParam("ip_address", "The IP address to test the connection on - optional", IJsonCmdHelp.STR)

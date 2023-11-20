@@ -5,6 +5,7 @@ import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
@@ -645,7 +646,7 @@ public class ScanApiHandler implements AutoCloseable {
         return response;
     }
 
-    public JsonApiResponse testEntityHttpConnection(
+    public EntityHttpConnectionTestResult testEntityHttpConnection(
             String entityHttpConnectionId,
             EntityHttpConnection entityHttpConnection,
             String deviceId,
@@ -667,7 +668,12 @@ public class ScanApiHandler implements AutoCloseable {
         if (connectionId != null) {
             requestBody.set("connectionInfoId", String.valueOf(connectionId));
         }
-        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_TEST, requestBody);
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_TEST, requestBody);
+        if (!response.isSuccess()) {
+            return null;
+        } else {
+            return EntityHttpConnectionTestResult.fromScannerJson(response.getResult());
+        }
     }
 
     public JsonApiResponse getPredefinedHttpVariables() {

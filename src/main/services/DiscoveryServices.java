@@ -521,10 +521,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (templateJson != null && templateJson.has("stages") && templateJson.get("stages").isArray()) {
                         for (Json stage : templateJson.get("stages").asJsonList()) {
                             if (stage.has("headers") && stage.get("headers").isArray()) {
-                                stage.get("headers").asJsonList().forEach(header -> header.set("isInput", true));
+                                stage.get("headers").asJsonList().forEach(header -> header.set("isInput", false));
                             }
                             if (stage.has("queryParams") && stage.get("queryParams").isArray()) {
-                                stage.get("queryParams").asJsonList().forEach(header -> header.set("isInput", true));
+                                stage.get("queryParams").asJsonList().forEach(header -> header.set("isInput", false));
                             }
                         }
                     }

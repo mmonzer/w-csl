@@ -599,6 +599,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (connectionJson != null) {
                         connectionJson.set("id", connectionId != null ? connectionId : 0);
                         connectionJson.set("connected_devices", Json.array(deviceId != null ? deviceId : 0));
+                        // If the template is provided, use it instead of existing discovery protocols
+                        if (templateJson != null) {
+                            protocols = List.of(ConnectionProtocol.fromTemplateId(templateJson.has("id") ? templateJson.get("id").asString() : null));
+                            connectionJson.set("discovery_protocol", protocols.get(0).getId());
+                        }
                         connection = Connection.fromJson(connectionJson, protocols);
                     } else if (connectionId != null) {
                         try {
@@ -611,6 +616,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                     Json.object("exception", e.getMessage())
                             ).toJson();
                         }
+                    } else {
+                        return JsonApiResponse.error("Missing required parameter connection or connection_id",
+                                Json.object("exception", "Missing parameter connection or connection_id, of type object or int")
+                        ).toJson();
                     }
 
                     if (ipAddress != null && connection != null) {

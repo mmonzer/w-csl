@@ -97,6 +97,17 @@ public class ConnectionProtocol {
     }
 
     /**
+     * Create a fake protocol from a template id.
+     * This is used to create a protocol for a connection that is not yet in the database when testing.
+     *
+     * @param templateId The template id of the protocol to create.
+     * @return A fake protocol.
+     */
+    public static ConnectionProtocol fromTemplateId(String templateId) {
+        return new ConnectionProtocol(0, "Mock protocol", "Mock protocol", 0, templateId, true);
+    }
+
+    /**
      * Get a protocol by its id from a list of protocols.
      *
      * @param protocols The list of protocols to search in.

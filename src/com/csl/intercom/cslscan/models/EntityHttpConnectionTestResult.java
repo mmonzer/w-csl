@@ -83,7 +83,7 @@ public class EntityHttpConnectionTestResult {
             if (statusCode != null) {
                 serialized.set(EntityHttpConnectionTestResultDetailsField.STATUS_CODE.dbapiName(), statusCode);
             }
-            if (variablesSerialized != null) {
+            if (!variablesSerialized.asMap().isEmpty()) {
                 serialized.set(EntityHttpConnectionTestResultDetailsField.VARIABLES.dbapiName(), variablesSerialized);
             }
             if (body != null) {

@@ -194,7 +194,7 @@ public class HttpConnection extends Connection {
     }
 
     public static class StageConfig {
-        private int port = 0;
+        private Integer port = null;
         private EntityHttpConnectionStage.HttpAuthenticationMethod authMethod = null;
         private String username = null;
         private String password = null;
@@ -221,7 +221,9 @@ public class HttpConnection extends Connection {
 
         public static StageConfig fromJson(Json json) {
             StageConfig stageConfig = new StageConfig();
-            stageConfig.port = JsonUtil.getIntFromJson(json, HttpConnectionField.PORT.dbapiName(), 0);
+            if (json.has(HttpConnectionField.PORT.dbapiName()) && json.get(HttpConnectionField.PORT.dbapiName()).isNumber()) {
+                stageConfig.port = json.get(HttpConnectionField.PORT.dbapiName()).asInteger();
+            }
             stageConfig.authMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, HttpConnectionField.AUTHENTICATION_METHOD.dbapiName(), EntityHttpConnectionStage.HttpAuthenticationMethod.NONE.name()));
             stageConfig.username = JsonUtil.getStringFromJson(json, HttpConnectionField.USERNAME.dbapiName(), null);
             stageConfig.password = JsonUtil.getStringFromJson(json, HttpConnectionField.PASSWORD.dbapiName(), null);
@@ -240,7 +242,7 @@ public class HttpConnection extends Connection {
             return stageConfig;
         }
 
-        public int getPort() {
+        public Integer getPort() {
             return port;
         }
 

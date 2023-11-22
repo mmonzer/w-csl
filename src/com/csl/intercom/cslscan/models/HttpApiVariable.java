@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan.models;
 
 import com.ucsl.json.Json;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -11,7 +12,8 @@ import java.util.stream.Collectors;
  */
 public class HttpApiVariable {
     private Json value;
-    private Map<String, HttpApiVariable> children;
+    private Map<String, HttpApiVariable> childrenMap;
+    private List<HttpApiVariable> childrenList;
 
     /**
      * Create a {@link HttpApiVariable} from the JSON object received from DB-API.
@@ -27,11 +29,19 @@ public class HttpApiVariable {
         HttpApiVariable httpApiVariable = new HttpApiVariable();
         if (json.isObject()) {
             httpApiVariable.value = null;
-            httpApiVariable.children = json.asJsonMap().entrySet().stream()
+            httpApiVariable.childrenMap = json.asJsonMap().entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> HttpApiVariable.fromDbapiJson(entry.getValue())));
+            httpApiVariable.childrenList = null;
+        } else if (json.isArray()) {
+            httpApiVariable.value = null;
+            httpApiVariable.childrenMap = null;
+            httpApiVariable.childrenList = json.asJsonList().stream()
+                    .map(HttpApiVariable::fromDbapiJson)
+                    .collect(Collectors.toList());
         } else {
             httpApiVariable.value = json;
-            httpApiVariable.children = null;
+            httpApiVariable.childrenMap = null;
+            httpApiVariable.childrenList = null;
         }
         return httpApiVariable;
     }
@@ -53,32 +63,48 @@ public class HttpApiVariable {
         Json value = json.get("value");
         if (value.isObject()) {
             httpApiVariable.value = null;
-            httpApiVariable.children = value.asJsonMap().entrySet().stream()
+            httpApiVariable.childrenMap = value.asJsonMap().entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> HttpApiVariable.fromScannerJson(entry.getValue())));
+            httpApiVariable.childrenList = null;
+        } else if (value.isArray()) {
+            httpApiVariable.value = null;
+            httpApiVariable.childrenMap = null;
+            httpApiVariable.childrenList = value.asJsonList().stream()
+                    .map(HttpApiVariable::fromScannerJson)
+                    .collect(Collectors.toList());
         } else {
             httpApiVariable.value = value;
-            httpApiVariable.children = null;
+            httpApiVariable.childrenMap = null;
+            httpApiVariable.childrenList = null;
         }
         return httpApiVariable;
     }
 
     public Json serializeForScanner() {
-        if (this.children == null) {
-            return Json.object("value", this.value);
-        } else {
+        if (this.childrenMap != null) {
             Json childrenSerialized = Json.object();
-            this.children.forEach((name, child) -> childrenSerialized.set(name, child.serializeForScanner()));
+            this.childrenMap.forEach((name, child) -> childrenSerialized.set(name, child.serializeForScanner()));
             return Json.object("value", childrenSerialized);
+        } else if (this.childrenList != null) {
+            Json childrenSerialized = Json.array();
+            this.childrenList.forEach(child -> childrenSerialized.add(child.serializeForScanner()));
+            return Json.object("value", childrenSerialized);
+        } else {
+            return Json.object("value", this.value);
         }
     }
 
     public Json serializeForDbapi() {
-        if (this.children == null) {
-            return this.value;
-        } else {
+        if (this.childrenMap != null) {
             Json childrenSerialized = Json.object();
-            this.children.forEach((name, child) -> childrenSerialized.set(name, child.serializeForDbapi()));
+            this.childrenMap.forEach((name, child) -> childrenSerialized.set(name, child.serializeForDbapi()));
             return childrenSerialized;
+        } else if (this.childrenList != null) {
+            Json childrenSerialized = Json.array();
+            this.childrenList.forEach(child -> childrenSerialized.add(child.serializeForDbapi()));
+            return childrenSerialized;
+        } else {
+            return this.value;
         }
     }
 }

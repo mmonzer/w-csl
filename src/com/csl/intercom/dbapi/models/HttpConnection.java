@@ -21,8 +21,22 @@ public class HttpConnection extends Connection {
     private Map<String, String> headers;
     private Map<String, String> queryParams;
     private Map<Integer, StageConfig> stagesConfig;
+    private Map<String, String> inputs;
 
-    public HttpConnection(int id, String port, List<String> devices, String entityHttpConnectionUuid, EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod, String username, String password, String realm, String token, Map<String, String> headers, Map<String, String> queryParams, Map<Integer, StageConfig> stagesConfig, Boolean isSimulated) {
+    public HttpConnection(int id,
+                          String port,
+                          List<String> devices,
+                          String entityHttpConnectionUuid,
+                          EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod,
+                          String username,
+                          String password,
+                          String realm,
+                          String token,
+                          Map<String, String> headers,
+                          Map<String, String> queryParams,
+                          Map<Integer, StageConfig> stagesConfig,
+                          Boolean isSimulated,
+                          Map<String, String> inputs) {
         super(id, devices, StaticConnectionProtocol.HTTP, isSimulated);
         this.entityHttpConnectionUuid = entityHttpConnectionUuid;
         this.port = port;
@@ -34,6 +48,7 @@ public class HttpConnection extends Connection {
         this.headers = headers;
         this.queryParams = queryParams;
         this.stagesConfig = stagesConfig;
+        this.inputs = inputs;
     }
 
     /**
@@ -81,7 +96,12 @@ public class HttpConnection extends Connection {
                     .map(Json::asString)
                     .collect(java.util.stream.Collectors.toList());
 
-            return new HttpConnection(id, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, headers, queryParams, stagesConfig, isSimulated);
+            Map<String, String> inputs = new HashMap<>();
+            if (otherData.has("inputs")) {
+                otherData.get("inputs").asJsonMap().forEach((key, value) -> inputs.put(key, value.asString()));
+            }
+
+            return new HttpConnection(id, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, headers, queryParams, stagesConfig, isSimulated, inputs);
         } catch (Throwable e) {
             e.printStackTrace(System.err);
             return null;
@@ -121,6 +141,9 @@ public class HttpConnection extends Connection {
         }
         if (this.queryParams != null) {
             result.set(HttpConnectionField.QUERY_PARAMS.scanName(), this.queryParams);
+        }
+        if (this.inputs != null) {
+            result.set("inputs", this.inputs);
         }
         result.set(HttpConnectionField.STAGES_CONFIG.scanName(), stagesConfigSerialized);
 
@@ -199,24 +222,38 @@ public class HttpConnection extends Connection {
         private String username = null;
         private String password = null;
         private String token = null;
+        private String realm = null;
         private Map<String, String> headers = null;
         private Map<String, String> queryParams = null;
+        private Map<String, String> inputs = null;
 
         public Json serializeForScanner() {
-            Json serializedHeaders = Json.object();
-            this.headers.entrySet().forEach(entry -> serializedHeaders.set(entry.getKey(), entry.getValue()));
-            Json serializedQueryParams = Json.object();
-            this.queryParams.entrySet().forEach(entry -> serializedQueryParams.set(entry.getKey(), entry.getValue()));
+            Json serialized = Json.object();
 
-            return Json.object(
-                    HttpConnectionField.PORT.scanName(), this.port,
-                    HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authMethod.name(),
-                    HttpConnectionField.USERNAME.scanName(), this.username,
-                    HttpConnectionField.PASSWORD.scanName(), this.password,
-                    HttpConnectionField.TOKEN.scanName(), this.token,
-                    HttpConnectionField.HEADERS.scanName(), serializedHeaders,
-                    HttpConnectionField.QUERY_PARAMS.scanName(), serializedQueryParams
-            );
+            if (this.headers != null) {
+                Json serializedHeaders = Json.object();
+                this.headers.forEach(serializedHeaders::set);
+                serialized.set(HttpConnectionField.HEADERS.scanName(), serializedHeaders);
+            }
+            if (this.queryParams != null) {
+                Json serializedQueryParams = Json.object();
+                this.queryParams.forEach(serializedQueryParams::set);
+                serialized.set(HttpConnectionField.QUERY_PARAMS.scanName(), serializedQueryParams);
+            }
+            if (this.inputs != null) {
+                Json serializedInputs = Json.object();
+                this.inputs.forEach(serializedInputs::set);
+                serialized.set(HttpConnectionField.INPUTS.scanName(), serializedInputs);
+            }
+
+            serialized.set(HttpConnectionField.PORT.scanName(), this.port);
+            serialized.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authMethod.name());
+            serialized.set(HttpConnectionField.USERNAME.scanName(), this.username);
+            serialized.set(HttpConnectionField.PASSWORD.scanName(), this.password);
+            serialized.set(HttpConnectionField.TOKEN.scanName(), this.token);
+            serialized.set(HttpConnectionField.REALM.scanName(), this.realm);
+
+            return serialized;
         }
 
         public static StageConfig fromJson(Json json) {
@@ -228,6 +265,7 @@ public class HttpConnection extends Connection {
             stageConfig.username = JsonUtil.getStringFromJson(json, HttpConnectionField.USERNAME.dbapiName(), null);
             stageConfig.password = JsonUtil.getStringFromJson(json, HttpConnectionField.PASSWORD.dbapiName(), null);
             stageConfig.token = JsonUtil.getStringFromJson(json, HttpConnectionField.TOKEN.dbapiName(), null);
+            stageConfig.realm = JsonUtil.getStringFromJson(json, HttpConnectionField.REALM.dbapiName(), null);
 
             stageConfig.headers = new HashMap<>();
             if (json.has(HttpConnectionField.HEADERS.dbapiName())) {
@@ -237,6 +275,11 @@ public class HttpConnection extends Connection {
             stageConfig.queryParams = new HashMap<>();
             if (json.has(HttpConnectionField.QUERY_PARAMS.dbapiName())) {
                 json.get(HttpConnectionField.QUERY_PARAMS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.queryParams.put(key, value.asString()));
+            }
+
+            stageConfig.inputs = new HashMap<>();
+            if (json.has(HttpConnectionField.INPUTS.dbapiName())) {
+                json.get(HttpConnectionField.INPUTS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.inputs.put(key, value.asString()));
             }
 
             return stageConfig;

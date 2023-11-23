@@ -13,6 +13,7 @@ public enum HttpConnectionField {
     HEADERS("headers", "headers"),
 
     QUERY_PARAMS("queryParams", "queryParams"),
+    INPUTS("inputs", "inputs"),
     STAGES_CONFIG("stagesConfig", "stagesConfig"),
     ;
 

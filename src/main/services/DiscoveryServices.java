@@ -641,7 +641,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (templateJson != null) {
                         entityHttpConnection = EntityHttpConnection.fromDbapiJson(templateJson);
                     }
-                    EntityHttpConnectionTestResult result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
+                    EntityHttpConnectionTestResult result = null;
+                    try {
+                        result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
+                    } catch (Exception e) {
+                        return JsonApiResponse.error("Could not test entity HTTP connection",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
                     if (result == null) {
                         return JsonApiResponse.error("Could not test entity HTTP connection",
                                 Json.object("exception", "Could not test entity HTTP connection")

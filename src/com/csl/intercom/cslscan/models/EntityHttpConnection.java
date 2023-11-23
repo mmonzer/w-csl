@@ -15,19 +15,25 @@ public class EntityHttpConnection {
     private String name;
     private Map<String, HttpApiVariable> variables;
     private List<EntityHttpConnectionStage> stages;
+    private List<EntityHttpConnectionInput> inputs;
 
     public Json serializeForScanner() {
         Json stagesSerialized = this.stages.stream()
                 .map(EntityHttpConnectionStage::serializeForScanner)
                 .collect(Json::array, Json::add, Json::add);
 
-       Json variablesSerialized = Json.object();
-       this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForScanner()));
+        Json variablesSerialized = Json.object();
+        this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForScanner()));
+
+        Json inputsSerialized = Json.array();
+        this.inputs.forEach(input -> inputsSerialized.add(input.serializeForScanner()));
+
 
         return Json.object(
                 EntityHttpConnectionField.UUID.scanName(), uuid,
                 EntityHttpConnectionField.NAME.scanName(), name,
                 EntityHttpConnectionField.VARIABLES.scanName(), variablesSerialized,
+                EntityHttpConnectionField.INPUTS.scanName(), inputsSerialized,
                 EntityHttpConnectionField.STAGES.scanName(), stagesSerialized
         );
     }
@@ -40,10 +46,14 @@ public class EntityHttpConnection {
         Json variablesSerialized = Json.object();
         this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForDbapi()));
 
+        Json inputsSerialized = Json.array();
+        this.inputs.forEach(input -> inputsSerialized.add(input.serializeForDbapi()));
+
         return Json.object(
                 EntityHttpConnectionField.UUID.dbapiName(), uuid,
                 EntityHttpConnectionField.NAME.dbapiName(), name,
                 EntityHttpConnectionField.VARIABLES.dbapiName(), variablesSerialized,
+                EntityHttpConnectionField.INPUTS.dbapiName(), inputsSerialized,
                 EntityHttpConnectionField.STAGES.dbapiName(), stagesSerialized
         );
     }
@@ -56,6 +66,11 @@ public class EntityHttpConnection {
             entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList().stream()
                     .map(EntityHttpConnectionStage::fromDbapiJson)
                     .collect(Collectors.toList());
+            if (json.has(EntityHttpConnectionField.INPUTS.dbapiName()) && json.get(EntityHttpConnectionField.INPUTS.dbapiName()).isArray()) {
+                entityHttpConnection.inputs = json.get(EntityHttpConnectionField.INPUTS.dbapiName()).asJsonList().stream()
+                        .map(EntityHttpConnectionInput::fromDbapiJson)
+                        .collect(Collectors.toList());
+            }
             if (json.has(EntityHttpConnectionField.VARIABLES.dbapiName()) && json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).asJsonMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, jsonEntry -> HttpApiVariable.fromDbapiJson(jsonEntry.getValue())));
@@ -77,6 +92,11 @@ public class EntityHttpConnection {
             entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.scanName()).asJsonList().stream()
                     .map(EntityHttpConnectionStage::fromScannerJson)
                     .collect(Collectors.toList());
+            if (json.has(EntityHttpConnectionField.INPUTS.scanName()) && json.get(EntityHttpConnectionField.INPUTS.scanName()).isArray()) {
+                entityHttpConnection.inputs = json.get(EntityHttpConnectionField.INPUTS.scanName()).asJsonList().stream()
+                        .map(EntityHttpConnectionInput::fromScannerJson)
+                        .collect(Collectors.toList());
+            }
             if (json.has(EntityHttpConnectionField.VARIABLES.scanName()) && json.get(EntityHttpConnectionField.VARIABLES.scanName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.scanName()).asJsonMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, jsonEntry -> HttpApiVariable.fromScannerJson(jsonEntry.getValue())));
@@ -92,6 +112,7 @@ public class EntityHttpConnection {
 
     /**
      * Add a stage to the connection.
+     *
      * @param stage The stage to add.
      * @return The connection itself.
      */
@@ -122,4 +143,6 @@ public class EntityHttpConnection {
         VARIABLES_EXTRACTION,
         CPE_PARSING,
     }
+
+
 }

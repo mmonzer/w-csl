@@ -4,6 +4,7 @@ public enum EntityHttpConnectionField {
     UUID("uuid", "uuid"),
     VARIABLES("variables", "variables"),
     NAME("name", "name"),
+    INPUTS("inputs", "inputs"),
     STAGES("stages", "stages");
 
     private String dbapiName;

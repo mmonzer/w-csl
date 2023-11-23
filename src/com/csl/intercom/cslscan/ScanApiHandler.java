@@ -627,7 +627,8 @@ public class ScanApiHandler implements AutoCloseable {
                     null,
                     null,
                     null,
-                    false
+                    false,
+                    null
             );
             device.setConnections(List.of(connection));
             if (stageIndex == null) {
@@ -651,7 +652,7 @@ public class ScanApiHandler implements AutoCloseable {
             EntityHttpConnection entityHttpConnection,
             String deviceId,
             Device device,
-            Integer connectionId) {
+            Integer connectionId) throws Exception {
         Json requestBody = Json.object();
         if (entityHttpConnectionId != null) {
             requestBody.set("entityHttpConnectionId", entityHttpConnectionId);
@@ -670,7 +671,7 @@ public class ScanApiHandler implements AutoCloseable {
         }
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_TEST, requestBody);
         if (!response.isSuccess()) {
-            return null;
+            throw new Exception("Could not test the entity http connection: " + response.getError().getDetails());
         } else {
             return EntityHttpConnectionTestResult.fromScannerJson(response.getResult());
         }

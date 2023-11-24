@@ -45,6 +45,7 @@ public class EntityHttpConnectionTestResult {
         private Map<String, HttpApiVariable> customVariables;
         private String body;
         private String cpeItems;
+        private String url;
 
         public Json serializeForDbapi() {
             Json variablesSerialized = Json.object();
@@ -92,6 +93,9 @@ public class EntityHttpConnectionTestResult {
             if (cpeItems != null) {
                 serialized.set(EntityHttpConnectionTestResultDetailsField.CPE_ITEMS.dbapiName(), cpeItems);
             }
+            if (url != null) {
+                serialized.set(EntityHttpConnectionTestResultDetailsField.URL.dbapiName(), url);
+            }
 
             return serialized;
         }
@@ -136,6 +140,9 @@ public class EntityHttpConnectionTestResult {
             }
             if (json.has(EntityHttpConnectionTestResultDetailsField.CPE_ITEMS.scanName()) && json.get(EntityHttpConnectionTestResultDetailsField.CPE_ITEMS.scanName()).isString()) {
                 details.cpeItems = json.get(EntityHttpConnectionTestResultDetailsField.CPE_ITEMS.scanName()).asString();
+            }
+            if (json.has(EntityHttpConnectionTestResultDetailsField.URL.scanName()) && json.get(EntityHttpConnectionTestResultDetailsField.URL.scanName()).isString()) {
+                details.url = json.get(EntityHttpConnectionTestResultDetailsField.URL.scanName()).asString();
             }
             return details;
         }

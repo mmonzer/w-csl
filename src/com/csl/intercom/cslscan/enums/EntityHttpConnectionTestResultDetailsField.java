@@ -9,8 +9,9 @@ public enum EntityHttpConnectionTestResultDetailsField {
     STATUS_CODE("statusCode", "statusCode"),
     VARIABLES("variables", "variablesSet"),
     BODY("body", "body"),
-    CPE_ITEMS("cpeItems", "cpeItems")
-        ;
+    CPE_ITEMS("cpeItems", "cpeItems"),
+    URL("url", "url"),
+    ;
 
     private String dbapiName;
     private String scanName;

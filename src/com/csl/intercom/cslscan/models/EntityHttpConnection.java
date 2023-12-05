@@ -31,7 +31,9 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForScanner()));
 
         Json inputsSerialized = Json.array();
-        this.inputs.forEach(input -> inputsSerialized.add(input.serializeForScanner()));
+        if (this.inputs != null) {
+            this.inputs.forEach(input -> inputsSerialized.add(input.serializeForScanner()));
+        }
 
 
         return Json.object(
@@ -52,7 +54,9 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForDbapi()));
 
         Json inputsSerialized = Json.array();
-        this.inputs.forEach(input -> inputsSerialized.add(input.serializeForDbapi()));
+        if (this.inputs != null) {
+            this.inputs.forEach(input -> inputsSerialized.add(input.serializeForDbapi()));
+        }
 
         return Json.object(
                 EntityHttpConnectionField.UUID.dbapiName(), uuid,

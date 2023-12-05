@@ -24,6 +24,7 @@ public class WebsocketClientEndpoint {
     private MessageHandler messageHandler;
     private URI endpointURI;
     public static String apiKey = null;
+    private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
     public static class Configurator extends javax.websocket.ClientEndpointConfig.Configurator {
         @Override
@@ -32,7 +33,7 @@ public class WebsocketClientEndpoint {
 //            String API_KEY = "FQ0dekrg.N5G8tw9On2UHrrncoPdhlmJCeEN4gwTp";
 
             if (apiKey != null) {
-                System.out.println(" (Adding Api-Key to the headers: " + apiKey + ")");
+//                System.out.println(" (Adding Api-Key to the headers: " + apiKey + ")");
                 List<String> authvalues = new ArrayList<>();
                 authvalues.add("Api-Key " + apiKey);
                 headers.put("Authorization", authvalues);
@@ -40,7 +41,7 @@ public class WebsocketClientEndpoint {
             super.beforeRequest(headers);
         }
     }
-    
+
     public WebsocketClientEndpoint(URI endpointURI) {
        this.endpointURI=endpointURI;
        connect();
@@ -52,16 +53,16 @@ public class WebsocketClientEndpoint {
         connect();
     }
 
-    private void connect()  {
+    synchronized private void connect()  {
     	 try {
-             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-             container.connectToServer(this, endpointURI);
+//             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+             this.userSession = container.connectToServer(this, endpointURI);
          } catch (Exception e) {
             // throw new RuntimeException(e);
              System.err.println(e);
          }
     }
-    
+
     /**
      * Callback hook for Connection open events.
      *
@@ -71,12 +72,12 @@ public class WebsocketClientEndpoint {
     public void onOpen(Session userSession) {
         System.out.println("Opening websocket "+userSession.getRequestURI());
         this.userSession = userSession;
-       System.out.println("Timeout="+ userSession.getMaxIdleTimeout());
         userSession.setMaxIdleTimeout(60000);
-         {
-    		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
-    		LocalDateTime now = LocalDateTime.now();  
-    		System.out.println(dtf.format(now));  
+        System.out.println("Timeout="+ userSession.getMaxIdleTimeout());
+        {
+    		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    		LocalDateTime now = LocalDateTime.now();
+    		System.out.println(dtf.format(now));
     	}
     }
 

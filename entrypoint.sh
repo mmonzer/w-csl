@@ -1,6 +1,7 @@
 #!/bin/bash
 
 jarfile=$1
+LOGBACK_CONFIG_FILE=resources/logback.xml
 
 if [ "$USE_SSL" == "true" ]; then
     CERT_FILE=/etc/certs/nginx.cert
@@ -13,8 +14,8 @@ if [ "$USE_SSL" == "true" ]; then
     -keystore $CACERT -keypass $PASS \
     -storepass $PASS
 
-    java -Djavax.net.ssl.trustStore=$CACERT -Djavax.net.ssl.trustStorePassword=$PASS -jar $jarfile
+    java -Djavax.net.ssl.trustStore=$CACERT -Djavax.net.ssl.trustStorePassword=$PASS -Dlogback.configurationFile=$LOGBACK_CONFIG_FILE -jar $jarfile
 
 else
-    java -jar $jarfile
+    java -Dlogback.configurationFile=$LOGBACK_CONFIG_FILE -jar $jarfile
 fi

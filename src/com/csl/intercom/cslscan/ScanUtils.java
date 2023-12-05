@@ -34,11 +34,11 @@ public class ScanUtils {
     /**
      * Extract a CPE Item's modification date from its {@link Json} form
      *
-     * @param cpeItem The CPE Item we want to read
+     * @param json The CPE Item we want to read
      * @return A {@link LocalDateTime} with the last modification date of the CPE Item
      */
-    public static OffsetDateTime getCpeItemDateTime(Json cpeItem) {
-        String cpeItemDate = JsonUtil.getStringFromJson(cpeItem, "updatedAt", null);
+    public static OffsetDateTime getDateFieldFromJson(Json json, String fieldName) {
+        String cpeItemDate = JsonUtil.getStringFromJson(json, fieldName, null);
         return cpeItemDate == null ? null : scanTimeToLocal(OffsetDateTime.parse(cpeItemDate));
     }
 

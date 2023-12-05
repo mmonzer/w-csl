@@ -10,8 +10,8 @@
         </layout>
     </appender>
 
-    <!-- LOG everything at INFO level -->
-    <root level="info">
+    <!-- LOG everything at DEBUG level -->
+    <root level="debug">
         <appender-ref ref="Console" />
     </root>
 </configuration>

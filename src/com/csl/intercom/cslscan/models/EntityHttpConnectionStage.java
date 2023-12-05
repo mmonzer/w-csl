@@ -1,15 +1,20 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.EntityHttpConnectionStageField;
+import com.csl.interfaces.models.IDbapiSerializable;
+import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.http.HttpMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class EntityHttpConnectionStage {
+public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSerializable {
+    private static final Logger logger = LoggerFactory.getLogger(EntityHttpConnectionStage.class);
     private String uuid;
     private String name;
     private String url;

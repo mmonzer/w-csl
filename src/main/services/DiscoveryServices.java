@@ -8,6 +8,7 @@ import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
+import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -16,7 +17,6 @@ import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
-import com.csl.logger.CSLLogger;
 import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
@@ -24,6 +24,8 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -40,7 +42,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
-    private final CSLLogger logger = CSLLogger.instance;
+    private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
     private final String configFileSectionName;
@@ -76,9 +78,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     @Override
     public boolean init(Json jConfig, String cslDir) {
-        System.out.println("Initializing SNMP service ..");
-        logger.warn("Hello from logger");
-
+        logger.info("Initializing SNMP service ..");
 
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
 
@@ -185,21 +185,27 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         addCmd("send_last_cpe_items", params -> {
                     String dateString = JsonUtil.getStringFromJson(params, "date", "");
                     if (!dateString.equals("")) {
-                        List<CpeItem> changes;
+                        List<CpeItem> cpeItemChanges;
+                        List<MicrosoftKB> microsoftKbChanges;
                         if (dateString.equals("all")) {
-                            changes = scanApiHandler.getCpeItemChangesSince(null);
+                            cpeItemChanges = scanApiHandler.getCpeItemChangesSince(null);
+                            microsoftKbChanges = scanApiHandler.getMicrosoftKbChangesSince(null);
                         } else {
-                            changes = scanApiHandler.getCpeItemChangesSince(OffsetDateTime.parse(dateString));
+                            cpeItemChanges = scanApiHandler.getCpeItemChangesSince(OffsetDateTime.parse(dateString));
+                            microsoftKbChanges = scanApiHandler.getMicrosoftKbChangesSince(OffsetDateTime.parse(dateString));
                         }
                         try {
-                            dbapiHandler.sendCpeItems(changes);
+                            dbapiHandler.sendCpeItems(cpeItemChanges);
+                            dbapiHandler.sendMicrosoftKbs(microsoftKbChanges);
                         } catch (Exception e) {
+                            logger.warn("Could not send changes to DB-API", e);
                             return JsonApiResponse.error("Could not send changes to DB-API",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
                         }
                     } else {
                         scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
+                        scanApiHandler.sendNewMicrosoftKbsToDbapi(dbapiHandler);
                     }
                     return JsonApiResponse.success().toJson();
                 },
@@ -217,7 +223,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         scanApiHandler.dropAllCollections();
                         return JsonApiResponse.success().toJson();
                     } catch (Exception e) {
-                        e.printStackTrace(System.err);
+                        logger.error("Could not drop collections", e);
                         return JsonApiResponse.error("Could not drop collections",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -342,6 +348,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             return response.toJson();
                         }
                     } catch (Exception e) {
+                        logger.error("Could not delete entity HTTP connection from CSL-Scan", e);
                         return JsonApiResponse.error("Could not delete entity HTTP connection from CSL-Scan",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -373,6 +380,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 }
                                 dbapiHandler.createDiscoveryProtocol(createdEntityHttpConnection);
                             } catch (Exception e) {
+                                logger.error("Could not create discovery protocol", e);
                                 scanApiHandler.deleteEntityHttpConnection(createdEntityHttpConnection.getUuid());
                                 response = JsonApiResponse.error("Could not create discovery protocol",
                                         Json.object("exception", e.getMessage())
@@ -385,6 +393,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         try {
                             dbapiHandler.updateDiscoveryProtocol(entityHttpConnection);
                         } catch (Exception e) {
+                            logger.error("Could not update discovery protocol", e);
                             scanApiHandler.updateEntityHttpConnection(previousEntityHttpConnection);
                             response = JsonApiResponse.error("Could not update discovery protocol",
                                     Json.object("exception", e.getMessage())
@@ -437,6 +446,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     try {
                         protocols = dbapiHandler.fetchDiscoveryProtocols();
                     } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                        logger.error("Could not fetch discovery protocols", e);
                         throw new RuntimeException(e);
                     }
 
@@ -483,13 +493,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             }
                         } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException |
                                  NullPointerException e) {
+                            logger.error("Could not fetch base connection", e);
                             return JsonApiResponse.error("Could not fetch base connection",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
                         }
                     }
 
-                    Connection connection = Connection.fromJson(connectionJson, protocols);
+                    Connection connection = Connection.fromDbapiJson(connectionJson, protocols);
                     if (ipAddress == null || connection == null) {
                         return JsonApiResponse.error("Missing required parameter device or connection",
                                 Json.object("exception", "Missing parameter device or connection, of type object")
@@ -591,6 +602,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     try {
                         protocols = dbapiHandler.fetchDiscoveryProtocols();
                     } catch (Exception e) {
+                        logger.error("Could not fetch discovery protocols", e);
                         return JsonApiResponse.error("Could not fetch discovery protocols from DB-API",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -604,7 +616,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             protocols = List.of(ConnectionProtocol.fromTemplateId(templateJson.has("id") ? templateJson.get("id").asString() : null));
                             connectionJson.set("discovery_protocol", protocols.get(0).getId());
                         }
-                        connection = Connection.fromJson(connectionJson, protocols);
+                        connection = Connection.fromDbapiJson(connectionJson, protocols);
                     } else if (connectionId != null) {
                         try {
                             List<Connection> connections = dbapiHandler.fetchConnections(List.of(connectionId), protocols);
@@ -612,6 +624,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 connection = connections.get(0);
                             }
                         } catch (Exception e) {
+                            logger.error("Could not fetch connection from DB-API", e);
                             return JsonApiResponse.error("Could not fetch connection from DB-API",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
@@ -633,6 +646,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 device.setConnections(List.of(connection));
                             }
                         } catch (Exception e) {
+                            logger.error("Could not fetch device from DB-API", e);
                             return JsonApiResponse.error("Could not fetch device from DB-API",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
@@ -645,6 +659,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     try {
                         result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
                     } catch (Exception e) {
+                        logger.error("Could not test entity HTTP connection", e);
                         return JsonApiResponse.error("Could not test entity HTTP connection",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -671,7 +686,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 
-        System.out.println("SNMP service operational");
+        logger.info("SNMP service operational");
         return true;
     }
 
@@ -700,7 +715,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             }
             scanApiHandler.close();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.warn("Could not stop the service", e);
+            return false;
         }
         return false;
     }
@@ -782,7 +798,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     public void syncAll() {
         dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
         scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
+        scanApiHandler.sendNewMicrosoftKbsToDbapi(dbapiHandler);
         handleDeletedCpes();
+        handleDeleteMicrosoftKBS();
     }
 
     /**
@@ -798,11 +816,34 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             OffsetDateTime lastCpeItemDeletionVerification = scanApiHandler.getLastCpeItemsDeletionDate();
             deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
         } catch (Exception e) {
+            logger.error("Failed to fetch deleted CPE Items", e);
             return JsonApiResponse.error("Failed to fetch deleted CPE Items",
                     Json.object("exception", e.getMessage())
             );
         }
         scanApiHandler.deleteCpeItemsFromScan(deletedCpes);
+        return JsonApiResponse.success();
+    }
+
+    /**
+     * Function to execute when Microsoft KB deletions are notified.
+     * Retrieves the deleted Microsoft KBs from DB-API and requests the deletion to CSL-Scan.
+     *
+     * @return A {@link JsonApiResponse} with the result of the operation
+     */
+    private JsonApiResponse handleDeleteMicrosoftKBS() {
+        List<Pair<String, OffsetDateTime>> deletedKBs = null;
+        try {
+            OffsetDateTime lastKBDeletionVerification = scanApiHandler.getLastMicrosoftKbsDeletionDate();
+            deletedKBs = dbapiHandler.getDeletedMicrosoftKbsSince(lastKBDeletionVerification);
+        } catch (Exception e) {
+            logger.error("Failed to fetch deleted Microsoft KBs from DB-API", e);
+            return JsonApiResponse.error("Failed to fetch deleted CPE Items",
+                    Json.object("exception", e.getMessage())
+            );
+        }
+        logger.trace("Request to delete in CSL-Scan those Microsoft KBs deleted in DB-API: {}", deletedKBs);
+        scanApiHandler.deleteMicrosoftKBsFromScan(deletedKBs);
         return JsonApiResponse.success();
     }
 

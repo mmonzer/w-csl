@@ -1,8 +1,12 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.EntityHttpConnectionField;
+import com.csl.interfaces.models.IDbapiSerializable;
+import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class EntityHttpConnection {
+public class EntityHttpConnection implements IScannerSerializable, IDbapiSerializable {
+    private static final Logger logger = LoggerFactory.getLogger(EntityHttpConnection.class);
     private String uuid;
     private String name;
     private Map<String, HttpApiVariable> variables;
@@ -79,7 +84,7 @@ public class EntityHttpConnection {
             }
             return entityHttpConnection;
         } catch (Throwable e) {
-            e.printStackTrace(System.err);
+            logger.warn("Failed to parse EntityHttpConnection from dbapi json", e);
             return null;
         }
     }
@@ -105,7 +110,7 @@ public class EntityHttpConnection {
             }
             return entityHttpConnection;
         } catch (Throwable e) {
-            e.printStackTrace(System.err);
+            logger.warn("Failed to parse EntityHttpConnection from scanner json", e);
             return null;
         }
     }

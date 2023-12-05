@@ -4,6 +4,7 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
@@ -18,12 +19,15 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -37,6 +41,7 @@ public class DbapiHandler implements AutoCloseable {
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
     private final int maxPageSize = 1000;
+    private static final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
 
     public DbapiHandler() {
         this(CSLContext.instance.getConfig());
@@ -51,7 +56,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             dbapiHttpClient.start();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Could not start the DB-API HTTP client.", e);
         }
     }
 
@@ -59,7 +64,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             dbapiHttpClient.stop();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Could not stop the DB-API HTTP client.", e);
         }
     }
 
@@ -76,7 +81,19 @@ public class DbapiHandler implements AutoCloseable {
         try {
             request.send();
         } catch (Exception e) {
-            System.err.println("[" + LocalDateTime.now().toString() + "] Could not delete the CPE Items from DB-API.");
+            logger.error("Could not delete the CPE Items from DB-API.", e);
+        }
+    }
+
+    private void deleteMicrosoftKbsFromDbapi(List<MicrosoftKB> deletedItems) {
+        Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(MicrosoftKB::getMongoEntityId).toArray()));
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DELETE_MICROSOFT_KBS.getEndpoint())
+                .header(HttpHeader.CONTENT_TYPE, "application/json")
+                .content(new StringContentProvider(contents.toString()));
+        try {
+            request.send();
+        } catch (Exception e) {
+            logger.error("Could not delete the Microsoft KBs from DB-API.", e);
         }
     }
 
@@ -86,10 +103,10 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems The list of {@link CpeItem} to classify.
      * @return A Map that associates a device id with the list of {@link CpeItem}s that have this id.
      */
-    private Map<String, List<CpeItem>> classifyCpeItemsByDevice(List<CpeItem> cpeItems) {
-        Map<String, List<CpeItem>> result = new HashMap<>();
-        for (CpeItem cpeItem : cpeItems) {
-            String deviceId = cpeItem.getDeviceId();
+    static private <T, Id> Map<Id, List<T>> classifyItemsById(List<T> cpeItems, Function<T, Id> idGetter) {
+        Map<Id, List<T>> result = new HashMap<>();
+        for (T cpeItem : cpeItems) {
+            Id deviceId = idGetter.apply(cpeItem);
             if (!result.containsKey(deviceId)) {
                 result.put(deviceId, new ArrayList<>());
             }
@@ -99,9 +116,9 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
-     * Send a CPE Item to DB-API
+     * Send a CPE Items batch to DB-API
      *
-     * @param cpeItems The CPE Items to send in a Json array
+     * @param cpeItems The CPE Items to send
      * @throws Exception If the sending fail
      */
     private void sendCpeItemsBatch(List<CpeItem> cpeItems) throws Exception {
@@ -113,7 +130,7 @@ public class DbapiHandler implements AutoCloseable {
             if (scan == null) return;
         }
 
-        Map<String, List<CpeItem>> classifiedCpeItems = classifyCpeItemsByDevice(cpeItems);
+        Map<String, List<CpeItem>> classifiedCpeItems = classifyItemsById(cpeItems, CpeItem::getDeviceId);
         Json cpeItemsArray = Json.array();
         for (Map.Entry<String, List<CpeItem>> deviceCpeItems : classifiedCpeItems.entrySet()) {
             Json deviceCpeItemsArray = Json.array(
@@ -141,7 +158,7 @@ public class DbapiHandler implements AutoCloseable {
     /**
      * Send a list of CPE Items to DB-API
      *
-     * @param cpeItems A {@link List <Json>} with the CPE Items to send
+     * @param cpeItems A {@link List <CpeItem>} with the CPE Items to send
      * @throws Exception If any item failed
      */
     public void sendCpeItems(List<CpeItem> cpeItems) throws Exception {
@@ -155,11 +172,73 @@ public class DbapiHandler implements AutoCloseable {
             }
             sendCpeItemsBatch(newItems);
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            logger.warn("Error sending CPE Items to DB-API.", e);
+            logger.debug("Error sending CPE Items to DB-API: {}", failedItems);
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
         }
     }
+
+    /**
+     * Send a batch of KBs to DB-API
+     *
+     * @param KBs A {@link List<MicrosoftKB>} with the KBs to send
+     * @throws Exception If any item failed
+     */
+    private void sendMicrosoftKbsBatch(List<MicrosoftKB> KBs) throws Exception {
+        ScansList scansList = ScansList.instance;
+        ScanEntity scan = scansList.getRunningScan();
+        if (scan == null) {
+            scan = scansList.getFinishedScan();
+            // If we found no running scans and no finished scan, we do not send the KBs
+            if (scan == null) return;
+        }
+
+        Map<String, List<MicrosoftKB>> classifiedKBs = classifyItemsById(KBs, MicrosoftKB::getDeviceId);
+        Json KBsArray = Json.array();
+        for (Map.Entry<String, List<MicrosoftKB>> deviceKBs : classifiedKBs.entrySet()) {
+            Json deviceKBsArray = Json.array(
+                    deviceKBs.getValue().stream().map(MicrosoftKB::serializeForDbapi).toArray()
+            );
+            KBsArray.add(Json.object(
+                    "device", deviceKBs.getKey(),
+                    "discovered_kb_list", deviceKBsArray
+            ));
+        }
+
+        Json requestContents = Json.object(
+                "progress", scan.getProgress(),
+                "event_id", scan.getDbapiId(),
+                "discovered_kb_list", KBsArray
+        );
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_MICROSOFT_KBS)
+                .content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Error sending KBs Batch to dbapi: got unexpected status " + response.getStatus());
+        }
+    }
+
+    public void sendMicrosoftKbs(List<MicrosoftKB> KBs) throws Exception {
+        logger.trace("Sending Microsoft KBs to DB-API: {}", KBs);
+        Json failedItems = Json.array();
+        List<MicrosoftKB> newItems = KBs.stream().filter(Predicate.not(MicrosoftKB::isDeleted)).collect(Collectors.toList());
+        List<MicrosoftKB> deletedItems = KBs.stream().filter(MicrosoftKB::isDeleted).collect(Collectors.toList());
+
+        try {
+            if (!deletedItems.isEmpty()) {
+                deleteMicrosoftKbsFromDbapi(deletedItems);
+            }
+            sendMicrosoftKbsBatch(newItems);
+        } catch (Exception e) {
+            newItems.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
+            logger.warn("Error sending Microsoft KBs to DB-API.", e);
+            logger.debug("Error sending Microsoft KBs to DB-API: {}", failedItems);
+            KBs.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
+            throw new Exception("Error sending the following KBs: " + failedItems.toString());
+        }
+    }
+
 
     /**
      * Fetch the last updated date of CPE Items in DB-API.
@@ -169,6 +248,29 @@ public class DbapiHandler implements AutoCloseable {
      */
     public OffsetDateTime getCpeItemsLastUpdateDate() throws Exception {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CPE_ITEMS_LAST_DATE);
+        ContentResponse response = request.send();
+        Json responseContents = Json.read(response.getContentAsString());
+        String lastUpdatedDateString;
+        if (responseContents.isString()) {
+            lastUpdatedDateString = responseContents.asString();
+        } else if (responseContents.isObject()) {
+            lastUpdatedDateString = responseContents.get("updatedAt").asString();
+        } else {
+            lastUpdatedDateString = responseContents.toString();
+        }
+        return DbapiUtils.dbapiDateToLocal(lastUpdatedDateString);
+    }
+
+    /**
+     * Fetch the last updated date of Microsoft KBs in DB-API.
+     *
+     * @return The last update of Microsoft KBs in DB-API.
+     * @throws ExecutionException   If the fetch failed.
+     * @throws InterruptedException If the connection with DB-API was interrupted.
+     * @throws TimeoutException     If the connection with DB-API times out.
+     */
+    public OffsetDateTime getMicrosoftKbsLastUpdateDate() throws ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.MICROSOFT_KB_LAST_DATE);
         ContentResponse response = request.send();
         Json responseContents = Json.read(response.getContentAsString());
         String lastUpdatedDateString;
@@ -220,7 +322,7 @@ public class DbapiHandler implements AutoCloseable {
         }
         Json response = Json.read(request.send().getContentAsString());
         return response.asJsonList().stream()
-                .map(json -> Connection.fromJson(json, protocols))
+                .map(json -> Connection.fromDbapiJson(json, protocols))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
@@ -300,6 +402,47 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
+     * Get the deleted Microsoft KBs from DB-API that were changed since an optional date.
+     *
+     * @param date The date of start of deletions to fecth. May be null, in wich case fetches all deletions.
+     * @return The {@link List<String>} of Microsoft KB uuids that were deleted since date.
+     * @throws Exception If the fetching failed.
+     */
+    public List<Pair<String, OffsetDateTime>> getDeletedMicrosoftKbsSince(OffsetDateTime date) throws Exception {
+        logger.trace("Fetching deleted Microsoft KBs since {}", date);
+        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
+        List<Pair<String, OffsetDateTime>> deletedMicrosoftKbs = new ArrayList<>();
+
+        int offset = 0;
+        boolean hasMore = true;
+        while (hasMore) {
+            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_MICROSOFT_KBS)
+                    .param("offset", String.valueOf(offset))
+                    .param("limit", String.valueOf(this.maxPageSize));
+            if (dateUtc != null) {
+                request.param("deleted_date__gt", dateUtc.toString());
+            }
+
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                throw new Exception("Unexpected status code " + response.getStatus());
+            }
+
+            Json responseContents = Json.read(response.getContentAsString());
+            List<Json> deletedMicrosoftKbsPageJson = responseContents.get("results").asJsonList();
+
+            // If the list is smaller than the max page size, there are no more pages
+            hasMore = !responseContents.get("next").isNull();
+
+            deletedMicrosoftKbsPageJson.stream()
+                    .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                    .forEach(deletedMicrosoftKbs::add);
+            offset += this.maxPageSize;
+        }
+        return deletedMicrosoftKbs;
+    }
+
+    /**
      * Fetch a list of devices from DB-API.
      *
      * @param uuids The {@link List<Integer>} of IDs of devices to retrieve from DB-API
@@ -340,9 +483,9 @@ public class DbapiHandler implements AutoCloseable {
             Json response = Json.read(request.send().getContentAsString());
             Connection connection;
             if (response.isArray()) {
-                connection = Connection.fromJson(response.at(0), protocols);
+                connection = Connection.fromDbapiJson(response.at(0), protocols);
             } else {
-                connection = Connection.fromJson(response, protocols);
+                connection = Connection.fromDbapiJson(response, protocols);
             }
             if (connection != null) {
                 connections.add(connection);
@@ -444,7 +587,7 @@ public class DbapiHandler implements AutoCloseable {
                 return ConnectionProtocol.fromJson(response);
             }
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Could not get discovery protocol by template id.", e);
             return null;
         }
     }
@@ -543,7 +686,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             request.send();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Could not send the no new CPE Item notification to DB-API.", e);
         }
     }
 
@@ -558,7 +701,7 @@ public class DbapiHandler implements AutoCloseable {
             ContentResponse response = request.send();
             return response.getContentAsString();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.warn("Could not get the organization name from DB-API.", e);
             return "None";
         }
     }
@@ -576,7 +719,7 @@ public class DbapiHandler implements AutoCloseable {
                 return result;
             }
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.warn("Could not get the MQTT topic prefix from DB-API.", e);
             return "None";
         }
     }
@@ -691,7 +834,7 @@ public class DbapiHandler implements AutoCloseable {
             OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
             deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Could not get changes from DB-API.", e);
             return JsonApiResponse.error("Could not get changes from DBAPI");
         }
         //endregion Get changes from DB-API
@@ -715,6 +858,7 @@ public class DbapiHandler implements AutoCloseable {
 
         if (failedDevices.isEmpty()) {
             scanApiHandler.sendNewCpeItemsToDbapi(this);
+            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
         }
 
         return failedDevices.isEmpty()
@@ -773,7 +917,7 @@ public class DbapiHandler implements AutoCloseable {
             connections.addAll(fetchConnections(connectionsToGet, protocols));
             devices.addAll(fetchDevices(devicesToGet));
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            e.printStackTrace(System.err);
+            logger.error("Could not fetch missing parts from DB-API.", e);
         }
         //endregion Get the missing parts
 

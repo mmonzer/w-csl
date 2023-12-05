@@ -2,6 +2,7 @@ package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiUtils;
+import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
@@ -9,12 +10,10 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.csl.intercom.dbapi.DbapiUtils.getConnectionById;
-
 /**
  * Model to represent a device from DB-API.
  */
-public class Device {
+public class Device implements IScannerSerializable {
     private String id;
     private String name;
     private String ipAddress;

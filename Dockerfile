@@ -17,6 +17,7 @@ COPY cslconf/ cslconf/
 COPY csldata/ csldata/
 COPY datafile/ datafile/ 
 COPY idsdata/ idsdata/ 
+COPY resources/ resources/
 COPY runconfig/ runconfig/
 COPY runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
 COPY entrypoint.sh .

@@ -577,7 +577,7 @@ public class ScanApiHandler implements AutoCloseable {
         try {
             lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
         } catch (Exception e) {
-            logger.warn("Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan", e);
+            logger.info("Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
         }
         List<CpeItem> changes = getCpeItemChangesSince(lastChangesDate);
         if (changes != null) {
@@ -644,7 +644,7 @@ public class ScanApiHandler implements AutoCloseable {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
-            logger.warn("Could not get last CPE items deletion date from CSL-Scan", e);
+//            logger.warn("Could not get last CPE items deletion date from CSL-Scan", e);
             return null;
         }
     }
@@ -661,7 +661,7 @@ public class ScanApiHandler implements AutoCloseable {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
-            logger.warn("Could not get last entities deletion date from CSL-Scan", e);
+//            logger.warn("Could not get last entities deletion date from CSL-Scan", e);
             return null;
         }
     }
@@ -678,7 +678,7 @@ public class ScanApiHandler implements AutoCloseable {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
-            logger.warn("Could not get last Microsoft KBs deletion date from CSL-Scan", e);
+//            logger.debug("Could not get last Microsoft KBs deletion date from CSL-Scan", e);
             return null;
         }
     }

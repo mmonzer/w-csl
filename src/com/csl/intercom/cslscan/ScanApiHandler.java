@@ -410,6 +410,7 @@ public class ScanApiHandler implements AutoCloseable {
                     .map(EntityHttpConnection::fromScannerJson)
                     .collect(Collectors.toList());
         } else {
+            logger.warn("Could not get all entity http connections from CSL-Scan");
             return null;
         }
     }
@@ -426,6 +427,7 @@ public class ScanApiHandler implements AutoCloseable {
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             return EntityHttpConnection.fromScannerJson(response.getResult());
         } else {
+            logger.warn("Could not get entity http connection {} from CSL-Scan", uuid);
             return null;
         }
     }
@@ -446,11 +448,14 @@ public class ScanApiHandler implements AutoCloseable {
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
             if (createdEntityHttpConnection != null) {
+                logger.info("Created entity http connection {}", createdEntityHttpConnection.getUuid());
                 return JsonApiResponse.result(createdEntityHttpConnection.serializeForDbapi(), response.getExtra());
             } else {
+                logger.error("Could not create the entity http connection (could not parse response from CSL-Scan)");
                 return JsonApiResponse.error("Could not create the entity http connection", Json.object("error", "Could not deserialize the entity http connection"));
             }
         } else {
+            logger.error("Could not create the entity http connection {}", response.getError().getDetails());
             return JsonApiResponse.error("Could not create the entity http connection", response.getError().getDetails());
         }
     }
@@ -462,11 +467,14 @@ public class ScanApiHandler implements AutoCloseable {
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
             if (createdEntityHttpConnection != null) {
+                logger.info("Updated entity http connection {}", createdEntityHttpConnection.getUuid());
                 return JsonApiResponse.result(createdEntityHttpConnection.serializeForDbapi(), response.getExtra());
             } else {
+                logger.error("Could not update the entity http connection (could not parse response from CSL-Scan)");
                 return JsonApiResponse.error("Could not update the entity http connection", Json.object("error", "Could not deserialize the entity http connection"));
             }
         } else {
+            logger.error("Could not update the entity http connection {}", response.getError().getDetails());
             return JsonApiResponse.error("Could not update the entity http connection", response.getError().getDetails());
         }
     }
@@ -569,7 +577,7 @@ public class ScanApiHandler implements AutoCloseable {
         try {
             lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
         } catch (Exception e) {
-            logger.warn("[Discovery] Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan", e);
+            logger.warn("Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan", e);
         }
         List<CpeItem> changes = getCpeItemChangesSince(lastChangesDate);
         if (changes != null) {
@@ -577,7 +585,6 @@ public class ScanApiHandler implements AutoCloseable {
                 dbapiHandler.sendCpeItems(changes);
             } catch (Exception e) {
                 logger.error("Could not send CPE items to DB-API", e);
-                logger.debug("Could not send CPE items to DB-API: {}", changes);
             }
         }
     }
@@ -598,7 +605,6 @@ public class ScanApiHandler implements AutoCloseable {
                 dbapiHandler.sendMicrosoftKbs(changes);
             } catch (Exception e) {
                 logger.error("Could not send Microsoft KBs to DB-API", e);
-                logger.debug("Could not send Microsoft KBs to DB-API: {}", changes);
             }
         }
     }
@@ -615,6 +621,7 @@ public class ScanApiHandler implements AutoCloseable {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
+            logger.warn("Could not get last Microsoft KBs update date from CSL-Scan", e);
             return null;
         }
     }
@@ -637,6 +644,7 @@ public class ScanApiHandler implements AutoCloseable {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
+            logger.warn("Could not get last CPE items deletion date from CSL-Scan", e);
             return null;
         }
     }
@@ -653,6 +661,7 @@ public class ScanApiHandler implements AutoCloseable {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
+            logger.warn("Could not get last entities deletion date from CSL-Scan", e);
             return null;
         }
     }
@@ -669,6 +678,7 @@ public class ScanApiHandler implements AutoCloseable {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
+            logger.warn("Could not get last Microsoft KBs deletion date from CSL-Scan", e);
             return null;
         }
     }

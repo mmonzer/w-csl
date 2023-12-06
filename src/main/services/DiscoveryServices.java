@@ -42,6 +42,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
+//    private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
@@ -842,7 +843,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     Json.object("exception", e.getMessage())
             );
         }
-        logger.trace("Request to delete in CSL-Scan those Microsoft KBs deleted in DB-API: {}", deletedKBs);
         scanApiHandler.deleteMicrosoftKBsFromScan(deletedKBs);
         return JsonApiResponse.success();
     }

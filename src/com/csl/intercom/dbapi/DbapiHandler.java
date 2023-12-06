@@ -173,7 +173,6 @@ public class DbapiHandler implements AutoCloseable {
             sendCpeItemsBatch(newItems);
         } catch (Exception e) {
             logger.warn("Error sending CPE Items to DB-API.", e);
-            logger.debug("Error sending CPE Items to DB-API: {}", failedItems);
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
         }
@@ -220,7 +219,6 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     public void sendMicrosoftKbs(List<MicrosoftKB> KBs) throws Exception {
-        logger.trace("Sending Microsoft KBs to DB-API: {}", KBs);
         Json failedItems = Json.array();
         List<MicrosoftKB> newItems = KBs.stream().filter(Predicate.not(MicrosoftKB::isDeleted)).collect(Collectors.toList());
         List<MicrosoftKB> deletedItems = KBs.stream().filter(MicrosoftKB::isDeleted).collect(Collectors.toList());
@@ -233,7 +231,6 @@ public class DbapiHandler implements AutoCloseable {
         } catch (Exception e) {
             newItems.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
             logger.warn("Error sending Microsoft KBs to DB-API.", e);
-            logger.debug("Error sending Microsoft KBs to DB-API: {}", failedItems);
             KBs.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following KBs: " + failedItems.toString());
         }
@@ -409,7 +406,6 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the fetching failed.
      */
     public List<Pair<String, OffsetDateTime>> getDeletedMicrosoftKbsSince(OffsetDateTime date) throws Exception {
-        logger.trace("Fetching deleted Microsoft KBs since {}", date);
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedMicrosoftKbs = new ArrayList<>();
 

@@ -32,7 +32,6 @@ public class MicrosoftKB implements IDbapiSerializable {
 
     public static MicrosoftKB fromScannerJson(Json json) {
         try {
-            logger.trace("Parsing MicrosoftKB from scanner json: {}", json);
             String mongoEntityId = json.get(MicrosoftKBField.MONGO_ENTITY_ID.scanName()).asString();
             String deviceId = json.get(MicrosoftKBField.DEVICE_ID.scanName()).asString();
             String discoveryConnectionId = json.get(MicrosoftKBField.DISCOVERY_CONNECTION_ID.scanName()).asString();
@@ -60,7 +59,6 @@ public class MicrosoftKB implements IDbapiSerializable {
                 MicrosoftKBField.KB_NUMBER.dbapiName(), kbNumber,
                 MicrosoftKBField.INSTALLED_DATE.dbapiName(), installedDate
         );
-        logger.trace("Serialized MicrosoftKB for dbapi: {}", serialized);
         return serialized;
     }
 

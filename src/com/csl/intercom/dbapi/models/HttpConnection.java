@@ -61,7 +61,14 @@ public class HttpConnection extends Connection {
     public static HttpConnection fromJson(Json jsonConnection, ConnectionProtocol protocol) {
         try {
             int id = jsonConnection.get("id").asInteger();
-            String port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asString();
+            String port;
+            if (jsonConnection.has(HttpConnectionField.PORT.dbapiName()) && jsonConnection.get(HttpConnectionField.PORT.dbapiName()).isString()) {
+                port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asString();
+            } else if (jsonConnection.has(HttpConnectionField.PORT.dbapiName()) && jsonConnection.get(HttpConnectionField.PORT.dbapiName()).isNumber()) {
+                port = String.valueOf(jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asInteger());
+            } else {
+                port = null;
+            }
             String username = null;
             try {
                 username = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.USERNAME.dbapiName(), null);

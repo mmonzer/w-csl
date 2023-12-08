@@ -208,7 +208,7 @@ public class DbapiHandler implements AutoCloseable {
         Json requestContents = Json.object(
                 "progress", scan.getProgress(),
                 "event_id", scan.getDbapiId(),
-                "discovered_kb_list", KBsArray
+                "discovered_kb_dict_arr", KBsArray
         );
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_MICROSOFT_KBS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");

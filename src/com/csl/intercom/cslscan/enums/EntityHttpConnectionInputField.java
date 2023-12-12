@@ -4,6 +4,7 @@ public enum EntityHttpConnectionInputField {
     KEY("key", "key"),
     DEFAULT_VALUE("default_value", "defaultValue"),
     SECRET("isSecret", "secret"),
+    REQUIRED("isRequired", "required"),
     DESCRIPTION("description", "description"),
     DISPLAY("display", "display"),
     TOOLTIP("tooltip", "tooltip"),

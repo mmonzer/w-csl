@@ -15,6 +15,7 @@ public class EntityHttpConnectionInput implements IScannerSerializable, IDbapiSe
     private String key;
     private String defaultValue;
     private boolean isSecret;
+    private boolean isRequired;
     private Map<Language, String> description;
     private Map<Language, String> tooltip;
     private Map<Language, String> placeholder;
@@ -69,6 +70,11 @@ public class EntityHttpConnectionInput implements IScannerSerializable, IDbapiSe
         } else {
             entityHttpConnectionInput.isSecret = false;
         }
+        if (json.has(EntityHttpConnectionInputField.REQUIRED.dbapiName()) && json.get(EntityHttpConnectionInputField.REQUIRED.dbapiName()).isBoolean()) {
+            entityHttpConnectionInput.isRequired = json.get(EntityHttpConnectionInputField.REQUIRED.dbapiName()).asBoolean();
+        } else {
+            entityHttpConnectionInput.isRequired = false;
+        }
         return entityHttpConnectionInput;
     }
 
@@ -96,6 +102,11 @@ public class EntityHttpConnectionInput implements IScannerSerializable, IDbapiSe
             entityHttpConnectionInput.isSecret = json.get(EntityHttpConnectionInputField.SECRET.scanName()).asBoolean();
         } else {
             entityHttpConnectionInput.isSecret = false;
+        }
+        if (json.has(EntityHttpConnectionInputField.REQUIRED.scanName()) && json.get(EntityHttpConnectionInputField.REQUIRED.scanName()).isBoolean()) {
+            entityHttpConnectionInput.isRequired = json.get(EntityHttpConnectionInputField.REQUIRED.scanName()).asBoolean();
+        } else {
+            entityHttpConnectionInput.isRequired = false;
         }
         return entityHttpConnectionInput;
     }
@@ -129,6 +140,7 @@ public class EntityHttpConnectionInput implements IScannerSerializable, IDbapiSe
             serialized.set(EntityHttpConnectionInputField.DISPLAY.dbapiName(), displaySerialized);
         }
         serialized.set(EntityHttpConnectionInputField.SECRET.dbapiName(), isSecret);
+        serialized.set(EntityHttpConnectionInputField.REQUIRED.dbapiName(), isRequired);
         return serialized;
     }
 
@@ -161,6 +173,7 @@ public class EntityHttpConnectionInput implements IScannerSerializable, IDbapiSe
             serialized.set(EntityHttpConnectionInputField.DISPLAY.scanName(), displaySerialized);
         }
         serialized.set(EntityHttpConnectionInputField.SECRET.scanName(), isSecret);
+        serialized.set(EntityHttpConnectionInputField.REQUIRED.scanName(), isRequired);
         return serialized;
     }
 

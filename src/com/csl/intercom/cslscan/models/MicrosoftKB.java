@@ -39,7 +39,10 @@ public class MicrosoftKB implements IDbapiSerializable {
             OffsetDateTime discoveredDate = ScanUtils.getDateFieldFromJson(json, MicrosoftKBField.DISCOVERED_DATE.scanName());
             boolean isDeleted = json.get(MicrosoftKBField.IS_DELETED.scanName()).asBoolean();
             String kbNumber = json.get(MicrosoftKBField.KB_NUMBER.scanName()).asString();
-            String installedDate = json.get(MicrosoftKBField.INSTALLED_DATE.scanName()).asString();
+            String installedDate = null;
+            if (json.has(MicrosoftKBField.INSTALLED_DATE.scanName()) && json.get(MicrosoftKBField.INSTALLED_DATE.scanName()).isString()) {
+                installedDate = json.get(MicrosoftKBField.INSTALLED_DATE.scanName()).asString();
+            }
 
             return new MicrosoftKB(mongoEntityId, deviceId, discoveryConnectionId, discoveredDate, isDeleted, kbNumber, installedDate);
         } catch (Throwable e) {

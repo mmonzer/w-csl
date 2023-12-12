@@ -1,14 +1,14 @@
 package com.csl.intercom.cslscan.enums;
 
 public enum MicrosoftKBField {
-    MONGO_ENTITY_ID("mongoEntityId", "uuid"),
-    DEVICE_ID("deviceId", "entityUuid"),
-    DISCOVERY_CONNECTION_ID("discoveryConnectionId", "connectionInfoUuid"),
-    CREATTION_DATE("creationDate", "createdAt"),
-    DISCOVERED_DATE("discoveredDate", "updatedAt"),
-    IS_DELETED("isDeleted", "deleted"),
-    KB_NUMBER("kbNumber", "number"),
-    INSTALLED_DATE("installedDate", "installedDate"),
+    MONGO_ENTITY_ID("mongo_entity_id", "uuid"),
+    DEVICE_ID("device_id", "entityUuid"),
+    DISCOVERY_CONNECTION_ID("connection_id", "connectionInfoUuid"),
+    CREATION_DATE("created_at", "createdAt"),
+    DISCOVERED_DATE("discovered_date", "updatedAt"),
+    IS_DELETED("is_deleted", "deleted"),
+    KB_NUMBER("kb_number", "number"),
+    INSTALLED_DATE("installed_date", "installedDate"),
     ;
 
     private String dbapiName;

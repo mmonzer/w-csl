@@ -625,8 +625,6 @@ public class ScanApiHandler implements AutoCloseable {
                     realm,
                     token,
                     null,
-                    null,
-                    null,
                     false,
                     null
             );

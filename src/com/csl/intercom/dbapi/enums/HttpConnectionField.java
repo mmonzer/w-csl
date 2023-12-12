@@ -10,9 +10,6 @@ public enum HttpConnectionField {
     PASSWORD("read_only_password", "password"),
     REALM("realm", "realm"),
     TOKEN("token", "token"),
-    HEADERS("headers", "headers"),
-
-    QUERY_PARAMS("queryParams", "queryParams"),
     INPUTS("inputs", "inputs"),
     STAGES_CONFIG("stagesConfig", "stagesConfig"),
     ;

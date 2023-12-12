@@ -18,8 +18,6 @@ public class HttpConnection extends Connection {
     private String password;
     private String realm;
     private String token;
-    private Map<String, String> headers;
-    private Map<String, String> queryParams;
     private Map<Integer, StageConfig> stagesConfig;
     private Map<String, String> inputs;
 
@@ -32,8 +30,6 @@ public class HttpConnection extends Connection {
                           String password,
                           String realm,
                           String token,
-                          Map<String, String> headers,
-                          Map<String, String> queryParams,
                           Map<Integer, StageConfig> stagesConfig,
                           Boolean isSimulated,
                           Map<String, String> inputs) {
@@ -45,8 +41,6 @@ public class HttpConnection extends Connection {
         this.password = password;
         this.realm = realm;
         this.token = token;
-        this.headers = headers;
-        this.queryParams = queryParams;
         this.stagesConfig = stagesConfig;
         this.inputs = inputs;
     }
@@ -83,12 +77,6 @@ public class HttpConnection extends Connection {
             String realm = JsonUtil.getStringFromJson(otherData, HttpConnectionField.REALM.dbapiName(), null);
             Boolean isSimulated = jsonConnection.get("is_simulated").asBoolean();
 
-            Map<String, String> headers = new HashMap<>();
-            otherData.get(HttpConnectionField.HEADERS.dbapiName()).asJsonMap().forEach((key, value) -> headers.put(key, value.asString()));
-
-            Map<String, String> queryParams = new HashMap<>();
-            otherData.get(HttpConnectionField.QUERY_PARAMS.dbapiName()).asJsonMap().forEach((key, value) -> queryParams.put(key, value.asString()));
-
             Map<Integer, StageConfig> stagesConfig = new HashMap<>();
             otherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), StageConfig.fromJson(value)));
 
@@ -101,7 +89,7 @@ public class HttpConnection extends Connection {
                 otherData.get("inputs").asJsonMap().forEach((key, value) -> inputs.put(key, value.asString()));
             }
 
-            return new HttpConnection(id, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, headers, queryParams, stagesConfig, isSimulated, inputs);
+            return new HttpConnection(id, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, stagesConfig, isSimulated, inputs);
         } catch (Throwable e) {
             e.printStackTrace(System.err);
             return null;
@@ -135,12 +123,6 @@ public class HttpConnection extends Connection {
         }
         if (this.token != null) {
             result.set(HttpConnectionField.TOKEN.scanName(), this.token);
-        }
-        if (this.headers != null) {
-            result.set(HttpConnectionField.HEADERS.scanName(), this.headers);
-        }
-        if (this.queryParams != null) {
-            result.set(HttpConnectionField.QUERY_PARAMS.scanName(), this.queryParams);
         }
         if (this.inputs != null) {
             result.set("inputs", this.inputs);
@@ -198,24 +180,6 @@ public class HttpConnection extends Connection {
         return stagesConfig;
     }
 
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
-    public HttpConnection setHeaders(Map<String, String> headers) {
-        this.headers = headers;
-        return this;
-    }
-
-    public Map<String, String> getQueryParams() {
-        return queryParams;
-    }
-
-    public HttpConnection setQueryParams(Map<String, String> queryParams) {
-        this.queryParams = queryParams;
-        return this;
-    }
-
     public static class StageConfig {
         private Integer port = null;
         private EntityHttpConnectionStage.HttpAuthenticationMethod authMethod = null;
@@ -223,23 +187,11 @@ public class HttpConnection extends Connection {
         private String password = null;
         private String token = null;
         private String realm = null;
-        private Map<String, String> headers = null;
-        private Map<String, String> queryParams = null;
         private Map<String, String> inputs = null;
 
         public Json serializeForScanner() {
             Json serialized = Json.object();
 
-            if (this.headers != null) {
-                Json serializedHeaders = Json.object();
-                this.headers.forEach(serializedHeaders::set);
-                serialized.set(HttpConnectionField.HEADERS.scanName(), serializedHeaders);
-            }
-            if (this.queryParams != null) {
-                Json serializedQueryParams = Json.object();
-                this.queryParams.forEach(serializedQueryParams::set);
-                serialized.set(HttpConnectionField.QUERY_PARAMS.scanName(), serializedQueryParams);
-            }
             if (this.inputs != null) {
                 Json serializedInputs = Json.object();
                 this.inputs.forEach(serializedInputs::set);
@@ -266,16 +218,6 @@ public class HttpConnection extends Connection {
             stageConfig.password = JsonUtil.getStringFromJson(json, HttpConnectionField.PASSWORD.dbapiName(), null);
             stageConfig.token = JsonUtil.getStringFromJson(json, HttpConnectionField.TOKEN.dbapiName(), null);
             stageConfig.realm = JsonUtil.getStringFromJson(json, HttpConnectionField.REALM.dbapiName(), null);
-
-            stageConfig.headers = new HashMap<>();
-            if (json.has(HttpConnectionField.HEADERS.dbapiName())) {
-                json.get(HttpConnectionField.HEADERS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.headers.put(key, value.asString()));
-            }
-
-            stageConfig.queryParams = new HashMap<>();
-            if (json.has(HttpConnectionField.QUERY_PARAMS.dbapiName())) {
-                json.get(HttpConnectionField.QUERY_PARAMS.dbapiName()).asJsonMap().forEach((key, value) -> stageConfig.queryParams.put(key, value.asString()));
-            }
 
             stageConfig.inputs = new HashMap<>();
             if (json.has(HttpConnectionField.INPUTS.dbapiName())) {

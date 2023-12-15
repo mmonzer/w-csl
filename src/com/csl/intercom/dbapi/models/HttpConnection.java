@@ -183,6 +183,15 @@ public class HttpConnection extends Connection {
         return this;
     }
 
+    public Map<String, String> getInputs() {
+        return inputs;
+    }
+
+    public HttpConnection setInputs(Map<String, String> inputs) {
+        this.inputs = inputs;
+        return this;
+    }
+
     public Map<Integer, StageConfig> getStagesConfig() {
         return stagesConfig;
     }

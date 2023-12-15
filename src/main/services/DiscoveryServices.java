@@ -444,13 +444,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     if (baseConnectionIdJson != null && baseConnectionIdJson.isNumber()) {
                         try {
                             Connection baseConnection = dbapiHandler.fetchConnections(List.of(baseConnectionIdJson.asInteger()), protocols).get(0);
+                            if (!connectionJson.has("read_only_connection_data")) {
+                                connectionJson.set("read_only_connection_data", Json.object());
+                            }
+                            Json otherDataJson = connectionJson.get("read_only_other_data");
                             switch (baseConnection.getProtocol()) {
                                 case SNMPv3:
                                     if (!connectionJson.has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
                                         connectionJson.set(SNMPv3ConnectionField.PASSWORD.dbapiName(), ((SNMPv3Connection) baseConnection).getPassword());
                                     }
-                                    if (!connectionJson.get("read_only_other_data").has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
-                                        connectionJson.get("read_only_other_data").set(SNMPv3ConnectionField.PASSPHRASE.dbapiName(), ((SNMPv3Connection) baseConnection).getPassphrase());
+                                    if (!otherDataJson.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
+                                        otherDataJson.set(SNMPv3ConnectionField.PASSPHRASE.dbapiName(), ((SNMPv3Connection) baseConnection).getPassphrase());
                                     }
                                     break;
                                 case RemotePowershell:
@@ -464,7 +468,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                     }
                                     // Add the password of the base connection to the stages config
                                     Map<Integer, HttpConnection.StageConfig> baseStagesConfig = ((HttpConnection) baseConnection).getStagesConfig();
-                                    for (Map.Entry<String, Json> stageConfig : connectionJson.get("read_only_other_data").get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
+                                    for (Map.Entry<String, Json> stageConfig : otherDataJson.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
                                         try {
                                             String stagePassword = baseStagesConfig.get(Integer.parseInt(stageConfig.getKey())).getPassword();
                                             if (stagePassword != null) {
@@ -476,6 +480,15 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                             continue;
                                         }
                                     }
+                                    // Add the inputs from the base connection
+                                    Map<String, String> baseInputs = ((HttpConnection) baseConnection).getInputs();
+                                    if (!otherDataJson.has(HttpConnectionField.INPUTS.dbapiName())) {
+                                        otherDataJson.set(HttpConnectionField.INPUTS.dbapiName(), Json.object());
+                                    }
+                                    Json inputsJson = otherDataJson.get(HttpConnectionField.INPUTS.dbapiName());
+                                    baseInputs.entrySet().stream()
+                                            .filter(input -> !inputsJson.has(input.getKey()) || !inputsJson.get(input.getKey()).isString() || !inputsJson.get(input.getKey()).asString().isEmpty())
+                                            .forEach(input -> inputsJson.set(input.getKey(), input.getValue()));
                                     break;
                                 default:
                                     break;

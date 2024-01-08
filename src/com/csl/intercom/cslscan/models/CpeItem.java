@@ -86,7 +86,7 @@ public class CpeItem {
             // Get the connection's id if it is valid
             try {
                 discoveryConnectionId = Integer.parseInt(JsonUtil.getStringFromJson(data, "connectionInfoUuid", "0"));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException | UnsupportedOperationException e) {
                 discoveryConnectionId = -1;
             }
         } catch (NullPointerException e) {

@@ -15,11 +15,13 @@ import java.util.concurrent.TimeUnit;
 import javax.websocket.*;
 
 import com.ucsl.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @ClientEndpoint(subprotocols = {"xsCrossfire"}, configurator = WebsocketClientEndpoint.Configurator.class)
 public class WebsocketClientEndpoint {
-
+    private static final Logger logger = LoggerFactory.getLogger(WebsocketClientEndpoint.class);
     Session userSession = null;
     private MessageHandler messageHandler;
     private URI endpointURI;
@@ -30,10 +32,7 @@ public class WebsocketClientEndpoint {
         @Override
         public void beforeRequest(Map<String, List<String>> headers)
         {
-//            String API_KEY = "FQ0dekrg.N5G8tw9On2UHrrncoPdhlmJCeEN4gwTp";
-
             if (apiKey != null) {
-//                System.out.println(" (Adding Api-Key to the headers: " + apiKey + ")");
                 List<String> authvalues = new ArrayList<>();
                 authvalues.add("Api-Key " + apiKey);
                 headers.put("Authorization", authvalues);
@@ -59,7 +58,8 @@ public class WebsocketClientEndpoint {
              this.userSession = container.connectToServer(this, endpointURI);
          } catch (Exception e) {
             // throw new RuntimeException(e);
-             System.err.println(e);
+             logger.warn("Error connecting to websocket {}, reason: {}", endpointURI, e.getMessage());
+             logger.debug("Error connecting to websocket {}", endpointURI, e);
          }
     }
 
@@ -70,14 +70,14 @@ public class WebsocketClientEndpoint {
      */
     @OnOpen
     public void onOpen(Session userSession) {
-        System.out.println("Opening websocket "+userSession.getRequestURI());
+        logger.info("Opening websocket {}", userSession.getRequestURI());
         this.userSession = userSession;
         userSession.setMaxIdleTimeout(60000);
-        System.out.println("Timeout="+ userSession.getMaxIdleTimeout());
+        logger.debug("Timeout = {}", userSession.getMaxIdleTimeout());
         {
     		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     		LocalDateTime now = LocalDateTime.now();
-    		System.out.println(dtf.format(now));
+            logger.debug("Sending message to websocket {}", dtf.format(now));
     	}
     }
 
@@ -89,8 +89,9 @@ public class WebsocketClientEndpoint {
      */
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        System.out.println("closing websocket");
-        //System.out.println(userSession);
+        logger.info("Closing websocket {}", userSession.getRequestURI());
+        logger.debug("UserSession {}", userSession);
+        logger.debug("Reason: {}", reason.getReasonPhrase());
         System.out.println(reason);
         this.userSession = null;
     }

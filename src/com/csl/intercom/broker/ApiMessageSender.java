@@ -1,430 +1,299 @@
 package com.csl.intercom.broker;
 
-import java.util.ArrayList;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
-
 
 // csl/services/requests/api_name
 
 
+public class ApiMessageSender implements MqttCallback {
 
-public class ApiMessageSender implements  MqttCallback {
-	
-	public static long TIME_OUT=10000;
-	
-	int idebug=0;
+    private static final Logger logger = LoggerFactory.getLogger(ApiMessageSender.class);
+    public static long TIME_OUT = 10000;
 
-	String moduleName="XSENDER";
+    int idebug = 0;
 
-	private static  String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
+    String moduleName = "XSENDER";
 
-	private static final String RESPONSE = "response";
+    private static String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
 
-	private static final String REQUEST = "request";
+    private static final String RESPONSE = "response";
 
-	private static final String REQ_ID = "reqId";
+    private static final String REQUEST = "request";
 
-	public static int request_ctr=1; 
+    private static final String REQ_ID = "reqId";
 
-	public static String REQUEST_TOPIC="csl/request/";
-	
-	
-	public static String RESPONSE_TOPIC="csl/response/";
-	//public static String API_NAME="api1";
-	
-	Map<String,Json> pendingMessages= new HashMap<>();
-	//List<Json> pendingMessages= new ArrayList<Json>();
-	
-	public String api="";
-	
-	boolean subscribed=false;
-	
+    public static int request_ctr = 1;
 
-	MqttClient clientToListen=null;
-	MqttClient clientToSend =null;
-	
-	public ApiMessageSender(String moduleName,String apiName,String brokerUrl, int debugLevel) {
-		
-		if (!brokerUrl.isEmpty()) BROKER_TCP_LOCALHOST_1883=brokerUrl;
-		
-		
-		
-		this.api=apiName;
-		setDebugLevel(debugLevel);
-		this.init();
-		
-	}
+    public static String REQUEST_TOPIC = "csl/request/";
 
-	public ApiMessageSender(String moduleName,String apiName, int debugLevel ) {
-		
-		this(moduleName,apiName,"", debugLevel);
-		System.out.println("Create MSG sender "+moduleName+" for api "+apiName);
-		
-		
-	}
-	
-	public boolean isDebug() {return idebug>1;}
-	public boolean isShowInfo() {return idebug>0;}
-	public void setDebugLevel(int d) {idebug=d;}
-	
 
-	public String getClientToListenID() {
-		return "S_"+moduleName+api+"_listen";
-	}
-	
-	public String getClientToSendID() {
-		return "S_"+moduleName+api+"_send";
-	}
-	
-	public void init() {
-		
-		if (isShowInfo()) System.out.println("Init sender api:"+api);
-		
-		
-		if (subscribed) close();
-		
-		int qos             = 2;
-		String broker       = BROKER_TCP_LOCALHOST_1883;
-		
-		MemoryPersistence persistence = new MemoryPersistence();
+    public static String RESPONSE_TOPIC = "csl/response/";
+    //public static String API_NAME="api1";
 
-		try {
-			
-			
-			//We're using eclipse paho library  so we've to go with MqttCallback 
-			clientToListen = new MqttClient(BROKER_TCP_LOCALHOST_1883,getClientToListenID(),persistence);
-			clientToListen.setCallback(this);
-			MqttConnectOptions mqOptions=new MqttConnectOptions();
-			mqOptions.setCleanSession(true);
-			clientToListen.connect(mqOptions);      //connecting to broker 
-			clientToListen.subscribe(RESPONSE_TOPIC+api); //subscribing to the topic name  test/topic
+    Map<String, Json> pendingMessages = new HashMap<>();
+    //List<Json> pendingMessages= new ArrayList<Json>();
 
-			//client.subscribe("csl/response/api1");
-			subscribed=true;
+    public String api = "";
 
-		} catch(MqttException me) {
-			System.out.println("reason "+me.getReasonCode());
-			System.out.println("msg "+me.getMessage());
-			System.out.println("loc "+me.getLocalizedMessage());
-			System.out.println("cause "+me.getCause());
-			System.out.println("excep "+me);
-			me.printStackTrace();
-		}
-		
-		
-		connectClientToSend();
+    boolean subscribed = false;
 
-	}
 
-	private void connectClientToSend() {
-		// client to send	
-		  
-         try {
-            String clientId     =getClientToSendID();
-        	if (clientToSend==null) clientToSend = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, new MemoryPersistence());
+    MqttClient clientToListen = null;
+    MqttClient clientToSend = null;
+
+    public ApiMessageSender(String moduleName, String apiName, String brokerUrl, int debugLevel) {
+
+        if (!brokerUrl.isEmpty()) BROKER_TCP_LOCALHOST_1883 = brokerUrl;
+
+        this.api = apiName;
+        setDebugLevel(debugLevel);
+        this.init();
+
+    }
+
+    public ApiMessageSender(String moduleName, String apiName, int debugLevel) {
+
+        this(moduleName, apiName, "", debugLevel);
+        logger.info("Create MSG sender {} for api {}", moduleName, apiName);
+    }
+
+    public boolean isDebug() {
+        return idebug > 1;
+    }
+
+    public boolean isShowInfo() {
+        return idebug > 0;
+    }
+
+    public void setDebugLevel(int d) {
+        idebug = d;
+    }
+
+
+    public String getClientToListenID() {
+        return "S_" + moduleName + api + "_listen";
+    }
+
+    public String getClientToSendID() {
+        return "S_" + moduleName + api + "_send";
+    }
+
+    public void init() {
+
+        if (isShowInfo()) logger.info("Init sender api:" + api);
+
+        if (subscribed) close();
+
+        MemoryPersistence persistence = new MemoryPersistence();
+
+        try {
+            //We're using eclipse paho library  so we've to go with MqttCallback
+            clientToListen = new MqttClient(BROKER_TCP_LOCALHOST_1883, getClientToListenID(), persistence);
+            clientToListen.setCallback(this);
+            MqttConnectOptions mqOptions = new MqttConnectOptions();
+            mqOptions.setCleanSession(true);
+            clientToListen.connect(mqOptions);      //connecting to broker
+            clientToListen.subscribe(RESPONSE_TOPIC + api); //subscribing to the topic name  test/topic
+
+            subscribed = true;
+
+        } catch (MqttException me) {
+            logger.error("Error while connecting to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
+        }
+
+        connectClientToSend();
+    }
+
+    private void connectClientToSend() {
+        // client to send
+
+        try {
+            String clientId = getClientToSendID();
+            if (clientToSend == null)
+                clientToSend = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, new MemoryPersistence());
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
-            if (isDebug()) System.out.println("Connecting to broker: "+BROKER_TCP_LOCALHOST_1883);
+            if (isDebug()) logger.debug("Connecting to broker: " + BROKER_TCP_LOCALHOST_1883);
             clientToSend.connect(connOpts);
-            if (isDebug()) System.out.println("Connected, topic="+REQUEST_TOPIC+api);
-           
-            
+            if (isDebug()) logger.debug("Connected, topic=" + REQUEST_TOPIC + api);
 
-            
-        } catch(MqttException me) {
-            System.out.println("reason "+me.getReasonCode());
-            System.out.println("msg "+me.getMessage());
-            System.out.println("loc "+me.getLocalizedMessage());
-            System.out.println("cause "+me.getCause());
-            System.out.println("excep "+me);
-            me.printStackTrace();
+
+        } catch (MqttException me) {
+            logger.error("Error while connecting to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
-		
-		ScheduledExecutorService executorService;
+
+        ScheduledExecutorService executorService;
         executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(this::detectTimeOut, 0, 1, TimeUnit.SECONDS);
-       
-	}
+
+    }
 
 
-	public void close() {
-		try {
-			clientToListen.unsubscribe(RESPONSE_TOPIC+api);
-			clientToListen.disconnect();
-			clientToListen.close(true);
-			subscribed=false;
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		 int qos             = 2;
-	     
-         try {
-         
-                        
+    public void close() {
+        try {
+            clientToListen.unsubscribe(RESPONSE_TOPIC + api);
+            clientToListen.disconnect();
+            clientToListen.close(true);
+            subscribed = false;
+        } catch (MqttException e) {
+            logger.error("Error while closing connection to broker, reason {}, msg {}, loc {}, cause {}", e.getReasonCode(), e.getMessage(), e.getLocalizedMessage(), e.getCause(), e);
+        }
+
+        try {
+
             clientToSend.disconnect();
-            if (isDebug())  System.out.println("Disconnected");
+            if (isDebug()) logger.debug("Disconnected");
             clientToSend.close();
 
-            
-        } catch(MqttException me) {
-            System.out.println("reason "+me.getReasonCode());
-            System.out.println("msg "+me.getMessage());
-            System.out.println("loc "+me.getLocalizedMessage());
-            System.out.println("cause "+me.getCause());
-            System.out.println("excep "+me);
-            me.printStackTrace();
+
+        } catch (MqttException me) {
+            logger.error("Error while closing connection to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
-	}
+    }
 
 
-	@Override
-	public void connectionLost(Throwable arg0) {
-		// TODO Auto-generated method stub
+    @Override
+    public void connectionLost(Throwable arg0) {
+        // TODO Auto-generated method stub
 
-	}
-
-
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken arg0) {
-		// TODO Auto-generated method stub
-
-	}
+    }
 
 
-	// listen the response to the request
-	@Override
-	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		 if (isDebug()) System.out.println("*************  message is : "+message);
-	        
-	        String s=new String(message.getPayload());
-	        
-	        try {
-	        	Json j=Json.read(s);
-	        	//System.out.println("JSON:"+j);
-	        	
-	        	String key="";
-	        	
-	        	if (j.has(REQ_ID)) key=j.get(REQ_ID).asString();
-	        	
-	        	if (!key.isEmpty()) {
-	        		Json jo=pendingMessages.get(key);
-	        		if (jo!=null) {
-	        			jo.set(RESPONSE, j);
-	        		}
-	        	}
-	        	
-	        }
-	        catch (Exception e) {
-	        	System.out.println(e);
-	        }
-	}
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken arg0) {
+        // TODO Auto-generated method stub
+
+    }
 
 
-	public void addToPendingRequest(Json j) {
-	
-		
-		
-	}
-	
-	
-	public Json execCmd(Json jCmd) {
-		
-		Json fullMsg=Json.object();
-		
-		String key=""+request_ctr;
-		
-		request_ctr++;
-		
-		//fullMsg.set(REQUEST,jCmd);
-		fullMsg.set(REQ_ID,key);
-		fullMsg.set("api",api);
-		fullMsg.set("jcmd", jCmd);
-	
-		sendMqttMsg(fullMsg);
-		
-		fullMsg.set("start_time",System.currentTimeMillis());
-		
-		pendingMessages.put(key,fullMsg);
-		
-		
-		while (true) {
-			
-				try {
-					Thread.sleep(3);
-					if (isDebug()) System.out.println(fullMsg);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return Json.object().set("error","timeout");
-				}
-				
-			if (fullMsg.has(RESPONSE)) {
-				if (isDebug()) System.out.println("*** "+fullMsg);
-				pendingMessages.remove(key);
-				Json rep= fullMsg.get(RESPONSE);
-				if (rep.has("result")) return rep.get("result");
-				return Json.object().set("error", "no result");
-			}
-			
-		}
-		
-		
-		
-	}
-	
-	
-	
-	public void sendWebSocketMsg(Json jSocket) {
-		
-		Json fullMsg=Json.object();
-	
-		fullMsg.set("websocket",api);
-		fullMsg.set("contents", jSocket);
-		
-		sendMqttMsg(fullMsg);
-	}
-	
-	
-	/*
-	 * 
-	 * send request to the dispatcher
-	 * 
-	 */
-	public void sendMqttMsg(Json j ) {
+    // listen the response to the request
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+        if (isDebug()) logger.debug("*************  message is : " + message);
 
-       
-         int qos             = 2;
-     
-         try {
-//            String clientId     = moduleName+"_"+api+"_sendx";
-//        	MqttClient clientToSend = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, new MemoryPersistence());
-//            MqttConnectOptions connOpts = new MqttConnectOptions();
-//            connOpts.setCleanSession(true);
-//            if (isDebug()) System.out.println("Connecting to broker: "+BROKER_TCP_LOCALHOST_1883);
-//            clientToSend.connect(connOpts);
-//            if (isDebug()) System.out.println("Connected, topic="+REQUEST_TOPIC+api);
-           
-        	 if (!clientToSend.isConnected()) {
- 				connectClientToSend();
- 			}
-        	 
+        String s = new String(message.getPayload());
+
+        try {
+            Json j = Json.read(s);
+
+            String key = "";
+
+            if (j.has(REQ_ID)) key = j.get(REQ_ID).asString();
+
+            if (!key.isEmpty()) {
+                Json jo = pendingMessages.get(key);
+                if (jo != null) {
+                    jo.set(RESPONSE, j);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while parsing message {}", s, e);
+        }
+    }
+
+    public Json execCmd(Json jCmd) {
+
+        Json fullMsg = Json.object();
+
+        String key = "" + request_ctr;
+
+        request_ctr++;
+
+        fullMsg.set(REQ_ID, key);
+        fullMsg.set("api", api);
+        fullMsg.set("jcmd", jCmd);
+
+        sendMqttMsg(fullMsg);
+
+        fullMsg.set("start_time", System.currentTimeMillis());
+
+        pendingMessages.put(key, fullMsg);
+
+
+        while (true) {
+
+            try {
+                Thread.sleep(3);
+                if (isDebug()) logger.debug("{}", fullMsg);
+            } catch (InterruptedException e) {
+                logger.error("Error while waiting for response", e);
+                return Json.object().set("error", "timeout");
+            }
+
+            if (fullMsg.has(RESPONSE)) {
+                if (isDebug()) logger.debug("*** " + fullMsg);
+                pendingMessages.remove(key);
+                Json rep = fullMsg.get(RESPONSE);
+                if (rep.has("result")) return rep.get("result");
+                return Json.object().set("error", "no result");
+            }
+        }
+    }
+
+
+    public void sendWebSocketMsg(Json jSocket) {
+
+        Json fullMsg = Json.object();
+
+        fullMsg.set("websocket", api);
+        fullMsg.set("contents", jSocket);
+
+        sendMqttMsg(fullMsg);
+    }
+
+
+    /*
+     *
+     * send request to the dispatcher
+     *
+     */
+    public void sendMqttMsg(Json j) {
+
+
+        int qos = 2;
+
+        try {
+            if (!clientToSend.isConnected()) {
+                connectClientToSend();
+            }
+
             String content = JsonUtil.prettyPrint(j);
             MqttMessage message = new MqttMessage(content.getBytes());
             message.setQos(qos);
-            clientToSend.publish(REQUEST_TOPIC+api, message);
-            if (isDebug()) System.out.println("Message published "+content);
-                        
-//            clientToSend.disconnect();
-//            if (isDebug())  System.out.println("Disconnected");
-//            clientToSend.close();
-
-            
-        } catch(MqttException me) {
-            System.out.println("reason "+me.getReasonCode());
-            System.out.println("msg "+me.getMessage());
-            System.out.println("loc "+me.getLocalizedMessage());
-            System.out.println("cause "+me.getCause());
-            System.out.println("excep "+me);
-            me.printStackTrace();
+            clientToSend.publish(REQUEST_TOPIC + api, message);
+            if (isDebug()) logger.debug("Message published {}", content);
+        } catch (MqttException me) {
+            logger.error("Error while sending message to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
     }
-	
-	// detect timeout in pending messages
-		public void detectTimeOut() {
 
+    // detect timeout in pending messages
+    public void detectTimeOut() {
 
-			//System.out.println("Detect time ou");
-			long current_time = System.currentTimeMillis();
-			
-			List<String> toDel= new ArrayList<String>();
-			
-			for (Map.Entry<String,Json> entry : pendingMessages.entrySet()) {
-			
-				Json message=entry.getValue();
-				long start_time=message.get("start_time").asLong();
-				long end_time = start_time + TIME_OUT;
-				if (end_time<current_time) {
-					if (isDebug()) System.out.println("Time out:"+message);
-					//toDel.add(entry.getKey());
-					message.set(RESPONSE, Json.object().set("error","TIMEOUT"));
-				}
-				
-			}
-			
-			//for (String key:toDel) pendingMessages.remove(key);
-			
-			 
+        long current_time = System.currentTimeMillis();
 
-		}
-		
-		
-		
-//	private  void run() {
-//        
-//		if (pendingMessages.size()>10) return;
-//		if (isDebug()) System.out.println("Running: " + new java.util.Date());
-//       
-//        Runnable runnable = new Runnable() {
-//			
-//			@Override
-//			public void run() {
-//				
-//				 Json jCmd= Json.object();
-//			        jCmd.set("cmd", "dosomething");
-//			        jCmd.set("params", (int) Math.random()*100);
-//			        Json result=execCmd(jCmd);
-//			        System.out.println("RESULT="+result);
-//			}
-//		};
-//        	
-//		Thread thread = new Thread(runnable);
-//		thread.start();
-//        
-//    }
-// 
-	
-	
+        for (Map.Entry<String, Json> entry : pendingMessages.entrySet()) {
 
-	public static void main(String[] args) {
-//
-//		ApiMessageSender ms=new ApiMessageSender("IDS","api1");
-//		ms.init();
-//
-//		ScheduledExecutorService executorService;
-//        executorService = Executors.newSingleThreadScheduledExecutor();
-//        executorService.scheduleAtFixedRate(ms::run, 0, 1, TimeUnit.SECONDS);
-//        
-//        while (true) {
-//        	try {
-//				Thread.sleep(100);
-//				//System.out.println("test");
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//        }
-//        
-        
-        
-	}
+            Json message = entry.getValue();
+            long start_time = message.get("start_time").asLong();
+            long end_time = start_time + TIME_OUT;
+            if (end_time < current_time) {
+                if (isDebug()) logger.debug("Time out: {}", message);
+                message.set(RESPONSE, Json.object().set("error", "TIMEOUT"));
+            }
 
+        }
+    }
 }

@@ -7,6 +7,8 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.AbstractMessageConverter;
@@ -36,6 +38,7 @@ import java.util.concurrent.*;
  * Handle the WebSocket connections with CSL-Scan.
  */
 public class ScanWebSocketHandler {
+    static private final Logger logger = LoggerFactory.getLogger(ScanWebSocketHandler.class);
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
@@ -137,15 +140,17 @@ public class ScanWebSocketHandler {
             try {
                 stompNotificationSession = subscribeToNotifications();
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
+                logger.warn("Error while connecting to notifications websocket", e);
                 stompNotificationSession = null;
             } catch (Throwable e) {
-                System.out.println("Caught");
+                logger.error("Error while connecting to notifications websocket", e);
                 stompNotificationSession = null;
             }
         }
 
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
             try {
+                logger.debug("Connecting to requests websocket");
                 stompRequestsSession = connectToRequestsWebSocket();
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 stompRequestsSession = null;
@@ -173,9 +178,9 @@ public class ScanWebSocketHandler {
 
                 //region Log the notification
                 if (payload != null) {
-                    System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
+                    logger.debug("[STOMP] " + payload.toString());
                 } else {
-                    System.out.println("[STOMP] null");
+                    logger.debug("[STOMP] null");
                 }
                 //endregion Log the notification
 
@@ -220,19 +225,21 @@ public class ScanWebSocketHandler {
 
             @Override
             public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                logger.debug("Connected to notifications websocket");
                 super.afterConnected(session, connectedHeaders);
                 session.subscribe(websocketNotificationsEndpoint, this);
             }
 
             @Override
             public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                System.err.println("Transport Error " + exception);
+                logger.warn("Transport Error", exception);
                 super.handleException(session, command, headers, payload, exception);
             }
 
             @Override
             public void handleTransportError(StompSession session, Throwable exception) {
-                System.err.println("Transport Error " + exception);
+                logger.warn("Transport Error", exception);
+                super.handleTransportError(session, exception);
             }
 
         }).get(1000, TimeUnit.MILLISECONDS);
@@ -255,15 +262,16 @@ public class ScanWebSocketHandler {
             public void handleFrame(StompHeaders headers, Object payload) {
                 super.handleFrame(headers, payload);
                 if (payload != null) {
-                    System.out.println("[STOMP " + LocalDateTime.now() + "] " + payload.toString());
+                    logger.debug("[STOMP] " + payload.toString());
                     // handle response
                 } else {
-                    System.out.println("[STOMP] null");
+                    logger.debug("[STOMP] null");
                 }
             }
 
             @Override
             public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                logger.debug("Connected to requests websocket");
                 super.afterConnected(session, connectedHeaders);
                 purgeScanRequestsQueue();
             }
@@ -277,7 +285,7 @@ public class ScanWebSocketHandler {
      */
     private WebSocketStompClient createStompClient() {
         WebSocketClient client = new StandardWebSocketClient();
-        SockJsClient sockJsClient = new SockJsClient(new ArrayList<>(Arrays.asList(new WebSocketTransport(client))));
+        SockJsClient sockJsClient = new SockJsClient(List.of(new WebSocketTransport(client)));
 
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new JsonMessageConverter());

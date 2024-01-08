@@ -28,9 +28,12 @@ import com.xcsl.miniserver.ApiHttpServer;
 import main.services.*;
 import main.util.CSLRunningArgs;
 import main.xcom.WebsocketClientEndpoint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CSLIDSMainClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(CSLIDSMainClient.class);
     static String SERVER_IP = "127.0.0.1";
     static String SERVER_URL_PREFIX = "";
     static String API_KEY = "";
@@ -48,7 +51,7 @@ public class CSLIDSMainClient {
                 public void broadcastMessageString(String socketName, String s) {
                     // TODO Auto-generated method stub
 
-                    System.out.println("Send string over ws:" + s);
+                    logger.trace("Send string over ws:{}", s);
                     if (clientEndPoint != null) {
                         if (!clientEndPoint.isOpen()) return;
                         clientEndPoint.sendMessage("wss:" + socketName + ":" + s);
@@ -57,8 +60,6 @@ public class CSLIDSMainClient {
 
                 @Override
                 public void broadcastMessageJson(String socketName, Json j) {
-
-                    //System.out.println("Send json over ws:"+j);
 
                     if (clientEndPoint != null) {
                         if (!clientEndPoint.isOpen()) return;
@@ -72,7 +73,7 @@ public class CSLIDSMainClient {
 
         @Override
         public void sendAlert(Json alert) {
-            System.out.println("********Forward alert:\n" + alert + "\n*************");
+           logger.debug("********Forward alert:\n" + alert + "\n*************");
             if (clientEndPoint != null) {
                 if (!clientEndPoint.isOpen()) return;
                 clientEndPoint.sendMessage("alert:" + alert);
@@ -87,11 +88,10 @@ public class CSLIDSMainClient {
      */
     static public void iniServices() {
 
-
         for (IApiCommands api : JServiceLoader.getApiCommandsList()) {
 
             String path = api.getName();
-            System.out.println("REGISTER API:<" + path + ">");
+            logger.info("REGISTER API:<" + path + ">");
             apiMap.put(path.toLowerCase(), api);
         }
     }
@@ -119,61 +119,52 @@ public class CSLIDSMainClient {
             } else
                 s = wsProtocol + "://" + SERVER_IP + SERVER_URL_PREFIX + "/cmd";
 
-            System.out.print("Try to connect to WS server " + s);
+            logger.debug("Try to connect to WS server {} with API Key {}", s, API_KEY);
 
             clientEndPoint = new WebsocketClientEndpoint(new URI(s), API_KEY);
             if (!clientEndPoint.isOpen()) {
-                System.out.println("  --> failed");
+                logger.warn("Connection to server failed, retrying...");
                 return;
             } else
-                System.out.println("   --> connected");
+                logger.info("Connected to server");
 
             // add listener
-            clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
-                public void handleMessage(String message) {
+            clientEndPoint.addMessageHandler(messageString -> {
+                logger.debug("MESSAGE:" + messageString);
+                messageString = messageString.trim();
+                if (messageString.startsWith("{") && messageString.endsWith("}")) {
 
-                    System.out.println("MESSAGE:" + message);
-                    message = message.trim();
-                    if (message.startsWith("{") && message.endsWith("}")) {
+                    Json messageJson = Json.read(messageString);
+                    logger.debug("received:" + messageJson);
 
-                        Json j = Json.read(message);
-                        System.out.println("received:" + j);
-                        //if (j.get("database")==null) return;
-                        //j=j.get("database");
-                        String m_uuid = "";
+                    String apiname = JsonUtil.getStringFromJson(messageJson, "api", "");
 
-                        String apiname = JsonUtil.getStringFromJson(j, "api", "");
+                    Runnable r = () -> {
+                        Json result = Json.object().set("error", "api not found ");
 
+                        if (apiname.isEmpty()) {
 
-                        Runnable r = new Runnable() {
-                            public void run() {
-                                Json result = Json.object().set("error", "api not found ");
+                        } else {
 
-                                if (apiname.isEmpty()) {
+                            IApiCommands api = apiMap.get(apiname);
+                            Json jcmd = messageJson.get("jcmd");
+                            if (jcmd == null) result.set("error", "jcmd not found");
 
-                                } else {
-
-                                    IApiCommands api = apiMap.get(apiname);
-                                    Json jcmd = j.get("jcmd");
-                                    if (jcmd == null) result.set("error", "jcmd not found");
-
-                                    if ((api != null) && (jcmd != null)) result = api.execJcmd(jcmd);
-                                }
+                            if ((api != null) && (jcmd != null)) result = api.execJcmd(jcmd);
+                        }
 
 
-                                Json r = Json.object();
-                                r.set("uuid", j.get("uuid"));
-                                r.set("result", result);
-                                System.out.println("****RESULT:" + r);
-                                clientEndPoint.sendMessage("res:" + r);
+                        Json resultMessageJson = Json.object();
+                        resultMessageJson.set("uuid", messageJson.get("uuid"));
+                        resultMessageJson.set("result", result);
+                        logger.debug("****RESULT:" + resultMessageJson);
+                        clientEndPoint.sendMessage("res:" + resultMessageJson);
 
-                            }
-                        };
+                    };
 
-                        Thread t = new Thread(r);
-                        t.start();
+                    Thread t = new Thread(r);
+                    t.start();
 
-                    }
                 }
             });
 
@@ -184,11 +175,10 @@ public class CSLIDSMainClient {
             }
             Thread.sleep(100);
 
-
         } catch (InterruptedException ex) {
-            System.err.println("InterruptedException exception: " + ex.getMessage());
+            logger.error("InterruptedException exception: {}", ex.getMessage(), ex);
         } catch (URISyntaxException ex) {
-            System.err.println("URISyntaxException exception: " + ex.getMessage());
+            logger.error("URISyntaxException exception: {}", ex.getMessage(), ex);
         }
 
     }
@@ -212,12 +202,10 @@ public class CSLIDSMainClient {
                     public void run() {
                         boolean reconnect = false;
                         if (clientEndPoint != null) {
-                            //if (!clientEndPoint.isOpen()) System.out.println("Session open="+clientEndPoint.isOpen());
                             reconnect = !clientEndPoint.isOpen();
                         } else reconnect = true;
 
                         if (reconnect) connectToServer();
-                        //else System.out.println("Connected");
                     }
                 },
                 0, 1, TimeUnit.SECONDS);
@@ -234,7 +222,6 @@ public class CSLIDSMainClient {
                         Json j2 = Json.object();
                         j2.set("line", "Test console");
                         j2.set("console_id", "learn");
-                        //			CSLWebSocketForConsole.broadcastMessageJson("log", j);
 
                         System.out.println(j2);
                         CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE, j2);
@@ -284,13 +271,13 @@ public class CSLIDSMainClient {
             try {
                 SERVER_IP = InetAddress.getByName(SERVER_IP).getHostAddress();
             } catch (UnknownHostException e) {
-                System.out.println("[ERROR] " + e.getMessage());
+                logger.error("Error while resolving host name: {}", e.getMessage(), e);
             }
         }
         SERVER_PORT = JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
         USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
         API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
-        System.out.println("API KEY is: " + API_KEY);
+        logger.trace("API KEY is: " + API_KEY);
         // endregion -- read configuration
 
         boolean USE_BROKER = false;
@@ -323,7 +310,6 @@ public class CSLIDSMainClient {
 
 
         if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
-            // FIXME: Client & Server are creating the same HTTP Server at the same port
             int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);
             ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
                     new InetSocketAddress(port),

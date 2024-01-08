@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.csl.core.NoLogging;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.logger.CSLLogger;
@@ -34,6 +35,8 @@ import static spark.Spark.staticFiles;
 import static spark.Spark.webSocket;
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -45,88 +48,31 @@ import spark.Service;
  * The response for an ICRoute is rendered in an after-filter.
  */
 public class CSLHttpServer {
-
 	static boolean ADD_GET_ROUTE=false;
-
-	//	static public CSLHttpServer instance = new CSLHttpServer();
 
 	Service sparkServer=null;
 	ServerConfig serverConfig=null;
 
-
-	//	private static boolean start_WEB_SOCKET_VARIABLES=false;
-	//	private static boolean start_WEB_SOCKET_ALERT=false;
-	//	private static boolean start_WEB_SOCKET_DATABASE=false;
-	//	private static boolean start_WEB_SOCKET_CONSOLE=false;
-	//	
-
-	//	public static String WEB_SOCKET_VARIABLES="/chat";
-	//	public static String WEB_SOCKET_ALERT="/alerts";
-	//	public static String WEB_SOCKET_DATABASE="/database";
-	//	public static String WEB_SOCKET_CONSOLE="/console";
-	//
-	//	private static String externalWebSiteRoot2=null;;	
-	//	private static String externalWebSiteRoot=System.getProperty("user.dir")+"/public";
-
 	private List<String> listOfWebsocketPath= new ArrayList<String>();
 
-
-
 	static public int REFRESH_SOCKET_PERIOD=280;  // 280 sec (timeout after 300 sec)
-
-	//private JCmdManager jCmdManager= new JCmdManager();
-
-	//private int port=-1;
-	//private boolean verbose =false;
-	//private boolean running =false;
-	//private   boolean debug =false;
 
 	private   boolean initialized =false;
 	private   boolean started=false;
 
-	//private   String userDir="";
-	//private   String rootdir="";
-	//private   String rootdir2="";
-	//private   String rootdir3="";
-
-	//private   Boolean core_commands=false;
-	//private   Boolean vars_commands=false;
-	//private   Boolean modbus_commands=false;
-	
-	//private   Boolean json_commands=false;
-	//private   Boolean custom_commands=false;
-	//private   Boolean external_commands=false;
-	
-	
-	//private   Boolean database_commands=false;
-	//private   Boolean send_alerts=false;
-	//private   Boolean send_console_output=false;
-	
-	////private   boolean config_file_commands =false;
-	//private   boolean mx_commands =false;
-
-
-	//List<ApiCommands> listOfAPIToRegister = new ArrayList<ApiCommands>();
-
 	CSLConfigFileServer cslConfigFileServer=null;
-
-	//ExecJsonCommands execJsonCommands=null;
+	private static final Logger logger = LoggerFactory.getLogger(CSLHttpServer.class);
 
 	public void reinitServer(Json j) {
-		
 		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
 		if (!on) return;
-	
 
 		if (sparkServer!=null) stop();
 		initialized=false;
 		initServer(j);
-
 	}
 
 	public void initServer(Json j) { //String rootdir, int port, boolean verbose) {
-
-		
 		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
 		if (!on) return;
 	
@@ -139,10 +85,9 @@ public class CSLHttpServer {
 	}
 
 
-	public void initServer(ServerConfig sc) { //String rootdir, int port, boolean verbose) {
-
+	public void initServer(ServerConfig sc) {
 		if (initialized) {
-			System.err.println("already initialized");
+			logger.error("Already initialized");
 			System.exit(0);
 		}
 
@@ -152,8 +97,8 @@ public class CSLHttpServer {
 
 		if (!sc.isRunning()) return;
 
-		sparkServer.exception(Exception.class, (e, req, res) -> e.printStackTrace()); // print all exceptions
-		sparkServer.staticFiles.externalLocation(sc.getRootdir()); //userDir+"/public");
+		sparkServer.exception(Exception.class, (e, req, res) -> logger.error("Spark exception", e)); // print all exceptions
+		sparkServer.staticFiles.externalLocation(sc.getRootdir());
 		sparkServer.staticFiles.expireTime(600);
 
 		if (!sc.getRootdir2().isEmpty()) {
@@ -164,25 +109,21 @@ public class CSLHttpServer {
 			sparkServer.staticFiles.externalLocation3(sc.getRootdir3());
 		}
 
-		sparkServer.port(sc.getPort()); //CSLContext.context.getCurrentPortForWEB());
+		sparkServer.port(sc.getPort());
 
 		// Websockets must be registered before regular HTTP routes
 		// region -- register websockets
 		CSLWebSocket.registerAll();
 		if (sc.isSend_alerts()) {
-			//AlertSenderViaWebSocket.init(this);
 			addWebsocket(CSLWebSocket.WEB_SOCKET_ALERT, CSLWebSocketHandler.class);
 		}
 		if (sc.isSend_console_output()) {
-			//ConsoleOutputSenderViaWebSocket.init(this);
 			addWebsocket(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class);
 		}
 		if (sc.isVars_commands()) {
-			//VariablesNotificationSenderViaWebSocket.init(this);
 			addWebsocket(CSLWebSocket.WEB_SOCKET_VARIABLES, CSLWebSocketHandler.class);
 		}
 		if (sc.isDatabase_commands()) {
-			//DataBaseNotificationSenderViaWebSocket.init(this);
 			addWebsocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class);
 		}
 		if (sc.isJcmd_commands()) {
@@ -192,16 +133,13 @@ public class CSLHttpServer {
 
 		// PROTECTED ENDPOINT FOR DEVELOPER ROLE_PROPERTY
 		sparkServer.get("/apihelp", (request, response) -> {
-
 			Json jj = Json.object();
 			Set<String> paramKeys = request.queryParams();
 			List<String> varNames = new ArrayList<String>(paramKeys);
 
-
 			for (String name : varNames) {
 				String[] z = request.queryParamsValues(name);
 				if (z != null) jj.set(name, z[0]);
-
 			}
 
 			jj.set("url", request.url());
@@ -214,12 +152,10 @@ public class CSLHttpServer {
 			}
 			jj.set("full_url", fullUrl);
 
-
 			String s = JServiceLoader.getApiHelpPage(jj);
 			response.type("text/html");
 			response.body(s);
 			return s;
-
 		});
 
 		sparkServer.staticFiles.header("Access-Control-Allow-Origin", "*");
@@ -271,10 +207,6 @@ public class CSLHttpServer {
 
 		}
 
-		//if (send_alerts) AlertSenderViaWebSocket.init();
-		//if (send_console_output) ConsoleOutputSenderViaWebSocket.init();
-
-
 		//decomposer sous forme de fcts
 
 		// After-filters are evaluated after each request, and can read the request and read/modify the response:
@@ -303,7 +235,6 @@ public class CSLHttpServer {
 		return s;
 	}
 	
-	
 	public Route getPostRoute(IApiCommands api) {
 		return (req, res) -> execPostCommand(api,req, res);
 	}
@@ -311,25 +242,21 @@ public class CSLHttpServer {
 	public Route getGetRoute(IApiCommands api) {
 		return (req, res) -> renderGetCommand(api, req, res);
 	}
-	
-	
+
 	private String execPostCommand(IApiCommands api, Request req, Response res) {
 
-		//System.out.println("API POST : "+path);
 		String sresponse = req.body();
-		System.out.println("\n<" + sresponse+">");
+		logger.debug("\n<" + sresponse+">");
 		System.out.println("path:" + req.pathInfo());
 
 		String result = "";
-
-		// if (s.compareToIgnoreCase("setfile")==0)
 
 		Json data = Json.read(sresponse);
 		Json cmd = data.get("cmd");
 		Json params = data.get("params");
 
 		if (cmd == null) {
-			System.out.println("Invalid jcmd:" + cmd);
+			logger.warn("Invalid jcmd:" + cmd);
 		}
 		if (params == null) {
 			params = Json.object();
@@ -339,21 +266,17 @@ public class CSLHttpServer {
 		
 		if (listOfRemoteApi.contains(api.getName())) {
 			cresult= CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
-			System.out.println("REMOTE SERVER RESPONSE:"+cresult);
-			
-			
+			logger.debug("REMOTE SERVER RESPONSE:"+cresult);
 		}
 		else {
 			cresult=  api.exec(cmd.asString(), params).toString();
-			System.out.println("SERVER RESPONSE:"+cresult);
-			
+			logger.debug("SERVER RESPONSE:"+cresult);
 		}
 
 		return cresult;
 	}
 	
 	private String renderGetCommand(IApiCommands api,  Request req, Response res) {
-
 		Set<String> paramKeys = req.queryParams();
 
 		String s = req.pathInfo();
@@ -379,7 +302,7 @@ public class CSLHttpServer {
 			}
 		}
 
-		System.out.println("Exec " + cmd + " " + params);
+		logger.debug("Exec " + cmd + " " + params);
 
 		String cresult = api.exec(cmd, params).toString();
 
@@ -394,33 +317,24 @@ public class CSLHttpServer {
 	private final List<String> listOfRemoteApi = new ArrayList<String>();
 
 	void startRefreshWebSocketTask(int n) {
-
 		if (n <= 0) return;
 
-		Runnable r = new Runnable() {
-
-			@Override
-			public void run() {
-				//System.out.println("refresh");
-				if (serverConfig.isSend_alerts())
-					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT); //CSLWebSocketForAlert.refresh();
-				if (serverConfig.isSend_console_output())
-					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE); //CSLWebSocketForConsole.refresh();
-				if (serverConfig.isVars_commands())
-					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES); //CSLWebSocketForVariables.refresh();
-				if (serverConfig.isDatabase_commands())
-					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE); //CSLWebSocketForDatabase.refresh();
-				if (serverConfig.isJcmd_commands())
-					CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD); //CSLWebSocketForDatabase.refresh();
-
-			}
-		};
-
+		Runnable r = () -> {
+            if (serverConfig.isSend_alerts())
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT); //CSLWebSocketForAlert.refresh();
+            if (serverConfig.isSend_console_output())
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE); //CSLWebSocketForConsole.refresh();
+            if (serverConfig.isVars_commands())
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES); //CSLWebSocketForVariables.refresh();
+            if (serverConfig.isDatabase_commands())
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE); //CSLWebSocketForDatabase.refresh();
+            if (serverConfig.isJcmd_commands())
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD); //CSLWebSocketForDatabase.refresh();
+        };
 		scheduler.scheduleAtFixedRate(r, n, n, TimeUnit.SECONDS);
 	}
 
 	private String replaceUserDir(String dir, String userDir) {
-
 		if (dir.startsWith(".")) {
 			return userDir + dir.substring(1);
 		}
@@ -436,13 +350,12 @@ public class CSLHttpServer {
 	}
 
 	public void start() {
-
 		if (!initialized) {
-			System.err.println("CSL Web server not initialized, cannot start");
+			logger.error("CSL Web server not initialized, cannot start");
 			System.exit(0);
 		}
 
-		CSLLogger.instance.info("current user dir = " + serverConfig.getUserDir());
+		logger.debug("current user dir = " + serverConfig.getUserDir());
 		setStarted(true);
 
 		sparkServer.init();
@@ -450,17 +363,13 @@ public class CSLHttpServer {
 		startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
 
 		if (serverConfig.isVerbose()) {
-			System.out.println();
-			System.out.println("Starting:");
-			System.out.println("=========");
-
-			System.out.println("  Web server listening on " + serverConfig.getPort());
+			logger.info("Starting");
+			logger.info("Web server listening on {}", serverConfig.getPort());
 		}
 	}
 
 	// stop the server
 	public void stop() {
-
 		sparkServer.stop();
 		scheduler.shutdownNow();
 
@@ -470,17 +379,6 @@ public class CSLHttpServer {
 	boolean isWebsocketPath(String path) {
 		return listOfWebsocketPath.indexOf(path) >= 0;
 	}
-
-
-	//	static public void addRoute(String mode,String path, Route r) {
-	//		if (mode.compareToIgnoreCase("get")==0)
-	//			get(path,r);	
-	//		else if (mode.compareToIgnoreCase("post")==0)
-	//			post(path,r);	
-	//		else 
-	//			System.err.println("Invalid mode :"+mode+" path:"+path);
-	//
-	//	}
 
 	public void addGetRoute(String path, Route r) {
 		System.err.println("  adding get path " + path);
@@ -493,7 +391,6 @@ public class CSLHttpServer {
 	}
 
 	public void addWebsocket(String path, Class<?> handler) {
-
 		if (!path.startsWith("/")) path = "/" + path;
 
 		if (listOfWebsocketPath.indexOf(path) < 0)
@@ -506,50 +403,18 @@ public class CSLHttpServer {
 
 
 	public int getCurrentPortForWEB() {
-		// TODO Auto-generated method stub
 		return serverConfig.getPort();
 	}
 
-
-	//    private static String renderEditTodo(Request req) {
-	//        return renderTemplate("velocity/editTodo.vm", new HashMap(){{ put("todo", TodoDao.find(req.params("id"))); }});
-	//    }
-	//
-	//    private static String renderTodos(Request req) {
-	//
-	//    	 String z = req.contentType();
-	//     	//BufferedReader br = request.getReader();
-	//     	String sresponse = "???";
-	//     	sresponse=req.body();
-	//     	//System.out.println(z+"\n"+sresponse);
-	//     	//System.out.println( req.requestMethod());
-	//     	//System.out.println( req.pathInfo());
-	//
-	//        String statusStr = req.queryParams("status");
-	//        Map<String, Object> model = new HashMap<>();
-	//        model.put("todos", TodoDao.ofStatus(statusStr));
-	//        model.put("filter", Optional.ofNullable(statusStr).orElse(""));
-	//        model.put("activeCount", TodoDao.ofStatus(Status.ACTIVE).size());
-	//        model.put("anyCompleteTodos", TodoDao.ofStatus(Status.COMPLETE).size() > 0);
-	//        model.put("allComplete", TodoDao.all().size() == TodoDao.ofStatus(Status.COMPLETE).size());
-	//        model.put("status", Optional.ofNullable(statusStr).orElse(""));
-	//        if ("true".equals(req.queryParams("ic-request"))) {
-	//            return renderTemplate("velocity/todoList.vm", model);
-	//        }
-	//        return renderTemplate("velocity/index.vm", model);
-	//    }
-	//
 	private String renderInvalid(Request req, Response res) {
 		return "CSL Server : Invalid command ";
 	}
 
 	public boolean isDebug() {
-		// TODO Auto-generated method stub
 		return serverConfig.isDebug();
 	}
 
 	public void addRemoteApi(String apiname) {
-		// TODO Auto-generated method stub
 		listOfRemoteApi.add(apiname.toLowerCase());
 	}
 

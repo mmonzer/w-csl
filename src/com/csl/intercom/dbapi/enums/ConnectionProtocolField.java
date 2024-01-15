@@ -7,6 +7,7 @@ public enum ConnectionProtocolField {
     DEFAULT_PORT("default_port"),
     CONNECTION_TEMPLATE_ID("connection_template_id"),
     IS_DYNAMIC("is_dynamic"),
+    CONNECTION_TEMPLATE_DETAILS("template_details"),
     ;
 
     private String dbapiName;

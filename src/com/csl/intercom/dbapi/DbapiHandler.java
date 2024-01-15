@@ -378,7 +378,8 @@ public class DbapiHandler implements AutoCloseable {
                 ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
                 ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
                 ConnectionProtocolField.DEFAULT_PORT.dbapiName(), 443,
-                ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid()
+                ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid(),
+                ConnectionProtocolField.CONNECTION_TEMPLATE_DETAILS.dbapiName(), entityHttpConnection.serializeForDbapi()
         );
         request.content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
@@ -405,7 +406,8 @@ public class DbapiHandler implements AutoCloseable {
                     ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
                     ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
                     ConnectionProtocolField.DEFAULT_PORT.dbapiName(), 443,
-                    ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid()
+                    ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid(),
+                    ConnectionProtocolField.CONNECTION_TEMPLATE_DETAILS.dbapiName(), entityHttpConnection.serializeForDbapi()
             );
             request.content(new StringContentProvider(requestContents.toString()), "application/json");
             ContentResponse response = request.send();

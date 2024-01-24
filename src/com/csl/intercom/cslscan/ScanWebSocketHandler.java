@@ -25,10 +25,7 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
@@ -39,15 +36,17 @@ import java.util.concurrent.*;
  */
 public class ScanWebSocketHandler {
     static private final Logger logger = LoggerFactory.getLogger(ScanWebSocketHandler.class);
+    private static final DbapiHandler dbapiHandler = new DbapiHandler();
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
+    private final String websocketImportNotificationsEndpoint = "/import/ready";
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private String scanManagerDiscoveryUrl;
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
-    private static final DbapiHandler dbapiHandler = new DbapiHandler();
+    private StompSession stompImportNotificationSession = null;
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private ScansList scansList = ScansList.instance;
 
@@ -76,8 +75,15 @@ public class ScanWebSocketHandler {
      */
     public void stop() {
         webSocketsConnectionAttempts.shutdown();
-        stompRequestsSession.disconnect();
-        stompNotificationSession.disconnect();
+        if (stompRequestsSession != null) {
+            stompRequestsSession.disconnect();
+        }
+        if (stompNotificationSession != null) {
+            stompNotificationSession.disconnect();
+        }
+        if (stompImportNotificationSession != null) {
+            stompImportNotificationSession.disconnect();
+        }
     }
 
     /**
@@ -93,6 +99,7 @@ public class ScanWebSocketHandler {
 
         status.set("is_requests_websocket_connected", stompRequestsSession != null && stompRequestsSession.isConnected());
         status.set("is_notifications_websocket_connected", stompNotificationSession != null && stompNotificationSession.isConnected());
+        status.set("is_import_notifications_websocket_connected", stompImportNotificationSession != null && stompImportNotificationSession.isConnected());
         status.set("scan_requests_queue", scanRequestsQueue.size());
 
         return status;
@@ -242,6 +249,31 @@ public class ScanWebSocketHandler {
                 super.handleTransportError(session, exception);
             }
 
+        }).get(1000, TimeUnit.MILLISECONDS);
+    }
+
+    private StompSession subscribeToImportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
+        WebSocketStompClient stompClient = createStompClient();
+
+        return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+            @Override
+            public void handleFrame(StompHeaders headers, Object payloadRaw) {
+                super.handleFrame(headers, payloadRaw);
+                Json payload = (Json) payloadRaw;
+
+                if (payload != null) {
+                    logger.debug("[STOMP] " + payload.toString());
+                } else {
+                    logger.debug("[STOMP] null");
+                }
+            }
+
+            @Override
+            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                logger.debug("Connected to import notifications websocket");
+                super.afterConnected(session, connectedHeaders);
+                session.subscribe(websocketImportNotificationsEndpoint, this);
+            }
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 

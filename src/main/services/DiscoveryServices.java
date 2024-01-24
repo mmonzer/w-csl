@@ -8,6 +8,7 @@ import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
+import com.csl.intercom.cslscan.services.ImportBsonService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -17,6 +18,7 @@ import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLLogger;
+import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
@@ -49,6 +51,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     //    private String apiKey;
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
+    private FileStorageService fileStorageService = null;
+    private ImportBsonService importBsonService = null;
     private CSLMqttBrokerHandler mqttBroker = null;
     private ScheduledExecutorService synchronizationSchedule;
 
@@ -88,6 +92,10 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
+        fileStorageService = new FileStorageService();
+
+        importBsonService = ImportBsonService.getInstance();
+        importBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
@@ -98,6 +106,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             });
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
                 handleDeletedCpes();
+            });
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.FILE_ACTION_STATUS, message -> {
+                HttpTemplateImportNotification notification = HttpTemplateImportNotification.fromMQTTMessage(Json.read(message.getResults()));
+                if (notification != null) {
+                    if (notification.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED) {
+                        importBsonService.startNewImportTask(notification);
+                    }
+                }
             });
         }
 
@@ -680,6 +696,22 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
                         "where result contains <code>{ \"success\": true }</code> if the template is valid," +
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+        );
+        addCmd("import_http_templates_bson", params -> {
+                    HttpTemplateImportNotification query = HttpTemplateImportNotification.fromHMIJson(params);
+                    if (query == null) {
+                        return JsonApiResponse.error("Could not parse BSON file",
+                                Json.object("exception", "Could not parse BSON file")
+                        ).toJson();
+                    } else {
+                        this.importBsonService.startNewImportTask(query);
+                        return JsonApiResponse.success().toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Import HTTP templates from a BSON file")
+                        .setParam("file", "The BSON file to import", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
         );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);

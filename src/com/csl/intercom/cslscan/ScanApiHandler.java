@@ -1,11 +1,13 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.enums.ImportQueryStatus;
 import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
+import com.csl.intercom.cslscan.models.ImportQuery;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
@@ -17,14 +19,20 @@ import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.MultiPartContentProvider;
+import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.ConnectException;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -34,6 +42,7 @@ import java.util.stream.Collectors;
 public class ScanApiHandler implements AutoCloseable {
     private String scanManagerUrl;
     private HttpClient httpClient = new HttpClient();
+    private Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
 
     public ScanApiHandler() {
         this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
@@ -677,5 +686,71 @@ public class ScanApiHandler implements AutoCloseable {
 
     public JsonApiResponse getPredefinedHttpVariables() {
         return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
+    }
+
+    /**
+     * Start a new import task in CSL-Scan.
+     * @param bsonFilePath The path to the bson file to import.
+     * @return The status of the import task.
+     * @throws Exception If the request failed.
+     */
+    public ImportQuery importBsonFile(Path bsonFilePath, boolean shouldDrop) throws Exception {
+        String URI = scanManagerUrl + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
+        Request request = httpClient.newRequest(URI);
+        request.param("drop", String.valueOf(shouldDrop));
+        request.method(HttpMethod.POST);
+        MultiPartContentProvider multiPart = new MultiPartContentProvider();
+        try {
+            multiPart.addFilePart("file", bsonFilePath.getFileName().toString(), new PathContentProvider(bsonFilePath), null);
+        } catch (IOException e) {
+            logger.error("Could not add bson file to multipart content provider", e);
+            return null;
+        }
+        multiPart.close();
+        request.content(multiPart);
+        try {
+            ContentResponse contentResponse = request.send();
+            if (contentResponse.getStatus() >= 400) {
+                logger.warn("Error while sending request to CSL-Scan: {}", contentResponse.getContentAsString());
+                throw new Exception("Error while sending request to CSL-Scan: unexpected status code " + contentResponse.getStatus());
+            }
+//            return UUID.fromString(contentResponse.getContentAsString().replace("\"", ""));
+            return ImportQuery.fromScannerJson(Json.read(contentResponse.getContentAsString()));
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            logger.error("Error while sending request to CSL-Scan", e);
+            throw new Exception("Error while sending request to CSL-Scan", e);
+        } catch (IllegalArgumentException e) {
+            logger.error("Error while parsing the import id", e);
+            throw new Exception("Error while parsing the import id", e);
+        }
+    }
+
+    public List<EntityHttpConnection> getEntityHttpConnectionsToSync() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_GET_SYNC_NEEDED, Json.object());
+        if (response.isSuccess()) {
+            return response.getResult().asJsonList().stream()
+                    .map(EntityHttpConnection::fromScannerJson)
+                    .collect(Collectors.toList());
+        } else {
+            return List.of();
+        }
+    }
+
+    public void notifyEntityHttpConnectionSynchronized(List<EntityHttpConnection> entityHttpConnections) {
+        Json body = Json.array(entityHttpConnections.stream().map(EntityHttpConnection::getUuid).toArray());
+        sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_SET_SYNC_NEEDED, body);
+    }
+
+    public ImportQuery importBsonFile(Path bsonFilePath) throws Exception {
+        return importBsonFile(bsonFilePath, false);
+    }
+
+    public ImportQuery getImportTaskStatus(UUID uuid) {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
+        if (response.isSuccess()) {
+            return ImportQuery.fromScannerJson(response.getResult());
+        } else {
+            return null;
+        }
     }
 }

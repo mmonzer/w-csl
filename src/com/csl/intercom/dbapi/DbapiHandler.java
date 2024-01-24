@@ -4,10 +4,13 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.cslscan.models.ImportQuery;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
+import com.csl.intercom.dbapi.enums.FileActionStatus;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
+import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -15,14 +18,20 @@ import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -37,6 +46,8 @@ public class DbapiHandler implements AutoCloseable {
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
     private final int maxPageSize = 1000;
+    private final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
+    private final FileStorageService fileStorageService = new FileStorageService();
 
     public DbapiHandler() {
         this(CSLContext.instance.getConfig());
@@ -51,7 +62,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             dbapiHttpClient.start();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Error starting DB-API HTTP client", e);
         }
     }
 
@@ -59,7 +70,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             dbapiHttpClient.stop();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Error stopping DB-API HTTP client", e);
         }
     }
 
@@ -76,7 +87,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             request.send();
         } catch (Exception e) {
-            System.err.println("[" + LocalDateTime.now().toString() + "] Could not delete the CPE Items from DB-API.");
+            logger.error("Error deleting CPE Items from DB-API", e);
         }
     }
 
@@ -155,7 +166,7 @@ public class DbapiHandler implements AutoCloseable {
             }
             sendCpeItemsBatch(newItems);
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            logger.warn("Error sending CPE Items to DB-API", e);
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
         }
@@ -444,7 +455,7 @@ public class DbapiHandler implements AutoCloseable {
                 return ConnectionProtocol.fromJson(response);
             }
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Error fetching discovery protocol by template id", e);
             return null;
         }
     }
@@ -543,7 +554,7 @@ public class DbapiHandler implements AutoCloseable {
         try {
             request.send();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Error sending no new CPE Item to DB-API", e);
         }
     }
 
@@ -558,7 +569,7 @@ public class DbapiHandler implements AutoCloseable {
             ContentResponse response = request.send();
             return response.getContentAsString();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.debug("Error fetching organization name from DB-API", e);
             return "None";
         }
     }
@@ -576,7 +587,7 @@ public class DbapiHandler implements AutoCloseable {
                 return result;
             }
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.debug("Error fetching MQTT topic prefix from DB-API", e);
             return "None";
         }
     }
@@ -691,7 +702,7 @@ public class DbapiHandler implements AutoCloseable {
             OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
             deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.error("Error getting changes from DB-API", e);
             return JsonApiResponse.error("Could not get changes from DBAPI");
         }
         //endregion Get changes from DB-API
@@ -773,7 +784,7 @@ public class DbapiHandler implements AutoCloseable {
             connections.addAll(fetchConnections(connectionsToGet, protocols));
             devices.addAll(fetchDevices(devicesToGet));
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            e.printStackTrace(System.err);
+            logger.error("Error fetching missing parts", e);
         }
         //endregion Get the missing parts
 
@@ -781,5 +792,64 @@ public class DbapiHandler implements AutoCloseable {
         devices.forEach(device -> device.setConnections(connections));
 
         return devices;
+    }
+
+    public Path downloadHttpTemplatesBsonFile(HttpTemplateImportNotification query) throws ExecutionException, InterruptedException, TimeoutException {
+        Json contents = Json.object("file_action_status_id", query.getId());
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DOWNLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint());
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        InputStreamResponseListener listener = new InputStreamResponseListener();
+        request.send(listener);
+        Response response = listener.get(30, TimeUnit.SECONDS);
+        if (response.getStatus() == 200) {
+            try {
+                return fileStorageService.saveFile(listener.getInputStream(), query.getFileName() + ".bson");
+            } catch (IOException e) {
+                logger.error("Error saving file", e);
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public void notifyImportStarted(int id, ImportQuery importQuery) {
+        Json contents = Json.object("status", FileActionStatus.FILE_PROCESSING.getValue());
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending import status to DB-API", e);
+        }
+    }
+
+    public void notifyImportFinished(int id, ImportQuery importQuery) {
+        Json contents;
+        switch (importQuery.getStatus()) {
+            case SUCCESS:
+                contents = Json.object("status", FileActionStatus.SUCCEEDED.getValue());
+                break;
+            case ERROR:
+                // Add an error status
+                contents = Json.object("status", FileActionStatus.FAILED.getValue());
+                break;
+            default:
+                logger.warn("Unknown import status: {}", importQuery.getStatus());
+                return;
+        }
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending import status to DB-API", e);
+        }
     }
 }

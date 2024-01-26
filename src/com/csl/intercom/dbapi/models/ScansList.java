@@ -7,6 +7,8 @@ import com.csl.util.SchedulerUtil;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -20,6 +22,7 @@ import java.util.function.Function;
  */
 public class ScansList {
     static public ScansList instance = new ScansList();
+    static private Logger logger = LoggerFactory.getLogger(ScansList.class);
     // The list of scans, indexed by their id (this list contains all the running scans).
     private Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
     // The list of scans that have been modified since the last time they were handled --> need to be handled.
@@ -120,7 +123,7 @@ public class ScansList {
                     dbapiHandler.notifyScanFinished(scan);
                     scanEntities.remove(scan.getScanId());
                 } catch (Exception e) {
-                    System.err.println("Could not notify DB-API a scan finished");
+                    logger.error("Could not notify DB-API a scan finished", e);
                 }
             }
         }
@@ -153,6 +156,7 @@ public class ScansList {
         }
 
         this.scanApiHandler.sendNewCpeItemsToDbapi(this.dbapiHandler);
+        this.scanApiHandler.sendNewMicrosoftKbsToDbapi(this.dbapiHandler);
 
         if (scan.isFinished()) {
             try {
@@ -164,7 +168,7 @@ public class ScansList {
                     this.scansHandlingTask.shutdown();
                 }
             } catch (Exception e) {
-                System.err.println("Could not notify DB-API the scan " + scan.getScanId() + " ended.");
+                logger.error("Could not notify DB-API the scan {} ended.", scan.getScanId(), e);
             }
         }
     }

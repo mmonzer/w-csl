@@ -1,5 +1,7 @@
 package com.csl.intercom.cslscan.models;
 
+import com.csl.interfaces.models.IDbapiSerializable;
+import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 
 import java.util.List;
@@ -10,7 +12,7 @@ import java.util.stream.Collectors;
  * Model to reprensent a variable for an HTTP API connection.
  * Needed because representations are different between DB-API and scanner.
  */
-public class HttpApiVariable {
+public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable {
     private Json value;
     private Map<String, HttpApiVariable> childrenMap;
     private List<HttpApiVariable> childrenList;

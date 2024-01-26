@@ -1,12 +1,13 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.EntityHttpConnectionTestResultDetailsField;
+import com.csl.interfaces.models.IDbapiSerializable;
 import com.ucsl.json.Json;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class EntityHttpConnectionTestResult {
+public class EntityHttpConnectionTestResult implements IDbapiSerializable {
     private boolean success;
 
     private Details details = null;
@@ -33,7 +34,7 @@ public class EntityHttpConnectionTestResult {
         return entityHttpConnectionTestResult;
     }
 
-    public static class Details {
+    public static class Details implements IDbapiSerializable {
         private String failedStageUuid;
         private String failedStageName;
         private Integer failedStageIndex;

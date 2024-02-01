@@ -18,12 +18,11 @@ public class HttpTemplateImportNotification {
     private FileAction fileAction;
     private Type type;
 
-    private HttpTemplateImportNotification(int id, String filePath, String fileName, OffsetDateTime uploadedAt, boolean fileReceived,FileAction fileAction, Type type) {
+    private HttpTemplateImportNotification(int id, String filePath, String fileName, OffsetDateTime uploadedAt, FileAction fileAction, Type type) {
         this.id = id;
         this.filePath = filePath;
         this.fileName = fileName;
         this.uploadedAt = uploadedAt;
-        this.fileReceived = fileReceived;
         this.fileAction = fileAction;
         this.type = type;
     }
@@ -53,7 +52,6 @@ public class HttpTemplateImportNotification {
         String filePath = null;
         String fileName = null;
         OffsetDateTime uploadedAt = null;
-        boolean fileReceived = false;
         FileActionStatus fileActionStatus = null;
         FileAction fileAction = null;
         Type type = null;
@@ -82,10 +80,6 @@ public class HttpTemplateImportNotification {
             uploadedAt = OffsetDateTime.parse(data.get("uploaded_at").asString());
         }
 
-        if (data.has("file_received") && data.get("file_received").isBoolean()) {
-            fileReceived = data.get("file_received").asBoolean();
-        }
-
         if (data.has("client_action_id") && data.get("client_action_id").isNumber()) {
            fileAction = FileAction.fromValue(data.get("client_action_id").asInteger());
         }
@@ -97,7 +91,81 @@ public class HttpTemplateImportNotification {
             }
         }
 
-        return new HttpTemplateImportNotification(id, filePath, fileName, uploadedAt, fileReceived, fileAction, type);
+        return new HttpTemplateImportNotification(id, filePath, fileName, uploadedAt, fileAction, type);
+    }
+
+    public static HttpTemplateImportNotification fromDbapiJson(Json data) {
+        int id;
+        String filePath;
+        String fileName;
+        OffsetDateTime uploadedAt;
+        FileAction fileAction;
+        Type type;
+
+        if (data == null) {
+            return null;
+        }
+
+        if (data.has("id") && data.get("id").isNumber()) {
+            id = data.get("id").asInteger();
+        } else if (data.has("id") && data.get("id").isString()) {
+            id = Integer.parseInt(data.get("id").asString());
+        } else {
+            return null;
+        }
+
+        if (data.has("file_path") && data.get("file_path").isString()) {
+            filePath = data.get("file_path").asString();
+        } else {
+            return null;
+        }
+
+        if (data.has("new_file_name") && data.get("new_file_name").isString()) {
+            fileName = data.get("new_file_name").asString();
+        } else {
+            return null;
+        }
+
+        if (data.has("uploaded_at") && data.get("uploaded_at").isString()) {
+            uploadedAt = OffsetDateTime.parse(data.get("uploaded_at").asString());
+        } else {
+            return null;
+        }
+
+        if (data.has("client_action") && data.get("client_action").isNumber()) {
+            fileAction = FileAction.fromValue(data.get("client_action").asInteger());
+        } else {
+            return null;
+        }
+
+        if (data.has("status")) {
+            int status_id;
+            if (data.get("status").isNumber()) {
+                status_id = data.get("status").asInteger();
+            } else if (data.get("status").isString()) {
+                status_id = Integer.parseInt(data.get("status").asString());
+            } else {
+                return null;
+            }
+            switch (status_id) {
+                case 0:
+                    type = Type.FILE_RECEIVED;
+                    break;
+                case 1:
+                    type = Type.FILE_PROCESSING;
+                    break;
+                case 2:
+                case 3:
+                    type = Type.FILE_IMPORTED_FINISHED;
+                    break;
+                default:
+                    return null;
+            }
+        } else {
+            return null;
+        }
+
+        return new HttpTemplateImportNotification(id, filePath, fileName, uploadedAt, fileAction, type);
     }
 
     public int getId() {

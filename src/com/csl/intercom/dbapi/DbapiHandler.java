@@ -784,7 +784,8 @@ public class DbapiHandler implements AutoCloseable {
             connections.addAll(fetchConnections(connectionsToGet, protocols));
             devices.addAll(fetchDevices(devicesToGet));
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            logger.error("Error fetching missing parts", e);
+            logger.error("Error fetching missing parts");
+            logger.debug("Error fetching missing parts", e);
         }
         //endregion Get the missing parts
 
@@ -792,6 +793,26 @@ public class DbapiHandler implements AutoCloseable {
         devices.forEach(device -> device.setConnections(connections));
 
         return devices;
+    }
+
+    public List<HttpTemplateImportNotification> getAvailableImportTasks() {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.FILE_ACTION_STATUS_AVAILABLE);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                logger.warn("Unable to fetch available import tasks from DB-API: Unexpected status code: {}", response.getStatus());
+                return new ArrayList<>();
+            }
+            return Json.read(response.getContentAsString()).asJsonList().stream()
+                    .map(HttpTemplateImportNotification::fromDbapiJson)
+                    .filter(Objects::nonNull)
+                    .filter(query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.warn("Error fetching available import tasks");
+            logger.debug("Error fetching available import tasks", e);
+            return new ArrayList<>();
+        }
     }
 
     public Path downloadHttpTemplatesBsonFile(HttpTemplateImportNotification query) throws ExecutionException, InterruptedException, TimeoutException {
@@ -805,7 +826,8 @@ public class DbapiHandler implements AutoCloseable {
             try {
                 return fileStorageService.saveFile(listener.getInputStream(), query.getFileName() + ".bson");
             } catch (IOException e) {
-                logger.error("Error saving file", e);
+                logger.error("Error saving file");
+                logger.debug("Error saving file", e);
                 return null;
             }
         } else {

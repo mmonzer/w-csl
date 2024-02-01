@@ -31,6 +31,8 @@ public enum DbapiEndpoint {
     DOWNLOAD_HTTP_TEMPLATES_BSON_FILE("/cpecve/download_http_template_bson_file/"),
     FILE_ACTION_STATUS("/file_action_status"),
     FILE_ACTION_STATUS_DETAILS(FILE_ACTION_STATUS.getEndpoint() + "/%d"),
+//    FILE_ACTION_STATUS_AVAILABLE(FILE_ACTION_STATUS.getEndpoint() + "/available"),
+    FILE_ACTION_STATUS_AVAILABLE(FILE_ACTION_STATUS.getEndpoint()),
     ;
 
     private final String endpoint;

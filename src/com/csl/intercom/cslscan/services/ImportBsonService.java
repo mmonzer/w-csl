@@ -28,6 +28,7 @@ public class ImportBsonService {
     private ScanApiHandler scanApiHandler = null;
     private FileStorageService fileStorageService = null;
     private final ScheduledExecutorService periodicHandleExecutor = new ScheduledThreadPoolExecutor(1);
+    private final ScheduledExecutorService periodicStartExecutor = new ScheduledThreadPoolExecutor(1);
 
     private ImportBsonService() {
     }
@@ -53,6 +54,8 @@ public class ImportBsonService {
                 handleImportTask(id);
             }
         }, 0, 5, TimeUnit.SECONDS);
+        this.periodicStartExecutor.scheduleAtFixedRate(() -> this.dbapiHandler.getAvailableImportTasks().forEach(this::startNewImportTask),
+                0, 10, TimeUnit.MINUTES);
     }
 
     /**
@@ -90,7 +93,12 @@ public class ImportBsonService {
         this.addImportTask(query.getId(), importQuery);
     }
 
-    public void addImportTask(int id, ImportQuery importQuery) {
+    private void startAvailableTasksFromDbapi() {
+        List<HttpTemplateImportNotification> notifications = this.dbapiHandler.getAvailableImportTasks();
+        notifications.forEach(this::startNewImportTask);
+    }
+
+    private void addImportTask(int id, ImportQuery importQuery) {
         importTasks.put(id, importQuery);
     }
 

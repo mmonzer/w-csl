@@ -1,5 +1,7 @@
 package com.csl.intercom.cslscan;
 
+import com.csl.intercom.cslscan.models.ImportQuery;
+import com.csl.intercom.cslscan.services.ImportBsonService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.dbapi.models.ScansList;
@@ -36,7 +38,8 @@ import java.util.concurrent.*;
  */
 public class ScanWebSocketHandler {
     static private final Logger logger = LoggerFactory.getLogger(ScanWebSocketHandler.class);
-    private static final DbapiHandler dbapiHandler = new DbapiHandler();
+    private final DbapiHandler dbapiHandler;
+    private final ImportBsonService importBsonService;
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
@@ -57,9 +60,11 @@ public class ScanWebSocketHandler {
      * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, DbapiHandler dbapiHandler, ImportBsonService importBsonService) {
         this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
+        this.dbapiHandler = dbapiHandler;
+        this.importBsonService = importBsonService;
 
         // Schedule reconnection to websockets every 2 seconds
         webSocketsConnectionAttempts = Executors.newScheduledThreadPool(1);
@@ -147,10 +152,12 @@ public class ScanWebSocketHandler {
             try {
                 stompNotificationSession = subscribeToNotifications();
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
-                logger.warn("Error while connecting to notifications websocket", e);
+                logger.warn("Error while connecting to notifications websocket, retrying");
+                logger.debug("Error while connecting to notifications websocket, retrying", e);
                 stompNotificationSession = null;
             } catch (Throwable e) {
-                logger.error("Error while connecting to notifications websocket", e);
+                logger.error("Error while connecting to notifications websocket, retrying");
+                logger.debug("Error while connecting to notifications websocket, retrying", e);
                 stompNotificationSession = null;
             }
         }
@@ -161,6 +168,19 @@ public class ScanWebSocketHandler {
                 stompRequestsSession = connectToRequestsWebSocket();
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 stompRequestsSession = null;
+            }
+        }
+
+        if (stompImportNotificationSession == null || !stompImportNotificationSession.isConnected()) {
+            try {
+                stompImportNotificationSession = subscribeToImportNotifications();
+            } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
+                logger.warn("Error while connecting to import notifications websocket, retrying");
+                logger.debug("Error while connecting to import notifications websocket, retrying", e);
+                stompImportNotificationSession = null;
+            } catch (Throwable e) {
+                logger.error("Error while connecting to import notifications websocket", e);
+                stompImportNotificationSession = null;
             }
         }
     }
@@ -265,6 +285,15 @@ public class ScanWebSocketHandler {
                     logger.debug("[STOMP] " + payload.toString());
                 } else {
                     logger.debug("[STOMP] null");
+                    return;
+                }
+
+                ImportQuery importQuery = ImportQuery.fromScannerJson(payload);
+                if (importQuery != null) {
+                    logger.debug("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getStatus());
+                    importBsonService.updateQueryStatus(importQuery.getId(), importQuery.getStatus());
+                } else {
+                    logger.debug("Received import notification from CSL-Scan that could not be parsed: {}", payload.toString());
                 }
             }
 

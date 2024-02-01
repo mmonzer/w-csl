@@ -103,7 +103,7 @@ public class ImportBsonService {
      */
     private void handleImportTask(int id) {
         if (!importTasks.containsKey(id)) {
-            logger.error("handleImportTask: uuid not found: " + id);
+            logger.debug("handleImportTask: uuid not found: " + id);
             return;
         }
 
@@ -146,7 +146,7 @@ public class ImportBsonService {
             importQuery.setStatus(status);
             handleImportTask(id);
         } else {
-            logger.error("updateQueryStatus: uuid not found: " + uuid);
+            logger.debug("updateQueryStatus: uuid not found: " + uuid);
         }
     }
 

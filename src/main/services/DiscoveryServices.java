@@ -86,16 +86,16 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
 
-        if (isConcentrator) {
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
-        }
-
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
         fileStorageService = new FileStorageService();
 
-        importBsonService = ImportBsonService.getInstance();
-        importBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
+        if (isConcentrator) {
+            importBsonService = ImportBsonService.getInstance();
+            importBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
+
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, dbapiHandler, importBsonService);
+        }
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 

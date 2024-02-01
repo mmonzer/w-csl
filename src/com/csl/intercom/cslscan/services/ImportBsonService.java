@@ -72,6 +72,7 @@ public class ImportBsonService {
 
         Path downloadedPath;
         ImportQuery importQuery;
+        boolean shouldDrop = false;  // For future use
         try {
             logger.debug("startNewImportTask: downloading file: {}", query.getFileName());
             downloadedPath = this.dbapiHandler.downloadHttpTemplatesBsonFile(query);
@@ -81,8 +82,13 @@ public class ImportBsonService {
             return;
         }
         try {
+            if (shouldDrop) {
+                logger.debug("Removing all discovery protocols from DB-API");
+                List<String> uuids = this.scanApiHandler.getAllEntityHttpConnectionsUuids();
+                this.dbapiHandler.deleteDiscoveryProtocolsList(uuids);
+            }
             logger.debug("startNewImportTask: importing file: {}", query.getFileName());
-            importQuery = this.scanApiHandler.importBsonFile(downloadedPath);
+            importQuery = this.scanApiHandler.importBsonFile(downloadedPath, shouldDrop);
             logger.debug("startNewImportTask: sent file to CSL-Scan: {}", query.getFileName());
             this.dbapiHandler.notifyImportStarted(query.getId(), importQuery);
             logger.debug("startNewImportTask: notified DB-API: {}", query.getFileName());

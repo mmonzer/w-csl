@@ -361,6 +361,18 @@ public class ScanApiHandler implements AutoCloseable {
         }
     }
 
+    public List<String> getAllEntityHttpConnectionsUuids() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+                ScanApiEndpoint.ENTITY_HTTP_CONNECTION_UUIDS, Json.object());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            return response.getResult().asJsonList().stream()
+                    .map(Json::asString)
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Get an {@link EntityHttpConnection} object from CSL-Scan from its uuid.
      *

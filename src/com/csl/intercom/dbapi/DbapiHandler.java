@@ -444,6 +444,16 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
+    public void deleteDiscoveryProtocolsList(List<String> uuids) {
+        uuids.forEach(uuid -> {
+            try {
+                deleteDiscoveryProtocol(uuid);
+            } catch (Exception e) {
+                logger.error("Error deleting discovery protocol", e);
+            }
+        });
+    }
+
     public ConnectionProtocol getDiscoveryProtocolByTemplateId(String id) {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
         request.param("connection_template_id", id);

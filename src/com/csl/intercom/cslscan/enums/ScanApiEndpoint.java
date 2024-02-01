@@ -15,6 +15,7 @@ public enum ScanApiEndpoint {
     DISCOVERY_STATUS_DETAILS(DISCOVERY_STATUS.endpoint() + "/%s"),
     ENTITY_SCAN_STATUS("/status/entity/%s"),
     ENTITY_HTTP_CONNECTION("/entityHttpConnection/"),
+    ENTITY_HTTP_CONNECTION_UUIDS(ENTITY_HTTP_CONNECTION.endpoint() + "uuids"),
     ENTITY_HTTP_CONNECTION_DETAILS(ENTITY_HTTP_CONNECTION.endpoint() + "%s"),
     ENTITY_HTTP_CONNECTION_FETCH_STAGE(ENTITY_HTTP_CONNECTION.endpoint() + "fetchStagePage"),
     ENTITY_HTTP_CONNECTION_TEST(ENTITY_HTTP_CONNECTION.endpoint() + "test"),

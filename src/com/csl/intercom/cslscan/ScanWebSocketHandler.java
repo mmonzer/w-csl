@@ -1,5 +1,7 @@
 package com.csl.intercom.cslscan;
 
+import com.csl.intercom.cslscan.models.scans.ExternalScan;
+import com.csl.intercom.services.ScansService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.dbapi.models.ScansList;
@@ -25,10 +27,7 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
@@ -42,13 +41,16 @@ public class ScanWebSocketHandler {
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
+    private final String websocketExternalScanEndpoint = "/external_discovery/ready";
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private String scanManagerDiscoveryUrl;
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
+    private StompSession stompExternalScanSession = null;
     private static final DbapiHandler dbapiHandler = new DbapiHandler();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
+    private ScansService scansService;
     private ScansList scansList = ScansList.instance;
 
 
@@ -58,9 +60,10 @@ public class ScanWebSocketHandler {
      * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, ScansService scansService) {
         this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
+        this.scansService = scansService;
 
         // Schedule reconnection to websockets every 2 seconds
         webSocketsConnectionAttempts = Executors.newScheduledThreadPool(1);
@@ -136,25 +139,48 @@ public class ScanWebSocketHandler {
      * Blocking, should be called asynchronously.
      */
     private void connectStompSessionsIfNecessary() {
+        boolean new_notification_connection = false;
         if (stompNotificationSession == null || !stompNotificationSession.isConnected()) {
             try {
+                new_notification_connection = true;
                 stompNotificationSession = subscribeToNotifications();
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
                 logger.warn("Error while connecting to notifications websocket", e);
                 stompNotificationSession = null;
+                new_notification_connection = false;
             } catch (Throwable e) {
                 logger.error("Error while connecting to notifications websocket", e);
                 stompNotificationSession = null;
+                new_notification_connection = false;
             }
         }
 
+        boolean new_request_connection = false;
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
             try {
+                new_request_connection = true;
                 logger.debug("Connecting to requests websocket");
                 stompRequestsSession = connectToRequestsWebSocket();
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 stompRequestsSession = null;
+                new_request_connection = false;
             }
+        }
+
+        boolean new_external_scan_connection = false;
+        if (stompExternalScanSession == null || !stompExternalScanSession.isConnected()) {
+            try {
+                new_external_scan_connection = true;
+                logger.debug("Connecting to external scans notifications websocket");
+                stompExternalScanSession = connectToExternalScansNotificationsWebSocket();
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                stompExternalScanSession = null;
+                new_external_scan_connection = false;
+            }
+        }
+
+        if (new_notification_connection || new_request_connection || new_external_scan_connection) {
+            scansService.handleConnectionEstablishedWithScanner();
         }
     }
 
@@ -274,6 +300,31 @@ public class ScanWebSocketHandler {
                 logger.debug("Connected to requests websocket");
                 super.afterConnected(session, connectedHeaders);
                 purgeScanRequestsQueue();
+            }
+        }).get(1, TimeUnit.SECONDS);
+    }
+
+    private StompSession connectToExternalScansNotificationsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
+        WebSocketStompClient requestStompClient = createStompClient();
+        // Define the callbacks and return the future when it is realized.
+        return requestStompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                super.handleFrame(headers, payload);
+                if (payload instanceof Json) {
+                    logger.debug("[STOMP] " + payload.toString());
+                    ExternalScan scan = ExternalScan.fromScannerJson((Json) payload);
+                    scansService.createOrUpdateExternalScan(scan);
+                } else {
+                    logger.debug("[STOMP] null");
+                }
+            }
+
+            @Override
+            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                logger.debug("Connected to external scans notifications websocket");
+                super.afterConnected(session, connectedHeaders);
+                session.subscribe(websocketExternalScanEndpoint, this);
             }
         }).get(1, TimeUnit.SECONDS);
     }

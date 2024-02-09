@@ -25,6 +25,11 @@ public enum ScanApiEndpoint {
     ENTITY_HTTP_CONNECTION_TEST(ENTITY_HTTP_CONNECTION.endpoint() + "test"),
     ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES(ENTITY_HTTP_CONNECTION.endpoint() + "fetchPredefinedVariables"),
     DROP_COLLECTION("/%s/drop"),
+    EXTERNAL_DISCOVERY("/externalDiscovery"),
+    EXTERNAL_CONNECTION_INFO_TEMPLATES(EXTERNAL_DISCOVERY.endpoint() + "/connectionInfoTemplates"),
+    EXTERNAL_CONNECTION_INFOS(EXTERNAL_DISCOVERY.endpoint() + "/connectionInfo"),
+    EXTERNAL_DISCOVERY_START_SCAN(EXTERNAL_DISCOVERY.endpoint() + "/startDiscovery/%s"),
+    EXTERNAL_DISCOVERED_DEVICES("/externalDiscoveredDevices/"),
     ;
 
     private String endpoint;

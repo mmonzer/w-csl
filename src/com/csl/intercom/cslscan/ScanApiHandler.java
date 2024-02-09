@@ -3,10 +3,8 @@ package com.csl.intercom.cslscan;
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
-import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
+import com.csl.intercom.cslscan.models.*;
+import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
@@ -818,5 +816,60 @@ public class ScanApiHandler implements AutoCloseable {
 
     public JsonApiResponse getPredefinedHttpVariables() {
         return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
+    }
+
+    public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, Json.object());
+        if (response.isSuccess()) {
+            return response.getResult().asJsonList().stream()
+                    .map(ExternalConnectionInfoTemplate::fromScannerJson)
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+    public List<ExternalConnectionInfo> getExternalConnectionInfos(boolean includeDeleted) {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_CONNECTION_INFOS, Json.object("includeDeleted", includeDeleted));
+        if (!response.isSuccess()) {
+            return null;
+        }
+        return response.getResult().asJsonList().stream()
+                .map(ExternalConnectionInfo::fromScannerJson)
+                .collect(Collectors.toList());
+    }
+
+    public JsonApiResponse createExternalConnectionInfo(ExternalConnectionInfo externalConnectionInfo) {
+        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.EXTERNAL_CONNECTION_INFOS, externalConnectionInfo.serializeForScanner());
+    }
+
+    public ExternalScan startExternalDiscoveryScan(String connectionInfoId) {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.EXTERNAL_DISCOVERY_START_SCAN.endpoint(), connectionInfoId), Json.object());
+        if (response.isSuccess()) {
+            return ExternalScan.fromScannerJson(response.getResult());
+        } else {
+            return null;
+        }
+    }
+
+    public List<ExternalDiscoveredDevice> getExternalDiscoveredDevices(OffsetDateTime dateTime) {
+        Json requestParams = Json.object();
+        if (dateTime != null) {
+            requestParams.set("date", ScanUtils.localTimeToScan(dateTime).toString());
+        }
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES, requestParams);
+        if (response.isSuccess()) {
+            return response.getResult().asJsonList().stream()
+                    .map(ExternalDiscoveredDevice::fromScannerJson)
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+    public ExternalScan getScanInfo(String uuid) {
+        logger.debug("Getting scan info for {}", uuid);
+        logger.warn("NOT IMPLEMENTED YET");
+        return null;
     }
 }

@@ -28,6 +28,10 @@ public enum DbapiEndpoint {
     ORGANIZATIONS("/organization_api_key"),
     GET_ORGANIZATION_NAME(ORGANIZATIONS.getEndpoint() + "/get_organization_name_from_api_key"),
     GET_MQTT_TOPIC_PREFIX(ORGANIZATIONS.getEndpoint() + "/get_mqtt_topic_prefix"),
+    EXTERNAL_CONNECTION_INFO_TEMPLATES("/external_connection_info_templates"),
+    EXTERNAL_CONNECTION_INFO_TEMPLATES_CREATE_OR_UPDATE(EXTERNAL_CONNECTION_INFO_TEMPLATES.getEndpoint() + "/create_or_update_external_connection_info_templates"),
+    EXTERNAL_CONNECTION_INFO("/external_connections_info"),
+    EXTERNAL_CONNECTION_INFO_CREATE_OR_UPDATE(EXTERNAL_CONNECTION_INFO.getEndpoint() + "/create_or_update_external_connections_info"),
     ;
 
     private final String endpoint;

@@ -2,12 +2,12 @@ package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
+import com.csl.intercom.cslscan.models.*;
+import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
+import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
@@ -22,7 +22,6 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -589,6 +588,45 @@ public class DbapiHandler implements AutoCloseable {
             return null;
         }
     }
+
+    // region External discovery
+    public void createOrUpdateExternalConnectionInfoTemplates(List<ExternalConnectionInfoTemplate> externalConnectionInfoTemplates) throws DbapiUnexpectedStatusCodeException, ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES_CREATE_OR_UPDATE);
+        Json requestContents = Json.array(externalConnectionInfoTemplates.stream().map(ExternalConnectionInfoTemplate::serializeForDbapi).toArray());
+        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() >= 400) {
+            throw new DbapiUnexpectedStatusCodeException("Could not create or update external connection info templates.", response.getStatus());
+        }
+    }
+
+    public void createOrUpdateExternalConnectionInfos(List<ExternalConnectionInfo> externalConnectionInfos) throws DbapiUnexpectedStatusCodeException, ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.EXTERNAL_CONNECTION_INFO_CREATE_OR_UPDATE);
+        Json requestContents = Json.array(externalConnectionInfos.stream().map(ExternalConnectionInfo::serializeForDbapi).toArray());
+        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() >= 400) {
+            throw new DbapiUnexpectedStatusCodeException("Could not create or update external connection infos.", response.getStatus());
+        }
+    }
+
+    public OffsetDateTime getExternalConnectionInfoTemplatesLastUpdateDate() {
+        logger.debug("Fetching external connection info templates last update date from DB-API.");
+        logger.warn("NOT IMPLEMENTED YET.");
+
+        return null;
+    }
+
+    public void createOrUpdateExternalDiscoveredDevices(List<ExternalDiscoveredDevice> externalDiscoveredDevices) {
+        logger.debug("Sending external discovered devices to DB-API.");
+        logger.warn("NOT IMPLEMENTED YET.");
+    }
+
+    public void createOrUpdateExternalDiscoveryScanEvent(ExternalScan scan) {
+        logger.debug("Creating or updating external discovery scan event in DB-API.");
+        logger.warn("NOT IMPLEMENTED YET.");
+    }
+    // endregion External discovery
 
     /**
      * Inform DB-API that a scan has started.

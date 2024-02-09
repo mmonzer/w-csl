@@ -5,10 +5,11 @@ import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
-import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
+import com.csl.intercom.cslscan.models.*;
+import com.csl.intercom.cslscan.models.scans.ExternalScan;
+import com.csl.intercom.services.ExternalDiscoveredDevicesSynchronizationService;
+import com.csl.intercom.services.ExternalConnectionInfoSynchronizationService;
+import com.csl.intercom.services.ScansService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -53,6 +54,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
     private CSLMqttBrokerHandler mqttBroker = null;
+    private ScansService scansService = null;
+    private ExternalConnectionInfoSynchronizationService externalConnectionInfoSynchronizationService = null;
+    private ExternalDiscoveredDevicesSynchronizationService externalDiscoveredDevicesSynchronizationService = null;
     private ScheduledExecutorService synchronizationSchedule;
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
@@ -83,10 +87,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
 
-        if (isConcentrator) {
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
-        }
-
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
 
@@ -100,6 +100,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
                 handleDeletedCpes();
             });
+
+            scansService = new ScansService(dbapiHandler, scanApiHandler);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, scansService);
+            externalConnectionInfoSynchronizationService = new ExternalConnectionInfoSynchronizationService(scanApiHandler, dbapiHandler);
+            externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+            externalDiscoveredDevicesSynchronizationService = new ExternalDiscoveredDevicesSynchronizationService(scanApiHandler, dbapiHandler, 3600);
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
@@ -696,6 +702,68 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
                         "where result contains <code>{ \"success\": true }</code> if the template is valid," +
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+        );
+        addCmd("get_external_connection_info_templates", params -> {
+                    List<ExternalConnectionInfoTemplate> templates = scanApiHandler.getExternalConnectionInfoTemplates();
+                    return JsonApiResponse.result(Json.array(templates.stream().map(ExternalConnectionInfoTemplate::serializeForDbapi).toArray())).toJson();
+                },
+                new JsonCmdHelp().setDesc("Get the list of device discovery fetcher templates")
+                        .setResult("The list of device discovery fetcher templates, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("get_external_connection_infos", params -> {
+                    List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(true);
+                    return JsonApiResponse.result(Json.array(connectionInfos.stream().map(ExternalConnectionInfo::serializeForDbapi).toArray())).toJson();
+                },
+                new JsonCmdHelp().setDesc("Get the list of device discovery connection infos")
+                        .setResult("The list of device discovery connection infos, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("create_external_connection_info", params -> {
+            if (!params.has("connection_info")) {
+                return JsonApiResponse.error("Missing required parameter connection_info",
+                        Json.object("exception", "Missing parameter connection_info")
+                ).toJson();
+            }
+            ExternalConnectionInfo connectionInfo = ExternalConnectionInfo.fromHMIJson(params.get("connection_info"));
+            if (connectionInfo == null) {
+                return JsonApiResponse.error("Could not parse connection_info",
+                        Json.object("exception", "Could not parse connection_info")
+                ).toJson();
+            } else {
+                JsonApiResponse response = scanApiHandler.createExternalConnectionInfo(connectionInfo);
+                if (response.isSuccess()) {
+                    externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                }
+                return response.toJson();
+            }
+        }, new JsonCmdHelp().setDesc("Create a device discovery connection info")
+                .setParam("connection_info", "The connection info to create", IJsonCmdHelp.JSON)
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("start_external_scan", params -> {
+                    if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
+                        return JsonApiResponse.error("Missing required parameter connection_info_uuid",
+                                Json.object("exception", "Missing parameter connection_info_uuid")
+                        ).toJson();
+                    }
+                    String connectionInfoId = params.get("connection_info_uuid").asString();
+                    ExternalScan scan = scansService.startExternalDiscoveryScan(connectionInfoId);
+                    if (scan == null) {
+                        return JsonApiResponse.error("Could not start device discovery scan",
+                                Json.object("exception", "Could not start device discovery scan")
+                        ).toJson();
+                    } else {
+                        return JsonApiResponse.result(Json.object("scan_uuid", scan.getUuid())).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Start a device discovery scan")
+                        .setParam("connection_info_uuid", "The id of the connection info to use", IJsonCmdHelp.INT)
+                        .setResult("<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);

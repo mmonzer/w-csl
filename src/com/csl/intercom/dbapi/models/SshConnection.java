@@ -78,4 +78,16 @@ public class SshConnection extends Connection {
         connectionJson.set(SshConnectionField.PASSPHRASE.scanName(), passphrase);
         return connectionJson;
     }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public String getPassphrase() {
+        return passphrase;
+    }
 }

@@ -13,6 +13,7 @@ import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
 import com.csl.intercom.dbapi.enums.SNMPv3ConnectionField;
+import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
@@ -471,6 +472,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 case RemotePowershell:
                                     if (!connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
                                         connectionJson.set(RemotePowershellConnectionField.PASSWORD.dbapiName(), ((RemotePowershellConnection) baseConnection).getPassword());
+                                    }
+                                    break;
+                                case SSH:
+                                    if (!connectionJson.has(SshConnectionField.PASSWORD.dbapiName())) {
+                                        connectionJson.set(SshConnectionField.PASSWORD.dbapiName(), ((SshConnection) baseConnection).getPassword());
+                                    }
+                                    if (!otherDataJson.has(SshConnectionField.PASSPHRASE.dbapiName())) {
+                                        otherDataJson.set(SshConnectionField.PASSPHRASE.dbapiName(), ((SshConnection) baseConnection).getPassphrase());
+                                    }
+                                    if (!otherDataJson.has(SshConnectionField.PRIVATE_KEY.dbapiName())) {
+                                        otherDataJson.set(SshConnectionField.PRIVATE_KEY.dbapiName(), ((SshConnection) baseConnection).getPrivateKey());
                                     }
                                     break;
                                 case HTTP:

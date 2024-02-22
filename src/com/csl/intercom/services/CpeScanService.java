@@ -1,8 +1,10 @@
-package com.csl.intercom.dbapi.models;
+package com.csl.intercom.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanConstants;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.models.ScanEntity;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.util.SchedulerUtil;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -20,22 +22,28 @@ import java.util.function.Function;
  * Represents and handles the list of currently running scans.
  * Should not be created, but accessed through the static instance.
  */
-public class ScansList {
-    static public ScansList instance = new ScansList();
-    static private Logger logger = LoggerFactory.getLogger(ScansList.class);
+public class CpeScanService {
+    static public CpeScanService instance = new CpeScanService();
+    static private Logger logger = LoggerFactory.getLogger(CpeScanService.class);
     // The list of scans, indexed by their id (this list contains all the running scans).
     private Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
     // The list of scans that have been modified since the last time they were handled --> need to be handled.
     private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private DbapiHandler dbapiHandler = new DbapiHandler();
+    private DataSynchronizationService cpeItemsSynchronizationService;
+    private DataSynchronizationService microsoftKbSynchronizationService;
     private ScheduledExecutorService scansHandlingTask = null;
     private ScheduledExecutorService scansListSanitizer = Executors.newSingleThreadScheduledExecutor();
 
-    {
+    public void init(DataSynchronizationService cpeItemsSynchronizationService, DataSynchronizationService microsoftKbSynchronizationService) {
+        this.cpeItemsSynchronizationService = cpeItemsSynchronizationService;
+        this.microsoftKbSynchronizationService = microsoftKbSynchronizationService;
+
 //        scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
         scansListSanitizer.scheduleAtFixedRate(this::sanitizeScans, 0, 5, TimeUnit.MINUTES);
     }
+
 
     /**
      * Add a scan in the list, or overwrite it if it already exists.
@@ -155,8 +163,19 @@ public class ScansList {
             scan.setDbapiId(dbapiHandler.notifyScanStarted(scan.getStartDate()));
         }
 
-        this.scanApiHandler.sendNewCpeItemsToDbapi(this.dbapiHandler);
-        this.scanApiHandler.sendNewMicrosoftKbsToDbapi(this.dbapiHandler);
+        try {
+            this.cpeItemsSynchronizationService.syncData();
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize CPE Items with DB-API");
+            logger.debug("Could not synchronize CPE Items with DB-API", e);
+        }
+
+        try {
+            this.microsoftKbSynchronizationService.syncData();
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize Microsoft KBs with DB-API");
+            logger.debug("Could not synchronize Microsoft KBs with DB-API", e);
+        }
 
         if (scan.isFinished()) {
             try {

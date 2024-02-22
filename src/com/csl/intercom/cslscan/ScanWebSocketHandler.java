@@ -2,7 +2,7 @@ package com.csl.intercom.cslscan;
 
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
-import com.csl.intercom.dbapi.models.ScansList;
+import com.csl.intercom.services.CpeScanService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
@@ -25,10 +25,7 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
@@ -47,9 +44,7 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
-    private static final DbapiHandler dbapiHandler = new DbapiHandler();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private ScansList scansList = ScansList.instance;
+    private CpeScanService cpeScanService;
 
 
     /**
@@ -58,9 +53,10 @@ public class ScanWebSocketHandler {
      * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService) {
         this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
+        this.cpeScanService = cpeScanService;
 
         // Schedule reconnection to websockets every 2 seconds
         webSocketsConnectionAttempts = Executors.newScheduledThreadPool(1);
@@ -188,7 +184,7 @@ public class ScanWebSocketHandler {
 
                 //region Get or Create Scan Entity
                 // Check if we already know the scan
-                ScanEntity scan = scansList.getScanByScanId(scanId);
+                ScanEntity scan = cpeScanService.getScanByScanId(scanId);
 
                 if (scan == null) {
                     // If we did not already see the scan, create a new Scan Entity
@@ -220,7 +216,7 @@ public class ScanWebSocketHandler {
                 }
                 //endregion Update the scan's info (status, progress)
 
-                scansList.createOrUpdate(scan);
+                cpeScanService.createOrUpdate(scan);
             }
 
             @Override

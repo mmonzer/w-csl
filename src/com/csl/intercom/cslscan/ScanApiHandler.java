@@ -7,7 +7,6 @@ import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.models.MicrosoftKB;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.HttpConnection;
@@ -309,13 +308,13 @@ public class ScanApiHandler implements AutoCloseable {
      * @param date The date to start receiving notifications. May be null to retrieve all the items.
      * @return A {@link List<MicrosoftKB>} array containing the CPE items that have changed since the specified date, or all the items if date was null.
      */
-    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {
+    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date, int limit, int offset) {
         JsonApiResponse response;
         Json cpeItems = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object());
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("limit", limit, "skip", offset));
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString()));
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             cpeItems = response.getResult();
@@ -330,19 +329,23 @@ public class ScanApiHandler implements AutoCloseable {
         }
     }
 
+    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {
+        return getCpeItemChangesSince(date, 0, 0);
+    }
+
     /**
      * Get the KBs that have changed since the specified date.
      *
      * @param date The date to start receiving notifications. May be null to retrieve all the items.
      * @return A {@link List<MicrosoftKB>} containing the KBs that have changed since the specified date, or all the items if date was null.
      */
-    public List<MicrosoftKB> getMicrosoftKbChangesSince(OffsetDateTime date) {
+    public List<MicrosoftKB> getMicrosoftKbChangesSince(OffsetDateTime date, int limit, int offset) {
         JsonApiResponse response;
         Json microsoftKbs = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object());
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("limit", limit, "skip", offset));
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString()));
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             microsoftKbs = response.getResult();
@@ -353,6 +356,10 @@ public class ScanApiHandler implements AutoCloseable {
         } else {
             return null;
         }
+    }
+
+    public List<MicrosoftKB> getMicrosoftKbChangesSince(OffsetDateTime date) {
+        return getMicrosoftKbChangesSince(date, 0, 0);
     }
 
     /**
@@ -564,48 +571,6 @@ public class ScanApiHandler implements AutoCloseable {
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             return null;
-        }
-    }
-
-    /**
-     * The action to perform when a modification is notified on the CpeItems.
-     *
-     * @param dbapiHandler The interface of DB-API's API.
-     */
-    public void sendNewCpeItemsToDbapi(DbapiHandler dbapiHandler) {
-        OffsetDateTime lastChangesDate = null;
-        try {
-            lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
-        } catch (Exception e) {
-            logger.info("Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
-        }
-        List<CpeItem> changes = getCpeItemChangesSince(lastChangesDate);
-        if (changes != null) {
-            try {
-                dbapiHandler.sendCpeItems(changes);
-            } catch (Exception e) {
-                logger.error("Could not send CPE items to DB-API", e);
-            }
-        }
-    }
-
-    /**
-     * The action to perform when a modification is notified on the MicrosoftKBs.
-     */
-    public void sendNewMicrosoftKbsToDbapi(DbapiHandler dbapiHandler) {
-        OffsetDateTime lastChangesDate = null;
-        try {
-            lastChangesDate = dbapiHandler.getMicrosoftKbsLastUpdateDate();
-        } catch (Exception e) {
-            logger.info("Could not get last update date from dbapi, fetching all Microsoft KBs from CSL-Scan");
-        }
-        List<MicrosoftKB> changes = getMicrosoftKbChangesSince(lastChangesDate);
-        if (changes != null) {
-            try {
-                dbapiHandler.sendMicrosoftKbs(changes);
-            } catch (Exception e) {
-                logger.error("Could not send Microsoft KBs to DB-API", e);
-            }
         }
     }
 

@@ -9,6 +9,7 @@ import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
+import com.csl.intercom.services.CpeScanService;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -22,7 +23,6 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -121,15 +121,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems The CPE Items to send
      * @throws Exception If the sending fail
      */
-    private void sendCpeItemsBatch(List<CpeItem> cpeItems) throws Exception {
-        ScansList scansList = ScansList.instance;
-        ScanEntity scan = scansList.getRunningScan();
-        if (scan == null) {
-            scan = scansList.getFinishedScan();
-            // If we found no running scans and no finished scan, we do not send the CPE Items
-            if (scan == null) return;
-        }
-
+    private void sendCpeItemsBatch(List<CpeItem> cpeItems, ScanEntity scan) throws Exception {
         Map<String, List<CpeItem>> classifiedCpeItems = classifyItemsById(cpeItems, CpeItem::getDeviceId);
         Json cpeItemsArray = Json.array();
         for (Map.Entry<String, List<CpeItem>> deviceCpeItems : classifiedCpeItems.entrySet()) {
@@ -161,7 +153,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems A {@link List <CpeItem>} with the CPE Items to send
      * @throws Exception If any item failed
      */
-    public void sendCpeItems(List<CpeItem> cpeItems) throws Exception {
+    public void sendCpeItems(List<CpeItem> cpeItems, ScanEntity scan) throws Exception {
         Json failedItems = Json.array();
         List<CpeItem> newItems = cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)).collect(Collectors.toList());
         List<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted).collect(Collectors.toList());
@@ -170,7 +162,7 @@ public class DbapiHandler implements AutoCloseable {
             if (!deletedItems.isEmpty()) {
                 deleteCpeItemsFromDbapi(deletedItems);
             }
-            sendCpeItemsBatch(newItems);
+            sendCpeItemsBatch(newItems, scan);
         } catch (Exception e) {
             logger.warn("Error sending CPE Items to DB-API.", e);
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
@@ -184,15 +176,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param KBs A {@link List<MicrosoftKB>} with the KBs to send
      * @throws Exception If any item failed
      */
-    private void sendMicrosoftKbsBatch(List<MicrosoftKB> KBs) throws Exception {
-        ScansList scansList = ScansList.instance;
-        ScanEntity scan = scansList.getRunningScan();
-        if (scan == null) {
-            scan = scansList.getFinishedScan();
-            // If we found no running scans and no finished scan, we do not send the KBs
-            if (scan == null) return;
-        }
-
+    private void sendMicrosoftKbsBatch(List<MicrosoftKB> KBs, ScanEntity scan) throws Exception {
         Map<String, List<MicrosoftKB>> classifiedKBs = classifyItemsById(KBs, MicrosoftKB::getDeviceId);
         Json KBsArray = Json.array();
         for (Map.Entry<String, List<MicrosoftKB>> deviceKBs : classifiedKBs.entrySet()) {
@@ -218,7 +202,7 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
-    public void sendMicrosoftKbs(List<MicrosoftKB> KBs) throws Exception {
+    public void sendMicrosoftKbs(List<MicrosoftKB> KBs, ScanEntity scan) throws Exception {
         Json failedItems = Json.array();
         List<MicrosoftKB> newItems = KBs.stream().filter(Predicate.not(MicrosoftKB::isDeleted)).collect(Collectors.toList());
         List<MicrosoftKB> deletedItems = KBs.stream().filter(MicrosoftKB::isDeleted).collect(Collectors.toList());
@@ -227,7 +211,7 @@ public class DbapiHandler implements AutoCloseable {
             if (!deletedItems.isEmpty()) {
                 deleteMicrosoftKbsFromDbapi(deletedItems);
             }
-            sendMicrosoftKbsBatch(newItems);
+            sendMicrosoftKbsBatch(newItems, scan);
         } catch (Exception e) {
             newItems.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
             logger.warn("Error sending Microsoft KBs to DB-API.", e);
@@ -854,10 +838,10 @@ public class DbapiHandler implements AutoCloseable {
             return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }
 
-        if (failedDevices.isEmpty()) {
-            scanApiHandler.sendNewCpeItemsToDbapi(this);
-            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
-        }
+//        if (failedDevices.isEmpty()) {
+//            scanApiHandler.sendNewCpeItemsToDbapi(this);
+//            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
+//        }
 
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()

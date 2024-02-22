@@ -17,6 +17,10 @@ import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.services.CpeItemsSynchronizationService;
+import com.csl.intercom.services.CpeScanService;
+import com.csl.intercom.services.DataSynchronizationService;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
@@ -54,6 +58,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
     private CSLMqttBrokerHandler mqttBroker = null;
+    private DataSynchronizationService cpeItemSynchronizationService = null;
+    private DataSynchronizationService microsoftKbSynchronizationService = null;
+    private CpeScanService cpeScanService = null;
     private ScheduledExecutorService synchronizationSchedule;
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
@@ -85,7 +92,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
 
         if (isConcentrator) {
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl);
         }
 
         dbapiHandler = new DbapiHandler();
@@ -101,6 +107,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
                 handleDeletedCpes();
             });
+            cpeScanService = new CpeScanService();
+            cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
+            microsoftKbSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
+            cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
@@ -182,42 +193,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Synchronize devices between DB-API and CSL-Scan.")
                         .setResult("<code>{\"success\": true }</code> if the synchronisation went without error," +
                                 "<code>{\"success\": false, \"error\", {\"reason\": \"...\", \"failed_devices\": [...]}}</code> otherwise. The failed_devices field is present if devices were actually fetched from DB-API.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
-        addCmd("send_last_cpe_items", params -> {
-                    String dateString = JsonUtil.getStringFromJson(params, "date", "");
-                    if (!dateString.equals("")) {
-                        List<CpeItem> cpeItemChanges;
-                        List<MicrosoftKB> microsoftKbChanges;
-                        if (dateString.equals("all")) {
-                            cpeItemChanges = scanApiHandler.getCpeItemChangesSince(null);
-                            microsoftKbChanges = scanApiHandler.getMicrosoftKbChangesSince(null);
-                        } else {
-                            cpeItemChanges = scanApiHandler.getCpeItemChangesSince(OffsetDateTime.parse(dateString));
-                            microsoftKbChanges = scanApiHandler.getMicrosoftKbChangesSince(OffsetDateTime.parse(dateString));
-                        }
-                        try {
-                            dbapiHandler.sendCpeItems(cpeItemChanges);
-                            dbapiHandler.sendMicrosoftKbs(microsoftKbChanges);
-                        } catch (Exception e) {
-                            logger.warn("Could not send changes to DB-API", e);
-                            return JsonApiResponse.error("Could not send changes to DB-API",
-                                    Json.object("exception", e.getMessage())
-                            ).toJson();
-                        }
-                    } else {
-                        scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
-                        scanApiHandler.sendNewMicrosoftKbsToDbapi(dbapiHandler);
-                    }
-                    return JsonApiResponse.success().toJson();
-                },
-                new JsonCmdHelp().setDesc("Trigger a synchronisation of the CPE Items between CSL-Scan and DB-API")
-                        .setParam("date", "The date of last CPE Items update on DB-API, in ISO local date format as above." +
-                                "May by \"all\" to send all CPE Items to DB-API." +
-                                "May also be omitted or null, in which case the date is fetched directly from DB-API.", IJsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the synchronisation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise." +
-                                "The details field should contain the list of failed items if relevant.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
         addCmd("drop_all_collections", params -> {
@@ -823,8 +798,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     public void syncAll() {
         dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
-        scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
-        scanApiHandler.sendNewMicrosoftKbsToDbapi(dbapiHandler);
+        try {
+            cpeItemSynchronizationService.syncData();
+            microsoftKbSynchronizationService.syncData();
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize CPE Items", e);
+        }
         handleDeletedCpes();
         handleDeleteMicrosoftKBS();
     }

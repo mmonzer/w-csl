@@ -4,7 +4,7 @@ public enum SshConnectionField {
     PORT("port", "port"),
     USERNAME("username", "username"),
     PASSWORD("read_only_password", "password"),
-    PRIVATE_KEY("private_key", "privateKey"),
+    PRIVATE_KEY("ssh_key", "privateKey"),
     PASSPHRASE("passphrase", "passphrase"),
     ;
 

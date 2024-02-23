@@ -17,10 +17,7 @@ import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.csl.intercom.services.CpeItemsSynchronizationService;
-import com.csl.intercom.services.CpeScanService;
-import com.csl.intercom.services.DataSynchronizationService;
-import com.csl.intercom.services.MicrosoftKbSynchronizationService;
+import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.util.Pair;
@@ -61,6 +58,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private CSLMqttBrokerHandler mqttBroker = null;
     private DataSynchronizationService cpeItemSynchronizationService = null;
     private DataSynchronizationService microsoftKbSynchronizationService = null;
+    private DataSynchronizationService deletedCpeItemsSynchronizationService = null;
+    private DataSynchronizationService deletedMicrosoftKbsSynchronizationService = null;
     private CpeScanService cpeScanService = null;
     private ScheduledExecutorService synchronizationSchedule;
 
@@ -101,18 +100,25 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         if (isConcentrator) {
+            cpeScanService = new CpeScanService();
+            cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
+            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(cpeScanService);
+            deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
+            deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
+            cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
+
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             });
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
-                handleDeletedCpes();
+                try {
+                    deletedCpeItemsSynchronizationService.syncData();
+                } catch (SynchronizationException e) {
+                    logger.error("Could not synchronize deleted CPE Items", e);
+                }
             });
-            cpeScanService = new CpeScanService();
-            cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
-            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(cpeScanService);
-            cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
@@ -798,58 +804,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * - CPE Items
      */
     public void syncAll() {
-        dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
-        try {
-            cpeItemSynchronizationService.syncData();
-            microsoftKbSynchronizationService.syncData();
-        } catch (SynchronizationException e) {
-            logger.error("Could not synchronize CPE Items", e);
+        if (isConcentrator) {
+            dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+            try {
+                cpeItemSynchronizationService.syncData();
+                microsoftKbSynchronizationService.syncData();
+                deletedCpeItemsSynchronizationService.syncData();
+                deletedMicrosoftKbsSynchronizationService.syncData();
+            } catch (SynchronizationException e) {
+                logger.error("Could not synchronize CPE Items", e);
+            }
         }
-        handleDeletedCpes();
-        handleDeleteMicrosoftKBS();
-    }
-
-    /**
-     * Function to execute when CPE Item deletions are notified.
-     * Retrieves the deleted CPE Items from DB-API and requests the deletion to CSL-Scan.
-     *
-     * @return A {@link Json} with the result of the operation: { "result": "OK" } if the deletion was successful,
-     * { "result": "NOK", "error": { "reason": ..., "details": ...}} otherwise.
-     */
-    private JsonApiResponse handleDeletedCpes() {
-        List<Pair<String, OffsetDateTime>> deletedCpes = null;
-        try {
-            OffsetDateTime lastCpeItemDeletionVerification = scanApiHandler.getLastCpeItemsDeletionDate();
-            deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
-        } catch (Exception e) {
-            logger.error("Failed to fetch deleted CPE Items", e);
-            return JsonApiResponse.error("Failed to fetch deleted CPE Items",
-                    Json.object("exception", e.getMessage())
-            );
-        }
-        scanApiHandler.deleteCpeItemsFromScan(deletedCpes);
-        return JsonApiResponse.success();
-    }
-
-    /**
-     * Function to execute when Microsoft KB deletions are notified.
-     * Retrieves the deleted Microsoft KBs from DB-API and requests the deletion to CSL-Scan.
-     *
-     * @return A {@link JsonApiResponse} with the result of the operation
-     */
-    private JsonApiResponse handleDeleteMicrosoftKBS() {
-        List<Pair<String, OffsetDateTime>> deletedKBs = null;
-        try {
-            OffsetDateTime lastKBDeletionVerification = scanApiHandler.getLastMicrosoftKbsDeletionDate();
-            deletedKBs = dbapiHandler.getDeletedMicrosoftKbsSince(lastKBDeletionVerification);
-        } catch (Exception e) {
-            logger.error("Failed to fetch deleted Microsoft KBs from DB-API", e);
-            return JsonApiResponse.error("Failed to fetch deleted CPE Items",
-                    Json.object("exception", e.getMessage())
-            );
-        }
-        scanApiHandler.deleteMicrosoftKBsFromScan(deletedKBs);
-        return JsonApiResponse.success();
     }
 
     /**
@@ -869,7 +834,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         }
 
         // Get deleted CPE Items from DB-API and delete them from CSL-Scan
-        JsonApiResponse cpeDeletionResult = handleDeletedCpes();
+        JsonApiResponse cpeDeletionResult = JsonApiResponse.success();
+        try {
+            deletedCpeItemsSynchronizationService.syncData();
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize deleted CPE Items", e);
+            cpeDeletionResult = JsonApiResponse.error(
+                    "Could not synchronize deleted CPE Items",
+                    Json.object("exception", e.getMessage())
+            );
+        }
+
         if (!cpeDeletionResult.isSuccess()) {
             return JsonApiResponse.error(
                     "Could not delete CPE Items in CSL-Scan",

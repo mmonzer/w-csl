@@ -20,6 +20,7 @@ import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.services.CpeItemsSynchronizationService;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.DataSynchronizationService;
+import com.csl.intercom.services.MicrosoftKbSynchronizationService;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.util.Pair;
@@ -109,7 +110,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             });
             cpeScanService = new CpeScanService();
             cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
-            microsoftKbSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
+            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(cpeScanService);
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
         }

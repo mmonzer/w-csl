@@ -5,11 +5,13 @@ import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CpeItemsSynchronizationService extends PaginatedSynchronizationService<CpeItem> {
     private final DbapiHandler dbapiHandler = new DbapiHandler();
@@ -22,7 +24,10 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
     }
 
     @Override
-    public List<CpeItem> retrieveData(OffsetDateTime since, int limit, int offset) {
+    public List<CpeItem> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
+        if (cpeScanService.getRunningScan() == null && cpeScanService.getFinishedScan() == null) {
+            throw new SynchronizationException("No scan is running or finished");
+        }
         return scanApiHandler.getCpeItemChangesSince(since, limit, offset);
     }
 
@@ -54,5 +59,21 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
     @Override
     protected Logger getLogger() {
         return logger;
+    }
+
+    /**
+     * Hard-delete the soft-deleted CPE items from the scan API after they have been sent to the DB-API.
+     *
+     * @param items The data that was sent to the DB-API.
+     */
+    @PostSend
+    public void hardDeleteCpeItems(List<CpeItem> items) {
+        List<Pair<String, OffsetDateTime>> deletedCpeItems = items.stream()
+                .filter(CpeItem::isDeleted)
+                .map(item -> new Pair<>(item.getMongoEntityId(), item.getDiscoveredDate()))
+                .collect(Collectors.toList());
+        if (!deletedCpeItems.isEmpty()) {
+            scanApiHandler.deleteCpeItemsFromScan(deletedCpeItems, true);
+        }
     }
 }

@@ -347,38 +347,36 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of CPE Item uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Pair<String, OffsetDateTime>> getDeletedCpeItemsSince(OffsetDateTime date) throws Exception {
+    public List<Pair<String, OffsetDateTime>> getDeletedCpeItemsSince(OffsetDateTime date, int limit, int offset) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedCpeItems = new ArrayList<>();
 
-        int offset = 0;
-        boolean hasMore = true;
-        while (hasMore) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS)
-                    .param("offset", String.valueOf(offset))
-                    .param("limit", String.valueOf(this.maxPageSize));
-            if (dateUtc != null) {
-                request.param("deleted_date__gt", dateUtc.toString());
-            }
-
-            ContentResponse response = request.send();
-            if (response.getStatus() != 200) {
-                throw new Exception("Unexpected status code " + response.getStatus());
-            }
-
-            Json responseContents = Json.read(response.getContentAsString());
-            List<Json> deletedCpeItemsPageJson = responseContents.get("results").asJsonList();
-
-            // If the list is smaller than the max page size, there are no more pages
-//            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
-            hasMore = !responseContents.get("next").isNull();
-
-            deletedCpeItemsPageJson.stream()
-                    .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
-                    .forEach(deletedCpeItems::add);
-
-            offset += this.maxPageSize;
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS);
+        if (offset > 0) {
+            request.param("offset", String.valueOf(offset));
         }
+        if (limit > 0) {
+            request.param("limit", String.valueOf(limit));
+        }
+        if (dateUtc != null) {
+            request.param("deleted_date__gt", dateUtc.toString());
+        }
+
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code " + response.getStatus());
+        }
+
+        Json responseContents = Json.read(response.getContentAsString());
+        List<Json> deletedCpeItemsPageJson = responseContents.get("results").asJsonList();
+
+        // If the list is smaller than the max page size, there are no more pages
+//            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
+
+        deletedCpeItemsPageJson.stream()
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                .forEach(deletedCpeItems::add);
+
         return deletedCpeItems;
     }
 
@@ -389,36 +387,35 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of Microsoft KB uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Pair<String, OffsetDateTime>> getDeletedMicrosoftKbsSince(OffsetDateTime date) throws Exception {
+    public List<Pair<String, OffsetDateTime>> getDeletedMicrosoftKbsSince(OffsetDateTime date, int limit, int offset) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedMicrosoftKbs = new ArrayList<>();
 
-        int offset = 0;
-        boolean hasMore = true;
-        while (hasMore) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_MICROSOFT_KBS)
-                    .param("offset", String.valueOf(offset))
-                    .param("limit", String.valueOf(this.maxPageSize));
-            if (dateUtc != null) {
-                request.param("deleted_date__gt", dateUtc.toString());
-            }
-
-            ContentResponse response = request.send();
-            if (response.getStatus() != 200) {
-                throw new Exception("Unexpected status code " + response.getStatus());
-            }
-
-            Json responseContents = Json.read(response.getContentAsString());
-            List<Json> deletedMicrosoftKbsPageJson = responseContents.get("results").asJsonList();
-
-            // If the list is smaller than the max page size, there are no more pages
-            hasMore = !responseContents.get("next").isNull();
-
-            deletedMicrosoftKbsPageJson.stream()
-                    .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
-                    .forEach(deletedMicrosoftKbs::add);
-            offset += this.maxPageSize;
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_MICROSOFT_KBS);
+        if (offset > 0) {
+            request.param("offset", String.valueOf(offset));
         }
+        if (limit > 0) {
+            request.param("limit", String.valueOf(limit));
+        }
+        if (dateUtc != null) {
+            request.param("deleted_date__gt", dateUtc.toString());
+        }
+
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code " + response.getStatus());
+        }
+
+        Json responseContents = Json.read(response.getContentAsString());
+        List<Json> deletedMicrosoftKbsPageJson = responseContents.get("results").asJsonList();
+
+        // If the list is smaller than the max page size, there are no more pages
+
+        deletedMicrosoftKbsPageJson.stream()
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                .forEach(deletedMicrosoftKbs::add);
+
         return deletedMicrosoftKbs;
     }
 

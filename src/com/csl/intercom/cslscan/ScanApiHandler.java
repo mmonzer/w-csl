@@ -27,6 +27,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -246,23 +247,28 @@ public class ScanApiHandler implements AutoCloseable {
      * Request multiple deletions of CPE Items to CSL-Scan.
      *
      * @param deletedCpes The list of CPE Items to delete.
+     * @param hardDelete  Whether to hard-delete the CPE Items (i.e. actually remove them from the DB)
+     *                    or to soft-delete them (i.e. mark them as deleted in the DB).
      */
-    public void deleteCpeItemsFromScan(List<Pair<String, OffsetDateTime>> deletedCpes) {
-        OffsetDateTime maxDate = OffsetDateTime.MIN;
+    public void deleteCpeItemsFromScan(List<Pair<String, OffsetDateTime>> deletedCpes, boolean hardDelete) {
+        AtomicReference<OffsetDateTime> maxDate = new AtomicReference<>(OffsetDateTime.MIN);
 
-        // Delete the CPE items from the scanner and find the latest deletion date
-        for (Pair<String, OffsetDateTime> deletedCpe : deletedCpes) {
-            String id = deletedCpe.getFirst();
-            OffsetDateTime date = deletedCpe.getSecond();
-            if (date != null && date.isAfter(maxDate)) {
-                maxDate = date;
-            }
-            deleteCpeItemFromScan(id);
-        }
+        Json deletedCpeItemsIdsArray = Json.array();
+        deletedCpes.stream().peek(deletedCpe -> {
+                    OffsetDateTime date = deletedCpe.getSecond();
+                    if (date != null && date.isAfter(maxDate.get())) {
+                        maxDate.set(date);
+                    }
+                })
+                .map(Pair::getFirst)
+                .forEach(deletedCpeItemsIdsArray::add);
+
+        ScanApiEndpoint endpoint = hardDelete ? ScanApiEndpoint.CPE_ITEM_DELETE_MANY_HARD : ScanApiEndpoint.CPE_ITEM_DELETE_MANY;
+        sendRequestToScanManager(HttpMethod.POST, endpoint, deletedCpeItemsIdsArray);
 
         if (!deletedCpes.isEmpty()) {
             try {
-                setLastCpeItemsDeletionDate(maxDate);
+                setLastCpeItemsDeletionDate(maxDate.get());
             } catch (Exception e) {
                 logger.error("Could not set the last CPE items deletion date", e);
             }
@@ -279,24 +285,34 @@ public class ScanApiHandler implements AutoCloseable {
                 String.format(ScanApiEndpoint.MICROSOFT_KB_DETAILS.endpoint(), id), Json.object());
     }
 
-    public void deleteMicrosoftKBsFromScan(List<Pair<String, OffsetDateTime>> deletedMicrosoftKBs) {
-        OffsetDateTime maxDate = OffsetDateTime.MIN;
+    /**
+     * Request multiple deletions of {@link MicrosoftKB} to CSL-Scan.
+     *
+     * @param deletedMicrosoftKBs The list of {@link MicrosoftKB} to delete.
+     * @param hardDelete          Whether to hard-delete the {@link MicrosoftKB} (i.e. actually remove them from the DB)
+     *                            or to soft-delete them (i.e. mark them as deleted in the DB).
+     */
+    public void deleteMicrosoftKBsFromScan(List<Pair<String, OffsetDateTime>> deletedMicrosoftKBs, boolean hardDelete) {
+        AtomicReference<OffsetDateTime> maxDate = new AtomicReference<>(OffsetDateTime.MIN);
 
-        // Delete the Microsoft KBs from the scanner and find the latest deletion date
-        for (Pair<String, OffsetDateTime> deletedMicrosoftKB : deletedMicrosoftKBs) {
-            String id = deletedMicrosoftKB.getFirst();
-            OffsetDateTime date = deletedMicrosoftKB.getSecond();
-            if (date != null && date.isAfter(maxDate)) {
-                maxDate = date;
-            }
-            deleteMicrosoftKBFromScan(id);
-        }
+        Json deletedCpeItemsIdsArray = Json.array();
+        deletedMicrosoftKBs.stream().peek(deletedCpe -> {
+                    OffsetDateTime date = deletedCpe.getSecond();
+                    if (date != null && date.isAfter(maxDate.get())) {
+                        maxDate.set(date);
+                    }
+                })
+                .map(Pair::getFirst)
+                .forEach(deletedCpeItemsIdsArray::add);
+
+        ScanApiEndpoint endpoint = hardDelete ? ScanApiEndpoint.MICROSOFT_KB_DELETE_MANY_HARD : ScanApiEndpoint.MICROSOFT_KB_DELETE_MANY;
+        sendRequestToScanManager(HttpMethod.POST, endpoint, deletedCpeItemsIdsArray);
 
         if (!deletedMicrosoftKBs.isEmpty()) {
             try {
-                setLastMicrosoftKbsDeletionDate(maxDate);
+                setLastMicrosoftKbsDeletionDate(maxDate.get());
             } catch (Exception e) {
-                logger.error("Could not set the last Microsoft KBs deletion date", e);
+                logger.error("Could not set the last CPE items deletion date", e);
             }
         }
     }

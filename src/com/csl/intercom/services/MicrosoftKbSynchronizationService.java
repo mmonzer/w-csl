@@ -6,11 +6,13 @@ import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MicrosoftKbSynchronizationService extends PaginatedSynchronizationService<MicrosoftKB> {
     private DbapiHandler dbapiHandler = new DbapiHandler();
@@ -57,6 +59,17 @@ public class MicrosoftKbSynchronizationService extends PaginatedSynchronizationS
             return dbapiHandler.getMicrosoftKbsLastUpdateDate();
         } catch (Exception e) {
             throw new SynchronizationException("Could not get last update date from DB-API", e);
+        }
+    }
+
+    @PostSend
+    public void hardDeleteCpeItems(List<CpeItem> items) {
+        List<Pair<String, OffsetDateTime>> deletedCpeItems = items.stream()
+                .filter(CpeItem::isDeleted)
+                .map(item -> new Pair<>(item.getMongoEntityId(), item.getDiscoveredDate()))
+                .collect(Collectors.toList());
+        if (!deletedCpeItems.isEmpty()) {
+            scanApiHandler.deleteCpeItemsFromScan(deletedCpeItems, true);
         }
     }
 }

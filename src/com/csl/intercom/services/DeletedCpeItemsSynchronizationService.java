@@ -26,7 +26,7 @@ public class DeletedCpeItemsSynchronizationService extends PaginatedSynchronizat
 
     @Override
     public void sendData(List<Pair<String, OffsetDateTime>> data) {
-        scanApiHandler.deleteCpeItemsFromScan(data);
+        scanApiHandler.deleteCpeItemsFromScan(data, true);
     }
 
     @Override

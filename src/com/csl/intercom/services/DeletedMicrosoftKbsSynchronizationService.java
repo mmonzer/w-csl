@@ -26,7 +26,7 @@ public class DeletedMicrosoftKbsSynchronizationService extends PaginatedSynchron
 
     @Override
     public void sendData(List<Pair<String, OffsetDateTime>> data) {
-        scanApiHandler.deleteMicrosoftKBsFromScan(data);
+        scanApiHandler.deleteMicrosoftKBsFromScan(data, true);
     }
 
     @Override

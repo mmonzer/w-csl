@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class CpeItemsSynchronizationService extends PaginatedSynchronizationService<CpeItem> {
@@ -68,12 +69,14 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
      */
     @PostSend
     public void hardDeleteCpeItems(List<CpeItem> items) {
-        List<Pair<String, OffsetDateTime>> deletedCpeItems = items.stream()
-                .filter(CpeItem::isDeleted)
-                .map(item -> new Pair<>(item.getMongoEntityId(), item.getDiscoveredDate()))
-                .collect(Collectors.toList());
-        if (!deletedCpeItems.isEmpty()) {
-            scanApiHandler.deleteCpeItemsFromScan(deletedCpeItems, true);
+        AtomicReference<OffsetDateTime> lastChangeDate = new AtomicReference<>(OffsetDateTime.MIN);
+        items.forEach(item -> {
+            if (item.isDeleted() && item.getDiscoveredDate().isAfter(lastChangeDate.get())) {
+                lastChangeDate.set(item.getDiscoveredDate());
+            }
+        });
+        if (!lastChangeDate.get().isEqual(OffsetDateTime.MIN)) {
+            scanApiHandler.deleteCpeItemsBeforeDate(lastChangeDate.get(), false);
         }
     }
 }

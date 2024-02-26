@@ -684,6 +684,90 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         "where result contains <code>{ \"success\": true }</code> if the template is valid," +
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
         );
+        addCmd("get_discovery_cron", params -> {
+                    try {
+                        String cron = scanApiHandler.getDiscoveryCron();
+                        if (cron == null) {
+                            throw new Exception("Could not fetch discovery cron");
+                        }
+                        return JsonApiResponse.result(Json.object("cron", cron)).toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not fetch discovery cron", e);
+                        return JsonApiResponse.error("Could not fetch discovery cron",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get the discovery cron")
+                        .setResult("The discovery cron, in the format <code>{ \"success\": true, \"result\": { \"cron\": \"...\" } }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("set_discovery_cron", params -> {
+                    String cron = null;
+                    if (params.has("cron") && params.get("cron").isString()) {
+                        cron = params.get("cron").asString();
+                    }
+                    if (cron == null) {
+                        return JsonApiResponse.error("Missing required parameter cron",
+                                Json.object("exception", "Missing parameter cron, of type string")
+                        ).toJson();
+                    }
+                    try {
+                        scanApiHandler.setDiscoveryCron(cron);
+                        return JsonApiResponse.success().toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not set discovery cron", e);
+                        return JsonApiResponse.error("Could not set discovery cron",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Set the discovery cron")
+                        .setParam("cron", "The cron to set", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("is_discovery_cron_active", params -> {
+                    try {
+                        return JsonApiResponse.result(Json.object("active", scanApiHandler.isDiscoveryCronActive())).toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not fetch discovery cron status", e);
+                        return JsonApiResponse.error("Could not fetch discovery cron status",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get the status of the discovery cron")
+                        .setResult("The status of the discovery cron, in the format <code>{ \"success\": true, \"result\": { \"active\": \"true/false\" } }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("set_discovery_cron_active", params -> {
+                    Boolean isActive = null;
+                    if (params.has("isActive") && params.get("isActive").isBoolean()) {
+                        isActive = params.get("isActive").asBoolean();
+                    }
+                    if (isActive == null) {
+                        return JsonApiResponse.error("Missing required parameter isActive",
+                                Json.object("exception", "Missing parameter isActive, of type boolean")
+                        ).toJson();
+                    }
+                    try {
+                        scanApiHandler.setDiscoveryCronActive(isActive);
+                        return JsonApiResponse.success().toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not set discovery cron status", e);
+                        return JsonApiResponse.error("Could not set discovery cron status",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Set the status of the discovery cron")
+                        .setParam("isActive", "The status to set", IJsonCmdHelp.BOOL)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 

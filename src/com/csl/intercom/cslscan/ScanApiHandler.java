@@ -497,7 +497,7 @@ public class ScanApiHandler implements AutoCloseable {
     private JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params) {
         JsonApiResponse res = JsonApiResponse.error(null);
         Request request;
-        String URI = scanManagerUrl + endpoint;
+        String URI = scanManagerUrl + endpoint.replace(" ", "%20");
 
         request = httpClient.newRequest(URI);
         request.method(method);
@@ -783,5 +783,74 @@ public class ScanApiHandler implements AutoCloseable {
 
     public JsonApiResponse getPredefinedHttpVariables() {
         return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
+    }
+
+    /**
+     * Get the current cron expression for the periodic discovery task.
+     * @return The cron expression for the periodic discovery task.
+     */
+    public String getDiscoveryCron() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            Json result = response.getResult();
+            if (result.has("value") && result.get("value").isString()) {
+                return result.get("value").asString();
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Set the cron expression for the periodic discovery task.
+     * @param cron The new cron expression for the periodic discovery task.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public void setDiscoveryCron(String cron) throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, ScanApiEndpoint.DISCOVERY_UPDATE_CRON.endpoint() + "?cronExpression=" + cron, Json.object());
+        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception("Could not set the discovery cron: " + response.getError().getReason());
+        }
+    }
+
+    /**
+     * Get the status of the periodic discovery task.
+     *
+     * @return Whether the periodic discovery task is active.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public boolean isDiscoveryCronActive() throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_IS_CRON_ACTIVE, Json.object());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            Json result = response.getResult();
+            if (result.has("value")) {
+                if (result.get("value").isBoolean()) {
+                    return result.get("value").asBoolean();
+                } else if (result.get("value").isString()) {
+                    return Boolean.parseBoolean(result.get("value").asString());
+                } else {
+                    throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+                }
+            } else {
+                throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+            }
+        } else {
+            throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+        }
+    }
+
+    /**
+     * Set the status of the periodic discovery task.
+     *
+     * @param active Whether the periodic discovery task should be active.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public void setDiscoveryCronActive(boolean active) throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, ScanApiEndpoint.DISCOVERY_SET_CRON_ACTIVE.endpoint() + "?isActive=" + active, Json.object());
+        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception("Could not set the discovery cron status: " + response.getError().getReason());
+        }
     }
 }

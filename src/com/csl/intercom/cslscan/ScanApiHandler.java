@@ -275,6 +275,10 @@ public class ScanApiHandler implements AutoCloseable {
         }
     }
 
+    public void deleteCpeItemsBeforeDate(OffsetDateTime date, boolean deleteAll) {
+        sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.CPE_ITEM_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
+    }
+
     /**
      * Request the deletion of a {@link MicrosoftKB} to CSL-Scan.
      *
@@ -317,6 +321,9 @@ public class ScanApiHandler implements AutoCloseable {
         }
     }
 
+    public void deleteMicrosoftKBsBeforeDate(OffsetDateTime date, boolean deleteAll) {
+        sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.MICROSOFT_KB_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
+    }
 
     /**
      * Get the CPE items that have changed since the specified date.

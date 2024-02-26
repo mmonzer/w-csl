@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class MicrosoftKbSynchronizationService extends PaginatedSynchronizationService<MicrosoftKB> {
@@ -63,13 +64,15 @@ public class MicrosoftKbSynchronizationService extends PaginatedSynchronizationS
     }
 
     @PostSend
-    public void hardDeleteCpeItems(List<CpeItem> items) {
-        List<Pair<String, OffsetDateTime>> deletedCpeItems = items.stream()
-                .filter(CpeItem::isDeleted)
-                .map(item -> new Pair<>(item.getMongoEntityId(), item.getDiscoveredDate()))
-                .collect(Collectors.toList());
-        if (!deletedCpeItems.isEmpty()) {
-            scanApiHandler.deleteCpeItemsFromScan(deletedCpeItems, true);
+    public void hardDeleteMicrosoftKbs(List<MicrosoftKB> items) {
+        AtomicReference<OffsetDateTime> maxDate = new AtomicReference<>(OffsetDateTime.MIN);
+        items.forEach(item -> {
+            if (item.getDiscoveredDate() != null && item.getDiscoveredDate().isAfter(maxDate.get())) {
+                maxDate.set(item.getDiscoveredDate());
+            }
+        });
+        if (!maxDate.get().isEqual(OffsetDateTime.MIN)) {
+            scanApiHandler.deleteCpeItemsBeforeDate(maxDate.get(), false);
         }
     }
 }

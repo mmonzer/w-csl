@@ -730,7 +730,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         );
         addCmd("is_discovery_cron_active", params -> {
                     try {
-                        return JsonApiResponse.result(Json.object("active", scanApiHandler.isDiscoveryCronActive())).toJson();
+                        return JsonApiResponse.result(Json.object("isActive", scanApiHandler.isDiscoveryCronActive())).toJson();
                     } catch (Exception e) {
                         logger.error("Could not fetch discovery cron status", e);
                         return JsonApiResponse.error("Could not fetch discovery cron status",

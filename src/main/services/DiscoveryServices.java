@@ -5,6 +5,7 @@ import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
+import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
@@ -686,11 +687,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         );
         addCmd("get_discovery_cron", params -> {
                     try {
-                        String cron = scanApiHandler.getDiscoveryCron();
+                        Json cron = scanApiHandler.getDiscoveryCron();
                         if (cron == null) {
                             throw new Exception("Could not fetch discovery cron");
                         }
-                        return JsonApiResponse.result(Json.object("cron", cron)).toJson();
+                        return JsonApiResponse.result(cron).toJson();
                     } catch (Exception e) {
                         logger.error("Could not fetch discovery cron", e);
                         return JsonApiResponse.error("Could not fetch discovery cron",
@@ -712,8 +713,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 Json.object("exception", "Missing parameter cron, of type string")
                         ).toJson();
                     }
+                    DynamicDiscoveryFrequencyOption frequencyOption = null;
+                    if (params.has("frequencyOption") && params.get("frequencyOption").isString()) {
+                        frequencyOption = DynamicDiscoveryFrequencyOption.fromDbapiName(params.get("frequencyOption").asString());
+                    }
                     try {
-                        scanApiHandler.setDiscoveryCron(cron);
+                        scanApiHandler.setDiscoveryCron(cron, frequencyOption);
                         return JsonApiResponse.success().toJson();
                     } catch (Exception e) {
                         logger.error("Could not set discovery cron", e);

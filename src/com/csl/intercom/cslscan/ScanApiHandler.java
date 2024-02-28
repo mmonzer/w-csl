@@ -1,6 +1,7 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.CpeItem;
@@ -789,15 +790,22 @@ public class ScanApiHandler implements AutoCloseable {
      * Get the current cron expression for the periodic discovery task.
      * @return The cron expression for the periodic discovery task.
      */
-    public String getDiscoveryCron() {
+    public Json getDiscoveryCron() {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             Json result = response.getResult();
-            if (result.has("value") && result.get("value").isString()) {
-                return result.get("value").asString();
+            String cron = null;
+            DynamicDiscoveryFrequencyOption frequencyOption = null;
+            if (result.has("cron") && result.get("cron").isString()) {
+                cron = result.get("cron").asString();
             } else {
                 return null;
             }
+
+            if (result.has("frequency") && result.get("frequency").isString()) {
+                frequencyOption = DynamicDiscoveryFrequencyOption.fromScanName(result.get("frequency").asString());
+            }
+            return Json.object("cron", cron, "frequencyOption", frequencyOption.dbapiName());
         } else {
             return null;
         }
@@ -808,8 +816,12 @@ public class ScanApiHandler implements AutoCloseable {
      * @param cron The new cron expression for the periodic discovery task.
      * @throws Exception If the request failed (ie status code != 200).
      */
-    public void setDiscoveryCron(String cron) throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, ScanApiEndpoint.DISCOVERY_UPDATE_CRON.endpoint() + "?cronExpression=" + cron, Json.object());
+    public void setDiscoveryCron(String cron, DynamicDiscoveryFrequencyOption frequencyOption) throws Exception {
+        String endpoint = ScanApiEndpoint.DISCOVERY_UPDATE_CRON.endpoint() + "?cronExpression=" + cron;
+        if (frequencyOption != null) {
+            endpoint += "&frequencyOption=" + frequencyOption.name();
+        }
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, endpoint, Json.object());
         if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception("Could not set the discovery cron: " + response.getError().getReason());
         }

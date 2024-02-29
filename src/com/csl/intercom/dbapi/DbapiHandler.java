@@ -213,7 +213,6 @@ public class DbapiHandler implements AutoCloseable {
             }
             sendMicrosoftKbsBatch(newItems, scan);
         } catch (Exception e) {
-            newItems.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
             logger.warn("Error sending Microsoft KBs to DB-API.", e);
             KBs.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following KBs: " + failedItems.toString());

@@ -29,6 +29,7 @@ public enum ScanApiEndpoint {
     DISCOVERY_IS_CRON_ACTIVE(DISCOVERY.endpoint() + "/isCronActive"),
     DISCOVERY_SET_CRON_ACTIVE(DISCOVERY.endpoint() + "/setCronActive"),
     DISCOVERY_UPDATE_CRON(DISCOVERY.endpoint() + "/updateCron"),
+    DISCOVERY_CANCEL(DISCOVERY.endpoint() + "/cancel"),
     ENTITY_SCAN_STATUS("/status/entity/%s"),
     ENTITY_HTTP_CONNECTION("/entityHttpConnection/"),
     ENTITY_HTTP_CONNECTION_DETAILS(ENTITY_HTTP_CONNECTION.endpoint() + "%s"),

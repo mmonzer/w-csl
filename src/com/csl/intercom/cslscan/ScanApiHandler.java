@@ -888,4 +888,14 @@ public class ScanApiHandler implements AutoCloseable {
             throw new Exception("Could not set the discovery cron status: " + response.getError().getReason());
         }
     }
+
+    /**
+     * Cancel the current scan (if any).
+     */
+    public void cancelScan() throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_CANCEL, Json.object());
+        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception(response.getError().getReason());
+        }
+    }
 }

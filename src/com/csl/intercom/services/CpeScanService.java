@@ -4,6 +4,7 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanConstants;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
+import com.csl.intercom.services.exceptions.CpeScanException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.util.SchedulerUtil;
 import com.ucsl.json.Json;
@@ -106,6 +107,14 @@ public class CpeScanService {
      */
     public ScanEntity getFinishedScan() {
         return searchScan(ScanEntity::isFinished);
+    }
+
+    public void cancelScan() throws CpeScanException {
+        try {
+            this.scanApiHandler.cancelScan();
+        } catch (Exception e) {
+            throw new CpeScanException("Could not cancel the scan", e);
+        }
     }
 
     /**

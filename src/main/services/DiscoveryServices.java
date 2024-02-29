@@ -197,6 +197,19 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
+        addCmd("stop_scan", params -> {
+                    try {
+                        this.cpeScanService.cancelScan();
+                        return JsonApiResponse.success().toJson();
+                    } catch (Exception e) {
+                        return JsonApiResponse.error("Could not stop the scan", Json.object("exception", e.getMessage())).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Stop a scan in CSL-Scan")
+                        .setParam("id", "The uuid of the scan to stop", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the scan was stopped successfully", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
         addCmd("synchronize_devices", params -> dbapiHandler.sendNewDevicesToScanner(scanApiHandler).toJson(),
                 new JsonCmdHelp().setDesc("Synchronize devices between DB-API and CSL-Scan.")
                         .setResult("<code>{\"success\": true }</code> if the synchronisation went without error," +

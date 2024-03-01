@@ -228,7 +228,8 @@ public class CpeScanService {
      * @return The status string of the scan, or ERROR if not present in the JSON.
      */
     private String getStatusStringFromStatus(Json status) {
-        return JsonUtil.getStringFromJson(status, "status", "ERROR");
+        String defaultStatus = "ERROR";
+        return status != null ? JsonUtil.getStringFromJson(status, "status", defaultStatus) : defaultStatus;
     }
 
     /**
@@ -238,6 +239,9 @@ public class CpeScanService {
      * @return The message of the scan, or an empty String if not present in the JSON.
      */
     private String getScanDescriptionFromStatus(Json status) {
+        if (status == null) {
+            return "";
+        }
         Json message = status.get("message");
         if (message == null || !message.isString()) {
             return "";

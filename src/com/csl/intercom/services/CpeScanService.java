@@ -4,6 +4,7 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanConstants;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
+import com.csl.intercom.services.annotations.PostInit;
 import com.csl.intercom.services.exceptions.CpeScanException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.util.SchedulerUtil;
@@ -13,6 +14,7 @@ import main.services.JsonApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Queue;
@@ -43,6 +45,18 @@ public class CpeScanService {
 
 //        scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
         scansListSanitizer.scheduleAtFixedRate(this::sanitizeScans, 0, 5, TimeUnit.MINUTES);
+
+        // Execute post-init tasks
+        Class<?> clazz = this.getClass();
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(PostInit.class)) {
+                try {
+                    method.invoke(this);
+                } catch (Exception e) {
+                    logger.error("Could not execute post-init method {}", method.getName(), e);
+                }
+            }
+        }
     }
 
 
@@ -109,6 +123,7 @@ public class CpeScanService {
         return searchScan(ScanEntity::isFinished);
     }
 
+    @PostInit
     public void cancelScan() throws CpeScanException {
         try {
             this.scanApiHandler.cancelScan();

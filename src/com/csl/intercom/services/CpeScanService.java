@@ -127,6 +127,12 @@ public class CpeScanService {
     public void cancelScan() throws CpeScanException {
         try {
             this.scanApiHandler.cancelScan();
+            this.scanEntities.forEach((id, scan) -> {
+                if (scan.isRunning()) {
+                    scan.setStatus(ScanEntity.Status.DISCARDED);
+                }
+            });
+            this.dbapiHandler.cancelAllScans();
         } catch (Exception e) {
             throw new CpeScanException("Could not cancel the scan", e);
         }

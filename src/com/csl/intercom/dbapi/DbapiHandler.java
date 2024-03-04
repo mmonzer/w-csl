@@ -9,7 +9,6 @@ import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
-import com.csl.intercom.services.CpeScanService;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -665,6 +664,18 @@ public class DbapiHandler implements AutoCloseable {
             request.send();
         } catch (Exception e) {
             logger.error("Could not send the no new CPE Item notification to DB-API.", e);
+        }
+    }
+
+    /**
+     * Cancel all scan events in DB-API.
+     */
+    public void cancelAllScans() {
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.EVENTS_CANCEL_ALL);
+        try {
+            request.send();
+        } catch (Exception e) {
+            logger.error("Could not send the cancel all scans notification to DB-API.", e);
         }
     }
 

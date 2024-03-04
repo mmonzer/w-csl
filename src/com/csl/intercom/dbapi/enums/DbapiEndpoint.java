@@ -5,6 +5,7 @@ package com.csl.intercom.dbapi.enums;
  */
 public enum DbapiEndpoint {
     EVENTS("/events"),
+    EVENTS_CANCEL_ALL(EVENTS.getEndpoint() + "/set_all_active_cpe_scan_event_to_discarded"),
     CPE_ITEMS_LAST_DATE(EVENTS.getEndpoint() + "/last_discovery_date"),
     CPE_ITEMS("/cpe_discovered_items"),
     DELETED_OBJECTS("/deleted_objects"),

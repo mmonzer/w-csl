@@ -60,7 +60,7 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
                     sendData(items);
                     doPostSendActions(items);
                 } catch (SynchronizationException e) {
-                    getLogger().warn("Failed to send data to DB-API", e);
+                    getLogger().warn("Failed to send data to DB-API");
                     getLogger().debug("Failed to send data to DB-API", e);
                     throw e;
                 }

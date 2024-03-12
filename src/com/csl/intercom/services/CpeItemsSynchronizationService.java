@@ -42,7 +42,7 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
             if (scanEntity == null) {
                 throw new SynchronizationException("No running scan found");
             }
-            dbapiHandler.sendCpeItems(items, scanEntity);
+            dbapiHandler.sendCpeItems(items, scanEntity, items.size() == this.getBatchMaxSize() || scanEntity.getProgress() < 1.0);
         } catch (Exception e) {
             throw new SynchronizationException("Could not send CPE items to DB-API", e);
         }

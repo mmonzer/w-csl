@@ -121,7 +121,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems The CPE Items to send
      * @throws Exception If the sending fail
      */
-    private void sendCpeItemsBatch(List<CpeItem> cpeItems, ScanEntity scan) throws Exception {
+    private void sendCpeItemsBatch(List<CpeItem> cpeItems, ScanEntity scan, boolean hasMore) throws Exception {
         Map<String, List<CpeItem>> classifiedCpeItems = classifyItemsById(cpeItems, CpeItem::getDeviceId);
         Json cpeItemsArray = Json.array();
         for (Map.Entry<String, List<CpeItem>> deviceCpeItems : classifiedCpeItems.entrySet()) {
@@ -137,7 +137,8 @@ public class DbapiHandler implements AutoCloseable {
         Json requestContents = Json.object(
                 "progress", scan.getProgress(),
                 "event_id", scan.getDbapiId(),
-                "discovered_cpe_dict_arr", cpeItemsArray
+                "discovered_cpe_dict_arr", cpeItemsArray,
+                "has_more", hasMore
         );
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
@@ -153,7 +154,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems A {@link List <CpeItem>} with the CPE Items to send
      * @throws Exception If any item failed
      */
-    public void sendCpeItems(List<CpeItem> cpeItems, ScanEntity scan) throws Exception {
+    public void sendCpeItems(List<CpeItem> cpeItems, ScanEntity scan, boolean hasMore) throws Exception {
         Json failedItems = Json.array();
         List<CpeItem> newItems = cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)).collect(Collectors.toList());
         List<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted).collect(Collectors.toList());
@@ -162,7 +163,7 @@ public class DbapiHandler implements AutoCloseable {
             if (!deletedItems.isEmpty()) {
                 deleteCpeItemsFromDbapi(deletedItems);
             }
-            sendCpeItemsBatch(newItems, scan);
+            sendCpeItemsBatch(newItems, scan, hasMore);
         } catch (Exception e) {
             logger.warn("Error sending CPE Items to DB-API.", e);
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);

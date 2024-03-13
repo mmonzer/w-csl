@@ -58,6 +58,11 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
     }
 
     @Override
+    public boolean shouldSendEmptyData() {
+        return true;
+    }
+
+    @Override
     protected Logger getLogger() {
         return logger;
     }

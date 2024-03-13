@@ -54,7 +54,7 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
         List<T> items;
         do {
             items = retrieveData(since, limit, offset);
-            if (items != null && !items.isEmpty()) {
+            if (items != null && (!items.isEmpty() || shouldSendEmptyData())) {
                 try {
                     doPreSendActions(items);
                     sendData(items);
@@ -84,6 +84,10 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
         getLogger().debug("Setting batch_max_size to {}", batch_max_size);
         this.batch_max_size = batch_max_size;
         return this;
+    }
+
+    public boolean shouldSendEmptyData() {
+        return false;
     }
 
     protected void doPreSendActions(List<T> data) throws SynchronizationException {

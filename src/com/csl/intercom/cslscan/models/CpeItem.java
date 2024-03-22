@@ -28,6 +28,7 @@ public class CpeItem implements IDbapiSerializable {
         add("lang");
         add("softwareEdition");
         add("targetSoftware");
+        add("targetHardware");
         add("others");
     }};
     private final Json cpeData;

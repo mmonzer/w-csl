@@ -11,6 +11,7 @@ import com.csl.core.CSLContext;
 import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.json.Json;
 
+
 public class CSLFlowManager {
 
 	int maxflows=10;
@@ -80,8 +81,7 @@ public class CSLFlowManager {
 		return null;
 	}
 
-	
-//	public boolean addToFlow(int n, Json j) {
+	//	public boolean addToFlow(int n, Json j) {
 //
 //		if ((n<0)|(n>=maxflows)) {
 //			CSLContext.context.logError("Invalid flow number "+n+" (max="+maxflows+")");
@@ -101,23 +101,28 @@ public class CSLFlowManager {
 //		return ok;
 //
 //	}
-	
-	
-	public boolean addToFlow(int n, Json j) {
 
-		if ((n<0)|(n>=maxflows)) {
-			CSLContext.instance.logError("Invalid flow number "+n+" (max="+maxflows+")");
+	/**
+	 * Add an alert to the flow. It calls the listeners to treat it and stoke it to the input flows
+	 * @param flowNumber number of the flow from the alert
+	 * @param alertData data of the alert
+	 * @return true if the alert was added to the input flows, otherwise false.
+	 */
+	public boolean addToFlow(int flowNumber, Json alertData) {
+
+		if ((flowNumber<0)|(flowNumber>=maxflows)) {
+			CSLContext.instance.logError("Invalid flow number "+flowNumber+" (max="+maxflows+")");
 			return false ;
 		}
 		
 		
 		boolean addToQueue=true;
 		
-		if (traceAllMessages) System.out.println("  dispatch -->"+j); 
-		for (ICSLFlowListener l: listeners.get(n)) {
+		if (traceAllMessages) System.out.println("  dispatch -->"+alertData);
+		for (ICSLFlowListener l: listeners.get(flowNumber)) {
 	
 			int result=ICSLFlowListener.DO_NOTHING;
-			result= l.newElementOnQueue(j);
+			result= l.newElementOnQueue(alertData);
 			
 			if (traceAllMessages) System.out.println("    "+l.getName()+" return "+result);
 			
@@ -137,23 +142,21 @@ public class CSLFlowManager {
 		boolean ok= true;
 		
 		if (addToQueue) {
-			ok=inputflows.get(n).offer(j);
+			ok=inputflows.get(flowNumber).offer(alertData);
 		}
 		//CSLContext.context.logInfo("added to flow #"+n+" ok="+ok+" o="+j);
 		
-		if (traceAllMessages) System.out.println(" Queue size:"+getFlowSize(n));
+		if (traceAllMessages) System.out.println(" Queue size:"+getFlowSize(flowNumber));
 		
 		if (!ok) {
-			CSLContext.instance.logError("flow number "+n+" is full, lost of data: "+j);
+			CSLContext.instance.logError("flow number "+flowNumber+" is full, lost of data: "+alertData);
 			//if (traceAllMessages) 
-				System.err.println("flow number "+n+" is full, lost of data: "+j);
+				System.err.println("flow number "+flowNumber+" is full, lost of data: "+alertData);
 		}
 		
 		return ok;
 
 	}
-
-
 
 	public String dumpInputs() {
 		String s="";
@@ -165,8 +168,6 @@ public class CSLFlowManager {
 		return s;
 
 	}
-
-
 
 	public void startListener() {
 		String ip= CSLContext.instance.getCslUDPServer().getCurrentIPForUCP();

@@ -9,6 +9,10 @@ import java.util.concurrent.BlockingQueue;
 
 import com.csl.core.CSLContext;
 
+/**
+ * Class for a UDP client that listens to the given ip address and port, and adds the received message into
+ * the messageQueue to be treated later.
+ */
 public class CSLUdpUnicastClient implements Runnable {
 	private final int port;
 	private String ip="";
@@ -17,7 +21,15 @@ public class CSLUdpUnicastClient implements Runnable {
 	
 	boolean closing=false;
 	private boolean traceAll;
-	
+
+	/**
+	 * Client UDP that listens to the given ip address and port, and adds the received message into the messageQueue.
+	 * If traceAll is true, it will also print them on the screen.
+	 * @param ip ip address for UDP listening
+	 * @param port port for UDP listening
+	 * @param messageQueue list to add the incoming messages
+	 * @param traceAll true if we want to have the incoming messages written on the terminal.
+	 */
 	public CSLUdpUnicastClient(String ip,int port, BlockingQueue<byte[]> messageQueue, boolean traceAll) {
 		this.ip=ip;
 		this.port = port;
@@ -49,7 +61,10 @@ public class CSLUdpUnicastClient implements Runnable {
         }
         return ret;
     }
-	
+
+	/**
+	 * Function that runs in a thread which reads the incoming data and appends it to the messageQueue
+	 */
 	@Override
 	public void run() {
 		/**

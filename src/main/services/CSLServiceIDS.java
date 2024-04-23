@@ -173,7 +173,7 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		},
 				new JsonCmdHelp()
-				.setDesc("set a flag in the IDS state (stored in the file CurrentIDSParams.json bewteen runs ")
+				.setDesc("set a flag in the IDS state (stored in the file CurrentIDSParams.json between runs ")
 				.setParam("value", "true/false", JsonCmdHelp.BOOL)
 				.setResult("return the result of the operation or error", JsonCmdHelp.STR)
 				);

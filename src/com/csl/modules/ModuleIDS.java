@@ -273,6 +273,9 @@ public class ModuleIDS implements IModule {
 		running=on;
 			
 		int n_input=1;
+		/*
+		 * Anonymous function to filter the type of alert format
+ 		 */
 		ICSLFlowListener listener=new ICSLFlowListener() {
 			@Override
 			public String getName() {

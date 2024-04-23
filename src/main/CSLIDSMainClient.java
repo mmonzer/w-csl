@@ -298,7 +298,7 @@ public class CSLIDSMainClient {
 
         iniServices();
 
-        startRemoteConnectTask();    // connect/reconnect
+        startRemoteConnectTask();    // connect/reconnect CSL-Server via wss
         CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
 
 

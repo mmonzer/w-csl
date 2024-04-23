@@ -132,13 +132,16 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 	public void execSysStateRules(long systemCurrentTimeMillis) {
 	}
 	//==================================================================================
-	
 
+	/**
+	 * Update the time of the alert and generate an Alert to forward
+	 * @param event event from a suricata Alert
+	 */
 	@Override
 	public void processSuricataEvent(Json event) {
 		// TODO Auto-generated method stub
 		updateTime(event);
-		generateAlertFRomSuricataEvent(event);
+		generateAlertFromSuricataEvent(event);
 	}
 	
 	
@@ -200,12 +203,12 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		
 		return idsMainProcessorParams;
 		}
-	
-	
-	
-	
-	// process an event (from suricata for example)
-	private void generateAlertFRomSuricataEvent(Json evtsInfo) {
+
+	/**
+	 * From a raw Suricata alert, reformats it and calls {@link CSLAlertManager} to send the alert
+	 * @param evtsInfo suricata alert information
+	 */
+	private void generateAlertFromSuricataEvent(Json evtsInfo) {
 		
 		// test pour eve event
 		

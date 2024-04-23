@@ -3,6 +3,9 @@ import java.util.concurrent.BlockingQueue;
 
 import com.ucsl.json.Json;
 
+/**
+ * Runnable class that treats the alerts from suricata stored in a Queue
+ */
 public class CSLUDPDataProcessor implements Runnable {
 	private final BlockingQueue<byte[]> messageQueue;
 	CSLFlowManager flowManager;
@@ -27,7 +30,11 @@ public class CSLUDPDataProcessor implements Runnable {
 			e.printStackTrace();
 		}
 	}
-	
+
+	/**
+	 * Function that runs in a thread and reads the alerts from the Queue list and send them to
+	 * add to the flow {@link CSLFlowManager}.
+	 */
 	@Override
 	public void run() {
 		int counter = 0;

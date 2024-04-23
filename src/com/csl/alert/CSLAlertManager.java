@@ -144,7 +144,7 @@ public class CSLAlertManager implements IAlertManager {
 		this.jConfig=jConfig;
 
 		//if (j==null) return;
-		this.port= CSLUtil.getConfigIntegerValue(jConfig,  "port",4445); 
+		this.port= CSLUtil.getConfigIntegerValue(jConfig,  "port",8001);
 		String ip=CSLUtil.getConfigStringValue(jConfig,  "ip","127.0.0.1" ); //. j.get("ip").asString();
 
 		try {
@@ -226,7 +226,13 @@ public class CSLAlertManager implements IAlertManager {
 	//	
 	//	}
 
-	public void sendAlert(IAlertDescriptor alertDescriptor,boolean toViewer, boolean toLog) {
+	/**
+	 * Checks if the alert is ok and calls the send function to forward it
+	 * @param alertDescriptor alert in {@link IAlertDescriptor} format
+	 * @param toViewer if the alert will be sent to the viewer
+	 * @param toLog if the alert will be logged
+	 */
+	public void sendAlert(IAlertDescriptor alertDescriptor, boolean toViewer, boolean toLog) {
 
 
 		//System.err.println("zaza:"+alertDescriptor.toJson());
@@ -247,12 +253,17 @@ public class CSLAlertManager implements IAlertManager {
 				//alertDescriptor.getMsg(),
 				//alertDescriptor.getProps(),
 				//message, properties, 
-				toLog, toViewer);
+				toViewer, toLog);
 		//for (IDSAlertListener l:listeners) l.newAlert(alertDescriptor);
 
 
 	}
 
+	/**
+	 * Verify that the alert is in the list of current Alerts
+	 * @param alert alert to verify
+	 * @return the alert if found and valid
+	 */
 	private IAlertDescriptor findAlert(IAlertDescriptor alert) {
 
 		
@@ -354,9 +365,6 @@ public class CSLAlertManager implements IAlertManager {
 		return data.replace("]]>", "]]>]]&gt;<![CDATA[");
 	}
 
-
-
-
 	private String XMLformatter(String loggerName, String levelName, String message, String ndc, String throwable, Map<String, String>propsMap) {
 		long time = CSLContext.instance.getSystemCurrentTimeMillis(); //System.currentTimeMillis();
 
@@ -382,11 +390,13 @@ public class CSLAlertManager implements IAlertManager {
 		return Log4jEvent(event);
 	}
 
-
-
-
-
-	private void send(IAlertDescriptor alert , /*String uuid,long time,String level, String message, String properties,*/ boolean toFile, boolean toViewer) {
+	/**
+	 * Send the alert to a UDP viewer, to logs and to Web viewer if respective flags are true
+	 * @param alert alert ot forward
+	 * @param toViewer if alert must be forwarded to viewer
+	 * @param toFile if alert must be logged
+	 */
+	private void send(IAlertDescriptor alert , /*String uuid,long time,String level, String message, String properties,*/ boolean toViewer, boolean toFile) {
 
 		//		if (level.compareTo("CRITICAL")==0) level="FATAL";
 		//
@@ -468,11 +478,14 @@ public class CSLAlertManager implements IAlertManager {
 
 	}
 
-	
 	public void registerAlertForwarder(IAlertForwarder af) {
 		this.alertForwarder=af;
 	}
-	
+
+	/**
+	 * Send the alert either to csl-server either to the web client
+	 * @param jalert alert in format {@link Json}
+	 */
 	public void sendAlertToViewerUDP(Json jalert) {
 
 		// in client
@@ -511,6 +524,10 @@ public class CSLAlertManager implements IAlertManager {
 
 	}
 
+	/**
+	 * Send the alert either to web socket
+	 * @param alert alert in format {@link IAlertDescriptor}
+	 */
 	private void sendAlertToViewerWeb(IAlertDescriptor alert
 			/*String uuid,long time,String level, String message, Map<String, String> props */) {
 
@@ -533,7 +550,6 @@ public class CSLAlertManager implements IAlertManager {
 			System.out.println("SENDING TO WEB SOCKET:"+jAlert);
 		}
 	}
-
 
 	public Json getListOfCurrentAlertsAsJson() {
 		Json jarray=Json.array();
@@ -577,7 +593,6 @@ public class CSLAlertManager implements IAlertManager {
 		return jarray;
 	}
 
-
 	public Json getListOfInactiveAlertsAsJson() {
 		Json jarray=Json.array();
 
@@ -592,9 +607,6 @@ public class CSLAlertManager implements IAlertManager {
 
 		return jarray;
 	}
-
-
-
 
 	public Json getListOfMaskedAlertsAsJson() {
 		Json jarray=Json.array();
@@ -715,7 +727,6 @@ public class CSLAlertManager implements IAlertManager {
 		return jlist;
 	}
 
-
 	public Json loadListOfCurrentAlerts( ) {
 		Json jlist=Json.array();
 		for (IAlertDescriptor a:listOfCurrentAlerts) {
@@ -732,7 +743,6 @@ public class CSLAlertManager implements IAlertManager {
 		System.err.println("j - recuperer contents");
 		return jlist;
 	}
-
 
 	public Json resetListOfCurrentAlerts( /*IDSParams idsParams*/) {
 
@@ -920,7 +930,6 @@ public class CSLAlertManager implements IAlertManager {
 
 	}
 
-
 	public Json getAlertStats() {
 
 		int[]  ctr= new int[5];
@@ -943,9 +952,6 @@ public class CSLAlertManager implements IAlertManager {
 
 		return j;
 	}
-
-
-
 
 	IAlertDescriptor getAlert(Json params) {
 
@@ -1011,7 +1017,6 @@ public class CSLAlertManager implements IAlertManager {
 		return list;
 
 	}
-
 
 	private void test2() {
 

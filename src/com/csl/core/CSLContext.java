@@ -71,7 +71,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
 
     CSLHttpServer cslHttpServer = null;
-    ;
+
+
     CSLUDPServer cslUDPServer = null;
 	
 	

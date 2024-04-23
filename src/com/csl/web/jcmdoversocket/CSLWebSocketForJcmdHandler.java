@@ -54,7 +54,6 @@ public class CSLWebSocketForJcmdHandler {
     		//String apiName=message.substring(4);
     		CSLWebSocketForJcmd.messageArrived(message);
     	}
-    	
     	else if (message.startsWith("wss:")) {
     		message=message.substring(4);
     		int n=message.indexOf(":");

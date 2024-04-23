@@ -555,8 +555,4 @@ public class AlertsService implements ICSLService {
 		return false;
 	}
 
-	
-	
-	
-
 }

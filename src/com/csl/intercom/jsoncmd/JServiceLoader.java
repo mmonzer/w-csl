@@ -204,7 +204,7 @@ public class JServiceLoader {
     }
 
     static public String getApiHelpPage(Json params) {
-        return new ApiGetHelp().getHelp(listOfServiceNames, params);
+        return new ApiGetHelp().getHelp(listOfServiceNames, listOfServiceNames, params);
     }
 
 

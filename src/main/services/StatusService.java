@@ -17,6 +17,7 @@ import com.ucsl.json.JsonUtil;
  */
 public class StatusService implements ICSLService {
     private String name = "status";
+    private String description = "status description";
     private String configFileSectionName = "status";
     private IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private StatusNotifier notifier = null;
@@ -56,6 +57,7 @@ public class StatusService implements ICSLService {
     @Override
     public IApiCommands getApiCommands() {
         apiCommands.setName(name);
+        apiCommands.setDescription(description);
         return apiCommands;
     }
 

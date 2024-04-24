@@ -23,6 +23,7 @@ public class ApiCommands implements IApiCommands {
     HashMap<String, IJsonCmdHelp> listOfCommandHelps = new HashMap<String, IJsonCmdHelp>();
     List<String> listOfCommandNames = new ArrayList<String>();
     private String path = "";
+    private String description = "";
 
     private ApiCommands(String path) {
         this.path = path;
@@ -108,9 +109,22 @@ public class ApiCommands implements IApiCommands {
         return getCleanApiName();
     }
 
+    /**
+     * Gives the description of the API service
+     * @return the description of the service
+     */
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public void setName(String name) {
-        // TODO Auto-generated method stub
         this.path = name;
     }
 

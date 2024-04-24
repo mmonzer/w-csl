@@ -20,8 +20,9 @@ public class CpeServices implements ICSLService {
 //	ApiCommands apiCommands= new ApiCommands("");
 	
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
+
 	String name="cpe";
+	String description="cpe description";
 	String configFileSectionName="cpe_service";
 	
 	public CpeServices() {
@@ -108,8 +109,8 @@ public class CpeServices implements ICSLService {
 
 	@Override
 	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 

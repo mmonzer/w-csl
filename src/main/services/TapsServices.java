@@ -8,9 +8,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
+import java.net.URI;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
@@ -30,10 +34,25 @@ import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
 import main.extensions.SshUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.methods.HttpPost;
+
+
+
+import main.services.JsonApiResponse;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpMethod;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TapsServices implements ICSLService {
 	//ApiCommands apiCommands= new ApiCommands("");
-	
 
 
 
@@ -54,8 +73,9 @@ public class TapsServices implements ICSLService {
 
 	
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
+
 	String name="taps";
+	String description="taps description";
 	String configFileSectionName="ssh_service";	
 	static ArrayList<Json> configuredTaps;  
 	static String localIP;	
@@ -345,7 +365,7 @@ public class TapsServices implements ICSLService {
 		}
 		return result;
 	}
-	
+
 	public static Json getConfFromtap(String name, String file) {
 		String username = "", password ="";
 		int port = 22;
@@ -391,7 +411,28 @@ public class TapsServices implements ICSLService {
 		}
 		return result;
 	}
-	
+
+	/**
+	 * Gets the configuration of the only TAP
+	 * @return the configuration of the TAP
+	 */
+	public static String getConfFromTap() {
+		// TODO : change url and deal with answer
+		HttpResponse<String> response = null;
+		String url = "http://localhost:8888/config";
+		HttpClient client = HttpClient.newHttpClient();
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url))
+				.POST(HttpRequest.BodyPublishers.ofString("{\"cmd\":\"getConfig\"}"))
+				.build();
+		try {
+			response = client.send(request, HttpResponse.BodyHandlers.ofString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return response.body();
+	}
+
 	public static void sendConfToTap(String name, String file) {
 		String username = "", password ="";
 		int port = 22;
@@ -815,30 +856,30 @@ public class TapsServices implements ICSLService {
 				return Json.object();
 			}
 		});
-		addCmd("getConfFromTap", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				Json result = Json.object();
-				switch(params.at("param").asString()) {
-					case "reseau":
-						result = getConfFromtap(params.at("name").asString(), "reseau");
-						break;
-					case "process":
-						result = getConfFromtap(params.at("name").asString(), "process");
-						break;	
-					case "suricataconf":
-						result = getConfFromtap(params.at("name").asString(), "suricataconf");
-						break;	
-					case "genrules":
-						result = getConfFromtap(params.at("name").asString(), "genrules");
-						break;							
-					case "baserules":
-						result = getConfFromtap(params.at("name").asString(), "baserules");
-						break;							
-				}
-				return result;
-			}
-		});	
+		addCmd("getConfFromTap", (Json params)-> Json.read(getConfFromTap()));
+	//			@Override
+//			public Json exec(Json params) {
+//				Json result = Json.object();
+//				switch(params.at("param").asString()) {
+//					case "reseau":
+//						result = getConfFromtap(params.at("name").asString(), "reseau");
+//						break;
+//					case "process":
+//						result = getConfFromtap(params.at("name").asString(), "process");
+//						break;
+//					case "suricataconf":
+//						result = getConfFromtap(params.at("name").asString(), "suricataconf");
+//						break;
+//					case "genrules":
+//						result = getConfFromtap(params.at("name").asString(), "genrules");
+//						break;
+//					case "baserules":
+//						result = getConfFromtap(params.at("name").asString(), "baserules");
+//						break;
+//				}
+//				return result;
+//			}
+//		});
 		
 		addCmd("sendConfToTap", new IJsonCmd() {
 			@Override
@@ -1288,8 +1329,8 @@ public class TapsServices implements ICSLService {
 
 	@Override
 	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 	

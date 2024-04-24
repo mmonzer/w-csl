@@ -23,6 +23,7 @@ public class MonitorService implements ICSLService {
 	
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	String name="#undef";
+	String description="monitor description";
 	String configFileSectionName="config_"+name;
 
 
@@ -187,6 +188,7 @@ public class MonitorService implements ICSLService {
 	public IApiCommands getApiCommands() {
 		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 

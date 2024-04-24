@@ -22,8 +22,9 @@ import main.extensions.SshUtils;
 public class SuricataServices implements ICSLService {
 	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
+
 	String name="suricata";
+	String description="suricata description";
 	String configFileSectionName="ssh_service";
 	static ArrayList<Json> configuredSuricata;  
 	static String localIP;	
@@ -279,10 +280,6 @@ public class SuricataServices implements ICSLService {
 		return configFileSectionName;
 	}
 
-	
-	
-	
-	
 	@Override
 	public boolean init(Json config, String cslDir) {
 		System.out.println("Initializing SSH suricata commands ..");
@@ -451,8 +448,8 @@ public class SuricataServices implements ICSLService {
 
 	@Override
 	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 

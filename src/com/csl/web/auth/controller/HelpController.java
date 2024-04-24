@@ -62,7 +62,7 @@ public class HelpController extends AbstractTokenController {
 
     			}
 
-                String s= ""+new ApiGetHelp().getHelp(apis, jj);
+                String s= ""+new ApiGetHelp().getHelp(apis, apis, jj);
                 response.type("text/html"); 
                 response.body(s);
                 return s;

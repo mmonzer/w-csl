@@ -15,13 +15,15 @@ public class CSLService implements ICSLService {
 
 	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
+
 	String name="#undef";
+	String description="#undef";
 	String configFileSectionName="config_"+name;;
 	
 	
 	public CSLService() {
 		this.name="my_service";
+		this.description="my_service description";
 		this.configFileSectionName="config_"+name;
 		apiCommands.setName(name);
 		

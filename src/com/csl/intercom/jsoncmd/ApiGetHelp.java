@@ -11,23 +11,23 @@ public class ApiGetHelp implements IApiGetHelp {
 
 
 	@Override
-	public String getHelp(List<String> apiNames, Json params) {
+	public String getHelp(List<String> apiNames, List<String> apiDescriptions, Json params) {
 
 		String s="";
 		String api="";
 		if (params.has("api")) {
 			api=params.get("api").asString();
 		}
-		for (String n:apiNames) {
+		for (int i=0; i<apiNames.size();i++) {
 			if (!api.isEmpty()) {
-				if (api.compareTo(n)==0) 	{
+				if (api.compareTo(apiNames.get(i))==0) 	{
 					
-					s=s+getHelp(n, params);
+					s=s+getHelp(apiNames.get(i), apiDescriptions.get(i), params);
 				}
 			}
 			else {
 				if (!params.has("all"))params.set("all", "");
-				s=s+getHelp(n, params);
+				s=s+getHelp(apiNames.get(i), apiDescriptions.get(i), params);
 			}
 			
 		}
@@ -62,7 +62,7 @@ public class ApiGetHelp implements IApiGetHelp {
 	}
 
 	@Override
-	public String getHelp(String apiName, Json params) {
+	public String getHelp(String apiName, String apiDescription, Json params) {
 
 		String styletr=" style =\"width:100 mm\" ";
 		String size="3";
@@ -73,6 +73,7 @@ public class ApiGetHelp implements IApiGetHelp {
 		
 		String s="";
 		s="<tr width=\"100mm\"><td colspan=\""+size+"\" class=\"apiname\">"+apiName+"</td></tr>";
+		s+="<tr width=\"100mm\"><td colspan=\""+size+"\" class=\"apiname\">"+apiDescription+"</td></tr>";
 
 		if (params.has("api")&&params.has("cmd")&params.has("url")) {
 			

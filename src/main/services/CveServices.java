@@ -23,13 +23,15 @@ import main.extensions.Utils;
 public class CveServices implements ICSLService {
 	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
+
+
 	String name="cve";
+	String description="cve";
 	String configFileSectionName="cve_service";
 	
 	public CveServices() {
 		this.name="cve";
+		this.description="cve description";
 		this.configFileSectionName="cve_service";
 	}
 	public CveServices(String name, String configFileSectionName) {
@@ -222,8 +224,8 @@ public class CveServices implements ICSLService {
 
 	@Override
 	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 	

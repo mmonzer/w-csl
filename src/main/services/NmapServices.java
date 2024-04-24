@@ -30,9 +30,10 @@ public class NmapServices implements ICSLService {
 	
 	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
+
+
 	String name="nmap";
+	String description="nmap description";
 	String configFileSectionName="nmap_service";
 	static String idsconf;
 	static Json tapList;
@@ -299,8 +300,8 @@ public class NmapServices implements ICSLService {
 
 	@Override
 	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 	

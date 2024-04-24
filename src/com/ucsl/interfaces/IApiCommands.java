@@ -5,6 +5,7 @@ import com.ucsl.json.Json;
 public interface IApiCommands {
 
 	void setName(String name);
+	void setDescription(String description);
 
 	String registerCmd(String name, IJsonCmd j);
 
@@ -12,6 +13,7 @@ public interface IApiCommands {
 
 	String getName();
 	String getPathName();
+	String getDescription();
 
 	public Json execJcmd(Json jCmd);
 	public Json exec(String name, Json params) ;

@@ -12,9 +12,10 @@ public class CSLServiceDemo implements ICSLService {
 	
 	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
+
+
 	String name="#undef";
+	String description="description";
 	String configFileSectionName="config_"+name;;
 	
 	
@@ -76,6 +77,7 @@ public class CSLServiceDemo implements ICSLService {
 	@Override
 	public IApiCommands getApiCommands() {
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 	

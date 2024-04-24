@@ -30,9 +30,10 @@ public class CSLServiceIDS implements ICSLService {
 
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 //	ApiCommands apiCommands= new ApiCommands("");
-	
+
 
 	String name="#undef";
+	String description="IDS description";
 	String configFileSectionName="config_"+name;
 
 
@@ -1453,8 +1454,8 @@ public class CSLServiceIDS implements ICSLService {
 
 	@Override
 	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 

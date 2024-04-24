@@ -50,6 +50,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
+    private final String description="discovery description";
     private final String configFileSectionName;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
@@ -808,6 +809,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     @Override
     public IApiCommands getApiCommands() {
         apiCommands.setName(name);
+        apiCommands.setDescription(description);
         return apiCommands;
     }
 

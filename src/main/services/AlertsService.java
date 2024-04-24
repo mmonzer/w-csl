@@ -19,9 +19,10 @@ public class AlertsService implements ICSLService {
 
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 //			new ApiCommands("");
-	
+
 
 	String name="#undef";
+	String description="alerts description";
 	String configFileSectionName="config_"+name;
 
 
@@ -544,8 +545,8 @@ public class AlertsService implements ICSLService {
 
 	@Override
 	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
 		apiCommands.setName(name);
+		apiCommands.setDescription(description);
 		return apiCommands;
 	}
 

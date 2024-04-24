@@ -39,26 +39,61 @@ import java.util.concurrent.TimeUnit;
 
 
 public class CSLContext implements ICSLContext, ICSLLogger {
+    /**
+     * Instance of logger for this class
+     */
     private static final Logger logger = LoggerFactory.getLogger(CSLContext.class);
 
+    /**
+     * Version of {@link CSLContext}
+     */
     public static String VERSION = "0.1.0-alpha1";
 
+    /**
+     * Date format : yyyy-MM-dd HH:mm:ss.SSS
+     */
     public static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
-
+    /**
+     * Default path for the configuration : current project path
+     */
     private static String DEFAULT_CONFIG_PATH = System.getProperty("user.dir");
+
+    /**
+     * Default relative path for the configuration file
+     */
     private static String DEFAULT_CONFIG_FILE = "runconfig" + File.separator + "CSLConfigIDS.json";
+
+    /**
+     * Default absolute path for the configuration file
+     */
     private String configFileName = DEFAULT_CONFIG_PATH + File.separator + DEFAULT_CONFIG_FILE;
 
     //private String userDir=System.getProperty("user.dir");
     private String cslConfDir = "";
 
+
+    /**
+     * The only instance of the class
+     */
     public static CSLContext instance = new CSLContext();
+    /**
+     * The only instance of the CSLLogger
+     */
     public static CSLLogger cslLogger = CSLLogger.instance;
 
+    /**
+     * If the CSL correspond to CSL-Client. Initialized at postInit.
+     */
+    boolean client = false;
+    /**
+     * If the CSL correspond to CSL-Server. Initialized at postInit.
+     */
+    boolean server = false;
 
-    boolean client = false, server = false;
-
+    /**
+     * Instance of the alert manager.
+     */
     CSLAlertManager cslAlertManager = null;
     private IDSRunner idsRunner = null;
     private IDSParams idsParams = null;
@@ -67,12 +102,19 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     private ZoneId zoneId = null;
 
 
+    /**
+     * Instance of the database server
+     */
     DataBaseServer databaseServer = null;
 
-
+    /**
+     * Instance of the http server
+     */
     CSLHttpServer cslHttpServer = null;
 
-
+    /**
+     * Instance of the UDP server
+     */
     CSLUDPServer cslUDPServer = null;
 	
 	
@@ -149,9 +191,13 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     private boolean testMode = false;
 
     private IFileStoreService fileUtils;
-
+    /**
+     * Instance of the file log factory
+     */
     private IFileLogFactory fileLogFactory;
-
+    /**
+     * Instance of the IDS main processor
+     */
     private IIDSMainProcessor idsMainProcessor;
 
 

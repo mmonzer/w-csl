@@ -204,41 +204,41 @@ Dockerfile for the docker configuration for the CSL-Server.
 ### entrypoint.sh
 Docker entrypoint script for CSL-Client adn CSL-Server.
 ### export*.xml
-Export configuration files for creating the different jars: clients, servers, tests, ... TODO: cleaning
+Export configuration files for creating the different jars: clients, servers, tests, ... REMARK : cleaning?
 ### jar-in-jar-loader.zip
 Jar loader for the different jars created with previous configurations.
 ### TRACE*.txt
-Running traces.  TODO: remove them and if created by the Project, store them somewhere away from the root of the project.
+Running traces.  REMARK : remove them , or if created by the project, store them somewhere away from the root of the project?
 ### W_CSL.iml
 Eclipse module manager configuration.
 ---
 
 # Code organisation
 ## - scr / com
-TODO : Contains all the commercial-logic classes of the CSL-client, the real and bulk functionalities of CSL-Client.
+TODO : Contains all packages for the project CSL.
 ### scr / com / csl
 Contains all the business-logic classes of the CSL-client, the real and bulk functionalities of CSL-Client.
 - `scr/com/csl/alert` : Contains all alert managing files.
 - `scr/com/csl/core` : Contains all the global Context files.
 - `scr/com/csl/defaultclasses` : Generic classes.
-- `scr/com/csl/devdb` : TODO :
+- `scr/com/csl/devdb` : TODO : complete
 - `scr/com/csl/ids` : Contains different tools for managing the IDS
 - `scr/com/csl/intercom` : Contains different packages for managing the communication with the 
 different connexions: APIHandlers, MQttHandlers, ... It contains also some json formating tools.
 - `scr/com/csl/interfaces` : Contains the bulk of interfaces of this package
-- `scr/com/csl/logger` : Contains some tools for logging. TODO : same classes seems mixed with `scr/com/csl/defaultclasses`
+- `scr/com/csl/logger` : Contains some tools for logging. REMARK : same classes seem mixed with `scr/com/csl/defaultclasses`
 - `scr/com/csl/modules` : Contains modules (only IDS module).
 - `scr/com/csl/monitor` : Contains classes for the activity history and monitoring.
-- `scr/com/csl/udp` : Contains classes for UDP connexions. TODO: maybe move this  package into web?
+- `scr/com/csl/udp` : Contains classes for UDP connexions. REMARK: maybe move this package into web?
 - `scr/com/csl/util` : Contains helper tools for this package
 - `scr/com/csl/web` : Contains helper tools for connexion, like authentication, proxy, low level web sockets, or servers.
 ### scr / com / ucsl
-Interfaces some tools, some json classes and the miniserver. TODO: complete
+Interfaces some tools, some json classes and the miniserver. TODO: complete REMARK: logic of this package?
 ### scr / com / wcsl.ids
 Processor, managers and factories for the IDS.
 
 ## - src / io.jsonwebtoken
-jsonwebtoken library downloaded. TODO : replace by the library jsonwebtoken.
+jsonwebtoken library downloaded. REMARK : replace by the library jsonwebtoken?
 
 ## - src / ipublic
 An HMI to control something through WebSocket at localhost:63342, probably a CSL Demo. DEPRECATED?
@@ -249,9 +249,9 @@ some business logic.
 ### scr / main / demo
 Demo and tests files
 ### scr / main / extensions
-TODO
+TODO : complete
 ### scr / main / help
-TODO
+TODO : complete
 ### scr / main / services
 Router for the API commands separated in services depending on the scope of these commands. These services may contain some business logic.
 These services are detailed in section [Services](#services).
@@ -260,13 +260,13 @@ Dummy tests for API runner and UDP connexion
 ### scr / main / util
 Some tools.
 ### scr / main / xcom
-Web socket and Main Remote. TODO : complete
+Web socket and Main Remote. REMARK : maybe this can be moved into `src/com`?
 ### scr / main / CSLIDSMainClient.java
 JVM entrypoint for the CSL-Client. Quite similar to CSL-Server.
 ### scr / main / CSLIDSMainServer.java
 JVM entrypoint for the CSL-Server. Quite similar to CSL-Client.
 ### scr / main / KillMosquito.java
-TODO
+TODO : complete
 
 ## - src / org
 Some downloaded packets. TODO : replace by the libraries.
@@ -280,7 +280,13 @@ Spark downloaded packet. TODO : replace by the library spark.
 **End point**: `/alert`
 
 **Description**: Service in charge of the alerts send by the IDS, in particular Suricata. It exposes an API to
-configure and retrieve the alerts and the corresponding stats.
+configure and retrieve the alerts and the corresponding stats. In particular, one thread stocks them in a queue 
+and another thread treat them and forward them upwards.
+<details>
+<summary>Show image of alert progress</summary>
+
+![Progress of alerts](images/alert_progress.png)
+</details>
 
 **Connexions**:
 - [WSS](#wss) : channel between CSL-Server and CSL-Client for the information of the alerts. CSL-Server is the server,
@@ -301,7 +307,7 @@ TODO : complete
 **End point**: `/demo`
 
 **Description**:
-Dummy api service: TODO: remove service?
+Dummy api service: REMARK: remove service?
 
 **Connexions**:
 Not used
@@ -351,6 +357,16 @@ It also allows to know the current status of the requested scans.
 - [UDP](#udp) : this protocol is used to receive the alerts from the CSL-Probe module. Here CSL-Client plays the role
   of server. But it is also used to send the alerts to a UDP viewer, here CSL-(TODO: Client of Server) plays the role of client.
 
+## JSON Database Service
+**End point**: `/JSONdatabase`
+
+**Description**:
+Dump and load json file for the database.
+
+**Connexions**:
+- [WSS](#wss) : channel between CSL-Server and CSL-Client for all the important data. CSL-Server is the server,
+  CSL-Client is the client but the communications start at CSL-Server.
+
 ## Nmap Service
 **End point**: `/nmap`
 
@@ -398,8 +414,8 @@ The different elements of the project and the connexions between them:
 - Database Remote Server
 - CSL-Server : remote
 - CSL-Client : installed in the client network. It plays the role of concentrator and forwarder.
-- Module CSL-Scan : installed in the client network.
-- Module CSL-Probe : installed in the client network.
+- [Module CSL-Scan](#csl-scan) : installed in the client network.
+- [Module CSL-Probe](#csl-probe) : installed in the client network.
 
 ![Schema of the architecture of communications between the different elements of the project.](images/architecture_global.png)
 
@@ -419,10 +435,12 @@ However, the notifications are sent from the CSL-Server to the CSL-Client.
 **Package** : `com.csl.intercom.broker`
 
 **Initialisation trace at MainClient** :
-TODO: find trace
+`CSLIDSMainClient →
+JServiceLoader.registerService →
+DiscoveryService.init → mqttBroker.subscribeToTopic`
 
 **Initialisation trace at MainServer** :
-`CSLIDSMainClient → CSLContext.instance.postInit → CSLHTTPServer.initServer(JSON) →
+`CSLIDSMainServer → CSLContext.instance.postInit → CSLHTTPServer.initServer(JSON) →
 CSLHTTPServer.initServer(ServerConfig) → WebSocket.registerAll →
 JServiceLoader.getCSLInterModuleCommunicationManager →
 CSLInterModuleCommunicationManager → SocketMessageMQTTHandler`
@@ -442,13 +460,12 @@ However, the communication is bidirectional.
 CSLIDSMainClient.connectToServer → WebsocketClientEndpoint`
 
 **Initialisation trace at MainServer** :
-``
-TODO: complete
+`CSLIDSMainServer → CSLContext.instance.init →
+CSLHttpServer`
 
 ## Secured API:
-**Description**: API Rest of the Database exposed to the CSL-(TODO: Client or Server). 
-It is also used for exposing the API of CSL-Server to the HMI.
-TODO: complete
+**Description**: API Rest of the Database exposed to the CSL-(TODO : Client or Server). 
+This type of connexion is also used for exposing the public API from CSL-Server to the HMI.
 
 **Architecture**: Database Remote Server is the server of the API. CSL-Server is the server
 for the public API.
@@ -456,12 +473,10 @@ for the public API.
 **Package** : `com.csl.web.database`, `com.csl.web.websockets`, `com.csl.intercom.dbapi`
 
 **Initialisation trace at MainClient** :
-``
-TODO : never?
+Not used.
 
 **Initialisation trace at MainServer** :
-``
-TODO: never?
+`CSLIDSMainServer → ApiHttpServer().createServer`
 
 ## API:
 **Description**: API Rest of a module (CSL-Scan, CSL-Probe). It is exposed to the CSL-Client, which interacts via 
@@ -470,7 +485,7 @@ module. These HTTP connexions are secured with a VPN.
 
 **Architecture**: modules are the servers and CSL-Client is the client of all of them.
 
-**Package** : `com.csl.intercom.cslscan`, ... TODO : Uniform the API clients...
+**Package** : `com.csl.intercom.cslscan`
 
 **Initialisation trace at MainClient** :
 `CSLIDSMainClient →
@@ -499,7 +514,7 @@ Not used
 
 ## UDP:
 **Description**: protocol to forward the notifications from CSL-Probe to the socket in the case of the CSL-Client.
-and to (TODO) in the case of CSL-Server. The received messages are stored into a queue by a listening thread and
+and to (TODO : ?) in the case of CSL-Server. The received messages are stored into a queue by a listening thread and
 managed by another thread that reads the queue.
 
 **Architecture**: CSL-Client is the server side to module (CSL-Probe). CSL-Server plays the role for client side
@@ -545,7 +560,7 @@ Not used
 
 # Modules
 ## CSL-Scan
-TODO: 
+TODO: complete
 
 ## CSL-Probe
 Module that listens to the network flow and send alerts when the custom rules are matched. These rules and other 

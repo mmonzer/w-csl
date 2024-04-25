@@ -263,7 +263,7 @@ public class SuricataServices extends Service {
 	 */
 	public SuricataServices() {
 		this("suricata",
-				"suricata_description",
+				"Service for dealing with suricata configuration.",
 				"ssh_service");
 	}
 

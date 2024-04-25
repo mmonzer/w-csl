@@ -7,9 +7,17 @@ import com.ucsl.interfaces.IApiGetHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
+/**
+ * Helper class that builds the apihelp HTML page.
+ */
 public class ApiGetHelp implements IApiGetHelp {
-
-
+	/**
+	 * Method that builds the body of HTML page from the api data.
+	 * @param apiNames list of names of the api endpoints
+	 * @param apiDescriptions list of descriptions of the api endpoints
+	 * @param params parameters passed through the request
+	 * @return the HTML page in f{@link String} format.
+	 */
 	@Override
 	public String getHelp(List<String> apiNames, List<String> apiDescriptions, Json params) {
 
@@ -38,11 +46,12 @@ public class ApiGetHelp implements IApiGetHelp {
 
 	}
 
-
-	private String getStyle(Json params) {
-		return getStyle(params.has("print"));
-	}
-
+	/**
+	 * Method that builds the HTML page from the api data.
+	 * @param sbody body of the HTML page
+	 * @param params parameters passed through the request
+	 * @return the HTML page in f{@link String} format.
+	 */
 	private String generatePage(String sbody, Json params) {
 
 		String ns="<!DOCTYPE html>\n" + 
@@ -61,6 +70,13 @@ public class ApiGetHelp implements IApiGetHelp {
 		return ns;
 	}
 
+	/**
+	 * Method that builds the part of an API endpoint.
+	 * @param apiName name of the api endpoint
+	 * @param apiDescription description of the api endpoint
+	 * @param params parameters passed through the request
+	 * @return the HTML page in f{@link String} format.
+	 */
 	@Override
 	public String getHelp(String apiName, String apiDescription, Json params) {
 
@@ -73,7 +89,7 @@ public class ApiGetHelp implements IApiGetHelp {
 		
 		String s="";
 		s="<tr width=\"100mm\"><td colspan=\""+size+"\" class=\"apiname\">"+apiName+"</td></tr>";
-		s+="<tr width=\"100mm\"><td colspan=\""+size+"\" class=\"apiname\">"+apiDescription+"</td></tr>";
+		s+="<tr width=\"100mm\"><td colspan=\""+size+"\" class=\"apidescription\">"+apiDescription+"</td></tr>";
 
 		if (params.has("api")&&params.has("cmd")&params.has("url")) {
 			
@@ -89,7 +105,6 @@ public class ApiGetHelp implements IApiGetHelp {
 		
 		Json j= getHelpInfoAsJson(apiName,  params);
 
-		System.out.println(j);
 		String cmd="";
 		if (params.has("cmd")) {
 			cmd=params.get("cmd").asString();
@@ -99,8 +114,9 @@ public class ApiGetHelp implements IApiGetHelp {
 			if (j.has("error")) {
 				s=s+"<tr width=\"100mm\"><td colspan=\"\"+size+\"\" >"+"Not available</td></tr>";
 			}
-			else
-			s=s+"<tr><td colspan=\"\"+size+\"\" >"+"Not available</td></tr>";
+			else {
+				s = s + "<tr><td colspan=\"\"+size+\"\" >" + "Not available</td></tr>";
+			}
 		}
 		else {
 
@@ -187,15 +203,10 @@ public class ApiGetHelp implements IApiGetHelp {
 				}
 			}
 		}
-
-		//return "<table class=\"helptable\">"+s+"</table>";
-
 		return s;
-
-
 	}
 
-	private String formatJson(Json j, boolean full,String url) {
+	private String formatJson(Json j, boolean full, String url) {
 		
 		boolean addlink=false;
 		String s=JsonUtil.prettyPrint(j);
@@ -212,11 +223,8 @@ public class ApiGetHelp implements IApiGetHelp {
 		if (addlink) z=z+"<a href=\""+url+" \" target=\"_blank\" >More ...</a>";
 		return z;
 	}
-	
 
 	private Json getHelpInfoAsJson(String apiName, Json jparams) {
-
-
 		//Json jparams= Json.object();
 		jparams.set("user", "user1");
 		//jparams.set("op", "LST_DEVICES");
@@ -227,15 +235,24 @@ public class ApiGetHelp implements IApiGetHelp {
 		return r;
 	}
 
+	/**
+	 * Creates the style with a width depending on the parameters of the request.
+	 * @param params parameters passed through the request
+	 * @return the style in {@link String} format.
+	 */
+	private String getStyle(Json params) {
+		return getStyle(params.has("print"));
+	}
 
-	
-	
-	
+	/**
+	 * Creates the style for the apihelp endpoint HTML webpage.
+	 * @param fixedWidth if the width is fixed or not
+	 * @return the style in format {@link String}.
+	 */
 	private String  getStyle(boolean fixedWidth) {
 	
 		String sw="width: 100%;";
 		if (fixedWidth) sw="width:170mm; table-layout:fixed";
-		
 		
 		String style2=
 			".helptable {\n" + 
@@ -252,19 +269,27 @@ public class ApiGetHelp implements IApiGetHelp {
 			"\n" + 
 			".helptable tr:nth-child(odd){background-color: #f2f2f2;}\n" + 
 			"\n" + 
-			".helptable tr:hover {background-color: #ddd;}\n" + 
-			".helptable td.apiname {\n" + 
-			"  border: 1px solid #ddd;\n" + 
-			"  padding: 8px;\n" + 
-			"  background-color: #04AA6D;\n" + 
+			".helptable tr:hover {background-color: #ddd;}\n" +
+			".helptable td.apiname {\n" +
+			"  border: 1px solid #ddd;\n" +
+			"  border-top: 6px solid #000;\n" +
+			"  padding: 8px;\n" +
+			"  background-color: #90D26D;\n" +
 			"  font-size: 150%; text-align:center;"+
-			"}\n" + 
+			"}\n" +
+			""+
+			".helptable td.apidescription {\n" +
+			"  border: 1px solid #ddd;\n" +
+			"  padding: 8px;\n" +
+			"  background-color: #D9EDBF;\n" +
+			"  font-size: 100%; text-align:center;"+
+			"}\n" +
 			""+
 			".helptable th {\n" + 
 			"  padding-top: 12px;\n" + 
 			"  padding-bottom: 12px;\n" + 
 			"  text-align: left;\n" + 
-			"  background-color:  #79e095;\n" + 
+			"  background-color:  #2C7865;\n" +
 			"  color: white;\n" + 
 			"}";
 	

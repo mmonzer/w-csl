@@ -27,7 +27,7 @@ public class AlertsService extends Service {
 	 */
 	public AlertsService() {
 		this("alerts",
-				"alerts description",
+				"Service that deals with the IDS alerts. Get the alerts and change the different parameters",
 	"ids_conf");
 	}
 

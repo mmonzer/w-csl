@@ -40,7 +40,7 @@ public class CSLServiceIDS extends Service {
 	 */
 	public CSLServiceIDS() {
 		this("ids",
-				"ids description",
+				"Service for managing previous IDS: start/stop, configure, change the running mode (learning, idle, recording, ...), ...",
 				"ids_conf");
 	}
 

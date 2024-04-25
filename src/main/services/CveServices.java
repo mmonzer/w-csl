@@ -37,22 +37,16 @@ public class CveServices extends Service {
 	}
 
 	/**
-	 * Initialization of the CveServices commands
+	 * Initialization of the CveServices commands.
+	 * It can be request the list of CVE depending on the parameter:
+	 *  - "any" : sends all the CVE of every machine
+	 *  - <uuid> : sends the CVE related to the given machine
 	 * @param jConfig the configuration section of the configuration file
 	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
-		/*
-		 * Permet de récupérer la liste des CVE depuis le backend pour les envoyer au front.
-		 * Le fichier renvoyé est une partie ou l'intégralité du fichier cve.json en fonction du paramètre recu.
-		 * Paramètre : Un string de la forme suivante : 
-		 * 	"any" va renvoyer toutes les CVE de toutes les machines
-		 * 	<uuid> va renvoyer les CVE associées à la machine désignée par <uuid> 
-		 */
-
-
 		addCmd("getCve", new IJsonCmd() {
 			
 			@Override

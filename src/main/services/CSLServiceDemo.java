@@ -12,7 +12,9 @@ public class CSLServiceDemo extends Service {
 	 * Default constructor of the Demo service.
 	 */
 	public CSLServiceDemo() {
-		this("demo","demo description","demo_conf");
+		this("demo",
+				"Demo service with dummy commands to check the api",
+				"demo_conf");
 	}
 
 	/**

@@ -21,9 +21,26 @@ public class StatusService extends Service {
      */
     private StatusNotifier notifier = null;
 
+    /**
+     * Default constructor of the Status service
+     */
+    public StatusService() {
+        this("status",
+                "Service for checking and changing if we want to receive the notifications.",
+                "status");
+    }
 
     /**
-     * Generic function where one will add the custom commands
+     * Generic constructor of the Status service
+     */
+    public StatusService(String name, String description, String configFileSectionName) {
+        super(name,
+                description,
+                configFileSectionName);
+    }
+
+    /**
+     * Initialization of the Status service commands
      * @param jConfig the configuration section of the configuration file
      * @param cslDir the CSL directory
      * @return true if the initialization happened with no problems, false otherwise.
@@ -52,14 +69,5 @@ public class StatusService extends Service {
 
         System.out.println("Status service operational");
         return true;
-    }
-
-    /**
-     * Creates the instance of Service with the proper configuration.
-     */
-    public StatusService() {
-        super("status",
-                "status description",
-                "status");
     }
 }

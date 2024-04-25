@@ -65,7 +65,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * Generic constructor of the Discovery service.
      */
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
-        super(name, "discovery description", configFileSectionName);
+        super(name,
+            "Service in charge of the SNMP manager microservice.\n" +
+            "It should expose an API to request a scan and fetch the database.\n" +
+            "It also manages CSL-Scan and the scanning.",
+            configFileSectionName);
         this.isConcentrator = isConcentrator;
     }
 

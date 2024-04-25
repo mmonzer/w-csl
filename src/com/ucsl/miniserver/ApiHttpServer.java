@@ -65,7 +65,7 @@ public class ApiHttpServer {
          this.server.start();
       }
 
-      System.out.println("Started");
+      System.out.println("Miniserver started");
    }
 
    class CustomHandler0 implements HttpHandler {
@@ -224,7 +224,6 @@ public class ApiHttpServer {
       }
 
       public void handle(HttpExchange exchange) throws IOException {
-         System.out.println("apihelp");
          String requestMethod = exchange.getRequestMethod();
          if (ApiHttpServer.this.debug) {
             this.printRequestInfo(exchange);

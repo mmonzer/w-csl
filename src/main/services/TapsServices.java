@@ -653,7 +653,7 @@ public class TapsServices extends Service {
 	 */
 	public TapsServices() {
 		this("taps",
-				"taps description",
+				"Service for managing the different CSL-Probes: adding, configuring, ...",
 				"ssh_service");
 	}
 

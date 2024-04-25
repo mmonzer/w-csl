@@ -21,7 +21,9 @@ public class MonitorService extends Service {
 	 * Default constructor of the Monitor service.
 	 */
 	public MonitorService() {
-		this("monitor"," monitor description","ids_conf");
+		this("monitor",
+				"Service for getting a general view fo the different devices and CSL-Probes",
+				"ids_conf");
 	}
 
 	/**

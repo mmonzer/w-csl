@@ -31,7 +31,7 @@ public class CSLServiceJsonDataBase extends Service {
 	 */
 	public CSLServiceJsonDataBase() {
 		this("JSONdatabase",
-				"JSONdatabase description",
+				"Service for dumping and loading the Database in JSON format",
 				"database_server_conf");
 	}
 

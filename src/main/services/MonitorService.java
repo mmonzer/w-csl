@@ -16,59 +16,30 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 
-public class MonitorService implements ICSLService {
-
-
-	//ApiCommands apiCommands= new ApiCommands("");
-	
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	String name="#undef";
-	String description="monitor description";
-	String configFileSectionName="config_"+name;
-
-
-	//private IIDSRunner idsRunner=null;
-
-	/*public void setIDSRunner(IDSRunner idsRunner) {
-		// TODO Auto-generated method stub
-		this.idsRunner=idsRunner;
-	} */
-	
+public class MonitorService extends Service {
+	/**
+	 * Default constructor of the Monitor service.
+	 */
 	public MonitorService() {
-		this.name="monitor";
-		this.configFileSectionName="ids_conf";
-
-		
+		this("monitor"," monitor description","ids_conf");
 	}
 
-	public MonitorService(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
+	/**
+	 * Generic constructor of the Monitor service.
+	 */
+	public MonitorService(String name, String description, String configFileSectionName) {
+		super(name,description,configFileSectionName);
 	}
 
-	
-
-
-
-	public String getName() {
-		return name;
-	}
-
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
-
-	}
-
+	/**
+	 * Initialization of the Monitor commands
+	 * @param jConfig the configuration section of the configuration file
+	 * @param cslDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
+	@Override
 	public boolean init(Json jConfig, String cslDir) {
-		
-		
 		//idsRunner=CSLContext.instance.getIdsRunner();
-
-		
-		
-		
-		
-		
 		
 		addCmd("stats_devices", new IJsonCmd() {
 
@@ -116,19 +87,12 @@ public class MonitorService implements ICSLService {
 				.setResult("{all:n, running: ", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
-		
-		
-		
-		
 
 		return true;  // ok to start
 	}
 
 	static private  String readAnyFile(String path) 
 	{
-
-
-
 		String content = "";
 
 		try
@@ -173,33 +137,4 @@ public class MonitorService implements ICSLService {
 		if (s.length()<=MAX) return s;
 		else return s.substring(0,MAX-1)+"...";
 	}
-
-
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		apiCommands.setDescription(description);
-		return apiCommands;
-	}
-
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	
-	
-	
-
 }

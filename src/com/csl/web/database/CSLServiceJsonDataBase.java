@@ -17,42 +17,46 @@ import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import main.services.Service;
 
-public class CSLServiceJsonDataBase implements ICSLService {
+public class CSLServiceJsonDataBase extends Service {
 
 	
 	private static   String datafiledir = System.getProperty("user.dir")+File.separatorChar+"datafile";
-
-
-
-
 	static boolean debug =true;
 	//static CSLAlertManager cslAlertManager = new CSLAlertManager("Intrusion detection");
-	IApiCommands apiCommands=new ApiCommandsFactory().createApiCommands("/"+"dbjson");
-		//	new ApiCommands("/"+"dbjson");
-	
-	
-	
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		return apiCommands;
+
+	/**
+	 * Default constructor of the JsonDatabase service.
+	 */
+	public CSLServiceJsonDataBase() {
+		this("JSONdatabase",
+				"JSONdatabase description",
+				"database_server_conf");
 	}
 
-	@Override
-	public String getConfigFileSectionName() {
-		// TODO Auto-generated method stub
-		return "database_server_conf";
+	/**
+	 * Generic constructor of the JsonDatabase service.
+	 */
+	public CSLServiceJsonDataBase(String name, String description, String configFileSectionName) {
+		super(name, description, configFileSectionName,"/"+"dbjson");
 	}
 
+	/**
+	 * Function called when stopping the service
+	 * @return true as default
+	 */
 	@Override
 	public boolean terminate() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 
-
-	
+	/**
+	 * Initialization of the JsonDatabase service commands
+	 * @param j the configuration section of the configuration file
+	 * @param userDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
 	public boolean init(Json j, String userDir) {
 
 		
@@ -174,9 +178,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		
 		return true;
 	}
-	
-	
-	
+
 	public  String cleanDataFileName(String filename) {
 
 
@@ -200,7 +202,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		return filename;
 	}
 
-
 	private  String writeDataFile(String path, String content) {
 
 		path=datafiledir+File.separator+path;
@@ -214,7 +215,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		}
 
 	}
-
 
 	private  String deleteDataFile(String path) {
 
@@ -255,8 +255,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 		//return content;
 	}
-
-
 	private  void sendEventFileModified(String fileName,String uuid) {
 
 		Json j=Json.object();
@@ -267,9 +265,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 //		CSLWebSocketForDatabase.broadcastMessageJson("database",j );
 		CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_DATABASE,j );
 	}
-
-
-	
 
 	private  List<String> listJsonFiles() {
 
@@ -307,9 +302,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 		return j;
 	}
-
-
-
 
 	public Json saveJsonAsDataFile(String fileName,Json data) {
 
@@ -363,11 +355,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		return j;
 	}
 
-
-
-
-
-	public boolean  docExists(String name) {
+	public boolean docExists(String name) {
 		String fileName=cleanDataFileName(name);
 		String path=datafiledir+File.separator+fileName+".json";
 
@@ -375,7 +363,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 
 	}
-
 
 	public Json loadDataFileAsJson(String name) {
 
@@ -404,8 +391,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		return j;
 	}
 
-
-
 	public Json deleteDataFileJson(String name) {
 		String fileName=cleanDataFileName(name);
 	//	IDSTrace.log(IDSTrace.WEB_DATABASE,"Delete jsonfile:"+fileName);
@@ -417,7 +402,4 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		return j;
 
 	}
-
-		
-
 }

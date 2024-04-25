@@ -15,14 +15,19 @@ import com.ucsl.json.JsonUtil;
  * Control the status notifications, mostly allow to remotely control the sending of them.
  * Also provides a command to directly retrieve the status message.
  */
-public class StatusService implements ICSLService {
-    private String name = "status";
-    private String description = "status description";
-    private String configFileSectionName = "status";
-    private IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
+public class StatusService extends Service {
+    /**
+     * Status of the notifier
+     */
     private StatusNotifier notifier = null;
 
 
+    /**
+     * Generic function where one will add the custom commands
+     * @param jConfig the configuration section of the configuration file
+     * @param cslDir the CSL directory
+     * @return true if the initialization happened with no problems, false otherwise.
+     */
     @Override
     public boolean init(Json jConfig, String cslDir) {
         System.out.println("Initializing status service ...");
@@ -49,43 +54,12 @@ public class StatusService implements ICSLService {
         return true;
     }
 
-    @Override
-    public String getConfigFileSectionName() {
-        return configFileSectionName;
-    }
-
-    @Override
-    public IApiCommands getApiCommands() {
-        apiCommands.setName(name);
-        apiCommands.setDescription(description);
-        return apiCommands;
-    }
-
-    @Override
-    public boolean terminate() {
-        return false;
-    }
-
     /**
-     * Register an API command.
-     *
-     * @param name The name of the command.
-     * @param cmd  The callback to be executed when the command is invoked.
-     * @return A {@link String}
+     * Creates the instance of Service with the proper configuration.
      */
-    public String addCmd(String name, IJsonCmd cmd) {
-        return apiCommands.registerCmd(name, cmd);
-    }
-
-    /**
-     * Register an API command.
-     *
-     * @param name The name of the command.
-     * @param cmd  The callback to be executed when the command is invoked.
-     * @param help The helper to display in the '/apihelp' page.
-     * @return A {@link String}
-     */
-    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
-        return apiCommands.registerCmd(name, cmd, help);
+    public StatusService() {
+        super("status",
+                "status description",
+                "status");
     }
 }

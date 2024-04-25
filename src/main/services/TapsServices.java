@@ -51,19 +51,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TapsServices implements ICSLService {
-	//ApiCommands apiCommands= new ApiCommands("");
-
-
-
-
+public class TapsServices extends Service {
 	private static final String SCRIPTS_DIR = "~/csl/scripts";
 	private static final String START_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./launchTap.sh & exit";
 	private static final String STOP_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./killTaps.sh";
 
 	private static final String REPLAY = "cd " + SCRIPTS_DIR + " && sudo ./replay.sh ";
 
-	
 	private static final String STOP_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./killSuricata.sh";
 	private static final String START_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./launchSuricata.sh";
 	private static final String CLEAR_SURICATA_LOG = "sudo rm /var/log/suricata/suricata.log";
@@ -71,13 +65,7 @@ public class TapsServices implements ICSLService {
 	private static final String REMOVE_ADDITIONAL_RULES = "cd " + SCRIPTS_DIR + " && sudo ./removeAdditionnalRules.sh";
 	private static final String RELOAD_RULES = "cd " + SCRIPTS_DIR + " && sudo ./reloadSuricataRules.sh";
 
-	
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-
-	String name="taps";
-	String description="taps description";
-	String configFileSectionName="ssh_service";	
-	static ArrayList<Json> configuredTaps;  
+	static ArrayList<Json> configuredTaps;
 	static String localIP;	
 	static String localPort;
 	static String knownHostFilePath;
@@ -176,8 +164,7 @@ public class TapsServices implements ICSLService {
 		out.at("result", output);
 		return out;
 	}
-	
-	
+
 	public static Json startReplay(String name, String pcap) {
 		String id = "", password ="";
 		String ip = null;
@@ -536,6 +523,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 	}
+
 	public static void setNetworkName(String name, String networkName) {
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
@@ -544,6 +532,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 	}
+
 	public static Json startSuricata(String name) {
 		String id = "", password ="";
 		int port = 22;
@@ -608,8 +597,6 @@ public class TapsServices implements ICSLService {
 		return out;
 	}
 	
-
-
 	private static Json reloadRulesParseOutput(String output) {
 		if (output == null) {
 			return Json.object();
@@ -630,6 +617,7 @@ public class TapsServices implements ICSLService {
 		}
 		return out;
 	}
+
 	public static Json reloadRules(String name) {
 		String id = "", password ="";
 		int port = 22;
@@ -660,37 +648,30 @@ public class TapsServices implements ICSLService {
 		return reloadRulesParseOutput(output);
 	}
 
-
+	/**
+	 * Default constructor of the Suricata service.
+	 */
 	public TapsServices() {
-		this.name="taps";
-		this.configFileSectionName="ssh_service";
-	}
-	
-	public TapsServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-	
-	
-
-	@Override
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
+		this("taps",
+				"taps description",
+				"ssh_service");
 	}
 
-	
-	
+	/**
+	 * Generic constructor of the Suricata service.
+	 */
+	public TapsServices(String name, String description, String configFileSectionName) {
+		super(name, description, configFileSectionName);
+	}
 	
 	public String getTapName(Json j) {
-		
 		
 		String n=JsonUtil.getStringFromJson(j, "name", "");
 		return n;
 	
 		
 	}
-	
-	
+
 	public String tapNameHasError(Json j) {
 		
 		
@@ -707,8 +688,7 @@ public class TapsServices implements ICSLService {
 		return "";
 		
 	}
-	
-	
+
 	public String missingParams(Json j,String ... params) {
 		
 		String e="";
@@ -721,7 +701,13 @@ public class TapsServices implements ICSLService {
 		if (!e.isEmpty()) e="Missing params:"+e;
 		return e;
 	}
-	
+
+	/**
+	 * Initialization of the TAPs commands
+	 * @param config the configuration section of the configuration file
+	 * @param cslDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
 	@Override
 	public boolean init(Json config, String cslDir) {
 		System.out.println("Initializing SSH taps commands ..");
@@ -1315,28 +1301,5 @@ public class TapsServices implements ICSLService {
 		
 		
 		return true;
-	}
-
-	
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		apiCommands.setName(name);
-		apiCommands.setDescription(description);
-		return apiCommands;
-	}
-	
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

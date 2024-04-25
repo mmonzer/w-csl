@@ -8,58 +8,30 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 
-public class CSLService implements ICSLService {
-	
-	
-	//HashMap<String, JsonCmd> cmds = new HashMap<String, JsonCmd>();
-
-	//ApiCommands apiCommands= new ApiCommands("");
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-
-	String name="#undef";
-	String description="#undef";
-	String configFileSectionName="config_"+name;;
-	
-	
+public class CSLService extends Service {
+	/**
+	 * Default constructor of the second Demo service.
+	 */
 	public CSLService() {
-		this.name="my_service";
-		this.description="my_service description";
-		this.configFileSectionName="config_"+name;
-		apiCommands.setName(name);
-		
-		
+		this("my_service",
+		 "my_service description",
+				"my_service");
 	}
-	
-	public CSLService(String name) {
-		this.name=name;
-		this.configFileSectionName="config_"+name;
-		apiCommands.setName(name);
-		
-		
+
+	/**
+	 * Generic constructor of the second Demo service.
+	 */
+	public CSLService(String name, String description, String configFileSectionName) {
+		super(name, description, configFileSectionName);
 	}
-	public CSLService(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-	
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public String getConfigFileSectionName() {
-		return "my_service";
-		
-	}
-	
+
+	/**
+	 * Initialization of a second Demo service commands
+	 * @param jConfig the configuration section of the configuration file
+	 * @param cslDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
 	public boolean init(Json jConfig, String cslDir) {
-		
-		
 		addCmd("test", new IJsonCmd() {
 			
 			@Override
@@ -75,25 +47,5 @@ public class CSLService implements ICSLService {
 		});
 		return true;  // ok to start
 	}
-	
-
-	
-	
-	
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		return apiCommands;
-	}
-	
 	
 }

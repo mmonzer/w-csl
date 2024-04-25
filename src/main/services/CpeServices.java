@@ -16,33 +16,29 @@ import com.ucsl.json.Json;
 
 import main.extensions.CpeSearch;
 
-public class CpeServices implements ICSLService {
-//	ApiCommands apiCommands= new ApiCommands("");
-	
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-
-	String name="cpe";
-	String description="cpe description";
-	String configFileSectionName="cpe_service";
-	
+public class CpeServices extends Service {
+	/**
+	 * Default constructor of the CPE service.
+	 */
 	public CpeServices() {
-		this.name="cpe";
-		this.configFileSectionName="cpe_service";
-	}
-	
-	public CpeServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-	
-	
-
-	@Override
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
+		this("cpe",
+				"cpe description",
+		"cpe_service");
 	}
 
-	
+	/**
+	 * Generic constructor of the CPE service.
+	 */
+	public CpeServices(String name, String description, String configFileSectionName) {
+		super(name, description,configFileSectionName);
+	}
+
+	/**
+	 * Initialization of the CPE service commands
+	 * @param jConfig the configuration section of the configuration file
+	 * @param cslDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("Initialising CPE functions .."+jConfig);
@@ -97,27 +93,4 @@ public class CpeServices implements ICSLService {
 		});			
 		return true;
 	}
-
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		apiCommands.setName(name);
-		apiCommands.setDescription(description);
-		return apiCommands;
-	}
-
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
 }

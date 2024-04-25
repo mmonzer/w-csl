@@ -19,13 +19,7 @@ import com.ucsl.json.Json;
 
 import main.extensions.SshUtils;
 
-public class SuricataServices implements ICSLService {
-	//ApiCommands apiCommands= new ApiCommands("");
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-
-	String name="suricata";
-	String description="suricata description";
-	String configFileSectionName="ssh_service";
+public class SuricataServices extends Service {
 	static ArrayList<Json> configuredSuricata;  
 	static String localIP;	
 	static String localPort;
@@ -130,9 +124,7 @@ public class SuricataServices implements ICSLService {
 		out.at("result", output);
 		return out;
 	}
-	
 
-	
 	public static Json reloadRules(String id, String password, String name) {
 		String ip = null;
 		int port = 22;
@@ -265,21 +257,29 @@ public class SuricataServices implements ICSLService {
 		}
 		configuredSuricata = suricataClone;
 	}
+
+	/**
+	 * Default constructor of the Suricata service. Name, description and configuration file are given here.
+	 */
 	public SuricataServices() {
-		this.name="suricata";
-		this.configFileSectionName="ssh_service";
-	}
-	public SuricataServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-	
-	
-	@Override
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
+		this("suricata",
+				"suricata_description",
+				"ssh_service");
 	}
 
+	/**
+	 * Generic constructor of the Suricata service.
+	 */
+	public SuricataServices(String name, String description, String configFileSectionName) {
+		super(name, description, configFileSectionName);
+	}
+
+	/**
+	 * Initialization of the Suricata commands
+	 * @param config the configuration section of the configuration file
+	 * @param cslDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
 	@Override
 	public boolean init(Json config, String cslDir) {
 		System.out.println("Initializing SSH suricata commands ..");
@@ -439,23 +439,5 @@ public class SuricataServices implements ICSLService {
 		});	
 		System.out.println("SSH commands operationnal");
 		return true;
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		apiCommands.setName(name);
-		apiCommands.setDescription(description);
-		return apiCommands;
-	}
-
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

@@ -7,51 +7,27 @@ import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 
-public class CSLServiceDemo implements ICSLService {
-	
-	
-	//ApiCommands apiCommands= new ApiCommands("");
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-
-
-	String name="#undef";
-	String description="description";
-	String configFileSectionName="config_"+name;;
-	
-	
+public class CSLServiceDemo extends Service {
+	/**
+	 * Default constructor of the Demo service.
+	 */
 	public CSLServiceDemo() {
-		this.name="demo";
-		this.configFileSectionName="demo_conf";
-		
-		
+		this("demo","demo description","demo_conf");
 	}
-	
-	public CSLServiceDemo(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
+
+	/**
+	 * Generic constructor of the Demo service.
+	 */
+	public CSLServiceDemo(String name, String description, String configFileSectionName) {
+		super(name, description, configFileSectionName);
 	}
-	
-	
-	public String getName() {
-		return name;
-	}
-	
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
-		
-	}
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
-	
-	
-	
-	
-	// ajouter les commandes ici
-	// jConfig est la partie du fichier de conf dans le nom de section est donné plus haut
+
+	/**
+	 * Initialization of the Demo service commands
+	 * @param jConfig the configuration section of the configuration file
+	 * @param cslDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
 	public boolean init(Json jConfig, String cslDir) {
 		
 		
@@ -68,19 +44,4 @@ public class CSLServiceDemo implements ICSLService {
 		});
 		return true;  // ok to start
 	}
-	
-
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		apiCommands.setName(name);
-		apiCommands.setDescription(description);
-		return apiCommands;
-	}
-	
-	
-	
 }

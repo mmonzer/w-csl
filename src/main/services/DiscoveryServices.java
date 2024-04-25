@@ -42,16 +42,12 @@ import java.util.concurrent.*;
  * It should expose an API to request a scan and fetch the database.
  * It also allows to know the current status of the requested scans.
  */
-public class DiscoveryServices implements ICSLService, IStatusProvider {
+public class DiscoveryServices extends Service implements IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
 //    private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
-    private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
-    private final String name;
-    private final String description="discovery description";
-    private final String configFileSectionName;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     //    private String apiKey;
@@ -65,20 +61,27 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private CpeScanService cpeScanService = null;
     private ScheduledExecutorService synchronizationSchedule;
 
+    /**
+     * Generic constructor of the Discovery service.
+     */
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
-        this.name = name;
-        this.configFileSectionName = configFileSectionName;
+        super(name, "discovery description", configFileSectionName);
         this.isConcentrator = isConcentrator;
     }
 
+    /**
+     * Constructor of the Discovery service with Concentration
+     */
     public DiscoveryServices() {
         this(defaultName, defaultConfigFileSectionName, true);
     }
 
+    /**
+     * Constructor of the Discovery service with custom concentration
+     */
     public DiscoveryServices(boolean isConcentrator) {
         this(defaultName, defaultConfigFileSectionName, isConcentrator);
     }
-
 
     /**
      * Initialize the service, setting the list of known managers and registering the commands.
@@ -801,17 +804,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         return true;
     }
 
-    @Override
-    public String getConfigFileSectionName() {
-        return configFileSectionName;
-    }
-
-    @Override
-    public IApiCommands getApiCommands() {
-        apiCommands.setName(name);
-        apiCommands.setDescription(description);
-        return apiCommands;
-    }
 
     /**
      * Stop the service.
@@ -831,29 +823,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             return false;
         }
         return false;
-    }
-
-    /**
-     * Register an API command.
-     *
-     * @param name The name of the command.
-     * @param cmd  The callback to be executed when the command is invoked.
-     * @return A {@link String}
-     */
-    public String addCmd(String name, IJsonCmd cmd) {
-        return apiCommands.registerCmd(name, cmd);
-    }
-
-    /**
-     * Register an API command.
-     *
-     * @param name The name of the command.
-     * @param cmd  The callback to be executed when the command is invoked.
-     * @param help The helper to display in the '/apihelp' page.
-     * @return A {@link String}
-     */
-    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
-        return apiCommands.registerCmd(name, cmd, help);
     }
 
     public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {

@@ -26,15 +26,7 @@ import main.extensions.ScanActif;
 import main.extensions.SshUtils;
 import main.extensions.Utils;
 
-public class NmapServices implements ICSLService {
-	
-	//ApiCommands apiCommands= new ApiCommands("");
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-
-
-	String name="nmap";
-	String description="nmap description";
-	String configFileSectionName="nmap_service";
+public class NmapServices extends Service {
 	static String idsconf;
 	static Json tapList;
 	static boolean debugMode = false;
@@ -43,28 +35,22 @@ public class NmapServices implements ICSLService {
 	static String logPath = "";
 
 	private static final String GET_TAP_NETWORK = "ip -o -f inet addr show $(cat ~/nmapInterface.txt) | awk '/scope global/ {print $4}'";
-	
+
+	/**
+	 * Default constructor of the Nmap service.
+	 */
 	public NmapServices() {
-		this.name="nmap";
-		this.configFileSectionName="nmap_service";
-	}
-	public NmapServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
+		this("nmap",
+				"nmap description",
+				"nmap_service");
 	}
 
-	
-
-	@Override
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
+	/**
+	 * Generic constructor of the Nmap service.
+	 */
+	public NmapServices(String name, String description, String configFileSectionName) {
+		super(name,description,configFileSectionName);
 	}
-
-	
-	
-	
-	
-
 	
 	static public void lauchNmap(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
@@ -85,6 +71,7 @@ public class NmapServices implements ICSLService {
 		scanDevice(machines, jConfig);
 
 	}
+
 	private static Json readJsonFile(String fileName) throws IOException {
 		String jsonRaw = "";
 		File fichierRegles = new File(fileName);
@@ -98,6 +85,7 @@ public class NmapServices implements ICSLService {
         br.close(); 
         return Json.read(jsonRaw);
 	}
+
 	static public Json scanDevice(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
@@ -127,6 +115,13 @@ public class NmapServices implements ICSLService {
 		}	
 		return result;
 	}
+
+	/**
+	 * Initialization of the Nmap commands
+	 * @param jConfig the configuration section of the configuration file
+	 * @param cslDir the CSL directory
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("--- Initialisation des services Nmap ---");
@@ -288,28 +283,4 @@ public class NmapServices implements ICSLService {
 		});	*/		
 		return true;
 	}
-	
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		apiCommands.setName(name);
-		apiCommands.setDescription(description);
-		return apiCommands;
-	}
-	
-	
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 }

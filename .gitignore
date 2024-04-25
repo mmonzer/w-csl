@@ -3,10 +3,10 @@ bin/
 out/
 idslogs/
 cslconf/taps/
+classes/
 w_csl.iml
+w-csl.iml
 W_CSL.iml
 runconfig/CSLConfigIDS.json
-classes/
-w-csl.iml
 cacerts.jks
 mqtt_agent_concentrator*

@@ -933,8 +933,6 @@ public class TapsServices extends Service {
 			}
 		});	
 		
-	
-		
 		addCmd("startTap", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -985,16 +983,27 @@ public class TapsServices extends Service {
 		addCmd("startSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
-				return startSuricata(params.at("name").asString());
+
+				return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+						Json.read("{\"cmd\":\"suricataStart\"}")).toJson();
 			}
-		});		
+		}, new JsonCmdHelp()
+						.setDesc("Start/restart Suricata")
+						.setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
+						.setStatus(JsonCmdHelp.STATUS_OK)
+		);
 		
 		addCmd("stopSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
-				return stopSuricata(params.at("name").asString());
+
+				return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+						Json.read("{\"cmd\":\"suricataStop\"}")).toJson();
 			}
-		});
+		}, new JsonCmdHelp()
+				.setDesc("Stop Suricata")
+				.setResult("If the stopping was successful", JsonCmdHelp.JSON)
+				.setStatus(JsonCmdHelp.STATUS_OK));
 
 		addCmd("reloadAllTapsRules", new IJsonCmd() {
 			@Override
@@ -1125,20 +1134,19 @@ public class TapsServices extends Service {
 				return j;
 			}
 		});
+
 		addCmd("getBaseRules", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				System.out.println("coucou");
-				Json j = Json.object();
-				try {
-					j.at("conf",readFile(idsconf+"/taps/"+params.at("name").asString()+"/baserules.rules"));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				System.out.println(j);
-				return j;
-			}
-		});	
+					@Override
+					public Json exec(Json params) {
+						return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+								Json.read("{\"cmd\":\"suricataGetBaseRules\"}")).toJson();
+					}
+				},
+				new JsonCmdHelp().setDesc("Retrieve the base rules of Suricata")
+						.setResult("Returns an object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK)
+		);
+
 		addCmd("getGenRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -1147,8 +1155,9 @@ public class TapsServices extends Service {
 			}
 		},
 				new JsonCmdHelp().setDesc("Retrieve the generated rules of Suricata")
-						.setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
-						.setStatus(IJsonCmdHelp.STATUS_OK));
+						.setResult("Returns an object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK)
+		);
 
 		addCmd("setSuricataConf", new IJsonCmd() {
 			@Override
@@ -1184,7 +1193,7 @@ public class TapsServices extends Service {
 						.setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
 						.setStatus(IJsonCmdHelp.STATUS_OK));
 
-		/***
+		/*
 		 * Update suricata rules in all taps
 		 */
 		addCmd("updateAllTapsSuricataRules", new IJsonCmd() {

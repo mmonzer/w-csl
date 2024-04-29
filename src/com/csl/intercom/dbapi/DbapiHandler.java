@@ -10,6 +10,7 @@ import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.Pair;
+import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -82,6 +83,26 @@ public class DbapiHandler implements AutoCloseable {
         } catch (Exception e) {
             logger.error("Could not delete the CPE Items from DB-API.", e);
         }
+    }
+
+    /**
+     * Insert a new alert into DB
+     *
+     * @param alert alert to insert
+     * @return the content of the response
+     */
+    public String insertAlert(IAlertDescriptor alert) {
+        String res = null;
+        Request request = createDbapiRequest(HttpMethod.POST, "/alerts")
+                .header(HttpHeader.CONTENT_TYPE, "application/json")
+                .content(new StringContentProvider(alert.toJson().toString()));
+        try {
+            ContentResponse response = request.send();
+            res = new String(response.getContent());
+        } catch (Exception e) {
+            logger.error("Could not delete the CPE Items from DB-API.", e);
+        }
+        return res;
     }
 
     private void deleteMicrosoftKbsFromDbapi(List<MicrosoftKB> deletedItems) {

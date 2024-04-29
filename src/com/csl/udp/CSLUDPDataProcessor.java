@@ -79,12 +79,10 @@ public class CSLUDPDataProcessor implements Runnable {
 						//	new UDPSend().sendMsg(msg);  // answer ok
 						//System.err.println("acquit not implemented");
 					}
-
 					int n=Integer.parseInt(fn);
 
 				//System.out.println("idOfTarget="+id+" fromPort="+fromPort+" flowNumber="+n);
 					//flowManager.addToFlow(n, jdata);
-					
 					if (jdata.isArray()) {
 						for (Json jj:jdata.asJsonList()) {
 							flowManager.addToFlow(n, jj);
@@ -92,10 +90,7 @@ public class CSLUDPDataProcessor implements Runnable {
 					}
 					else
 						flowManager.addToFlow(n, jdata);
-					
-					
 				} catch (Exception e) {
-
 					System.out.println("Received invalid UDP packet "+msg);
 					System.out.println(e);
 				}

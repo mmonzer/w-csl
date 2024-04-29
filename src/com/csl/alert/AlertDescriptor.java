@@ -376,7 +376,7 @@ public class AlertDescriptor implements IAlertDescriptor{
 		String s="";
 		
 		for (Map.Entry<String, String> entry : getPropsList().entrySet()) {
-			System.out.println(" Prop:"+entry.getKey() + "=" + entry.getValue());
+			//System.out.println(" Prop:"+entry.getKey() + "=" + entry.getValue());
 			String key=entry.getKey();
 			String value=entry.getValue();
 			if (!s.isEmpty()) s=s+";";
@@ -440,7 +440,7 @@ public class AlertDescriptor implements IAlertDescriptor{
 		Json jarray= Json.array();
 
 		for (Map.Entry<String, Json> entry : metaInfos.entrySet()) {
-			System.out.println(entry.getKey() + "/" + entry.getValue());
+			//System.out.println(entry.getKey() + "/" + entry.getValue());
 			String key=entry.getKey();
 			Json value=entry.getValue();
 			jarray.add(Json.object().set("key",key).set("value", value));

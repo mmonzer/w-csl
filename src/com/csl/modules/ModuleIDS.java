@@ -331,12 +331,7 @@ public class ModuleIDS implements IModule {
 						else if (type.compareTo("EVE")==0) {
 							EveMessageUtill.reformatTimeStamp(jj);
 							if (loggingOn) packetsLog.RecordLogMessage(jj.toString());
-							//	variablesLog.RecordLogMessage(jj.toString());
-							//outDisplay(jj);
-							System.out.println("EVE:"+jj);
-							//System.out.println(EveMessageUtill.getEveInfo(jj));
-							//if (idsDetectOn) 
-								idsMainProcessor.processSuricataEvent(jj);
+							idsMainProcessor.processSuricataEvent(jj);
 						} 
 						else if (type.compareTo("TIC")==0) {
 							//if (loggingOn) packetsLog.RecordLogMessage(jj.toString());

@@ -212,7 +212,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		
 		// test pour eve event
 		
-		boolean verbose=true;
+		boolean verbose=false;
 		if (verbose) System.out.println("IDS Processing Info  "+evtsInfo);
 		String code="#suricata_alert";
 		String msg="#undef";
@@ -288,7 +288,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		}
 		else {
 
-			System.out.println("Suricata EVE (not an alert)"+evtsInfo);
+			// System.out.println("Suricata EVE (not an alert)"+evtsInfo);
 		}
 
 

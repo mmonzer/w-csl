@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.csl.intercom.cslscan.ScanApiHandler;
 import org.apache.commons.io.FileUtils;
 
 import com.csl.core.CSLContext;
@@ -69,6 +70,8 @@ public class TapsServices extends Service {
 	static String localIP;	
 	static String localPort;
 	static String knownHostFilePath;
+
+	private final ScanApiHandler apiHandler;
 
 	static String idsconf;
 	
@@ -533,7 +536,7 @@ public class TapsServices extends Service {
 		}
 	}
 
-	public static Json startSuricata(String name) {
+	public Json startSuricata(String name) {
 		String id = "", password ="";
 		int port = 22;
 
@@ -562,10 +565,13 @@ public class TapsServices extends Service {
 
 		Json out = Json.object();
 		out.at("result", output);
-		return out;
+
+		JsonApiResponse response = apiHandler.sendRequestToScanManager(HttpMethod.POST, "suricata", Json.read("\"cmd\":\"suricataStart\""));
+		return response.toJson();
+		//return out;
 	}
 	
-	public static Json stopSuricata(String name) {
+	public Json stopSuricata(String name) {
 		String id = "", password ="";
 		int port = 22;
 
@@ -594,7 +600,9 @@ public class TapsServices extends Service {
 
 		Json out = Json.object();
 		out.at("result", output);
-		return out;
+		JsonApiResponse response = apiHandler.sendRequestToScanManager(HttpMethod.POST, "suricata", Json.read("\"cmd\":\"suricataStart\""));
+		return response.toJson();
+		//return out;
 	}
 	
 	private static Json reloadRulesParseOutput(String output) {
@@ -662,6 +670,7 @@ public class TapsServices extends Service {
 	 */
 	public TapsServices(String name, String description, String configFileSectionName) {
 		super(name, description, configFileSectionName);
+		apiHandler = new ScanApiHandler("http://localhost:8888");
 	}
 	
 	public String getTapName(Json j) {
@@ -1037,12 +1046,18 @@ public class TapsServices extends Service {
 			}
 		});
 
-		addCmd("reloadRules", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				return reloadRules(params.at("name").asString());
-			}
-		});	
+		addCmd("reloadRules",	new IJsonCmd() {
+					@Override
+					public Json exec(Json params) {
+
+						return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+								Json.read("{\"cmd\":\"suricataReloadRules\"}")).toJson();
+					}
+				},
+				new JsonCmdHelp().setDesc("Reloads the rules of Suricata")
+						.setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK)
+		);
 		
 		// Setter et getter de l'édition de Json graphique
 		addCmd("getProcessJson", new IJsonCmd() {
@@ -1088,7 +1103,16 @@ public class TapsServices extends Service {
 				return Json.object();			}
 		});	
 		
-		// Same but for suricata
+		addCmd("getSuricataStatus", new IJsonCmd() {
+			@Override
+			public Json exec(Json params) {
+				return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",Json.read("{\"cmd\":\"suricataStatus\"}")).toJson();
+			}
+		},
+				new JsonCmdHelp().setDesc("Get the status of Suricata")
+						.setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK)
+		);
 		addCmd("getSuricataConf", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -1100,7 +1124,7 @@ public class TapsServices extends Service {
 				}
 				return j;
 			}
-		});	
+		});
 		addCmd("getBaseRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -1118,17 +1142,14 @@ public class TapsServices extends Service {
 		addCmd("getGenRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
-				Json j = Json.object();
-				
-				System.out.println("IDSCONF:"+idsconf);
-				try {
-					j.at("conf",readFile(idsconf+"/taps/"+params.at("name").asString()+"/genrules.rules"));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				return j;
+				return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+						Json.read("{\"cmd\":\"suricataGetRules\"}")).toJson();
 			}
-		});		
+		},
+				new JsonCmdHelp().setDesc("Retrieve the generated rules of Suricata")
+						.setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK));
+
 		addCmd("setSuricataConf", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -1154,14 +1175,14 @@ public class TapsServices extends Service {
 		addCmd("setGeneratedRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
-				try {
-					writeToFile(params.at("conf").asString(),idsconf+"/taps/"+params.at("name").asString()+"/genrules.rules" );
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				return Json.object();
+				return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+						Json.read("{\"cmd\":\"suricataAddRules\",\"params\":" + params.toString()+"}")).toJson();
 			}
-		});
+		},
+				new JsonCmdHelp().setDesc("Set the generated rules of Suricata")
+						.setParam("rules","A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+						.setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK));
 
 		/***
 		 * Update suricata rules in all taps

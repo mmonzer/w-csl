@@ -518,7 +518,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
-    private JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params) {
+    public JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params) {
         JsonApiResponse res = JsonApiResponse.error(null);
         Request request;
         String URI = scanManagerUrl + endpoint.replace(" ", "%20");
@@ -539,6 +539,8 @@ public class ScanApiHandler implements AutoCloseable {
                     break;
 
                 case POST:
+                    request.content(new StringContentProvider(params.toString()), "application/json");
+                    break;
                 case PUT:
                     request.content(new StringContentProvider(params.toString()), "application/json");
                     break;

@@ -1143,7 +1143,7 @@ public class TapsServices extends Service {
 					}
 				},
 				new JsonCmdHelp().setDesc("Retrieve the base rules of Suricata")
-						.setResult("Returns an object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
+						.setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
 						.setStatus(IJsonCmdHelp.STATUS_OK)
 		);
 
@@ -1151,11 +1151,37 @@ public class TapsServices extends Service {
 			@Override
 			public Json exec(Json params) {
 				return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
-						Json.read("{\"cmd\":\"suricataGetRules\"}")).toJson();
+						Json.read("{\"cmd\":\"suricataGetCustomRules\"}")).toJson();
 			}
 		},
 				new JsonCmdHelp().setDesc("Retrieve the generated rules of Suricata")
-						.setResult("Returns an object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
+						.setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK)
+		);
+
+		addCmd("modifyGenRules", new IJsonCmd() {
+					@Override
+					public Json exec(Json params) {
+						return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+								Json.read("{\"cmd\":\"suricataModifyCustomRules\",\"params\":"+params+"}")).toJson();
+					}
+				},
+				new JsonCmdHelp().setDesc("Modify the generated rules of Suricata")
+						.setParam("rules","A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+						.setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK)
+		);
+
+		addCmd("modifyBaseRules", new IJsonCmd() {
+					@Override
+					public Json exec(Json params) {
+						return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+								Json.read("{\"cmd\":\"suricataModifyBaseRules\",\"params\":"+params+"}")).toJson();
+					}
+				},
+				new JsonCmdHelp().setDesc("Modify the base rules of Suricata")
+						.setParam("rules","A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+						.setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
 						.setStatus(IJsonCmdHelp.STATUS_OK)
 		);
 
@@ -1171,26 +1197,26 @@ public class TapsServices extends Service {
 			}
 		});	
 		addCmd("setBaseRules", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				try {
-					writeToFile(params.at("conf").asString(),idsconf+"/taps/"+params.at("name").asString()+"/baserules.rules" );
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				return Json.object();			
-			}
-		});	
+					@Override
+					public Json exec(Json params) {
+						return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
+								Json.read("{\"cmd\":\"suricataAddBaseRules\",\"params\":" + params.toString()+"}")).toJson();
+					}
+				},
+				new JsonCmdHelp().setDesc("Set the base rules of Suricata")
+						.setParam("rules","A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+						.setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK));
 		addCmd("setGeneratedRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
-						Json.read("{\"cmd\":\"suricataAddRules\",\"params\":" + params.toString()+"}")).toJson();
+						Json.read("{\"cmd\":\"suricataAddCustomRules\",\"params\":" + params.toString()+"}")).toJson();
 			}
 		},
 				new JsonCmdHelp().setDesc("Set the generated rules of Suricata")
 						.setParam("rules","A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-						.setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
+						.setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
 						.setStatus(IJsonCmdHelp.STATUS_OK));
 
 		/*

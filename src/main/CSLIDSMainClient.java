@@ -295,19 +295,16 @@ public class CSLIDSMainClient {
 
         JServiceLoader.registerService(new NmapServices(), configObj, true);
 
-
         iniServices();
 
         startRemoteConnectTask();    // connect/reconnect CSL-Server via wss
         CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
-
 
         CSLContext.instance.postInit(false, true);
         CSLContext.instance.start();
 
         CSLContext.instance.getIdsRunner().start();
         ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
-
 
         if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
             int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);

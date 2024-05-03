@@ -54,7 +54,10 @@ public class ActivityMonitor implements IStatusProvider {
 		long data_size=JsonUtil.getLongFromJson(j, "data_size", 0);
 
 		desc.set("tap_id", id);
-		desc.set( "nb_packets",(nb_packets+nb_packets0));
+		desc.set("suricata_running",JsonUtil.getBooleanFromJson(j, "suricata_running",false));
+		desc.set("monitor_running",JsonUtil.getBooleanFromJson(j, "monitor_running",false));
+		desc.set("nb_packets",(nb_packets+nb_packets0));
+		desc.set("nb_packets",(nb_packets+nb_packets0));
 		desc.set("data_size", (data_size+data_size0) );
 
 		nb_packets_total=nb_packets_total+nb_packets;
@@ -63,6 +66,11 @@ public class ActivityMonitor implements IStatusProvider {
 		tapsLastActivity.put(id, LocalDateTime.now());
 	}
 
+	/**
+	 * Specification of a method that sends every x time a notification to the HMI, so it knows that the module is alive
+	 * @return json object with the identifier and state of the tap.
+	 */
+	@Override
 	public Json getStatus() {
 		LocalDateTime currentTime = LocalDateTime.now();
 		Json activeTaps = Json.array();

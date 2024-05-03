@@ -393,12 +393,14 @@ public class CSLAlertManager implements IAlertManager {
 
 
 		// Send to UDP : who is this?
-		if (this.alert_to_udp)
-			this.sendAlertToViewerUDP(alert.toJson());
+		if (this.alert_to_udp) {
+			//this.sendAlertToViewerUDP(alert.toJson());
+		}
 
 		// Send to DB
-		if (this.alertToDb)
+		if (this.alertToDb) {
 			this.dbapiHandler.insertAlert(alert);
+		}
 
 		if ((!toFile)&&(!toViewer)) return;
 
@@ -414,19 +416,16 @@ public class CSLAlertManager implements IAlertManager {
 				fileLog.send("["+alert.getLevelAsString()+"] "+alert.getMsg()+"  "+alert.getPropsList());
 			else
 				fileLog.send("["+alert.getLevelAsString()+"] "+alert.getMsg());
-
 		}
 
 		// String msg = XMLformatter(loggerName, alert.getLevelAsString(), alert.getMsg(),"","", alert.getPropsList());
 
 		// Send to viewer
 		if (toViewer) {
-			if (this.alert_to_web)
-				this.sendAlertToViewerWeb(alert) ; //uuid,time,level,message,props);
+			if (this.alert_to_web) {
+				this.sendAlertToViewerWeb(alert); //uuid,time,level,message,props);
+			}
 		}
-
-
-
 	}
 
 	public void registerAlertForwarder(IAlertForwarder af) {

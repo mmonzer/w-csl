@@ -18,6 +18,8 @@ import com.csl.ids.Tap;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.modules.ModuleIDS;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 
@@ -50,6 +52,7 @@ import java.net.http.HttpRequest;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1155,22 +1158,26 @@ public class TapsServices extends Service {
 				return Json.object();
 			}
 		});
-		addCmd("set_base_rules", new IJsonCmd() {
+		addCmd("set_base_rules",
+				new IJsonCmd() {
 					@Override
 					public Json exec(Json params) {
-						return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
-								Json.read("{\"cmd\":\"suricataAddBaseRules\",\"params\":" + params.toString()+"}")).toJson();
+						if (!params.has("name")) {
+							return JsonApiResponse.error("Tap's name missing from params").toJson();
+						}
+						return setRules("Base",params);
 					}
-				},
-				new JsonCmdHelp().setDesc("Set the base rules of Suricata")
+				}, new JsonCmdHelp().setDesc("Set the base rules of Suricata")
 						.setParam("rules","A list of strings, each string is a rule", IJsonCmdHelp.JSON)
 						.setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
 						.setStatus(IJsonCmdHelp.STATUS_OK));
 		addCmd("set_generated_rules", new IJsonCmd() {
 					@Override
 					public Json exec(Json params) {
-						return apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
-								Json.read("{\"cmd\":\"suricataAddCustomRules\",\"params\":" + params.toString()+"}")).toJson();
+						if (!params.has("name")) {
+							return JsonApiResponse.error("Tap's name missing from params").toJson();
+						}
+						return setRules("Custom",params);
 					}
 				},
 				new JsonCmdHelp().setDesc("Set the generated rules of Suricata")
@@ -1184,14 +1191,16 @@ public class TapsServices extends Service {
 		addCmd("update_all_taps_suricata_rules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
-				Json response = null;
-				for (Json tapConfig: configuredTaps) {
-					response = apiHandler.sendRequestToScanManager(HttpMethod.POST,"/suricata",
-							Json.read("{\"cmd\":\"suricataAddCustomRules\",\"params\":" + params.toString()+"}")).toJson();
+				if (!params.has("rules")) {
+					return JsonApiResponse.error("rules is missing from params").toJson();
 				}
-				return response;
-			}
-		});
+				return updateAllTapsSuricataRules(params);
+			}},
+				new JsonCmdHelp().setDesc("Update all generated suricata rules in all taps")
+						.setParam("rules","A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+						.setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
+						.setStatus(IJsonCmdHelp.STATUS_OK)
+		);
 
 		addCmd("get_suricata_logs", new IJsonCmd() {
 			@Override
@@ -1866,6 +1875,41 @@ public class TapsServices extends Service {
 		System.out.println("SSH commands operationnal");
 
 		return true;
+	}
+
+	/**
+	 * Set the rules of a given tap
+	 * @param type type of rule
+	 * @param params name of the tap
+	 * @return the new rules
+	 */
+	private static Json setRules(String type, Json params) {
+		if (!taps.containsKey(params.get("name").asString())) {
+			return JsonApiResponse.error("This tap is not configured").toJson();
+		}
+		if (!params.has("rules")) {
+			return JsonApiResponse.error("Rules must be passed in params").toJson();
+		}
+		if (!type.matches("(Base)|(Custom)")) {
+			return JsonApiResponse.error("Unknown type of rule").toJson();
+		}
+		return taps.get(params.get("name").asString()).sendCmd("/suricata",
+				Json.read("{\"cmd\":\"suricataAdd"+type+"Rules\",\"params\":{\"rules\":" + params.get("rules") + "}}")).toJson();
+	}
+
+	/**
+	 * Replaces all custom suricata rules for all the taps at once. Old rules will be lost.
+	 * @param params json with a key "rules", which contains the list of the new rules.
+	 * @return the
+	 */
+	private @Nullable Json updateAllTapsSuricataRules(Json params) {
+		Json response = Json.read("[]");
+		for (Tap tap : taps.values()) {
+			response = tap.sendCmd("/suricata",
+					Json.read("{\"cmd\":\"suricataReplaceCustomRules\"," +
+							"\"params\":{\"rules\":"+ params.get("rules").asJsonList()+"}}")).toJson();
+		}
+		return response;
 	}
 
 	/**

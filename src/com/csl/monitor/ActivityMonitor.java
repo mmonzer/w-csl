@@ -1,17 +1,22 @@
 package com.csl.monitor;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
+import com.csl.core.CSLContext;
+import com.csl.ids.Tap;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+
+import static main.services.TapsServices.readJsonFile;
 
 public class ActivityMonitor implements IStatusProvider {
 
@@ -25,14 +30,12 @@ public class ActivityMonitor implements IStatusProvider {
 	boolean showTicks=true;
 
 	Map<String, Json> taps= new HashMap<String, Json>();
+	Map<String, Tap> activeTaps;
 
 	ActivityHistory history = new ActivityHistory(60);
 	Map<String, LocalDateTime> tapsLastActivity = new HashMap<>();
 	private static final long inactivityDurationThreshold = 5;
 	private static final long inactivityDurationDeletionThreshold = 300;
-
-
-//	
 
 
 	public void addTick(Json j) {
@@ -74,10 +77,46 @@ public class ActivityMonitor implements IStatusProvider {
 	public Json getStatus() {
 		LocalDateTime currentTime = LocalDateTime.now();
 		Json activeTaps = Json.array();
+		boolean is_http_api_reachable = false;
+		Tap tap;
 		for (Map.Entry<String, LocalDateTime> tapLastActivity: tapsLastActivity.entrySet()) {
+
+			Json conf;
+			ArrayList<Json> configuredTaps;
+			String idsconf = CSLContext.instance.getCslConfDir();
+			try {
+				conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+				if (conf.isArray()) {
+					configuredTaps = (ArrayList<Json>) conf.asJsonList();
+				} else {
+					configuredTaps = new ArrayList<Json>();
+				}
+				for (Json j : configuredTaps) {
+					if (j.at("idname").asString().equals(tapLastActivity.getKey())) {
+						tap = new Tap(j.at("idname").asString(),
+								j.at("id").asString(),
+								j.at("ip").asString(),
+								j.at("port").asInteger(),
+								j.at("includes").asJsonList()
+						);
+
+						Tap finalTap = tap;
+						try {
+							is_http_api_reachable = CompletableFuture.supplyAsync(() -> finalTap.sendQuietCmd("/config", "{\"cmd\":\"getConfig\"}"))
+									.get(100, TimeUnit.MILLISECONDS).isSuccess();
+						} catch (TimeoutException|InterruptedException|ExecutionException|CancellationException e) {
+							is_http_api_reachable = false;
+						}
+						break;
+					}
+				}
+			} catch (IOException e1) {
+				System.err.println("No tap config found");
+			}
 			activeTaps.add(Json.object(
 				"id", tapLastActivity.getKey(),
-				"is_running", Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) <= inactivityDurationThreshold
+					"is_udp_connected", Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) <= inactivityDurationThreshold,
+					"is_http_api_reachable", is_http_api_reachable
 			));
 			if (Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) > inactivityDurationDeletionThreshold) {
 				tapsLastActivity.remove(tapLastActivity.getKey());
@@ -86,11 +125,9 @@ public class ActivityMonitor implements IStatusProvider {
 		return Json.object("active_taps", activeTaps);
 	}
 
-
 	public boolean isShowTicks() {
 		return showTicks;
 	}
-
 
 	public void setShowTicks(boolean showTicks) {
 		this.showTicks = showTicks;

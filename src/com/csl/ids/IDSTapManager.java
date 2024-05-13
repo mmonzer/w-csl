@@ -257,8 +257,6 @@ public class IDSTapManager {
 		return fileUtils.writeFileFromText(filename, text);
 		
 	}
-	
-	
 
 	public Json addTap(String idname,Json value) {
 		Json result= Json.object();

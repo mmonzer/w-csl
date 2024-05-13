@@ -519,6 +519,18 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params) {
+        return sendRequestToScanManager(method, endpoint, params, false);
+    }
+
+    /**
+     * Send an HTTP request to the scanner.
+     *
+     * @param method   The HTTP method to use (GET, POST, PUT, ...)
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params, boolean quiet) {
         JsonApiResponse res = JsonApiResponse.error(null);
         Request request;
         String URI = scanManagerUrl + endpoint.replace(" ", "%20");
@@ -572,7 +584,7 @@ public class ScanApiHandler implements AutoCloseable {
             logger.error("Malformed json", e);
             res = JsonApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            logger.error("Error while sending request to CSL-Scan", e);
+            if (!quiet) {logger.error("Error while sending request to CSL-Scan");}
             if (e.getCause() instanceof ConnectException) {
                 res = JsonApiResponse.error("Connection error with CSL-Scan");
             }

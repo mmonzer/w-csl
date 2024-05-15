@@ -597,7 +597,7 @@ public class TapsServices extends Service {
         }
 
         return activeTaps.get(name).sendCmd("/suricata",
-                Json.read("{\"cmd\":\"suricataSetInterfaces\",\"params\":{\"interfaces\":"+interfaces+"}}")).toJson();
+                Json.read("{\"cmd\":\"suricataSetInterfaces\",\"params\":{\"interfaces\":"+interfaces+"}}")).toJson().get("result");
     }
 
     /**

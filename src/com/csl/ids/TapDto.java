@@ -1,14 +1,13 @@
 package com.csl.ids;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.google.gson.JsonObject;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.http.HttpMethod;
 
 import java.util.List;
 
-public class Tap {
+public class TapDto {
     private String name;
     private int id;
     private String ip;
@@ -24,14 +23,14 @@ public class Tap {
      * @param port port of API of the TAP
      * @param includes ???
      */
-    public Tap(String name, String id, String ip, int port, List<Json> includes) {
+    public TapDto(String name, String id, String ip, int port, List<Json> includes) {
         this.name=name;
         this.ip=ip;
         this.port=port;
         this.includes=includes;
         apiHandler = new ScanApiHandler("http://"+ip+":"+port);
     }
-    public Tap(String name, int id, String ip, int port, List<Json> includes) {
+    public TapDto(String name, int id, String ip, int port, List<Json> includes) {
         this.name=name;
         this.id=id;
         this.ip=ip;
@@ -100,8 +99,9 @@ public class Tap {
      * Gives the id of the TAP
      * @return the id of the TAP
      */
-    public int getId() {
-        return id;
+    public String getId() {
+        // return String.valueOf(id);
+        return String.valueOf(name);
     }
 
     /**

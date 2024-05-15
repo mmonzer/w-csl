@@ -7,23 +7,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.csl.core.CSLContext;
-import com.csl.ids.Tap;
-import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.ids.TapDto;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.modules.ModuleIDS;
 import com.csl.monitor.ActivityMonitor;
-import com.ucsl.interfaces.IApiCommands;
-import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 
 import static main.services.TapsServices.readJsonFile;
 
 public class MonitorService extends Service {
 	static ArrayList<Json> configuredTaps;
-	static HashMap<String, Tap> activeTaps = new HashMap<>();
+	static HashMap<String, TapDto> activeTaps = new HashMap<>();
 	static String idsconf;
 
 	/**
@@ -53,6 +48,7 @@ public class MonitorService extends Service {
 		// TODO : duplicated with TapService
 		idsconf = CSLContext.instance.getCslConfDir();
 		Json conf;
+		TapDto tap;
 		try {
 			conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
 			if (conf.isArray()) {
@@ -61,14 +57,13 @@ public class MonitorService extends Service {
 				configuredTaps = new ArrayList<Json>();
 			}
 			for (Json j : configuredTaps) {
-				activeTaps.put(j.at("idname").asString(),
-						new Tap(j.at("idname").asString(),
-								j.at("id").asString(),
-								j.at("ip").asString(),
-								j.at("port").asInteger(),
-								j.at("includes").asJsonList()
-						)
+				tap = new TapDto(j.at("idname").asString(),
+						j.at("id").asString(),
+						j.at("ip").asString(),
+						j.at("port").asInteger(),
+						j.at("includes").asJsonList()
 				);
+				activeTaps.put(tap.getId(), tap);
 			}
 		} catch (IOException e1) {
 			System.err.println("No tap config found");

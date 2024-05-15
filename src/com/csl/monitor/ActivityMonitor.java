@@ -1,7 +1,6 @@
 package com.csl.monitor;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 import com.csl.core.CSLContext;
-import com.csl.ids.Tap;
+import com.csl.ids.TapDto;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
@@ -30,7 +29,7 @@ public class ActivityMonitor implements IStatusProvider {
 	boolean showTicks=true;
 
 	Map<String, Json> taps= new HashMap<String, Json>();
-	Map<String, Tap> activeTaps;
+	Map<String, TapDto> activeTaps;
 
 	ActivityHistory history = new ActivityHistory(60);
 	Map<String, LocalDateTime> tapsLastActivity = new HashMap<>();
@@ -78,7 +77,7 @@ public class ActivityMonitor implements IStatusProvider {
 		LocalDateTime currentTime = LocalDateTime.now();
 		Json activeTaps = Json.array();
 		boolean is_http_api_reachable = false;
-		Tap tap;
+		TapDto tap;
 		for (Map.Entry<String, LocalDateTime> tapLastActivity: tapsLastActivity.entrySet()) {
 
 			Json conf;
@@ -93,14 +92,14 @@ public class ActivityMonitor implements IStatusProvider {
 				}
 				for (Json j : configuredTaps) {
 					if (j.at("idname").asString().equals(tapLastActivity.getKey())) {
-						tap = new Tap(j.at("idname").asString(),
+						tap = new TapDto(j.at("idname").asString(),
 								j.at("id").asString(),
 								j.at("ip").asString(),
 								j.at("port").asInteger(),
 								j.at("includes").asJsonList()
 						);
 
-						Tap finalTap = tap;
+						TapDto finalTap = tap;
 						try {
 							is_http_api_reachable = CompletableFuture.supplyAsync(() -> finalTap.sendQuietCmd("/config", "{\"cmd\":\"getConfig\"}"))
 									.get(100, TimeUnit.MILLISECONDS).isSuccess();

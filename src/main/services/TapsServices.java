@@ -351,33 +351,22 @@ public class TapsServices extends Service {
 
     }
 
-    public static Json getSuricataLogs(String name) {
-        String username = "", password = "";
-        int port = 22;
+    /**
+     * Gets the IDS logs of the given tap
+     * @param name name of the tap
+     * @return the last logs of the ids
+     */
+    public Json getSuricataLogs(String name) {
+        return activeTaps.get(name).sendCmd("/suricata", "{\"cmd\":\"suricataGetLogs\"}").toJson().get("result");
+    }
 
-        Json result = Json.object();
-        for (Json j : configuredTaps) {
-            if (j.at("idname").asString().contentEquals(name)) {
-                String ip = j.at("ip").asString();
-                username = j.at("username").asString();
-                password = j.at("password").asString();
-                try {
-                    port = j.at("port").asInteger();
-                } catch (NullPointerException e) {
-                    System.out.println("Using default SSH port (22)");
-                }
-                System.out.println("id " + username + " password " + password + " ip " + ip + " port " + port);
-                SshUtils ssh = new SshUtils(username, password, ip, port/*,knownHostFilePath*/);
-                try {
-                    ssh.getFile("/var/log/suricata/suricata.log", idsconf + "/taps/" + name + "/suricataLogs.txt");
-                } catch (IOException | JSchException e) {
-                    e.printStackTrace();
-                }
-                ssh.endConnection();
-
-            }
-        }
-        return result;
+    /**
+     * Gets the IDS logs of the given tap
+     * @param name name of the tap
+     * @return the last logs of the ids
+     */
+    public Json clearSuricataLogs(String name) {
+        return activeTaps.get(name).sendCmd("/suricata", "{\"cmd\":\"suricataClearLogs\"}").toJson().get("result").get("result");
     }
 
     public static Json getConfFromtap(String name, String file) {
@@ -561,6 +550,54 @@ public class TapsServices extends Service {
 
             }
         }
+    }
+
+    /**
+     * Get the interfaces sniffed by Suricata in the given TAP name
+     *
+     * @param params params of the request
+     * @return the result of the change
+     */
+    public Json getInterfacesIdsTap (Json params) {
+        // Check if name of tap ok
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
+        if (!activeTaps.containsKey(name)) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
+        }
+
+        return activeTaps.get(name).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataGetInterfaces\"}")).toJson().get("result");
+    }
+
+    /**
+     * Changes the interfaces sniffed by Suricata in the given TAP name
+     *
+     * @param params params of the request
+     * @return the result of the change
+     */
+    public Json setInterfacesIdsTap (Json params) {
+        // Check if name of tap ok
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
+        if (!activeTaps.containsKey(name)) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
+        }
+        // Check if interfaces ok
+        if (!params.has("interfaces")) {
+            return JsonApiResponse.error("List of new interfaces must be included as 'interfaces'").toJson();
+        }
+        Json interfaces = params.get("interfaces");
+        if (!interfaces.isArray()) {
+            return JsonApiResponse.error("Interfaces must be a list").toJson().get("result");
+        }
+
+        return activeTaps.get(name).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataSetInterfaces\",\"params\":{\"interfaces\":"+interfaces+"}}")).toJson();
     }
 
     /**
@@ -985,21 +1022,36 @@ public class TapsServices extends Service {
         );
 
         addCmd("restart_tap", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                if (!params.has("name")) {
-                    return JsonApiResponse.error("Tap's name missing from params").toJson();
-                }
-                stopTap(params.at("name").asString());
-                startTap(params.at("name").asString());
+                    @Override
+                    public Json exec(Json params) {
+                        if (!params.has("name")) {
+                            return JsonApiResponse.error("Tap's name missing from params").toJson();
+                        }
+                        stopTap(params.at("name").asString());
+                        startTap(params.at("name").asString());
 
-                return Json.object();
-            }
-        }, new JsonCmdHelp()
+                        return Json.object();
+                    }
+                }, new JsonCmdHelp()
                         .setDesc("Restarts the given tap")
                         .setParam("name", "name of the tap that must restart", JsonCmdHelp.STR)
                         //	.setResult("nothing", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
+        );
+
+        addCmd("set_interfaces_ids_tap", this::setInterfacesIdsTap, new JsonCmdHelp()
+                .setDesc("Changes the interfaces sniffed by the IDS of the given tap")
+                .setParam("name", "name of the tap that must restart", JsonCmdHelp.STR)
+                .setParam("interfaces", "list of the interfaces to sniff (old ones are erased)", JsonCmdHelp.STR)
+                .setResult("list of new ids interfaces", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
+        );
+
+        addCmd("get_interfaces_ids_tap", this::getInterfacesIdsTap, new JsonCmdHelp()
+                .setDesc("Get the interfaces sniffed by the IDS of the given tap")
+                .setParam("name", "name of the tap that must restart", JsonCmdHelp.STR)
+                .setResult("list of the ids interfaces", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("replay", new IJsonCmd() {
@@ -1265,7 +1317,7 @@ public class TapsServices extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("modify_base_rules", new IJsonCmd() {
+        addCmd("modify_gen_rules", new IJsonCmd() {
                     @Override
                     public Json exec(Json params) {
                         if (!params.has("name")) {
@@ -1278,10 +1330,56 @@ public class TapsServices extends Service {
                             return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
                         }
                         return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
-                                Json.read("{\"cmd\":\"suricataModifyBaseRules\",\"params\":" + params + "}")).toJson();
+                                Json.read("{\"cmd\":\"suricataModifyCustomRules\",\"params\":" + params + "}")).toJson();
                     }
                 },
-                new JsonCmdHelp().setDesc("Modify the base rules of the given tap")
+                new JsonCmdHelp().setDesc("Modify the generated rules of the given tap")
+                        .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
+                        .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+                        .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+
+        addCmd("replace_base_rules", new IJsonCmd() {
+                    @Override
+                    public Json exec(Json params) {
+                        if (!params.has("name")) {
+                            return JsonApiResponse.error("Tap's name missing from params").toJson();
+                        }
+                        if (!params.has("rules")) {
+                            return JsonApiResponse.error("Rules are missing from params").toJson();
+                        }
+                        if (!activeTaps.containsKey(params.get("name").asString())) {
+                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+                        }
+                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
+                                Json.read("{\"cmd\":\"suricataReplaceBaseRules\",\"params\":" + params + "}")).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Replace the base rules of the given tap")
+                        .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
+                        .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+                        .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+
+        addCmd("replace_gen_rules", new IJsonCmd() {
+                    @Override
+                    public Json exec(Json params) {
+                        if (!params.has("name")) {
+                            return JsonApiResponse.error("Tap's name missing from params").toJson();
+                        }
+                        if (!params.has("rules")) {
+                            return JsonApiResponse.error("Rules are missing from params").toJson();
+                        }
+                        if (!activeTaps.containsKey(params.get("name").asString())) {
+                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+                        }
+                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
+                                Json.read("{\"cmd\":\"suricataReplaceCustomRules\",\"params\":" + params + "}")).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Replace the generated rules of the given tap")
                         .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
                         .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
                         .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
@@ -1339,31 +1437,55 @@ public class TapsServices extends Service {
         addCmd("get_suricata_logs", new IJsonCmd() {
             @Override
             public Json exec(Json params) {
-                Json result = Json.object();
-                result = getSuricataLogs(params.at("name").asString());
-                String content = "";
-                try {
-                    content = readFile(idsconf + "/taps/" + params.at("name").asString() + "/suricataLogs.txt");
-                } catch (IOException e) {
-                    e.printStackTrace();
+                JsonApiResponse response;
+                // Check if name of tap in params
+                if (!params.has("name")) {
+                    response = JsonApiResponse.error("Taps name must be included");
+                    return response.toJson();
                 }
-                result.at("logs", content);
-                return result;
+                Json nameJ = params.get("name");
+                // Check name is a string
+                if (!nameJ.isString()) {
+                    response = JsonApiResponse.error("Taps name must be a string");
+                    return response.toJson();
+                }
+                String name = params.get("name").asString();
+                // Check taps name in taps
+                if (!activeTaps.containsKey(name)) {
+                    response = JsonApiResponse.error("Taps name is not configured");
+                    return response.toJson();
+                }
+
+                return getSuricataLogs(name);
             }
-        });
+        },
+                new JsonCmdHelp().setDesc("Get the IDS logs of the given tap")
+                        .setParam("name", "name of the tap", IJsonCmdHelp.JSON)
+                        .setResult("The most recent logs of the IDS of the given tap", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK));
 
         addCmd("clear_suricata_logs", new IJsonCmd() {
             @Override
             public Json exec(Json params) {
-                clearLogs(params.at("name").asString());
-                Json result = Json.object();
-                try {
-                    writeToFile("", idsconf + "/taps/" + params.at("name").asString() + "/suricataLogs.txt");
-                } catch (IOException e) {
-                    e.printStackTrace();
+                JsonApiResponse response;
+                // Check if name of tap in params
+                if (!params.has("name")) {
+                    response = JsonApiResponse.error("Taps name must be included");
+                    return response.toJson();
                 }
-                result.at("logs", "");
-                return result;
+                Json nameJ = params.get("name");
+                // Check name is a string
+                if (!nameJ.isString()) {
+                    response = JsonApiResponse.error("Taps name must be a string");
+                    return response.toJson();
+                }
+                String name = params.get("name").asString();
+                // Check taps name in taps
+                if (!activeTaps.containsKey(name)) {
+                    response = JsonApiResponse.error("Taps name is not configured");
+                    return response.toJson();
+                }
+                return clearSuricataLogs(name);
             }
         });
 
@@ -1939,30 +2061,50 @@ public class TapsServices extends Service {
             addCmd("getSuricataLogs", new IJsonCmd() {
                 @Override
                 public Json exec(Json params) {
-                    Json result = Json.object();
-                    result = getSuricataLogs(params.at("name").asString());
-                    String content = "";
-                    try {
-                        content = readFile(idsconf + "/taps/" + params.at("name").asString() + "/suricataLogs.txt");
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    JsonApiResponse response;
+                    // Check if name of tap in params
+                    if (!params.has("name")) {
+                        response = JsonApiResponse.error("Taps name must be included");
+                        return response.toJson();
                     }
-                    result.at("logs", content);
-                    return result;
+                    Json nameJ = params.get("name");
+                    // Check name is a string
+                    if (!nameJ.isString()) {
+                        response = JsonApiResponse.error("Taps name must be a string");
+                        return response.toJson();
+                    }
+                    String name = params.get("name").asString();
+                    // Check taps name in taps
+                    if (!activeTaps.containsKey(name)) {
+                        response = JsonApiResponse.error("Taps name is not configured");
+                        return response.toJson();
+                    }
+
+                    return getSuricataLogs(name);
                 }
             }, new JsonCmdHelp().setDesc("DEPRECATED"));
             addCmd("clearSuricataLogs", new IJsonCmd() {
                 @Override
                 public Json exec(Json params) {
-                    clearLogs(params.at("name").asString());
-                    Json result = Json.object();
-                    try {
-                        writeToFile("", idsconf + "/taps/" + params.at("name").asString() + "/suricataLogs.txt");
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    JsonApiResponse response;
+                    // Check if name of tap in params
+                    if (!params.has("name")) {
+                        response = JsonApiResponse.error("Taps name must be included");
+                        return response.toJson();
                     }
-                    result.at("logs", "");
-                    return result;
+                    Json nameJ = params.get("name");
+                    // Check name is a string
+                    if (!nameJ.isString()) {
+                        response = JsonApiResponse.error("Taps name must be a string");
+                        return response.toJson();
+                    }
+                    String name = params.get("name").asString();
+                    // Check taps name in taps
+                    if (!activeTaps.containsKey(name)) {
+                        response = JsonApiResponse.error("Taps name is not configured");
+                        return response.toJson();
+                    }
+                    return clearSuricataLogs(name);
                 }
             }, new JsonCmdHelp().setDesc("DEPRECATED"));
             addCmd("sendIncludes", new IJsonCmd() {

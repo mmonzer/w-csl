@@ -16,6 +16,7 @@ import java.util.*;
 
 import com.csl.ids.TapDto;
 import com.csl.intercom.cslscan.ScanApiHandler;
+import com.csl.intercom.jsoncmd.JServiceLoader;
 import org.apache.commons.io.FileUtils;
 
 import com.csl.core.CSLContext;
@@ -90,7 +91,11 @@ public class TapsServices extends Service {
         return Json.read(jsonRaw);
     }
 
-    public static Json stopTap(String name) {
+    public Json stopTap(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
         if (!activeTaps.containsKey(name)) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
@@ -101,7 +106,11 @@ public class TapsServices extends Service {
         return JsonApiResponse.result(Json.read("{\"msg\":\"Tap " + name + " was successfully stopped\"}")).toJson();
     }
 
-    public static Json startTap(String name) {
+    public Json startTap(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
         if (!activeTaps.containsKey(name)) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
@@ -337,10 +346,28 @@ public class TapsServices extends Service {
 
     /**
      * Gets the IDS logs of the given tap
-     * @param name name of the tap
+     * @param params general params of the request
      * @return the last logs of the ids
      */
-    public Json getSuricataLogs(String name) {
+    public Json getSuricataLogs(Json params) {
+        JsonApiResponse response;
+        // Check if name of tap in params
+        if (!params.has("name")) {
+            response = JsonApiResponse.error("Taps name must be included");
+            return response.toJson();
+        }
+        Json nameJ = params.get("name");
+        // Check name is a string
+        if (!nameJ.isString()) {
+            response = JsonApiResponse.error("Taps name must be a string");
+            return response.toJson();
+        }
+        String name = params.get("name").asString();
+        // Check taps name in taps
+        if (!activeTaps.containsKey(name)) {
+            response = JsonApiResponse.error("Taps name is not configured");
+            return response.toJson();
+        }
         return activeTaps.get(name).sendCmd("/suricata", "{\"cmd\":\"suricataGetLogs\"}").toJson().get("result");
     }
 
@@ -448,6 +475,13 @@ public class TapsServices extends Service {
      * @return the configuration of the tap
      */
     public Json getTapConf(Json params) {
+//        try {
+//            return readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return Json.object();
+
         // Check if name of tap ok
         if (!params.has("name") || !params.get("name").isString()) {
             return JsonApiResponse.error("Tap's name missing from params").toJson();
@@ -612,38 +646,50 @@ public class TapsServices extends Service {
     /**
      * Starts the Suricata of the given TAP name
      *
-     * @param name name of the TAP
+     * @param params parameters of the request
      * @return the result of the starting
      */
-    public Json startSuricata(String name) {
+    public Json startSuricata(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
         if (!activeTaps.containsKey(name)) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
-        return activeTaps.get(name).sendCmd("/suricata",
-                Json.read("{\"cmd\":\"suricataStart\"}")).toJson();
+        return JsonApiResponse.result(activeTaps.get(name).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataStart\"}")).getResult().get("result")).toJson();
     }
 
     /**
      * Stops the Suricata of the given TAP name
      *
-     * @param name name of the TAP
+     * @param params parameters of the request
      * @return the result of the stopping
      */
-    public Json stopSuricata(String name) {
+    public Json stopSuricata(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
         if (!activeTaps.containsKey(name)) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
-        return activeTaps.get(name).sendCmd("/suricata",
-                Json.read("{\"cmd\":\"suricataStop\"}")).toJson();
+        return JsonApiResponse.result(activeTaps.get(name).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataStop\"}")).getResult().get("result")).toJson();
     }
 
     /**
      * Starts the Monitor of the given TAP name
      *
-     * @param name name of the TAP
+     * @param params name of the TAP
      * @return the result of the starting
      */
-    public Json startMonitor(String name) {
+    public Json startMonitor(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
         if (!activeTaps.containsKey(name)) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
@@ -654,10 +700,14 @@ public class TapsServices extends Service {
     /**
      * Stops the Monitor of the given TAP name
      *
-     * @param name name of the TAP
+     * @param params name of the TAP
      * @return the result of the stopping
      */
-    public Json stopMonitor(String name) {
+    public Json stopMonitor(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
         if (!activeTaps.containsKey(name)) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
@@ -1105,64 +1155,33 @@ public class TapsServices extends Service {
             }
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
 
-        addCmd("start_tap", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        return startTap(params.at("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("start_tap", this::startTap, new JsonCmdHelp()
                         .setDesc("Start the given tap")
                         .setParam("name", "name of the tap that must start", JsonCmdHelp.STR)
                         //	.setResult("nothing", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("startTap", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        return startTap(params.at("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("startTap", this::startTap, new JsonCmdHelp()
                         .setDesc("DEPRECATED : Start tap")
                         .setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
                         //	.setResult("nothing", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("stop_tap", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        return stopTap(params.at("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("stop_tap", this::stopTap, new JsonCmdHelp()
                         .setDesc("Stop the given tap")
                         .setParam("name", "name of the tap that must stop", JsonCmdHelp.STR)
                         //	.setResult("nothing", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
-        addCmd("stopTap", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                return stopTap(params.at("name").asString());
-            }
-        }, new JsonCmdHelp().setDesc("DEPRECATED"));
+        addCmd("stopTap", this::stopTap, new JsonCmdHelp().setDesc("DEPRECATED"));
 
         addCmd("restart_tap", new IJsonCmd() {
                     @Override
                     public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        stopTap(params.at("name").asString());
-                        startTap(params.at("name").asString());
-
-                        return Json.object();
+                        stopTap(params);
+                        return startTap(params);
                     }
                 }, new JsonCmdHelp()
                         .setDesc("Restarts the given tap")
@@ -1175,13 +1194,17 @@ public class TapsServices extends Service {
         addCmd("restartTap", new IJsonCmd() {
             @Override
             public Json exec(Json params) {
-
-                stopTap(params.at("name").asString());
-                startTap(params.at("name").asString());
-
-                return Json.object();
+                stopTap(params);
+                return startTap(params);
             }
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
+
+        addCmd("get_possible_interfaces_tap", this::getPossibleInterfaces, new JsonCmdHelp()
+                .setDesc("Gets the list of interfaces of the given tap")
+                .setParam("name", "name of the tap that must restart", JsonCmdHelp.STR)
+                .setResult("list of possible interfaces", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
+        );
 
         addCmd("set_interfaces_ids_tap", this::setInterfacesIdsTap, new JsonCmdHelp()
                 .setDesc("Changes the interfaces sniffed by the IDS of the given tap")
@@ -1215,100 +1238,47 @@ public class TapsServices extends Service {
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("start_suricata", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        return startSuricata(params.get("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("start_suricata", this::startSuricata, new JsonCmdHelp()
                         .setDesc("Start/restart Suricata of the given tap")
                         .setParam("name", "name of the tap, where suricata should be started.", JsonCmdHelp.STR)
                         .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("startSuricata", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        return startSuricata(params.get("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("startSuricata", this::startSuricata, new JsonCmdHelp()
                         .setDesc("DEPRECATED : Start/restart Suricata")
                         .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("stop_suricata", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        return stopSuricata(params.get("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("stop_suricata", this::stopSuricata, new JsonCmdHelp()
                         .setDesc("Stop Suricata of the given tap")
                         .setParam("name", "name of the tap, where suricata should be stop. ", JsonCmdHelp.STR)
                         .setResult("If the stopping was successful", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("stopSuricata", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                if (!params.has("name")) {
-                    return JsonApiResponse.error("Tap's name missing from params").toJson();
-                }
-                return stopSuricata(params.get("name").asString());
-            }
-        }, new JsonCmdHelp()
+        addCmd("stopSuricata", this::stopSuricata, new JsonCmdHelp()
                 .setDesc("DEPRECATED : Stop Suricata of the given tap")
                 .setParam("name", "name of the tap, where suricata should be stop. ", JsonCmdHelp.STR)
                 .setResult("If the stopping was successful", JsonCmdHelp.JSON)
                 .setStatus(JsonCmdHelp.STATUS_OK));
 
-        addCmd("start_monitor", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        return startMonitor(params.get("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("start_monitor", this::startMonitor, new JsonCmdHelp()
                         .setDesc("Start/restart Monitor in the given tap")
                         .setParam("name", "name of the tap, where monitor should be started.", JsonCmdHelp.STR)
                         .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("stop_monitor", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        return stopMonitor(params.get("name").asString());
-                    }
-                }, new JsonCmdHelp()
+        addCmd("stop_monitor", this::stopMonitor, new JsonCmdHelp()
                         .setDesc("Stop Monitor in the given tap.")
                         .setParam("name", "name of the tap, where monitor should be stop. ", JsonCmdHelp.STR)
                         .setResult("If the stopping was successful", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("reload_all_taps_rules", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                return reloadAllTapsRules();
-            }
-        },
+        addCmd("reload_all_taps_rules", this::reloadAllTapsRules,
                 new JsonCmdHelp().setDesc("Reloads the rules of all the taps")
                         .setResult("The summary of the update", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
@@ -1351,34 +1321,13 @@ public class TapsServices extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("reload_rules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        if (!activeTaps.containsKey(params.get("name").asString())) {
-                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
-                        }
-
-                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
-                                Json.read("{\"cmd\":\"suricataReloadRules\"}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Reloads the rules of the given tap")
+        addCmd("reload_rules", this::reloadRules, new JsonCmdHelp().setDesc("Reloads the rules of the given tap")
                         .setParam("name", "name of the tap, where the rules should be reloaded. ", JsonCmdHelp.STR)
                         .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("reloadRules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-
-                        return apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
-                                Json.read("{\"cmd\":\"suricataReloadRules\"}")).toJson();
-                    }
-                },
+        addCmd("reloadRules", this::reloadRules,
                 new JsonCmdHelp().setDesc("DEPRECATED : Reloads the rules of the given tap")
                         .setParam("name", "name of the tap, where the rules should be reloaded. ", JsonCmdHelp.STR)
                         .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
@@ -1492,43 +1441,20 @@ public class TapsServices extends Service {
             }
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
 
-        addCmd("get_suricata_status", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        if (!activeTaps.containsKey(params.get("name").asString())) {
-                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
-                        }
-                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata", Json.read("{\"cmd\":\"suricataStatus\"}")).toJson();
-                    }
-                },
+        addCmd("get_suricata_status", this::getSuricataStatus,
                 new JsonCmdHelp().setDesc("Get the Suricata status of the given tap")
                         .setParam("name","Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
                         .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("getSuricataStatus", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        return apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata", Json.read("{\"cmd\":\"suricataStatus\"}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("DEPRECATED : Get the Suricata status of the given tap")
+        addCmd("getSuricataStatus", this::getSuricataStatus, new JsonCmdHelp().setDesc("DEPRECATED : Get the Suricata status of the given tap")
                         .setParam("name","Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
                         .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("get_suricata_conf", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                return getSuricataConf(params);
-            }
-        },
-                new JsonCmdHelp().setDesc("Get the Suricata configuration file of the given tap")
+        addCmd("get_suricata_conf", this::getSuricataConf, new JsonCmdHelp().setDesc("Get the Suricata configuration file of the given tap")
                         .setParam("name","Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
                         .setResult("teh file content of the configuration file", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
@@ -1548,17 +1474,7 @@ public class TapsServices extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("setSuricataConf", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                try {
-                    writeToFile(params.at("conf").asString(), idsconf + "/taps/" + params.at("name").asString() + "/suricata.yaml");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return Json.object();
-            }
-        },
+        addCmd("setSuricataConf", this::setSuricataConf,
                 new JsonCmdHelp().setDesc("DEPRECATED : Modify the configuration of Suricata. Several properties can be changed at once")
                         .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
                         .setParam("property", "The property to change", IJsonCmdHelp.JSON)
@@ -1566,63 +1482,24 @@ public class TapsServices extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("get_base_rules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        if (!activeTaps.containsKey(params.get("name").asString())) {
-                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
-                        }
-                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
-                                Json.read("{\"cmd\":\"suricataGetBaseRules\"}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Retrieve the base rules of the given tap")
+        addCmd("get_base_rules", this::getBaseRules, new JsonCmdHelp().setDesc("Retrieve the base rules of the given tap")
                         .setParam("name","The name of the tap", IJsonCmdHelp.JSON)
                         .setResult("An object with the list of base rules of the given tap", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("getBaseRules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        return apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
-                                Json.read("{\"cmd\":\"suricataGetBaseRules\"}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the base rules of Suricata")
+        addCmd("getBaseRules", this::getBaseRules, new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the base rules of Suricata")
+                .setParam("name","The name of the tap", IJsonCmdHelp.JSON)
                         .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_gen_rules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        if (!activeTaps.containsKey(params.get("name").asString())) {
-                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
-                        }
-                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
-                                Json.read("{\"cmd\":\"suricataGetCustomRules\"}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Retrieve the generated rules of the given tap")
+        addCmd("get_gen_rules", this::getGenRules, new JsonCmdHelp().setDesc("Retrieve the generated rules of the given tap")
                         .setParam("name","The name of the tap", IJsonCmdHelp.STR)
                         .setResult("An object with the list of generated rules of the given tap", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("getGenRules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        return apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
-                                Json.read("{\"cmd\":\"suricataGetCustomRules\"}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the generated rules of Suricata")
+        addCmd("getGenRules", this::getGenRules, new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the generated rules of Suricata")
                         .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
@@ -1710,46 +1587,14 @@ public class TapsServices extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("replace_base_rules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        if (!params.has("rules")) {
-                            return JsonApiResponse.error("Rules are missing from params").toJson();
-                        }
-                        if (!activeTaps.containsKey(params.get("name").asString())) {
-                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
-                        }
-                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
-                                Json.read("{\"cmd\":\"suricataReplaceBaseRules\",\"params\":" + params + "}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Replace the base rules of the given tap")
+        addCmd("replace_base_rules", this::replaceBaseRules, new JsonCmdHelp().setDesc("Replace the base rules of the given tap")
                         .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
                         .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
                         .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("replace_gen_rules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("name")) {
-                            return JsonApiResponse.error("Tap's name missing from params").toJson();
-                        }
-                        if (!params.has("rules")) {
-                            return JsonApiResponse.error("Rules are missing from params").toJson();
-                        }
-                        if (!activeTaps.containsKey(params.get("name").asString())) {
-                            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
-                        }
-                        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
-                                Json.read("{\"cmd\":\"suricataReplaceCustomRules\",\"params\":" + params + "}")).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Replace the generated rules of the given tap")
+        addCmd("replace_gen_rules", this::replaceGenRules, new JsonCmdHelp().setDesc("Replace the generated rules of the given tap")
                         .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
                         .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
                         .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
@@ -1813,88 +1658,22 @@ public class TapsServices extends Service {
         /*
          * Update suricata rules in all taps
          */
-        addCmd("update_all_taps_suricata_rules", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        if (!params.has("rules")) {
-                            return JsonApiResponse.error("rules is missing from params").toJson();
-                        }
-                        return updateAllTapsSuricataRules(params);
-                    }
-                },
+        addCmd("update_all_taps_suricata_rules", this::updateAllTapsSuricataRules,
                 new JsonCmdHelp().setDesc("Update all generated suricata rules in all taps")
                         .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
                         .setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("updateAllTapsSuricataRules", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                Json response = null;
-                for (Json tapConfig : configuredTaps) {
-                    response = apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
-                            Json.read("{\"cmd\":\"suricataAddCustomRules\",\"params\":" + params.toString() + "}")).toJson();
-                }
-                return response;
-            }
-        }, new JsonCmdHelp().setDesc("DEPRECATED"));
+        addCmd("updateAllTapsSuricataRules", this::updateAllTapsSuricataRules, new JsonCmdHelp().setDesc("DEPRECATED"));
 
-        addCmd("get_suricata_logs", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                JsonApiResponse response;
-                // Check if name of tap in params
-                if (!params.has("name")) {
-                    response = JsonApiResponse.error("Taps name must be included");
-                    return response.toJson();
-                }
-                Json nameJ = params.get("name");
-                // Check name is a string
-                if (!nameJ.isString()) {
-                    response = JsonApiResponse.error("Taps name must be a string");
-                    return response.toJson();
-                }
-                String name = params.get("name").asString();
-                // Check taps name in taps
-                if (!activeTaps.containsKey(name)) {
-                    response = JsonApiResponse.error("Taps name is not configured");
-                    return response.toJson();
-                }
-
-                return getSuricataLogs(name);
-            }
-        },
+        addCmd("get_suricata_logs", this::getSuricataLogs,
                 new JsonCmdHelp().setDesc("Get the IDS logs of the given tap")
                         .setParam("name", "name of the tap", IJsonCmdHelp.JSON)
                         .setResult("The most recent logs of the IDS of the given tap", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK));
 
-        addCmd("getSuricataLogs", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                JsonApiResponse response;
-                // Check if name of tap in params
-                if (!params.has("name")) {
-                    response = JsonApiResponse.error("Taps name must be included");
-                    return response.toJson();
-                }
-                Json nameJ = params.get("name");
-                // Check name is a string
-                if (!nameJ.isString()) {
-                    response = JsonApiResponse.error("Taps name must be a string");
-                    return response.toJson();
-                }
-                String name = params.get("name").asString();
-                // Check taps name in taps
-                if (!activeTaps.containsKey(name)) {
-                    response = JsonApiResponse.error("Taps name is not configured");
-                    return response.toJson();
-                }
-
-                return getSuricataLogs(name);
-            }
-        },
+        addCmd("getSuricataLogs", this::getSuricataLogs,
                 new JsonCmdHelp().setDesc("DEPRECATED : Get the IDS logs of the given tap")
                         .setParam("name", "name of the tap", IJsonCmdHelp.JSON)
                         .setResult("The most recent logs of the IDS of the given tap", IJsonCmdHelp.JSON)
@@ -2094,6 +1873,109 @@ public class TapsServices extends Service {
         return true;
     }
 
+    /**
+     * Reloads the rules of the given IDS
+     * @param params general parameters of the request
+     * @return whether the rules were updated
+     */
+    private Json reloadRules(Json params) {
+        if (!params.has("name")) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        if (!activeTaps.containsKey(params.get("name").asString())) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+        }
+
+        return JsonApiResponse.result(activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataReloadRules\"}")).getResult().get("result")).toJson();
+    }
+
+    /**
+     * Replaces all the base rules of the given IDS
+     * @param params general parameters of the request
+     * @return the base rules of the given IDS
+     */
+    private Json replaceBaseRules(Json params) {
+        if (!params.has("name")) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        if (!params.has("rules")) {
+            return JsonApiResponse.error("Rules are missing from params").toJson();
+        }
+        if (!activeTaps.containsKey(params.get("name").asString())) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+        }
+        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataReplaceBaseRules\",\"params\":" + params + "}")).toJson();
+    }
+
+    /**
+     * Replaces all the generated rules of the given IDS
+     * @param params general parameters of the request
+     * @return the generated rules of the given IDS
+     */
+    private Json replaceGenRules(Json params) {
+        if (!params.has("name")) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        if (!params.has("rules")) {
+            return JsonApiResponse.error("Rules are missing from params").toJson();
+        }
+        if (!activeTaps.containsKey(params.get("name").asString())) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+        }
+        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataReplaceCustomRules\",\"params\":" + params + "}")).toJson();
+    }
+
+    /**
+     * Gets the base rules of the given IDS
+     * @param params general parameters of the request
+     * @return the base rules of the given IDS
+     */
+    private Json getBaseRules(Json params) {
+        if (!params.has("name")) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        if (!activeTaps.containsKey(params.get("name").asString())) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+        }
+        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataGetBaseRules\"}")).toJson();
+    }
+
+    /**
+     * Gets the generated rules of the given IDS
+     * @param params general parameters of the request
+     * @return the generated rules of the given IDS
+     */
+    private Json getGenRules(Json params) {
+        if (!params.has("name")) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        if (!activeTaps.containsKey(params.get("name").asString())) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+        }
+        return activeTaps.get(params.get("name").asString()).sendCmd("/suricata",
+                Json.read("{\"cmd\":\"suricataGetCustomRules\"}")).toJson();
+    }
+
+    /**
+     * Gets the status of the IDS
+     * @param params general parameters of the request
+     * @return the status of the IDS
+     */
+    private Json getSuricataStatus(Json params) {
+        if (!params.has("name")) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        if (!activeTaps.containsKey(params.get("name").asString())) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+        }
+        return JsonApiResponse.result(
+                activeTaps.get(params.get("name").asString()).sendCmd("/suricata", "{\"cmd\":\"suricataStatus\"}").getResult().get("result")).toJson();
+    }
+
     private Json clearSuricataLogs(Json params) {
         JsonApiResponse response;
         // Check if name of tap in params
@@ -2144,6 +2026,9 @@ public class TapsServices extends Service {
      * @return the
      */
     private @Nullable Json updateAllTapsSuricataRules(Json params) {
+        if (!params.has("rules")) {
+            return JsonApiResponse.error("rules is missing from params").toJson();
+        }
         Json response = Json.read("[]");
         for (TapDto tap : activeTaps.values()) {
             response = tap.sendCmd("/suricata",
@@ -2158,19 +2043,23 @@ public class TapsServices extends Service {
      *
      * @return the output of every reload
      */
-    private @NotNull Json reloadAllTapsRules() {
+    private @NotNull Json reloadAllTapsRules(Json params) {
         List<Json> allTapsOutputs = new ArrayList<>();
-        boolean gotError = false;
 
         for (TapDto tap : activeTaps.values()) {
-            String output = tap.sendCmd("/suricata", Json.read("{\"cmd\":\"suricataReloadRulesNonBlocking\"}")).toString();
+            JsonApiResponse response = tap.sendCmd("/suricata", Json.read("{\"cmd\":\"suricataReloadRulesNonBlocking\"}"));
 
             Json result = Json.object();
             result.at("idname", tap.getName());
-            result.at("result", reloadRulesParseOutput(output));
-
-            if (result.at("result").has("error")) {
-                gotError = true;
+            result.at("id", tap.getId());
+            if (response.isSuccess()){
+                if (response.getResult().has("result") && response.getResult().get("result").has("reloadRules")) {
+                    result.at("result", response.getResult().get("result").get("reloadRules").asString());
+                } else {
+                    result.at("result", response.getResult().get("result"));
+                }
+            } else {
+                result.at("result", "failed");
             }
 
             allTapsOutputs.add(result);
@@ -2178,9 +2067,7 @@ public class TapsServices extends Service {
 
         Json out = Json.object();
         out.at("result", allTapsOutputs);
-        if (gotError) {
-            out.at("error", true);
-        }
+
         return out;
     }
 
@@ -2203,6 +2090,7 @@ public class TapsServices extends Service {
         output.atDel("status");
         Json result = Json.object();
         result.at("idname", tap.getName());
+        result.at("id", tap.getId());
         result.at("result", output);
 
         if (output.has("([Ee]rror)|([Pp]roblem)")) {
@@ -2229,6 +2117,34 @@ public class TapsServices extends Service {
         Json output = tap.sendCmd("/suricata",Json.read("{\"cmd\":\"suricataGetConfigurationFile\"}")).toJson();;
         Json result = Json.object();
         result.at("idname", tap.getName());
+        result.at("id", tap.getId());
+        if (output.has("result") && output.get("result").has("result")) {
+            result.at("result", output.get("result").get("result"));
+        } else {
+            result.at("error", true);
+        }
+
+        return result;
+    }
+
+    /**
+     * Get the possible interfaces at the given tap.
+     *
+     * @return the name of the tap and the content of the yaml file
+     */
+    private @NotNull Json getPossibleInterfaces(Json params) {
+        if (!params.has("name")) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        if (!activeTaps.containsKey(params.get("name").asString())) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
+        }
+        TapDto tap = activeTaps.get(params.get("name").asString());
+
+        Json output = tap.sendCmd("/config",Json.read("{\"cmd\":\"getPossibleInterfaces\"}")).toJson();;
+        Json result = Json.object();
+        result.at("idname", tap.getName());
+        result.at("id", tap.getId());
         if (output.has("result") && output.get("result").has("result")) {
             result.at("result", output.get("result").get("result"));
         } else {

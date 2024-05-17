@@ -12,11 +12,15 @@ import com.ucsl.json.Json;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Class that manages the generic api.
+ */
 public class ApiHttpServer {
     boolean debug = false;
     HttpServer server = null;
@@ -44,10 +48,10 @@ public class ApiHttpServer {
             out.write(response);
             out.close();
         });
-        Iterator var5 = apis.iterator();
+        Iterator apiIterator = apis.iterator();
 
-        while (var5.hasNext()) {
-            IApiCommands api = (IApiCommands) var5.next();
+        while (apiIterator.hasNext()) {
+            IApiCommands api = (IApiCommands) apiIterator.next();
             this.server.createContext("/" + api.getName(), new CustomHandlerApi(api));
             this.apiNames.add(api.getName());
             this.apiDescriptions.add(api.getDescription());
@@ -57,6 +61,9 @@ public class ApiHttpServer {
         return this;
     }
 
+    /**
+     * Starts the server
+     */
     public void startServer() {
         if (this.server != null) {
             this.server.start();
@@ -65,40 +72,16 @@ public class ApiHttpServer {
         System.out.println("Miniserver started");
     }
 
-    class CustomHandler0 implements HttpHandler {
-        private IApiCommands api;
-
-        private void printRequestInfo(HttpExchange exchange) {
-            System.out.println("-- headers --");
-            Headers requestHeaders = exchange.getRequestHeaders();
-            Set var10000 = requestHeaders.entrySet();
-            PrintStream var10001 = System.out;
-            var10000.forEach(var10001::println);
-            System.out.println("-- principle --");
-            HttpPrincipal principal = exchange.getPrincipal();
-            System.out.println(principal);
-            System.out.println("-- HTTP method --");
-            String requestMethod = exchange.getRequestMethod();
-            System.out.println(requestMethod);
-            System.out.println("-- query --");
-            URI requestURI = exchange.getRequestURI();
-            String query = requestURI.getQuery();
-            System.out.println(query);
-        }
-
-        protected String getContent(HttpExchange exchange) throws IOException {
-            BufferedReader httpInput = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), "UTF-8"));
-            StringBuilder in = new StringBuilder();
-
-            String input;
-            while ((input = httpInput.readLine()) != null) {
-                in.append(input).append(" ");
-            }
-
-            httpInput.close();
-            return in.toString().trim();
-        }
-
+    /**
+     * Handler for the api test
+     */
+    class CustomHandler0 extends CustomHttpHandler {
+        /**
+         * Handler of the connexion.
+         * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
+         * @throws IOException if cant get the content of the exchange.
+         */
+        @Override
         public void handle(HttpExchange exchange) throws IOException {
             String requestMethod = exchange.getRequestMethod();
             System.out.println("req");
@@ -114,44 +97,23 @@ public class ApiHttpServer {
         }
     }
 
-    class CustomHandlerApi implements HttpHandler {
+    /**
+     * Handler for the api
+     */
+    class CustomHandlerApi extends CustomHttpHandler {
         private IApiCommands api;
 
         public CustomHandlerApi(IApiCommands api) {
+            super();
             this.api = api;
         }
 
-        private void printRequestInfo(HttpExchange exchange) {
-            System.out.println("-- headers --");
-            Headers requestHeaders = exchange.getRequestHeaders();
-            Set var10000 = requestHeaders.entrySet();
-            PrintStream var10001 = System.out;
-            var10000.forEach(var10001::println);
-            System.out.println("-- principle --");
-            HttpPrincipal principal = exchange.getPrincipal();
-            System.out.println(principal);
-            System.out.println("-- HTTP method --");
-            String requestMethod = exchange.getRequestMethod();
-            System.out.println(requestMethod);
-            System.out.println("-- query --");
-            URI requestURI = exchange.getRequestURI();
-            String query = requestURI.getQuery();
-            System.out.println(query);
-        }
-
-        protected String getContent(HttpExchange exchange) throws IOException {
-            BufferedReader httpInput = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), "UTF-8"));
-            StringBuilder in = new StringBuilder();
-
-            String input;
-            while ((input = httpInput.readLine()) != null) {
-                in.append(input).append(" ");
-            }
-
-            httpInput.close();
-            return in.toString().trim();
-        }
-
+        /**
+         * Generic method that POST the given body at the given api endpoint
+         * @param api endpoint of the api
+         * @param body body to post
+         * @return the result of the execution of the given function
+         */
         private Json execPostCommand(IApiCommands api, String body) {
             Json data = Json.read(body);
             Json cmd = data.get("cmd");
@@ -168,6 +130,12 @@ public class ApiHttpServer {
             return api.exec(cmd.asString(), params);
         }
 
+        /**
+         * Handler of the connexion.
+         * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
+         * @throws IOException if cant get the content of the exchange.
+         */
+        @Override
         public void handle(HttpExchange exchange) throws IOException {
             String requestMethod = exchange.getRequestMethod();
             if (ApiHttpServer.this.debug) {
@@ -197,39 +165,16 @@ public class ApiHttpServer {
         }
     }
 
-    class CustomHandlerHelp implements HttpHandler {
-        private IApiCommands api;
-
-        private void printRequestInfo(HttpExchange exchange) {
-            System.out.println("-- headers --");
-            Headers requestHeaders = exchange.getRequestHeaders();
-            Set var10000 = requestHeaders.entrySet();
-            PrintStream var10001 = System.out;
-            var10000.forEach(var10001::println);
-            System.out.println("-- principle --");
-            HttpPrincipal principal = exchange.getPrincipal();
-            System.out.println(principal);
-            System.out.println("-- HTTP method --");
-            String requestMethod = exchange.getRequestMethod();
-            System.out.println(requestMethod);
-            System.out.println("-- query --");
-            URI requestURI = exchange.getRequestURI();
-            String query = requestURI.getQuery();
-        }
-
-        protected String getContent(HttpExchange exchange) throws IOException {
-            BufferedReader httpInput = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), "UTF-8"));
-            StringBuilder in = new StringBuilder();
-
-            String input;
-            while ((input = httpInput.readLine()) != null) {
-                in.append(input).append(" ");
-            }
-
-            httpInput.close();
-            return in.toString().trim();
-        }
-
+    /**
+     * Handler for the api help
+     */
+    class CustomHandlerHelp extends CustomHttpHandler {
+        /**
+         * Handler of the connexion.
+         * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
+         * @throws IOException if cant get the content of the exchange.
+         */
+        @Override
         public void handle(HttpExchange exchange) throws IOException {
             String requestMethod = exchange.getRequestMethod();
             if (ApiHttpServer.this.debug) {
@@ -262,5 +207,59 @@ public class ApiHttpServer {
             os.write(response.getBytes());
             os.close();
         }
+    }
+
+    /**
+     * Handler for the api
+     */
+    abstract class CustomHttpHandler implements HttpHandler {
+        /**
+         * Prints information of the exchange : RequestHeaders, Method, query, authentication, ...
+         * @param exchange {@link HttpExchange} of the current connexion to sho information
+         */
+        protected void printRequestInfo(HttpExchange exchange) {
+            System.out.println("-- headers --");
+            Headers requestHeaders = exchange.getRequestHeaders();
+            Set headers = requestHeaders.entrySet();
+            PrintStream var10001 = System.out;
+            headers.forEach(var10001::println);
+            System.out.println("-- principle --");
+            HttpPrincipal principal = exchange.getPrincipal();
+            System.out.println(principal);
+            System.out.println("-- HTTP method --");
+            String requestMethod = exchange.getRequestMethod();
+            System.out.println(requestMethod);
+            System.out.println("-- query --");
+            URI requestURI = exchange.getRequestURI();
+            String query = requestURI.getQuery();
+            System.out.println(query);
+        }
+
+        /**
+         * Get the content of the request
+         * @param exchange {@link HttpExchange} of the current connexion
+         * @return the content of the request
+         * @throws IOException if the content cannot be read.
+         */
+        protected String getContent(HttpExchange exchange) throws IOException {
+            BufferedReader httpInput = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8));
+            StringBuilder in = new StringBuilder();
+
+            String input;
+            while ((input = httpInput.readLine()) != null) {
+                in.append(input).append(" ");
+            }
+
+            httpInput.close();
+            return in.toString().trim();
+        }
+
+        /**
+         * Handler of the connexion.
+         * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
+         * @throws IOException if cant get the content of the exchange.
+         */
+        @Override
+        public abstract void handle(HttpExchange exchange) throws IOException;
     }
 }

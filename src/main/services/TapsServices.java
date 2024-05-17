@@ -1,22 +1,12 @@
 package main.services;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.NoRouteToHostException;
-import java.net.URI;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import com.csl.ids.TapDto;
+import com.csl.ids.Tap;
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.intercom.jsoncmd.JServiceLoader;
 import org.apache.commons.io.FileUtils;
 
 import com.csl.core.CSLContext;
@@ -29,15 +19,19 @@ import com.ucsl.json.JsonUtil;
 
 import main.extensions.SshUtils;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
+import org.eclipse.jetty.client.HttpClient;
 
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.util.InputStreamResponseListener;
+import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class TapsServices extends Service {
     private static final String SCRIPTS_DIR = "~/csl/scripts";
@@ -54,7 +48,7 @@ public class TapsServices extends Service {
     private static final String RELOAD_RULES = "cd " + SCRIPTS_DIR + " && sudo ./reloadSuricataRules.sh";
 
     static ArrayList<Json> configuredTaps;
-    static HashMap<String, TapDto> activeTaps = new HashMap<>();
+    static HashMap<String, Tap> activeTaps = new HashMap<>();
     static String localIP;
     static String localPort;
     static String knownHostFilePath;
@@ -193,9 +187,9 @@ public class TapsServices extends Service {
         }
     }
 
-    private static void writeToFile(HashMap<String, TapDto> t, String path) throws IOException {
+    private static void writeToFile(HashMap<String, Tap> t, String path) throws IOException {
         StringBuilder s = new StringBuilder("[");
-        for (TapDto tap : t.values()) {
+        for (Tap tap : t.values()) {
             s.append("{");
             s.append("\"idname\":\"").append(tap.getName()).append("\",");
             s.append("\"id\":\"").append(tap.getId()).append("\",");
@@ -204,7 +198,7 @@ public class TapsServices extends Service {
             s.append("\"includes\":").append(tap.getIncludes());
             s.append("},");
         }
-        s.deleteCharAt(s.length()-1);
+        s.deleteCharAt(s.length() - 1);
         s.append("]");
         writeToFile(s.toString(), path);
     }
@@ -248,6 +242,76 @@ public class TapsServices extends Service {
         }
     }
 
+    /**
+     * Adds new tap to the list of active Taps. If its present, it modifies it
+     *
+     * @param params parameters with the information of the new Tap
+     * @return the new tap
+     */
+    public Json newTap(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
+        int port;
+        if (!params.has("port") || !params.get("port").isNumber()) {
+            port = 8888;
+        } else {
+            port = params.get("port").asInteger();
+        }
+        String ip;
+        if (!params.has("ip") || !params.get("ip").isString()) {
+            ip = "127.0.0.1";
+        } else {
+            ip = params.get("ip").asString();
+        }
+
+        Tap newTap;
+        if (activeTaps.values().stream().anyMatch(t -> t.getId().equals(name))) {
+            newTap = activeTaps.get("name");
+            newTap.setIp(ip);
+            newTap.setPort(port);
+            configuredTaps.removeIf((e) -> e.get("idname").asString().equals(name));
+        } else {
+            newTap = new Tap(name, name, ip, port, new ArrayList<>());
+        }
+
+        configuredTaps.add(newTap.toJson());
+
+        try {
+            writeToFile(configuredTaps.toString(), idsconf + "/taps/TapsConfiguration.json");
+        } catch (IOException ignored) {
+        }
+
+        activeTaps.put(newTap.getId(), newTap);
+
+        return newTap.toJson();
+    }
+
+    /**
+     * Deletes new tap to the list of active Taps
+     *
+     * @param params parameters with the information of the new Tap
+     * @return the new tap
+     */
+    public Json deleteTap(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
+
+        configuredTaps.removeIf((e) -> e.get("idname").asString().equals(name));
+
+        try {
+            writeToFile(configuredTaps.toString(), idsconf + "/taps/TapsConfiguration.json");
+        } catch (IOException ignored) {
+        }
+
+        activeTaps.remove(name);
+
+        return Json.make(configuredTaps);
+    }
+
     public static void deleteTap(String name) {
         ArrayList<Json> tapsclone = (ArrayList<Json>) configuredTaps.clone();
         for (Json j : configuredTaps) {
@@ -266,8 +330,9 @@ public class TapsServices extends Service {
     /**
      * Changes the IP to contact the tap API. It changes the configuration if the CSL-Client side and
      * records it into a file.
+     *
      * @param name of the tap
-     * @param ip new ip of the tap API
+     * @param ip   new ip of the tap API
      * @return an API response with the new tap configuration if the field result.
      */
     public Json setIp(String name, String ip) {
@@ -313,6 +378,7 @@ public class TapsServices extends Service {
     /**
      * Changes the IP to contact the tap API. It changes the configuration if the CSL-Client side and
      * records it into a file.
+     *
      * @param name of the tap
      * @param port new port to contact the tap API
      * @return an API response with the new tap configuration if the field result.
@@ -327,7 +393,7 @@ public class TapsServices extends Service {
         int previousPort = activeTaps.get(name).getPort();
         activeTaps.get(name).setPort(port);
         try {
-            if (activeTaps.get(name).sendCmd("/config", "{\"cmd\":\"getConfig\"}").getResult()==null) {
+            if (activeTaps.get(name).sendCmd("/config", "{\"cmd\":\"getConfig\"}").getResult() == null) {
                 throw new NoRouteToHostException();
             }
         } catch (Exception e) {
@@ -345,34 +411,26 @@ public class TapsServices extends Service {
     }
 
     /**
-     * Gets the IDS logs of the given tap
+     * Gets the file containing the IDS logs of the given tap
+     *
      * @param params general params of the request
-     * @return the last logs of the ids
+     * @return the logs file of the ids
      */
     public Json getSuricataLogs(Json params) {
-        JsonApiResponse response;
-        // Check if name of tap in params
-        if (!params.has("name")) {
-            response = JsonApiResponse.error("Taps name must be included");
-            return response.toJson();
-        }
-        Json nameJ = params.get("name");
-        // Check name is a string
-        if (!nameJ.isString()) {
-            response = JsonApiResponse.error("Taps name must be a string");
-            return response.toJson();
-        }
-        String name = params.get("name").asString();
-        // Check taps name in taps
-        if (!activeTaps.containsKey(name)) {
-            response = JsonApiResponse.error("Taps name is not configured");
-            return response.toJson();
-        }
-        return activeTaps.get(name).sendCmd("/suricata", "{\"cmd\":\"suricataGetLogs\"}").toJson().get("result");
+            if (!params.has("name") || !params.get("name").isString()) {
+                return JsonApiResponse.error("Tap's name missing from params").toJson();
+            }
+            String name = params.get("name").asString();
+            if (!activeTaps.containsKey(name)) {
+                return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+            }
+            return activeTaps.get(name).getFile("/suricata",
+                    Json.read("{\"cmd\":\"suricataGetLogFile\"}"));
     }
 
     /**
      * Gets the IDS logs of the given tap
+     *
      * @param name name of the tap
      * @return the last logs of the ids
      */
@@ -420,34 +478,11 @@ public class TapsServices extends Service {
                     e.printStackTrace();
                 }
                 ssh.endConnection();
-
             }
         }
 
 
         return result;
-    }
-
-    /**
-     * Gets the configuration of the only TAP
-     *
-     * @return the configuration of the TAP
-     */
-    public static String getConfFromTap() {
-        // TODO : change url and deal with answer
-        HttpResponse<String> response = null;
-        String url = "http://localhost:8888/config";
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .POST(HttpRequest.BodyPublishers.ofString("{\"cmd\":\"getConfig\"}"))
-                .build();
-        try {
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return response.body();
     }
 
     /**
@@ -495,13 +530,27 @@ public class TapsServices extends Service {
     }
 
     /**
+     * Gets the configuration of the one tap. It's the configuration tof CSLClient to connect the tap
+     *
+     * @return the configuration of the tap
+     */
+    public Json getTapConf_old(Json params) {
+        try {
+            return readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Json.object();
+    }
+
+    /**
      * Gets the configuration of the all tap. It's the configuration tof CSL-Client to connect the tap
      *
      * @return the configuration of the taps
      */
     public Json getTapsConf(Json params) {
         Json response = Json.object();
-        for (TapDto tap : activeTaps.values()) {
+        for (Tap tap : activeTaps.values()) {
             response.at(tap.getId(), tap.toJson());
         }
 
@@ -520,8 +569,7 @@ public class TapsServices extends Service {
 
         params.delAt("name");
 
-        return activeTaps.get(name).sendCmd("/config","{\"cmd\":\"updateConfig\",\"params\":"+params+"}").toJson();
-
+        return activeTaps.get(name).sendCmd("/config", "{\"cmd\":\"updateConfig\",\"params\":" + params + "}").toJson();
     }
 
     public static void sendIncludes(String name) {
@@ -581,7 +629,6 @@ public class TapsServices extends Service {
             if (j.at("idname").asString().contentEquals(name)) {
                 j.set("password", password);
                 j.set("username", username);
-
             }
         }
     }
@@ -590,7 +637,6 @@ public class TapsServices extends Service {
         for (Json j : configuredTaps) {
             if (j.at("idname").asString().contentEquals(name)) {
                 j.at("networkName", networkName);
-
             }
         }
     }
@@ -601,7 +647,7 @@ public class TapsServices extends Service {
      * @param params params of the request
      * @return the result of the change
      */
-    public Json getInterfacesIdsTap (Json params) {
+    public Json getInterfacesIdsTap(Json params) {
         // Check if name of tap ok
         if (!params.has("name") || !params.get("name").isString()) {
             return JsonApiResponse.error("Tap's name missing from params").toJson();
@@ -621,7 +667,7 @@ public class TapsServices extends Service {
      * @param params params of the request
      * @return the result of the change
      */
-    public Json setInterfacesIdsTap (Json params) {
+    public Json setInterfacesIdsTap(Json params) {
         // Check if name of tap ok
         if (!params.has("name") || !params.get("name").isString()) {
             return JsonApiResponse.error("Tap's name missing from params").toJson();
@@ -640,7 +686,7 @@ public class TapsServices extends Service {
         }
 
         return activeTaps.get(name).sendCmd("/suricata",
-                Json.read("{\"cmd\":\"suricataSetInterfaces\",\"params\":{\"interfaces\":"+interfaces+"}}")).toJson().get("result");
+                Json.read("{\"cmd\":\"suricataSetInterfaces\",\"params\":{\"interfaces\":" + interfaces + "}}")).toJson().get("result");
     }
 
     /**
@@ -817,6 +863,54 @@ public class TapsServices extends Service {
         return e;
     }
 
+    public static Json downloadFile2(String serverUrl, String outputFilePath) throws Exception {
+        // Create and start the HttpClient
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+
+        Json responseJson = Json.object();
+        try {
+            // Create a POST request to the server
+            Request request = httpClient.newRequest(serverUrl)
+                    .method(HttpMethod.POST)
+                    .content(new StringContentProvider("{\"cmd\":\"suricataGetLogFile\"}"), "application/json");
+
+            // Send the request and get the response
+            InputStreamResponseListener listener = new InputStreamResponseListener();
+            request.send(listener);
+
+            Response response = listener.get(30, TimeUnit.SECONDS); // Wait for the response
+            if (response.getHeaders().containsKey("Content-Type")) {
+                responseJson.at("Content-Type", response.getHeaders().getField("Content-Type").getValue());
+            }
+            if (response.getHeaders().containsKey("Content-disposition")) {
+                responseJson.at("Content-disposition", response.getHeaders().getField("Content-disposition").getValue());
+            }
+            String strResponse = "";
+            // Check if the response status is OK (200)
+            if (response.getStatus() == 200) {
+                try (InputStream inputStream = listener.getInputStream();
+                     FileOutputStream outputStream = new FileOutputStream(outputFilePath)) {
+
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        strResponse += new String(buffer);
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    responseJson.at("Content", strResponse);
+                }
+            } else {
+                System.err.println("Failed to download file: " + response.getStatus());
+                responseJson.at("success", "false");
+                responseJson.at("error", "Failed to download the file");
+            }
+        } finally {
+            httpClient.stop();
+        }
+        return responseJson;
+    }
+
     /**
      * Initialization of the TAPs commands
      *
@@ -828,7 +922,7 @@ public class TapsServices extends Service {
     public boolean init(Json config, String cslDir) {
         idsconf = CSLContext.instance.getCslConfDir();
         Json conf;
-        TapDto tap;
+        Tap tap;
         try {
             conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
             if (conf.isArray()) {
@@ -837,7 +931,7 @@ public class TapsServices extends Service {
                 configuredTaps = new ArrayList<Json>();
             }
             for (Json j : configuredTaps) {
-                tap = new TapDto(j.at("idname").asString(),
+                tap = new Tap(j.at("idname").asString(),
                         j.at("id").asString(),
                         j.at("ip").asString(),
                         j.at("port").asInteger(),
@@ -853,56 +947,35 @@ public class TapsServices extends Service {
         localIP = config.at("localIpAddr").asString();
         localPort = config.at("localPort").asString();
 
-        addCmd("new_tap", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        System.out.println("paramètres de newTap :" + params.toString());
-                        System.out.println("nom utilisé :" + params.at("name").asString());
 
-                        String error = (missingParams(params, "name"));
-                        if (!error.isEmpty()) return Json.object().set("error", error);
+        addCmd("testStreaming", (params) -> {
+            if (!params.has("name") || !params.get("name").isString()) {
+                return JsonApiResponse.error("Tap's name missing from params").toJson();
+            }
+            String name = params.get("name").asString();
+            if (!activeTaps.containsKey(name)) {
+                return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+            }
+            return activeTaps.get(name).getFile("/suricata",
+                    Json.read("{\"cmd\":\"suricataGetLogFile\"}"));
+        }, new JsonCmdHelp());
 
-                        newTap(params.at("name").asString());
-                        Json write = Json.object();
-                        write.at("write", configuredTaps);
-                        try {
-                            writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        return Json.object();
-                    }
-                }, new JsonCmdHelp()
-                        .setDesc("Creation of a new tap description")
-                        .setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
-                        //	.setResult("nothing", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+        addCmd("new_tap", this::newTap, new JsonCmdHelp()
+                .setDesc("Creation of a new tap handler or modifies it if already present")
+                .setParam("name", "name of the tap", JsonCmdHelp.STR)
+                .setParam("ip", "[OPT] ip of the tap. Par default 127.0.0.1", JsonCmdHelp.STR)
+                .setParam("port", "[OPT] port of the tap. Par default 8888", JsonCmdHelp.STR)
+                .setResult("The new tap configuration", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("newTap", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        System.out.println("paramètres de newTap :" + params.toString());
-                        System.out.println("nom utilisé :" + params.at("name").asString());
-
-                        String error = (missingParams(params, "name"));
-                        if (!error.isEmpty()) return Json.object().set("error", error);
-
-                        newTap(params.at("name").asString());
-                        Json write = Json.object();
-                        write.at("write", configuredTaps);
-                        try {
-                            writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        return Json.object();
-                    }
-                }, new JsonCmdHelp()
-                        .setDesc("DEPRECATED : Creation of a new tap description")
-                        .setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
-                        //	.setResult("nothing", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+        addCmd("newTap", this::newTap, new JsonCmdHelp()
+                .setDesc("DEPRECATED : Creation of a new tap handler")
+                .setParam("name", "name of the tap", JsonCmdHelp.STR)
+                .setParam("ip", "[OPT] ip of the tap. Par default 127.0.0.1", JsonCmdHelp.STR)
+                .setParam("port", "[OPT] port of the tap. Par default 8888", JsonCmdHelp.STR)
+                .setResult("The new tap configuration", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("tap_number", new IJsonCmd() {
@@ -923,48 +996,32 @@ public class TapsServices extends Service {
             }
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
 
-        addCmd("delete_tap", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                deleteTap(params.at("name").asString());
-                Json write = Json.object();
-                write.at("write", configuredTaps);
-                try {
-                    writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return Json.object();
-            }
-        });
+        addCmd("delete_tap", this::deleteTap, new JsonCmdHelp()
+                .setDesc("DEPRECATED : Suppress a tap handler")
+                .setParam("name", "name of the tap", JsonCmdHelp.STR)
+                .setResult("The rest of tap handlers", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
+        );
 
-        addCmd("deleteTap", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                deleteTap(params.at("name").asString());
-                Json write = Json.object();
-                write.at("write", configuredTaps);
-                try {
-                    writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return Json.object();
-            }
-        }, new JsonCmdHelp().setDesc("DEPRECATED"));
+        addCmd("deleteTap", this::deleteTap, new JsonCmdHelp()
+                .setDesc("DEPRECATED : Suppress a tap handler")
+                .setParam("name", "name of the tap", JsonCmdHelp.STR)
+                .setResult("The rest of tap handlers", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
+        );
 
         addCmd("set_ip", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                if (!params.has("name")) {
-                    return JsonApiResponse.error("Tap's name missing from params").toJson();
-                }
-                if (!params.has("ip")) {
-                    return JsonApiResponse.error("Tap's new ip missing from params").toJson();
-                }
-                return setIp(params.at("name").asString(), params.at("ip").asString());
-            }
-        }, new JsonCmdHelp()
+                    @Override
+                    public Json exec(Json params) {
+                        if (!params.has("name")) {
+                            return JsonApiResponse.error("Tap's name missing from params").toJson();
+                        }
+                        if (!params.has("ip")) {
+                            return JsonApiResponse.error("Tap's new ip missing from params").toJson();
+                        }
+                        return setIp(params.at("name").asString(), params.at("ip").asString());
+                    }
+                }, new JsonCmdHelp()
                         .setDesc("Changes the ip to connect a given tap.")
                         .setParam("name", "name of the tap to be connected at such ip. ", JsonCmdHelp.STR)
                         .setParam("ip", "ip to connect the tap", JsonCmdHelp.STR)
@@ -973,15 +1030,15 @@ public class TapsServices extends Service {
         );
 
         addCmd("setIp", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                if (!params.has("name")) {
-                    return JsonApiResponse.error("Tap's name missing from params").toJson();
-                }
-                if (!params.has("ip")) {
-                    return JsonApiResponse.error("Tap's new ip missing from params").toJson();
-                }
-                return setIp(params.at("name").asString(), params.at("ip").asString());
+                    @Override
+                    public Json exec(Json params) {
+                        if (!params.has("name")) {
+                            return JsonApiResponse.error("Tap's name missing from params").toJson();
+                        }
+                        if (!params.has("ip")) {
+                            return JsonApiResponse.error("Tap's new ip missing from params").toJson();
+                        }
+                        return setIp(params.at("name").asString(), params.at("ip").asString());
 //                    Json write = Json.object();
 //                    write.at("write", configuredTaps);
 //                    try {
@@ -990,8 +1047,8 @@ public class TapsServices extends Service {
 //                        e.printStackTrace();
 //                    }
 //                    return Json.object();
-            }
-        }, new JsonCmdHelp()
+                    }
+                }, new JsonCmdHelp()
                         .setDesc("DEPRECATED : Changes the ip to connect a given tap.")
                         .setParam("name", "name of the tap to be connected at such ip. ", JsonCmdHelp.STR)
                         .setParam("ip", "ip to connect the tap", JsonCmdHelp.STR)
@@ -1000,36 +1057,36 @@ public class TapsServices extends Service {
         );
 
         addCmd("set_port", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                if (!params.has("name")) {
-                    return JsonApiResponse.error("Tap's name missing from params").toJson();
-                }
-                if (!params.has("port")) {
-                    return JsonApiResponse.error("Tap's new port missing from params").toJson();
-                }
-                return setPort(params.at("name").asString(), params.at("port").asInteger());
-            }
-        }, new JsonCmdHelp()
+                    @Override
+                    public Json exec(Json params) {
+                        if (!params.has("name")) {
+                            return JsonApiResponse.error("Tap's name missing from params").toJson();
+                        }
+                        if (!params.has("port")) {
+                            return JsonApiResponse.error("Tap's new port missing from params").toJson();
+                        }
+                        return setPort(params.at("name").asString(), params.at("port").asInteger());
+                    }
+                }, new JsonCmdHelp()
                         .setDesc("Changes the port to connect a given tap.")
-                .setParam("name", "name of the tap to be connected at such port. ", JsonCmdHelp.STR)
-                .setParam("port", "port to connect the tap", JsonCmdHelp.STR)
+                        .setParam("name", "name of the tap to be connected at such port. ", JsonCmdHelp.STR)
+                        .setParam("port", "port to connect the tap", JsonCmdHelp.STR)
                         .setResult("If the change was successful", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("setPort", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                if (!params.has("name")) {
-                    return JsonApiResponse.error("Tap's name missing from params").toJson();
-                }
-                if (!params.has("port")) {
-                    return JsonApiResponse.error("Tap's new port missing from params").toJson();
-                }
-                return setPort(params.get("name").asString(), params.get("port").asInteger());
-            }
-        }, new JsonCmdHelp()
+                    @Override
+                    public Json exec(Json params) {
+                        if (!params.has("name")) {
+                            return JsonApiResponse.error("Tap's name missing from params").toJson();
+                        }
+                        if (!params.has("port")) {
+                            return JsonApiResponse.error("Tap's new port missing from params").toJson();
+                        }
+                        return setPort(params.get("name").asString(), params.get("port").asInteger());
+                    }
+                }, new JsonCmdHelp()
                         .setDesc("DEPRECATED : Changes the port to connect a given tap.")
                         .setParam("name", "name of the tap to be connected at such port. ", JsonCmdHelp.STR)
                         .setParam("port", "port to connect the tap", JsonCmdHelp.STR)
@@ -1123,7 +1180,7 @@ public class TapsServices extends Service {
                 .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("getTapConf", this::getTapConf, new JsonCmdHelp().setDesc("DEPRECATED : get the global tap configuration : name, id, ip"));
+        addCmd("getTapConf", this::getTapConf_old, new JsonCmdHelp().setDesc("DEPRECATED : get the global tap configuration : name, id, ip"));
 
         addCmd("get_taps_configuration", this::getTapsConf, new JsonCmdHelp()
                 .setDesc("Gets the configuration of all taps: name, id, api ip/port, ...")
@@ -1156,24 +1213,24 @@ public class TapsServices extends Service {
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
 
         addCmd("start_tap", this::startTap, new JsonCmdHelp()
-                        .setDesc("Start the given tap")
-                        .setParam("name", "name of the tap that must start", JsonCmdHelp.STR)
-                        //	.setResult("nothing", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("Start the given tap")
+                .setParam("name", "name of the tap that must start", JsonCmdHelp.STR)
+                //	.setResult("nothing", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("startTap", this::startTap, new JsonCmdHelp()
-                        .setDesc("DEPRECATED : Start tap")
-                        .setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
-                        //	.setResult("nothing", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("DEPRECATED : Start tap")
+                .setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
+                //	.setResult("nothing", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("stop_tap", this::stopTap, new JsonCmdHelp()
-                        .setDesc("Stop the given tap")
-                        .setParam("name", "name of the tap that must stop", JsonCmdHelp.STR)
-                        //	.setResult("nothing", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("Stop the given tap")
+                .setParam("name", "name of the tap that must stop", JsonCmdHelp.STR)
+                //	.setResult("nothing", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("stopTap", this::stopTap, new JsonCmdHelp().setDesc("DEPRECATED"));
 
@@ -1239,23 +1296,23 @@ public class TapsServices extends Service {
         );
 
         addCmd("start_suricata", this::startSuricata, new JsonCmdHelp()
-                        .setDesc("Start/restart Suricata of the given tap")
-                        .setParam("name", "name of the tap, where suricata should be started.", JsonCmdHelp.STR)
-                        .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("Start/restart Suricata of the given tap")
+                .setParam("name", "name of the tap, where suricata should be started.", JsonCmdHelp.STR)
+                .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("startSuricata", this::startSuricata, new JsonCmdHelp()
-                        .setDesc("DEPRECATED : Start/restart Suricata")
-                        .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("DEPRECATED : Start/restart Suricata")
+                .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("stop_suricata", this::stopSuricata, new JsonCmdHelp()
-                        .setDesc("Stop Suricata of the given tap")
-                        .setParam("name", "name of the tap, where suricata should be stop. ", JsonCmdHelp.STR)
-                        .setResult("If the stopping was successful", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("Stop Suricata of the given tap")
+                .setParam("name", "name of the tap, where suricata should be stop. ", JsonCmdHelp.STR)
+                .setResult("If the stopping was successful", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("stopSuricata", this::stopSuricata, new JsonCmdHelp()
@@ -1265,17 +1322,17 @@ public class TapsServices extends Service {
                 .setStatus(JsonCmdHelp.STATUS_OK));
 
         addCmd("start_monitor", this::startMonitor, new JsonCmdHelp()
-                        .setDesc("Start/restart Monitor in the given tap")
-                        .setParam("name", "name of the tap, where monitor should be started.", JsonCmdHelp.STR)
-                        .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("Start/restart Monitor in the given tap")
+                .setParam("name", "name of the tap, where monitor should be started.", JsonCmdHelp.STR)
+                .setResult("If the (re)starting was successful", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("stop_monitor", this::stopMonitor, new JsonCmdHelp()
-                        .setDesc("Stop Monitor in the given tap.")
-                        .setParam("name", "name of the tap, where monitor should be stop. ", JsonCmdHelp.STR)
-                        .setResult("If the stopping was successful", JsonCmdHelp.JSON)
-                        .setStatus(JsonCmdHelp.STATUS_OK)
+                .setDesc("Stop Monitor in the given tap.")
+                .setParam("name", "name of the tap, where monitor should be stop. ", JsonCmdHelp.STR)
+                .setResult("If the stopping was successful", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("reload_all_taps_rules", this::reloadAllTapsRules,
@@ -1285,46 +1342,46 @@ public class TapsServices extends Service {
         );
 
         addCmd("reloadAllTapsRules", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
+                    @Override
+                    public Json exec(Json params) {
 
-                List<Json> allTapsOutputs = new ArrayList<>();
-                boolean gotError = false;
+                        List<Json> allTapsOutputs = new ArrayList<>();
+                        boolean gotError = false;
 
-                for (Json j : configuredTaps) {
-                    String output = "";
+                        for (Json j : configuredTaps) {
+                            String output = "";
 
-                    output = apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
-                            Json.read("{\"cmd\":\"suricataReloadRules\"}")).toString();
+                            output = apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
+                                    Json.read("{\"cmd\":\"suricataReloadRules\"}")).toString();
 
-                    Json result = Json.object();
-                    result.at("idname", j.at("idname").asString());
-                    result.at("result", reloadRulesParseOutput(output));
+                            Json result = Json.object();
+                            result.at("idname", j.at("idname").asString());
+                            result.at("result", reloadRulesParseOutput(output));
 
-                    if (result.at("result").has("error")) {
-                        gotError = true;
+                            if (result.at("result").has("error")) {
+                                gotError = true;
+                            }
+
+                            allTapsOutputs.add(result);
+                        }
+
+                        Json out = Json.object();
+                        out.at("result", allTapsOutputs);
+                        if (gotError) {
+                            out.at("error", true);
+                        }
+                        return out;
                     }
-
-                    allTapsOutputs.add(result);
-                }
-
-                Json out = Json.object();
-                out.at("result", allTapsOutputs);
-                if (gotError) {
-                    out.at("error", true);
-                }
-                return out;
-            }
-        },
+                },
                 new JsonCmdHelp().setDesc("DEPRECATED : Reloads the rules of all the taps")
                         .setResult("The summary of the update", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("reload_rules", this::reloadRules, new JsonCmdHelp().setDesc("Reloads the rules of the given tap")
-                        .setParam("name", "name of the tap, where the rules should be reloaded. ", JsonCmdHelp.STR)
-                        .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "name of the tap, where the rules should be reloaded. ", JsonCmdHelp.STR)
+                .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("reloadRules", this::reloadRules,
@@ -1336,16 +1393,16 @@ public class TapsServices extends Service {
 
         // Setter et getter de l'édition de Json graphique
         addCmd("get_process_json", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                try {
-                    return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return Json.object();
-            }
-        },
+                    @Override
+                    public Json exec(Json params) {
+                        try {
+                            return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return Json.object();
+                    }
+                },
                 new JsonCmdHelp().setDesc("FUTURE : get variables of the industrial process")
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
@@ -1380,7 +1437,7 @@ public class TapsServices extends Service {
                 // try {
 
                 Json result = getSuricataConf(params);
-                result.set("result", result.at("result").asString().substring(0,63550));
+                result.set("result", result.at("result").asString().substring(0, 63550));
                 return result;
                 // return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
                    /* } catch (IOException e) {
@@ -1391,16 +1448,16 @@ public class TapsServices extends Service {
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
 
         addCmd("set_process_json", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                try {
-                    writeToFile(params.at("conf").toString(), idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return Json.object();
-            }
-        },
+                    @Override
+                    public Json exec(Json params) {
+                        try {
+                            writeToFile(params.at("conf").toString(), idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return Json.object();
+                    }
+                },
                 new JsonCmdHelp().setDesc("FUTURE : set variables of the industrial process")
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
@@ -1443,25 +1500,25 @@ public class TapsServices extends Service {
 
         addCmd("get_suricata_status", this::getSuricataStatus,
                 new JsonCmdHelp().setDesc("Get the Suricata status of the given tap")
-                        .setParam("name","Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
+                        .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
                         .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("getSuricataStatus", this::getSuricataStatus, new JsonCmdHelp().setDesc("DEPRECATED : Get the Suricata status of the given tap")
-                        .setParam("name","Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
-                        .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
+                .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("get_suricata_conf", this::getSuricataConf, new JsonCmdHelp().setDesc("Get the Suricata configuration file of the given tap")
-                        .setParam("name","Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
-                        .setResult("teh file content of the configuration file", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
+                .setResult("teh file content of the configuration file", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
         addCmd("getSuricataConf", this::getSuricataConf,
                 new JsonCmdHelp().setDesc("DEPRECATED : Get the Suricata configuration file of the given tap")
-                        .setParam("name","Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
+                        .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
                         .setResult("teh file content of the configuration file", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
@@ -1483,25 +1540,25 @@ public class TapsServices extends Service {
         );
 
         addCmd("get_base_rules", this::getBaseRules, new JsonCmdHelp().setDesc("Retrieve the base rules of the given tap")
-                        .setParam("name","The name of the tap", IJsonCmdHelp.JSON)
-                        .setResult("An object with the list of base rules of the given tap", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
+                .setResult("An object with the list of base rules of the given tap", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("getBaseRules", this::getBaseRules, new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the base rules of Suricata")
-                .setParam("name","The name of the tap", IJsonCmdHelp.JSON)
-                        .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
+                .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
         addCmd("get_gen_rules", this::getGenRules, new JsonCmdHelp().setDesc("Retrieve the generated rules of the given tap")
-                        .setParam("name","The name of the tap", IJsonCmdHelp.STR)
-                        .setResult("An object with the list of generated rules of the given tap", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "The name of the tap", IJsonCmdHelp.STR)
+                .setResult("An object with the list of generated rules of the given tap", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("getGenRules", this::getGenRules, new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the generated rules of Suricata")
-                        .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("modify_gen_rules", new IJsonCmd() {
@@ -1564,7 +1621,7 @@ public class TapsServices extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        addCmd("modifyBaseRules",  new IJsonCmd() {
+        addCmd("modifyBaseRules", new IJsonCmd() {
                     @Override
                     public Json exec(Json params) {
                         if (!params.has("name")) {
@@ -1588,17 +1645,17 @@ public class TapsServices extends Service {
         );
 
         addCmd("replace_base_rules", this::replaceBaseRules, new JsonCmdHelp().setDesc("Replace the base rules of the given tap")
-                        .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-                        .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                        .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
+                .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+                .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("replace_gen_rules", this::replaceGenRules, new JsonCmdHelp().setDesc("Replace the generated rules of the given tap")
-                        .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-                        .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                        .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
+                .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
+                .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
         addCmd("set_base_rules",
@@ -1690,12 +1747,12 @@ public class TapsServices extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK));
 
         addCmd("send_includes", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                sendIncludes(params.at("name").asString());
-                return Json.object();
-            }
-        },
+                    @Override
+                    public Json exec(Json params) {
+                        sendIncludes(params.at("name").asString());
+                        return Json.object();
+                    }
+                },
                 new JsonCmdHelp().setDesc("FUTURE : Send a list of rules files to tap")
                         .setParam("name", "Name of the tap when the rules will be add.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
@@ -1720,31 +1777,31 @@ public class TapsServices extends Service {
             }
         });
         addCmd("set_include", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
+                    @Override
+                    public Json exec(Json params) {
 
-                ArrayList<Integer> includeList = new ArrayList<>();
-                for (Json j : params.at("include").asJsonList()) {
-                    if (j.at("checked").asBoolean()) {
-                        includeList.add(j.at("id").asInteger());
+                        ArrayList<Integer> includeList = new ArrayList<>();
+                        for (Json j : params.at("include").asJsonList()) {
+                            if (j.at("checked").asBoolean()) {
+                                includeList.add(j.at("id").asInteger());
+                            }
+                        }
+                        for (Json good : configuredTaps) {
+                            if (good.at("idname").asString().contentEquals(params.at("name").asString())) {
+                                good.atDel("includes");
+                                good.at("includes", includeList);
+                            }
+                        }
+                        Json write = Json.object();
+                        write.at("write", configuredTaps);
+                        try {
+                            writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return Json.object();
                     }
-                }
-                for (Json good : configuredTaps) {
-                    if (good.at("idname").asString().contentEquals(params.at("name").asString())) {
-                        good.atDel("includes");
-                        good.at("includes", includeList);
-                    }
-                }
-                Json write = Json.object();
-                write.at("write", configuredTaps);
-                try {
-                    writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return Json.object();
-            }
-        },
+                },
                 new JsonCmdHelp().setDesc("FUTURE : set a list of rules files to tap")
                         .setParam("name", "Name of the tap when the rules will be add.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
@@ -1777,6 +1834,44 @@ public class TapsServices extends Service {
             }
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
         addCmd("get_includes", new IJsonCmd() {
+                    @Override
+                    public Json exec(Json params) {
+                        try {
+                            Json includes = Json.object();
+                            Json taps = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+
+                            for (Json k : taps.asJsonList()) {
+                                Json includesRaw = Json.object();
+                                ArrayList<Json> includesRawClone = new ArrayList<Json>();
+                                includesRaw = readJsonFile(idsconf + "/taps/includesConfiguration.json");
+                                for (Json j : includesRaw.asJsonList()) {
+                                    for (Json r : k.at("includes").asJsonList()) {
+                                        if (j.at("id").asInteger() == r.asInteger()) {
+                                            j.at("checked", true);
+                                        }
+                                    }
+                                    includesRawClone.add(j);
+                                }
+                                for (Json j : includesRawClone) {
+                                    if (JsonUtil.getJson(j, "checked") == null)
+                                        j.at("checked", false);
+                                }
+                                includes.at(k.at("idname").asString(), includesRawClone);
+                            }
+
+                            return includes;
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                        return Json.object();
+                    }
+                },
+                new JsonCmdHelp().setDesc("FUTURE : get a list of rules files to tap")
+                        .setParam("name", "Name of the tap when the rules will be add.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+
+        addCmd("getIncludes", new IJsonCmd() {
             @Override
             public Json exec(Json params) {
                 try {
@@ -1802,53 +1897,14 @@ public class TapsServices extends Service {
                         includes.at(k.at("idname").asString(), includesRawClone);
                     }
 
+
                     return includes;
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
                 return Json.object();
             }
-        },
-                new JsonCmdHelp().setDesc("FUTURE : get a list of rules files to tap")
-                        .setParam("name", "Name of the tap when the rules will be add.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
-
-        addCmd("getIncludes", new IJsonCmd() {
-                    @Override
-                    public Json exec(Json params) {
-                        try {
-                            Json includes = Json.object();
-                            Json taps = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
-
-                            for (Json k : taps.asJsonList()) {
-                                Json includesRaw = Json.object();
-                                ArrayList<Json> includesRawClone = new ArrayList<Json>();
-                                includesRaw = readJsonFile(idsconf + "/taps/includesConfiguration.json");
-                                for (Json j : includesRaw.asJsonList()) {
-                                    for (Json r : k.at("includes").asJsonList()) {
-                                        if (j.at("id").asInteger() == r.asInteger()) {
-                                            j.at("checked", true);
-                                        }
-
-                                    }
-                                    includesRawClone.add(j);
-                                }
-                                for (Json j : includesRawClone) {
-                                    if (JsonUtil.getJson(j, "checked") == null)
-                                        j.at("checked", false);
-                                }
-                                includes.at(k.at("idname").asString(), includesRawClone);
-                            }
-
-
-                            return includes;
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
-                        return Json.object();
-                    }
-                }, new JsonCmdHelp().setDesc("DEPRECATED"));
+        }, new JsonCmdHelp().setDesc("DEPRECATED"));
 
         // Deprecated cmd
         // TODO : remove eventually
@@ -1875,6 +1931,7 @@ public class TapsServices extends Service {
 
     /**
      * Reloads the rules of the given IDS
+     *
      * @param params general parameters of the request
      * @return whether the rules were updated
      */
@@ -1892,6 +1949,7 @@ public class TapsServices extends Service {
 
     /**
      * Replaces all the base rules of the given IDS
+     *
      * @param params general parameters of the request
      * @return the base rules of the given IDS
      */
@@ -1911,6 +1969,7 @@ public class TapsServices extends Service {
 
     /**
      * Replaces all the generated rules of the given IDS
+     *
      * @param params general parameters of the request
      * @return the generated rules of the given IDS
      */
@@ -1930,6 +1989,7 @@ public class TapsServices extends Service {
 
     /**
      * Gets the base rules of the given IDS
+     *
      * @param params general parameters of the request
      * @return the base rules of the given IDS
      */
@@ -1946,6 +2006,7 @@ public class TapsServices extends Service {
 
     /**
      * Gets the generated rules of the given IDS
+     *
      * @param params general parameters of the request
      * @return the generated rules of the given IDS
      */
@@ -1962,6 +2023,7 @@ public class TapsServices extends Service {
 
     /**
      * Gets the status of the IDS
+     *
      * @param params general parameters of the request
      * @return the status of the IDS
      */
@@ -2030,7 +2092,7 @@ public class TapsServices extends Service {
             return JsonApiResponse.error("rules is missing from params").toJson();
         }
         Json response = Json.read("[]");
-        for (TapDto tap : activeTaps.values()) {
+        for (Tap tap : activeTaps.values()) {
             response = tap.sendCmd("/suricata",
                     Json.read("{\"cmd\":\"suricataReplaceCustomRules\"," +
                             "\"params\":{\"rules\":" + params.get("rules").asJsonList() + "}}")).toJson();
@@ -2046,13 +2108,13 @@ public class TapsServices extends Service {
     private @NotNull Json reloadAllTapsRules(Json params) {
         List<Json> allTapsOutputs = new ArrayList<>();
 
-        for (TapDto tap : activeTaps.values()) {
+        for (Tap tap : activeTaps.values()) {
             JsonApiResponse response = tap.sendCmd("/suricata", Json.read("{\"cmd\":\"suricataReloadRulesNonBlocking\"}"));
 
             Json result = Json.object();
             result.at("idname", tap.getName());
             result.at("id", tap.getId());
-            if (response.isSuccess()){
+            if (response.isSuccess()) {
                 if (response.getResult().has("result") && response.getResult().get("result").has("reloadRules")) {
                     result.at("result", response.getResult().get("result").get("reloadRules").asString());
                 } else {
@@ -2083,7 +2145,7 @@ public class TapsServices extends Service {
         if (!activeTaps.containsKey(params.get("name").asString())) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
-        TapDto tap = activeTaps.get(params.get("name").asString());
+        Tap tap = activeTaps.get(params.get("name").asString());
 
         Json output = tap.sendCmd("/suricata",
                 Json.read("{\"cmd\":\"updateConfig\", \"params\":" + params.toString() + "}")).toJson();
@@ -2106,15 +2168,33 @@ public class TapsServices extends Service {
      * @return the name of the tap and the content of the yaml file
      */
     private @NotNull Json getSuricataConf(Json params) {
+        if (!params.has("name") || !params.get("name").isString()) {
+            return JsonApiResponse.error("Tap's name missing from params").toJson();
+        }
+        String name = params.get("name").asString();
+        if (!activeTaps.containsKey(name)) {
+            return JsonApiResponse.error("Tap's name does not correspond to a configured tap").toJson();
+        }
+        return activeTaps.get(name).getFile("/suricata",
+                Json.read("{\"cmd\":\"suricataGetConfigurationFile\"}"));
+    }
+
+    /**
+     * Get last part of configuration yaml file.
+     *
+     * @return the name of the tap and the content of the yaml file
+     */
+    private @NotNull Json getSuricataConf_prototype(Json params) {
         if (!params.has("name")) {
             return JsonApiResponse.error("Tap's name missing from params").toJson();
         }
         if (!activeTaps.containsKey(params.get("name").asString())) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
-        TapDto tap = activeTaps.get(params.get("name").asString());
+        Tap tap = activeTaps.get(params.get("name").asString());
 
-        Json output = tap.sendCmd("/suricata",Json.read("{\"cmd\":\"suricataGetConfigurationFile\"}")).toJson();;
+        Json output = tap.sendCmd("/suricata", Json.read("{\"cmd\":\"suricataGetConfigurationFile\"}")).toJson();
+        ;
         Json result = Json.object();
         result.at("idname", tap.getName());
         result.at("id", tap.getId());
@@ -2139,9 +2219,10 @@ public class TapsServices extends Service {
         if (!activeTaps.containsKey(params.get("name").asString())) {
             return JsonApiResponse.error("Tap's name does not correspond to a configured Tap").toJson();
         }
-        TapDto tap = activeTaps.get(params.get("name").asString());
+        Tap tap = activeTaps.get(params.get("name").asString());
 
-        Json output = tap.sendCmd("/config",Json.read("{\"cmd\":\"getPossibleInterfaces\"}")).toJson();;
+        Json output = tap.sendCmd("/config", Json.read("{\"cmd\":\"getPossibleInterfaces\"}")).toJson();
+        ;
         Json result = Json.object();
         result.at("idname", tap.getName());
         result.at("id", tap.getId());

@@ -15,19 +15,25 @@ import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
+import org.apache.http.params.CoreConnectionPNames;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -39,6 +45,7 @@ public class ScanApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
     private String scanManagerUrl;
     private HttpClient httpClient = new HttpClient();
+
 
     public ScanApiHandler() {
         this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
@@ -592,8 +599,76 @@ public class ScanApiHandler implements AutoCloseable {
         return res;
     }
 
+    /**
+     * Send an HTTP request to the scanner.
+     *
+     * @param method   The HTTP method to use (GET, POST, PUT, ...)
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
     private JsonApiResponse sendRequestToScanManager(HttpMethod method, ScanApiEndpoint endpoint, Json params) {
         return sendRequestToScanManager(method, endpoint.endpoint(), params);
+    }
+
+    /**
+     * Downloads a file from the given endpoint.
+     * @param endpoint endpoint to fetch the file
+     * @param params parameters needed for the fetch
+     * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
+     * @throws Exception if it couldn't fetch the file from the module
+     */
+    public Json downloadFile(String endpoint, Json params) throws Exception {
+        return downloadFile(endpoint, params.toString());
+    }
+
+
+    /**
+     * Downloads a file from the given endpoint.
+     * @param endpoint endpoint to fetch the file
+     * @param body parameters needed for the fetch
+     * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
+     * @throws Exception if it couldn't fetch the file from the module
+     */
+    public Json downloadFile(String endpoint, String body) throws Exception {
+        String URI = scanManagerUrl + endpoint.replace(" ", "%20");
+
+        Json responseJson = Json.object();
+        // Create a POST request to the server
+        Request request = httpClient.newRequest(URI)
+                .method(HttpMethod.POST)
+                .content(new StringContentProvider(body));
+
+        // Send the request and get the response
+        InputStreamResponseListener listener = new InputStreamResponseListener();
+        request.send(listener);
+
+        Response response = listener.get(5, TimeUnit.SECONDS); // Wait for the response
+        if (response.getHeaders().containsKey("Content-Type")) {
+            responseJson.at("Content-Type", response.getHeaders().getField("Content-Type").getValue());
+        }
+        if (response.getHeaders().containsKey("Content-disposition")) {
+            responseJson.at("Content-disposition", response.getHeaders().getField("Content-disposition").getValue());
+        }
+        String strResponse = "";
+        // Check if the response status is OK (200)
+        if (response.getStatus() == 200) {
+            try (InputStream inputStream = listener.getInputStream()) {
+
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    strResponse += new String(buffer);
+                }
+                responseJson.at("Content", strResponse);
+                logger.info("Successfully downloaded file.");
+            }
+        } else {
+            responseJson.at("success", "false");
+            responseJson.at("error", "Failed to download the file");
+            logger.error("Failed to download file: {}", response.getStatus());
+        }
+        return responseJson;
     }
 
     /**

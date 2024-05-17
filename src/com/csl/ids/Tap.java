@@ -7,7 +7,7 @@ import org.eclipse.jetty.http.HttpMethod;
 
 import java.util.List;
 
-public class TapDto {
+public class Tap {
     private String name;
     private int id;
     private String ip;
@@ -23,20 +23,34 @@ public class TapDto {
      * @param port port of API of the TAP
      * @param includes ???
      */
-    public TapDto(String name, String id, String ip, int port, List<Json> includes) {
+    public Tap(String name, String id, String ip, int port, List<Json> includes) {
         this.name=name;
         this.ip=ip;
         this.port=port;
         this.includes=includes;
         apiHandler = new ScanApiHandler("http://"+ip+":"+port);
     }
-    public TapDto(String name, int id, String ip, int port, List<Json> includes) {
+    public Tap(String name, int id, String ip, int port, List<Json> includes) {
         this.name=name;
         this.id=id;
         this.ip=ip;
         this.port=port;
         this.includes=includes;
         apiHandler = new ScanApiHandler("http://"+ip+":"+port);
+    }
+
+    /**
+     * Send cmd to the TAP
+     * @param endpoint endpoint to connect
+     * @param body boyd of the POST request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public Json getFile(String endpoint, Json body) {
+        try {
+            return apiHandler.downloadFile(endpoint, body);
+        } catch (Exception ignored) {
+            return JsonApiResponse.error("Could not fetch the file in module").toJson();
+        }
     }
 
     /**
@@ -152,7 +166,7 @@ public class TapDto {
      */
     public Json toJson() {
         Json res = Json.object();
-        res.at("name", name);
+        res.at("idname", name);
         res.at("id", id);
         res.at("ip", ip);
         res.at("port", port);

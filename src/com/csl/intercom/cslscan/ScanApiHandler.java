@@ -49,7 +49,6 @@ public class ScanApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
     private String scanManagerUrl;
     private HttpClient httpClient = new HttpClient();
-    private Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
 
     public ScanApiHandler() {
         this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));

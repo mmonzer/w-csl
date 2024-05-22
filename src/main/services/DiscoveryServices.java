@@ -105,10 +105,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         fileStorageService = new FileStorageService();
 
         if (isConcentrator) {
-            importBsonService = ImportBsonService.getInstance();
-            importBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
 
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, dbapiHandler, importBsonService);
         }
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
@@ -120,7 +117,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
             deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
+            importBsonService = ImportBsonService.getInstance();
+            importBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, importBsonService);
 
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {

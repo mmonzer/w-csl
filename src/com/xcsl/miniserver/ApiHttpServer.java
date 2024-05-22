@@ -8,7 +8,10 @@ import com.sun.net.httpserver.HttpServer;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.IApiGetHelp;
 import com.ucsl.json.Json;
+import main.services.Service;
+import org.eclipse.jetty.server.Request;
 
+import javax.servlet.MultipartConfigElement;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -24,8 +27,8 @@ import java.util.Set;
 public class ApiHttpServer {
     boolean debug = false;
     HttpServer server = null;
-    List apiNames = new ArrayList();
-    List apiDescriptions = new ArrayList();
+    List apiNames = new ArrayList<>();
+    List apiDescriptions = new ArrayList<>();
     private IApiGetHelp apiGetHelp;
 
     public ApiHttpServer createServer(InetSocketAddress inetAddress, List apis, IApiGetHelp apiGetHelp) {
@@ -41,7 +44,7 @@ public class ApiHttpServer {
         this.server.createContext("/test", new CustomHandler0());
         this.server.createContext("/apihelp", new CustomHandlerHelp());
         this.server.createContext("/", (httpExchange) -> {
-            byte[] response = "API not found".getBytes("UTF-8");
+            byte[] response = "API not found" .getBytes("UTF-8");
             httpExchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
             httpExchange.sendResponseHeaders(200, (long) response.length);
             OutputStream out = httpExchange.getResponseBody();
@@ -78,6 +81,7 @@ public class ApiHttpServer {
     class CustomHandler0 extends CustomHttpHandler {
         /**
          * Handler of the connexion.
+         *
          * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
          * @throws IOException if cant get the content of the exchange.
          */
@@ -103,6 +107,8 @@ public class ApiHttpServer {
     class CustomHandlerApi extends CustomHttpHandler {
         private IApiCommands api;
 
+        private final MultipartConfigElement MULTI_PART_CONFIG = new MultipartConfigElement("./tmp");
+
         public CustomHandlerApi(IApiCommands api) {
             super();
             this.api = api;
@@ -110,7 +116,8 @@ public class ApiHttpServer {
 
         /**
          * Generic method that POST the given body at the given api endpoint
-         * @param api endpoint of the api
+         *
+         * @param api  endpoint of the api
          * @param body body to post
          * @return the result of the execution of the given function
          */
@@ -132,12 +139,81 @@ public class ApiHttpServer {
 
         /**
          * Handler of the connexion.
+         *
          * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
          * @throws IOException if cant get the content of the exchange.
          */
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             String requestMethod = exchange.getRequestMethod();
+            if (requestMethod.equals("POST")) {
+                handlePOST(exchange);
+            }
+        }
+
+        /**
+         * Handler of the POST connexions
+         *
+         * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
+         * @throws IOException if cant get the content of the exchange.
+         */
+        private void handlePOST(HttpExchange exchange) throws IOException {
+            if (exchange.getRequestHeaders().get("Content-type").get(0).contains("application/json")) {
+                handlePOST_json(exchange);
+            } else if (exchange.getRequestHeaders().get("Content-type").get(0).contains("multipart/form-data")) {
+                handlePOST_multipart(exchange);
+                // TODO : upload file
+            }
+        }
+
+        /**
+         * Handler of the connexion for POST methods and multipart data (upload files)
+         *
+         * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
+         * @throws IOException if cant get the content of the exchange.
+         */
+        private void handlePOST_multipart(HttpExchange exchange) throws IOException {
+            if (ApiHttpServer.this.debug) {
+                this.printRequestInfo(exchange);
+            }
+
+            exchange.setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, MULTI_PART_CONFIG);
+
+            String body = this.getContent(exchange);
+            if (ApiHttpServer.this.debug) {
+                System.out.println("Body:\n" + body);
+            }
+
+            if (exchange.getRequestHeaders().containsKey("Content-Type")) {
+                String boundary = exchange.getRequestHeaders().get("Content-Type").get(0).split("boundary=")[1];
+                body = parseMultipart(body, boundary).toString();
+            }
+
+
+            Json responseJson = this.execPostCommand(this.api, body);
+            String response = responseJson.toString();
+            if (responseJson.has("Content-Type")) {
+                exchange.setAttribute("Content-Type", responseJson.get("Content-Type").asString());
+            }
+            if (responseJson.has("Content-disposition")) {
+                exchange.setAttribute("Content-disposition", responseJson.get("Content-disposition").asString());
+            }
+            if (responseJson.has("Content")) {
+                response = responseJson.get("Content").asString();
+            }
+            exchange.sendResponseHeaders(200, (long) response.getBytes().length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
+
+        /**
+         * Handler of the connexion for POST methods and json input
+         *
+         * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
+         * @throws IOException if cant get the content of the exchange.
+         */
+        private void handlePOST_json(HttpExchange exchange) throws IOException {
             if (ApiHttpServer.this.debug) {
                 this.printRequestInfo(exchange);
             }
@@ -156,12 +232,60 @@ public class ApiHttpServer {
                 exchange.setAttribute("Content-disposition", responseJson.get("Content-disposition").asString());
             }
             if (responseJson.has("Content")) {
-                response= responseJson.get("Content").asString();
+                response = responseJson.get("Content").asString();
             }
             exchange.sendResponseHeaders(200, (long) response.getBytes().length);
             OutputStream os = exchange.getResponseBody();
             os.write(response.getBytes());
             os.close();
+        }
+
+        /**
+         * Get the content of the request
+         *
+         * @param body     the raw body of the request
+         * @param boundary the boundary of the multipart request
+         * @return the content of the request
+         */
+        protected Json parseMultipart(String body, String boundary) {
+            String[] parts = body.split("--" + boundary);
+            Json query = Json.object();
+            String content;
+            String headers;
+            String name;
+            String name1;
+            for (String part : parts) {
+                part = part.trim();
+                name = "";
+                name1 = "";
+                content = "";
+                headers = "";
+                if (!part.isEmpty() && !part.equals("--")) {
+                    content = part.substring(part.indexOf("\n\n") + 2);
+                    headers = part.substring(0, part.indexOf("\n\n"));
+                    name1 = headers.substring(headers.indexOf("name=\"") + 6);
+                    if (headers.contains("application/octet-stream")) {
+                        name = name1.substring(0, name1.indexOf("\";"));
+                    } else {
+                        name = name1.substring(0, name1.indexOf("\""));
+                    }
+                    query.at(name, content);
+                }
+            }
+            // Reformating
+            Json params = query.get("params");
+            if (params != null) {
+                query.delAt("params");
+                query.at("params", Json.read(params.asString()));
+            }
+            Json file = query.get("file");
+            if (file != null) {
+                Json par = query.get("params");
+                par.at("file", file);
+                query.at("params", par);
+                query.delAt("file");
+            }
+            return query;
         }
     }
 
@@ -171,6 +295,7 @@ public class ApiHttpServer {
     class CustomHandlerHelp extends CustomHttpHandler {
         /**
          * Handler of the connexion.
+         *
          * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
          * @throws IOException if cant get the content of the exchange.
          */
@@ -215,6 +340,7 @@ public class ApiHttpServer {
     abstract class CustomHttpHandler implements HttpHandler {
         /**
          * Prints information of the exchange : RequestHeaders, Method, query, authentication, ...
+         *
          * @param exchange {@link HttpExchange} of the current connexion to sho information
          */
         protected void printRequestInfo(HttpExchange exchange) {
@@ -237,6 +363,7 @@ public class ApiHttpServer {
 
         /**
          * Get the content of the request
+         *
          * @param exchange {@link HttpExchange} of the current connexion
          * @return the content of the request
          * @throws IOException if the content cannot be read.
@@ -247,7 +374,7 @@ public class ApiHttpServer {
 
             String input;
             while ((input = httpInput.readLine()) != null) {
-                in.append(input).append(" ");
+                in.append(input).append("\n");
             }
 
             httpInput.close();
@@ -256,6 +383,7 @@ public class ApiHttpServer {
 
         /**
          * Handler of the connexion.
+         *
          * @param exchange {@link HttpExchange} contains the information of the connexion, in particular the request and the response
          * @throws IOException if cant get the content of the exchange.
          */

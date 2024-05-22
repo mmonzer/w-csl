@@ -2,8 +2,11 @@ package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiUtils;
+import com.csl.interfaces.models.IDbapiSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -12,8 +15,9 @@ import java.util.Set;
 /**
  * Class to retain the required fields of a CPE Items.
  */
-public class CpeItem {
+public class CpeItem implements IDbapiSerializable {
     // The fields to include in the cpeData array
+    private static final Logger logger = LoggerFactory.getLogger(CpeItem.class);
     private static final Set<String> dataFields = new HashSet<>(10) {{
         add("part");
         add("vendor");
@@ -24,6 +28,7 @@ public class CpeItem {
         add("lang");
         add("softwareEdition");
         add("targetSoftware");
+        add("targetHardware");
         add("others");
     }};
     private final Json cpeData;
@@ -64,7 +69,7 @@ public class CpeItem {
      * @return The newly created CpeItem.
      * @throws IllegalArgumentException if mandatory fields are missing in the provided data.
      */
-    public static CpeItem parseFromScanCpeItem(Json data) throws IllegalArgumentException {
+    public static CpeItem fromScannerJson(Json data) throws IllegalArgumentException {
         OffsetDateTime discoveredDate = null;
         String mongoEntityId = null;
         String deviceId = null;
@@ -73,7 +78,7 @@ public class CpeItem {
         int discoveryConnectionId = 0;
 
         try {
-            discoveredDate = ScanUtils.getCpeItemDateTime(data);
+            discoveredDate = ScanUtils.getDateFieldFromJson(data, "updatedAt");
             mongoEntityId = data.get("uuid").asString();
             deviceId = data.get("entityUuid").asString();
             isDeleted = JsonUtil.getBooleanFromJson(data, "deleted", false);
@@ -86,11 +91,12 @@ public class CpeItem {
             // Get the connection's id if it is valid
             try {
                 discoveryConnectionId = Integer.parseInt(JsonUtil.getStringFromJson(data, "connectionInfoUuid", "0"));
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException | UnsupportedOperationException e) {
                 discoveryConnectionId = -1;
             }
         } catch (NullPointerException e) {
             // If any of the fields are missing, throw an exception
+            logger.error("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item", e);
             throw new IllegalArgumentException("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item");
         }
 

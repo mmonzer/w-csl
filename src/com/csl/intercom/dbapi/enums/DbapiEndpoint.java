@@ -5,6 +5,7 @@ package com.csl.intercom.dbapi.enums;
  */
 public enum DbapiEndpoint {
     EVENTS("/events"),
+    EVENTS_CANCEL_ALL(EVENTS.getEndpoint() + "/set_all_active_cpe_scan_event_to_discarded"),
     CPE_ITEMS_LAST_DATE(EVENTS.getEndpoint() + "/last_discovery_date"),
     CPE_ITEMS("/cpe_discovered_items"),
     DELETED_OBJECTS("/deleted_objects"),
@@ -14,9 +15,9 @@ public enum DbapiEndpoint {
     DELETE_CPE_ITEMS(CPE_ITEMS.getEndpoint() + "/delete_by_mongo_ids"),
     MICROSOFT_KB("/microsoft_kb"),
     MICROSOFT_KB_LAST_DATE(EVENTS.getEndpoint() + "/last_microsoft_kb_date"),
-    CREATE_MICROSOFT_KBS(MICROSOFT_KB.getEndpoint() + "/create_microsoft_kb"),
+    CREATE_MICROSOFT_KBS(MICROSOFT_KB.getEndpoint() + "/create_microsoft_kbs"),
     DELETE_MICROSOFT_KBS(MICROSOFT_KB.getEndpoint() + "/delete_by_mongo_ids"),
-    GET_DELETED_MICROSOFT_KBS(DELETED_OBJECTS.getEndpoint() + "/get_deleted_microsoft_kb"),
+    GET_DELETED_MICROSOFT_KBS(DELETED_OBJECTS.getEndpoint() + "/get_deleted_microsoft_kbs"),
     DEVICES("/devices"),
     DELETED_DEVICES(DELETED_OBJECTS.getEndpoint() + "/get_deleted_devices"),
     CONNECTIONS("/connections"),

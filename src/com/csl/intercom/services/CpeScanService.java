@@ -1,13 +1,20 @@
-package com.csl.intercom.dbapi.models;
+package com.csl.intercom.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanConstants;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.models.ScanEntity;
+import com.csl.intercom.services.annotations.PostInit;
+import com.csl.intercom.services.exceptions.CpeScanException;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.util.SchedulerUtil;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Queue;
@@ -18,21 +25,40 @@ import java.util.function.Function;
  * Represents and handles the list of currently running scans.
  * Should not be created, but accessed through the static instance.
  */
-public class ScansList {
-    static public ScansList instance = new ScansList();
+public class CpeScanService {
+    static public CpeScanService instance = new CpeScanService();
+    static private Logger logger = LoggerFactory.getLogger(CpeScanService.class);
     // The list of scans, indexed by their id (this list contains all the running scans).
     private Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
     // The list of scans that have been modified since the last time they were handled --> need to be handled.
     private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private DbapiHandler dbapiHandler = new DbapiHandler();
+    private DataSynchronizationService cpeItemsSynchronizationService;
+    private DataSynchronizationService microsoftKbSynchronizationService;
     private ScheduledExecutorService scansHandlingTask = null;
     private ScheduledExecutorService scansListSanitizer = Executors.newSingleThreadScheduledExecutor();
 
-    {
+    public void init(DataSynchronizationService cpeItemsSynchronizationService, DataSynchronizationService microsoftKbSynchronizationService) {
+        this.cpeItemsSynchronizationService = cpeItemsSynchronizationService;
+        this.microsoftKbSynchronizationService = microsoftKbSynchronizationService;
+
 //        scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
         scansListSanitizer.scheduleAtFixedRate(this::sanitizeScans, 0, 5, TimeUnit.MINUTES);
+
+        // Execute post-init tasks
+        Class<?> clazz = this.getClass();
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(PostInit.class)) {
+                try {
+                    method.invoke(this);
+                } catch (Exception e) {
+                    logger.error("Could not execute post-init method {}", method.getName(), e);
+                }
+            }
+        }
     }
+
 
     /**
      * Add a scan in the list, or overwrite it if it already exists.
@@ -97,6 +123,21 @@ public class ScansList {
         return searchScan(ScanEntity::isFinished);
     }
 
+    @PostInit
+    public void cancelScan() throws CpeScanException {
+        try {
+            this.scanApiHandler.cancelScan();
+            this.scanEntities.forEach((id, scan) -> {
+                if (scan.isRunning()) {
+                    scan.setStatus(ScanEntity.Status.DISCARDED);
+                }
+            });
+            this.dbapiHandler.cancelAllScans();
+        } catch (Exception e) {
+            throw new CpeScanException("Could not cancel the scan", e);
+        }
+    }
+
     /**
      * Check the scans in scanEntities, to get their status from CSL-Scan directly, and handle them accordingly.
      * If a scan is unknown in CSL-Scan, we consider it is finished with errors.
@@ -120,7 +161,7 @@ public class ScansList {
                     dbapiHandler.notifyScanFinished(scan);
                     scanEntities.remove(scan.getScanId());
                 } catch (Exception e) {
-                    System.err.println("Could not notify DB-API a scan finished");
+                    logger.error("Could not notify DB-API a scan finished", e);
                 }
             }
         }
@@ -152,7 +193,19 @@ public class ScansList {
             scan.setDbapiId(dbapiHandler.notifyScanStarted(scan.getStartDate()));
         }
 
-        this.scanApiHandler.sendNewCpeItemsToDbapi(this.dbapiHandler);
+        try {
+            this.cpeItemsSynchronizationService.syncData();
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize CPE Items with DB-API");
+            logger.debug("Could not synchronize CPE Items with DB-API", e);
+        }
+
+        try {
+            this.microsoftKbSynchronizationService.syncData();
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize Microsoft KBs with DB-API");
+            logger.debug("Could not synchronize Microsoft KBs with DB-API", e);
+        }
 
         if (scan.isFinished()) {
             try {
@@ -164,7 +217,7 @@ public class ScansList {
                     this.scansHandlingTask.shutdown();
                 }
             } catch (Exception e) {
-                System.err.println("Could not notify DB-API the scan " + scan.getScanId() + " ended.");
+                logger.error("Could not notify DB-API the scan {} ended.", scan.getScanId(), e);
             }
         }
     }
@@ -196,7 +249,8 @@ public class ScansList {
      * @return The status string of the scan, or ERROR if not present in the JSON.
      */
     private String getStatusStringFromStatus(Json status) {
-        return JsonUtil.getStringFromJson(status, "status", "ERROR");
+        String defaultStatus = "ERROR";
+        return status != null ? JsonUtil.getStringFromJson(status, "status", defaultStatus) : defaultStatus;
     }
 
     /**
@@ -206,6 +260,9 @@ public class ScansList {
      * @return The message of the scan, or an empty String if not present in the JSON.
      */
     private String getScanDescriptionFromStatus(Json status) {
+        if (status == null) {
+            return "";
+        }
         Json message = status.get("message");
         if (message == null || !message.isString()) {
             return "";

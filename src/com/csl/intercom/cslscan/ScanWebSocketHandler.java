@@ -4,7 +4,7 @@ import com.csl.intercom.cslscan.models.ImportQuery;
 import com.csl.intercom.cslscan.services.ImportBsonService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
-import com.csl.intercom.dbapi.models.ScansList;
+import com.csl.intercom.services.CpeScanService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
@@ -49,9 +49,8 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
+    private CpeScanService cpeScanService;
     private StompSession stompImportNotificationSession = null;
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private ScansList scansList = ScansList.instance;
 
 
     /**
@@ -60,11 +59,11 @@ public class ScanWebSocketHandler {
      * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, DbapiHandler dbapiHandler, ImportBsonService importBsonService) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService, ImportBsonService importBsonService) {
         this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
-        this.dbapiHandler = dbapiHandler;
         this.importBsonService = importBsonService;
+        this.cpeScanService = cpeScanService;
 
         // Schedule reconnection to websockets every 2 seconds
         webSocketsConnectionAttempts = Executors.newScheduledThreadPool(1);
@@ -215,7 +214,7 @@ public class ScanWebSocketHandler {
 
                 //region Get or Create Scan Entity
                 // Check if we already know the scan
-                ScanEntity scan = scansList.getScanByScanId(scanId);
+                ScanEntity scan = cpeScanService.getScanByScanId(scanId);
 
                 if (scan == null) {
                     // If we did not already see the scan, create a new Scan Entity
@@ -247,7 +246,7 @@ public class ScanWebSocketHandler {
                 }
                 //endregion Update the scan's info (status, progress)
 
-                scansList.createOrUpdate(scan);
+                cpeScanService.createOrUpdate(scan);
             }
 
             @Override

@@ -5,17 +5,22 @@ import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
+import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.services.ImportBsonService;
+import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
 import com.csl.intercom.dbapi.enums.SNMPv3ConnectionField;
+import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.services.*;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLLogger;
 import com.csl.util.FileStorageService;
@@ -26,6 +31,8 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -42,7 +49,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
-    private final CSLLogger logger = CSLLogger.instance;
+//    private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
+    private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
     private final String configFileSectionName;
@@ -54,6 +62,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private FileStorageService fileStorageService = null;
     private ImportBsonService importBsonService = null;
     private CSLMqttBrokerHandler mqttBroker = null;
+    private DataSynchronizationService cpeItemSynchronizationService = null;
+    private DataSynchronizationService microsoftKbSynchronizationService = null;
+    private DataSynchronizationService deletedCpeItemsSynchronizationService = null;
+    private DataSynchronizationService deletedMicrosoftKbsSynchronizationService = null;
+    private CpeScanService cpeScanService = null;
     private ScheduledExecutorService synchronizationSchedule;
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
@@ -80,11 +93,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     @Override
     public boolean init(Json jConfig, String cslDir) {
-        System.out.println("Initializing SNMP service ..");
-        logger.warn("Hello from logger");
-
+        logger.info("Initializing SNMP service ..");
 
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
+
+        if (isConcentrator) {
+        }
 
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
@@ -100,12 +114,24 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         if (isConcentrator) {
+            cpeScanService = new CpeScanService();
+            cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
+            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(cpeScanService);
+            deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
+            deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
+            cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
+
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             });
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
-                handleDeletedCpes();
+                try {
+                    deletedCpeItemsSynchronizationService.syncData();
+                } catch (SynchronizationException e) {
+                    logger.error("Could not synchronize deleted CPE Items", e);
+                }
             });
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.FILE_ACTION_STATUS, message -> {
                 HttpTemplateImportNotification notification = HttpTemplateImportNotification.fromMQTTMessage(Json.read(message.getResults()));
@@ -192,40 +218,23 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
+        addCmd("stop_scan", params -> {
+                    try {
+                        this.cpeScanService.cancelScan();
+                        return JsonApiResponse.success().toJson();
+                    } catch (Exception e) {
+                        return JsonApiResponse.error("Could not stop the scan", Json.object("exception", e.getMessage())).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Stop a scan in CSL-Scan")
+                        .setParam("id", "The uuid of the scan to stop", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the scan was stopped successfully", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
         addCmd("synchronize_devices", params -> dbapiHandler.sendNewDevicesToScanner(scanApiHandler).toJson(),
                 new JsonCmdHelp().setDesc("Synchronize devices between DB-API and CSL-Scan.")
                         .setResult("<code>{\"success\": true }</code> if the synchronisation went without error," +
                                 "<code>{\"success\": false, \"error\", {\"reason\": \"...\", \"failed_devices\": [...]}}</code> otherwise. The failed_devices field is present if devices were actually fetched from DB-API.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
-        addCmd("send_last_cpe_items", params -> {
-                    String dateString = JsonUtil.getStringFromJson(params, "date", "");
-                    if (!dateString.equals("")) {
-                        List<CpeItem> changes;
-                        if (dateString.equals("all")) {
-                            changes = scanApiHandler.getCpeItemChangesSince(null);
-                        } else {
-                            changes = scanApiHandler.getCpeItemChangesSince(OffsetDateTime.parse(dateString));
-                        }
-                        try {
-                            dbapiHandler.sendCpeItems(changes);
-                        } catch (Exception e) {
-                            return JsonApiResponse.error("Could not send changes to DB-API",
-                                    Json.object("exception", e.getMessage())
-                            ).toJson();
-                        }
-                    } else {
-                        scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
-                    }
-                    return JsonApiResponse.success().toJson();
-                },
-                new JsonCmdHelp().setDesc("Trigger a synchronisation of the CPE Items between CSL-Scan and DB-API")
-                        .setParam("date", "The date of last CPE Items update on DB-API, in ISO local date format as above." +
-                                "May by \"all\" to send all CPE Items to DB-API." +
-                                "May also be omitted or null, in which case the date is fetched directly from DB-API.", IJsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the synchronisation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise." +
-                                "The details field should contain the list of failed items if relevant.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
         addCmd("drop_all_collections", params -> {
@@ -233,7 +242,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         scanApiHandler.dropAllCollections();
                         return JsonApiResponse.success().toJson();
                     } catch (Exception e) {
-                        e.printStackTrace(System.err);
+                        logger.error("Could not drop collections", e);
                         return JsonApiResponse.error("Could not drop collections",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -358,6 +367,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             return response.toJson();
                         }
                     } catch (Exception e) {
+                        logger.error("Could not delete entity HTTP connection from CSL-Scan", e);
                         return JsonApiResponse.error("Could not delete entity HTTP connection from CSL-Scan",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -389,6 +399,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 }
                                 dbapiHandler.createDiscoveryProtocol(createdEntityHttpConnection);
                             } catch (Exception e) {
+                                logger.error("Could not create discovery protocol", e);
                                 scanApiHandler.deleteEntityHttpConnection(createdEntityHttpConnection.getUuid());
                                 response = JsonApiResponse.error("Could not create discovery protocol",
                                         Json.object("exception", e.getMessage())
@@ -401,6 +412,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         try {
                             dbapiHandler.updateDiscoveryProtocol(entityHttpConnection);
                         } catch (Exception e) {
+                            logger.error("Could not update discovery protocol", e);
                             scanApiHandler.updateEntityHttpConnection(previousEntityHttpConnection);
                             response = JsonApiResponse.error("Could not update discovery protocol",
                                     Json.object("exception", e.getMessage())
@@ -453,6 +465,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     try {
                         protocols = dbapiHandler.fetchDiscoveryProtocols();
                     } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                        logger.error("Could not fetch discovery protocols", e);
                         throw new RuntimeException(e);
                     }
 
@@ -476,6 +489,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 case RemotePowershell:
                                     if (!connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
                                         connectionJson.set(RemotePowershellConnectionField.PASSWORD.dbapiName(), ((RemotePowershellConnection) baseConnection).getPassword());
+                                    }
+                                    break;
+                                case SSH:
+                                    if (!connectionJson.has(SshConnectionField.PASSWORD.dbapiName())) {
+                                        connectionJson.set(SshConnectionField.PASSWORD.dbapiName(), ((SshConnection) baseConnection).getPassword());
+                                    }
+                                    if (!otherDataJson.has(SshConnectionField.PASSPHRASE.dbapiName())) {
+                                        otherDataJson.set(SshConnectionField.PASSPHRASE.dbapiName(), ((SshConnection) baseConnection).getPassphrase());
+                                    }
+                                    if (!otherDataJson.has(SshConnectionField.PRIVATE_KEY.dbapiName())) {
+                                        otherDataJson.set(SshConnectionField.PRIVATE_KEY.dbapiName(), ((SshConnection) baseConnection).getPrivateKey());
                                     }
                                     break;
                                 case HTTP:
@@ -512,13 +536,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             }
                         } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException |
                                  NullPointerException e) {
+                            logger.error("Could not fetch base connection", e);
                             return JsonApiResponse.error("Could not fetch base connection",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
                         }
                     }
 
-                    Connection connection = Connection.fromJson(connectionJson, protocols);
+                    Connection connection = Connection.fromDbapiJson(connectionJson, protocols);
                     if (ipAddress == null || connection == null) {
                         return JsonApiResponse.error("Missing required parameter device or connection",
                                 Json.object("exception", "Missing parameter device or connection, of type object")
@@ -620,6 +645,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     try {
                         protocols = dbapiHandler.fetchDiscoveryProtocols();
                     } catch (Exception e) {
+                        logger.error("Could not fetch discovery protocols", e);
                         return JsonApiResponse.error("Could not fetch discovery protocols from DB-API",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -633,7 +659,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                             protocols = List.of(ConnectionProtocol.fromTemplateId(templateJson.has("id") ? templateJson.get("id").asString() : null));
                             connectionJson.set("discovery_protocol", protocols.get(0).getId());
                         }
-                        connection = Connection.fromJson(connectionJson, protocols);
+                        connection = Connection.fromDbapiJson(connectionJson, protocols);
                     } else if (connectionId != null) {
                         try {
                             List<Connection> connections = dbapiHandler.fetchConnections(List.of(connectionId), protocols);
@@ -641,6 +667,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 connection = connections.get(0);
                             }
                         } catch (Exception e) {
+                            logger.error("Could not fetch connection from DB-API", e);
                             return JsonApiResponse.error("Could not fetch connection from DB-API",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
@@ -662,6 +689,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 device.setConnections(List.of(connection));
                             }
                         } catch (Exception e) {
+                            logger.error("Could not fetch device from DB-API", e);
                             return JsonApiResponse.error("Could not fetch device from DB-API",
                                     Json.object("exception", e.getMessage())
                             ).toJson();
@@ -674,6 +702,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     try {
                         result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
                     } catch (Exception e) {
+                        logger.error("Could not test entity HTTP connection", e);
                         return JsonApiResponse.error("Could not test entity HTTP connection",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
@@ -697,6 +726,94 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         "where result contains <code>{ \"success\": true }</code> if the template is valid," +
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
         );
+        addCmd("get_discovery_cron", params -> {
+                    try {
+                        Json cron = scanApiHandler.getDiscoveryCron();
+                        if (cron == null) {
+                            throw new Exception("Could not fetch discovery cron");
+                        }
+                        return JsonApiResponse.result(cron).toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not fetch discovery cron", e);
+                        return JsonApiResponse.error("Could not fetch discovery cron",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get the discovery cron")
+                        .setResult("The discovery cron, in the format <code>{ \"success\": true, \"result\": { \"cron\": \"...\" } }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("set_discovery_cron", params -> {
+                    String cron = null;
+                    if (params.has("cron") && params.get("cron").isString()) {
+                        cron = params.get("cron").asString();
+                    }
+                    if (cron == null) {
+                        return JsonApiResponse.error("Missing required parameter cron",
+                                Json.object("exception", "Missing parameter cron, of type string")
+                        ).toJson();
+                    }
+                    DynamicDiscoveryFrequencyOption frequencyOption = null;
+                    if (params.has("frequencyOption") && params.get("frequencyOption").isString()) {
+                        frequencyOption = DynamicDiscoveryFrequencyOption.fromDbapiName(params.get("frequencyOption").asString());
+                    }
+                    try {
+                        scanApiHandler.setDiscoveryCron(cron, frequencyOption);
+                        return JsonApiResponse.success().toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not set discovery cron", e);
+                        return JsonApiResponse.error("Could not set discovery cron",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Set the discovery cron")
+                        .setParam("cron", "The cron to set", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("is_discovery_cron_active", params -> {
+                    try {
+                        return JsonApiResponse.result(Json.object("isActive", scanApiHandler.isDiscoveryCronActive())).toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not fetch discovery cron status", e);
+                        return JsonApiResponse.error("Could not fetch discovery cron status",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Get the status of the discovery cron")
+                        .setResult("The status of the discovery cron, in the format <code>{ \"success\": true, \"result\": { \"active\": \"true/false\" } }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("set_discovery_cron_active", params -> {
+                    Boolean isActive = null;
+                    if (params.has("isActive") && params.get("isActive").isBoolean()) {
+                        isActive = params.get("isActive").asBoolean();
+                    }
+                    if (isActive == null) {
+                        return JsonApiResponse.error("Missing required parameter isActive",
+                                Json.object("exception", "Missing parameter isActive, of type boolean")
+                        ).toJson();
+                    }
+                    try {
+                        scanApiHandler.setDiscoveryCronActive(isActive);
+                        return JsonApiResponse.success().toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not set discovery cron status", e);
+                        return JsonApiResponse.error("Could not set discovery cron status",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Set the status of the discovery cron")
+                        .setParam("isActive", "The status to set", IJsonCmdHelp.BOOL)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
         addCmd("import_http_templates_bson", params -> {
                     HttpTemplateImportNotification query = HttpTemplateImportNotification.fromHMIJson(params);
                     if (query == null) {
@@ -716,7 +833,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 
-        System.out.println("SNMP service operational");
+        logger.info("SNMP service operational");
         return true;
     }
 
@@ -745,7 +862,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             }
             scanApiHandler.close();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            logger.warn("Could not stop the service", e);
+            return false;
         }
         return false;
     }
@@ -825,30 +943,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      * - CPE Items
      */
     public void syncAll() {
-        dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
-        scanApiHandler.sendNewCpeItemsToDbapi(dbapiHandler);
-        handleDeletedCpes();
-    }
-
-    /**
-     * Function to execute when CPE Item deletions are notified.
-     * Retrieves the deleted CPE Items from DB-API and requests the deletion to CSL-Scan.
-     *
-     * @return A {@link Json} with the result of the operation: { "result": "OK" } if the deletion was successful,
-     * { "result": "NOK", "error": { "reason": ..., "details": ...}} otherwise.
-     */
-    private JsonApiResponse handleDeletedCpes() {
-        List<Pair<String, OffsetDateTime>> deletedCpes = null;
-        try {
-            OffsetDateTime lastCpeItemDeletionVerification = scanApiHandler.getLastCpeItemsDeletionDate();
-            deletedCpes = dbapiHandler.getDeletedCpeItemsSince(lastCpeItemDeletionVerification);
-        } catch (Exception e) {
-            return JsonApiResponse.error("Failed to fetch deleted CPE Items",
-                    Json.object("exception", e.getMessage())
-            );
+        if (isConcentrator) {
+            dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+            try {
+                cpeItemSynchronizationService.syncData();
+                microsoftKbSynchronizationService.syncData();
+                deletedCpeItemsSynchronizationService.syncData();
+                deletedMicrosoftKbsSynchronizationService.syncData();
+            } catch (SynchronizationException e) {
+                logger.error("Could not synchronize CPE Items", e);
+            }
         }
-        scanApiHandler.deleteCpeItemsFromScan(deletedCpes);
-        return JsonApiResponse.success();
     }
 
     /**
@@ -868,7 +973,17 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         }
 
         // Get deleted CPE Items from DB-API and delete them from CSL-Scan
-        JsonApiResponse cpeDeletionResult = handleDeletedCpes();
+        JsonApiResponse cpeDeletionResult = JsonApiResponse.success();
+        try {
+            deletedCpeItemsSynchronizationService.syncData();
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize deleted CPE Items", e);
+            cpeDeletionResult = JsonApiResponse.error(
+                    "Could not synchronize deleted CPE Items",
+                    Json.object("exception", e.getMessage())
+            );
+        }
+
         if (!cpeDeletionResult.isSuccess()) {
             return JsonApiResponse.error(
                     "Could not delete CPE Items in CSL-Scan",

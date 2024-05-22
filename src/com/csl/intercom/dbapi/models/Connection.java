@@ -1,9 +1,8 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
+import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 
@@ -11,7 +10,7 @@ import java.util.List;
  * Model representing a DB-API connection.
  * Abstract class, concrete children are tied to the actual protocols of a connection.
  */
-public abstract class Connection {
+public abstract class Connection implements IScannerSerializable {
     private int id;
     private List<String> devicesIds;
     private StaticConnectionProtocol protocol;
@@ -37,7 +36,7 @@ public abstract class Connection {
      * @param connectionJson The serialized connection as handed by DB-API.
      * @return An instance of the correct child if the parsing was successful, or null.
      */
-    public static Connection fromJson(Json connectionJson, List<ConnectionProtocol> protocols) {
+    public static Connection fromDbapiJson(Json connectionJson, List<ConnectionProtocol> protocols) {
         ConnectionProtocol connectionProtocol;
         StaticConnectionProtocol protocol;
         try {
@@ -65,6 +64,9 @@ public abstract class Connection {
 
             case HTTP:
                 return HttpConnection.fromJson(connectionJson, connectionProtocol);
+
+            case SSH:
+                return SshConnection.fromJson(connectionJson);
 
             default:
                 return null;

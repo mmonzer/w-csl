@@ -1,5 +1,8 @@
 package com.csl.intercom.cslscan.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ScanCollection {
     GENERAL_INFO("general_info"),
     CPE_ITEMS("cpeItem"),
@@ -14,7 +17,4 @@ public enum ScanCollection {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
 }

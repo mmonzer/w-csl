@@ -15,9 +15,9 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.util.Date;
-
 import io.jsonwebtoken.Clock;
+
+import java.util.Date;
 
 /**
  * A {@code Clock} implementation that is constructed with a seed timestamp and always reports that same

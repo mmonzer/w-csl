@@ -15,9 +15,9 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
-import java.security.Key;
-
 import io.jsonwebtoken.SignatureAlgorithm;
+
+import java.security.Key;
 
 public interface SignerFactory {
 

@@ -6,7 +6,7 @@ import com.ucsl.json.Json;
 
 public class IDSConsole implements IConsole {
 	
-	private IDSParams idsParams;
+	private final IDSParams idsParams;
 
 
 	public IDSConsole(IDSParams idsParams) {
@@ -15,19 +15,14 @@ public class IDSConsole implements IConsole {
 
 	@Override
 	public void print(String outputName, String s) {
-		// TODO Auto-generated method stub
-
 		println(outputName, s);
 	}
 
-	
-	public   void println(String target,String line) {
+	public void println(String target,String line) {
 		if (idsParams.isSendToBrowser()) {
-
 			Json j = Json.object();
 			j.set("line", line);
 			j.set("console_id",target);
-			//			CSLWebSocketForConsole.broadcastMessageJson("log", j);
 			CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j );
 		}
 		if (idsParams.isSendToConsole()) 

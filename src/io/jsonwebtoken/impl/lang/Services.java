@@ -15,14 +15,14 @@
  */
 package io.jsonwebtoken.impl.lang;
 
-import static io.jsonwebtoken.lang.Collections.arrayToList;
+import io.jsonwebtoken.lang.Assert;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
 
-import io.jsonwebtoken.lang.Assert;
+import static io.jsonwebtoken.lang.Collections.arrayToList;
 
 /**
  * Helper class for loading services from the classpath, using a {@link ServiceLoader}. Decouples loading logic for

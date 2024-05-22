@@ -15,13 +15,13 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
-import java.nio.charset.Charset;
-import java.security.Key;
-
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.lang.Assert;
+
+import java.nio.charset.Charset;
+import java.security.Key;
 
 public class DefaultJwtSignatureValidator implements JwtSignatureValidator {
 

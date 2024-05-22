@@ -1,13 +1,12 @@
 package com.csl.web.auth.controller;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.csl.web.auth.TokenService;
 import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.UserPrincipal;
-
 import spark.Request;
+
+import java.util.Arrays;
+import java.util.List;
 
 public abstract class AbstractTokenController {
 	  private boolean debug=false;;

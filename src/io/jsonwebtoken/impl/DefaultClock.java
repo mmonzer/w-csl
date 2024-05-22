@@ -15,9 +15,9 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.util.Date;
-
 import io.jsonwebtoken.Clock;
+
+import java.util.Date;
 
 /**
  * Default {@link Clock} implementation.

@@ -15,10 +15,10 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
+import io.jsonwebtoken.SignatureAlgorithm;
+
 import java.security.Key;
 import java.security.MessageDigest;
-
-import io.jsonwebtoken.SignatureAlgorithm;
 
 public class MacValidator implements SignatureValidator {
 

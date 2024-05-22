@@ -15,6 +15,12 @@
  */
 package io.jsonwebtoken;
 
+import io.jsonwebtoken.security.InvalidKeyException;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+import io.jsonwebtoken.security.WeakKeyException;
+
+import javax.crypto.SecretKey;
 import java.security.Key;
 import java.security.PrivateKey;
 import java.security.interfaces.ECKey;
@@ -22,13 +28,6 @@ import java.security.interfaces.RSAKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import javax.crypto.SecretKey;
-
-import io.jsonwebtoken.security.InvalidKeyException;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
-import io.jsonwebtoken.security.WeakKeyException;
 
 /**
  * Type-safe representation of standard JWT signature algorithm names as defined in the

@@ -1,20 +1,14 @@
 package com.csl.web.jcmdoversocket;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-
+import com.csl.alert.CSLAlertManager;
+import com.csl.core.CSLContext;
+import com.csl.web.websockets.CSLWebSocket;
+import com.ucsl.json.Json;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-
-import com.csl.alert.CSLAlertManager;
-import com.csl.core.CSLContext;
-import com.csl.logger.CSLLogger;
-import com.csl.web.websockets.CSLWebSocket;
-import com.ucsl.json.Json;
 
 @WebSocket
 public class CSLWebSocketForJcmdHandler {

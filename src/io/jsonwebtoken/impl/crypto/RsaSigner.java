@@ -15,14 +15,14 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.SignatureException;
+
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.interfaces.RSAKey;
-
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.SignatureException;
 
 public class RsaSigner extends RsaProvider implements Signer {
 

@@ -15,13 +15,13 @@
  */
 package io.jsonwebtoken.impl.compression;
 
+import io.jsonwebtoken.CompressionCodec;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import io.jsonwebtoken.CompressionCodec;
 
 /**
  * Codec implementing the <a href="https://en.wikipedia.org/wiki/Gzip">gzip compression algorithm</a>.

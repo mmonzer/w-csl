@@ -15,9 +15,9 @@
  */
 package io.jsonwebtoken;
 
-import java.util.Map;
-
 import io.jsonwebtoken.lang.Classes;
+
+import java.util.Map;
 
 /**
  * Factory class useful for creating instances of JWT interfaces.  Using this factory class can be a good

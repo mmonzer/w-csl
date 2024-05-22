@@ -1,24 +1,17 @@
 package com.csl.web.proxy;
 
-import static spark.Spark.delete;
-import static spark.Spark.get;
-import static spark.Spark.head;
-import static spark.Spark.options;
-import static spark.Spark.post;
-import static spark.Spark.put;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Request;
-
 import spark.Service;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import static spark.Spark.*;
 
 
 public class ProxyServer {

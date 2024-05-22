@@ -39,7 +39,7 @@ public enum ScanApiEndpoint {
     DROP_COLLECTION("/%s/drop"),
     ;
 
-    private String endpoint;
+    private final String endpoint;
 
     private ScanApiEndpoint(String endpoint) {
         this.endpoint = endpoint;

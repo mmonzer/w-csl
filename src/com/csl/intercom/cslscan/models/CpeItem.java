@@ -5,6 +5,7 @@ import com.csl.intercom.dbapi.DbapiUtils;
 import com.csl.interfaces.models.IDbapiSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +33,11 @@ public class CpeItem implements IDbapiSerializable {
         add("others");
     }};
     private final Json cpeData;
+    @Getter
     private final OffsetDateTime discoveredDate;
+    @Getter
     private final String mongoEntityId;
+    @Getter
     private final String deviceId;
     private final boolean isDeleted;
     private final boolean isMain;
@@ -105,18 +109,6 @@ public class CpeItem implements IDbapiSerializable {
 
     public Json getCpeData() {
         return cpeData;
-    }
-
-    public OffsetDateTime getDiscoveredDate() {
-        return discoveredDate;
-    }
-
-    public String getMongoEntityId() {
-        return mongoEntityId;
-    }
-
-    public String getDeviceId() {
-        return deviceId;
     }
 
     public boolean isDeleted() {

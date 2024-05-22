@@ -15,18 +15,15 @@
  */
 package io.jsonwebtoken.impl.compression;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import io.jsonwebtoken.CompressionCodec;
-import io.jsonwebtoken.CompressionCodecResolver;
 import io.jsonwebtoken.CompressionCodecs;
-import io.jsonwebtoken.CompressionException;
-import io.jsonwebtoken.Header;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.lang.Services;
 import io.jsonwebtoken.lang.Assert;
 import io.jsonwebtoken.lang.Strings;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Default implementation of {@link CompressionCodecResolver} that supports the following:

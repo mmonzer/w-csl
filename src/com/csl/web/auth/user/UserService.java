@@ -1,10 +1,10 @@
 package com.csl.web.auth.user;
 
+import org.mindrot.BCrypt;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.mindrot.BCrypt;
 
 public final class UserService {
 

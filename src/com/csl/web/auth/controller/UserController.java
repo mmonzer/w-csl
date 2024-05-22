@@ -2,7 +2,6 @@ package com.csl.web.auth.controller;
 
 import com.csl.web.auth.TokenService;
 import com.csl.web.auth.user.Role;
-
 import spark.Service;
 
 //import static spark.Spark.get;

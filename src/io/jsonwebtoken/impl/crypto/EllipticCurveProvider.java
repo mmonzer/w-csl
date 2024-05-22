@@ -15,6 +15,11 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.lang.Assert;
+import io.jsonwebtoken.lang.Strings;
+
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -22,11 +27,6 @@ import java.security.SecureRandom;
 import java.security.spec.ECGenParameterSpec;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.lang.Assert;
-import io.jsonwebtoken.lang.Strings;
 
 /**
  * ElliptiCurve crypto provider.

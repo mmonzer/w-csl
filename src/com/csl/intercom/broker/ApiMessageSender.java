@@ -13,10 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-
-// csl/services/requests/api_name
-
-
 public class ApiMessageSender implements MqttCallback {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiMessageSender.class);
@@ -30,31 +26,23 @@ public class ApiMessageSender implements MqttCallback {
 
     private static final String RESPONSE = "response";
 
-    private static final String REQUEST = "request";
-
     private static final String REQ_ID = "reqId";
 
     public static int request_ctr = 1;
 
     public static String REQUEST_TOPIC = "csl/request/";
-
-
     public static String RESPONSE_TOPIC = "csl/response/";
-    //public static String API_NAME="api1";
 
     Map<String, Json> pendingMessages = new HashMap<>();
-    //List<Json> pendingMessages= new ArrayList<Json>();
 
     public String api = "";
 
     boolean subscribed = false;
 
-
     MqttClient clientToListen = null;
     MqttClient clientToSend = null;
 
     public ApiMessageSender(String moduleName, String apiName, String brokerUrl, int debugLevel) {
-
         if (!brokerUrl.isEmpty()) BROKER_TCP_LOCALHOST_1883 = brokerUrl;
 
         this.api = apiName;
@@ -64,7 +52,6 @@ public class ApiMessageSender implements MqttCallback {
     }
 
     public ApiMessageSender(String moduleName, String apiName, int debugLevel) {
-
         this(moduleName, apiName, "", debugLevel);
         logger.info("Create MSG sender {} for api {}", moduleName, apiName);
     }
@@ -81,7 +68,6 @@ public class ApiMessageSender implements MqttCallback {
         idebug = d;
     }
 
-
     public String getClientToListenID() {
         return "S_" + moduleName + api + "_listen";
     }
@@ -93,7 +79,6 @@ public class ApiMessageSender implements MqttCallback {
     public void init() {
 
         if (isShowInfo()) logger.info("Init sender api:" + api);
-
         if (subscribed) close();
 
         MemoryPersistence persistence = new MemoryPersistence();
@@ -140,7 +125,6 @@ public class ApiMessageSender implements MqttCallback {
 
     }
 
-
     public void close() {
         try {
             clientToListen.unsubscribe(RESPONSE_TOPIC + api);
@@ -150,26 +134,21 @@ public class ApiMessageSender implements MqttCallback {
         } catch (MqttException e) {
             logger.error("Error while closing connection to broker, reason {}, msg {}, loc {}, cause {}", e.getReasonCode(), e.getMessage(), e.getLocalizedMessage(), e.getCause(), e);
         }
-
         try {
 
             clientToSend.disconnect();
             if (isDebug()) logger.debug("Disconnected");
             clientToSend.close();
 
-
         } catch (MqttException me) {
             logger.error("Error while closing connection to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
     }
 
-
     @Override
     public void connectionLost(Throwable arg0) {
         // TODO Auto-generated method stub
-
     }
-
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken arg0) {
@@ -177,10 +156,9 @@ public class ApiMessageSender implements MqttCallback {
 
     }
 
-
     // listen the response to the request
     @Override
-    public void messageArrived(String topic, MqttMessage message) throws Exception {
+    public void messageArrived(String topic, MqttMessage message) {
         if (isDebug()) logger.debug("*************  message is : " + message);
 
         String s = new String(message.getPayload());
@@ -242,18 +220,6 @@ public class ApiMessageSender implements MqttCallback {
         }
     }
 
-
-    public void sendWebSocketMsg(Json jSocket) {
-
-        Json fullMsg = Json.object();
-
-        fullMsg.set("websocket", api);
-        fullMsg.set("contents", jSocket);
-
-        sendMqttMsg(fullMsg);
-    }
-
-
     /*
      *
      * send request to the dispatcher
@@ -281,7 +247,6 @@ public class ApiMessageSender implements MqttCallback {
 
     // detect timeout in pending messages
     public void detectTimeOut() {
-
         long current_time = System.currentTimeMillis();
 
         for (Map.Entry<String, Json> entry : pendingMessages.entrySet()) {

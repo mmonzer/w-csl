@@ -15,16 +15,16 @@
  */
 package io.jsonwebtoken;
 
-import java.security.Key;
-import java.util.Date;
-import java.util.Map;
-
 import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Encoder;
 import io.jsonwebtoken.io.Serializer;
 import io.jsonwebtoken.security.InvalidKeyException;
 import io.jsonwebtoken.security.Keys;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * A builder for constructing JWTs.

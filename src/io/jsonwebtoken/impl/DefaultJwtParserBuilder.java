@@ -15,22 +15,17 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.security.Key;
-import java.util.Date;
-import java.util.Map;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Clock;
-import io.jsonwebtoken.CompressionCodecResolver;
-import io.jsonwebtoken.JwtParser;
-import io.jsonwebtoken.JwtParserBuilder;
-import io.jsonwebtoken.SigningKeyResolver;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
 import io.jsonwebtoken.impl.lang.Services;
 import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Deserializer;
 import io.jsonwebtoken.lang.Assert;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * @since 0.11.0

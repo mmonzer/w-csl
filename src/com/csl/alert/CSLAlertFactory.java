@@ -7,8 +7,6 @@ import com.ucsl.json.Json;
 public class CSLAlertFactory implements IAlertFactory {
 	
 	static public CSLAlertFactory instance = new CSLAlertFactory();
-	
-	
 
 	@Override
 	public IAlertDescriptor createAlertDescriptor(long time) {

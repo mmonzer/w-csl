@@ -7,23 +7,19 @@ import java.util.List;
 import com.csl.util.FileUtils;
 import com.ucsl.interfaces.IFileStoreService;
 import com.ucsl.json.Json;
+import lombok.Getter;
 
 
 public class FileStoreService implements IFileStoreService {
 	
 	boolean trace=true;
 	
-	String cslConfDir=".";
+	@Getter
+    String cslConfDir=".";
 	
 	public FileStoreService(String cslConf) {
 		this.cslConfDir=cslConf;
 	}
-	
-	public IFileStoreService setTrace(boolean b) {
-		return this;
-	}
-			
-
 
 	@Override
 	public Json readJsonFromFile(String dir, String fileName) {
@@ -42,8 +38,6 @@ public class FileStoreService implements IFileStoreService {
 	@Override
 	public String buildFullPathInConfDir(String dir) {
 		if (trace) System.out.println("[FILESERVICE] buildFullPath :"+dir);
-		
-	
 
 		if (dir==null) dir ="";
 		dir=dir.replace('\\','/');
@@ -66,13 +60,8 @@ public class FileStoreService implements IFileStoreService {
 		}
 		return s;
 	}
-	
-	
-	public String getCslConfDir() {
-		return cslConfDir;
-	}
 
-	@Override
+    @Override
 	public String sanitizeDirPath(String s) {
 		if (trace) System.out.println("[FILESERVICE] sanitizeDirPath :"+s);
 		
@@ -81,19 +70,16 @@ public class FileStoreService implements IFileStoreService {
 
 	@Override
 	public boolean fileExists(String dir, String fileName) {
-		 
 		return FileUtils.fileExists(dir, fileName);
 	}
 
 	@Override
 	public boolean fileExists(String fileName) {
-		 
 		return FileUtils.fileExists(fileName);
 	}
 	
 	@Override
 	public boolean dirExists(String fileName) {
-		 
 		return FileUtils.dirExists(fileName);
 	}
 
@@ -101,14 +87,13 @@ public class FileStoreService implements IFileStoreService {
 	public Json writeFileFromText(String filename, String text) {
 		if (trace) System.out.println("[FILESERVICE] writefile :"+filename);
 		
-		 
 		return FileUtils.writeFileFromText(filename, text);
 	}
 
 	@Override
 	public Json readFileInAJsonText(String filename) {
 		if (trace) System.out.println("[FILESERVICE] read Json :"+filename);
-		
+
 		return FileUtils.readFileInAJsonText(filename);
 	}
 
@@ -119,15 +104,13 @@ public class FileStoreService implements IFileStoreService {
 		return FileUtils.readFile(filename);
 	}
 	
-	
 	@Override
 	public List<String> readFileAsStringList(String filename) throws IOException {
 		if (trace) System.out.println("[FILESERVICE] read file :"+filename);
 		
 		return FileUtils.readFileAsStringList(filename);
 	}
-	
-	
+
 	@Override
 	public String writeFile(String filename, String contents) throws IOException {
 		if (trace) System.out.println("[FILESERVICE] write file :"+filename);
@@ -137,30 +120,22 @@ public class FileStoreService implements IFileStoreService {
 
 	@Override
 	public void backupFileWithTimeStamp(String filePath, String idsModelDirBackup) {
-		// TODO Auto-generated method stub
 		FileUtils.backupFileWithTimeStamp(filePath, idsModelDirBackup);
 	}
 	@Override
 	public void reverseToLastBackupFile(String filePath) {
-		// TODO Auto-generated method stub
 		FileUtils.reverseToLastBackupFile(filePath);
 	}
 	
-	
 	@Override
 	public String checkAndCreateDir(String s) {
-
 		return FileUtils.checkAndCreateDir(s);
 	}
 
-
-
 	@Override
 	public void renameFileWithTimeStamp(String filePath, String string) {
-		// TODO Auto-generated method stub
 		FileUtils.renameFileWithTimeStamp(filePath, string);
 	}
-
 
 	private boolean deleteDirectory(File directoryToBeDeleted) {
 	    File[] allContents = directoryToBeDeleted.listFiles();
@@ -177,27 +152,21 @@ public class FileStoreService implements IFileStoreService {
 		File file = new File(name);
 		return deleteDirectory(file);
 	}
+
 	@Override
 	public boolean deleteFile(String rootDir, String name) {
 		File file = new File(name);
 		return file.delete();
 	}
-
-	
-	
 	
 	@Override
 	public void createSubDir(String rootDir,String subDir) {
-		
 		File file = new File(rootDir+FileUtils.fileSeparator+subDir);
 		if (!file.exists()) file.mkdirs();
-	
 	}
 
 	@Override
 	public boolean renameSubDir(String rootDir, String dsrc, String ddst) {
-		
-		
 		String fsrc=rootDir+dsrc;
 		String fdst=rootDir+ddst;
 	

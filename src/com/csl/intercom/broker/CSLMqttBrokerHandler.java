@@ -3,15 +3,12 @@ package com.csl.intercom.broker;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import main.services.JsonApiResponse;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -33,7 +30,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         CONFIGURATIONS("configuration")
         ;
 
-        private String name;
+        private final String name;
 
         Topic(String name) {
             this.name = name;
@@ -46,13 +43,12 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
     }
 
     private static final String clientId = "mqtt_agent_concentrator";       // MQTT client id's prefix
-    private String apiKey;                                                  // The API key to include in each message
     private String organization = "None";                                   // The organization, default id None.
     private MqttClient mqttClient;
     private String brokerUri;
-    private Map<String, IMqttMessageListener> topics = new HashMap<>();     // The topic we should subscribe to, together with callbacks to execute when a message is received on that topic
-    private MqttConnectOptions mqttConnectOptions;
-    private ScheduledExecutorService mqttConnectionAttempts;
+    private final Map<String, IMqttMessageListener> topics = new HashMap<>();     // The topic we should subscribe to, together with callbacks to execute when a message is received on that topic
+    private final MqttConnectOptions mqttConnectOptions;
+    private final ScheduledExecutorService mqttConnectionAttempts;
 
     /**
      * Create a new {@link CSLMqttBrokerHandler} from the project's configuration.
@@ -64,7 +60,8 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         brokerUri = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "wss://" : "ws://";
         brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
         brokerUri += "/mqtt";
-        this.apiKey = globalConfig.get("api_key").asString();
+        // The API key to include in each message
+        String apiKey = globalConfig.get("api_key").asString();
 
         // Get the organization name, or "None" if it doesn't exist.
         try (DbapiHandler dbapiHandler = new DbapiHandler(config)) {
@@ -103,7 +100,6 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
             }
         }
     }
-
 
     /**
      * Subscribe to a topic, with a callback to execute when a message is published in the topic.
@@ -172,7 +168,6 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     return FileVisitResult.CONTINUE;
                 }
-
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
                     String dirName = dir.getFileName().toString();

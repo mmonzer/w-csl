@@ -1,14 +1,13 @@
 package com.csl.web.websockets;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.csl.core.CSLContext;
+import com.ucsl.json.Json;
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
-import com.csl.core.CSLContext;
-import com.ucsl.json.Json;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CSLWebSocketForVariables {
 	

@@ -15,13 +15,13 @@
  */
 package io.jsonwebtoken;
 
-import java.security.Key;
-import java.util.Date;
-import java.util.Map;
-
 import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Deserializer;
 import io.jsonwebtoken.security.SignatureException;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * A parser for reading JWT strings, used to convert them into a {@link Jwt} object representing the expanded JWT.

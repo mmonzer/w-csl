@@ -15,15 +15,15 @@
  */
 package io.jsonwebtoken.impl.compression;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import io.jsonwebtoken.CompressionCodec;
 import io.jsonwebtoken.CompressionException;
 import io.jsonwebtoken.lang.Assert;
 import io.jsonwebtoken.lang.Objects;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Abstract class that asserts arguments and wraps IOException with CompressionException.

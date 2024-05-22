@@ -1,8 +1,8 @@
 package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.cslscan.models.EntityHttpConnectionStage;
-import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 

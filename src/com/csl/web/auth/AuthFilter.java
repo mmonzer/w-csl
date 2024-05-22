@@ -1,11 +1,11 @@
 package com.csl.web.auth;
 
-import java.util.logging.Logger;
-
 import spark.Filter;
 import spark.Request;
 import spark.Response;
 import spark.Service;
+
+import java.util.logging.Logger;
 
 //import static spark.Spark.halt;
 

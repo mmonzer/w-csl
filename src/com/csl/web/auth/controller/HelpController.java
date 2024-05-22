@@ -3,16 +3,15 @@ package com.csl.web.auth.controller;
 //import static spark.Spark.get;
 //import static spark.Spark.halt;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.web.auth.TokenService;
 import com.csl.web.auth.user.Role;
 import com.ucsl.json.Json;
-
 import spark.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class HelpController extends AbstractTokenController {
 	

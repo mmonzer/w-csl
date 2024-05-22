@@ -1,18 +1,17 @@
 package com.csl.web.auth;
 
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.User;
 import com.csl.web.auth.user.UserPrincipal;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.DefaultClaims;
+
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class TokenService {
 

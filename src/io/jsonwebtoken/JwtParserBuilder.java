@@ -15,12 +15,12 @@
  */
 package io.jsonwebtoken;
 
+import io.jsonwebtoken.io.Decoder;
+import io.jsonwebtoken.io.Deserializer;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
-
-import io.jsonwebtoken.io.Decoder;
-import io.jsonwebtoken.io.Deserializer;
 
 /**
  * A builder to construct a {@link JwtParser}. Example usage:

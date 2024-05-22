@@ -15,9 +15,9 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.util.Map;
-
 import io.jsonwebtoken.JwsHeader;
+
+import java.util.Map;
 
 public class DefaultJwsHeader<T extends JwsHeader<T>> extends DefaultHeader<T> implements JwsHeader<T>  {
 

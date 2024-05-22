@@ -15,22 +15,16 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.Key;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.Signature;
-import java.security.spec.MGF1ParameterSpec;
-import java.security.spec.PSSParameterSpec;
-import java.util.HashMap;
-import java.util.Map;
-
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.lang.Assert;
 import io.jsonwebtoken.lang.RuntimeEnvironment;
 import io.jsonwebtoken.security.SignatureException;
+
+import java.security.*;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.PSSParameterSpec;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class RsaProvider extends SignatureProvider {
 

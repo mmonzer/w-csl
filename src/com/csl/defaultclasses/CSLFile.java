@@ -12,7 +12,6 @@ public class CSLFile implements ICSLFile {
 	File f=null;
 	BufferedReader b=null;
 
-
 	@Override
 	public boolean open(String fileName) {
 

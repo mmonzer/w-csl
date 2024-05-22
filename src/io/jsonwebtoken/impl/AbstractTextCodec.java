@@ -15,11 +15,11 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.nio.charset.Charset;
-
 import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Encoder;
 import io.jsonwebtoken.lang.Assert;
+
+import java.nio.charset.Charset;
 
 /**
  * @deprecated since 0.10.0 - will be removed before 1.0.0. Use {@link Encoder} orr {@link Decoder} instead.

@@ -15,10 +15,10 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
-import java.security.Key;
-
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.lang.Assert;
+
+import java.security.Key;
 
 public class DefaultSignerFactory implements SignerFactory {
 

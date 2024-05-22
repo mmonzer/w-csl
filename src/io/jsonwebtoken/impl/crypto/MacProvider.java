@@ -15,15 +15,14 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.lang.Assert;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.lang.Assert;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 public abstract class MacProvider extends SignatureProvider {
 

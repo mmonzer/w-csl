@@ -178,15 +178,6 @@ public class CSLMqttMessage {
     }
 
     /**
-     * Get the error message.
-     *
-     * @return The error message.
-     */
-    public String getErrorMessage() {
-        return errorMsg;
-    }
-
-    /**
      * Create a {@link String} suitable for sending through MQTT, in the correct format to be interpreted by other CSL components.
      *
      * @return A {@link String} containing a well-formed JSON.

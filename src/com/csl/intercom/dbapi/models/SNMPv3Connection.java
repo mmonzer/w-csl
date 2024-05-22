@@ -1,6 +1,9 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.intercom.dbapi.enums.*;
+import com.csl.intercom.dbapi.enums.SNMPv3AuhtenticationAlgorithm;
+import com.csl.intercom.dbapi.enums.SNMPv3ConnectionField;
+import com.csl.intercom.dbapi.enums.SNMPv3PrivacyAlgorithm;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
 
 import java.util.ArrayList;

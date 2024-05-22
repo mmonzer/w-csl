@@ -1,7 +1,8 @@
 package com.csl.udp;
-import java.util.concurrent.BlockingQueue;
 
 import com.ucsl.json.Json;
+
+import java.util.concurrent.BlockingQueue;
 
 public class CSLUDPDataProcessor implements Runnable {
 	private final BlockingQueue<byte[]> messageQueue;

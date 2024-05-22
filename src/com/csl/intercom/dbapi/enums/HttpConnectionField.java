@@ -1,7 +1,5 @@
 package com.csl.intercom.dbapi.enums;
 
-import com.csl.intercom.dbapi.models.HttpConnection;
-
 public enum HttpConnectionField {
     PORT("port_number", "port"),
     ENTITY_HTTP_CONNECTION_ID("entityHttpConnectionId", "entityHttpConnectionId"),

@@ -15,11 +15,11 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.util.Date;
-import java.util.Map;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.RequiredTypeException;
+
+import java.util.Date;
+import java.util.Map;
 
 public class DefaultClaims extends JwtMap implements Claims {
 

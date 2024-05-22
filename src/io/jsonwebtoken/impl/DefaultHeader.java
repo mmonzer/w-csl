@@ -15,10 +15,10 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.util.Map;
-
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.lang.Strings;
+
+import java.util.Map;
 
 @SuppressWarnings("unchecked")
 public class DefaultHeader<T extends Header<T>> extends JwtMap implements Header<T> {

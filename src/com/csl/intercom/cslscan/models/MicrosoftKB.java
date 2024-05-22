@@ -1,11 +1,11 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.ScanUtils;
+import com.csl.intercom.cslscan.enums.MicrosoftKBField;
 import com.csl.interfaces.models.IDbapiSerializable;
+import com.ucsl.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.csl.intercom.cslscan.enums.MicrosoftKBField;
-import com.ucsl.json.Json;
 
 import java.time.OffsetDateTime;
 

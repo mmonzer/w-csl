@@ -3,7 +3,6 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 
 import java.util.List;
 

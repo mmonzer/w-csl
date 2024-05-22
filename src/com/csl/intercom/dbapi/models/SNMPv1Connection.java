@@ -1,7 +1,7 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.intercom.dbapi.enums.SNMPv2cConnectionField;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
 
 import java.util.ArrayList;

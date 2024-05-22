@@ -15,17 +15,16 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.lang.Assert;
+import io.jsonwebtoken.security.SignatureException;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.lang.Assert;
-import io.jsonwebtoken.security.SignatureException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 
 public class MacSigner extends MacProvider implements Signer {
 

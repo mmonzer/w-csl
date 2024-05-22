@@ -15,13 +15,13 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.nio.charset.StandardCharsets;
-
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.DeserializationException;
 import io.jsonwebtoken.io.Deserializer;
 import io.jsonwebtoken.io.IOException;
 import io.jsonwebtoken.lang.Assert;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * A {@link Deserializer} implementation that wraps another Deserializer implementation to add common JWT related

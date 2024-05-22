@@ -15,17 +15,16 @@
  */
 package io.jsonwebtoken.security;
 
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.lang.Assert;
+import io.jsonwebtoken.lang.Classes;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.lang.Assert;
-import io.jsonwebtoken.lang.Classes;
 
 /**
  * Utility class for securely generating {@link SecretKey}s and {@link KeyPair}s.

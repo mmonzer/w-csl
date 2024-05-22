@@ -15,25 +15,14 @@
  */
 package io.jsonwebtoken.impl;
 
-import java.security.Key;
-import java.util.Date;
-import java.util.Map;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Clock;
-import io.jsonwebtoken.CompressionCodecResolver;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Header;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwt;
-import io.jsonwebtoken.JwtHandler;
-import io.jsonwebtoken.JwtParser;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SigningKeyResolver;
-import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoder;
 import io.jsonwebtoken.io.Deserializer;
 import io.jsonwebtoken.security.SignatureException;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * This JwtParser implementation exists as a stop gap until the mutable methods are removed from JwtParser.

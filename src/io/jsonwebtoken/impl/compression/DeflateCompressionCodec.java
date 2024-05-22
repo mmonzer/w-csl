@@ -15,16 +15,12 @@
  */
 package io.jsonwebtoken.impl.compression;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import io.jsonwebtoken.lang.Objects;
+
+import java.io.*;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.InflaterOutputStream;
-
-import io.jsonwebtoken.lang.Objects;
 
 /**
  * Codec implementing the <a href="https://en.wikipedia.org/wiki/DEFLATE">deflate compression algorithm</a>.

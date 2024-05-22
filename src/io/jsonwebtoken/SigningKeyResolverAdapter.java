@@ -15,11 +15,10 @@
  */
 package io.jsonwebtoken;
 
-import java.security.Key;
+import io.jsonwebtoken.lang.Assert;
 
 import javax.crypto.spec.SecretKeySpec;
-
-import io.jsonwebtoken.lang.Assert;
+import java.security.Key;
 
 /**
  * An <a href="http://en.wikipedia.org/wiki/Adapter_pattern">Adapter</a> implementation of the

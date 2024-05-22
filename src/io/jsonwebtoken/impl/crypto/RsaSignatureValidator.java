@@ -15,17 +15,13 @@
  */
 package io.jsonwebtoken.impl.crypto;
 
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.MessageDigest;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.lang.Assert;
 import io.jsonwebtoken.security.SignatureException;
+
+import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 public class RsaSignatureValidator extends RsaProvider implements SignatureValidator {
 

@@ -16,10 +16,13 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.close;
-import static org.lightcouch.CouchDbUtil.getAsString;
-import static org.lightcouch.URIBuilder.buildUri;
+import com.csl.logger.CSLLogger;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import org.apache.commons.codec.Charsets;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPut;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,16 +31,8 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
 
-import org.apache.commons.codec.Charsets;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPut;
-
-import com.csl.logger.CSLLogger;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
+import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.URIBuilder.buildUri;
 
 /**
  * Contains database server specific APIs.

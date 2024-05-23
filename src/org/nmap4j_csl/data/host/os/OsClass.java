@@ -34,9 +34,9 @@
  */
 package org.nmap4j_csl.data.host.os;
 
-import java.util.ArrayList;
-
 import org.nmap4j_csl.data.host.Cpe;
+
+import java.util.ArrayList;
 
 public class OsClass {
 	

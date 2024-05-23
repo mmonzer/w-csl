@@ -30,12 +30,7 @@ import org.apache.velocity.runtime.resource.util.StringResourceRepositoryImpl;
 import org.apache.velocity.util.ClassUtils;
 import org.apache.velocity.util.ExtProperties;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

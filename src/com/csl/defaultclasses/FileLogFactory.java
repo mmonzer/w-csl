@@ -1,9 +1,9 @@
 package com.csl.defaultclasses;
 
-import java.util.function.LongSupplier;
-
 import com.ucsl.interfaces.IFileLog;
 import com.ucsl.interfaces.IFileLogFactory;
+
+import java.util.function.LongSupplier;
 
 public class FileLogFactory implements IFileLogFactory {
 

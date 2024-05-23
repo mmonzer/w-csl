@@ -1,33 +1,20 @@
 package com.wcsl.ids;
 
-import java.util.List;
-import java.util.Map;
-
 import com.csl.alert.CSLAlertFactory;
 import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.defaultclasses.FileLogFactory;
 import com.csl.defaultclasses.FileStoreService;
-import com.ucsl.interfaces.IAlertDescriptor;
-import com.ucsl.interfaces.IAlertFactory;
-import com.ucsl.interfaces.IAlertLevel;
-import com.ucsl.interfaces.IAlertManager;
-import com.ucsl.interfaces.IAlertSender;
-import com.ucsl.interfaces.ICSLLogger;
-import com.ucsl.interfaces.IConsole;
-import com.ucsl.interfaces.IFileLogFactory;
-import com.ucsl.interfaces.IFileStoreService;
-import com.ucsl.interfaces.IIDSLearnedRules;
-import com.ucsl.interfaces.IIDSMainProcessor;
-import com.ucsl.interfaces.IIDSMainProcessorParams;
-import com.ucsl.interfaces.IILearningProcessor;
-import com.ucsl.interfaces.IOffLineDetectionProcessor;
+import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.ucsl.util.DefaultLogger;
 import com.ucsl.util.IDSUtil;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
+import java.util.Map;
 
 
 public class IDSMainProcessor implements IIDSMainProcessor {

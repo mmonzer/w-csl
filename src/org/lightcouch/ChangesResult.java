@@ -16,10 +16,10 @@
 
 package org.lightcouch;
 
-import java.util.List;
-
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 /**
  * Represents Changes feed result of type <i>normal</i>.

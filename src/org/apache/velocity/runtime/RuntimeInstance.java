@@ -19,20 +19,12 @@ package org.apache.velocity.runtime;
  * under the License.
  */
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
-import org.apache.velocity.app.event.EventCartridge;
-import org.apache.velocity.app.event.EventHandler;
-import org.apache.velocity.app.event.IncludeEventHandler;
-import org.apache.velocity.app.event.InvalidReferenceEventHandler;
-import org.apache.velocity.app.event.MethodExceptionEventHandler;
-import org.apache.velocity.app.event.ReferenceInsertionEventHandler;
+import org.apache.velocity.app.event.*;
 import org.apache.velocity.context.Context;
 import org.apache.velocity.context.InternalContextAdapterImpl;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.exception.TemplateInitException;
-import org.apache.velocity.exception.VelocityException;
+import org.apache.velocity.exception.*;
 import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.directive.Macro;
 import org.apache.velocity.runtime.directive.Scope;
@@ -49,24 +41,11 @@ import org.apache.velocity.util.RuntimeServicesAware;
 import org.apache.velocity.util.introspection.ChainableUberspector;
 import org.apache.velocity.util.introspection.LinkingUberspector;
 import org.apache.velocity.util.introspection.Uberspect;
-
-import org.apache.commons.lang3.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.Writer;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Properties;
+import java.io.*;
+import java.util.*;
 
 /**
  * This is the Runtime system for Velocity. It is the

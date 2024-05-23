@@ -34,10 +34,10 @@
  */
 package org.nmap4j_csl.data.host;
 
+import org.nmap4j_csl.data.nmaprun.hostnames.Hostname;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.nmap4j_csl.data.nmaprun.hostnames.Hostname;
 
 public class Hostnames {
 	

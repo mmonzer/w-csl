@@ -16,11 +16,11 @@
 
 package org.lightcouch;
 
-import java.util.Map;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Map;
 
 /**
  * Represents a design document.

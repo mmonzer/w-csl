@@ -16,13 +16,10 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.JsonToObject;
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.close;
-import static org.lightcouch.CouchDbUtil.getAsInt;
-import static org.lightcouch.CouchDbUtil.getAsLong;
-import static org.lightcouch.CouchDbUtil.getAsString;
-import static org.lightcouch.CouchDbUtil.getStream;
+import com.csl.logger.CSLLogger;
+import com.google.gson.*;
+import org.apache.commons.codec.Charsets;
+import org.apache.commons.codec.binary.Base64;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,15 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.codec.Charsets;
-import org.apache.commons.codec.binary.Base64;
-
-import com.csl.logger.CSLLogger;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import static org.lightcouch.CouchDbUtil.*;
 
 /**
  * This class provides access to the <tt>View</tt> APIs.

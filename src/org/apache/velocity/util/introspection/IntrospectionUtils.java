@@ -21,7 +21,6 @@ package org.apache.velocity.util.introspection;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *

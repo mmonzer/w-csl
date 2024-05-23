@@ -2,9 +2,7 @@ package com.csl.core;
 
 import com.csl.interfaces.IModule;
 import com.csl.interfaces.IModuleContext;
-import com.ucsl.interfaces.IVariablesTable;
 import com.ucsl.json.Json;
-import com.wcsl.ids.VariableTableFactory;
 import lombok.Getter;
 import lombok.Setter;
 

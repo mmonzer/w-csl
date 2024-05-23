@@ -1,8 +1,10 @@
 package org.mitre.cpe.naming;
 
-import java.text.ParseException;
+import org.mitre.cpe.common.LogicalValue;
+import org.mitre.cpe.common.Utilities;
+import org.mitre.cpe.common.WellFormedName;
 
-import org.mitre.cpe.common.*;
+import java.text.ParseException;
 
 /**
  * The CPENameBinder class is a simple implementation

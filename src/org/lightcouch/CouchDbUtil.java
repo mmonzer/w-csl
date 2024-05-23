@@ -16,29 +16,21 @@
 
 package org.lightcouch;
 
-import static java.lang.String.format;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import org.apache.http.HttpResponse;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.apache.http.HttpResponse;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import static java.lang.String.format;
 
 /**
  * Provides various utility methods, for internal use.

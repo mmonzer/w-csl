@@ -29,7 +29,6 @@ import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.parser.Parser;
 import org.apache.velocity.runtime.parser.Token;
 import org.apache.velocity.util.StringUtils;
-
 import org.slf4j.Logger;
 
 import java.io.IOException;

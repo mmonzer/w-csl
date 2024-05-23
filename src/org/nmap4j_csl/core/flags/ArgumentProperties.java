@@ -35,10 +35,10 @@
  */
 package org.nmap4j_csl.core.flags;
 
-import java.util.HashSet ;
-import java.util.Iterator ;
-import java.util.LinkedHashMap ;
-import java.util.Set ;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 /**
  * Instances of this class are used to manage the flags for a given 

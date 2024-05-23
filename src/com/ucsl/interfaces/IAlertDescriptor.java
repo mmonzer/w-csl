@@ -1,8 +1,8 @@
 package com.ucsl.interfaces;
 
-import java.util.Map;
-
 import com.ucsl.json.Json;
+
+import java.util.Map;
 
 public interface IAlertDescriptor {
 	// code alertes

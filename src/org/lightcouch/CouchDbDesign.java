@@ -16,12 +16,9 @@
 
 package org.lightcouch;
 
-import static java.lang.String.format;
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.listResources;
-import static org.lightcouch.CouchDbUtil.readFile;
-import static org.lightcouch.CouchDbUtil.removeExtension;
-import static org.lightcouch.URIBuilder.buildUri;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import org.lightcouch.DesignDocument.MapReduce;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -29,10 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lightcouch.DesignDocument.MapReduce;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import static java.lang.String.format;
+import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.URIBuilder.buildUri;
 
 /**
  * Provides API to work with design documents. 

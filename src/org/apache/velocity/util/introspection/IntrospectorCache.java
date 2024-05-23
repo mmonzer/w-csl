@@ -20,7 +20,6 @@ package org.apache.velocity.util.introspection;
  */
 
 import org.apache.commons.lang3.Validate;
-
 import org.slf4j.Logger;
 
 import java.util.HashMap;

@@ -30,7 +30,6 @@ import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.parser.ParseException;
 import org.apache.velocity.runtime.parser.Token;
 import org.apache.velocity.runtime.parser.node.Node;
-
 import org.slf4j.Logger;
 
 import java.io.IOException;

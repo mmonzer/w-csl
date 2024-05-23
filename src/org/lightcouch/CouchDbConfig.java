@@ -16,10 +16,10 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-
 import java.io.InputStream;
 import java.util.Properties;
+
+import static org.lightcouch.CouchDbUtil.assertNotEmpty;
 
 //import org.apache.commons.logging.Log;
 //import org.apache.commons.logging.LogFactory;

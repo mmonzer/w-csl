@@ -20,11 +20,7 @@ package org.apache.velocity.runtime.parser.node;
  */
 
 import org.apache.velocity.context.InternalContextAdapter;
-import org.apache.velocity.exception.MethodInvocationException;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.exception.TemplateInitException;
-import org.apache.velocity.exception.VelocityException;
+import org.apache.velocity.exception.*;
 import org.apache.velocity.runtime.RuntimeConstants.SpaceGobbling;
 import org.apache.velocity.runtime.directive.BlockMacro;
 import org.apache.velocity.runtime.directive.Directive;

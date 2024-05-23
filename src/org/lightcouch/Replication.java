@@ -16,23 +16,18 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.close;
-import static org.lightcouch.CouchDbUtil.getStream;
-import static org.lightcouch.URIBuilder.buildUri;
+import com.csl.logger.CSLLogger;
+import com.google.gson.JsonObject;
+import org.apache.commons.codec.Charsets;
+import org.apache.http.HttpResponse;
+import org.lightcouch.ReplicationResult.ReplicationHistory;
 
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Map;
 
-import org.apache.commons.codec.Charsets;
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
-import org.lightcouch.ReplicationResult.ReplicationHistory;
-
-import com.csl.logger.CSLLogger;
-import com.google.gson.JsonObject;
+import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.URIBuilder.buildUri;
 
 /**
  * This class provides access to the database replication API; a replication request 

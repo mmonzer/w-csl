@@ -19,15 +19,8 @@ package org.apache.velocity.util.introspection;
  * under the License.
  */
 
-import org.apache.velocity.exception.VelocityException;
-
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

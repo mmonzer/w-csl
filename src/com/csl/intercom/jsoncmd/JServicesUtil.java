@@ -1,10 +1,10 @@
 package com.csl.intercom.jsoncmd;
 
+import com.ucsl.json.Json;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-
-import com.ucsl.json.Json;
 
 
 public class JServicesUtil {

@@ -35,9 +35,9 @@
  */
 package org.nmap4j_csl.data.host;
 
-import java.util.ArrayList;
-
 import org.nmap4j_csl.data.host.ports.Port;
+
+import java.util.ArrayList;
 
 
 public class Ports {

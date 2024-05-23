@@ -1,10 +1,5 @@
 package com.wcsl.ids;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.ucsl.interfaces.ICancelChecker;
-import com.ucsl.interfaces.IConsole;
 import com.ucsl.interfaces.IFileStoreService;
 import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.interfaces.IIDSMainProcessorParams;
@@ -13,6 +8,9 @@ import com.ucsl.json.JsonUtil;
 import com.ucsl.util.IDSUtil;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 	

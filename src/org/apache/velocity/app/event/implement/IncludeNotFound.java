@@ -19,14 +19,12 @@ package org.apache.velocity.app.event.implement;
  * under the License.
  */
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.event.IncludeEventHandler;
 import org.apache.velocity.context.Context;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.util.ContextAware;
 import org.apache.velocity.util.RuntimeServicesAware;
-
-import org.apache.commons.lang3.StringUtils;
-
 import org.slf4j.Logger;
 
 /**

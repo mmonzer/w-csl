@@ -34,8 +34,6 @@
  */
 package org.nmap4j_csl.core.scans;
 
-import org.nmap4j_csl.core.flags.Flag;
-
 /**
  * This is a convenience class that allows you to scan for hosts based on the
  * included/excluded hosts passed to the constructor.

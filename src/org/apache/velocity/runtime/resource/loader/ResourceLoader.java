@@ -27,14 +27,9 @@ import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.resource.Resource;
 import org.apache.velocity.runtime.resource.ResourceCacheImpl;
 import org.apache.velocity.util.ExtProperties;
-
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 
 /**
  * This is abstract class the all text resource loaders should

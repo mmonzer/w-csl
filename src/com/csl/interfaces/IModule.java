@@ -1,8 +1,8 @@
 package com.csl.interfaces;
 
-import java.util.Map;
-
 import com.ucsl.interfaces.IResult;
+
+import java.util.Map;
 
 public interface IModule {
 

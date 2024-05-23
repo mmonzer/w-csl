@@ -16,10 +16,12 @@
 
 package org.lightcouch;
 
-import static org.lightcouch.CouchDbUtil.assertNotEmpty;
-import static org.lightcouch.CouchDbUtil.close;
-import static org.lightcouch.CouchDbUtil.getAsString;
-import static org.lightcouch.URIBuilder.buildUri;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.apache.commons.codec.Charsets;
+import org.lightcouch.ReplicatorDocument.UserCtx;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,13 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.Charsets;
-import org.lightcouch.ReplicatorDocument.UserCtx;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import static org.lightcouch.CouchDbUtil.*;
+import static org.lightcouch.URIBuilder.buildUri;
 
 /**
  * This class provides access to the <tt>_replicator</tt> database introduced in CouchDB version 1.1.0

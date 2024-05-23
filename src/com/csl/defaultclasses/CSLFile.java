@@ -1,12 +1,8 @@
 package com.csl.defaultclasses;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-
 import com.ucsl.interfaces.ICSLFile;
+
+import java.io.*;
 
 public class CSLFile implements ICSLFile {
 	File f=null;

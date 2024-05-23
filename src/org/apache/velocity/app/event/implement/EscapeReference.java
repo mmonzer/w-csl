@@ -19,13 +19,11 @@ package org.apache.velocity.app.event.implement;
  * under the License.
  */
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.event.ReferenceInsertionEventHandler;
 import org.apache.velocity.context.Context;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.util.RuntimeServicesAware;
-
-import org.apache.commons.lang3.StringUtils;
-
 import org.slf4j.Logger;
 
 import java.util.regex.PatternSyntaxException;

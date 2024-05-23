@@ -19,6 +19,7 @@ package org.apache.velocity.runtime.resource;
  * under the License.
  */
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.exception.VelocityException;
@@ -28,13 +29,9 @@ import org.apache.velocity.runtime.resource.loader.ResourceLoader;
 import org.apache.velocity.runtime.resource.loader.ResourceLoaderFactory;
 import org.apache.velocity.util.ClassUtils;
 import org.apache.velocity.util.ExtProperties;
-
-import org.apache.commons.lang3.StringUtils;
-
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;

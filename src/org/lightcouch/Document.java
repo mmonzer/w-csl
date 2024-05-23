@@ -16,10 +16,10 @@
 
 package org.lightcouch;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import com.google.gson.annotations.SerializedName;
 
 /**
  * Convenient base class for CouchDB documents, defines the basic 

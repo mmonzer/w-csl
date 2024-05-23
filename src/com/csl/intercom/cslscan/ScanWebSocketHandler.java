@@ -1,6 +1,5 @@
 package com.csl.intercom.cslscan;
 
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.ucsl.json.Json;

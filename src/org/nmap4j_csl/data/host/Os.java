@@ -34,11 +34,11 @@
  */
 package org.nmap4j_csl.data.host;
 
-import java.util.ArrayList;
-
 import org.nmap4j_csl.data.host.os.OsClass;
 import org.nmap4j_csl.data.host.os.OsMatch;
 import org.nmap4j_csl.data.host.os.PortUsed;
+
+import java.util.ArrayList;
 
 
 public class Os {

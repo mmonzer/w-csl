@@ -1,7 +1,6 @@
 package com.csl.interfaces;
 
 import com.csl.ids.IDSParams;
-import com.ucsl.interfaces.IIDSLearnedRules;
 
 
 public interface IIDSRunner {

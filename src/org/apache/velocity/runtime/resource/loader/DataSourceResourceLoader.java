@@ -19,25 +19,19 @@ package org.apache.velocity.runtime.resource.loader;
  * under the License.
  */
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.exception.VelocityException;
 import org.apache.velocity.runtime.resource.Resource;
 import org.apache.velocity.util.ExtProperties;
-
-import org.apache.commons.lang3.StringUtils;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.io.FilterReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 
 /**
  * <P>This is a simple template file loader that loads templates

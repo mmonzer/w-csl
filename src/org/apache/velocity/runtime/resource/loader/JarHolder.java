@@ -22,7 +22,6 @@ package org.apache.velocity.runtime.resource.loader;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.exception.VelocityException;
 import org.apache.velocity.runtime.RuntimeServices;
-
 import org.slf4j.Logger;
 
 import java.io.IOException;

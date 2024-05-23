@@ -4,8 +4,6 @@ import com.csl.intercom.cslscan.enums.EntityHttpConnectionInputField;
 import com.csl.interfaces.models.IDbapiSerializable;
 import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.stream.Collectors;

@@ -16,16 +16,15 @@
 
 package org.lightcouch;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-
+import com.google.gson.Gson;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.client.methods.HttpGet;
 import org.lightcouch.ChangesResult.Row;
 
-import com.google.gson.Gson;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
 
 /**
  * <p>Contains the Change Notifications API, supports <i>normal</i> and <i>continuous</i> feed Changes. 

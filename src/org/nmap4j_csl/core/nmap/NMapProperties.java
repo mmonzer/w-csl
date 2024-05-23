@@ -34,9 +34,9 @@
  */
 package org.nmap4j_csl.core.nmap;
 
-import java.io.File ;
-
 import org.nmap4j_csl.core.flags.Flag;
+
+import java.io.File;
 
 /**
  * This class is used to manage the path to nmap.  This class attempts to look

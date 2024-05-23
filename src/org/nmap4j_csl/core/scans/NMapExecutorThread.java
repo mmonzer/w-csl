@@ -36,11 +36,7 @@
 package org.nmap4j_csl.core.scans;
 
 import org.nmap4j_csl.core.flags.ArgumentProperties;
-import org.nmap4j_csl.core.nmap.ExecutionResults;
-import org.nmap4j_csl.core.nmap.NMapExecutionException;
-import org.nmap4j_csl.core.nmap.NMapExecutor;
-import org.nmap4j_csl.core.nmap.NMapInitializationException;
-import org.nmap4j_csl.core.nmap.NMapProperties;
+import org.nmap4j_csl.core.nmap.*;
 
 /**
  * An implementation of the Runnable interface capable of running an 

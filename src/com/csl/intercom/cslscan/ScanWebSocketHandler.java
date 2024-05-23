@@ -1,7 +1,7 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.services.ScansService;
+import com.csl.intercom.services.ExternalScansService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
@@ -50,7 +50,7 @@ public class ScanWebSocketHandler {
     private StompSession stompExternalScanSession = null;
     private static final DbapiHandler dbapiHandler = new DbapiHandler();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private ScansService scansService;
+    private ExternalScansService externalScansService;
     private CpeScanService cpeScanService;
 
 
@@ -60,11 +60,11 @@ public class ScanWebSocketHandler {
      * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService, ScansService scansService) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService, ExternalScansService externalScansService) {
         this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
         this.cpeScanService = cpeScanService;
-        this.scansService = scansService;
+        this.externalScansService = externalScansService;
 
         // Schedule reconnection to websockets every 2 seconds
         webSocketsConnectionAttempts = Executors.newScheduledThreadPool(1);
@@ -181,7 +181,7 @@ public class ScanWebSocketHandler {
         }
 
         if (new_notification_connection || new_request_connection || new_external_scan_connection) {
-            scansService.handleConnectionEstablishedWithScanner();
+            externalScansService.handleConnectionEstablishedWithScanner();
         }
     }
 
@@ -315,7 +315,7 @@ public class ScanWebSocketHandler {
                 if (payload instanceof Json) {
                     logger.debug("[STOMP] " + payload.toString());
                     ExternalScan scan = ExternalScan.fromScannerJson((Json) payload);
-                    scansService.createOrUpdateExternalScan(scan);
+                    externalScansService.createOrUpdateExternalScan(scan);
                 } else {
                     logger.debug("[STOMP] null");
                 }

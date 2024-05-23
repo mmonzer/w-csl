@@ -9,12 +9,11 @@ import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.services.ExternalDiscoveredDevicesSynchronizationService;
 import com.csl.intercom.services.ExternalConnectionInfoSynchronizationService;
-import com.csl.intercom.services.ScansService;
+import com.csl.intercom.services.ExternalScansService;
 import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -26,7 +25,6 @@ import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
-import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
@@ -62,7 +60,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
     private CSLMqttBrokerHandler mqttBroker = null;
-    private ScansService scansService = null;
+    private ExternalScansService externalScansService = null;
     private ExternalConnectionInfoSynchronizationService externalConnectionInfoSynchronizationService = null;
     private ExternalDiscoveredDevicesSynchronizationService externalDiscoveredDevicesSynchronizationService = null;
     private DataSynchronizationService cpeItemSynchronizationService = null;
@@ -115,7 +113,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
             deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
 
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
@@ -129,8 +126,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 }
             });
 
-            scansService = new ScansService(dbapiHandler, scanApiHandler);
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, scansService);
+            externalScansService = new ExternalScansService(dbapiHandler, scanApiHandler);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, externalScansService);
             externalConnectionInfoSynchronizationService = new ExternalConnectionInfoSynchronizationService(scanApiHandler, dbapiHandler);
             externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
             externalDiscoveredDevicesSynchronizationService = new ExternalDiscoveredDevicesSynchronizationService(scanApiHandler, dbapiHandler, 3600);
@@ -854,7 +851,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         ).toJson();
                     }
                     String connectionInfoId = params.get("connection_info_uuid").asString();
-                    ExternalScan scan = scansService.startExternalDiscoveryScan(connectionInfoId);
+                    ExternalScan scan = externalScansService.startExternalDiscoveryScan(connectionInfoId);
                     if (scan == null) {
                         return JsonApiResponse.error("Could not start device discovery scan",
                                 Json.object("exception", "Could not start device discovery scan")

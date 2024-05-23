@@ -20,16 +20,7 @@ public class CSLWebSocketForJcmd {
 	private static final String RESPONSE = "response";
 	public static long TIME_OUT=60000;
 
-
-
 	public static String WEB_SOCKET_CMD="/cmd";
-
-
-	//static HashMap<String, String> websocketTags = new HashMap<String, String >();
-
-	// this map is shared between sessions and threads, so it needs to be thread-safe (http://stackoverflow.com/a/2688817)
-	//static Map<String,Map<Session, String>> allSocketsUsernameMap = new ConcurrentHashMap<>();
-	//static int nextUserNumber = 1; //Assign to username for next connecting user
 
 	static Map<String,Session> sessionMap = new ConcurrentHashMap<>();
 
@@ -38,28 +29,8 @@ public class CSLWebSocketForJcmd {
 	static private int idebug=2;
 
 	static  public boolean isDebug() {return idebug>1;}
-	static public boolean isShowInfo() {return idebug>0;}
-	static public void setDebugLevel(int d) {idebug=d;}
-
-
-	static public String cleanSocketName(String name) {
-
-		if (name.startsWith("/")) name=name.substring(1);
-		return name.toLowerCase();
-	}
-
-
 
 	static public void addUser(String name,Session session) {
-
-
-		//System.out.println(user.getUpgradeRequest().getRequestURI());
-		//System.out.println(user.getUpgradeRequest().getRequestURI().getPath());
-		//CSLContext.instance.logInfo("Connection :"+user);
-		//String username = "User" + (nextUserNumber++);
-		//CSLWebSocketForConsole.userUsernameMap.put(user, username);
-
-		//String socketName=cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath());
 
 		name=name.toLowerCase();
 		System.out.println("connect :"+name);
@@ -81,31 +52,6 @@ public class CSLWebSocketForJcmd {
 	}
 
 
-
-
-
-
-//	public static void  refresh(String name) {
-//
-//		Session session=sessionMap.get(name);
-//		if (session==null) {
-//			System.err.println("Invalid api name "+name+" client not connected");
-//			return ;
-//		}
-//		System.out.println("Refresh socket "+name+": "+name+" open:"+session.isOpen());
-//		Json jx=Json.object();
-//		jx.set("refresh", name);
-//
-//		try {
-//			if (session.isOpen())session.getRemote().sendString(jx.toString());
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//	}
-
-
 	//Sends a message from one user to all users, along with a list of current usernames
 	public static void broadcastMessageJson( String name, Json j) {
 
@@ -125,14 +71,11 @@ public class CSLWebSocketForJcmd {
 				return ;
 			}
 		}
-
-		//	Json jx=Json.object();
 		j.set("api", name);
 		String s=j.toString();
 
 
 		try {
-	//		session.getRemote().sendString(s);
 			session.getRemote().sendStringByFuture(s);
 
 		} catch (Exception e) {
@@ -140,26 +83,6 @@ public class CSLWebSocketForJcmd {
 		}
 
 	}
-
-
-//	//Sends a message from one user to all users, along with a list of current usernames
-//	public static void broadcastMessageString( String name,  String s) {
-//
-//		Session session=sessionMap.get(name);
-//		if (session==null) {
-//			System.err.println("Invalid api name "+name+" client not connected");
-//			return ;
-//		}
-//
-//
-//		try {
-//			session.getRemote().sendString(s);
-//
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-
 
 	public static long getUuid() {
 		uuidctr++;
@@ -178,11 +101,9 @@ public class CSLWebSocketForJcmd {
 	public static void removeUser(Session user) {
 		// TODO Auto-generated method stub
 
-		//System.out.println("Remove session ");
 		List <String> keysToRemove = new ArrayList<String>();
 		for (String key : sessionMap.keySet()) {
 
-			//System.out.println(key + ":" + sessionMap.get(key));
 			Session x= sessionMap.get(key);
 			if (user.equals(x)) {
 				keysToRemove.add(key);
@@ -197,28 +118,12 @@ public class CSLWebSocketForJcmd {
 
 
 	public static Json execJCmd(String apiName, Json jCmd) {
-
-		/*	jcmd.set("uuid", getUuid());
-
-		System.out.println("Remote Exec Jcmd <"+apiName+"> "+jcmd);
-
-		broadcastMessageJson(apiName, jcmd);
-		return Json.object().set("info", "remote exec");
-	}
-
-
-
-	public static  Json execCmd(String apiName,Json jCmd) {*/
-
-		
 		startTimeOutDetector();
 
 		Json fullMsg=Json.object();
 
 		String key=""+getUuid();
 
-
-		//fullMsg.set(REQUEST,jCmd);
 		fullMsg.set("uuid",key);
 		fullMsg.set("api",apiName);
 		fullMsg.set("jcmd", jCmd);
@@ -234,7 +139,6 @@ public class CSLWebSocketForJcmd {
 
 			try {
 				Thread.sleep(3);
-			//	if (isDebug()) System.out.println("wait for response:"+fullMsg);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -263,9 +167,7 @@ public class CSLWebSocketForJcmd {
 
 		try {
 
-
 			Json j=Json.read(s);
-			//System.out.println("JSON:"+j);
 
 			String key="";
 
@@ -298,7 +200,6 @@ public class CSLWebSocketForJcmd {
 				new Runnable() {
 					public void run() {
 						long current_time = System.currentTimeMillis();
-						//System.out.println("Time out detector at time "+current_time);
 						List<String> toDel= new ArrayList<String>();
 
 						for (Map.Entry<String,Json> entry : pendingMessages.entrySet()) {
@@ -308,7 +209,6 @@ public class CSLWebSocketForJcmd {
 							long end_time = start_time + TIME_OUT;
 							if (end_time<current_time) {
 								if (isDebug()) System.out.println("Time out:"+message);
-								//toDel.add(entry.getKey());
 								message.set(RESPONSE, Json.object().set("error","TIMEOUT"));
 							}
 

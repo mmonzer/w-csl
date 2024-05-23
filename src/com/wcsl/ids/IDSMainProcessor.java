@@ -26,14 +26,11 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.ucsl.util.DefaultLogger;
 import com.ucsl.util.IDSUtil;
-
-
-
-
+import lombok.Getter;
+import lombok.Setter;
 
 
 public class IDSMainProcessor implements IIDSMainProcessor {
-
 	
 	private IFileStoreService fileStoreServices;
 
@@ -53,21 +50,14 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 	//=======================================================================================================================
 	// Logger
 	//
-	static private ICSLLogger logger= new DefaultLogger();
+	@Setter
+    @Getter
+    static private ICSLLogger logger= new DefaultLogger();
 	static public ICSLLogger cslLogger() {
 		return logger;
 	}
-	static public ICSLLogger getLogger() {
-		return logger;
-	}
-	static public void setLogger(ICSLLogger l) {
-		logger = l;
-	}
-	//=======================================================================================================================
 
-	
-	
-	
+    //=======================================================================================================================
 	public IDSMainProcessor(
 			Json jConfig,
 			String cslConfDir
@@ -88,8 +78,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		this.idsMainProcessorParams= new IDSMainProcessorParams(this, jConfig);
 
 		this.alertFactory= new CSLAlertFactory();
-
-		
 
 	}
 	
@@ -118,7 +106,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		// TODO Auto-generated method stub
 		
 	}
-
 
 	//==================================================================================
 	// Adavanced version
@@ -174,10 +161,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		return getFileStoreServices().readJsonFromFile(dir, fileName);
 	}
 	
-	
-	
-	
-	
 	@Override
 	public IFileStoreService getFileStoreServices() {
 		// TODO Auto-generated method stub
@@ -201,9 +184,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		return idsMainProcessorParams;
 		}
 	
-	
-	
-	
 	// process an event (from suricata for example)
 	private void generateAlertFRomSuricataEvent(Json evtsInfo) {
 		
@@ -217,23 +197,20 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		if (evtsInfo.has("alert")) {
 
 			Json j=evtsInfo.get("alert");
-			if (j.has("signature")) { //cslAlertManager.sendToViewer(CSLAlertManager.INFO, evtsInfo.get("msg").asString());
+			if (j.has("signature")) {
 
 				String s=j.get("signature").asString();
 				if (s.startsWith("#")) {
 					int p=s.indexOf(" ");
 					if (p<0) {
-						//code=s;
 						msg=s;
 					}
 					else {
 						code=s.substring(1,p);
 						msg=s.substring(p+1,s.length());
 					}
-
 				}
 				else msg=s;
-
 			}
 
 			if (j.has("category")) {
@@ -281,18 +258,13 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 					.setMetaInfo("base_info", base_info);
 
 			CSLContext.instance.getCSLAlertManager().sendAlert(alert);
-		
 		}
 		else {
 
 			System.out.println("Suricata EVE (not an alert)"+evtsInfo);
 		}
 
-
-
-
 	}
-
 	
 	private Json getEveInfo(Json jj) {
 		
@@ -342,7 +314,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 			
 	}
 	
-	
 	//=======================================================================================================================
 	// Learning
 	
@@ -357,8 +328,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		System.err.println("Not implemented in basic version");
 		return null;
 	}
-	
-	
+
 	@Override
 	public IOffLineDetectionProcessor getOffLineDetectionProcessor(String fullPackets_dir_for_detection_offline) {
 		System.err.println("Not implemented in basic version");
@@ -420,24 +390,17 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 	@Override
 	public void reverseBackupLearnedModel() {
 		System.err.println("Not implemented in basic version");
-		
-		
 	}
+
 	@Override
 	public void renameLearnedRulesWithTimeStamp() {
 		System.err.println("Not implemented in basic version");		
 	}
 	
-	
-	
-	
-	
-	
 	@Override
 	public void getParamsAsJsonNameValueArray(Json j) {
 		if (j==null) j=Json.array();
 		if (!j.isArray()) j= Json.array();
-
 	}
 	
 	@Override
@@ -446,5 +409,4 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		String s="";
 		return s;
 	}
-
 }

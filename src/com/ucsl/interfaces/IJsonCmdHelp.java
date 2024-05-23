@@ -11,7 +11,6 @@ public interface IJsonCmdHelp {
 	static public String BOOL="boolean";
 	
 	static public String STATUS_TODO="TODO";
-	static public String STATUS_TOTEST="TO TEST";
 	static public String STATUS_OK="OK";
 	
 	IJsonCmdHelp setName(String s);
@@ -32,7 +31,6 @@ public interface IJsonCmdHelp {
 
 	IJsonCmdHelp setStatus(String s);
 	IJsonCmdHelp  setHelpProvider(ICmdHelpProvider h);
-	
-	
+
 
 }

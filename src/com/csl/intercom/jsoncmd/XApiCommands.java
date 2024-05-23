@@ -13,7 +13,6 @@ public class XApiCommands {
 
 	static boolean debug =true;
 
-	boolean initialized = false;
 	private String path = "";
 
 	private CSLInterModuleCommunicationManager interModuleCommunicationManager;
@@ -56,14 +55,9 @@ public class XApiCommands {
 	
 	private String execPostCommand(Request req, Response res) {
 
-	//	System.out.println("API POST : "+path);
 		String sresponse = req.body();
-	//	System.out.println("\n" + sresponse);
-	//	System.out.println("path:" + req.pathInfo());
 
 		String result = "";
-
-		// if (s.compareToIgnoreCase("setfile")==0)
 
 		Json data = Json.read(sresponse);
 		Json cmd = data.get("cmd");

@@ -13,14 +13,9 @@ public class IDSMainProcessorFactory implements IIDSMainProcessorFactory {
 	
 	@Override
 	public IIDSMainProcessor createIDSMainProcessor(Json config, String cslConfDir, ICSLLogger logger) {
-		// TODO Auto-generated method stub
 		IDSMainProcessor idsMainProcessor = new IDSMainProcessor(config, cslConfDir);
 		
 		idsMainProcessor.setLogger(logger);
-		//public IDSMainProcessor(
-	//			Json jConfig,
-	//			String cslConfDir
-		
 		return idsMainProcessor;
 		
 	}

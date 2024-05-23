@@ -5,6 +5,7 @@ import com.csl.intercom.dbapi.enums.SNMPv3ConnectionField;
 import com.csl.intercom.dbapi.enums.SNMPv3PrivacyAlgorithm;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +14,16 @@ import java.util.List;
  * Model to represent a SNMPv3 connection.
  */
 public class SNMPv3Connection extends Connection {
-    private int port;
-    private String username;
-    private String password;
-    private String passphrase;
-    private SNMPv3AuhtenticationAlgorithm authenticationAlgorithm;
-    private SNMPv3PrivacyAlgorithm privacyAlgorithm;
-    private String securityLevel;
+    private final int port;
+    @Getter
+    private final String username;
+    @Getter
+    private final String password;
+    @Getter
+    private final String passphrase;
+    private final SNMPv3AuhtenticationAlgorithm authenticationAlgorithm;
+    private final SNMPv3PrivacyAlgorithm privacyAlgorithm;
+    private final String securityLevel;
 
     protected SNMPv3Connection(int id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm, Boolean isSimulated) {
         super(id, devices, StaticConnectionProtocol.SNMPv3, isSimulated);
@@ -84,15 +88,4 @@ public class SNMPv3Connection extends Connection {
         return result;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getPassphrase() {
-        return passphrase;
-    }
 }

@@ -27,8 +27,7 @@ import main.extensions.SshUtils;
 import main.extensions.Utils;
 
 public class NmapServices implements ICSLService {
-	
-	//ApiCommands apiCommands= new ApiCommands("");
+
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	
@@ -58,12 +57,6 @@ public class NmapServices implements ICSLService {
 	public String getConfigFileSectionName() {
 		return configFileSectionName;
 	}
-
-	
-	
-	
-	
-
 	
 	static public void lauchNmap(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
@@ -243,48 +236,7 @@ public class NmapServices implements ICSLService {
 				return	scanDevice(param,jConfig);
 
 			}
-		});	
-		/*addCmd("getMachineList", new JsonCmd() {
-			
-			@Override
-			public Json exec(Json params) {
-				String idsconf = IDSRunner.instance.getIdsParams().getIdsModelDir();
-
-				Json devicesList = Utils.listDevices();
-				Json tapList = null;
-				try {
-					tapList = readJsonFile(idsconf+"/taps/TapsConfiguration.json");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				Json result = Json.object();
-				
-				HashMap<String, ArrayList<Json>> map = new HashMap<String, ArrayList<Json>>();
-				System.out.println(devicesList);
-				for(Json tmp : devicesList.asJsonList()) {
-					if(!map.containsKey(tmp.at("ip").asString().split("@")[1])) {
-						tmp.at("ip", tmp.at("ip").asString().split("@"));
-						ArrayList<Json> tmp2 = new ArrayList<Json>();
-						tmp2.add(tmp);
-						map.put(tmp.at("ip").asString().split("@")[1], tmp2);
-					}
-					else {
-						map.get(tmp.at("ip").asString().split("@")[1]).add(tmp);
-					}
-				}
-				
-				HashMap<String, ArrayList<Json>> map2 = new HashMap<String, ArrayList<Json>>();
-				for(String key : map.keySet()) {
-					for(Json tap : tapList.asJsonList()) {
-						if(tap.at("networkName").asString().contentEquals(key))
-							map2.put(tap.at("idname").asString(), map.get(key));
-					}
-				}				
-				result.at("result",map2);
-				return result.at("result");
-
-			}
-		});	*/		
+		});
 		return true;
 	}
 	

@@ -40,9 +40,8 @@ import java.util.stream.Collectors;
  */
 public class DbapiHandler implements AutoCloseable {
     private String dbapiUrl;
-    private String apiKey;
-    private HttpClient dbapiHttpClient = new HttpClient();
-    private final int maxPageSize = 1000;
+    private final String apiKey;
+    private final HttpClient dbapiHttpClient = new HttpClient();
     private static final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
 
     public DbapiHandler() {
@@ -324,9 +323,10 @@ public class DbapiHandler implements AutoCloseable {
         boolean hasMore = true;
         int offset = 0;
         while (hasMore) {
+            int maxPageSize = 1000;
             Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES)
                     .param("offset", String.valueOf(offset))
-                    .param("limit", String.valueOf(this.maxPageSize));
+                    .param("limit", String.valueOf(maxPageSize));
             if (dateUtc != null) {
                 request.param("deleted_date__gt", dateUtc.toString());
             }
@@ -337,7 +337,7 @@ public class DbapiHandler implements AutoCloseable {
                 deletedDevices.add(new Pair<>(uuid, deletedDate));
             }
             hasMore = !response.get("next").isNull();
-            offset += this.maxPageSize;
+            offset += maxPageSize;
         }
         return deletedDevices;
     }
@@ -593,15 +593,6 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
-     * Inform DB-API that a scan just started.
-     *
-     * @return The id attributed by DB-API to the scan object.
-     */
-    public int notifyScanStarted() {
-        return notifyScanStarted(OffsetDateTime.now());
-    }
-
-    /**
      * Notify DB-API that a scan is finished.
      *
      * @param scan The scan that ended.
@@ -848,11 +839,6 @@ public class DbapiHandler implements AutoCloseable {
         } catch (Exception e) {
             return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }
-
-//        if (failedDevices.isEmpty()) {
-//            scanApiHandler.sendNewCpeItemsToDbapi(this);
-//            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
-//        }
 
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()

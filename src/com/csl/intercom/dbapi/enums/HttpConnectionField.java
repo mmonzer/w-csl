@@ -12,8 +12,8 @@ public enum HttpConnectionField {
     STAGES_CONFIG("stagesConfig", "stagesConfig"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private HttpConnectionField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

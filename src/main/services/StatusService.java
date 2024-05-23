@@ -16,9 +16,7 @@ import com.ucsl.json.JsonUtil;
  * Also provides a command to directly retrieve the status message.
  */
 public class StatusService implements ICSLService {
-    private String name = "status";
-    private String configFileSectionName = "status";
-    private IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
+    private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private StatusNotifier notifier = null;
 
 
@@ -50,11 +48,12 @@ public class StatusService implements ICSLService {
 
     @Override
     public String getConfigFileSectionName() {
-        return configFileSectionName;
+        return "status";
     }
 
     @Override
     public IApiCommands getApiCommands() {
+        String name = "status";
         apiCommands.setName(name);
         return apiCommands;
     }

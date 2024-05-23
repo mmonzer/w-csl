@@ -11,6 +11,8 @@ import com.csl.web.websockets.CSLWebSocketHandler;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -41,19 +43,14 @@ public class CSLHttpServer {
 	static public int REFRESH_SOCKET_PERIOD=280;  // 280 sec (timeout after 300 sec)
 
 	private   boolean initialized =false;
-	private   boolean started=false;
-
-	CSLConfigFileServer cslConfigFileServer=null;
+	@Setter
+    @Getter
+    private   boolean started=false;
 	private static final Logger logger = LoggerFactory.getLogger(CSLHttpServer.class);
 
-	public void reinitServer(Json j) {
-		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
-		if (!on) return;
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-		if (sparkServer!=null) stop();
-		initialized=false;
-		initServer(j);
-	}
+	private final List<String> listOfRemoteApi = new ArrayList<String>();
 
 	public void initServer(Json j) { //String rootdir, int port, boolean verbose) {
 		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
@@ -291,13 +288,7 @@ public class CSLHttpServer {
 
 		return cresult;
 	}
-	
 
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-	public static String ROUTE_MODE_GET = "get";
-	public static String ROUTE_MODE_POST = "post";
-	private final List<String> listOfRemoteApi = new ArrayList<String>();
 
 	void startRefreshWebSocketTask(int n) {
 		if (n <= 0) return;
@@ -317,22 +308,7 @@ public class CSLHttpServer {
 		scheduler.scheduleAtFixedRate(r, n, n, TimeUnit.SECONDS);
 	}
 
-	private String replaceUserDir(String dir, String userDir) {
-		if (dir.startsWith(".")) {
-			return userDir + dir.substring(1);
-		}
-		return dir;
-	}
-
-	public boolean isStarted() {
-		return started;
-	}
-
-	public void setStarted(boolean started) {
-		this.started = started;
-	}
-
-	public void start() {
+    public void start() {
 		if (!initialized) {
 			logger.error("CSL Web server not initialized, cannot start");
 			System.exit(0);
@@ -382,11 +358,6 @@ public class CSLHttpServer {
 			System.err.println("websocket in use:" + path);
 		}
 		sparkServer.webSocket(path, handler);
-	}
-
-
-	public int getCurrentPortForWEB() {
-		return serverConfig.getPort();
 	}
 
 	private String renderInvalid(Request req, Response res) {

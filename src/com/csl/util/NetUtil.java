@@ -13,8 +13,7 @@ public class NetUtil {
 
 	
 	 public static String findIPAddress()  {
-	    	
-	    	
+
 	    	try {
 	    	Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
 		      

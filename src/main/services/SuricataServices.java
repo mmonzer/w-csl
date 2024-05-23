@@ -20,7 +20,6 @@ import com.ucsl.json.Json;
 import main.extensions.SshUtils;
 
 public class SuricataServices implements ICSLService {
-	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="suricata";
@@ -89,8 +88,6 @@ public class SuricataServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		// String command = "cd /home/"+id+"/configSuricata && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
-		// "sudo suricata -D -c /home/"+id+"configSuricata/suricata/suricata.yaml -i enp0s3 --pidfile /home/"+id+"configSuricata/suricataPID";
 		String command = startSuricataCommand(localIP, localPort);
 		String output = null;
 		try {
@@ -116,8 +113,7 @@ public class SuricataServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		// String command = "sudo kill -9 `cat /home/"+id+"configSuricata/suricataPID`";
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = STOP_SURICATA;
 		String output = null;
 		try {
@@ -145,8 +141,7 @@ public class SuricataServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		//String command = "sudo kill -USR2 `cat /home/"+id+"configSuricata/suricataPID`";
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = RELOAD_RULES;
 		String output = null;
 		try {
@@ -169,7 +164,7 @@ public class SuricataServices implements ICSLService {
 				} catch (NullPointerException e) {
 					System.out.println("Using default SSH port (22)");
 				}
-				SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
+				SshUtils ssh = new SshUtils(username,password,ip,port);
 				try {
 					ssh.sendFile("./datafile/suricataRules/"+name+".rules","/home/"+username+"/configSuricata/suricata/rules/csl.rules");
 				} catch (IOException | JSchException e) {
@@ -190,7 +185,7 @@ public class SuricataServices implements ICSLService {
 				} catch (NullPointerException e) {
 					System.out.println("Using default SSH port (22)");
 				}
-				SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
+				SshUtils ssh = new SshUtils(username,password,ip,port);
 				try {
 					ssh.getFile("/home/"+username+"/configSuricata/suricata/rules/csl.rules","./datafile/suricataRules/"+name+".rules");
 					resultat = readFile("./datafile/suricataRules/"+name+".rules");
@@ -278,10 +273,6 @@ public class SuricataServices implements ICSLService {
 	public String getConfigFileSectionName() {
 		return configFileSectionName;
 	}
-
-	
-	
-	
 	
 	@Override
 	public boolean init(Json config, String cslDir) {

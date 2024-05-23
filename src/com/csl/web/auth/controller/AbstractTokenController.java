@@ -3,13 +3,17 @@ package com.csl.web.auth.controller;
 import com.csl.web.auth.TokenService;
 import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.UserPrincipal;
+import lombok.Getter;
+import lombok.Setter;
 import spark.Request;
 
 import java.util.Arrays;
 import java.util.List;
 
 public abstract class AbstractTokenController {
-	  private boolean debug=false;;
+	  @Setter
+      @Getter
+      private boolean debug=false;;
 
     private static final String TOKEN_PREFIX = "Bearer";
 
@@ -18,22 +22,9 @@ public abstract class AbstractTokenController {
     public AbstractTokenController(TokenService tokenService) {
         this.tokenService = tokenService;
     }
-    
-    
-
-    public boolean isDebug() {
-		return debug;
-	}
 
 
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
-	}
-
-
-
-	protected UserPrincipal getUserPrincipal(Request request) {
+    protected UserPrincipal getUserPrincipal(Request request) {
         String authorizationHeader = request.headers("Authorization");
         String token = authorizationHeader.replace(TOKEN_PREFIX, "");
         return tokenService.getUserPrincipal(token);

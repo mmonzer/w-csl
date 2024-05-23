@@ -1,15 +1,18 @@
 package com.csl.web.auth.user;
 
+import lombok.Getter;
 import org.mindrot.BCrypt;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@Getter
 public final class UserService {
 
 	private static final String BCRYPT_SALT = BCrypt.gensalt();
 
+    // TODO Auto-generated method stub
     private final List<User> users = new CopyOnWriteArrayList<>();
 
     public final User register(String userName, String password, String firstName, String lastName) {
@@ -48,12 +51,7 @@ public final class UserService {
         users.add(user);
     }
 
-	public List<User> getUsers() {
-		// TODO Auto-generated method stub
-		return users;
-	}
-
-	public String encrypt(String pass) {
+    public String encrypt(String pass) {
 		
 		return BCrypt.hashpw(pass, BCRYPT_SALT);
 	}

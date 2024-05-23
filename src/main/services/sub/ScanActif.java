@@ -385,11 +385,6 @@ public class ScanActif {
 	private Json scanMachine(String ip) {
 		Json result = Json.object();
 		try {
-			// -O -> OS probe
-			// sudo nmap -sn 192.168.1.0/24 --script ip-forwarding --script-args='target=www.google.com'
-			// nmap4j.addFlags(" --script ip-forwarding.nse --script-args='target=www.google.com' ");
-			//nmap4j.addFlags(" --script /usr/share/nmap/scripts/ip-forwarding.nse --script-args='target=www.google.com' ");
-			//nmap4j.includeHosts("195.83.81.0/24");		
 			
 			// Exécution de nmap
 			Nmap4j nmap4j = new Nmap4j(nmapLocation);
@@ -524,21 +519,12 @@ public class ScanActif {
 	private boolean hasIpForwarding(String ip) {
 		print("On tente de savoir si "+ip+" a l'ip forwarding avec ce paramètre : "+ipForwardTestParameter,1);
 		try {
-			// -O -> OS probe
-			// sudo nmap -sn 192.168.1.0/24 --script ip-forwarding --script-args='target=www.google.com'
-			// nmap4j.addFlags(" --script ip-forwarding.nse --script-args='target=www.google.com' ");
-			//nmap4j.addFlags(" --script /usr/share/nmap/scripts/ip-forwarding.nse --script-args='target=www.google.com' ");
-			//nmap4j.includeHosts("195.83.81.0/24");		
 			
 			// Exécution de nmap
 			Nmap4j nmap4j = new Nmap4j(nmapLocation);
 			nmap4j.includeHosts(ip);
-			//nmap4j.addFlags(" -vv -sn --script="+nmapScriptLocation+"ip-forwarding --script-args='"+ipForwardTestParameter+"' ");
 			//////////////////
 			nmap4j.addFlags(" --script-trace --script ip-forwarding.nse --script-args='target=www.google.com' ");
-
-
-			
 			//////////////////
 			nmap4j.execute() ;
 			String output ="Erreur";
@@ -619,7 +605,6 @@ public class ScanActif {
 				// merge des versions d'OS
 				j = merge(j,"os_version",scannedResult.at("os_version").asString(), scannedResult);
 
-				
 				
 				devicesMerged.add(j);
 			}

@@ -17,7 +17,6 @@ import com.ucsl.json.Json;
 import main.extensions.CpeSearch;
 
 public class CpeServices implements ICSLService {
-//	ApiCommands apiCommands= new ApiCommands("");
 	
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	

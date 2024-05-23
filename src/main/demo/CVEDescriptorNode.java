@@ -17,8 +17,7 @@ public class CVEDescriptorNode {
 	int type=0; // 1: OR, 2: AND, 3: TERM
 	List<CVEDescriptorNode> nodes=null;
 	String cpeUri=null;
-	
-	
+
 	public int getSize() {
 		int n=12+4*3;
 		if (type==3) return cpeUri.length()+24+n;
@@ -126,6 +125,5 @@ public class CVEDescriptorNode {
 		if (type==2) s="AND("+s+")";
 		
 		return s;
-		
 	}
 }

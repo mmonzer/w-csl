@@ -35,7 +35,6 @@ public class FileUtils  {
 	}
 
 	public static boolean  dirExists(String dir,String fileName) {
-		//path, String fileName) {
 
 		if (dir.isEmpty()) dir=".";
 
@@ -47,9 +46,6 @@ public class FileUtils  {
 	}
 
 	public static boolean  dirExists(String f) {
-		//path, String fileName) {
-
-	
 		File file= new File(f);
 
 		return file.exists()&&file.isDirectory();
@@ -122,16 +118,11 @@ public class FileUtils  {
 
 
 	public static Json readJsonFromFile(String dir,String fileName) {
-		//path, String fileName) {
-
 		if (dir.isEmpty()) dir=".";
 
 		String f=dir+File.separator+fileName;
 
-
-		//URL  url= new URL("file:///"+fileName);
 		String content="{}";
-		//String f=path+ File.separator+fileName;
 		try {
 			content = readFile(f);
 		} catch (IOException e) {
@@ -180,12 +171,9 @@ public class FileUtils  {
 			fr = new FileReader(filename);
 			br = new BufferedReader(fr);
 			String nextLine = "";
-			List<String> list= new ArrayList<String>(); // StringBuilder sb = new StringBuilder();
+			List<String> list= new ArrayList<String>();
 			while ((nextLine = br.readLine()) != null) {
 				list.add(nextLine);
-				//sb.append(nextLine); // note: BufferedReader strips the EOL character
-				//   so we add a new one!
-				//sb.append(EOL);
 			}
 			return list;
 		}
@@ -198,9 +186,6 @@ public class FileUtils  {
 
 	static public String writeFile(String filename, String content) {
 
-		
-	//	String dir=Paths.get(filename).getParent().getFileName().toString();
-		
 		File file = new File(filename);
 		String dir = file.getAbsoluteFile().getParent();
 		
@@ -328,12 +313,6 @@ public class FileUtils  {
 		}
 	}
 
-
-
-
-
-
-
 	private   static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
 	
@@ -367,7 +346,7 @@ public class FileUtils  {
 		}
 
 		Date date = new Date();
-		String dir=parentPath.toString(); //System.getProperty("user.dir");
+		String dir=parentPath.toString();
 		String newFileName=dir+File.separatorChar+fileNameWithoutExtension+'_'+sdf.format(date.getTime())+fileNameExtension+moreInfo;
 
 
@@ -378,18 +357,13 @@ public class FileUtils  {
 			return "";
 		}
 		else {
-			//	System.out.println("File Does not Exists"); 
 			return "";
 		}
 
 		
 	}
 
-
 	public static String setTimeStampToFilePath(String filePath) {
-
-
-
 		File f = new File(filePath); 
 
 
@@ -413,7 +387,6 @@ public class FileUtils  {
 		return newFileName;
 
 	}
-
 	
 	private static String dirNameForBackup(String filePath) {
 		
@@ -425,8 +398,6 @@ public class FileUtils  {
 		// call getFileName() and get FileName path object 
 		Path fileName = path.getFileName(); 
 		Path parentPath = path.getParent();
-
-
 
 		String fs=fileName.getFileName().toString();
 		int pos=fs.lastIndexOf(".");
@@ -440,7 +411,7 @@ public class FileUtils  {
 		}
 
 		Date date = new Date();
-		String dir=parentPath.toString(); //System.getProperty("user.dir");
+		String dir=parentPath.toString();
 		String newFileName=fileNameWithoutExtension+'_'+sdf.format(date.getTime())+fileNameExtension;
 		
 		return newFileName;
@@ -463,8 +434,6 @@ public class FileUtils  {
 		// call getFileName() and get FileName path object 
 		Path fileName = path.getFileName(); 
 		Path parentPath = path.getParent();
-
-
 
 		String fs=fileName.getFileName().toString();
 		int pos=fs.lastIndexOf(".");
@@ -498,7 +467,6 @@ public class FileUtils  {
 			}
 		}
 		else {
-			//	System.out.println("File Does not Exists"); 
 		}
 
 	}
@@ -507,7 +475,6 @@ public class FileUtils  {
 	static private void deleteReverseFile(String filePath) {
 		File[] files2=getListOfFilesWithTimeStamp(filePath,".reversed");
 		for (File file:files2) {
-			//System.out.println("Deleting "+file);
 			boolean ok=file.delete();
 		}
 	}
@@ -518,9 +485,6 @@ public class FileUtils  {
 
 
 	static public String reverseToLastBackupFile(String filePath) {
-
-
-
 		File[] files=getListOfFilesWithTimeStamp(filePath,"");
 		File f=null;
 
@@ -529,25 +493,16 @@ public class FileUtils  {
 		} else {
 			return "No previous version ";
 		}
-
 		deleteReverseFile(filePath);
-
-
 
 		if (f!=null) {
 			renameFileWithTimeStamp(filePath,".reversed"); // rename current file
 		}
 
 		if (f.exists()&&!f.isDirectory()) {
-			//System.out.println("Exists"); 
 			File f2= new File(filePath);
 			boolean success = f.renameTo(f2);
-			//System.out.println("success:"+success);
 
-
-		}
-		else {
-			//System.out.println("Does not Exists"); 
 		}
 
 		return "ok";

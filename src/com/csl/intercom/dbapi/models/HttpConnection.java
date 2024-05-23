@@ -5,20 +5,28 @@ import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class HttpConnection extends Connection {
-    private String entityHttpConnectionUuid;
+    private final String entityHttpConnectionUuid;
+    @Getter
     private String port;
-    private EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod;
+    @Getter
+    private final EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod;
+    @Getter
     private String username;
+    @Getter
     private String password;
-    private String realm;
+    private final String realm;
+    @Getter
     private String token;
-    private Map<Integer, StageConfig> stagesConfig;
+    @Getter
+    private final Map<Integer, StageConfig> stagesConfig;
+    @Getter
     private Map<String, String> inputs;
 
     public HttpConnection(int id,
@@ -143,21 +151,9 @@ public class HttpConnection extends Connection {
         return entityHttpConnectionUuid;
     }
 
-    public String getPort() {
-        return port;
-    }
-
     public HttpConnection setPort(String port) {
         this.port = port;
         return this;
-    }
-
-    public EntityHttpConnectionStage.HttpAuthenticationMethod getAuthenticationMethod() {
-        return authenticationMethod;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public HttpConnection setUsername(String username) {
@@ -165,17 +161,9 @@ public class HttpConnection extends Connection {
         return this;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public HttpConnection setPassword(String password) {
         this.password = password;
         return this;
-    }
-
-    public String getToken() {
-        return token;
     }
 
     public HttpConnection setToken(String token) {
@@ -183,24 +171,20 @@ public class HttpConnection extends Connection {
         return this;
     }
 
-    public Map<String, String> getInputs() {
-        return inputs;
-    }
-
     public HttpConnection setInputs(Map<String, String> inputs) {
         this.inputs = inputs;
         return this;
     }
 
-    public Map<Integer, StageConfig> getStagesConfig() {
-        return stagesConfig;
-    }
-
     public static class StageConfig {
+        @Getter
         private Integer port = null;
         private EntityHttpConnectionStage.HttpAuthenticationMethod authMethod = null;
+        @Getter
         private String username = null;
+        @Getter
         private String password = null;
+        @Getter
         private String token = null;
         private String realm = null;
         private Map<String, String> inputs = null;
@@ -251,20 +235,5 @@ public class HttpConnection extends Connection {
             return stageConfig;
         }
 
-        public Integer getPort() {
-            return port;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public String getToken() {
-            return token;
-        }
     }
 }

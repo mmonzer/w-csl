@@ -8,15 +8,14 @@ public class CSLDemo06WebSocket {
 	
 	
 	static public void listenAlert() {
-		
-		
+
 		 try {
 	            // open websocket
-	        	
+
 	        	
 	        	String s= "ws://" + "127.0.0.1" + ":" + "8000" + "/alerts";
 	        	
-	            final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(s)); //"wss://real.okcoin.cn:10440/websocket/okcoinapi"));
+	            final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(s));
 
 	            // add listener
 	            clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
@@ -66,10 +65,7 @@ public class CSLDemo06WebSocket {
 
 
     public static void main(String[] args) {
-       
-    	
     	listenAlert();
     	listenDatabase();
-    	//List<String> ExternalCommands
     }
 }

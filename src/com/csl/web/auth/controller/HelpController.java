@@ -7,6 +7,8 @@ import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.web.auth.TokenService;
 import com.csl.web.auth.user.Role;
 import com.ucsl.json.Json;
+import lombok.Getter;
+import lombok.Setter;
 import spark.Service;
 
 import java.util.ArrayList;
@@ -15,7 +17,9 @@ import java.util.Set;
 
 public class HelpController extends AbstractTokenController {
 	
-	private boolean debug=false;;
+	@Setter
+    @Getter
+    private boolean debug=false;;
 
 	List<String> apis=new ArrayList<>();
 	boolean noprotect=true;
@@ -30,24 +34,12 @@ public class HelpController extends AbstractTokenController {
     public void addApiName(String s) {
     	apis.add(s);
     }
-    public boolean isDebug() {
-		return debug;
-	}
 
 
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
-	}
-
-    
     public HelpController init() {
-    	
-    	
     	 // PROTECTED ENDPOINT FOR DEVELOPER ROLE_PROPERTY
         sparkServer.get("/apihelp", (request, response) -> {
             if (noprotect || hasRole(request, new Role[]{Role.DEVELOPER, Role.ADMIN})) {
-            	
 
             	System.out.println(request);
             	Json jj=Json.object();

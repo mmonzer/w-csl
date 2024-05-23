@@ -15,9 +15,6 @@ import com.ucsl.json.Json;
  * 
  */
 public class Test04InterProcessCommunicationA {
-
-	
-	//ApiCommands api= new ApiCommands("essai");
 	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
 	
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("IDS", new MosquittoConfig());
@@ -43,11 +40,8 @@ public class Test04InterProcessCommunicationA {
 	
 	
 	public static void main(String[] args) {
-		
-		
 		Test04InterProcessCommunicationA test= new Test04InterProcessCommunicationA();
-		
-		
+
 		test.init();
 		
 		Json r=test.imcm.executeCommand("essai", Json.object().set("cmd", "test").set("params", Json.object().set("x", 10)));

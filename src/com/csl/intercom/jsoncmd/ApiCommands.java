@@ -5,6 +5,7 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ public class ApiCommands implements IApiCommands {
     HashMap<String, IJsonCmd> listOfCommands = new HashMap<String, IJsonCmd>();
     HashMap<String, IJsonCmdHelp> listOfCommandHelps = new HashMap<String, IJsonCmdHelp>();
     List<String> listOfCommandNames = new ArrayList<String>();
+    @Getter
     private String path = "";
 
     private ApiCommands(String path) {
@@ -112,10 +114,6 @@ public class ApiCommands implements IApiCommands {
     public void setName(String name) {
         // TODO Auto-generated method stub
         this.path = name;
-    }
-
-    public String getPath() {
-        return path;
     }
 
     public List<String> getListOfCommands() {

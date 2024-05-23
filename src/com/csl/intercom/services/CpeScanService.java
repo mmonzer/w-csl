@@ -27,23 +27,22 @@ import java.util.function.Function;
  */
 public class CpeScanService {
     static public CpeScanService instance = new CpeScanService();
-    static private Logger logger = LoggerFactory.getLogger(CpeScanService.class);
+    static private final Logger logger = LoggerFactory.getLogger(CpeScanService.class);
     // The list of scans, indexed by their id (this list contains all the running scans).
-    private Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
+    private final Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
     // The list of scans that have been modified since the last time they were handled --> need to be handled.
-    private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private DbapiHandler dbapiHandler = new DbapiHandler();
+    private final Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
+    private final ScanApiHandler scanApiHandler = new ScanApiHandler();
+    private final DbapiHandler dbapiHandler = new DbapiHandler();
     private DataSynchronizationService cpeItemsSynchronizationService;
     private DataSynchronizationService microsoftKbSynchronizationService;
     private ScheduledExecutorService scansHandlingTask = null;
-    private ScheduledExecutorService scansListSanitizer = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scansListSanitizer = Executors.newSingleThreadScheduledExecutor();
 
     public void init(DataSynchronizationService cpeItemsSynchronizationService, DataSynchronizationService microsoftKbSynchronizationService) {
         this.cpeItemsSynchronizationService = cpeItemsSynchronizationService;
         this.microsoftKbSynchronizationService = microsoftKbSynchronizationService;
 
-//        scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
         scansListSanitizer.scheduleAtFixedRate(this::sanitizeScans, 0, 5, TimeUnit.MINUTES);
 
         // Execute post-init tasks
@@ -289,12 +288,10 @@ public class CpeScanService {
                     Thread.currentThread().interrupt();
                 }
                 scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
-//                scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
                 SchedulerUtil.scheduleAtFixedRatedWithTimeout(scansHandlingTask, this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
             }
         } else {
             scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
-//            scansHandlingTask.scheduleAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS);
             SchedulerUtil.scheduleAtFixedRatedWithTimeout(scansHandlingTask, this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
         }
     }

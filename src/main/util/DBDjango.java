@@ -21,8 +21,6 @@ import com.ucsl.json.Json;
 
 
 public class DBDjango {
-	
-	
 	static String CONFIGURATION_FILE = "configuration.json";
 	static String API_KEY = "";
 	static String BASE_URL = "http://localhost:8005/";

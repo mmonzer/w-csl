@@ -36,15 +36,13 @@ import java.util.concurrent.*;
  */
 public class ScanWebSocketHandler {
     static private final Logger logger = LoggerFactory.getLogger(ScanWebSocketHandler.class);
-    private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
-    private final String websocketStartDiscoveryEndpoint = "/discovery/start";
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
-    private String scanManagerDiscoveryUrl;
-    private ScheduledExecutorService webSocketsConnectionAttempts;
+    private final String scanManagerDiscoveryUrl;
+    private final ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
-    private CpeScanService cpeScanService;
+    private final CpeScanService cpeScanService;
 
 
     /**
@@ -54,7 +52,6 @@ public class ScanWebSocketHandler {
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
     public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService) {
-        this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
         this.cpeScanService = cpeScanService;
 
@@ -120,6 +117,7 @@ public class ScanWebSocketHandler {
      * @param uuids A list of entities to scan. May be null, resulting in a scan of all entities.
      */
     private void startScan(List<String> uuids) {
+        String websocketStartDiscoveryEndpoint = "/discovery/start";
         if (uuids == null || uuids.isEmpty()) {
             stompRequestsSession.send(websocketStartDiscoveryEndpoint, "");
         } else {

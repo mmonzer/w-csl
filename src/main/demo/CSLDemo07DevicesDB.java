@@ -19,32 +19,17 @@ import com.ucsl.json.JsonUtil;
 
 import main.xcom.WebsocketClientEndpoint;
 
-
-
-
-
-
 public class CSLDemo07DevicesDB {
 
-	
 	private static final String OBJECT_NAME = "devices_2";
 
-
 	static String uuid = UUID.randomUUID().toString();
-
-
-	static Json testObject=null;
 	
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-
-	
-	
-	
 	static public Json execCmd(String cmd, Json jparams) {
-
 
 		Json j= Json.object();
 	
@@ -81,10 +66,6 @@ public class CSLDemo07DevicesDB {
 
 		return Json.object();
 	}
-
-	
-
-		
 	
 	static public void listenDatabase() {
 		 try {
@@ -106,7 +87,6 @@ public class CSLDemo07DevicesDB {
 	                    	if (uuid.compareTo(m_uuid)==0) return ; // this update is from this process
 	                    }
 	                    if (j.get("name").asString().compareTo(OBJECT_NAME)==0) {
-	                    	//testObject=readObjectFromDatabase(OBJECT_NAME);
 	                    	System.out.println("***** Updating "+OBJECT_NAME);
 	                    }
 	                }
@@ -121,25 +101,6 @@ public class CSLDemo07DevicesDB {
 	            System.err.println("URISyntaxException exception: " + ex.getMessage());
 	        }
 	}
-
-	/*
-	z.exec(user, true,ADD_DEVICE,"1.2.1.1","","",null, null);
-	z.dump();
-	System.out.println(z.exec(user, true,GET_DEVICES,"","","",null, null));
-	
-	z.exec(user, true,SET_DEVICE_PROP,"1.2.1.1","","macs",Json.make("aaaa-bbbb"), null);
-	z.exec(user, true,SET_DEVICE_PROP,"1.2.1.1","","props.os",Json.make("window"), null);
-	
-	Json result=z.exec(user, true,GET_DEVICE_PROP,"1.2.1.1","","props.os",null, null);
-	
-	System.out.println("os="+result);
-	
-	z.dump();
-	
-	
-	z.exec(user, true,DEL_DEVICE,"1.2.1.1","","",null, null);
-	
-	*/
 	
 	static public Json lstDevices() {
 		
@@ -150,10 +111,6 @@ public class CSLDemo07DevicesDB {
 		jparams.set("user",Json.object().set("name","admin"));
 		
 		return  execCmd("op", jparams);
-		
-		//System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	static public void clear() {
@@ -179,8 +136,6 @@ public class CSLDemo07DevicesDB {
 		Json result = execCmd("op", jparams);
 		
 		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	static public void delDevice(String ip) {
@@ -213,14 +168,11 @@ public class CSLDemo07DevicesDB {
 		Json result = execCmd("op", jparams);
 		
 		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	
 	static public Json getDeviceProp(String ip,String path) {
-		
-		
+
 		System.out.println("GET_DEVICE_PROP");
 		
 		Json jparams= Json.object();
@@ -235,14 +187,10 @@ public class CSLDemo07DevicesDB {
 		System.out.println("Result ="+result);
 		
 		return result;
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	static public void addLink(String ip, String ip2, Json params) {
-		
-		
-		
+
 		System.out.println("ADD_LINK");
 		Json jparams= Json.object();
 		jparams.set("op","ADD_LINK");
@@ -256,37 +204,10 @@ public class CSLDemo07DevicesDB {
 		Json result = execCmd("op", jparams);
 		
 		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
-	}
-	
-	
-	static public void delLink(String ip, String ip2, Json params) {
-		
-		
-		
-		System.out.println("DEL_LINK");
-		Json jparams= Json.object();
-		jparams.set("op","DEL_LINK");
-		jparams.set("user",Json.object().set("name","admin"));
-		jparams.set("id", ip);
-		jparams.set("id2", ip2);
-		
-		jparams.set("value", params);
-		
-		
-		Json result = execCmd("op", jparams);
-		
-		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
 
-	
 	static public Json getLink(String ip, String ip2) {
-		
-		
-		
+
 		System.out.println("GET_LINK");
 		Json jparams= Json.object();
 		jparams.set("op","GET_LINK");
@@ -297,15 +218,10 @@ public class CSLDemo07DevicesDB {
 		
 		System.out.println("Result ="+result);
 		return result;
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	
 	static public Json getLinkPropsList(String ip, String ip2) {
-		
-		
-		
 		System.out.println("GET_LINK_PROPS_LIST");
 		Json jparams= Json.object();
 		jparams.set("op","GET_LINK_PROPS_LIST");
@@ -319,8 +235,6 @@ public class CSLDemo07DevicesDB {
 		
 		System.out.println("Result ="+result);
 		return result;
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	
@@ -340,32 +254,6 @@ public class CSLDemo07DevicesDB {
 		
 		System.out.println("Result ="+result);
 		return result;
-		
-	//	System.out.println("\n\n\n");
-	}
-	
-	
-	/* id is starting with #
-	 * index if number
-	 */
-	static public Json delLinkProps(String ip, String ip2, String path) {
-		
-		String op="DEL_LINK_PROPS";
-		
-		System.out.println(op);
-		Json jparams= Json.object();
-		jparams.set("op",op);
-		jparams.set("user",Json.object().set("name","admin"));
-		jparams.set("id", ip);
-		jparams.set("id2", ip2);
-		jparams.set("path", path);
-		
-		Json result = execCmd("op", jparams);
-		
-		System.out.println("Result ="+result);
-		return result;
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	static public Json setLinkProps(String ip, String ip2, String path, Json value) {
@@ -385,8 +273,6 @@ public class CSLDemo07DevicesDB {
 		
 		System.out.println("Result ="+result);
 		return result;
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	static public Json getLinkProps(String ip, String ip2, String path) {
@@ -405,43 +291,7 @@ public class CSLDemo07DevicesDB {
 		
 		System.out.println("Result ="+result);
 		return result;
-		
-
 	}
-	
-	static public Json setDebug(boolean b) {
-		
-		String op="SET_DEBUG";
-		
-		String s="off";
-		if (b) s="on"; 
-		
-		System.out.println(op);
-		Json jparams= Json.object();
-		jparams.set("op",op);
-		jparams.set("user",Json.object().set("name","admin"));
-		jparams.set("id", s);
-		
-		Json result = execCmd("op", jparams);
-		
-		System.out.println("Result ="+result);
-		return result;
-		
-
-	}
-	
-	static String ADD_LINK_PROPS="ADD_LINK_PROPS";
-	static String DEL_LINK_PROPS="DEL_LINK_PROPS";
-	static String SET_LINK_PROPS="SET_LINK_PROPS";
-		// path starts with #  --> id
-		// path starts with number. --> path to the props_list array
-
-	static String GET_LINK_PROPS="GET_LINK_PROPS";
-	
-	
-	static String GET_NETWORK_VUES="GET_NETWORK_VUES";
-	static String SET_NETWORK_VUES="SET_NETWORK_VUES";
-
 	
 	static public Json saveViews( Json value) {
 		
@@ -458,8 +308,6 @@ public class CSLDemo07DevicesDB {
 		
 		System.out.println("Result ="+result);
 		return result;
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	
@@ -471,15 +319,11 @@ public class CSLDemo07DevicesDB {
 		Json jparams= Json.object();
 		jparams.set("op",op);
 		jparams.set("user",Json.object().set("name","admin"));
-		
-		
-		
+
 		Json result = execCmd("op", jparams);
 		
 		System.out.println("Result ="+result);
 		return result;
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	
@@ -508,8 +352,7 @@ public class CSLDemo07DevicesDB {
 		
 		System.out.println(getDeviceProp("2.2.2.4", "props"));
 		System.out.println(getDeviceProp("2.2.2.4", "macs"));
-				
-		
+
 		System.out.println(JsonUtil.prettyPrint(lstDevices()));
 		
 		Json props=Json.object().set("protocol","udp");
@@ -530,20 +373,12 @@ public class CSLDemo07DevicesDB {
 	
 		addLinkProps("2.2.2.3", "2.2.2.4", props);
 		System.out.println(JsonUtil.prettyPrint(getLinkPropsList("2.2.2.3", "2.2.2.4")));
-		
-		
+
 		props.set("protocol", "tcp");
 		props.set("app_protocol", "mqtt");
 	
 		addLinkProps("2.2.2.3", "2.2.2.4", props);
 		System.out.println(JsonUtil.prettyPrint(getLinkPropsList("2.2.2.3", "2.2.2.4")));
-	
-//		delLinkProps("2.2.2.3", "2.2.2.4","2");
-//		System.out.println(JsonUtil.prettyPrint(getLinkPropsList("2.2.2.3", "2.2.2.4")));
-//		
-//		delLinkProps("2.2.2.3", "2.2.2.4","#3");
-//		System.out.println(JsonUtil.prettyPrint(getLinkPropsList("2.2.2.3", "2.2.2.4")));
-//	
 		props.set("protocol", "icmp");
 		
 		setLinkProps("2.2.2.3", "2.2.2.4","#0", props);
@@ -553,8 +388,6 @@ public class CSLDemo07DevicesDB {
 		System.out.println(JsonUtil.prettyPrint(getLinkPropsList("2.2.2.3", "2.2.2.4")));
 	
 		System.out.println(JsonUtil.prettyPrint(getLinkProps("2.2.2.3", "2.2.2.4","2")));
-	
-		
 		
 		Json jviews= Json.array();
 		jviews.add(Json.object().set("test", "ok"));

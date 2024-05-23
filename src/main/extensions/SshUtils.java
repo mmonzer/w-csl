@@ -136,10 +136,6 @@ public class SshUtils {
 	
 	private int checkAck(InputStream in) throws IOException{
 	    int b=in.read();
-	    // b may be 0 for success,
-	    //          1 for error,
-	    //          2 for fatal error,
-	    //          -1
 	    if(b==0) return b;
 	    if(b==-1) return b;
 
@@ -189,18 +185,6 @@ public class SshUtils {
 		}
 		
 		File _lfile = new File(lfile);
-		if(ptimestamp){
-			command="T "+(_lfile.lastModified()/1000)+" 0";
-			// The access time should be sent here,
-			// but it is not accessible with JavaAPI ;-<
-			command+=(" "+(_lfile.lastModified()/1000)+" 0\n"); 
-			out.write(command.getBytes()); out.flush();
-			if(checkAck(in)!=0){
-				////System.exit(0);
-			}
-		}
-		
-		// send "C0644 filesize filename", where filename should not include '/'
 		long filesize=_lfile.length();
 		command="C0644 "+filesize+" ";
 		if(lfile.lastIndexOf('/')>0){
@@ -222,7 +206,7 @@ public class SshUtils {
 		while(true){
 			int len=fis.read(buf, 0, buf.length);
 			if(len<=0) break;
-				out.write(buf, 0, len); //out.flush();
+			out.write(buf, 0, len); //out.flush();
 		}
 		fis.close();
 		fis=null;
@@ -296,8 +280,6 @@ public class SshUtils {
 	  	  }
 	        }
 
-		//System.out.println("filesize="+filesize+", file="+file);
-
 	        // send '\0'
 	        buf[0]=0; out.write(buf, 0, 1); out.flush();
 
@@ -327,8 +309,5 @@ public class SshUtils {
 	        buf[0]=0; out.write(buf, 0, 1); out.flush();
 	      }
 
-
-
-		
 	}
 }

@@ -46,8 +46,6 @@ public class CSLIDSMainRemote {
 				
 				@Override
 				public void broadcastMessageJson(String socketName, Json j) {
-							    	
-					//System.out.println("Send json over ws:"+j);
 					
 					if (clientEndPoint!=null) clientEndPoint.sendMessage("wsj:"+socketName+":"+j);
 			    	
@@ -56,8 +54,6 @@ public class CSLIDSMainRemote {
 			
 	
 	static public void iniServices() {
-		
-		
 		for (IApiCommands api:JServiceLoader.getApiCommandsList()) {
 
 			String path=api.getName();
@@ -88,8 +84,6 @@ public class CSLIDSMainRemote {
 	                		
 	                		Json j=Json.read(message);
 		                    System.out.println("received:"+j);
-		                    //if (j.get("database")==null) return;
-		                    //j=j.get("database");
 		                    String m_uuid="";
 		                    
 		                    String apiname= JsonUtil.getStringFromJson(j, "api", "");
@@ -124,13 +118,7 @@ public class CSLIDSMainRemote {
 							
 							Thread t= new Thread(r);
 							t.start();
-							
-							//tests ici
-		                    
-		                    
 	                	}
-	                	
-	                    
 	                }
 	            });
 	            
@@ -140,7 +128,6 @@ public class CSLIDSMainRemote {
 	            	   clientEndPoint.sendMessage("api:"+sx);
 	      	         
 	            }
-	          //  clientEndPoint.sendMessage("api:alerts");
 	            Thread.sleep(100);
 
 
@@ -168,13 +155,11 @@ public class CSLIDSMainRemote {
 				public void run() {
 					boolean reconnect=false;
 					if (clientEndPoint!=null) {
-						//if (!clientEndPoint.isOpen()) System.out.println("Session open="+clientEndPoint.isOpen());
 						reconnect=!clientEndPoint.isOpen();
 					}
 					else reconnect=true;
 					
 					if (reconnect) connectToServer();
-					//else System.out.println("Connected");
 				}
 			},
 			0, 1, TimeUnit.SECONDS);
@@ -214,12 +199,7 @@ public class CSLIDSMainRemote {
 	
 	
     public static void main(String[] args) {
-    	
-    	
-    	
     	org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
-    	
-    	
     	
     	Json j =CSLContext.instance.getConfig();
     	

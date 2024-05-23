@@ -2,18 +2,15 @@ package com.csl.web.auth.controller;
 
 import com.csl.web.auth.TokenService;
 import com.csl.web.auth.user.Role;
+import lombok.Getter;
+import lombok.Setter;
 import spark.Service;
 
-//import static spark.Spark.get;
-//import static spark.Spark.halt;
-
 public class UserController extends AbstractTokenController {
-
-		
+    @Setter
+    @Getter
     private boolean debug=false;;
-
-	
-Service sparkServer;
+    Service sparkServer;
 	
     public UserController(Service sparkServer,TokenService tokenService, boolean debug) {
         super(tokenService);
@@ -21,16 +18,6 @@ Service sparkServer;
         this.debug=debug;
     }
 
-
-    public boolean isDebug() {
-		return debug;
-	}
-
-
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
-	}
 
     public UserController init() {
     	 // PROTECTED ENDPOINT FOR DEVELOPER ROLE_PROPERTY

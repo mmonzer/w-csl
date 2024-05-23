@@ -9,11 +9,6 @@ import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 
 public class CSLService implements ICSLService {
-	
-	
-	//HashMap<String, JsonCmd> cmds = new HashMap<String, JsonCmd>();
-
-	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="#undef";
@@ -73,10 +68,6 @@ public class CSLService implements ICSLService {
 		});
 		return true;  // ok to start
 	}
-	
-
-	
-	
 	
 	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);

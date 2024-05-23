@@ -11,10 +11,8 @@ import com.ucsl.json.JsonUtil;
 public class Help55Cve {
 
 	HelpGenerator hg ;
-	
-	
+
 	public Json exec(String cmd, Json params) {
-		
 		return hg.addExample(cmd,  params);
 		
 	}
@@ -22,9 +20,7 @@ public class Help55Cve {
 	public Json exec(String cmd) {
 		return exec(cmd, Json.object());
 	}
-	
-	
-	
+
 	public void init() {
 		
 		String apiname="cve";
@@ -32,17 +28,11 @@ public class Help55Cve {
 		hg.loadHelp();
 		
 		hg.setReplaceExisting(true);
-		
-		
-	
 	}
 	
 	
 
 	public void finish() {
-		
-		
-		
 		hg.saveHelp();
 	}
 	
@@ -53,14 +43,9 @@ public class Help55Cve {
 
 		Json result=Json.object();
 
-
 		Json p=Json.object();
 		
 		return exec("get_cve", p);
-		
-		
-		
-	
 	}
 
 
@@ -69,13 +54,9 @@ public class Help55Cve {
 
 		Json result=Json.object();
 
-
 		Json p=Json.object();
 		
 		return exec("stats", p);
-		
-		
-		
 	
 	}
 	public void  print(Json r) {
@@ -110,27 +91,13 @@ public class Help55Cve {
 		System.out.println("TEST get cve");
 		r= test_get();
 		System.out.println(r);
-		//r= test_get_list_all();
-		
 				
 		finish();
 	}
-
-	
-	
-	
 	
 	public static void main(String[] args) {
-		
-		
-		
 		Help55Cve h = new Help55Cve();
 		
 		h.run();
-		
-		
 	}
-	
-	
-
 }

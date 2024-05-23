@@ -29,10 +29,6 @@ public interface IIDSRunner {
 	public int getIDSMode();
 	public void setIDSMode(int mode);
 
-
-	//public Json getLearnedRulesAsJson();
-	IIDSLearnedRules getLearnedRules();
-
 	public void start();
 
 	public void stop();

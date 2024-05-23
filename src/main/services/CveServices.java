@@ -21,7 +21,6 @@ import main.extensions.CveUtils;
 import main.extensions.Utils;
 
 public class CveServices implements ICSLService {
-	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	
@@ -36,17 +35,11 @@ public class CveServices implements ICSLService {
 		this.name=name;
 		this.configFileSectionName=configFileSectionName;
 	}
-	
-	
+
 	@Override
 	public String getConfigFileSectionName() {
 		return configFileSectionName;
 	}
-
-	
-
-
-	
 	
 	@Override
 	public boolean init(Json jConfig, String cslDir) {

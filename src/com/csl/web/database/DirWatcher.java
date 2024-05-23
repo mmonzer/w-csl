@@ -58,8 +58,6 @@ public class DirWatcher implements Runnable {
                     Json j=Json.object();
     		        j.set("action","modified");
     		        j.set("name",filename);
-    		        
-//    		        CSLWebSocketForDatabase.broadcastMessageJson("database",j );
     		        CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_DATABASE,j );
     		        
                 }
@@ -72,27 +70,5 @@ public class DirWatcher implements Runnable {
         } catch (InterruptedException x) {
             return;
         }
-    }
-
-    public static void startWatcher(String dirpath) throws IOException, InterruptedException, ExecutionException,
-            TimeoutException {
-
-        Path dir = Paths.get(dirpath);
-        DirWatcher watcher = new DirWatcher(dir);
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<?> future = executor.submit(watcher);
-        executor.shutdown();
-
-        // Now, the watcher runs in parallel
-        // Do other stuff here
-
-        // Shutdown after 10 seconds
-        //executor.awaitTermination(10, TimeUnit.SECONDS);
-        // abort watcher
-        //future.cancel(true);
-
-        //executor.awaitTermination(1, TimeUnit.SECONDS);
-        //executor.shutdownNow();
     }
 }

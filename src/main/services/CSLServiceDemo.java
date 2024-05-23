@@ -6,16 +6,16 @@ import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
+import lombok.Getter;
 
 public class CSLServiceDemo implements ICSLService {
-	
-	
-	//ApiCommands apiCommands= new ApiCommands("");
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	
-	String name="#undef";
-	String configFileSectionName="config_"+name;;
+	@Getter
+    String name="#undef";
+	@Getter
+    String configFileSectionName="config_"+name;;
 	
 	
 	public CSLServiceDemo() {
@@ -29,26 +29,13 @@ public class CSLServiceDemo implements ICSLService {
 		this.name=name;
 		this.configFileSectionName=configFileSectionName;
 	}
-	
-	
-	public String getName() {
-		return name;
-	}
-	
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
-		
-	}
-	@Override
+
+    @Override
 	public boolean terminate() {
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
-	
-	
-	
-	
+
 	// ajouter les commandes ici
 	// jConfig est la partie du fichier de conf dans le nom de section est donné plus haut
 	public boolean init(Json jConfig, String cslDir) {
@@ -78,7 +65,5 @@ public class CSLServiceDemo implements ICSLService {
 		apiCommands.setName(name);
 		return apiCommands;
 	}
-	
-	
 	
 }

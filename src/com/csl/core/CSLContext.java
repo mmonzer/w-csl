@@ -39,7 +39,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-
+@Getter
+@Setter
 public class CSLContext implements ICSLContext, ICSLLogger {
     private static final Logger logger = LoggerFactory.getLogger(CSLContext.class);
 
@@ -388,7 +389,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         }
         if (cslRunningArgs.hasDirForDetectionOffLine()) {
             safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_DETECTION_OFFLINE,
-                    cslRunningArgs.getDirForDetectionOffLine());
+                    cslRunningArgs.getDirForDetectionOffline());
         }
         if (cslRunningArgs.hasIdsMode()) {
             safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.MODE,
@@ -431,7 +432,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         setVerbose(cslRunningArgs.isVerbose());
         setDebug(cslRunningArgs.isDebug());
 
-        setTestMode(cslRunningArgs.getTestParam());
+        setTestMode(cslRunningArgs.isTestparam());
 
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
@@ -456,7 +457,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             idsParams = new IDSParams(idsMainProcessor);
 
             idsParams.initFromJson(getConfig(), cslRunningArgs.getDataDir(),
-                    cslRunningArgs.getTestParam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
+                    cslRunningArgs.isTestparam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
 
 
             if (cslRunningArgs.hasIdsMode())
@@ -466,7 +467,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             if (cslRunningArgs.hasDataSetForLearning())
                 idsParams.setCurrentDataSetNameForLearning(cslRunningArgs.getDataSetForLearning());
             if (cslRunningArgs.hasDataSetForDetectionOffLine())
-                idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffLine());
+                idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffline());
 
 
         }

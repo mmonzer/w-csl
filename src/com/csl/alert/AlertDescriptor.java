@@ -11,35 +11,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@Getter
+@Setter
 public class AlertDescriptor implements IAlertDescriptor{
 
-	@Setter
-    @Getter
     IAlertLevel level=IAlertLevel.UNDEF;
-
-	@Getter
     String msg="";
-
-	@Getter
     long time=0;
-
-	@Getter
     String uuid="";
-
-	@Setter
-	@Getter
     private boolean acked=false;
-
-	@Setter
-    @Getter
     private boolean masked=false;
-
-	@Setter
-    @Getter
     private boolean added_to_model=false;
-
-	@Setter
-    @Getter
     private int levelForModel=-1;
 
 	long time_for_end_of_mask=0;  ;  // (<=0 if no end )

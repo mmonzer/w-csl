@@ -64,8 +64,7 @@ links : [
 		link.set("ip_dst","10.0.208.18");		
 		link.set("port_dst","502");
 		link.set("permission","forbidden" );  // default
-	
-		
+
 		
 		return listDevices;
 		

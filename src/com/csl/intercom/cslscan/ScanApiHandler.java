@@ -37,8 +37,8 @@ import java.util.stream.Collectors;
  */
 public class ScanApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
-    private String scanManagerUrl;
-    private HttpClient httpClient = new HttpClient();
+    private final String scanManagerUrl;
+    private final HttpClient httpClient = new HttpClient();
 
     public ScanApiHandler() {
         this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));

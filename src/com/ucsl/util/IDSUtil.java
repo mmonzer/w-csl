@@ -9,8 +9,6 @@ public class IDSUtil {
 
 	public static  String fileSeparator=File.separator;
 
-
-	
 	public static int str2int(String s,int defaulft) {
 		int i=defaulft;
 		
@@ -40,8 +38,6 @@ public class IDSUtil {
 		if (name.startsWith("#")) name=name.substring(1);
 		
 		return str2int(name, -1);
-		
-		//return -1;
 	}
 	
 	static public String getProtocoleName(Json j) {

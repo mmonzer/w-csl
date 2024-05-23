@@ -2,6 +2,7 @@ package com.csl.util;
 
 import com.ucsl.json.Json;
 import com.ucsl.util.FileUtils;
+import lombok.Setter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,20 +14,11 @@ import java.util.List;
 
 public class LineCounter {
 
-	boolean DEBUG=false;
-	boolean verbose=false;
-
-	List<String> listofFiles =new ArrayList<String>();
-
-	
-	
-	
-
-	boolean first=true;
-	boolean end =false;
+	@Setter
+    boolean verbose=false;
 
 	List<String> toExclude=null;
-	private String filePostfix;
+	private final String filePostfix;
 
 	
 
@@ -38,11 +30,7 @@ public class LineCounter {
 		this.filePostfix=postfix;
 	}
 
-	public void setVerbose(boolean verbose) {
-		this.verbose = verbose;
-	}
-
-	public boolean dirToExclude(String dir) {
+    public boolean dirToExclude(String dir) {
 		
 		for (String s:toExclude) {
 			if (dir.contains(s)) return true;
@@ -53,7 +41,6 @@ public class LineCounter {
 	public Json getAllFilesFromDir(String dir, String filepostfix) {
 
 		List<String> listOfFile= new ArrayList<String>();
-
 		
 		Json j=Json.object();
 		
@@ -68,8 +55,6 @@ public class LineCounter {
 		
 		if (!dirToExclude(dir)) listOfFiles=folder.listFiles();
 
-		
-		
 		if (listOfFiles==null) {
 			j.set("name", dir);
 			j.set("lines", lines);

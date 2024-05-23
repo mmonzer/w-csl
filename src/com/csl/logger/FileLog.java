@@ -39,7 +39,7 @@ public class FileLog implements Runnable, IFileLog {
 
 	private boolean addTimeStampToFilename=true;
 
-	private LongSupplier getSystemCurrentTimeMillis;
+	private final LongSupplier getSystemCurrentTimeMillis;
 	
 
 	public  FileLog(String dataDir,String prefixFile,long maxSize, LongSupplier getSystemCurrentTimeMillis) {
@@ -83,8 +83,6 @@ public class FileLog implements Runnable, IFileLog {
 
 	@Override
 	public void run() {
-
-
 		try {
 
 			while(true){
@@ -121,21 +119,10 @@ public class FileLog implements Runnable, IFileLog {
 	}
 
 	public void InitializeLogging() {
-		//System.out.println("Init loggers packets");
-
-		//System.err.println("JM START NEW LOG FILE");
-
-
-		//	this.MAX_SIZE= CSLContext.context.getParamAsInteger("max_size_of_log_files",  10000000);
-		//TapConfig.instance.getMaxSizeOfLogFiles();
-
 		// Use the current timestamp with non-numeric characters replaced by underscores.
-
 		builFileName();
 
-		pathLogFile = Paths.get(dataDir+ //  CSLContext.context.getParamAsString("data_dir", "myappdata")+
-				File.separator + nameFile);
-		//TapConfig.instance.getDirLogs(), nameFile);
+		pathLogFile = Paths.get(dataDir+ File.separator + nameFile);
 
 		new File(dataDir).mkdirs();
 
@@ -143,21 +130,16 @@ public class FileLog implements Runnable, IFileLog {
 			fileToLog= new File(pathLogFile.toString());
 
 			writerLogFile = Files.newBufferedWriter(pathLogFile);
-			//Write a line to the file to ensure that isn't generating errors, either.
-			//RecordLogMessage(new Logger.Message(LauncherHeadLess.class, Severity.Information, "Logging subsystem initialized."));
 
 			//Start listening for alerts.
-			//Logger.getMessageHistory().addListener(LauncherHeadLess::Handle_writeLogMessageToDisk);
 		} catch (IOException ex) {
 			CSLLogger.instance.error( "This session cannot be logged to disk: " + ex.getMessage());
 		}
-
 
 	}
 
 	private void startLog() {
 		running=true;
-		//this.max_size_of_log_files=maxSize;
 		InitializeLogging();
 		new Thread(this).start();
 
@@ -176,17 +158,15 @@ public class FileLog implements Runnable, IFileLog {
 		}
 	}
 	public  void RecordLogMessage(final String message) {
-
 		if (!running) {
 			startLog();
 		}
 		try {
 
-			String line; // = String.format("[%s] %s\r\n", Instant.now().atZone(ZoneId.of("Z")).format(DateTimeFormatter.ISO_INSTANT), message);
-			//line =""+CSLContext.instance.getSystemCurrentTimeMillis()/*System.currentTimeMillis()*/+':'+ message+"\r\n";
+			String line;
 
 			long t= this.getSystemCurrentTimeMillis.getAsLong();
-			line =""+t /*System.currentTimeMillis()*/+':'+ message+"\r\n";
+			line =""+t +':'+ message+"\r\n";
 
 			blockingQueue.put(line);
 		} catch (InterruptedException e) {
@@ -206,49 +186,25 @@ public class FileLog implements Runnable, IFileLog {
 	}
 
 	private void SendLogMessageToFile(final String message) {
-
-		//	System.out.println("log to"+this.pathLogFile+" :"+message);
 		if (fileToLog.length()>this. max_size_of_log_files) {
 			TerminateLogging();
 			InitializeLogging();
 		}
 
 		if(writerLogFile != null) {
-			//String line = String.format("[%s] DEBUG - %s\r\n", Instant.now().atZone(ZoneId.of("Z")).format(DateTimeFormatter.ISO_INSTANT), message);
-			String line; // = String.format("[%s] %s\r\n", Instant.now().atZone(ZoneId.of("Z")).format(DateTimeFormatter.ISO_INSTANT), message);
-			//line =""+System.currentTimeMillis()+':'+ message+"\r\n";
+			String line;
 			line=message;
 
 			try {
 				writerLogFile.write(line);
 				writerLogFile.flush();
 				double bytes = fileToLog.length();
-				//System.out.println(bytes);
 			} catch(final IOException ex) {
 				System.err.println("Unable to write message message to disk:\n" + line);
 			}
 
 		}
 	}
-	//	public static void RecordLogMessage(final Logger.Message message) {
-	//		if(writerLogFile != null) {
-	//			String line = String.format("[%s] %s - %s\r\n", Instant.ofEpochMilli(message.tsCreated).atZone(ZoneId.of("Z")).format(DateTimeFormatter.ISO_INSTANT), message.severity, message.message);
-	//			try {
-	//				writerLogFile.write(line);
-	//				writerLogFile.flush();
-	//			} catch(final IOException ex) {
-	//				System.err.println("Unable to write message message to disk:\n" + line);
-	//			}
-	//		}
-	//	}
-
-
-
-
-
-
-
-
 
 	public void send(Json j) {
 		RecordLogMessage(j.toString());

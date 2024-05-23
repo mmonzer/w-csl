@@ -6,6 +6,7 @@ import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +28,10 @@ public class JServiceLoader {
     public static CSLInterModuleCommunicationManager cslInterModuleCommunicationManager = null;
     static String moduleName = "XXX";
 
+    @Getter
     static MosquittoConfig mosquittoConfig = new MosquittoConfig();
 
+    @Getter
     static String userDir = System.getProperty("user.dir");
     static List<IApiCommands> listOfAPIToRegister = new ArrayList<IApiCommands>();
     static List<XApiCommands> listOfXAPIToRegister = new ArrayList<XApiCommands>();
@@ -37,19 +40,11 @@ public class JServiceLoader {
     private static final List<String> listOfServiceNames = new ArrayList<>();
 
 
-    static public String getUserDir() {
-        return userDir;
-    }
-
     static public String setUserDir(String s) {
         userDir = s;
         return userDir;
     }
 
-
-    public static MosquittoConfig getMosquittoConfig() {
-        return mosquittoConfig;
-    }
 
     public static void setMosquittoConfig(MosquittoConfig mosquittoConfig) {
         JServiceLoader.mosquittoConfig = mosquittoConfig;

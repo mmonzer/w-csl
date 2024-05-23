@@ -22,29 +22,11 @@ import com.ucsl.json.JsonUtil;
 
 public class CSLDemo20OpModelIDSModifs {
 
-
-	static String uuid = UUID.randomUUID().toString();
-
-
-	Json testObject=null;
-
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-
-
-
-
-
-
-
-
-
-
 	public Json execCmd(String cmd, Json jparams) {
-
-
 		Json j= Json.object();
 
 		j.set("cmd", cmd);
@@ -80,22 +62,6 @@ public class CSLDemo20OpModelIDSModifs {
 		}
 
 		return Json.object();
-	}
-
-	public void testCmd() {
-
-
-		System.out.println("TEST EXEC_CMD");
-		Json jparams= Json.object();
-		jparams.set("x",1);
-		jparams.set("info", "test");
-
-
-		Json result = execCmd("op_model_ids", jparams);
-
-		System.out.println("Result ="+result);
-
-		//	System.out.println("\n\n\n");
 	}
 
 	//get_devices
@@ -139,13 +105,6 @@ public class CSLDemo20OpModelIDSModifs {
 		
 		r=opManager.exec("get_device", Json.object().set("name", name1));
 		System.out.println(r);
-		
-		
-		
-		
-		//r=opManager.exec("get_device_name", Json.object().set("ip", ip));
-		//r=opManager.exec("get_device_mac", Json.object().set("ip", ip));
-		//r=opManager.exec("get_device_ip", Json.object().set("name", "test"));
 		
 		r=opManager.exec("get_device", Json.object().set("ip", "1.1.1.1"));
 		System.out.println(r);
@@ -233,22 +192,15 @@ public class CSLDemo20OpModelIDSModifs {
 
 
 	public void test() {
-
-
 		testDevices();
-
 
 	}
 
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
 		CSLDemo20OpModelIDSModifs runner= new CSLDemo20OpModelIDSModifs();
-
 		runner.test();
-
-
 
 	}
 

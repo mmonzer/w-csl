@@ -14,30 +14,12 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
 
-
-
-
-
-
 public class CSLDemo08TapsManager {
-
-	
-	private static final String OBJECT_NAME = "devices_2";
-
-
-	static String uuid = UUID.randomUUID().toString();
-
-
-	static Json testObject=null;
 	
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-
-	
-	
-	
 	static public Json execCmd(String operation,String idname, Json jparams) {
 
 
@@ -82,13 +64,8 @@ public class CSLDemo08TapsManager {
 	}
 
 	
-	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-	
-		
-		
-		
 		Json params=Json.object();
 		execCmd("add", "tap28", Json.object());
 		System.out.println(execCmd("list", "tap28", Json.object()));

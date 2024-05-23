@@ -13,11 +13,6 @@ import main.util.JsonCommands;
 
 
 public class CSLDemo05UDPListener {
-
-	static boolean verbose=false;
-
-
-
 	
 	public static void main(String[] args) {
 
@@ -51,43 +46,21 @@ public class CSLDemo05UDPListener {
 			}
 
 		};
-		
-		
-	
-		
-		
-		
 		System.out.println("Starting CSL IDS version "+CSLContext.VERSION);
-		String configFile=System.getProperty("user.dir")+File.separator+"runconfig/CSLConfigIDS.json";
-			
-		
+
 		CSLContext.instance.init(new CSLRunningArgs().parseArgs(args));
 		
-		
 		CSLContext.instance.getCslUDPServer().addListener(1,listener); 
-		CSLContext.instance.getCslUDPServer().addListener(1,listener2); 
-	
-	
-		
-		
-		
-		//démarrer si on
-		//CSLContext.instance.initWebsocketListener();
+		CSLContext.instance.getCslUDPServer().addListener(1,listener2);
 		
 		CSLContext.instance.setDebug(true);
-		//CSLServer.setExternalWebSiteRoot("/Users/flausj/Documents/devx/demo/cslgraph");
 
 		CSLContext.instance.getCslUDPServer().start();
 		CSLContext.instance.getCslUDPServer().start();
 		
 		CSLContext.instance.startExec();
-	
 		
 		JsonCommands.init();
-		
-
-		
-		
 		
 	}
 }

@@ -9,9 +9,6 @@ import com.ucsl.json.Json;
 
 public class JsonCmdHelp implements IJsonCmdHelp {
 
-	
-	
-	
 	boolean hidden=false;
 	
 	String name="";

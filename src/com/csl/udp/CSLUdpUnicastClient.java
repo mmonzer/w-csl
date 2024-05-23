@@ -16,7 +16,7 @@ public class CSLUdpUnicastClient implements Runnable {
 	DatagramSocket clientSocket=null;
 	
 	boolean closing=false;
-	private boolean traceAll;
+	private final boolean traceAll;
 	
 	public CSLUdpUnicastClient(String ip,int port, BlockingQueue<byte[]> messageQueue, boolean traceAll) {
 		this.ip=ip;
@@ -27,7 +27,6 @@ public class CSLUdpUnicastClient implements Runnable {
 
 	
 	public void stop() {
-		//clientSocket.disconnect();
 		closing=true;
 		clientSocket.close();
 		
@@ -58,15 +57,10 @@ public class CSLUdpUnicastClient implements Runnable {
 		 */
 		
 		try {
-			//clientSocket = new DatagramSocket(port) ;
 			System.out.println("XXXJMFUDP on "+ip+":"+port);
-			//clientSocket = new DatagramSocket(port); //,Inet4Address.getByName("127.0.0.1")) ;
-			//clientSocket = new DatagramSocket(8001,InetAddress.getByName("192.168.56.1"));
 			
 			clientSocket = new DatagramSocket(port,Inet4Address.getByName(ip)) ;
-			
-			// Set a timeout of 3000 ms for the client.
-			//clientSocket.setSoTimeout(3000);
+
 			while (true) {
 				
 				

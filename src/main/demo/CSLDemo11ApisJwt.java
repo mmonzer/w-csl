@@ -24,23 +24,14 @@ import com.ucsl.json.Json;
 
 public class CSLDemo11ApisJwt {
 
-	
-	String uuid = UUID.randomUUID().toString();
-
-	Json userDesc=Json.object();
 	String token ="";
-	
-	Json testObject=null;
 	
 	public String getServerURL() {
 		return "http://localhost:7999/";
 	}
 
-
-	
 	public Json doLogin(String user,String pass) {
 
-		
 		Json j= Json.object();
 		
 		j.set("username", user);
@@ -77,7 +68,6 @@ public class CSLDemo11ApisJwt {
 		}
 
 		return Json.object();
-		
 		
 	}
 	

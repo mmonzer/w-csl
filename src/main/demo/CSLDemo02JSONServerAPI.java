@@ -30,7 +30,6 @@ public class CSLDemo02JSONServerAPI {
 ;
 	private static final String OBJECT_NAME = "obj.drx";
 
-
 	static String token ="";
 	static String uuid = UUID.randomUUID().toString();
 
@@ -61,12 +60,8 @@ public class CSLDemo02JSONServerAPI {
 				.setConnectTimeout(timeout * 1000)
 				.setConnectionRequestTimeout(timeout * 1000)
 				.setSocketTimeout(timeout * 1000).build();
-		//CloseableHttpClient client = 
-		//  HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
 		HttpClient  client    = HttpClientBuilder.create().setDefaultRequestConfig(config).build(); //HttpClientBuilder.create().build();
-
-
 
 
 		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
@@ -98,13 +93,6 @@ public class CSLDemo02JSONServerAPI {
 
 		return Json.object();
 	}
-
-
-
-
-
-
-
 
 	public void listenDatabase() {
 		try {
@@ -152,26 +140,21 @@ public class CSLDemo02JSONServerAPI {
 	}
 
 	public Json writeObjectToDatabase(String filename, Json contents) {
-
-
 		Json p= Json.object();
 		p.set("name", filename);
 		p.set("contents", contents);
 		
 		return execCmd(api,"save_jsonfile", p);
-
 		
 	}
 
 	public Json getListOfObjects() {
-
 		return execCmd(api,"dir_jsonfile", Json.object());
 	}
 
 
 
 	public void updateData() {
-
 		System.out.println("TEST UPDATE TO DB");
 
 		if (testObject==null) testObject=Json.object();
@@ -186,48 +169,36 @@ public class CSLDemo02JSONServerAPI {
 		writeObjectToDatabase(OBJECT_NAME,testObject);
 
 		System.out.println("New value send to database:"+testObject);
-		//System.out.println("\n\n\n");
 	}
 
 	public void testdirJsonFile() {
-
 		System.out.println("TEST DIR");
 
 		System.out.println(getListOfObjects());
-		//System.out.println("\n\n\n");
 	}
 
 
 	public void testSaveJsonFile() {
-
 		System.out.println("TEST SAVE");
-
 
 		Json jContents= Json.object();
 		jContents.set("first",1);
 		jContents.set("second", "test");
 
 		System.out.println(writeObjectToDatabase(OBJECT_NAME,jContents));
-		//System.out.println("\n\n\n");
 		testObject=jContents;
 	}
 
 
 	public void testLoadJsonFile() {
-
 		System.out.println("TEST LOAD");
 
 		Json jData=readObjectFromDatabase(OBJECT_NAME);
 		System.out.println(jData);
 		testObject=jData;
-		//System.out.println("\n\n\n");
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-
-
 		CSLDemo02JSONServerAPI z = new CSLDemo02JSONServerAPI();
 
 		z.testLoadJsonFile();

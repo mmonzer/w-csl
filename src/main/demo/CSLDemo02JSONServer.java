@@ -26,20 +26,15 @@ import main.xcom.WebsocketClientEndpoint;
 
 public class CSLDemo02JSONServer {
 
-	
 	private static final String OBJECT_NAME = "obj.drx";
 
-
 	static String uuid = UUID.randomUUID().toString();
-
 
 	static Json testObject=null;
 	
 	static public String getServerURL() {
 		return "http://localhost:7999/";
 	}
-
-
 	
 	
 	static public Json readObjectFromDatabase(String name) {
@@ -58,7 +53,6 @@ public class CSLDemo02JSONServer {
 			}
 			in.close();
 			String  result = sb.toString();
-			//System.out.println(result);
 			Json j=Json.read(result);
 			return j;
 			
@@ -70,13 +64,8 @@ public class CSLDemo02JSONServer {
 		return Json.object();
 
 	}
-
-	
 	
 	static public Json getListOfObjects() {
-
-
-
 		HttpGet get = new HttpGet(getServerURL()+"dir_jsonfile");
 		HttpClient  client    = HttpClientBuilder.create().build();
 
@@ -107,8 +96,6 @@ public class CSLDemo02JSONServer {
 	}
 
 	static public Json writeObjectToDatabase(String filename, Json contents) {
-
-
 		Json j= Json.object();
 	
 		j.set("contents",contents );
@@ -150,8 +137,6 @@ public class CSLDemo02JSONServer {
 
 
 	static public Json execCmd(String cmd, Json jparams) {
-
-
 		Json j= Json.object();
 	
 		j.set("cmd", cmd);
@@ -184,25 +169,7 @@ public class CSLDemo02JSONServer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return Json.object();
-	}
-
-	
-	static public void testCmd() {
-		
-		
-		System.out.println("TEST EXEC_CMD");
-		Json jparams= Json.object();
-		jparams.set("x",1);
-		jparams.set("info", "test");
-
-		
-		Json result = execCmd("test_cmd", jparams);
-		
-		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	
@@ -213,7 +180,6 @@ public class CSLDemo02JSONServer {
 		Json jData=readObjectFromDatabase(OBJECT_NAME);
 		System.out.println(jData);
 		testObject=jData;
-		//System.out.println("\n\n\n");
 	}
 	
 	
@@ -233,7 +199,6 @@ public class CSLDemo02JSONServer {
 		writeObjectToDatabase(OBJECT_NAME,testObject);
 		
 		System.out.println("New value send to database:"+testObject);
-		//System.out.println("\n\n\n");
 	}
 	
 	static public void testdirJsonFile() {
@@ -241,21 +206,17 @@ public class CSLDemo02JSONServer {
 		System.out.println("TEST DIR");
 		
 		System.out.println(getListOfObjects());
-		//System.out.println("\n\n\n");
 	}
 	
 	
 	static public void testSaveJsonFile() {
 		
 		System.out.println("TEST SAVE");
-		
-		
 		Json jContents= Json.object();
 		jContents.set("first",1);
 		jContents.set("second", "test");
 
 		System.out.println(writeObjectToDatabase(OBJECT_NAME,jContents));
-		//System.out.println("\n\n\n");
 		testObject=jContents;
 	}
 	
@@ -298,10 +259,6 @@ public class CSLDemo02JSONServer {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-	
-		
-		
-		
 		testLoadJsonFile();
 		testSaveJsonFile();
 		testdirJsonFile();
@@ -319,8 +276,6 @@ public class CSLDemo02JSONServer {
 			}
 			updateData();
 			n=n+1;
-			
-			
 		}
 	}
 

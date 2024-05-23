@@ -32,18 +32,12 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class TapsServices implements ICSLService {
-	//ApiCommands apiCommands= new ApiCommands("");
-	
-
-
-
 
 	private static final String SCRIPTS_DIR = "~/csl/scripts";
 	private static final String START_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./launchTap.sh & exit";
 	private static final String STOP_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./killTaps.sh";
 
 	private static final String REPLAY = "cd " + SCRIPTS_DIR + " && sudo ./replay.sh ";
-
 	
 	private static final String STOP_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./killSuricata.sh";
 	private static final String START_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./launchSuricata.sh";
@@ -108,7 +102,7 @@ public class TapsServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = STOP_TAPS;
 		String output = null;
 		try {
@@ -142,7 +136,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 		System.out.println("Start tap:"+name+" "+ip);
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = START_TAPS;
 		String output = null;
 		try {
@@ -462,8 +456,7 @@ public class TapsServices implements ICSLService {
 							}
 						}
 					}
-					SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
-					// ssh.remoteExec("sudo rm /home/"+username+"/configSuricata/suricata/rules/additionnalRules/*.rules");
+					SshUtils ssh = new SshUtils(username,password,ip,port);
 					ssh.remoteExec(REMOVE_ADDITIONAL_RULES);
 					ssh.endConnection();
 					String yamlFile = "";
@@ -471,12 +464,12 @@ public class TapsServices implements ICSLService {
 					for(String ruleFile : ruleFiles) {
 						System.out.println("Sending "+ruleFile);
 						yamlFile += "- /home/"+username+"/configSuricata/suricata/rules/additionnalRules/"+ruleFile+"\r\n";
-						ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
+						ssh = new SshUtils(username,password,ip,port);
 						ssh.sendFile(idsconf+"/taps/rules/"+ruleFile,"/home/"+username+"/configSuricata/suricata/rules/additionnalRules/"+ruleFile);
 						ssh.endConnection();
 					}
 					writeToFile(yamlFile, idsconf+"/taps/"+name+"/includes.yaml");
-					ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
+					ssh = new SshUtils(username,password,ip,port);
 					ssh.sendFile(idsconf+"/taps/"+name+"/includes.yaml","/home/"+username+"/configSuricata/suricata/includes.yaml");
 					ssh.endConnection();					
 				} catch (IOException | JSchException  e) {
@@ -520,7 +513,7 @@ public class TapsServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = START_SURICATA;
 		String output = null;
 		try {
@@ -552,7 +545,7 @@ public class TapsServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = STOP_SURICATA;
 		String output = null;
 		try {
@@ -606,7 +599,7 @@ public class TapsServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = RELOAD_RULES;
 		String output = null;
 		try {
@@ -637,22 +630,13 @@ public class TapsServices implements ICSLService {
 		return configFileSectionName;
 	}
 
-	
-	
-	
 	public String getTapName(Json j) {
-		
-		
 		String n=JsonUtil.getStringFromJson(j, "name", "");
 		return n;
-	
-		
 	}
 	
 	
 	public String tapNameHasError(Json j) {
-		
-		
 		String n=JsonUtil.getStringFromJson(j, "name", "");
 		
 		if (n.isEmpty()) return "No tap name";
@@ -664,12 +648,10 @@ public class TapsServices implements ICSLService {
         if (!file.isDirectory()) return "No directory for tap "+n;
         
 		return "";
-		
 	}
 	
 	
 	public String missingParams(Json j,String ... params) {
-		
 		String e="";
 		for (String s:params) {
 			if (!j.has(s)) {
@@ -726,7 +708,6 @@ public class TapsServices implements ICSLService {
 		}, new JsonCmdHelp()
 				.setDesc("Creation of a new tap description")
 				.setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
-			//	.setResult("nothing", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_OK)
 				);
 		
@@ -895,9 +876,7 @@ public class TapsServices implements ICSLService {
 				j.at("state","IDLE");
 				return j;
 			}
-		});	
-		
-	
+		});
 		
 		addCmd("startTap", new IJsonCmd() {
 			@Override
@@ -907,7 +886,6 @@ public class TapsServices implements ICSLService {
 		}, new JsonCmdHelp()
 				.setDesc("Start tap")
 				.setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
-			//	.setResult("nothing", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_OK)
 				);		
 		
@@ -941,8 +919,6 @@ public class TapsServices implements ICSLService {
 				.setDesc("Start replay of a pcap")
 				.setParam("name", "name of the tap (id) ", JsonCmdHelp.STR)
 				.setParam("pcap_file", "name of file to replay (must be in /csl) ", JsonCmdHelp.STR)
-				
-			//	.setResult("nothing", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_OK)
 				);	
 
@@ -1268,10 +1244,6 @@ public class TapsServices implements ICSLService {
 			}
 		});			
 		System.out.println("SSH commands operationnal");
-		
-		
-		
-		
 		
 		return true;
 	}

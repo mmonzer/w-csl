@@ -3,16 +3,20 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class SshConnection extends Connection {
-    private int port;
-    private String username;
-    private String password;
-    private String privateKey;
-    private String passphrase;
+    private final int port;
+    private final String username;
+    @Getter
+    private final String password;
+    @Getter
+    private final String privateKey;
+    @Getter
+    private final String passphrase;
 
     protected SshConnection(int id, int port, List<String> devices, String username, String password, String privateKey, String passphrase) {
         super(id, devices, StaticConnectionProtocol.SSH);
@@ -79,15 +83,4 @@ public class SshConnection extends Connection {
         return connectionJson;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public String getPrivateKey() {
-        return privateKey;
-    }
-
-    public String getPassphrase() {
-        return passphrase;
-    }
 }

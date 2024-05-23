@@ -1,36 +1,26 @@
 package main.services;
 
 import com.ucsl.json.Json;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Class to harmonize API responses with a common format.
  */
+@Getter
+@Setter
 public class JsonApiResponse {
     /**
      * Subclass to hold errors.
      */
+    @Setter
+    @Getter
     public static class Error {
         private String reason;
         private Json details;
 
         public Error(String reason, Json details) {
             this.reason = reason;
-            this.details = details;
-        }
-
-        public String getReason() {
-            return reason;
-        }
-
-        public Json getDetails() {
-            return details;
-        }
-
-        public void setReason(String reason) {
-            this.reason = reason;
-        }
-
-        public void setDetails(Json details) {
             this.details = details;
         }
 
@@ -44,9 +34,9 @@ public class JsonApiResponse {
             return result;
         }
     }
-    private Json result;
-    private Json extra;  // Extra information, that is not included in the serialisation.
-    private Error error;
+    private final Json result;
+    private Json extra;
+    private final Error error;
 
     private JsonApiResponse(Json result, Json extra, Error error) {
         this.result = result;
@@ -74,20 +64,6 @@ public class JsonApiResponse {
         }
         return result;
     }
-
-    /**
-     * Get the extra information in a message response.
-     *
-     * @return The extra information contained in the message.
-     */
-    public Json getExtra() {
-        return extra;
-    }
-
-    public Error getError() {
-        return error;
-    }
-
     /**
      * Create a {@link Json} object suitable fo sending as a response to an API call.
      *

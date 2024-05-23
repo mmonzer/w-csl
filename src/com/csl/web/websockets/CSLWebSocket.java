@@ -39,12 +39,8 @@ public class CSLWebSocket {
 					Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
 					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
 				          try {
-				          	
-				          	//IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND String "+s);
 				          	System.out.println("SEND String "+s);
 				              session.getRemote().sendString(s);
-				                  //.put("userlist", userUsernameMap.values())
-				             // ));
 				          } catch (Exception e) {
 				              e.printStackTrace();
 				          }
@@ -53,9 +49,6 @@ public class CSLWebSocket {
 				
 				@Override
 				public void broadcastMessageJson(String socketName, Json j) {
-					// TODO Auto-generated method stub
-					
-					//System.out.println("Broadcast json <"+socketName+">"+j);
 					String tag= websocketTags.get(socketName);
 			    	if (tag==null) {
 			    		System.err.println("Invalid socket name "+socketName);
@@ -74,8 +67,6 @@ public class CSLWebSocket {
 			    	Map<Session, String> socketUsernameMap=getSocketUsernameMap(socketName);
 					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
 			            try {
-			            	
-			            	//IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+s);
 			            	session.getRemote().sendString(s);
 			                
 			            } catch (Exception e) {
@@ -114,8 +105,6 @@ public class CSLWebSocket {
     				Map<Session, String> socketUsernameMap=getSocketUsernameMap(websocketName);
     				socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
     		            try {
-    		            	
-    		            	//IDSTrace.log(IDSTrace.WEB_SOCKET, "SEND JSON  "+msg);
     		            	session.getRemote().sendString(msg);
     		                
     		            } catch (Exception e) {
@@ -148,13 +137,7 @@ public class CSLWebSocket {
     
     
     static public void addUser(Session user) {
-    	
-    	
-    	//System.out.println(user.getUpgradeRequest().getRequestURI());
-    	//System.out.println(user.getUpgradeRequest().getRequestURI().getPath());
-    	//CSLContext.instance.logInfo("Connection :"+user);
         String username = "User" + (nextUserNumber++);
-        //CSLWebSocketForConsole.userUsernameMap.put(user, username);
         
         String socketName=cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath());
         
@@ -213,21 +196,12 @@ public class CSLWebSocket {
     
     //Sends a message from one user to all users, along with a list of current usernames
     public static void broadcastMessageJson( String socketName, Json j) {
-    	
-    	
     	messageBroadcaster.broadcastMessageJson(socketName, j);
-    	
-    	
     }
     
     
   //Sends a message from one user to all users, along with a list of current usernames
   public static void broadcastMessageString( String socketName,  String s) {
-  	
-  	//System.out.println("Console out:"+j);
-  	  
 	  messageBroadcaster.broadcastMessageString(socketName, s);
-	  
-	
   }
 }

@@ -214,15 +214,8 @@ public class ApiGetHelp implements IApiGetHelp {
 	
 
 	private Json getHelpInfoAsJson(String apiName, Json jparams) {
-
-
-		//Json jparams= Json.object();
 		jparams.set("user", "user1");
-		//jparams.set("op", "LST_DEVICES");
-
 		Json r=JServiceLoader.getCSLInterModuleCommunicationManager().executeCommand(apiName, Json.object().set("cmd", "help").set("params", jparams));
-		//System.out.println(JsonUtil.prettyPrint(r));
-
 		return r;
 	}
 

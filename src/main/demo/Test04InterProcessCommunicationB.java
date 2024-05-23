@@ -15,26 +15,16 @@ import com.ucsl.json.Json;
  */
 public class Test04InterProcessCommunicationB {
 
-	
-	//IApiCommands api= new ApiCommands("essai");
 	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
-
-	
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("IDS2", new MosquittoConfig());
 	
 	public void init() {
-		
-		
-		
-		
 	}
 	
 	
 	
 	public static void main(String[] args) {
-		
-		
-		
+
 		Test04InterProcessCommunicationB test= new Test04InterProcessCommunicationB();
 		
 		

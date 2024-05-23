@@ -13,30 +13,22 @@ import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
+import lombok.Getter;
 
 public class AlertsService implements ICSLService {
 
 
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-//			new ApiCommands("");
 	
 
-	String name="#undef";
-	String configFileSectionName="config_"+name;
-
-
-	//private IIDSRunner idsRunner=null;
-
-	/*public void setIDSRunner(IDSRunner idsRunner) {
-		// TODO Auto-generated method stub
-		this.idsRunner=idsRunner;
-	} */
+	@Getter
+    String name="#undef";
+	@Getter
+    String configFileSectionName="config_"+name;
 	
 	public AlertsService() {
 		this.name="alerts";
 		this.configFileSectionName="ids_conf";
-
-		
 	}
 
 	public AlertsService(String name, String configFileSectionName) {
@@ -44,29 +36,7 @@ public class AlertsService implements ICSLService {
 		this.configFileSectionName=configFileSectionName;
 	}
 
-	
-
-
-
-	public String getName() {
-		return name;
-	}
-
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
-
-	}
-
-	public boolean init(Json jConfig, String cslDir) {
-		
-		
-		//idsRunner=CSLContext.instance.getIdsRunner();
-
-		
-		
-		
-		
-	
+    public boolean init(Json jConfig, String cslDir) {
 		addCmd("get_list_active_alerts", new IJsonCmd() {
 
 			@Override
@@ -75,10 +45,6 @@ public class AlertsService implements ICSLService {
 				
 				params.set("op", "get_list_active");
 				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
-				
-				
-				
-			//	return Json.object();
 			}
 		},
 				new JsonCmdHelp()
@@ -92,14 +58,8 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-			//	System.out.println("start exec <get_list_active_alerts>:"+params);
-				
 				params.set("op", "get_number_active_by_level");
 				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
-				
-				
-				
-			//	return Json.object();
 			}
 		},
 				new JsonCmdHelp()
@@ -184,27 +144,6 @@ public class AlertsService implements ICSLService {
 					
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
-		
-//		addCmd("get_list_of_alerts_added_to_model", new JsonCmd() {
-//
-//			@Override
-//			public Json exec(Json params) {
-//				System.out.println("start exec ");
-//				System.out.println("Exec JCmd test_cmd :"+params);
-//				System.out.println("Fin exec");
-//				Json j=Json.object();
-//				j.set("result", "ok");
-//				j.set("value",1);
-//
-//				return Json.object();
-//			}
-//		},
-//				new JsonCmdHelp()
-//				.setDesc("returns list of all alerts")
-//					
-//				.setStatus(JsonCmdHelp.STATUS_TODO)
-//				);
-//		
 		addCmd("set_acked", new IJsonCmd() {
 
 			@Override
@@ -262,9 +201,6 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-//				System.out.println("start exec ");
-//				System.out.println("Exec JCmd test_cmd :"+params);
-//				System.out.println("Fin exec");
 				return CSLContext.instance.getCSLAlertManager().getAlertStats();
 				
 
@@ -281,17 +217,13 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-//				System.out.println("start exec ");
-//				System.out.println("Exec JCmd test_cmd :"+params);
-//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);
 
 				
 				CSLContext.instance.getCSLAlertManager().resetListOfCurrentAlerts();
-				
-				//CSLAlertManager.instance.sendAlert("HIGH","test alert","xxx=testval");
+
 				return Json.object().set("info", "ok");
 			}
 		},
@@ -307,9 +239,6 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-//				System.out.println("start exec ");
-//				System.out.println("Exec JCmd test_cmd :"+params);
-//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);
@@ -319,8 +248,6 @@ public class AlertsService implements ICSLService {
 				IAlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().
 						createAlertDescriptor(3, "ALERT 3", System.currentTimeMillis());
 				CSLContext.instance.getCSLAlertManager().sendAlert(a3);
-			
-				//CSLAlertManager.instance.sendAlert("HIGH","test alert","xxx=testval");
 				
 				Json list=Json.array();
 				return list.add(a3.toJson());
@@ -339,22 +266,14 @@ public class AlertsService implements ICSLService {
 
 			@Override
 			public Json exec(Json params) {
-//				System.out.println("start exec ");
-//				System.out.println("Exec JCmd test_cmd :"+params);
-//				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);
 
-			
-				
 				params.set("op", "test1");
 				
 				CSLContext.instance.getCSLAlertManager().execOpAlert(params);
-				
-				
-				
-				//CSLAlertManager.instance.sendAlert("HIGH","test alert","xxx=testval");
+
 				return  Json.object();
 			}
 		},
@@ -376,10 +295,7 @@ public class AlertsService implements ICSLService {
 				params.set("op", "test2");
 			
 				CSLContext.instance.getCSLAlertManager().execOpAlert(params);
-				
-				
-				
-				//CSLAlertManager.instance.sendAlert("HIGH","test alert","xxx=testval");
+
 				return  Json.object();
 			}
 		},
@@ -388,66 +304,6 @@ public class AlertsService implements ICSLService {
 					
 				.setStatus(JsonCmdHelp.STATUS_OK)
 				);
-
-		
-		
-		
-		
-		//		addCmd("set_show_alerts_on_hmi", new JsonCmd() {
-		//			
-		//			@Override
-		//			public Json exec(Json params) {
-		//				// TODO Auto-generated method stub
-		//				
-		//				boolean b=JsonUtil.getBooleanFromJson(params, "value", true);
-		//				
-		//				CSLContext.instance.getIdsRunner().getIdsParams().setShowAlertsOnHMI(b);
-		//				Json j= Json.object();
-		//				j.set("value", b);
-		//				return j;
-		//			}
-		//		});
-		//		
-		//		addCmd("get_show_alerts_on_hmi", new JsonCmd() {
-		//			
-		//			@Override
-		//			public Json exec(Json params) {
-		//				// TODO Auto-generated method stub
-		//				Json j= Json.object();
-		//				j.set("value", CSLContext.instance.getIdsRunner().getIdsParams().isShowAlertsOnHMI());
-		//				return j;
-		//			}
-		//		});
-		//		
-		//		addCmd("set_show_console_on_hmi", new JsonCmd() {
-		//			
-		//			@Override
-		//			public Json exec(Json params) {
-		//				// TODO Auto-generated method stub
-		//				
-		//				boolean b=JsonUtil.getBooleanFromJson(params, "value", true);
-		//				
-		//				CSLContext.instance.getIdsRunner().getIdsParams().setShowConsoleOnHMI(b);
-		//				Json j= Json.object();
-		//				j.set("value", b);
-		//				return j;
-		//			}
-		//		});
-		//		
-		//		addCmd("get_show_console_on_hmi", new JsonCmd() {
-		//			
-		//			@Override
-		//			public Json exec(Json params) {
-		//				// TODO Auto-generated method stub
-		//				Json j= Json.object();
-		//				j.set("value", CSLContext.instance.getIdsRunner().getIdsParams().isShowConsoleOnHMI());
-		//				return j;
-		//			}
-		//		});
-
-
-	
-
 		
 		// Gestion des alertes
 		addCmd("get_alerts_list", new IJsonCmd() {
@@ -484,9 +340,6 @@ public class AlertsService implements ICSLService {
 
 	static private  String readAnyFile(String path) 
 	{
-
-
-
 		String content = "";
 
 		try
@@ -503,8 +356,6 @@ public class AlertsService implements ICSLService {
 	}
 
 	static private Json loadAnyFileAsJson(String fullname) {
-
-
 		String result="";
 		Json j=Json.object();
 
@@ -512,14 +363,10 @@ public class AlertsService implements ICSLService {
 			result=readAnyFile(fullname);
 			Json z=Json.read(result);
 			j.set("contents",z);
-//			IDSTrace.log(IDSTrace.WEB_DATABASE,
-//					"File Contents="+result);
 
 		} else {
 			j.set("contents",Json.object());
 			j.set("error", "Nof file with name:"+fullname);
-//			IDSTrace.log(IDSTrace.WEB_DATABASE,
-//					"File Load error="+j.toString());
 
 		}
 
@@ -532,11 +379,9 @@ public class AlertsService implements ICSLService {
 		else return s.substring(0,MAX-1)+"...";
 	}
 
-
 	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
-	
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
@@ -554,9 +399,5 @@ public class AlertsService implements ICSLService {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-	
-	
-	
 
 }

@@ -11,8 +11,8 @@ import java.util.List;
  * Model to represent a SNMPv2c connection.
  */
 public class SNMPv1Connection extends Connection {
-    private int port;
-    private String community;
+    private final int port;
+    private final String community;
 
     protected SNMPv1Connection(int id, int port, List<String> devices, String community) {
         super(id, devices, StaticConnectionProtocol.SNMPv1);

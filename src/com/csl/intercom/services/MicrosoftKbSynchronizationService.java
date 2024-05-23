@@ -16,9 +16,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class MicrosoftKbSynchronizationService extends PaginatedSynchronizationService<MicrosoftKB> {
-    private DbapiHandler dbapiHandler = new DbapiHandler();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private CpeScanService cpeScanService;
+    private final DbapiHandler dbapiHandler = new DbapiHandler();
+    private final ScanApiHandler scanApiHandler = new ScanApiHandler();
+    private final CpeScanService cpeScanService;
     private final Logger logger = LoggerFactory.getLogger(MicrosoftKbSynchronizationService.class);
 
     public MicrosoftKbSynchronizationService(CpeScanService cpeScanService) {

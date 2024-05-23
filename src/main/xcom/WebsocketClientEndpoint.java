@@ -54,10 +54,8 @@ public class WebsocketClientEndpoint {
 
     synchronized private void connect()  {
     	 try {
-//             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
              this.userSession = container.connectToServer(this, endpointURI);
          } catch (Exception e) {
-            // throw new RuntimeException(e);
              logger.warn("Error connecting to websocket {}, reason: {}", endpointURI, e.getMessage());
              logger.debug("Error connecting to websocket {}", endpointURI, e);
          }

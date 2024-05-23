@@ -9,8 +9,8 @@ public enum SNMPv3ConnectionField {
     PRIVACY_ALGORITHM("snmp_privacy_algorithm", "privProtocolName"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private SNMPv3ConnectionField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

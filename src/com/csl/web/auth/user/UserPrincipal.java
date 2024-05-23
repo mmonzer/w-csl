@@ -1,7 +1,10 @@
 package com.csl.web.auth.user;
 
+import lombok.Getter;
+
 import java.util.List;
 
+@Getter
 public final class UserPrincipal {
     private final String userName;
     private final List<Role> roles;
@@ -9,14 +12,6 @@ public final class UserPrincipal {
     private UserPrincipal(String userName, List<Role> roles) {
         this.userName = userName;
         this.roles = roles;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
     }
 
     public static UserPrincipal of(String userName, List<Role> roles) {

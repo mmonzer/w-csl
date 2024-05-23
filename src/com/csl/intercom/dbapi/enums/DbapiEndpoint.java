@@ -1,8 +1,11 @@
 package com.csl.intercom.dbapi.enums;
 
+import lombok.Getter;
+
 /**
  * The various endpoints used in DB-API.
  */
+@Getter
 public enum DbapiEndpoint {
     EVENTS("/events"),
     EVENTS_CANCEL_ALL(EVENTS.getEndpoint() + "/set_all_active_cpe_scan_event_to_discarded"),
@@ -37,7 +40,4 @@ public enum DbapiEndpoint {
         this.endpoint = endpoint;
     }
 
-    public String getEndpoint() {
-        return endpoint;
-    }
 }

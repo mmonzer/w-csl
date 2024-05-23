@@ -6,6 +6,7 @@ import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.User;
 import com.csl.web.auth.user.UserService;
 import com.ucsl.json.Json;
+import lombok.Getter;
 import org.mindrot.BCrypt;
 import spark.Request;
 import spark.Response;
@@ -14,17 +15,11 @@ import spark.Service;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-/*import static spark.Spark.before;
-import static spark.Spark.get;
-import static spark.Spark.halt;
-import static spark.Spark.options;
-import static spark.Spark.post;
-import static spark.Spark.staticFiles;*/
-
 public class AuthController extends AbstractTokenController {
 	
 	
-	public boolean debug=true;
+	@Getter
+    public boolean debug=true;
 
     private static final String ROLE_PROPERTY = "role";
     private static final String TOKEN_PREFIX = "Bearer";
@@ -36,8 +31,6 @@ public class AuthController extends AbstractTokenController {
     private static final String AUTH_ENDPOINT_PREFIX = "/auth";
 
     private static final String BCRYPT_SALT = BCrypt.gensalt();
-
-  //  private final Gson gson;
     private final UserService userService;
     private final TokenService tokenService;
 
@@ -53,16 +46,9 @@ public class AuthController extends AbstractTokenController {
         this.debug=debug;
         this.sparkServer=sparkServer;
     }
-    
-    
-
-    public boolean isDebug() {
-		return debug;
-	}
 
 
-
-	public void setDebug(boolean debug) {
+    public void setDebug(boolean debug) {
 		this.debug = debug;
 		authFilter.setDebug(debug);
 	}
@@ -76,34 +62,6 @@ public class AuthController extends AbstractTokenController {
         // AUTH FILTER
         sparkServer.before(authFilter);
 
-        
-   /*     staticFiles.header("Access-Control-Allow-Origin", "*");
-
-		options("/*", (req, res) -> {
-			String accessControlRequestHeaders = req.headers("Access-Control-Request-Headers");
-			if (accessControlRequestHeaders != null) {
-				res.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
-			}
-
-			String accessControlRequestMethod = req.headers("Access-Control-Request-Method");
-			if (accessControlRequestMethod != null) {
-				res.header("Access-Control-Allow-Methods", accessControlRequestMethod);
-			}
-
-			return "OK";
-		});
-
-		sparkServer.before((req, res) -> {
-
-			//System.out.println("WEB_DEBUG:"+req.pathInfo()+"  "+req.requestMethod());
-
-
-			res.header("Access-Control-Allow-Origin", "*");
-			res.header("Access-Control-Allow-Headers", "*");
-			res.type("application/json");
-		});*/
-
-        
         // REGISTRATION ENDPOINT
         sparkServer.post(AUTH_ENDPOINT_PREFIX + "/registration", (request, response) -> register(request, response));
 
@@ -208,7 +166,6 @@ public class AuthController extends AbstractTokenController {
     
     
     private Json getUserRoles(User user) {
-    	
     	Json j=Json.array();
     	for (Role r:user.getRoles()) {
     		j.add(r.name().toUpperCase());

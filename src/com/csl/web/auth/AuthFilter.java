@@ -1,5 +1,7 @@
 package com.csl.web.auth;
 
+import lombok.Getter;
+import lombok.Setter;
 import spark.Filter;
 import spark.Request;
 import spark.Response;
@@ -7,13 +9,13 @@ import spark.Service;
 
 import java.util.logging.Logger;
 
-//import static spark.Spark.halt;
-
 public class AuthFilter implements Filter {
 
 	boolean disabled=true;
 	
-	private boolean debug=true;;
+	@Setter
+    @Getter
+    private boolean debug=true;;
 
 	
     private static final Logger LOG = Logger.getLogger(AuthFilter.class.getName());
@@ -25,9 +27,9 @@ public class AuthFilter implements Filter {
 
     private final String authEndpointPrefix;
 
-    private TokenService tokenService;
+    private final TokenService tokenService;
 
-	private Service sparkServer;
+	private final Service sparkServer;
 
     public AuthFilter(Service sparkServer,String authEndpointPrefix, TokenService tokenService, boolean d) {
         this.authEndpointPrefix = authEndpointPrefix;
@@ -36,21 +38,7 @@ public class AuthFilter implements Filter {
         this.sparkServer=sparkServer;
     }
 
-    
-    
-    public boolean isDebug() {
-		return debug;
-	}
-
-
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
-	}
-
-
-
-	public void handle(Request request, Response response) {
+    public void handle(Request request, Response response) {
     	
     	if (debug) System.out.println("Request:"+request.requestMethod()+"   "+request.pathInfo());
     		

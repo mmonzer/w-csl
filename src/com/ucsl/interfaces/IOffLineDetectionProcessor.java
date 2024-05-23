@@ -32,7 +32,6 @@ public interface IOffLineDetectionProcessor {
 	
 	public boolean hasIDSRulesCompileErrors();
 	IIDSRulesSet getIdsRulesSet();
-//	IDSVariables getIdsVariables();
 	String getProcessVariables();
 	IIDSLearnedRules getLearnedRules();
 	

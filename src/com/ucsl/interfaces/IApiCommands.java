@@ -11,7 +11,6 @@ public interface IApiCommands {
 	String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh);
 
 	String getName();
-	String getPathName();
 
 	public Json execJcmd(Json jCmd);
 	public Json exec(String name, Json params) ;

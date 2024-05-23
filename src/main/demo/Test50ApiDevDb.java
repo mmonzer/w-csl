@@ -16,9 +16,6 @@ import com.ucsl.json.JsonUtil;
  */
 public class Test50ApiDevDb {
 
-
-	//IApiCommands api= new ApiCommands("essai");
-
 	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
 
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("DB", new MosquittoConfig());
@@ -32,10 +29,10 @@ public class Test50ApiDevDb {
 	
 	public Json exec(String cmd, Json params) {
 		params.set("user", "user1");
-		
+
 		Json r=imcm.executeCommand("devdb", Json.object().set("cmd", cmd).set("params", params));
-	
-		
+
+
 		return r;
 		
 	}
@@ -44,8 +41,8 @@ public class Test50ApiDevDb {
 	}
 
 	/*
-	 * 
-	 * 	
+	 *
+	 *
 	 */
 
 	public Json test_add_device() {

@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class EntityHttpConnectionInput implements IScannerSerializable, IDbapiSerializable {
-    private static final Logger logger = LoggerFactory.getLogger(EntityHttpConnectionInput.class);
     private String key;
     private String defaultValue;
     private boolean isSecret;

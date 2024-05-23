@@ -46,23 +46,20 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
-//    private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
     private final String configFileSectionName;
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
-    //    private String apiKey;
+
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
-    private CSLMqttBrokerHandler mqttBroker = null;
     private DataSynchronizationService cpeItemSynchronizationService = null;
     private DataSynchronizationService microsoftKbSynchronizationService = null;
     private DataSynchronizationService deletedCpeItemsSynchronizationService = null;
     private DataSynchronizationService deletedMicrosoftKbsSynchronizationService = null;
     private CpeScanService cpeScanService = null;
-    private ScheduledExecutorService synchronizationSchedule;
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
         this.name = name;
@@ -109,7 +106,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
 
-            mqttBroker = CSLContext.instance.getMqttBroker();
+            CSLMqttBrokerHandler mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             });
@@ -122,7 +119,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             });
         }
 
-        synchronizationSchedule = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService synchronizationSchedule = Executors.newScheduledThreadPool(1);
         synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, 300, TimeUnit.SECONDS);
 
         addCmd("get_status", params -> getStatus(),

@@ -15,9 +15,6 @@ import com.ucsl.json.JsonUtil;
  * 
  */
 public class Test51ApiDevDb {
-
-
-	//IApiCommands api= new ApiCommands("essai");
 	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
 
 
@@ -32,10 +29,10 @@ public class Test51ApiDevDb {
 	
 	public Json exec(String cmd, Json params) {
 		params.set("user", "user1");
-		
+
 		Json r=imcm.executeCommand("devdb", Json.object().set("cmd", cmd).set("params", params));
-	
-		
+
+
 		return r;
 		
 	}
@@ -44,8 +41,8 @@ public class Test51ApiDevDb {
 	}
 
 	/*
-	 * 
-	 * 	
+	 *
+	 *
 	 */
 
 	public Json test_add_device() {
@@ -56,16 +53,16 @@ public class Test51ApiDevDb {
 		Json p=Json.object();
 		p.set("props", Json.object().set("brand","siemens"));
 		p.set("ip","1.1.1.1");
-		
+
 		exec("add_device", p);
-		
-		
+
+
 		p=Json.object();
 		p.set("props", Json.object().set("brand","schneider"));
 		p.set("ip","1.1.1.2");
-		
+
 		exec("add_device", p);
-		
+
 		return result;
 	}
 
@@ -76,10 +73,10 @@ public class Test51ApiDevDb {
 
 		Json p=Json.object();
 		p.set("ip","1.1.1.1");
-		
+
 		return exec("get_device", p);
 
-		
+
 	}
 
 
@@ -91,8 +88,8 @@ public class Test51ApiDevDb {
 		Json p=Json.object();
 		p.set("ip","1.1.1.1");
 		p.set("props", Json.object().set("brand","yokogawa").set("impact level", 4));
-		
-		
+
+
 		return exec("update_device", p);
 
 
@@ -106,11 +103,11 @@ public class Test51ApiDevDb {
 
 		Json p=Json.object();
 		p.set("ip","1.1.1.1");
-		
+
 		return exec("del_device", p);
 
 
-	
+
 	}
 
 
@@ -119,10 +116,10 @@ public class Test51ApiDevDb {
 		Json result=Json.object();
 
 
-		
+
 		return exec("get_devices");
 	}
-	
+
 
 	public Json test_get_link_between(){
 
@@ -130,11 +127,11 @@ public class Test51ApiDevDb {
 
 		Json p=Json.object();
 		p.set("ip","10.0.208.100");
-		
+
 		p.set("id2","10.0.208.110");
 		p.set("op","GET_LINK_BETWEEN");
-		
-		
+
+
 		return exec("op",p);
 	}
 	

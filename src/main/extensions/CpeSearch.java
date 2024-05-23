@@ -16,6 +16,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -27,7 +29,15 @@ import com.ucsl.json.Json;
 public class CpeSearch {
 	Tree dictionnary;
 	Json test = Json.object();
-	HashMap<Integer,Integer> infos = new HashMap<Integer,Integer>();
+    /**
+     * -- GETTER --
+     *  Fonction de debug permettant d'obtenir une hashmap contenant le nombre d'element par niveau du graph
+     *  Pour qu'elle soit remplie, décommenter le code entre balise \/\* \*\/ de la fonction addToTree
+     *
+     * @return une hashmap contenant les infos
+     */
+    @Getter
+    HashMap<Integer,Integer> infos = new HashMap<Integer,Integer>();
 	public CpeSearch() {
 		dictionnary = new Tree();
 	}
@@ -49,17 +59,8 @@ public class CpeSearch {
 			return;
 		}
 	}
-	
-	/**
-	 * Fonction de debug permettant d'obtenir une hashmap contenant le nombre d'element par niveau du graph 
-	 * Pour qu'elle soit remplie, décommenter le code entre balise \/\* \*\/ de la fonction addToTree
-	 * @return une hashmap contenant les infos
-	 */
-	public HashMap<Integer,Integer> getInfos(){
-		return infos;
-	}
-	
-	/**
+
+    /**
 	 * Affiche pour chaque niveau le nombre maximal de fils qu'un element du niveau possède.
 	 */
 	public void getMaxes() {
@@ -145,34 +146,7 @@ public class CpeSearch {
 	public Json exportToJson() {
 		return exportToJson(dictionnary);
 	}
-	
-	/**
-	 * Fonction récurcive qui fonctionne avec exportToJson(), meme principe
-	 * @param dict
-	 * @return Une partie de la solution
-	 */
-	/*private  Json exportToJson(Tree dict) {
-		Json result = Json.object();
-		Json biResult;
-		ArrayList<Json> list = new ArrayList<Json>();
 
-		if(dict.hasFils()) {
-			for(Tree t : dict.getFilsList()) {
-				biResult = exportToJson(t);
-				Json current = Json.object();
-				current.at(dict.getElement(),biResult);
-				list.add(current.at(dict.getElement()));
-			}
-			result.at(dict.getElement(),list);
-		}
-		else {
-			Json newFeuille = Json.object();
-			newFeuille.at("feuille",dict.getElement());
-			return newFeuille;
-		}
-		
-		return result;
-	}*/
 	private  Json exportToJson(Tree dict) {
 		Json result = Json.object();
 		Json biResult;
@@ -320,7 +294,9 @@ public class CpeSearch {
 	 * @author Antonin
 	 */
 	private class Tree{
-		private String element;
+		@Getter
+        @Setter
+        private String element;
 		private ArrayList<Tree> fils = new ArrayList<Tree>();
 		
 		public Tree getSubTree(String path) {
@@ -350,20 +326,12 @@ public class CpeSearch {
 		public Tree(String element) {
 			this.element = element;
 		}
-		
-		public void setElement(String element) {
-			this.element = element;
-		}
-		
-		public ArrayList<Tree> getFilsList() {
+
+        public ArrayList<Tree> getFilsList() {
 			return fils;
 		}
-		
-		public String getElement() {
-			return this.element;
-		}
-		
-		@SuppressWarnings("unused")
+
+        @SuppressWarnings("unused")
 		public void addFils(String element) {
 			Tree newNode = new Tree(element);
 			this.fils.add(newNode);

@@ -4,7 +4,7 @@ import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.services.ScansService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
-import com.csl.intercom.dbapi.models.ScansList;
+import com.csl.intercom.services.CpeScanService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
@@ -51,7 +51,7 @@ public class ScanWebSocketHandler {
     private static final DbapiHandler dbapiHandler = new DbapiHandler();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private ScansService scansService;
-    private ScansList scansList = ScansList.instance;
+    private CpeScanService cpeScanService;
 
 
     /**
@@ -60,9 +60,10 @@ public class ScanWebSocketHandler {
      * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, ScansService scansService) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService, ScansService scansService) {
         this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
+        this.cpeScanService = cpeScanService;
         this.scansService = scansService;
 
         // Schedule reconnection to websockets every 2 seconds
@@ -214,7 +215,7 @@ public class ScanWebSocketHandler {
 
                 //region Get or Create Scan Entity
                 // Check if we already know the scan
-                ScanEntity scan = scansList.getScanByScanId(scanId);
+                ScanEntity scan = cpeScanService.getScanByScanId(scanId);
 
                 if (scan == null) {
                     // If we did not already see the scan, create a new Scan Entity
@@ -246,7 +247,7 @@ public class ScanWebSocketHandler {
                 }
                 //endregion Update the scan's info (status, progress)
 
-                scansList.createOrUpdate(scan);
+                cpeScanService.createOrUpdate(scan);
             }
 
             @Override

@@ -1,11 +1,16 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.cslscan.models.CpeItem;
+import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
+import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.HttpConnection;
@@ -26,6 +31,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -245,27 +251,36 @@ public class ScanApiHandler implements AutoCloseable {
      * Request multiple deletions of CPE Items to CSL-Scan.
      *
      * @param deletedCpes The list of CPE Items to delete.
+     * @param hardDelete  Whether to hard-delete the CPE Items (i.e. actually remove them from the DB)
+     *                    or to soft-delete them (i.e. mark them as deleted in the DB).
      */
-    public void deleteCpeItemsFromScan(List<Pair<String, OffsetDateTime>> deletedCpes) {
-        OffsetDateTime maxDate = OffsetDateTime.MIN;
+    public void deleteCpeItemsFromScan(List<Pair<String, OffsetDateTime>> deletedCpes, boolean hardDelete) {
+        AtomicReference<OffsetDateTime> maxDate = new AtomicReference<>(OffsetDateTime.MIN);
 
-        // Delete the CPE items from the scanner and find the latest deletion date
-        for (Pair<String, OffsetDateTime> deletedCpe : deletedCpes) {
-            String id = deletedCpe.getFirst();
-            OffsetDateTime date = deletedCpe.getSecond();
-            if (date != null && date.isAfter(maxDate)) {
-                maxDate = date;
-            }
-            deleteCpeItemFromScan(id);
-        }
+        Json deletedCpeItemsIdsArray = Json.array();
+        deletedCpes.stream().peek(deletedCpe -> {
+                    OffsetDateTime date = deletedCpe.getSecond();
+                    if (date != null && date.isAfter(maxDate.get())) {
+                        maxDate.set(date);
+                    }
+                })
+                .map(Pair::getFirst)
+                .forEach(deletedCpeItemsIdsArray::add);
+
+        ScanApiEndpoint endpoint = hardDelete ? ScanApiEndpoint.CPE_ITEM_DELETE_MANY_HARD : ScanApiEndpoint.CPE_ITEM_DELETE_MANY;
+        sendRequestToScanManager(HttpMethod.POST, endpoint, deletedCpeItemsIdsArray);
 
         if (!deletedCpes.isEmpty()) {
             try {
-                setLastCpeItemsDeletionDate(maxDate);
+                setLastCpeItemsDeletionDate(maxDate.get());
             } catch (Exception e) {
                 logger.error("Could not set the last CPE items deletion date", e);
             }
         }
+    }
+
+    public void deleteCpeItemsBeforeDate(OffsetDateTime date, boolean deleteAll) {
+        sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.CPE_ITEM_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
     }
 
     /**
@@ -278,28 +293,41 @@ public class ScanApiHandler implements AutoCloseable {
                 String.format(ScanApiEndpoint.MICROSOFT_KB_DETAILS.endpoint(), id), Json.object());
     }
 
-    public void deleteMicrosoftKBsFromScan(List<Pair<String, OffsetDateTime>> deletedMicrosoftKBs) {
-        OffsetDateTime maxDate = OffsetDateTime.MIN;
+    /**
+     * Request multiple deletions of {@link MicrosoftKB} to CSL-Scan.
+     *
+     * @param deletedMicrosoftKBs The list of {@link MicrosoftKB} to delete.
+     * @param hardDelete          Whether to hard-delete the {@link MicrosoftKB} (i.e. actually remove them from the DB)
+     *                            or to soft-delete them (i.e. mark them as deleted in the DB).
+     */
+    public void deleteMicrosoftKBsFromScan(List<Pair<String, OffsetDateTime>> deletedMicrosoftKBs, boolean hardDelete) {
+        AtomicReference<OffsetDateTime> maxDate = new AtomicReference<>(OffsetDateTime.MIN);
 
-        // Delete the Microsoft KBs from the scanner and find the latest deletion date
-        for (Pair<String, OffsetDateTime> deletedMicrosoftKB : deletedMicrosoftKBs) {
-            String id = deletedMicrosoftKB.getFirst();
-            OffsetDateTime date = deletedMicrosoftKB.getSecond();
-            if (date != null && date.isAfter(maxDate)) {
-                maxDate = date;
-            }
-            deleteMicrosoftKBFromScan(id);
-        }
+        Json deletedCpeItemsIdsArray = Json.array();
+        deletedMicrosoftKBs.stream().peek(deletedCpe -> {
+                    OffsetDateTime date = deletedCpe.getSecond();
+                    if (date != null && date.isAfter(maxDate.get())) {
+                        maxDate.set(date);
+                    }
+                })
+                .map(Pair::getFirst)
+                .forEach(deletedCpeItemsIdsArray::add);
+
+        ScanApiEndpoint endpoint = hardDelete ? ScanApiEndpoint.MICROSOFT_KB_DELETE_MANY_HARD : ScanApiEndpoint.MICROSOFT_KB_DELETE_MANY;
+        sendRequestToScanManager(HttpMethod.POST, endpoint, deletedCpeItemsIdsArray);
 
         if (!deletedMicrosoftKBs.isEmpty()) {
             try {
-                setLastMicrosoftKbsDeletionDate(maxDate);
+                setLastMicrosoftKbsDeletionDate(maxDate.get());
             } catch (Exception e) {
-                logger.error("Could not set the last Microsoft KBs deletion date", e);
+                logger.error("Could not set the last CPE items deletion date", e);
             }
         }
     }
 
+    public void deleteMicrosoftKBsBeforeDate(OffsetDateTime date, boolean deleteAll) {
+        sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.MICROSOFT_KB_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
+    }
 
     /**
      * Get the CPE items that have changed since the specified date.
@@ -307,13 +335,13 @@ public class ScanApiHandler implements AutoCloseable {
      * @param date The date to start receiving notifications. May be null to retrieve all the items.
      * @return A {@link List<MicrosoftKB>} array containing the CPE items that have changed since the specified date, or all the items if date was null.
      */
-    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {
+    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date, int limit, int offset) {
         JsonApiResponse response;
         Json cpeItems = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object());
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("limit", limit, "skip", offset));
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString()));
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             cpeItems = response.getResult();
@@ -328,19 +356,23 @@ public class ScanApiHandler implements AutoCloseable {
         }
     }
 
+    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {
+        return getCpeItemChangesSince(date, 0, 0);
+    }
+
     /**
      * Get the KBs that have changed since the specified date.
      *
      * @param date The date to start receiving notifications. May be null to retrieve all the items.
      * @return A {@link List<MicrosoftKB>} containing the KBs that have changed since the specified date, or all the items if date was null.
      */
-    public List<MicrosoftKB> getMicrosoftKbChangesSince(OffsetDateTime date) {
+    public List<MicrosoftKB> getMicrosoftKbChangesSince(OffsetDateTime date, int limit, int offset) {
         JsonApiResponse response;
         Json microsoftKbs = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object());
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("limit", limit, "skip", offset));
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString()));
+            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             microsoftKbs = response.getResult();
@@ -351,6 +383,10 @@ public class ScanApiHandler implements AutoCloseable {
         } else {
             return null;
         }
+    }
+
+    public List<MicrosoftKB> getMicrosoftKbChangesSince(OffsetDateTime date) {
+        return getMicrosoftKbChangesSince(date, 0, 0);
     }
 
     /**
@@ -488,7 +524,7 @@ public class ScanApiHandler implements AutoCloseable {
     private JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params) {
         JsonApiResponse res = JsonApiResponse.error(null);
         Request request;
-        String URI = scanManagerUrl + endpoint;
+        String URI = scanManagerUrl + endpoint.replace(" ", "%20");
 
         request = httpClient.newRequest(URI);
         request.method(method);
@@ -562,48 +598,6 @@ public class ScanApiHandler implements AutoCloseable {
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             return null;
-        }
-    }
-
-    /**
-     * The action to perform when a modification is notified on the CpeItems.
-     *
-     * @param dbapiHandler The interface of DB-API's API.
-     */
-    public void sendNewCpeItemsToDbapi(DbapiHandler dbapiHandler) {
-        OffsetDateTime lastChangesDate = null;
-        try {
-            lastChangesDate = dbapiHandler.getCpeItemsLastUpdateDate();
-        } catch (Exception e) {
-            logger.info("Could not get last update date from dbapi, fetching all CPE Items from CSL-Scan");
-        }
-        List<CpeItem> changes = getCpeItemChangesSince(lastChangesDate);
-        if (changes != null) {
-            try {
-                dbapiHandler.sendCpeItems(changes);
-            } catch (Exception e) {
-                logger.error("Could not send CPE items to DB-API", e);
-            }
-        }
-    }
-
-    /**
-     * The action to perform when a modification is notified on the MicrosoftKBs.
-     */
-    public void sendNewMicrosoftKbsToDbapi(DbapiHandler dbapiHandler) {
-        OffsetDateTime lastChangesDate = null;
-        try {
-            lastChangesDate = dbapiHandler.getMicrosoftKbsLastUpdateDate();
-        } catch (Exception e) {
-            logger.info("Could not get last update date from dbapi, fetching all Microsoft KBs from CSL-Scan");
-        }
-        List<MicrosoftKB> changes = getMicrosoftKbChangesSince(lastChangesDate);
-        if (changes != null) {
-            try {
-                dbapiHandler.sendMicrosoftKbs(changes);
-            } catch (Exception e) {
-                logger.error("Could not send Microsoft KBs to DB-API", e);
-            }
         }
     }
 
@@ -816,6 +810,96 @@ public class ScanApiHandler implements AutoCloseable {
 
     public JsonApiResponse getPredefinedHttpVariables() {
         return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
+    }
+
+    /**
+     * Get the current cron expression for the periodic discovery task.
+     * @return The cron expression for the periodic discovery task.
+     */
+    public Json getDiscoveryCron() {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            Json result = response.getResult();
+            String cron = null;
+            DynamicDiscoveryFrequencyOption frequencyOption = null;
+            if (result.has("cron") && result.get("cron").isString()) {
+                cron = result.get("cron").asString();
+            } else {
+                return null;
+            }
+
+            if (result.has("frequency") && result.get("frequency").isString()) {
+                frequencyOption = DynamicDiscoveryFrequencyOption.fromScanName(result.get("frequency").asString());
+            }
+            return Json.object("cron", cron, "frequencyOption", frequencyOption.dbapiName());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Set the cron expression for the periodic discovery task.
+     * @param cron The new cron expression for the periodic discovery task.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public void setDiscoveryCron(String cron, DynamicDiscoveryFrequencyOption frequencyOption) throws Exception {
+        String endpoint = ScanApiEndpoint.DISCOVERY_UPDATE_CRON.endpoint() + "?cronExpression=" + cron;
+        if (frequencyOption != null) {
+            endpoint += "&frequencyOption=" + frequencyOption.name();
+        }
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, endpoint, Json.object());
+        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception("Could not set the discovery cron: " + response.getError().getReason());
+        }
+    }
+
+    /**
+     * Get the status of the periodic discovery task.
+     *
+     * @return Whether the periodic discovery task is active.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public boolean isDiscoveryCronActive() throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_IS_CRON_ACTIVE, Json.object());
+        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+            Json result = response.getResult();
+            if (result.has("value")) {
+                if (result.get("value").isBoolean()) {
+                    return result.get("value").asBoolean();
+                } else if (result.get("value").isString()) {
+                    return Boolean.parseBoolean(result.get("value").asString());
+                } else {
+                    throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+                }
+            } else {
+                throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+            }
+        } else {
+            throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+        }
+    }
+
+    /**
+     * Set the status of the periodic discovery task.
+     *
+     * @param active Whether the periodic discovery task should be active.
+     * @throws Exception If the request failed (ie status code != 200).
+     */
+    public void setDiscoveryCronActive(boolean active) throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, ScanApiEndpoint.DISCOVERY_SET_CRON_ACTIVE.endpoint() + "?isActive=" + active, Json.object());
+        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception("Could not set the discovery cron status: " + response.getError().getReason());
+        }
+    }
+
+    /**
+     * Cancel the current scan (if any).
+     */
+    public void cancelScan() throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_CANCEL, Json.object());
+        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+            throw new Exception(response.getError().getReason());
+        }
     }
 
     public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates() {

@@ -120,15 +120,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems The CPE Items to send
      * @throws Exception If the sending fail
      */
-    private void sendCpeItemsBatch(List<CpeItem> cpeItems) throws Exception {
-        ScansList scansList = ScansList.instance;
-        ScanEntity scan = scansList.getRunningScan();
-        if (scan == null) {
-            scan = scansList.getFinishedScan();
-            // If we found no running scans and no finished scan, we do not send the CPE Items
-            if (scan == null) return;
-        }
-
+    private void sendCpeItemsBatch(List<CpeItem> cpeItems, ScanEntity scan, boolean hasMore) throws Exception {
         Map<String, List<CpeItem>> classifiedCpeItems = classifyItemsById(cpeItems, CpeItem::getDeviceId);
         Json cpeItemsArray = Json.array();
         for (Map.Entry<String, List<CpeItem>> deviceCpeItems : classifiedCpeItems.entrySet()) {
@@ -144,7 +136,8 @@ public class DbapiHandler implements AutoCloseable {
         Json requestContents = Json.object(
                 "progress", scan.getProgress(),
                 "event_id", scan.getDbapiId(),
-                "discovered_cpe_dict_arr", cpeItemsArray
+                "discovered_cpe_dict_arr", cpeItemsArray,
+                "has_more", hasMore
         );
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
@@ -160,7 +153,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param cpeItems A {@link List <CpeItem>} with the CPE Items to send
      * @throws Exception If any item failed
      */
-    public void sendCpeItems(List<CpeItem> cpeItems) throws Exception {
+    public void sendCpeItems(List<CpeItem> cpeItems, ScanEntity scan, boolean hasMore) throws Exception {
         Json failedItems = Json.array();
         List<CpeItem> newItems = cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)).collect(Collectors.toList());
         List<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted).collect(Collectors.toList());
@@ -169,7 +162,7 @@ public class DbapiHandler implements AutoCloseable {
             if (!deletedItems.isEmpty()) {
                 deleteCpeItemsFromDbapi(deletedItems);
             }
-            sendCpeItemsBatch(newItems);
+            sendCpeItemsBatch(newItems, scan, hasMore);
         } catch (Exception e) {
             logger.warn("Error sending CPE Items to DB-API.", e);
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
@@ -183,15 +176,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param KBs A {@link List<MicrosoftKB>} with the KBs to send
      * @throws Exception If any item failed
      */
-    private void sendMicrosoftKbsBatch(List<MicrosoftKB> KBs) throws Exception {
-        ScansList scansList = ScansList.instance;
-        ScanEntity scan = scansList.getRunningScan();
-        if (scan == null) {
-            scan = scansList.getFinishedScan();
-            // If we found no running scans and no finished scan, we do not send the KBs
-            if (scan == null) return;
-        }
-
+    private void sendMicrosoftKbsBatch(List<MicrosoftKB> KBs, ScanEntity scan) throws Exception {
         Map<String, List<MicrosoftKB>> classifiedKBs = classifyItemsById(KBs, MicrosoftKB::getDeviceId);
         Json KBsArray = Json.array();
         for (Map.Entry<String, List<MicrosoftKB>> deviceKBs : classifiedKBs.entrySet()) {
@@ -217,7 +202,7 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
-    public void sendMicrosoftKbs(List<MicrosoftKB> KBs) throws Exception {
+    public void sendMicrosoftKbs(List<MicrosoftKB> KBs, ScanEntity scan) throws Exception {
         Json failedItems = Json.array();
         List<MicrosoftKB> newItems = KBs.stream().filter(Predicate.not(MicrosoftKB::isDeleted)).collect(Collectors.toList());
         List<MicrosoftKB> deletedItems = KBs.stream().filter(MicrosoftKB::isDeleted).collect(Collectors.toList());
@@ -226,9 +211,8 @@ public class DbapiHandler implements AutoCloseable {
             if (!deletedItems.isEmpty()) {
                 deleteMicrosoftKbsFromDbapi(deletedItems);
             }
-            sendMicrosoftKbsBatch(newItems);
+            sendMicrosoftKbsBatch(newItems, scan);
         } catch (Exception e) {
-            newItems.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
             logger.warn("Error sending Microsoft KBs to DB-API.", e);
             KBs.stream().map(MicrosoftKB::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following KBs: " + failedItems.toString());
@@ -362,38 +346,36 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of CPE Item uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Pair<String, OffsetDateTime>> getDeletedCpeItemsSince(OffsetDateTime date) throws Exception {
+    public List<Pair<String, OffsetDateTime>> getDeletedCpeItemsSince(OffsetDateTime date, int limit, int offset) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedCpeItems = new ArrayList<>();
 
-        int offset = 0;
-        boolean hasMore = true;
-        while (hasMore) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS)
-                    .param("offset", String.valueOf(offset))
-                    .param("limit", String.valueOf(this.maxPageSize));
-            if (dateUtc != null) {
-                request.param("deleted_date__gt", dateUtc.toString());
-            }
-
-            ContentResponse response = request.send();
-            if (response.getStatus() != 200) {
-                throw new Exception("Unexpected status code " + response.getStatus());
-            }
-
-            Json responseContents = Json.read(response.getContentAsString());
-            List<Json> deletedCpeItemsPageJson = responseContents.get("results").asJsonList();
-
-            // If the list is smaller than the max page size, there are no more pages
-//            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
-            hasMore = !responseContents.get("next").isNull();
-
-            deletedCpeItemsPageJson.stream()
-                    .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
-                    .forEach(deletedCpeItems::add);
-
-            offset += this.maxPageSize;
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS);
+        if (offset > 0) {
+            request.param("offset", String.valueOf(offset));
         }
+        if (limit > 0) {
+            request.param("limit", String.valueOf(limit));
+        }
+        if (dateUtc != null) {
+            request.param("deleted_date__gt", dateUtc.toString());
+        }
+
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code " + response.getStatus());
+        }
+
+        Json responseContents = Json.read(response.getContentAsString());
+        List<Json> deletedCpeItemsPageJson = responseContents.get("results").asJsonList();
+
+        // If the list is smaller than the max page size, there are no more pages
+//            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
+
+        deletedCpeItemsPageJson.stream()
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                .forEach(deletedCpeItems::add);
+
         return deletedCpeItems;
     }
 
@@ -404,36 +386,35 @@ public class DbapiHandler implements AutoCloseable {
      * @return The {@link List<String>} of Microsoft KB uuids that were deleted since date.
      * @throws Exception If the fetching failed.
      */
-    public List<Pair<String, OffsetDateTime>> getDeletedMicrosoftKbsSince(OffsetDateTime date) throws Exception {
+    public List<Pair<String, OffsetDateTime>> getDeletedMicrosoftKbsSince(OffsetDateTime date, int limit, int offset) throws Exception {
         OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedMicrosoftKbs = new ArrayList<>();
 
-        int offset = 0;
-        boolean hasMore = true;
-        while (hasMore) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_MICROSOFT_KBS)
-                    .param("offset", String.valueOf(offset))
-                    .param("limit", String.valueOf(this.maxPageSize));
-            if (dateUtc != null) {
-                request.param("deleted_date__gt", dateUtc.toString());
-            }
-
-            ContentResponse response = request.send();
-            if (response.getStatus() != 200) {
-                throw new Exception("Unexpected status code " + response.getStatus());
-            }
-
-            Json responseContents = Json.read(response.getContentAsString());
-            List<Json> deletedMicrosoftKbsPageJson = responseContents.get("results").asJsonList();
-
-            // If the list is smaller than the max page size, there are no more pages
-            hasMore = !responseContents.get("next").isNull();
-
-            deletedMicrosoftKbsPageJson.stream()
-                    .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
-                    .forEach(deletedMicrosoftKbs::add);
-            offset += this.maxPageSize;
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_MICROSOFT_KBS);
+        if (offset > 0) {
+            request.param("offset", String.valueOf(offset));
         }
+        if (limit > 0) {
+            request.param("limit", String.valueOf(limit));
+        }
+        if (dateUtc != null) {
+            request.param("deleted_date__gt", dateUtc.toString());
+        }
+
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code " + response.getStatus());
+        }
+
+        Json responseContents = Json.read(response.getContentAsString());
+        List<Json> deletedMicrosoftKbsPageJson = responseContents.get("results").asJsonList();
+
+        // If the list is smaller than the max page size, there are no more pages
+
+        deletedMicrosoftKbsPageJson.stream()
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                .forEach(deletedMicrosoftKbs::add);
+
         return deletedMicrosoftKbs;
     }
 
@@ -727,6 +708,18 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     /**
+     * Cancel all scan events in DB-API.
+     */
+    public void cancelAllScans() {
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.EVENTS_CANCEL_ALL);
+        try {
+            request.send();
+        } catch (Exception e) {
+            logger.error("Could not send the cancel all scans notification to DB-API.", e);
+        }
+    }
+
+    /**
      * Get the organization name from DB-API.
      *
      * @return The organization name. Defaults to "None" if the request failed.
@@ -892,10 +885,10 @@ public class DbapiHandler implements AutoCloseable {
             return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }
 
-        if (failedDevices.isEmpty()) {
-            scanApiHandler.sendNewCpeItemsToDbapi(this);
-            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
-        }
+//        if (failedDevices.isEmpty()) {
+//            scanApiHandler.sendNewCpeItemsToDbapi(this);
+//            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
+//        }
 
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()

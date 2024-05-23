@@ -6,6 +6,7 @@ public enum StaticConnectionProtocol {
     SNMPv3("SNMPv3", "SNMPV3"),
     RemotePowershell("Powershell", "POWERSHELL"),
     HTTP("HTTP", "HTTP"),
+    SSH("SSH", "SSH"),
     ;
 
     private String dbapiName;

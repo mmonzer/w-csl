@@ -65,6 +65,9 @@ public abstract class Connection implements IScannerSerializable {
             case HTTP:
                 return HttpConnection.fromJson(connectionJson, connectionProtocol);
 
+            case SSH:
+                return SshConnection.fromJson(connectionJson);
+
             default:
                 return null;
         }

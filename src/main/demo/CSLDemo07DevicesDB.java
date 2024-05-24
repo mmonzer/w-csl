@@ -17,7 +17,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
-import main.xcom.WebsocketClientEndpoint;
+import com.csl.web.websockets.WebsocketClientEndpoint;
 
 public class CSLDemo07DevicesDB {
 

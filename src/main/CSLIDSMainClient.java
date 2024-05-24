@@ -27,7 +27,7 @@ import com.xcsl.miniserver.ApiHttpServer;
 
 import main.services.*;
 import main.util.CSLRunningArgs;
-import main.xcom.WebsocketClientEndpoint;
+import com.csl.web.websockets.WebsocketClientEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

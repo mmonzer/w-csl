@@ -2,7 +2,7 @@ package main.demo;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import main.xcom.WebsocketClientEndpoint;
+import com.csl.web.websockets.WebsocketClientEndpoint;
 
 public class CSLDemo06WebSocket {
 	

@@ -1,7 +1,7 @@
 package com.csl.web;
 
 import com.csl.logger.CSLLogger;
-import com.csl.udp.CSLFlowManager;
+import com.csl.web.udp.CSLFlowManager;
 import com.csl.util.NetUtil;
 import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.json.Json;

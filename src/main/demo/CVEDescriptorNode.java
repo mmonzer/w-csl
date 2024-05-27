@@ -4,9 +4,9 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mitre.cpe.common.WellFormedName;
-import org.mitre.cpe.matching.CPENameMatcher;
-import org.mitre.cpe.naming.CPENameUnbinder;
+import lib.unpacked.org.mitre.cpe.common.WellFormedName;
+import lib.unpacked.org.mitre.cpe.matching.CPENameMatcher;
+import lib.unpacked.org.mitre.cpe.naming.CPENameUnbinder;
 
 public class CVEDescriptorNode {
 	

@@ -1,7 +1,7 @@
 package com.csl.web.auth.user;
 
 import lombok.Getter;
-import org.mindrot.BCrypt;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.List;

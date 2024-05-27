@@ -3,7 +3,7 @@ package main.demo;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mitre.cpe.common.WellFormedName;
+import lib.unpacked.org.mitre.cpe.common.WellFormedName;
 
 import com.ucsl.json.Json;
 

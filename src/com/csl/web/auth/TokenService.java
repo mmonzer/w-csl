@@ -3,11 +3,11 @@ package com.csl.web.auth;
 import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.User;
 import com.csl.web.auth.user.UserPrincipal;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.DefaultClaims;
+import lib.unpacked.io.jsonwebtoken.Claims;
+import lib.unpacked.io.jsonwebtoken.JwtBuilder;
+import lib.unpacked.io.jsonwebtoken.Jwts;
+import lib.unpacked.io.jsonwebtoken.SignatureAlgorithm;
+import lib.unpacked.io.jsonwebtoken.impl.DefaultClaims;
 
 import java.util.Date;
 import java.util.List;

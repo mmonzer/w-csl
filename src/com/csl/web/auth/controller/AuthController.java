@@ -7,7 +7,7 @@ import com.csl.web.auth.user.User;
 import com.csl.web.auth.user.UserService;
 import com.ucsl.json.Json;
 import lombok.Getter;
-import org.mindrot.BCrypt;
+import org.mindrot.jbcrypt.BCrypt;
 import spark.Request;
 import spark.Response;
 import spark.Service;

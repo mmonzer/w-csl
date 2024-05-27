@@ -1,8 +1,8 @@
 package com.csl.web.auth;
 
 import com.ucsl.json.Json;
-import io.jsonwebtoken.io.SerializationException;
-import io.jsonwebtoken.io.Serializer;
+import lib.unpacked.io.jsonwebtoken.io.SerializationException;
+import lib.unpacked.io.jsonwebtoken.io.Serializer;
 
 public class CSLSerializer implements Serializer {
 

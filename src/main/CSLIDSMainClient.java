@@ -292,6 +292,7 @@ public class CSLIDSMainClient {
         JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
         JServiceLoader.registerService(new DiscoveryServices(), configObj, true);
         JServiceLoader.registerService(new StatusService(), configObj, true);
+        JServiceLoader.registerService(new AutoCryptService(), configObj, true);
 
         JServiceLoader.registerService(new NmapServices(), configObj, true);
 

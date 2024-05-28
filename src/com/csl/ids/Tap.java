@@ -1,5 +1,6 @@
 package com.csl.ids;
 
+import com.csl.intercom.cslscan.ApiHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
@@ -13,7 +14,7 @@ public class Tap {
     private String ip;
     private int port;
     private List<Json> includes;
-    private ScanApiHandler apiHandler;
+    private ApiHandler apiHandler;
 
     /**
      * Canonical constructor of a TAP.
@@ -28,7 +29,7 @@ public class Tap {
         this.ip=ip;
         this.port=port;
         this.includes=includes;
-        apiHandler = new ScanApiHandler("http://"+ip+":"+port);
+        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
     }
     public Tap(String name, int id, String ip, int port, List<Json> includes) {
         this.name=name;
@@ -36,7 +37,7 @@ public class Tap {
         this.ip=ip;
         this.port=port;
         this.includes=includes;
-        apiHandler = new ScanApiHandler("http://"+ip+":"+port);
+        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
     }
 
     /**
@@ -60,7 +61,7 @@ public class Tap {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmd(String endpoint, Json body) {
-        return apiHandler.sendRequestToScanManager(HttpMethod.POST, endpoint, body);
+        return apiHandler.sendRequestToApi(HttpMethod.POST, endpoint, body);
     }
 
     /**
@@ -70,7 +71,7 @@ public class Tap {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendQuietCmd(String endpoint, Json body) {
-        return apiHandler.sendRequestToScanManager(HttpMethod.POST, endpoint, body, true);
+        return apiHandler.sendRequestToApi(HttpMethod.POST, endpoint, body, true);
     }
 
     /**
@@ -124,7 +125,7 @@ public class Tap {
      */
     public void setIp(String ip) {
         this.ip=ip;
-        apiHandler = new ScanApiHandler("http://"+ip+":"+port);
+        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
     }
 
     /**
@@ -141,7 +142,7 @@ public class Tap {
      */
     public void setPort(int port) {
         this.port=port;
-        apiHandler = new ScanApiHandler("http://"+ip+":"+port);
+        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
     }
 
     /**

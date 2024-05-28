@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import com.csl.ids.Tap;
+import com.csl.intercom.cslscan.ApiHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import org.apache.commons.io.FileUtils;
 
@@ -53,7 +54,7 @@ public class TapsServices extends Service {
     static String localPort;
     static String knownHostFilePath;
 
-    private final ScanApiHandler apiHandler;
+    private final ApiHandler apiHandler;
 
     static String idsconf;
 
@@ -842,7 +843,7 @@ public class TapsServices extends Service {
      */
     public TapsServices(String name, String description, String configFileSectionName) {
         super(name, description, configFileSectionName);
-        apiHandler = new ScanApiHandler("http://localhost:8888");
+        apiHandler = new ApiHandler("CSL-Tap", "http://localhost:8888");
     }
 
     public String getTapName(Json j) {
@@ -1374,7 +1375,7 @@ public class TapsServices extends Service {
                         for (Json j : configuredTaps) {
                             String output = "";
 
-                            output = apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
+                            output = apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
                                     Json.read("{\"cmd\":\"suricataReloadRules\"}")).toString();
 
                             Json result = Json.object();
@@ -1618,7 +1619,7 @@ public class TapsServices extends Service {
         addCmd("modifyGenRules", new IJsonCmd() {
                     @Override
                     public Json exec(Json params) {
-                        return apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
+                        return apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
                                 Json.read("{\"cmd\":\"suricataModifyCustomRules\",\"params\":" + params + "}")).toJson();
                     }
                 },
@@ -1706,7 +1707,7 @@ public class TapsServices extends Service {
         addCmd("setBaseRules", new IJsonCmd() {
                     @Override
                     public Json exec(Json params) {
-                        return apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
+                        return apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
                                 Json.read("{\"cmd\":\"suricataAddBaseRules\",\"params\":" + params.toString() + "}")).toJson();
                     }
                 },
@@ -1733,7 +1734,7 @@ public class TapsServices extends Service {
         addCmd("setGeneratedRules", new IJsonCmd() {
                     @Override
                     public Json exec(Json params) {
-                        return apiHandler.sendRequestToScanManager(HttpMethod.POST, "/suricata",
+                        return apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
                                 Json.read("{\"cmd\":\"suricataAddCustomRules\",\"params\":" + params.toString() + "}")).toJson();
                     }
                 },
@@ -1935,24 +1936,6 @@ public class TapsServices extends Service {
                 return Json.object();
             }
         }, new JsonCmdHelp().setDesc("DEPRECATED"));
-
-        // Deprecated cmd
-        // TODO : remove eventually
-        {
-
-
-
-
-
-
-
-
-            /*
-             * Update suricata rules in all taps
-             */
-
-
-        }
 
         System.out.println("SSH commands operationnal");
 

@@ -240,7 +240,6 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
-
     /**
      * Fetch the last updated date of CPE Items in DB-API.
      *

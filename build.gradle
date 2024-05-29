@@ -13,7 +13,7 @@ dependencies{
     //local librairies
     implementation files('src/lib/jar/xminiserver.jar')
 
-    //MavenCentral() libraries
+    //MavenCentral() librairies
     implementation 'org.json:json:20210307'
     implementation 'org.apache.httpcomponents:fluent-hc:4.5.13'
     implementation 'org.jetbrains:annotations:13.0'

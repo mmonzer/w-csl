@@ -1,0 +1,74 @@
+plugins{
+    id 'java'
+    id 'application'
+}
+repositories {
+    mavenCentral()
+}
+dependencies{
+    //to process lombock annotations while gradle building
+    compileOnly 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+    //local librairies
+    implementation files('src/lib/jar/xminiserver.jar')
+
+    //MavenCentral() libraries
+    implementation 'org.json:json:20210307'
+    implementation 'org.apache.httpcomponents:fluent-hc:4.5.13'
+    implementation 'org.jetbrains:annotations:13.0'
+    implementation 'org.mongodb:bson:4.2.0'
+    implementation 'org.netbeans.external:org-apache-commons-codec:RELEASE190'
+    implementation 'org.netbeans.external:org-apache-commons-io:RELEASE113'
+    implementation 'org.apache.commons:commons-lang3:3.8.1'
+    implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE210'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'org.netbeans.external:com-google-guava:RELEASE113'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.12'
+    implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.11.2'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.11.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.2'
+    implementation 'com.clumd.projects:java-json:1.2.1'
+    implementation 'io.javalin:javalin:2.4.0'
+    implementation 'org.mindrot:jbcrypt:0.4'
+    implementation 'org.eclipse.jetty.aggregate:jetty-all:9.4.14.v20181114'
+    implementation 'org.eclipse.jetty:jetty-util:9.4.28.v20200408'
+    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation 'com.sun.jna:jna:3.0.9'
+    implementation 'jsch:jsch:0.1.7'
+    implementation 'org.lightcouch:lightcouch:0.2.0'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'ch.qos.logback:logback-core:1.2.3'
+    implementation 'org.projectlombok:lombok:1.18.4'
+    implementation 'io.micrometer:micrometer-commons:1.10.4'
+    implementation 'io.micrometer:micrometer-observation:1.10.4'
+    implementation 'org.mongodb:mongo-java-driver:3.12.8'
+    implementation 'com.neuronrobotics:nrjavaserial:3.12.1'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'org.slf4j:slf4j-simple:1.7.25'
+    implementation 'com.sparkjava:spark-core:2.8.0'
+    implementation 'org.springframework:spring-aop:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-beans:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-context:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-core:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-expression:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-jcl:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-messaging:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-web:5.2.22.RELEASE'
+    implementation 'org.springframework:spring-websocket:5.2.22.RELEASE'
+    implementation 'org.apache.servicemix.bundles:org.apache.servicemix.bundles.velocity:1.7_6'
+    implementation 'org.jetbrains:annotations:13.0'
+    
+}
+application {
+    mainClass = 'src/main/CSLIDSMainClient.java'
+}
+sourceSets {
+    main {
+        java {
+            srcDirs 'src'
+        }
+    }
+}

@@ -217,10 +217,6 @@ public class CSLAlertManager implements IAlertManager {
         }
     }
 
-    public List<IAlertDescriptor> getListOfCurrentAlerts(){
-        return this.listOfCurrentAlerts;
-    }
-
     public Json getListOfCurrentAlertsAsJson() {
         Json jarray = Json.array();
 

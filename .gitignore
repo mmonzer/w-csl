@@ -10,3 +10,8 @@ classes/
 w-csl.iml
 cacerts.jks
 mqtt_agent_concentrator*
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build

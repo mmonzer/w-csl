@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -51,7 +52,9 @@ public class SshUtils {
 		    JSch jsch=new JSch();  
 		    jsch.setKnownHosts(knownHostsPath);
 		    session=jsch.getSession(user, host, port);
-		    session.setConfig("server_host_key","ecdsa-sha2-nistp256");
+		  	Hashtable<String, String> config = new Hashtable<String, String>();
+		  	config.put("server_host_key", "ecdsa-sha2-nistp256");
+		  	session.setConfig(config);
 		    session.setPassword(password);
 		    session.connect();
 		  }  
@@ -72,7 +75,7 @@ public class SshUtils {
 		Channel channel=session.openChannel("exec");
 		((ChannelExec)channel).setCommand(command);
 		channel.setInputStream(null);
-		((ChannelExec)channel).setErrStream(System.err);
+		System.setErr(System.err);
 		InputStream in=channel.getInputStream();
 		channel.connect();
 		byte[] tmp=new byte[1024];
@@ -82,8 +85,8 @@ public class SshUtils {
 				if(i<0)break;
 					resultPart.add(new String(tmp, 0, i));
 			}
-			if(channel.isClosed()){
-				if(in.available()>0) continue; 
+			if(channel.getExitStatus()==-1){
+				if(in.available()>0) continue;
 				//System.out.println("exit-status: "+channel.getExitStatus());
 				break;
 			}
@@ -103,7 +106,7 @@ public class SshUtils {
 		Channel channel=session.openChannel("exec");
 		((ChannelExec)channel).setCommand(command);
 		channel.setInputStream(null);
-		((ChannelExec)channel).setErrStream(System.err);
+		System.setErr(System.err);
 		InputStream in=channel.getInputStream();
 		channel.connect();
 		byte[] tmp=new byte[1024];
@@ -114,7 +117,7 @@ public class SshUtils {
 				if(i<0)break;
 					resultPart.add(new String(tmp, 0, i));
 			}
-			if(channel.isClosed()){
+			if(channel.getExitStatus()==-1){
 				if(in.available()>0) continue; 
 				//System.out.println("exit-status: "+channel.getExitStatus());
 				break;

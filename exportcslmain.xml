@@ -10,7 +10,7 @@
         <jar destfile="${dir.jarfile}/cslmainr.jar">
             <manifest>
                 <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
-                <attribute name="Rsrc-Main-Class" value="main.xcom.CSLIDSMainClient"/>
+                <attribute name="Rsrc-Main-Class" value="main.xcom.main.CSLIDSMainClient"/>
                 <attribute name="Class-Path" value="."/>
                 <attribute name="Rsrc-Class-Path" value="./ annotations-13.0.jar bson-4.2.0.jar commons-codec-1.9.jar commons-io-2.2.jar commons-io-2.6.jar commons-lang3-3.8.1.jar commons-logging-1.2.jar commons-net-3.3.jar fluent-hc-4.5.13.jar gson-2.8.6.jar httpclient-4.5.12.jar httpcore-4.4.13.jar javalin-2.4.0.jar jetty-all-9.4.14.v20181114-uber.jar jetty-util-9.4.28.v20200408.jar jjwt-0.9.1.jar jna-5.4.0.jar jsch-0.1.55.jar logback-classic-1.2.3.jar logback-core-1.2.3.jar lombok.jar mongo-java-driver-3.12.8.jar nrjavaserial-3.12.1.jar org.eclipse.paho.client.mqttv3-1.2.5.jar org.nmap4j-1.1.0.jar slf4j-api-1.7.25.jar slf4j-simple.jar spark-core-2.8.0.jar xcsl.jar jackson-annotations-2.11.2.jar jackson-core-2.11.2.jar jackson-databind-2.11.2.jar java-json.jar guava-30.0-jre.jar"/>
             </manifest>

@@ -5,13 +5,14 @@ plugins{
 repositories {
     mavenCentral()
 }
+
 dependencies{
     //to process lombock annotations while gradle building
     compileOnly 'org.projectlombok:lombok:1.18.20'
     annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
     //local librairies
-    implementation files('src/lib/jar/xminiserver.jar')
+    implementation files('src/main/java/lib/jar/xminiserver.jar')
 
     //MavenCentral() librairies
     implementation 'org.json:json:20210307'
@@ -63,7 +64,12 @@ dependencies{
     
 }
 application {
-    mainClass = 'src/main/CSLIDSMainClient.java'
+    mainClassName = 'main.CSLIDSMainClient'
+}
+run{
+    systemProperty 'logback.configurationFile', './resources/logback.xml'
+    systemProperty 'javax.net.ssl.trustStore', './cacerts.jks'
+    systemProperty 'javax.net.ssl.trustStorePassword', 'changeit'
 }
 sourceSets {
     main {

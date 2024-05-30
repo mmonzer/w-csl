@@ -35,7 +35,7 @@ public class CSLUtil {
 
 		if (config==null) return defaulValue;
 		Json obj=config.get(name);
-		if (obj==null) return new Boolean(defaulValue);
+		if (obj==null) return defaulValue;
 		return obj.asBoolean();
 
 	}

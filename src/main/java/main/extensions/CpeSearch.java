@@ -319,7 +319,7 @@ public class CpeSearch {
 		}
 		
 		public Tree() { 
-			infos.put(new Integer(0), 1);
+			infos.put(0, 1);
 			this.element = null;
 		}
 		
@@ -369,11 +369,11 @@ public class CpeSearch {
 					return cur;
 				}
 			}
-	        if(!infos.containsKey(new Integer(index))) {
-	            infos.put(new Integer(index), new Integer(1));
+	        if(!infos.containsKey(index)) {
+	            infos.put(index, 1);
 	        }
 	        else {
-	            infos.put(new Integer(index),infos.get(new Integer(index))+1);
+	            infos.put(index ,infos.get(index+1));
 	        }
 			Tree newFils = new Tree(element);
 			this.addFils(newFils);

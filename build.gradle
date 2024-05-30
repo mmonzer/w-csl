@@ -66,11 +66,13 @@ dependencies{
 application {
     mainClassName = 'main.CSLIDSMainClient'
 }
+
 run{
     systemProperty 'logback.configurationFile', './resources/logback.xml'
     systemProperty 'javax.net.ssl.trustStore', './cacerts.jks'
     systemProperty 'javax.net.ssl.trustStorePassword', 'changeit'
 }
+
 sourceSets {
     main {
         java {

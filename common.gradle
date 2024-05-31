@@ -12,19 +12,25 @@ dependencies{
 
     //MavenCentral() librairies
     //Special import jetty for Websocket
-    implementation enforcedPlatform('org.eclipse.jetty:jetty-bom:9.4.46.v20220331')
 
     implementation 'org.eclipse.jetty.websocket:websocket-servlet:9.4.46.v20220331'
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-api:9.4.46.v20220331'
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:9.4.46.v20220331'
+    implementation 'org.eclipse.jetty.aggregate:jetty-all:9.4.0.v20161208'
 
+    implementation 'org.eclipse.jetty:jetty-server:9.4.0.v20161208'
+    implementation 'org.eclipse.jetty:jetty-util:9.4.0.v20161208'
+
+
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.21'
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-api:11.0.21'
+    implementation 'org.eclipse.jetty:jetty-client:11.0.21'
+
+    //shadow 'org.eclipse.jetty:jetty-util:12.0.9'
     //implementation 'org.eclipse.jetty:jetty-server:9.4.46.v20220331'
     //other librairies
+    implementation 'org.eclipse.jetty:jetty-http:9.3.14.v20161028'
+    implementation "com.sparkjava:spark-core:2.9.4"
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     implementation 'org.eclipse.jetty.websocket:websocket-jakarta-client:11.0.21'
-    implementation 'org.eclipse.jetty:jetty-client:12.0.9'
-    implementation 'org.eclipse.jetty:jetty-util:9.4.46.v20220331'
-    implementation 'org.eclipse.jetty.aggregate:jetty-all:9.4.46.v20220331'
     implementation 'org.json:json:20240303'
     implementation 'org.apache.httpcomponents:fluent-hc:4.5.14'
     implementation 'org.jetbrains:annotations:24.1.0'
@@ -56,7 +62,6 @@ dependencies{
     implementation 'com.neuronrobotics:nrjavaserial:5.2.1'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
     implementation 'org.slf4j:slf4j-api:2.1.0-alpha1'
-    implementation 'org.slf4j:slf4j-simple:2.1.0-alpha1'
     implementation 'com.sparkjava:spark-core:2.9.4'
     implementation 'org.springframework:spring-aop:6.1.8'
     implementation 'org.springframework:spring-beans:6.1.8'
@@ -71,7 +76,16 @@ dependencies{
     implementation 'org.jetbrains:annotations:24.1.0'
     
 }
-
+configurations {
+    all {
+        resolutionStrategy {
+            force 'org.eclipse.jetty.websocket:websocket-servlet:9.4.46.v20220331', 'org.eclipse.jetty.aggregate:jetty-all:9.4.46.v20220331'
+            force 'org.eclipse.jetty:jetty-server:9.4.0.v20161208', 'org.eclipse.jetty:jetty-util:9.4.0.v20161208'
+            force 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.21', 'org.eclipse.jetty.websocket:websocket-jetty-api:11.0.21', 'org.eclipse.jetty:jetty-client:11.0.21'
+            force 'org.eclipse.jetty:jetty-http:9.3.14.v20161028'
+        }
+    }
+}
 run{
     systemProperty 'logback.configurationFile', './resources/logback.xml'
     systemProperty 'javax.net.ssl.trustStore', './cacerts.jks'

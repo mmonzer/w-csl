@@ -2,6 +2,7 @@ package com.csl.web.jcmdoversocket;
 
 import com.ucsl.json.Json;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class CSLWebSocketForJcmd {
 		if (s!=null) {
 			try {
 				s.disconnect();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -76,7 +77,18 @@ public class CSLWebSocketForJcmd {
 
 
 		try {
-			session.getRemote().sendStringByFuture(s);
+			session.getRemote().sendString(s, new WriteCallback() {
+				@Override
+				public void writeFailed(Throwable x) {
+					// Handle write failure
+					x.printStackTrace();
+				}
+
+				@Override
+				public void writeSuccess() {
+					// Handle write success
+				}
+			});
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -18,6 +18,7 @@ package spark.embeddedserver.jetty.websocket;
 
 import java.util.Map;
 import java.util.Optional;
+import java.time.Duration;
 
 import org.eclipse.jetty.http.pathmap.ServletPathSpec;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -49,7 +50,8 @@ public class WebSocketServletContextHandlerFactory {
                 webSocketServletContextHandler = new ServletContextHandler(null, "/", true, false);
                 WebSocketUpgradeFilter webSocketUpgradeFilter = WebSocketUpgradeFilter.configureContext(webSocketServletContextHandler);
                 if (webSocketIdleTimeoutMillis.isPresent()) {
-                    webSocketUpgradeFilter.getFactory().getPolicy().setIdleTimeout(webSocketIdleTimeoutMillis.get());
+                    Duration idleTimeout = Duration.ofMillis(webSocketIdleTimeoutMillis.get());
+                    webSocketUpgradeFilter.getFactory().getPolicy().setIdleTimeout(idleTimeout);
                 }
                 // Since we are configuring WebSockets before the ServletContextHandler and WebSocketUpgradeFilter is
                 // even initialized / started, then we have to pre-populate the configuration that will eventually

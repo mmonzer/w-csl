@@ -3,6 +3,7 @@ package main.services;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
+import main.services.endpoints.Endpoint;
 
 /**
  * Generic Service with a name, description, a configuration file and an API command.
@@ -90,6 +91,17 @@ public abstract class Service implements ICSLService {
 	 */
 	public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
 		return apiCommands.registerCmd(name, cmd, help);
+	}
+
+	/**
+	 * Register an API command.
+	 *
+	 * @param endpoint endpoint information: cmd and help
+	 * @param cmd  The callback to be executed when the command is invoked.
+	 * @return A {@link String}
+	 */
+	public String addCmd(Endpoint endpoint, IJsonCmd cmd) {
+		return addCmd(endpoint.cmd(), cmd, endpoint.help());
 	}
 
 	/**

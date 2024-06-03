@@ -13,6 +13,7 @@ import com.csl.modules.ModuleIDS;
 import com.csl.monitor.ActivityMonitor;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
+import main.services.endpoints.MonitorEndpoints;
 
 import static main.services.TapsServices.readJsonFile;
 
@@ -70,7 +71,7 @@ public class MonitorService extends Service {
 			configuredTaps = new ArrayList<Json>();
 		}
 		
-		addCmd("stats_devices", new IJsonCmd() {
+		addCmd(MonitorEndpoints.STATS_DEVICES, new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
@@ -81,14 +82,9 @@ public class MonitorService extends Service {
 				j.set("running",87);
 				return j;
 			}
-		},
-				new JsonCmdHelp()
-				.setDesc("return the number of devices ")
-				.setResult("{all:, running: ", JsonCmdHelp.JSON)
-				.setStatus(JsonCmdHelp.STATUS_TODO)
-				);
+		}				);
 
-		addCmd("stats_taps", new IJsonCmd() {
+		addCmd(MonitorEndpoints.STATS_TAPS, new IJsonCmd() {
 
 					@Override
 					public Json exec(Json params) {
@@ -98,29 +94,11 @@ public class MonitorService extends Service {
 
 						return j;
 					}
-				},
-				new JsonCmdHelp()
-						.setDesc("return the number of taps ")
-						.setResult("{all:n, running: ", JsonCmdHelp.JSON)
-						.setStatus(JsonCmdHelp.STATUS_TODO)
-		);
+				}		);
 
-		addCmd("set_interfaces_monitor_tap", this::setInterfaces,
-				new JsonCmdHelp()
-						.setDesc("Set the new monitoring interfaces of the given tap")
-						.setParam("name","name of the tap", JsonCmdHelp.STR)
-						.setParam("interfaces","list of the new interfaces", JsonCmdHelp.STR)
-						.setResult("list of the new interfaces", JsonCmdHelp.JSON)
-						.setStatus(JsonCmdHelp.STATUS_TODO)
-		);
+		addCmd(MonitorEndpoints.SET_INTERFACES_MONITOR_TAP, this::setInterfaces		);
 
-		addCmd("get_interfaces_monitor_tap", this::getInterfaces,
-				new JsonCmdHelp()
-						.setDesc("Ge the monitoring interfaces of the given tap")
-						.setParam("name","name of the tap", JsonCmdHelp.STR)
-						.setResult("list of the monitored interfaces in the given tap", JsonCmdHelp.JSON)
-						.setStatus(JsonCmdHelp.STATUS_TODO)
-		);
+		addCmd(MonitorEndpoints.GET_INTERFACES_MONITOR_TAP,this::getInterfaces		);
 
 		return true;  // ok to start
 	}

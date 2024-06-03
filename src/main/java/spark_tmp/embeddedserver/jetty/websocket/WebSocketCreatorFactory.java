@@ -17,10 +17,9 @@ package spark.embeddedserver.jetty.websocket;
 
 import static java.util.Objects.requireNonNull;
 
+import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
-import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
-
 /**
  * Factory class to create {@link WebSocketCreator} implementations that
  * delegate to the given handler class.

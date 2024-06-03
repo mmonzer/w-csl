@@ -44,7 +44,6 @@ dependencies{
     implementation 'com.neuronrobotics:nrjavaserial:3.12.1'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
     implementation 'org.slf4j:slf4j-api:1.7.25'
-    implementation 'org.slf4j:slf4j-simple:1.7.25'
     implementation 'com.sparkjava:spark-core:2.8.0'
     implementation 'org.springframework:spring-aop:5.2.22.RELEASE'
     implementation 'org.springframework:spring-beans:5.2.22.RELEASE'

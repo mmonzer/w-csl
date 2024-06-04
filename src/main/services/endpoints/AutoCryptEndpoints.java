@@ -9,33 +9,42 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setDesc("Changes the ip to connect the AutoCrypt module")
                     .setParam("ip", "New ip", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
+    GET_IP("get_ip",
+            new JsonCmdHelp()
+                    .setDesc("Gets the ip to connect the AutoCrypt module")
+                    .setResult("ip",  JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     SET_PORT("set_port",
             new JsonCmdHelp()
                     .setDesc("Changes the port to connect the AutoCrypt module")
                     .setParam("port", "New port", JsonCmdHelp.INT)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
+    GET_PORT("get_port",
+            new JsonCmdHelp()
+                    .setDesc("Gets the port to connect the AutoCrypt module")
+                    .setResult("port",  JsonCmdHelp.INT)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_ISSUER_INFO("get_issuer_info",
             new JsonCmdHelp()
                     .setDesc("Gives the information of a given issuer")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("issuerId", "", JsonCmdHelp.STR)
+                    .setParam("issuer_id", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     UPDATE_ISSUER_INFO("update_issuer_info",
             new JsonCmdHelp()
                     .setDesc("Updates the information of a given issuer")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("issuerId", "", JsonCmdHelp.STR)
-                    .setParam("others?", "", JsonCmdHelp.STR)
+                    .setParam("issuer_id", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     DELETE_ISSUER_INFO("delete_issuer_info",
             new JsonCmdHelp()
                     .setDesc("Deletes the given issuer")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("issuerId", "", JsonCmdHelp.STR)
+                    .setParam("issuer_id", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
-    IMPORT_CERTIFICATE("import_certificate",
+    IMPORT_CERTIFICATE("import_issuer",
             new JsonCmdHelp()
-                    .setDesc("Imports a new certificate")
+                    .setDesc("Imports a new issuer, usually a certificate")
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("file", "new certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
@@ -72,13 +81,16 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setDesc("Updates the information of the given role")
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("name", "Name of the role", JsonCmdHelp.STR)
-                    .setParam("others?", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     ACTIVATE_OCSP("activate_ocsp",
             new JsonCmdHelp()
                     .setDesc("Activates OCSP")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("ocspServers", "", JsonCmdHelp.STR)
+                    .setParam("ocsp-servers", "", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+    IS_ALIVE("is_alive",
+            new JsonCmdHelp()
+                    .setDesc("Check if AutoCrypt api is reachable")
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_CERTIFICATE("generate_certificate",
             new JsonCmdHelp()
@@ -106,7 +118,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
     GENERATE_ROOT_CA("generate_root_ca",
             new JsonCmdHelp()
                     .setDesc("Generates a root for CA")
-                    .setParam("commonName", "", JsonCmdHelp.STR)
+                    .setParam("common_name", "", JsonCmdHelp.STR)
                     .setParam("ttl", "", JsonCmdHelp.STR)
                     .setParam("path", "OPT: ", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
@@ -114,7 +126,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
             new JsonCmdHelp()
                     .setDesc("Generate intermediate ca")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("commonName", "", JsonCmdHelp.STR)
+                    .setParam("common_name", "", JsonCmdHelp.STR)
                     .setParam("ttl", "", JsonCmdHelp.STR)
                     .setParam("type", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK));
@@ -130,7 +142,8 @@ public enum AutoCryptEndpoints implements Endpoint  {
     public static final String ROLE_URI_ = ROLE_URI+"/";
 
     public static final String MISC_URI = "/api/general";
-    public static final String MISC_URI_ACTIVATE_OCSP = MISC_URI+"/activateOCSP";
+    public static final String MISC_URI_ACTIVATE_OCSP = MISC_URI+"/activate-ocsp";
+    public static final String MISC_URI_IS_ALIVE = MISC_URI+"/health-check";
 
     public static final String CERT_URI = "/api/certificate";
     public static final String CERT_URI_ = CERT_URI+"/";
@@ -138,9 +151,8 @@ public enum AutoCryptEndpoints implements Endpoint  {
     public static final String CERT_URI_REVOKE = CERT_URI_+"revoke";
 
     public static final String CA_URI = "/api/ca";
-    public static final String CA_URI_LIST_INTER = CA_URI+"/listIntermediates";
-    public static final String CA_URI_GENERATE_INTER = CA_URI+"/generateIntermediate";
-    public static final String CA_URI_GENERATE_ROOT = CA_URI+"/generateRoot";
+    public static final String CA_URI_GENERATE_INTER = CA_URI+"/generate-intermediate";
+    public static final String CA_URI_GENERATE_ROOT = CA_URI+"/generate-root";
 
     /**
      * Constructor for the endpoints of Monitor service

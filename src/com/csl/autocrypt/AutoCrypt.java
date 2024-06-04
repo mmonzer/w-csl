@@ -3,14 +3,14 @@ package com.csl.autocrypt;
 import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
-import org.eclipse.jetty.http.HttpMethod;
+import main.services.endpoints.AutoCryptEndpoints;
 
 /**
  * API client of the module AutoCrypt
  */
 public class AutoCrypt {
-    private String ip = "localhost";
-    private int port = 8989;
+    private String ip = "http://10.0.200.35";
+    private int port = 8082;
     private ApiHandler apiHandler = null;
 
     /**
@@ -171,5 +171,16 @@ public class AutoCrypt {
      */
     public JsonApiResponse sendCmdPut(String endpoint, Json body) {
         return apiHandler.sendPut(endpoint, body);
+    }
+
+    /**
+     * Verifies whether the http api is reachable or not
+     * @return if the http api is reachable
+     */
+    public boolean getStatus() {
+        return apiHandler.sendGet(
+                        AutoCryptEndpoints.MISC_URI_IS_ALIVE,
+                        Json.object()
+                ).isSuccess();
     }
 }

@@ -1,7 +1,9 @@
 package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
+import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
@@ -13,8 +15,8 @@ import main.services.endpoints.AutoCryptEndpoints;
  * Path :
  * Issuer :
  */
-public class AutoCryptService extends Service {
-    private AutoCrypt manager;
+public class AutoCryptService extends Service implements IStatusProvider {
+    private final AutoCrypt manager;
 
     /**
      * Default constructor of the Suricata service.
@@ -46,6 +48,9 @@ public class AutoCryptService extends Service {
         manager.setPort(config.at("port").asInteger());
         manager.reinitApiHandler();
 
+
+        CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
+
         addCmd("command_to_change",
                 new IJsonCmd() {
                     @Override
@@ -62,9 +67,12 @@ public class AutoCryptService extends Service {
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
 
-        // Connexion
-        addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
-        addCmd(AutoCryptEndpoints.SET_PORT, this::changePort);
+//        // TODO: needs to add persistence of changes
+//        // Connexion
+//        addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
+//        addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
+//        addCmd(AutoCryptEndpoints.GET_PORT, this::getPort);
+//        addCmd(AutoCryptEndpoints.SET_PORT, this::changePort);
         // issuer-controller
         addCmd(AutoCryptEndpoints.GET_ISSUERS, this::getIssuers);
         addCmd(AutoCryptEndpoints.GET_ISSUER_INFO, this::getIssuerInfo);
@@ -79,6 +87,7 @@ public class AutoCryptService extends Service {
         addCmd(AutoCryptEndpoints.UPDATE_ROLE, this::updateRole);
         // miscellaneous-controller
         addCmd(AutoCryptEndpoints.ACTIVATE_OCSP, this::activateOCSP);
+        addCmd(AutoCryptEndpoints.IS_ALIVE, this::getStatus);
         // certificate-controller
         addCmd(AutoCryptEndpoints.GENERATE_CERTIFICATE, this::generateCertificate);
         addCmd(AutoCryptEndpoints.GET_CERTIFICATES, this::getCertificates);
@@ -108,6 +117,17 @@ public class AutoCryptService extends Service {
     }
 
     /**
+     * Gets the ip to connect the autocrypt module
+     *
+     * @param body parameters with the ip
+     */
+    public Json getIp(Json body) {
+        Json response = Json.object();
+        response.at("ip", manager.getIp());
+        return JsonApiResponse.result(response).toJson();
+    }
+
+    /**
      * Method that changes the port to connect the autocrypt module
      *
      * @param body parameters with the port
@@ -121,6 +141,17 @@ public class AutoCryptService extends Service {
         manager.reinitApiHandler();
 
         return JsonApiResponse.success().toJson();
+    }
+
+    /**
+     * Gets the port to connect the autocrypt module
+     *
+     * @param body parameters with the port
+     */
+    public Json getPort(Json body) {
+        Json response = Json.object();
+        response.at("port", manager.getPort());
+        return JsonApiResponse.result(response).toJson();
     }
 
     /**
@@ -145,14 +176,14 @@ public class AutoCryptService extends Service {
         if (!body.has("path") || !body.get("path").isString()) {
             return errorVariableNotFound("path");
         }
-        if (!body.has("issuerId") || !body.get("issuerId").isString()) {
-            return errorVariableNotFound("issuerId");
+        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
+            return errorVariableNotFound("issuer_ref");
         }
-        String issuerId = body.get("issuerId").asString();
-        body.delAt("issuerId");
+        String issuerRef = body.get("issuer_ref").asString();
+        body.delAt("issuer_ref");
 
         return manager.sendCmdGet(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerId,
+                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
                 body
         ).toJson();
     }
@@ -170,16 +201,14 @@ public class AutoCryptService extends Service {
         }
         params.at("path", body.get("path").asString());
         body.delAt("path");
-        if (!body.has("issuerId") || !body.get("issuerId").isString()) {
-            return errorVariableNotFound("issuerId");
+        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
+            return errorVariableNotFound("issuer_ref");
         }
-        String issuerId = body.get("issuerId").asString();
-        body.delAt("issuerId");
-        // Check body
-        // TODO: any parameters needed in the body?
+        String issuerRef = body.get("issuer_ref").asString();
+        body.delAt("issuer_ref");
 
         return manager.sendCmdPut(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerId,
+                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
                 body,
                 params
         ).toJson();
@@ -198,14 +227,14 @@ public class AutoCryptService extends Service {
         }
         params.at("path", body.get("path").asString());
         body.delAt("path");
-        if (!body.has("issuerId") || !body.get("issuerId").isString()) {
-            return errorVariableNotFound("issuerId");
+        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
+            return errorVariableNotFound("issuer_ref");
         }
-        String issuerId = body.get("issuerId").asString();
-        body.delAt("issuerId");
+        String issuerRef = body.get("issuer_ref").asString();
+        body.delAt("issuer_ref");
 
         return manager.sendCmdDelete(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerId,
+                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
                 body,
                 params
         ).toJson();
@@ -341,7 +370,6 @@ public class AutoCryptService extends Service {
         }
         String name = body.get("name").asString();
         body.delAt("name");
-        // TODO: any parameters needed in the body?
 
         return manager.sendCmdPut(
                 AutoCryptEndpoints.ROLE_URI_ + name,
@@ -363,11 +391,11 @@ public class AutoCryptService extends Service {
         }
         params.at("path", body.get("path"));
         body.delAt("path");
-        if (!body.has("ocspServers") || !body.get("ocspServers").isString()) {
-            return errorVariableNotFound("ocspServers");
+        if (!body.has("ocsp_servers") || !body.get("ocsp_servers").isString()) {
+            return errorVariableNotFound("ocsp_servers");
         }
-        params.at("ocspServers", body.get("ocspServers"));
-        body.delAt("ocspServers");
+        params.at("ocsp_servers", body.get("ocsp_servers"));
+        body.delAt("ocsp_servers");
 
         return manager.sendCmdPost(
                 AutoCryptEndpoints.MISC_URI_ACTIVATE_OCSP,
@@ -426,11 +454,11 @@ public class AutoCryptService extends Service {
         }
         params.at("path", body.get("path").asString());
         body.delAt("path");
-        if (!body.has("serialNumber") || !body.get("serialNumber").isString()) {
-            return errorVariableNotFound("serialNumber");
+        if (!body.has("serial_number") || !body.get("serial_number").isString()) {
+            return errorVariableNotFound("serial_number");
         }
-        String serialNumber = body.get("serialNumber").asString();
-        body.delAt("serialNumber");
+        String serialNumber = body.get("serial_number").asString();
+        body.delAt("serial_number");
 
         return manager.sendCmdGet(
                 AutoCryptEndpoints.CERT_URI_ + serialNumber,
@@ -451,14 +479,14 @@ public class AutoCryptService extends Service {
         }
         params.at("path", body.get("path"));
         body.delAt("path");
-        if (!body.has("serialNumber") || !body.get("serialNumber").isString()) {
-            return errorVariableNotFound("serialNumber");
+        if (!body.has("serial_number") || !body.get("serial_number").isString()) {
+            return errorVariableNotFound("serial_number");
         }
-        String serialNumber = body.get("serialNumber").asString();
-        body.delAt("serialNumber");
+        String serialNumber = body.get("serial_number").asString();
+        body.delAt("serial_number");
 
         return manager.sendCmdDelete(
-                AutoCryptEndpoints.CERT_URI_REVOKE+"/"+serialNumber,
+                AutoCryptEndpoints.CERT_URI_REVOKE + "/" + serialNumber,
                 params
         ).toJson();
     }
@@ -471,16 +499,21 @@ public class AutoCryptService extends Service {
     public Json generateRootCA(Json body) {
         // check params
         Json params = Json.object();
-        if (!body.has("commonName") || !body.get("commonName").isString()) {
-            return errorVariableNotFound("commonName");
+        if (!body.has("common_name") || !body.get("common_name").isString()) {
+            return errorVariableNotFound("common_name");
         }
-        params.at("commonName", body.get("commonName"));
-        body.delAt("commonName");
+        params.at("common_name", body.get("common_name"));
+        body.delAt("common_name");
         if (!body.has("ttl") || !body.get("ttl").isString()) {
             return errorVariableNotFound("ttl");
         }
         params.at("ttl", body.get("ttl"));
         body.delAt("ttl");
+
+        if (body.has("path") && body.get("path").isString()) {
+            params.at("path", body.get("path"));
+            body.delAt("path");
+        }
 
         return manager.sendCmdPost(
                 AutoCryptEndpoints.CA_URI_GENERATE_ROOT,
@@ -497,17 +530,16 @@ public class AutoCryptService extends Service {
     public Json generateIntermediateCA(Json body) {
         Json params = Json.object();
         // check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
+        if (body.has("path") && body.get("path").isString()) {
+            params.at("path", body.get("path"));
+            body.delAt("path");
         }
-        params.at("path", body.get("path"));
-        body.delAt("path");
         // check body
         if (!body.has("type") || !body.get("type").isString()) {
             return errorVariableNotFound("type");
         }
-        if (!body.has("commonName") || !body.get("commonName").isString()) {
-            return errorVariableNotFound("commonName");
+        if (!body.has("common_name") || !body.get("common_name").isString()) {
+            return errorVariableNotFound("common_name");
         }
         if (!body.has("ttl") || !body.get("ttl").isString()) {
             return errorVariableNotFound("ttl");
@@ -518,5 +550,27 @@ public class AutoCryptService extends Service {
                 body,
                 params
         ).toJson();
+    }
+
+    /**
+     * Verifies if the module api is reachable
+     *
+     * @return whether it is reachable
+     */
+    @Override
+    public Json getStatus() {
+        Json status = Json.object();
+        status.set("is_http_api_reachable", manager.getStatus());
+        return status;
+    }
+
+    /**
+     * Verifies if the module api is reachable
+     *
+     * @param body default body of the POST request
+     * @return whether it is reachable
+     */
+    public Json getStatus(Json body) {
+        return JsonApiResponse.result(getStatus()).toJson();
     }
 }

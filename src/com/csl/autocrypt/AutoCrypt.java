@@ -69,7 +69,19 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdPost(String endpoint, Json body) {
-        return apiHandler.sendRequestToApi(HttpMethod.POST, endpoint, body);
+        return apiHandler.sendPost( endpoint, body);
+    }
+
+    /**
+     * Send cmd to the module in method POST
+     *
+     * @param endpoint endpoint to connect
+     * @param body     body of the POST request
+     * @param params     params of the POST request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdPost(String endpoint, Json body, Json params) {
+        return apiHandler.sendPost( endpoint, params, body);
     }
     /**
      * Send cmd to the module in method GET
@@ -90,7 +102,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdGet(String endpoint, Json params) {
-        return apiHandler.sendRequestToApi(HttpMethod.GET, endpoint,  params);
+        return apiHandler.sendGet(endpoint,  params);
     }
 
     /**
@@ -112,7 +124,19 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdDelete(String endpoint, Json params) {
-        return apiHandler.sendRequestToApi(HttpMethod.DELETE, endpoint, params);
+        return apiHandler.sendDelete(endpoint, params);
+    }
+
+    /**
+     * Send cmd to the module in method DELETE
+     *
+     * @param endpoint endpoint to connect
+     * @param params     params of the DELETE request
+     * @param body     body of the DELETE request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdDelete(String endpoint, Json body, Json params) {
+        return apiHandler.sendDelete(endpoint, params, body);
     }
 
     /**
@@ -131,10 +155,11 @@ public class AutoCrypt {
      *
      * @param endpoint endpoint to connect
      * @param body     body of the PUT request
+     * @param params     params of the PUT request
      * @return the {@link JsonApiResponse} returned by the manager
      */
-    public JsonApiResponse sendCmdPut(String endpoint, Json body) {
-        return apiHandler.sendRequestToApi(HttpMethod.PUT, endpoint, body);
+    public JsonApiResponse sendCmdPut(String endpoint, Json body, Json params) {
+        return apiHandler.sendPut(endpoint, params, body);
     }
 
     /**
@@ -144,7 +169,7 @@ public class AutoCrypt {
      * @param body     body of the PUT request
      * @return the {@link JsonApiResponse} returned by the manager
      */
-    public JsonApiResponse sendCmdPatch(String endpoint, Json body) {
-        return apiHandler.sendRequestToApi("PATCH", endpoint, body);
+    public JsonApiResponse sendCmdPut(String endpoint, Json body) {
+        return apiHandler.sendPut(endpoint, body);
     }
 }

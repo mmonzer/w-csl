@@ -35,7 +35,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     IMPORT_CERTIFICATE("import_certificate",
             new JsonCmdHelp()
-                    .setDesc("Imports a new certificates")
+                    .setDesc("Imports a new certificate")
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("file", "new certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
@@ -47,13 +47,13 @@ public enum AutoCryptEndpoints implements Endpoint  {
     GET_ROLES("get_roles",
             new JsonCmdHelp()
                     .setDesc("Gets the list of roles")
-                    .setParam("path", "", JsonCmdHelp.STR)
+                    .setParam("path", "OPT", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     CREATE_ROLE("create_role",
             new JsonCmdHelp()
                     .setDesc("Creates a new role")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("others?", "", JsonCmdHelp.STR)
+                    .setParam("name", "Name of the new role", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_ROLE("get_role",
             new JsonCmdHelp()
@@ -79,13 +79,12 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setDesc("Activates OCSP")
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("ocspServers", "", JsonCmdHelp.STR)
-                    .setParam("others?", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_CERTIFICATE("generate_certificate",
             new JsonCmdHelp()
                     .setDesc("Generates a certificate")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("role", "", JsonCmdHelp.STR)
+                    .setParam("role_name", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_CERTIFICATES("get_certificates",
             new JsonCmdHelp()
@@ -96,17 +95,13 @@ public enum AutoCryptEndpoints implements Endpoint  {
             new JsonCmdHelp()
                     .setDesc("Gives the list of certificates")
                     .setParam("serialNumber", "Number of certificate", JsonCmdHelp.STR)
+                    .setParam("path", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     REVOKE_CERTIFICATE("revoke_certificate",
             new JsonCmdHelp()
                     .setDesc("Revoke the certificate")
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("others?", "", JsonCmdHelp.STR)
-                    .setStatus(JsonCmdHelp.STATUS_OK)),
-    GET_CA("get_ca",
-            new JsonCmdHelp()
-                    .setDesc("Lists the CA of the children of the given parent")
-                    .setParam("others?", "", JsonCmdHelp.STR)
+                    .setParam("serialNumber", "Serial number of the certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_ROOT_CA("generate_root_ca",
             new JsonCmdHelp()
@@ -121,6 +116,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("commonName", "", JsonCmdHelp.STR)
                     .setParam("ttl", "", JsonCmdHelp.STR)
+                    .setParam("type", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK));
 
     private final String command;

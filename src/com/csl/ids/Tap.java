@@ -61,7 +61,7 @@ public class Tap {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmd(String endpoint, Json body) {
-        return apiHandler.sendRequestToApi(HttpMethod.POST, endpoint, body);
+        return apiHandler.sendPost( endpoint, body);
     }
 
     /**
@@ -71,7 +71,7 @@ public class Tap {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendQuietCmd(String endpoint, Json body) {
-        return apiHandler.sendRequestToApi(HttpMethod.POST, endpoint, body, true);
+        return apiHandler.sendRequestToApiQuiet(HttpMethod.POST, endpoint, body);
     }
 
     /**

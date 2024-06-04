@@ -58,6 +58,84 @@ public class ApiHandler implements AutoCloseable {
     }
 
     /**
+     * Send a DELETE HTTP request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendDelete(String endpoint, Json params) {
+        return sendRequestToApi(HttpMethod.DELETE, endpoint, params, null,false);
+    }
+
+    /**
+     * Send a DELETE HTTP request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendDelete(String endpoint, Json params, Json body) {
+        return sendRequestToApi(HttpMethod.DELETE, endpoint, params, body,false);
+    }
+
+    /**
+     * Send a HTTP GET request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendGet(String endpoint, Json params) {
+        return sendRequestToApi(HttpMethod.GET, endpoint, params,null, false);
+    }
+
+    /**
+     * Send a HTTP POST request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param body   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendPost(String endpoint, Json params, Json body) {
+        return sendRequestToApi(HttpMethod.POST, endpoint, params, body, false);
+    }
+
+    /**
+     * Send a HTTP POST request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param body   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendPost(String endpoint, Json body) {
+        return sendRequestToApi(HttpMethod.POST, endpoint, null, body, false);
+    }
+
+    /**
+     * Send a HTTP PUT request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param body   The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendPut(String endpoint, Json params, Json body) {
+        return sendRequestToApi(HttpMethod.PUT, endpoint, params, body, false);
+    }
+
+    /**
+     * Send a HTTP PUT request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param body   The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendPut(String endpoint, Json body) {
+        return sendRequestToApi(HttpMethod.PUT, endpoint, null, body, false);
+    }
+
+    /**
      * Send an HTTP request to the scanner.
      *
      * @param method   The HTTP method to use (GET, POST, PUT, ...)
@@ -65,8 +143,8 @@ public class ApiHandler implements AutoCloseable {
      * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
-    public JsonApiResponse sendRequestToApi(HttpMethod method, String endpoint, Json params) {
-        return sendRequestToApi(method, endpoint, params, false);
+    public JsonApiResponse sendRequestToApiQuiet(HttpMethod method, String endpoint, Json params) {
+        return sendRequestToApi(method, endpoint, params, true);
     }
 
     /**
@@ -93,6 +171,72 @@ public class ApiHandler implements AutoCloseable {
                 case GET:
                 case DELETE:
                     addParamsToRequest(params, request);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());
+            }
+            ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                return JsonApiResponse.error("Error while sending request to " + moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
+            }
+            if (response.getContent().length > 0) {
+                if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
+                    res = JsonApiResponse.result(
+                            Json.read(response.getContentAsString()),
+                            Json.object("status_code", response.getStatus())
+                    );
+                } else {
+                    res = JsonApiResponse.result(Json.object("value", response.getContentAsString()),
+                            Json.object("status_code", response.getStatus())
+                    );
+                }
+            } else {
+                res = JsonApiResponse.result(null,
+                        Json.object("status_code", response.getStatus())
+                );
+            }
+        } catch (UnsupportedOperationException e) {
+            logger.error("Malformed json", e);
+            res = JsonApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            if (!quiet) {
+                logger.error("Error while sending request to " + moduleName);
+            }
+            if (e.getCause() instanceof ConnectException) {
+                res = JsonApiResponse.error("Connection error with " + moduleName);
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Send an HTTP request to the scanner.
+     *
+     * @param method   The HTTP method to use (GET, POST, PUT, ...)
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body   The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendRequestToApi(HttpMethod method, String endpoint, Json params, Json body, boolean quiet) {
+        JsonApiResponse res = JsonApiResponse.error(null);
+        Request request;
+        String URI = url + endpoint.replace(" ", "%20");
+
+        request = httpClient.newRequest(URI);
+        request.method(method);
+        addParamsToRequest(params, request);
+
+
+        request.header("Content-Type", "application/json");
+        try {
+            switch (method) {
+                case POST:
+                case PUT:
+                case DELETE:
+                    if (body!=null) {request.content(new StringContentProvider(body.toString()), "application/json");}
+                    break;
+                case GET:
                     break;
                 default:
                     throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());

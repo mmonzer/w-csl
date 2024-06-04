@@ -1211,7 +1211,7 @@ public class TapsServices extends Service {
                 for (Json j : configuredTaps) {
                     String output = "";
 
-                    output = apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
+                    output = apiHandler.sendPost("/suricata",
                             Json.read("{\"cmd\":\"suricataReloadRules\"}")).toString();
 
                     Json result = Json.object();
@@ -1381,7 +1381,7 @@ public class TapsServices extends Service {
         addCmd(TapsEndpoints.MODIFY_GENERATED_RULES_DEPRECATED, new IJsonCmd() {
             @Override
             public Json exec(Json params) {
-                return apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
+                return apiHandler.sendPost("/suricata",
                         Json.read("{\"cmd\":\"suricataModifyCustomRules\",\"params\":" + params + "}")).toJson();
             }
         });
@@ -1437,7 +1437,7 @@ public class TapsServices extends Service {
         addCmd(TapsEndpoints.ADD_BASE_RULES_DEPRECATED, new IJsonCmd() {
             @Override
             public Json exec(Json params) {
-                return apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
+                return apiHandler.sendPost("/suricata",
                         Json.read("{\"cmd\":\"suricataAddBaseRules\",\"params\":" + params.toString() + "}")).toJson();
             }
         });
@@ -1455,7 +1455,7 @@ public class TapsServices extends Service {
         addCmd(TapsEndpoints.ADD_GENERATED_RULES_DEPRECATED, new IJsonCmd() {
             @Override
             public Json exec(Json params) {
-                return apiHandler.sendRequestToApi(HttpMethod.POST, "/suricata",
+                return apiHandler.sendPost("/suricata",
                         Json.read("{\"cmd\":\"suricataAddCustomRules\",\"params\":" + params.toString() + "}")).toJson();
             }
         });

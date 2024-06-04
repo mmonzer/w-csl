@@ -49,15 +49,15 @@ public class AutoCryptService extends Service {
         addCmd("command_to_change",
                 new IJsonCmd() {
                     @Override
-                    public Json exec(Json params) {
+                    public Json exec(Json body) {
                         Json payload = Json.object();
                         payload.at("cmd", "command_to_change");
-                        payload.at("params", params);
+                        payload.at("body", body);
                         return manager.sendCmdPost("/config", payload.toString()).toJson();
                     }
                 },
                 new JsonCmdHelp().setDesc("Dummy api point for module")
-                        .setParam("No params", "", IJsonCmdHelp.JSON)
+                        .setParam("No body", "", IJsonCmdHelp.JSON)
                         .setResult("Dummy result", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
@@ -85,7 +85,7 @@ public class AutoCryptService extends Service {
         addCmd(AutoCryptEndpoints.GET_CERTIFICATE_INFO, this::getCertificateInfo);
         addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE, this::revokeCertificate);
         // ca-controller
-        addCmd(AutoCryptEndpoints.GET_CA, this::generateRootCA);
+        addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
 
         return true;
@@ -93,14 +93,15 @@ public class AutoCryptService extends Service {
 
     /**
      * Method that changes the ip to connect the autocrypt module
-     * @param params parameters with the ip
+     *
+     * @param body parameters with the ip
      */
-    public Json changeIp(Json params) {
-        if (!params.has("ip") || !params.get("ip").isString()) {
-            return JsonApiResponse.error("IP is missing from params").toJson();
+    public Json changeIp(Json body) {
+        if (!body.has("ip") || !body.get("ip").isString()) {
+            return errorVariableNotFound("ip");
         }
 
-        manager.setIp(params.get("ip").asString());
+        manager.setIp(body.get("ip").asString());
         manager.reinitApiHandler();
 
         return JsonApiResponse.success().toJson();
@@ -108,14 +109,15 @@ public class AutoCryptService extends Service {
 
     /**
      * Method that changes the port to connect the autocrypt module
-     * @param params parameters with the port
+     *
+     * @param body parameters with the port
      */
-    public Json changePort(Json params) {
-        if (!params.has("port") || !params.get("port").isNumber()) {
-            return JsonApiResponse.error("Port is missing from params").toJson();
+    public Json changePort(Json body) {
+        if (!body.has("port") || !body.get("port").isNumber()) {
+            return errorVariableNotFound("port");
         }
 
-        manager.setPort(params.get("port").asInteger());
+        manager.setPort(body.get("port").asInteger());
         manager.reinitApiHandler();
 
         return JsonApiResponse.success().toJson();
@@ -123,251 +125,398 @@ public class AutoCryptService extends Service {
 
     /**
      * Method that gets the list of issuers
-     * @param params parameters with the path
+     *
+     * @param body parameters with the path
      */
-    public Json getIssuers(Json params) {
-        return manager.sendCmdGet(AutoCryptEndpoints.ISSUER_URI, params).toJson();
+    public Json getIssuers(Json body) {
+        return manager.sendCmdGet(
+                AutoCryptEndpoints.ISSUER_URI,
+                body
+        ).toJson();
     }
 
     /**
      * Method that recovers the information of the given issuer
-     * @param params parameters with the path and the issuer id
+     *
+     * @param body parameters with the path and the issuer id
      */
-    public Json getIssuerInfo(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json getIssuerInfo(Json body) {
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("issuerId") || !params.get("issuerId").isString()) {
-            return JsonApiResponse.error("issuerId is missing from params").toJson();
+        if (!body.has("issuerId") || !body.get("issuerId").isString()) {
+            return errorVariableNotFound("issuerId");
         }
+        String issuerId = body.get("issuerId").asString();
+        body.delAt("issuerId");
 
-        return manager.sendCmdGet(AutoCryptEndpoints.ISSUER_URI_+params.get("issuerId").asString(), params).toJson();
+        return manager.sendCmdGet(
+                AutoCryptEndpoints.ISSUER_URI_ + issuerId,
+                body
+        ).toJson();
     }
 
     /**
      * Method that updates the information of the given issuer
-     * @param params parameters with the path and the issuer id
+     *
+     * @param body parameters with the path and the issuer id
      */
-    public Json updateIssuerInfo(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json updateIssuerInfo(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("issuerId") || !params.get("issuerId").isString()) {
-            return JsonApiResponse.error("issuerId is missing from params").toJson();
+        params.at("path", body.get("path").asString());
+        body.delAt("path");
+        if (!body.has("issuerId") || !body.get("issuerId").isString()) {
+            return errorVariableNotFound("issuerId");
         }
+        String issuerId = body.get("issuerId").asString();
+        body.delAt("issuerId");
+        // Check body
         // TODO: any parameters needed in the body?
 
-        // TODO : path and issuerId are params, but not body
-        return manager.sendCmdPut(AutoCryptEndpoints.ISSUER_URI_+params.get("issuerId").asString(), params).toJson();
+        return manager.sendCmdPut(
+                AutoCryptEndpoints.ISSUER_URI_ + issuerId,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Method that deletes the given issuer
-     * @param params parameters with the path and the issuer id
+     *
+     * @param body parameters with the path and the issuer id
      */
-    public Json deleteIssuer(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json deleteIssuer(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("issuerId") || !params.get("issuerId").isString()) {
-            return JsonApiResponse.error("issuerId is missing from params").toJson();
+        params.at("path", body.get("path").asString());
+        body.delAt("path");
+        if (!body.has("issuerId") || !body.get("issuerId").isString()) {
+            return errorVariableNotFound("issuerId");
         }
+        String issuerId = body.get("issuerId").asString();
+        body.delAt("issuerId");
 
-        return manager.sendCmdDelete(AutoCryptEndpoints.ISSUER_URI_+params.get("issuerId").asString(), params).toJson();
+        return manager.sendCmdDelete(
+                AutoCryptEndpoints.ISSUER_URI_ + issuerId,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Method that imports a new certificate
-     * @param params parameters with the path and the file
+     *
+     * @param body parameters with the path and the file
      */
-    public Json importCertificate(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json importCertificate(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("file") || !params.get("file").isString()) {
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        // Check file (body)
+        if (!body.has("file") || !body.get("file").isString()) {
             return JsonApiResponse.error("File was not correctly uploaded").toJson();
         }
 
-        // TODO : path is params, but not body
-        return manager.sendCmdPost(AutoCryptEndpoints.ISSUER_URI_IMPORT, params).toJson();
+        return manager.sendCmdPost(
+                AutoCryptEndpoints.ISSUER_URI_IMPORT,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Gets the list of roles
-     * @param params parameters with the path
+     *
+     * @param body parameters with the path
      */
-    public Json getRoles(Json params) {
-        return manager.sendCmdGet(AutoCryptEndpoints.ROLE_URI, params).toJson();
+    public Json getRoles(Json body) {
+        return manager.sendCmdGet(
+                AutoCryptEndpoints.ROLE_URI,
+                body
+        ).toJson();
     }
 
     /**
      * Creates a new role
-     * @param params parameters with the path
+     *
+     * @param body parameters with the path
      */
-    public Json createRole(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json createRole(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("name") || !params.get("name").isString()) {
-            return JsonApiResponse.error("name is missing from params").toJson();
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        // Check body
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
         }
 
-        // TODO : path is params, but not body
-        return manager.sendCmdPost(AutoCryptEndpoints.ROLE_URI, params).toJson();
+        return manager.sendCmdPost(
+                AutoCryptEndpoints.ROLE_URI,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Gets the information of the given role
-     * @param params parameters with the path and name of role
+     *
+     * @param body parameters with the path and name of role
      */
-    public Json getRole(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json getRole(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("name") || !params.get("name").isString()) {
-            return JsonApiResponse.error("name is missing from params").toJson();
+        params.at("path", body.get("path").asString());
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
         }
+        String name = body.get("name").asString();
+        body.delAt("name");
 
-        return manager.sendCmdGet(AutoCryptEndpoints.ROLE_URI_+params.get("name").asString(), params).toJson();
+        return manager.sendCmdGet(
+                AutoCryptEndpoints.ROLE_URI_ + name,
+                params
+        ).toJson();
     }
 
     /**
      * Deletes the given role
-     * @param params parameters with the path and name of role
+     *
+     * @param body parameters with the path and name of role
      */
-    public Json deleteRole(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json deleteRole(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("name") || !params.get("name").isString()) {
-            return JsonApiResponse.error("name is missing from params").toJson();
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
         }
+        String name = body.get("name").asString();
+        body.delAt("name");
 
-        return manager.sendCmdDelete(AutoCryptEndpoints.ROLE_URI_+params.get("name").asString(), params).toJson();
+        return manager.sendCmdDelete(
+                AutoCryptEndpoints.ROLE_URI_ + name,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Updates the information of the given role
-     * @param params parameters with the path and name of role, others?
+     *
+     * @param body parameters with the path and name of role, others?
      */
-    public Json updateRole(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json updateRole(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("name") || !params.get("name").isString()) {
-            return JsonApiResponse.error("name is missing from params").toJson();
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
         }
+        String name = body.get("name").asString();
+        body.delAt("name");
         // TODO: any parameters needed in the body?
 
-        // TODO : path is a param, not body
-        return manager.sendCmdPut(AutoCryptEndpoints.ROLE_URI_+params.get("name").asString(), params).toJson();
+        return manager.sendCmdPut(
+                AutoCryptEndpoints.ROLE_URI_ + name,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Activates the Online Certificate Status Protocol (OCSP)
-     * @param params parameters with the path and name of role, others?
+     *
+     * @param body parameters with the path and name of role, others?
      */
-    public Json activateOCSP(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json activateOCSP(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("ocspServers") || !params.get("ocspServers").isString()) {
-            return JsonApiResponse.error("ocspServers is missing from params").toJson();
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        if (!body.has("ocspServers") || !body.get("ocspServers").isString()) {
+            return errorVariableNotFound("ocspServers");
         }
-        // TODO: any parameters needed in the body?
+        params.at("ocspServers", body.get("ocspServers"));
+        body.delAt("ocspServers");
 
-        // TODO : path and ocspServers are params, not body
-        return manager.sendCmdPost(AutoCryptEndpoints.MISC_URI_ACTIVATE_OCSP, params).toJson();
+        return manager.sendCmdPost(
+                AutoCryptEndpoints.MISC_URI_ACTIVATE_OCSP,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Generates a certificates at the given path and role
-     * @param params parameters with the path and role
+     *
+     * @param body parameters with the path and role
      */
-    public Json generateCertificate(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("Path is missing from params").toJson();
+    public Json generateCertificate(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("role") || !params.get("role").isString()) {
-            return JsonApiResponse.error("role is missing from params").toJson();
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        // Check body
+        if (!body.has("role_name") || !body.get("role_name").isString()) {
+            return errorVariableNotFound("role_name");
         }
 
-        // TODO : path is params, not body
-        return manager.sendCmdPost(AutoCryptEndpoints.CERT_URI_ISSUE, params).toJson();
+        return manager.sendCmdPost(
+                AutoCryptEndpoints.CERT_URI_ISSUE,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Gives the list of certificates
-     * @param params parameters with the path
+     *
+     * @param body parameters with the path
      */
-    public Json getCertificates(Json params) {
-        return manager.sendCmdGet(AutoCryptEndpoints.CERT_URI, params).toJson();
+    public Json getCertificates(Json body) {
+        return manager.sendCmdGet(
+                AutoCryptEndpoints.CERT_URI,
+                body
+        ).toJson();
     }
 
     /**
      * Gives the information of the given certificate
-     * @param params parameters with the serialNumber
+     *
+     * @param body parameters with the serialNumber
      */
-    public Json getCertificateInfo(Json params) {
-        if (!params.has("serialNumber") || !params.get("serialNumber").isString()) {
-            return JsonApiResponse.error("serialNumber is missing from params").toJson();
+    public Json getCertificateInfo(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
+        params.at("path", body.get("path").asString());
+        body.delAt("path");
+        if (!body.has("serialNumber") || !body.get("serialNumber").isString()) {
+            return errorVariableNotFound("serialNumber");
+        }
+        String serialNumber = body.get("serialNumber").asString();
+        body.delAt("serialNumber");
 
-        return manager.sendCmdGet(AutoCryptEndpoints.CERT_URI_+params.get("serialNumber").asString(), Json.object()).toJson();
+        return manager.sendCmdGet(
+                AutoCryptEndpoints.CERT_URI_ + serialNumber,
+                params
+        ).toJson();
     }
 
     /**
      * Revokes the given certificate
-     * @param params parameters with the path
+     *
+     * @param body parameters with the path
      */
-    public Json revokeCertificate(Json params) {
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("path is missing from params").toJson();
+    public Json revokeCertificate(Json body) {
+        // check params
+        Json params = Json.object();
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        // TODO: any parameters needed in the body?
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        if (!body.has("serialNumber") || !body.get("serialNumber").isString()) {
+            return errorVariableNotFound("serialNumber");
+        }
+        String serialNumber = body.get("serialNumber").asString();
+        body.delAt("serialNumber");
 
-        return manager.sendCmdDelete(AutoCryptEndpoints.CERT_URI_REVOKE, Json.object()).toJson();
+        return manager.sendCmdDelete(
+                AutoCryptEndpoints.CERT_URI_REVOKE+"/"+serialNumber,
+                params
+        ).toJson();
     }
 
     /**
      * Generate root CA
-     * @param params parameters with commonName, ttl, and optionally path
+     *
+     * @param body parameters with commonName, ttl, and optionally path
      */
-    public Json generateRootCA(Json params) {
-        if (!params.has("commonName") || !params.get("commonName").isString()) {
-            return JsonApiResponse.error("commonName is missing from params").toJson();
+    public Json generateRootCA(Json body) {
+        // check params
+        Json params = Json.object();
+        if (!body.has("commonName") || !body.get("commonName").isString()) {
+            return errorVariableNotFound("commonName");
         }
-        if (!params.has("ttl") || !params.get("ttl").isString()) {
-            return JsonApiResponse.error("ttl is missing from params").toJson();
+        params.at("commonName", body.get("commonName"));
+        body.delAt("commonName");
+        if (!body.has("ttl") || !body.get("ttl").isString()) {
+            return errorVariableNotFound("ttl");
         }
-        // TODO: any parameters needed in the body?
+        params.at("ttl", body.get("ttl"));
+        body.delAt("ttl");
 
-        // TODO : commonName and ttl are params, not body
-        return manager.sendCmdPost(AutoCryptEndpoints.CA_URI_GENERATE_ROOT, params).toJson();
+        return manager.sendCmdPost(
+                AutoCryptEndpoints.CA_URI_GENERATE_ROOT,
+                body,
+                params
+        ).toJson();
     }
 
     /**
      * Generate intermediate CA
-     * @param params parameters with commonName, ttl, and optionally path
+     *
+     * @param body parameters with commonName, ttl, and optionally path
      */
-    public Json generateIntermediateCA(Json params) {
-        if (!params.has("commonName") || !params.get("commonName").isString()) {
-            return JsonApiResponse.error("commonName is missing from params").toJson();
+    public Json generateIntermediateCA(Json body) {
+        Json params = Json.object();
+        // check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
-        if (!params.has("ttl") || !params.get("ttl").isString()) {
-            return JsonApiResponse.error("ttl is missing from params").toJson();
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        // check body
+        if (!body.has("type") || !body.get("type").isString()) {
+            return errorVariableNotFound("type");
         }
-        if (!params.has("path") || !params.get("path").isString()) {
-            return JsonApiResponse.error("path is missing from params").toJson();
+        if (!body.has("commonName") || !body.get("commonName").isString()) {
+            return errorVariableNotFound("commonName");
         }
-        // TODO: any parameters needed in the body?
+        if (!body.has("ttl") || !body.get("ttl").isString()) {
+            return errorVariableNotFound("ttl");
+        }
 
-        // TODO : path, commonName and ttl are params, not body
-        return manager.sendCmdPost(AutoCryptEndpoints.CA_URI_GENERATE_INTER, params).toJson();
+        return manager.sendCmdPost(
+                AutoCryptEndpoints.CA_URI_GENERATE_INTER,
+                body,
+                params
+        ).toJson();
     }
-
-    // TODO : methods
-    // TODO : endpoints
-    // TODO : variables : params and body
-    // TODO : documentation: endpoint and javadoc
 }

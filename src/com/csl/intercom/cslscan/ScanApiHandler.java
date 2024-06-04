@@ -1,19 +1,14 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.cslscan.enums.ImportQueryStatus;
 import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
-import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
-import com.csl.intercom.cslscan.models.ImportQuery;
-import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.HttpConnection;
+import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -21,6 +16,8 @@ import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.MultiPartContentProvider;
 import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -30,15 +27,17 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.*;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -49,6 +48,7 @@ public class ScanApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
     private String scanManagerUrl;
     private HttpClient httpClient = new HttpClient();
+    private final FileStorageService fileStorageService = new FileStorageService();
 
     public ScanApiHandler() {
         this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
@@ -833,6 +833,7 @@ public class ScanApiHandler implements AutoCloseable {
 
     /**
      * Get the current cron expression for the periodic discovery task.
+     *
      * @return The cron expression for the periodic discovery task.
      */
     public Json getDiscoveryCron() {
@@ -858,6 +859,7 @@ public class ScanApiHandler implements AutoCloseable {
 
     /**
      * Set the cron expression for the periodic discovery task.
+     *
      * @param cron The new cron expression for the periodic discovery task.
      * @throws Exception If the request failed (ie status code != 200).
      */
@@ -923,13 +925,14 @@ public class ScanApiHandler implements AutoCloseable {
 
     /**
      * Start a new import task in CSL-Scan.
+     *
      * @param bsonFilePath The path to the bson file to import.
      * @return The status of the import task.
      * @throws Exception If the request failed.
      */
     public ImportQuery importBsonFile(Path bsonFilePath, boolean shouldDrop) throws Exception {
-        String URI = scanManagerUrl + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
-        Request request = httpClient.newRequest(URI);
+        String uri = scanManagerUrl + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
+        Request request = httpClient.newRequest(uri);
         request.param("drop", String.valueOf(shouldDrop));
         request.method(HttpMethod.POST);
         MultiPartContentProvider multiPart = new MultiPartContentProvider();
@@ -955,6 +958,73 @@ public class ScanApiHandler implements AutoCloseable {
         } catch (IllegalArgumentException e) {
             logger.error("Error while parsing the import id", e);
             throw new Exception("Error while parsing the import id", e);
+        }
+    }
+
+    /**
+     * Request the export of the http templates from the scanner.
+     *
+     * @return The export query.
+     * @throws Exception If the request failed.
+     */
+    public ExportQuery requestExportHttpTemplates() throws Exception {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON, Json.object());
+        if (response.isSuccess()) {
+            return ExportQuery.fromScannerJson(response.getResult());
+        } else {
+            throw new Exception("Could not request the export of the http templates");
+        }
+    }
+
+    /**
+     * Get the status of an export query.
+     *
+     * @param uuid The uuid of the export query.
+     * @return The new export query.
+     */
+    public ExportQuery getExportQueryStatus(UUID uuid) {
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
+        if (response.isSuccess()) {
+            return ExportQuery.fromScannerJson(response.getResult());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Get the status of an export query.
+     *
+     * @param exportQuery The export query to get the status of.
+     * @return The new export query.
+     */
+    public ExportQuery getExportQueryStatus(ExportQuery exportQuery) {
+        return getExportQueryStatus(exportQuery.getId());
+    }
+
+    public void deleteExportFile(UUID uuid) {
+        sendRequestToScanManager(HttpMethod.DELETE, String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DELETE.endpoint(), uuid.toString()), Json.object());
+    }
+
+    public void deleteExportFile(ExportQuery exportQuery) {
+        deleteExportFile(exportQuery.getId());
+    }
+
+    public Path downloadExportFile(ExportQuery exportQuery) throws ExecutionException, InterruptedException, TimeoutException {
+        URI uri = URI.create(scanManagerUrl + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
+        Request request = httpClient.newRequest(uri);
+        InputStreamResponseListener listener = new InputStreamResponseListener();
+        request.send(listener);
+        Response response = listener.get(30, TimeUnit.SECONDS);
+        if (response.getStatus() == 200) {
+            try {
+                return fileStorageService.saveFile(listener.getInputStream(), exportQuery.getFilename());
+            } catch (IOException e) {
+                logger.error("Could not save the export file");
+                logger.debug("Could not save the export file", e);
+                return null;
+            }
+        } else {
+            return null;
         }
     }
 

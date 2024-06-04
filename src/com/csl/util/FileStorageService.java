@@ -66,4 +66,29 @@ public class FileStorageService {
             }
         });
     }
+
+    public void deleteFile(String filename) {
+        try {
+            Path fullFilePath = rootLocation.resolve(filename);
+            Files.deleteIfExists(fullFilePath);
+            deleteSchedule.remove(fullFilePath);
+        } catch (IOException e) {
+            logger.error("Error deleting file: " + filename, e);
+        }
+    }
+
+    /**
+     * Get the file path for the given filename.
+     *
+     * @param filename The filename to get the path for.
+     * @return The path for the given filename.
+     */
+    public Path getFilePath(String filename) {
+        Path filepath = rootLocation.resolve(filename);
+        if (Files.exists(filepath)) {
+            return filepath;
+        } else {
+            return null;
+        }
+    }
 }

@@ -2,10 +2,7 @@ package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.ImportQuery;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
+import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FileActionStatus;
@@ -21,6 +18,8 @@ import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
+import org.eclipse.jetty.client.util.MultiPartContentProvider;
+import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -28,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -976,6 +976,27 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
+    public void uploadHttpTemplatesBsonFile(ExportQuery exportQuery) {
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.UPLOAD_HTTP_TEMPLATES_BSON_FILE);
+        MultiPartContentProvider multiPart = new MultiPartContentProvider();
+        try {
+            multiPart.addFilePart("file", exportQuery.getFilename(), new PathContentProvider(fileStorageService.getFilePath(exportQuery.getFilename())), null);
+        } catch (IOException e) {
+            logger.error("Error adding file to request", e);
+            return;
+        }
+        multiPart.close();
+        request.content(multiPart);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending file to DB-API", e);
+        }
+    }
+
     public void notifyImportStarted(int id, ImportQuery importQuery) {
         Json contents = Json.object("status", FileActionStatus.FILE_PROCESSING.getValue());
         Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
@@ -1014,5 +1035,19 @@ public class DbapiHandler implements AutoCloseable {
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             logger.error("Error sending import status to DB-API", e);
         }
+    }
+
+    /**
+     * Request a new BSON export ID from DB-API.
+     *
+     * @return The new BSON export ID.
+     * @throws Exception If the request failed.
+     */
+    public int requestBsonExportID() throws Exception {
+        // TODO implement
+        int min = 1;
+        int max = 10000;
+        int id = (int) (Math.random() * (max - min + 1) + min);
+        return id;
     }
 }

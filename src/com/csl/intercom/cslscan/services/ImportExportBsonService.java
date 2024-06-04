@@ -1,8 +1,10 @@
 package com.csl.intercom.cslscan.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
+import com.csl.intercom.cslscan.enums.ExportQueryStatus;
 import com.csl.intercom.cslscan.enums.ImportQueryStatus;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
+import com.csl.intercom.cslscan.models.ExportQuery;
 import com.csl.intercom.cslscan.models.ImportQuery;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.HttpTemplateImportNotification;
@@ -20,22 +22,23 @@ import java.util.concurrent.*;
  * Class for handling BSON file imports.
  * Should be able to handle multiple imports at the same time *via* scheduled tasks.
  */
-public class ImportBsonService {
-    static private final Logger logger = LoggerFactory.getLogger(ImportBsonService.class);
-    static private ImportBsonService instance = null;
+public class ImportExportBsonService {
+    static private final Logger logger = LoggerFactory.getLogger(ImportExportBsonService.class);
+    static private ImportExportBsonService instance = null;
     private Map<Integer, ImportQuery> importTasks = new ConcurrentHashMap<>();
+    private Map<Integer, ExportQuery> exportTasks = new ConcurrentHashMap<>();
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
     private FileStorageService fileStorageService = null;
     private final ScheduledExecutorService periodicHandleExecutor = new ScheduledThreadPoolExecutor(1);
     private final ScheduledExecutorService periodicStartExecutor = new ScheduledThreadPoolExecutor(1);
 
-    private ImportBsonService() {
+    private ImportExportBsonService() {
     }
 
-    public static ImportBsonService getInstance() {
+    public static ImportExportBsonService getInstance() {
         if (instance == null) {
-            instance = new ImportBsonService();
+            instance = new ImportExportBsonService();
         }
         return instance;
     }
@@ -50,6 +53,9 @@ public class ImportBsonService {
         this.fileStorageService = fileStorageService;
 
         this.periodicHandleExecutor.scheduleAtFixedRate(() -> {
+            for (int id : exportTasks.keySet()) {
+                handleExportTask(id);
+            }
             for (int id : importTasks.keySet()) {
                 handleImportTask(id);
             }
@@ -99,6 +105,18 @@ public class ImportBsonService {
         this.addImportTask(query.getId(), importQuery);
     }
 
+    public int startNewExportTask() throws Exception {
+        try {
+            int id = this.dbapiHandler.requestBsonExportID();
+            ExportQuery exportQuery = this.scanApiHandler.requestExportHttpTemplates();
+            this.addExportTask(id, exportQuery);
+            return id;
+        } catch (Exception e) {
+            logger.error("startNewExportTask: error exporting file",  e);
+            throw e;
+        }
+    }
+
     private void startAvailableTasksFromDbapi() {
         List<HttpTemplateImportNotification> notifications = this.dbapiHandler.getAvailableImportTasks();
         notifications.forEach(this::startNewImportTask);
@@ -106,6 +124,10 @@ public class ImportBsonService {
 
     private void addImportTask(int id, ImportQuery importQuery) {
         importTasks.put(id, importQuery);
+    }
+
+    private void addExportTask(int id, ExportQuery exportQuery) {
+        exportTasks.put(id, exportQuery);
     }
 
     /**
@@ -117,7 +139,7 @@ public class ImportBsonService {
      */
     private void handleImportTask(int id) {
         if (!importTasks.containsKey(id)) {
-            logger.debug("handleImportTask: uuid not found: " + id);
+            logger.debug("handleImportTask: uuid not found: {}", id);
             return;
         }
 
@@ -147,13 +169,44 @@ public class ImportBsonService {
         }
     }
 
+    private void handleExportTask(int id) {
+        if (!exportTasks.containsKey(id)) {
+            logger.debug("handleExportTask: uuid not found: {}", id);
+            return;
+        }
+
+        ExportQuery exportQuery = exportTasks.get(id);
+        if (ExportQueryStatus.IN_PROGRESS_STATUSES.contains(exportQuery.getStatus())) {
+            logger.debug("handleExportTask: export in progress: {}", exportQuery.getStatus());
+            ExportQuery updatedExportQuery = this.scanApiHandler.getExportQueryStatus(exportQuery);
+            if (updatedExportQuery != null) {
+                exportTasks.put(id, updatedExportQuery);
+                exportQuery = updatedExportQuery;
+            }
+        }
+
+        if (ExportQueryStatus.FINISHED_STATUSES.contains(exportQuery.getStatus())) {
+            logger.info("Export of file finished: {}", exportQuery.getStatus());
+            try {
+                this.scanApiHandler.downloadExportFile(exportQuery);
+                this.scanApiHandler.deleteExportFile(exportQuery);
+                // TODO: send the bson file to DB-API
+                this.dbapiHandler.uploadHttpTemplatesBsonFile(exportQuery);
+                this.fileStorageService.deleteFile(exportQuery.getFilename());
+                this.exportTasks.remove(id);
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                logger.error("handleExportTask: error downloading file: {}", exportQuery.getFilename(), e);
+            }
+        }
+    }
+
     /**
      * Update the status of an import task.
      *
      * @param uuid   The UUID of the import task.
      * @param status The new status of the import task.
      */
-    public void updateQueryStatus(UUID uuid, ImportQueryStatus status) {
+    public void updateImportQueryStatus(UUID uuid, ImportQueryStatus status) {
         Integer id = getImportTaskByUuid(uuid);
         if (id != null) {
             ImportQuery importQuery = importTasks.get(id);
@@ -161,6 +214,23 @@ public class ImportBsonService {
             handleImportTask(id);
         } else {
             logger.debug("updateQueryStatus: uuid not found: " + uuid);
+        }
+    }
+
+    /**
+     * Update the status of an export task.
+     *
+     * @param uuid   The UUID of the export task.
+     * @param status The new status of the export task.
+     */
+    public void updateExportQueryStatus(UUID uuid, ExportQueryStatus status) {
+        Integer id = getExportTaskByUuid(uuid);
+        if (id != null) {
+            ExportQuery exportQuery = exportTasks.get(id);
+            exportQuery.setStatus(status);
+            handleExportTask(id);
+        } else {
+            logger.debug("updateExportQueryStatus: uuid not found: " + uuid);
         }
     }
 
@@ -173,6 +243,21 @@ public class ImportBsonService {
     private Integer getImportTaskByUuid(UUID uuid) {
         for (int id : importTasks.keySet()) {
             if (importTasks.get(id).getId().equals(uuid)) {
+                return id;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the ID of an export task from its UUID.
+     *
+     * @param uuid The UUID of the export task.
+     * @return The ID of the export task, or null if the UUID is not found.
+     */
+    private Integer getExportTaskByUuid(UUID uuid) {
+        for (int id : exportTasks.keySet()) {
+            if (exportTasks.get(id).getId().equals(uuid)) {
                 return id;
             }
         }

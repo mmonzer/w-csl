@@ -30,6 +30,7 @@ public enum DbapiEndpoint {
     GET_ORGANIZATION_NAME(ORGANIZATIONS.getEndpoint() + "/get_organization_name_from_api_key"),
     GET_MQTT_TOPIC_PREFIX(ORGANIZATIONS.getEndpoint() + "/get_mqtt_topic_prefix"),
     DOWNLOAD_HTTP_TEMPLATES_BSON_FILE("/cpecve/download_http_template_bson_file/"),
+    UPLOAD_HTTP_TEMPLATES_BSON_FILE("/cpecve/upload_http_template_bson_file/"),
     FILE_ACTION_STATUS("/file_action_status"),
     FILE_ACTION_STATUS_DETAILS(FILE_ACTION_STATUS.getEndpoint() + "/%d"),
 //    FILE_ACTION_STATUS_AVAILABLE(FILE_ACTION_STATUS.getEndpoint() + "/available"),

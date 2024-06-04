@@ -1,0 +1,13 @@
+plugins{
+    id 'java'
+    id 'application'
+    id 'com.github.ben-manes.versions' version '0.51.0' //replaces the old versions of dependencies
+    id 'se.patrikerdes.use-latest-versions' version '0.2.18'
+}
+
+apply from : 'build.gradle'
+
+
+application {
+    mainClass = 'main.CSLIDSMainClient'
+}

@@ -2,10 +2,10 @@ bin/
 .idea/
 out/
 idslogs/
-cslconf/taps/
+app/src/main/resources/cslconf/taps/
 w_csl.iml
 W_CSL.iml
-runconfig/CSLConfigIDS.json
+app/src/main/resources/runconfig/CSLConfigIDS.json
 classes/
 w-csl.iml
 cacerts.jks

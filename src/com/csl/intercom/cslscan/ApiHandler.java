@@ -28,6 +28,7 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Constructor with no module name
+     *
      * @param url url of the service api
      */
     public ApiHandler(String url) {
@@ -36,8 +37,9 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * General constructor
+     *
      * @param nameModule nameof the module
-     * @param url url of the service api
+     * @param url        url of the service api
      */
     public ApiHandler(String nameModule, String url) {
         this.url = url;
@@ -46,7 +48,7 @@ public class ApiHandler implements AutoCloseable {
         try {
             httpClient.start();
         } catch (Exception e) {
-            logger.error("Could not start the http client for "+nameModule+" API.", e);
+            logger.error("Could not start the http client for " + nameModule + " API.", e);
         }
     }
 
@@ -84,36 +86,20 @@ public class ApiHandler implements AutoCloseable {
         request.method(method);
         try {
             switch (method) {
-                case GET:
-                    for (Map.Entry<String, Json> param : params.asJsonMap().entrySet()) {
-                        if (param.getValue().isString()) {
-                            request.param(param.getKey(), param.getValue().asString());
-                        } else {
-                            request.param(param.getKey(), param.getValue().toString());
-                        }
-                    }
-                    break;
                 case POST:
-                    request.content(new StringContentProvider(params.toString()), "application/json");
-                    break;
                 case PUT:
                     request.content(new StringContentProvider(params.toString()), "application/json");
                     break;
+                case GET:
                 case DELETE:
-                    for (Map.Entry<String, Json> param : params.asJsonMap().entrySet()) {
-                        if (param.getValue().isString()) {
-                            request.param(param.getKey(), param.getValue().asString());
-                        } else {
-                            request.param(param.getKey(), param.getValue().toString());
-                        }
-                    }
+                    addParamsToRequest(params, request);
                     break;
                 default:
                     throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());
             }
             ContentResponse response = request.send();
             if (response.getStatus() >= 400) {
-                return JsonApiResponse.error("Error while sending request to "+ moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
+                return JsonApiResponse.error("Error while sending request to " + moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
             }
             if (response.getContent().length > 0) {
                 if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
@@ -135,18 +121,38 @@ public class ApiHandler implements AutoCloseable {
             logger.error("Malformed json", e);
             res = JsonApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            if (!quiet) {logger.error("Error while sending request to "+ moduleName);}
+            if (!quiet) {
+                logger.error("Error while sending request to " + moduleName);
+            }
             if (e.getCause() instanceof ConnectException) {
-                res = JsonApiResponse.error("Connection error with "+ moduleName);
+                res = JsonApiResponse.error("Connection error with " + moduleName);
             }
         }
         return res;
     }
 
     /**
+     * Adds the parameters to the request
+     * @param params parameters to add
+     * @param request request to add parameters
+     */
+    private static void addParamsToRequest(Json params, Request request) {
+        if (params==null) { return ;}
+
+        for (Map.Entry<String, Json> param : params.asJsonMap().entrySet()) {
+            if (param.getValue().isString()) {
+                request.param(param.getKey(), param.getValue().asString());
+            } else {
+                request.param(param.getKey(), param.getValue().toString());
+            }
+        }
+    }
+
+    /**
      * Downloads a file from the given endpoint.
+     *
      * @param endpoint endpoint to fetch the file
-     * @param params parameters needed for the fetch
+     * @param params   parameters needed for the fetch
      * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
      * @throws Exception if it couldn't fetch the file from the module
      */
@@ -156,8 +162,9 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Downloads a file from the given endpoint.
+     *
      * @param endpoint endpoint to fetch the file
-     * @param body parameters needed for the fetch
+     * @param body     parameters needed for the fetch
      * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
      * @throws Exception if it couldn't fetch the file from the module
      */

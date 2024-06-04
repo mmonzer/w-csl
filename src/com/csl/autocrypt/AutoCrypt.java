@@ -54,21 +54,97 @@ public class AutoCrypt {
      * Send cmd to the module in method POST
      *
      * @param endpoint endpoint to connect
-     * @param body     boyd of the POST request
+     * @param body     body of the POST request
      * @return the {@link JsonApiResponse} returned by the manager
      */
-    public JsonApiResponse sendCmd(String endpoint, String body) {
-        return sendCmd(endpoint, Json.read(body));
+    public JsonApiResponse sendCmdPost(String endpoint, String body) {
+        return sendCmdPost(endpoint, Json.read(body));
     }
 
     /**
      * Send cmd to the module in method POST
      *
      * @param endpoint endpoint to connect
-     * @param body     boyd of the POST request
+     * @param body     body of the POST request
      * @return the {@link JsonApiResponse} returned by the manager
      */
-    public JsonApiResponse sendCmd(String endpoint, Json body) {
+    public JsonApiResponse sendCmdPost(String endpoint, Json body) {
         return apiHandler.sendRequestToApi(HttpMethod.POST, endpoint, body);
+    }
+    /**
+     * Send cmd to the module in method GET
+     *
+     * @param endpoint endpoint to connect
+     * @param params     params of the GET request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdGet(String endpoint, String params) {
+        return sendCmdGet(endpoint, Json.read(params));
+    }
+
+    /**
+     * Send cmd to the module in method GET
+     *
+     * @param endpoint endpoint to connect
+     * @param params     params of the GET request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdGet(String endpoint, Json params) {
+        return apiHandler.sendRequestToApi(HttpMethod.GET, endpoint,  params);
+    }
+
+    /**
+     * Send cmd to the module in method DELETE
+     *
+     * @param endpoint endpoint to connect
+     * @param params     params of the DELETE request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdDelete(String endpoint, String params) {
+        return sendCmdDelete(endpoint, Json.read(params));
+    }
+
+    /**
+     * Send cmd to the module in method DELETE
+     *
+     * @param endpoint endpoint to connect
+     * @param params     params of the DELETE request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdDelete(String endpoint, Json params) {
+        return apiHandler.sendRequestToApi(HttpMethod.DELETE, endpoint, params);
+    }
+
+    /**
+     * Send cmd to the module in method PUT
+     *
+     * @param endpoint endpoint to connect
+     * @param body     body of the PUT request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdPut(String endpoint, String body) {
+        return sendCmdPut(endpoint, Json.read(body));
+    }
+
+    /**
+     * Send cmd to the module in method PUT
+     *
+     * @param endpoint endpoint to connect
+     * @param body     body of the PUT request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdPut(String endpoint, Json body) {
+        return apiHandler.sendRequestToApi(HttpMethod.PUT, endpoint, body);
+    }
+
+    /**
+     * Send cmd to the module in method PUT
+     *
+     * @param endpoint endpoint to connect
+     * @param body     body of the PUT request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdPatch(String endpoint, Json body) {
+        return apiHandler.sendRequestToApi("PATCH", endpoint, body);
     }
 }

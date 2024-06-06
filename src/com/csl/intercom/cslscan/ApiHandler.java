@@ -7,6 +7,7 @@ import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
+import org.eclipse.jetty.client.util.MultiPartContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
@@ -65,7 +66,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendDelete(String endpoint, Json params) {
-        return sendRequestToApi(HttpMethod.DELETE, endpoint, params, null,false);
+        return sendRequestToApi(HttpMethod.DELETE, endpoint, params, null, false);
     }
 
     /**
@@ -76,7 +77,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendDelete(String endpoint, Json params, Json body) {
-        return sendRequestToApi(HttpMethod.DELETE, endpoint, params, body,false);
+        return sendRequestToApi(HttpMethod.DELETE, endpoint, params, body, false);
     }
 
     /**
@@ -87,14 +88,25 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendGet(String endpoint, Json params) {
-        return sendRequestToApi(HttpMethod.GET, endpoint, params,null, false);
+        return sendRequestToApi(HttpMethod.GET, endpoint, params, null, false);
     }
 
     /**
      * Send a HTTP POST request to the scanner.
      *
      * @param endpoint The endpoint on the API to use.
-     * @param body   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body     The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendPostFile(String endpoint, Json params, Json body) {
+        return sendRequestToApiContentType(HttpMethod.POST, endpoint, params, body, false, "multipart/form-data");
+    }
+
+    /**
+     * Send a HTTP POST request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param body     The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
     public JsonApiResponse sendPost(String endpoint, Json params, Json body) {
@@ -105,7 +117,7 @@ public class ApiHandler implements AutoCloseable {
      * Send a HTTP POST request to the scanner.
      *
      * @param endpoint The endpoint on the API to use.
-     * @param body   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body     The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
     public JsonApiResponse sendPost(String endpoint, Json body) {
@@ -116,7 +128,7 @@ public class ApiHandler implements AutoCloseable {
      * Send a HTTP PUT request to the scanner.
      *
      * @param endpoint The endpoint on the API to use.
-     * @param body   The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body     The body to send, if any (if not, should be an empty {@link Json} object, not null).
      * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
@@ -128,7 +140,7 @@ public class ApiHandler implements AutoCloseable {
      * Send a HTTP PUT request to the scanner.
      *
      * @param endpoint The endpoint on the API to use.
-     * @param body   The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body     The body to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
     public JsonApiResponse sendPut(String endpoint, Json body) {
@@ -215,10 +227,23 @@ public class ApiHandler implements AutoCloseable {
      * @param method   The HTTP method to use (GET, POST, PUT, ...)
      * @param endpoint The endpoint on the API to use.
      * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
-     * @param body   The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body     The body to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
     public JsonApiResponse sendRequestToApi(HttpMethod method, String endpoint, Json params, Json body, boolean quiet) {
+        return sendRequestToApiContentType(method, endpoint, params, body, quiet, "application/json");
+    }
+
+    /**
+     * Send an HTTP request to the scanner.
+     *
+     * @param method   The HTTP method to use (GET, POST, PUT, ...)
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body     The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendRequestToApiContentType(HttpMethod method, String endpoint, Json params, Json body, boolean quiet, String contentType) {
         JsonApiResponse res = JsonApiResponse.error(null);
         Request request;
         String URI = url + endpoint.replace(" ", "%20");
@@ -227,14 +252,24 @@ public class ApiHandler implements AutoCloseable {
         request.method(method);
         addParamsToRequest(params, request);
 
-
-        request.header("Content-Type", "application/json");
         try {
             switch (method) {
                 case POST:
                 case PUT:
                 case DELETE:
-                    if (body!=null) {request.content(new StringContentProvider(body.toString()), "application/json");}
+                    if (body != null) {
+                        if (contentType.equals("application/json")) {
+                            request.content(new StringContentProvider(body.toString()), "application/json");
+                        } else if (contentType.equals("multipart/form-data")) {
+                            MultiPartContentProvider multiPart = new MultiPartContentProvider();
+                            Map<String, Json> bodyMap = body.asJsonMap();
+                            for (Map.Entry<String, Json> e : body.asJsonMap().entrySet()) {
+                                multiPart.addFieldPart(e.getKey(), new StringContentProvider(e.getValue().toString()), null);
+                            }
+                            multiPart.close();
+                            request.content(multiPart);
+                        }
+                    }
                     break;
                 case GET:
                     break;
@@ -277,11 +312,14 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Adds the parameters to the request
-     * @param params parameters to add
+     *
+     * @param params  parameters to add
      * @param request request to add parameters
      */
     private static void addParamsToRequest(Json params, Request request) {
-        if (params==null) { return ;}
+        if (params == null) {
+            return;
+        }
 
         for (Map.Entry<String, Json> param : params.asJsonMap().entrySet()) {
             if (param.getValue().isString()) {

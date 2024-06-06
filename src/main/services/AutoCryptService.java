@@ -258,7 +258,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return JsonApiResponse.error("File was not correctly uploaded").toJson();
         }
 
-        return manager.sendCmdPost(
+        return manager.sendCmdPostFile(
                 AutoCryptEndpoints.ISSUER_URI_IMPORT,
                 body,
                 params

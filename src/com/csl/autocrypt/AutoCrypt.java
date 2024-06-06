@@ -103,6 +103,23 @@ public class AutoCrypt {
     }
 
     /**
+     * Send cmd to the module in method POST
+     *
+     * @param endpoint endpoint to connect
+     * @param body     body of the POST request
+     * @param params   params of the POST request
+     * @return the {@link JsonApiResponse} returned by the manager
+     */
+    public JsonApiResponse sendCmdPostFile(String endpoint, Json body, Json params) {
+        JsonApiResponse response =  apiHandler.sendPostFile(endpoint, params, body);
+        if (response.isSuccess()) {
+            return response;
+        } else {
+            return reformatAutoCryptError(response);
+        }
+    }
+
+    /**
      * Send cmd to the module in method GET
      *
      * @param endpoint endpoint to connect

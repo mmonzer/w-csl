@@ -277,7 +277,6 @@ public class ApiHttpServer {
             // Reformating
             Json params = query.get("params");
             if (params != null) {
-                query.delAt("params");
                 query.at("params", Json.read(params.asString()));
             }
             Json file = query.get("file");

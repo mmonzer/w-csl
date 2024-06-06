@@ -10,22 +10,26 @@ import org.jetbrains.annotations.NotNull;
  * API client of the module AutoCrypt
  */
 public class AutoCrypt {
-    private String ip;
-    private int port;
-    private ApiHandler apiHandler = null;
+    private String moduleIp;
+    private int modulePort;
+    private ApiHandler moduleApiHandler = null;
+    private String dbIp;
+    private int dbPort;
+    private String dbApikey;
+    private ApiHandler dbApiHandler = null;
 
     /**
      * Get the API port
      */
-    public int getPort() {
-        return port;
+    public int getModulePort() {
+        return modulePort;
     }
 
     /**
      * Get the API ip
      */
-    public String getIp() {
-        return ip;
+    public String getModuleIp() {
+        return moduleIp;
     }
 
     /**
@@ -33,8 +37,8 @@ public class AutoCrypt {
      *
      * @param newPort new port of the API
      */
-    public void setPort(int newPort) {
-        port = newPort;
+    public void setModulePort(int newPort) {
+        modulePort = newPort;
     }
 
     /**
@@ -42,15 +46,28 @@ public class AutoCrypt {
      *
      * @param newIp new ip of the API
      */
-    public void setIp(String newIp) {
-        ip = newIp;
+    public void setModuleIp(String newIp) {
+        moduleIp = newIp;
+    }
+
+    /**
+     * Set the new configuration for connecting the DB (port par default)
+     *
+     * @param ip ip of the DB
+     * @param apikey authentication key for DB
+     */
+    public void configureDbApiConnection(String ip, String apikey) {
+        this.dbIp = ip;
+        this.dbApikey = apikey;
     }
 
     /**
      * Reinit the handler point
      */
     public void reinitApiHandler() {
-        apiHandler = new ApiHandler("CSL-AutoCrypt", "http://" + ip + ":" + port);
+        moduleApiHandler = new ApiHandler("CSL-AutoCrypt", "http://" + moduleIp + ":" + modulePort);
+        dbApiHandler = new ApiHandler("DB-AutoCrypt", "https://" + dbIp + "/api");
+        dbApiHandler.setApiKey(this.dbApikey);
     }
 
     /**
@@ -77,7 +94,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdPost(String endpoint, Json body) {
-        JsonApiResponse response =  apiHandler.sendPost(endpoint, body);
+        JsonApiResponse response =  moduleApiHandler.sendPost(endpoint, body);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -94,7 +111,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdPost(String endpoint, Json body, Json params) {
-        JsonApiResponse response =  apiHandler.sendPost(endpoint, params, body);
+        JsonApiResponse response =  moduleApiHandler.sendPost(endpoint, params, body);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -111,7 +128,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdPostFile(String endpoint, Json body, Json params) {
-        JsonApiResponse response =  apiHandler.sendPostFile(endpoint, params, body);
+        JsonApiResponse response =  moduleApiHandler.sendPostFile(endpoint, params, body);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -138,7 +155,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdGet(String endpoint, Json params) {
-        JsonApiResponse response = apiHandler.sendGet(endpoint, params);
+        JsonApiResponse response = moduleApiHandler.sendGet(endpoint, params);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -165,7 +182,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdDelete(String endpoint, Json params) {
-        JsonApiResponse response =  apiHandler.sendDelete(endpoint, params);
+        JsonApiResponse response =  moduleApiHandler.sendDelete(endpoint, params);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -182,7 +199,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdDelete(String endpoint, Json body, Json params) {
-        JsonApiResponse response =  apiHandler.sendDelete(endpoint, params, body);
+        JsonApiResponse response =  moduleApiHandler.sendDelete(endpoint, params, body);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -210,7 +227,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdPut(String endpoint, Json body, Json params) {
-        JsonApiResponse response =  apiHandler.sendPut(endpoint, params, body);
+        JsonApiResponse response =  moduleApiHandler.sendPut(endpoint, params, body);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -226,7 +243,7 @@ public class AutoCrypt {
      * @return the {@link JsonApiResponse} returned by the manager
      */
     public JsonApiResponse sendCmdPut(String endpoint, Json body) {
-        JsonApiResponse response =  apiHandler.sendPut(endpoint, body);
+        JsonApiResponse response =  moduleApiHandler.sendPut(endpoint, body);
         if (response.isSuccess()) {
             return response;
         } else {
@@ -240,7 +257,19 @@ public class AutoCrypt {
      * @return if the http api is reachable
      */
     public boolean getStatus() {
-        return apiHandler.sendGet(
+        return moduleApiHandler.sendGet(
+                AutoCryptEndpoints.MISC_URI_IS_ALIVE,
+                Json.object()
+        ).isSuccess();
+    }
+
+    /**
+     * Verifies whether the http api is reachable or not
+     *
+     * @return if the http api is reachable
+     */
+    public boolean saveRoleToDb() {
+        return moduleApiHandler.sendGet(
                 AutoCryptEndpoints.MISC_URI_IS_ALIVE,
                 Json.object()
         ).isSuccess();

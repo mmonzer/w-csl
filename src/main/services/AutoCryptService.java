@@ -7,6 +7,7 @@ import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import main.services.endpoints.AutoCryptEndpoints;
 
 /**
@@ -44,8 +45,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     @Override
     public boolean init(Json config, String configFile) {
-        manager.setIp(config.at("ip").asString());
-        manager.setPort(config.at("port").asInteger());
+        manager.setModuleIp(config.at("ip").asString());
+        manager.setModulePort(config.at("port").asInteger());
+        Json globalConfig = config.get("global");
+        manager.configureDbApiConnection(JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost"),
+                JsonUtil.getStringFromJson(globalConfig, "api_key", ""));
         manager.reinitApiHandler();
 
 
@@ -110,7 +114,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("ip");
         }
 
-        manager.setIp(body.get("ip").asString());
+        manager.setModuleIp(body.get("ip").asString());
         manager.reinitApiHandler();
 
         return JsonApiResponse.success().toJson();
@@ -123,7 +127,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getIp(Json body) {
         Json response = Json.object();
-        response.at("ip", manager.getIp());
+        response.at("ip", manager.getModuleIp());
         return JsonApiResponse.result(response).toJson();
     }
 
@@ -137,7 +141,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("port");
         }
 
-        manager.setPort(body.get("port").asInteger());
+        manager.setModulePort(body.get("port").asInteger());
         manager.reinitApiHandler();
 
         return JsonApiResponse.success().toJson();
@@ -150,7 +154,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getPort(Json body) {
         Json response = Json.object();
-        response.at("port", manager.getPort());
+        response.at("port", manager.getModulePort());
         return JsonApiResponse.result(response).toJson();
     }
 

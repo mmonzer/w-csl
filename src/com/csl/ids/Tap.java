@@ -48,7 +48,7 @@ public class Tap {
      */
     public Json getFile(String endpoint, Json body) {
         try {
-            return apiHandler.downloadFile(endpoint, body);
+            return apiHandler.downloadFile(endpoint, body).toJson();
         } catch (Exception ignored) {
             return JsonApiResponse.error("Could not fetch the file in module").toJson();
         }

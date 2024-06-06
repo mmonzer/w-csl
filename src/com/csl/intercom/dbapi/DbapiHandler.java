@@ -306,7 +306,6 @@ public class DbapiHandler implements AutoCloseable {
         return devices;
     }
 
-
     /**
      * Get the connections from DB-API that were changed since an optional date.
      *
@@ -326,7 +325,6 @@ public class DbapiHandler implements AutoCloseable {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Get the deleted devices from DB-API that were changed since an optional date.

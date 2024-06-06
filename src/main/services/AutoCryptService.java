@@ -435,9 +435,16 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json getCertificates(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (body.has("path") && body.get("path").isString()) {
+            params.at("path", body.get("path").asString());
+            body.delAt("path");
+        }
+
         return manager.sendCmdGet(
                 AutoCryptEndpoints.CERT_URI,
-                body
+                params
         ).toJson();
     }
 
@@ -530,10 +537,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
     public Json generateIntermediateCA(Json body) {
         Json params = Json.object();
         // check params
-        if (body.has("path") && body.get("path").isString()) {
-            params.at("path", body.get("path"));
-            body.delAt("path");
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
         }
+        params.at("path", body.get("path"));
+        body.delAt("path");
         // check body
         if (!body.has("type") || !body.get("type").isString()) {
             return errorVariableNotFound("type");

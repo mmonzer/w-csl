@@ -179,14 +179,16 @@ public class ApiHttpServer {
 
             exchange.setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, MULTI_PART_CONFIG);
 
-            String body = this.getContent(exchange);
+            String rawBody = this.getContent(exchange);
             if (ApiHttpServer.this.debug) {
-                System.out.println("Body:\n" + body);
+                System.out.println("Body:\n" + rawBody);
             }
 
+            String body="";
             if (exchange.getRequestHeaders().containsKey("Content-Type")) {
-                String boundary = exchange.getRequestHeaders().get("Content-Type").get(0).split("boundary=")[1];
-                body = parseMultipart(body, boundary).toString();
+                // String boundary = exchange.getRequestHeaders().get("Content-Type").get(0).split("boundary=")[1];
+                String boundary = rawBody.split("\n")[0].substring(2);
+                body = parseMultipart(rawBody, boundary).toString();
             }
 
 
@@ -281,6 +283,7 @@ public class ApiHttpServer {
             Json file = query.get("file");
             if (file != null) {
                 Json par = query.get("params");
+                if (par==null) { par=Json.object();}
                 par.at("file", file);
                 query.at("params", par);
                 query.delAt("file");

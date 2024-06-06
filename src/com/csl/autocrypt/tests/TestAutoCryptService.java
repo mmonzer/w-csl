@@ -22,20 +22,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestAutoCryptService {
 
     // API module
-    private static final int PORT_MODULE = 8989; // Change this to your actual base URL
-    private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
-    private static final String ENDPOINT_MODULE = "/api";
+    protected static final int PORT_MODULE = 8082; // Change this to your actual base URL
+    protected static final String IP_MODULE = "localhost"; // Change this to your actual base URL
+    protected static final String BASE_URL_MODULE = "http://"+IP_MODULE+":" + PORT_MODULE; // Change this to your actual base URL
+    protected static final String ENDPOINT_MODULE = "/api";
     // API client
-    private static final int PORT_CLIENT = 9900; // Change this to your actual base URL
-    private static final String BASE_URL_CLIENT = "http://localhost:" + PORT_CLIENT; // Change this to your actual base URL
-    private static final String ENDPOINT_CLIENT = "/autocrypt";
+    protected static final int PORT_CLIENT = 9900; // Change this to your actual base URL
+    protected static final String BASE_URL_CLIENT = "http://localhost:" + PORT_CLIENT; // Change this to your actual base URL
+    protected static final String ENDPOINT_CLIENT = "/autocrypt";
 
-    private WireMockServer wireMockServer;
+    protected WireMockServer wireMockServer;
 
     @BeforeEach
     public void setUp() {
         wireMockServer = new WireMockServer(PORT_MODULE);
-        WireMock.configureFor("localhost", PORT_MODULE);
+        WireMock.configureFor(IP_MODULE, PORT_MODULE);
         wireMockServer.start();
     }
 
@@ -87,7 +88,8 @@ public class TestAutoCryptService {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(returnedOutput));
+                        .withBody(returnedOutput)
+                        );
         stubFor(x);
 
         // Define request to th mocked service

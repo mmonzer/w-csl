@@ -148,7 +148,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
     public static final String CERT_URI = "/api/certificate";
     public static final String CERT_URI_ = CERT_URI+"/";
     public static final String CERT_URI_ISSUE = CERT_URI_+"issue";
-    public static final String CERT_URI_REVOKE = CERT_URI_+"revoke";
+    public static final String CERT_URI_REVOKE_ = CERT_URI_+"revoke/";
 
     public static final String CA_URI = "/api/ca";
     public static final String CA_URI_GENERATE_INTER = CA_URI+"/generate-intermediate";

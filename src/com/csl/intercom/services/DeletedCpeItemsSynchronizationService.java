@@ -1,7 +1,7 @@
 package com.csl.intercom.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.util.Pair;
 import org.slf4j.Logger;
@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 public class DeletedCpeItemsSynchronizationService extends PaginatedSynchronizationService<Pair<String, OffsetDateTime>> {
-    private DbapiHandler dbapiHandler = new DbapiHandler();
+    private DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private Logger logger = LoggerFactory.getLogger(DeletedCpeItemsSynchronizationService.class);
 

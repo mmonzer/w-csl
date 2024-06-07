@@ -1,5 +1,6 @@
 package com.csl.intercom.cslscan;
 
+import com.csl.autocrypt.ICleaner;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
@@ -32,6 +33,7 @@ public class ApiHandler implements AutoCloseable {
     private final String url;
     private final HashMap<HttpHeader, String> headers = new HashMap<>();
     private final HttpClient httpClient = new HttpClient();
+    private ICleaner outputCleaner = (e)->e;
 
     /**
      * Constructor with no module name
@@ -111,7 +113,7 @@ public class ApiHandler implements AutoCloseable {
                 res = JsonApiResponse.error("Connection error with " + moduleName);
             }
         }
-        return res;
+        return outputCleaner.clean(res);
     }
 
     /**
@@ -133,6 +135,8 @@ public class ApiHandler implements AutoCloseable {
         }
         return request;
     }
+
+    // region -- static methods
 
     /**
      * Creates the request
@@ -251,6 +255,8 @@ public class ApiHandler implements AutoCloseable {
         return parsedResponse;
     }
 
+    // endregion -- static methods
+
     /**
      * Downloads a file from the given endpoint.
      *
@@ -340,6 +346,8 @@ public class ApiHandler implements AutoCloseable {
     }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+    //* TODO . doPost instead sendPost
 
     /**
      * Send a DELETE HTTP request to the scanner.
@@ -507,5 +515,13 @@ public class ApiHandler implements AutoCloseable {
             }
         }
         return res;
+    }
+
+    /**
+     * Add callback for cleaning output
+     * @param cleaner  callbacks that cleans output.
+     */
+    public void addCleaner(ICleaner cleaner) {
+        this.outputCleaner = cleaner;
     }
 }

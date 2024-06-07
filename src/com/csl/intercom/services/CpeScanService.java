@@ -2,7 +2,7 @@ package com.csl.intercom.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanConstants;
-import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.annotations.PostInit;
 import com.csl.intercom.services.exceptions.CpeScanException;
@@ -33,7 +33,7 @@ public class CpeScanService {
     // The list of scans that have been modified since the last time they were handled --> need to be handled.
     private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private DbapiHandler dbapiHandler = new DbapiHandler();
+    private DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
     private DataSynchronizationService cpeItemsSynchronizationService;
     private DataSynchronizationService microsoftKbSynchronizationService;
     private ScheduledExecutorService scansHandlingTask = null;

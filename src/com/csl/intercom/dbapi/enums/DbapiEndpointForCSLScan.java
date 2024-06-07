@@ -3,7 +3,7 @@ package com.csl.intercom.dbapi.enums;
 /**
  * The various endpoints used in DB-API.
  */
-public enum DbapiEndpoint {
+public enum DbapiEndpointForCSLScan {
     EVENTS("/events"),
     EVENTS_CANCEL_ALL(EVENTS.getEndpoint() + "/set_all_active_cpe_scan_event_to_discarded"),
     CPE_ITEMS_LAST_DATE(EVENTS.getEndpoint() + "/last_discovery_date"),
@@ -33,7 +33,7 @@ public enum DbapiEndpoint {
 
     private final String endpoint;
 
-    DbapiEndpoint(String endpoint) {
+    DbapiEndpointForCSLScan(String endpoint) {
         this.endpoint = endpoint;
     }
 

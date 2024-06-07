@@ -1,17 +1,14 @@
 package com.csl.intercom.broker;
 
-import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import main.services.JsonApiResponse;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -67,7 +64,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         this.apiKey = globalConfig.get("api_key").asString();
 
         // Get the organization name, or "None" if it doesn't exist.
-        try (DbapiHandler dbapiHandler = new DbapiHandler(config)) {
+        try (DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan(config)) {
             this.organization = dbapiHandler.getMqttTopicPrefix();
         } catch (Exception e) {
             this.organization = "None";

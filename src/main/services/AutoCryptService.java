@@ -33,7 +33,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public AutoCryptService(String name, String description, String configFileSectionName) {
         super(name, description, configFileSectionName);
-        manager = new AutoCrypt();
+        manager = new AutoCrypt(name);
     }
 
     /**
@@ -52,24 +52,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
                 JsonUtil.getStringFromJson(globalConfig, "api_key", ""));
         manager.reinitApiHandler();
 
-
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
-
-        addCmd("command_to_change",
-                new IJsonCmd() {
-                    @Override
-                    public Json exec(Json body) {
-                        Json payload = Json.object();
-                        payload.at("cmd", "command_to_change");
-                        payload.at("body", body);
-                        return manager.sendCmdPost("/config", payload.toString()).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Dummy api point for module")
-                        .setParam("No body", "", IJsonCmdHelp.JSON)
-                        .setResult("Dummy result", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
 
 //        // TODO: needs to add persistence of changes
 //        // Connexion
@@ -164,10 +147,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json getIssuers(Json body) {
-        return manager.sendCmdGet(
-                AutoCryptEndpoints.ISSUER_URI,
-                body
-        ).toJson();
+        return manager.getMethods().getIssuers(body).toJson();
     }
 
     /**
@@ -186,14 +166,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.sendCmdGet(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
-                body
-        ).toJson();
+        return manager.getMethods().getIssuerInfo(issuerRef, body).toJson();
     }
 
     /**
-     * Method that updates the information of the given issuer
+     * Updates the information of the given issuer
      *
      * @param body parameters with the path and the issuer id
      */
@@ -211,15 +188,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.sendCmdPut(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().updateIssuerInfo(issuerRef, body, params).toJson();
     }
 
     /**
-     * Method that deletes the given issuer
+     * Deletes the given issuer
      *
      * @param body parameters with the path and the issuer id
      */
@@ -237,15 +210,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.sendCmdDelete(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
+        return manager.getMethods().deleteIssuer(issuerRef,
                 body,
                 params
         ).toJson();
     }
 
     /**
-     * Method that imports a new certificate
+     * Imports a new certificate
      *
      * @param body parameters with the path and the file
      */
@@ -262,11 +234,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return JsonApiResponse.error("File was not correctly uploaded").toJson();
         }
 
-        return manager.sendCmdPostFile(
-                AutoCryptEndpoints.ISSUER_URI_IMPORT,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().importCertificate(body, params).toJson();
     }
 
     /**
@@ -275,10 +243,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json getRoles(Json body) {
-        return manager.sendCmdGet(
-                AutoCryptEndpoints.ROLE_URI,
-                body
-        ).toJson();
+        return manager.getMethods().getRoles(body).toJson();
     }
 
     /**
@@ -299,8 +264,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("name");
         }
 
-        return manager.sendCmdPost(
-                AutoCryptEndpoints.ROLE_URI,
+        return manager.getMethods().createRole(
                 body,
                 params
         ).toJson();
@@ -324,10 +288,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String name = body.get("name").asString();
         body.delAt("name");
 
-        return manager.sendCmdGet(
-                AutoCryptEndpoints.ROLE_URI_ + name,
-                params
-        ).toJson();
+        return manager.getMethods().getRole(name, params).toJson();
     }
 
     /**
@@ -349,11 +310,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String name = body.get("name").asString();
         body.delAt("name");
 
-        return manager.sendCmdDelete(
-                AutoCryptEndpoints.ROLE_URI_ + name,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().deleteRole(name, body, params).toJson();
     }
 
     /**
@@ -375,11 +332,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String name = body.get("name").asString();
         body.delAt("name");
 
-        return manager.sendCmdPut(
-                AutoCryptEndpoints.ROLE_URI_ + name,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().updateRole(name, body, params).toJson();
     }
 
     /**
@@ -401,8 +354,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         params.at("ocsp_servers", body.get("ocsp_servers"));
         body.delAt("ocsp_servers");
 
-        return manager.sendCmdPost(
-                AutoCryptEndpoints.MISC_URI_ACTIVATE_OCSP,
+        return manager.getMethods().activateOCSP(
                 body,
                 params
         ).toJson();
@@ -426,8 +378,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("role_name");
         }
 
-        return manager.sendCmdPost(
-                AutoCryptEndpoints.CERT_URI_ISSUE,
+        return manager.getMethods().generateCertificate(
                 body,
                 params
         ).toJson();
@@ -446,10 +397,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             body.delAt("path");
         }
 
-        return manager.sendCmdGet(
-                AutoCryptEndpoints.CERT_URI,
-                params
-        ).toJson();
+        return manager.getMethods().getCertificates(params).toJson();
     }
 
     /**
@@ -471,10 +419,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String serialNumber = body.get("serial_number").asString();
         body.delAt("serial_number");
 
-        return manager.sendCmdGet(
-                AutoCryptEndpoints.CERT_URI_ + serialNumber,
-                params
-        ).toJson();
+        return manager.getMethods().getCertificateInfo(serialNumber, params).toJson();
     }
 
     /**
@@ -496,10 +441,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String serialNumber = body.get("serial_number").asString();
         body.delAt("serial_number");
 
-        return manager.sendCmdDelete(
-                AutoCryptEndpoints.CERT_URI_REVOKE + "/" + serialNumber,
-                params
-        ).toJson();
+        return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
     }
 
     /**
@@ -526,8 +468,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             body.delAt("path");
         }
 
-        return manager.sendCmdPost(
-                AutoCryptEndpoints.CA_URI_GENERATE_ROOT,
+        return manager.getMethods().generateRootCA(
                 body,
                 params
         ).toJson();
@@ -557,11 +498,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("ttl");
         }
 
-        return manager.sendCmdPost(
-                AutoCryptEndpoints.CA_URI_GENERATE_INTER,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().generateIntermediateCA(body, params).toJson();
     }
 
     /**
@@ -571,9 +508,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     @Override
     public Json getStatus() {
-        Json status = Json.object();
-        status.set("is_http_api_reachable", manager.getStatus());
-        return status;
+        return manager.getMethods().getStatus();
     }
 
     /**
@@ -584,5 +519,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getStatus(Json body) {
         return JsonApiResponse.result(getStatus()).toJson();
+    }
+
+    /**
+     * Returns the manager of the module
+     *
+     * @return manager of the module
+     */
+    public AutoCrypt getManager() {
+        return manager;
     }
 }

@@ -6,7 +6,7 @@ import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
-import com.csl.intercom.dbapi.enums.DbapiEndpoint;
+import com.csl.intercom.dbapi.enums.DbapiEndpointForCSLScan;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.Pair;
@@ -36,18 +36,18 @@ import java.util.stream.Collectors;
  * Provides an interface for retrieving the devices, connections and so on,
  * and to send information to it (CPE Items, a Scan's status, ...).
  */
-public class DbapiHandler implements AutoCloseable {
+public class DbapiHandlerForCSLScan implements AutoCloseable {
     private String dbapiUrl;
     private String apiKey;
     private HttpClient dbapiHttpClient = new HttpClient();
     private final int maxPageSize = 1000;
-    private static final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(DbapiHandlerForCSLScan.class);
 
-    public DbapiHandler() {
+    public DbapiHandlerForCSLScan() {
         this(CSLContext.instance.getConfig());
     }
 
-    public DbapiHandler(Json config) {
+    public DbapiHandlerForCSLScan(Json config) {
         Json globalConfig = config.get("global");
         dbapiUrl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "https://" : "http://";
         dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
@@ -75,7 +75,7 @@ public class DbapiHandler implements AutoCloseable {
      */
     private void deleteCpeItemsFromDbapi(List<CpeItem> deletedItems) {
         Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(CpeItem::getMongoEntityId).toArray()));
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DELETE_CPE_ITEMS.getEndpoint())
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_CPE_ITEMS.getEndpoint())
                 .header(HttpHeader.CONTENT_TYPE, "application/json")
                 .content(new StringContentProvider(contents.toString()));
         try {
@@ -107,7 +107,7 @@ public class DbapiHandler implements AutoCloseable {
 
     private void deleteMicrosoftKbsFromDbapi(List<MicrosoftKB> deletedItems) {
         Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(MicrosoftKB::getMongoEntityId).toArray()));
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DELETE_MICROSOFT_KBS.getEndpoint())
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_MICROSOFT_KBS.getEndpoint())
                 .header(HttpHeader.CONTENT_TYPE, "application/json")
                 .content(new StringContentProvider(contents.toString()));
         try {
@@ -160,7 +160,7 @@ public class DbapiHandler implements AutoCloseable {
                 "discovered_cpe_dict_arr", cpeItemsArray,
                 "has_more", hasMore
         );
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_CPE_ITEMS)
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_CPE_ITEMS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
         if (response.getStatus() != 200) {
@@ -215,7 +215,7 @@ public class DbapiHandler implements AutoCloseable {
                 "event_id", scan.getDbapiId(),
                 "discovered_kb_dict_arr", KBsArray
         );
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.CREATE_MICROSOFT_KBS)
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_MICROSOFT_KBS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
         ContentResponse response = request.send();
         if (response.getStatus() != 200) {
@@ -247,7 +247,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
      */
     public OffsetDateTime getCpeItemsLastUpdateDate() throws Exception {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CPE_ITEMS_LAST_DATE);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CPE_ITEMS_LAST_DATE);
         ContentResponse response = request.send();
         Json responseContents = Json.read(response.getContentAsString());
         String lastUpdatedDateString;
@@ -258,7 +258,7 @@ public class DbapiHandler implements AutoCloseable {
         } else {
             lastUpdatedDateString = responseContents.toString();
         }
-        return DbapiUtils.dbapiDateToLocal(lastUpdatedDateString);
+        return DbapiUtilsForCSLScan.dbapiDateToLocal(lastUpdatedDateString);
     }
 
     /**
@@ -270,7 +270,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws TimeoutException     If the connection with DB-API times out.
      */
     public OffsetDateTime getMicrosoftKbsLastUpdateDate() throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.MICROSOFT_KB_LAST_DATE);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.MICROSOFT_KB_LAST_DATE);
         ContentResponse response = request.send();
         Json responseContents = Json.read(response.getContentAsString());
         String lastUpdatedDateString;
@@ -281,7 +281,7 @@ public class DbapiHandler implements AutoCloseable {
         } else {
             lastUpdatedDateString = responseContents.toString();
         }
-        return DbapiUtils.dbapiDateToLocal(lastUpdatedDateString);
+        return DbapiUtilsForCSLScan.dbapiDateToLocal(lastUpdatedDateString);
     }
 
     /**
@@ -292,8 +292,8 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the fetching failed.
      */
     public List<Device> getDevicesSince(OffsetDateTime date) throws Exception {
-        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DEVICES);
         if (dateUtc != null) {
             request.param("updated_at__gt", dateUtc.toString());
         }
@@ -314,8 +314,8 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the fetching failed.
      */
     public List<Connection> getConnectionsSince(OffsetDateTime date, List<ConnectionProtocol> protocols) throws Exception {
-        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS);
         if (dateUtc != null) {
             request.param("updated_at__gt", dateUtc.toString());
         }
@@ -334,12 +334,12 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the fetching failed.
      */
     public List<Pair<String, OffsetDateTime>> getDeletedDevicesSince(OffsetDateTime date) throws Exception {
-        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedDevices = new ArrayList<>();
         boolean hasMore = true;
         int offset = 0;
         while (hasMore) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DELETED_DEVICES)
+            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DELETED_DEVICES)
                     .param("offset", String.valueOf(offset))
                     .param("limit", String.valueOf(this.maxPageSize));
             if (dateUtc != null) {
@@ -348,7 +348,7 @@ public class DbapiHandler implements AutoCloseable {
             Json response = Json.read(request.send().getContentAsString());
             for (Json deletedDevice : response.get("results").asJsonList()) {
                 String uuid = deletedDevice.get("object_id").asString();
-                OffsetDateTime deletedDate = DbapiUtils.dbapiDateToLocal(deletedDevice.get("deleted_at").asString());
+                OffsetDateTime deletedDate = DbapiUtilsForCSLScan.dbapiDateToLocal(deletedDevice.get("deleted_at").asString());
                 deletedDevices.add(new Pair<>(uuid, deletedDate));
             }
             hasMore = !response.get("next").isNull();
@@ -365,10 +365,10 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the fetching failed.
      */
     public List<Pair<String, OffsetDateTime>> getDeletedCpeItemsSince(OffsetDateTime date, int limit, int offset) throws Exception {
-        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedCpeItems = new ArrayList<>();
 
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_CPE_ITEMS);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_DELETED_CPE_ITEMS);
         if (offset > 0) {
             request.param("offset", String.valueOf(offset));
         }
@@ -391,7 +391,7 @@ public class DbapiHandler implements AutoCloseable {
 //            hasMore = deletedCpeItemsPageJson.size() == this.maxPageSize;
 
         deletedCpeItemsPageJson.stream()
-                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtilsForCSLScan.dbapiDateToLocal(json.get("deleted_at").asString())))
                 .forEach(deletedCpeItems::add);
 
         return deletedCpeItems;
@@ -405,10 +405,10 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the fetching failed.
      */
     public List<Pair<String, OffsetDateTime>> getDeletedMicrosoftKbsSince(OffsetDateTime date, int limit, int offset) throws Exception {
-        OffsetDateTime dateUtc = DbapiUtils.localDateToDbapi(date);
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedMicrosoftKbs = new ArrayList<>();
 
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_DELETED_MICROSOFT_KBS);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_DELETED_MICROSOFT_KBS);
         if (offset > 0) {
             request.param("offset", String.valueOf(offset));
         }
@@ -430,7 +430,7 @@ public class DbapiHandler implements AutoCloseable {
         // If the list is smaller than the max page size, there are no more pages
 
         deletedMicrosoftKbsPageJson.stream()
-                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtils.dbapiDateToLocal(json.get("deleted_at").asString())))
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtilsForCSLScan.dbapiDateToLocal(json.get("deleted_at").asString())))
                 .forEach(deletedMicrosoftKbs::add);
 
         return deletedMicrosoftKbs;
@@ -450,7 +450,7 @@ public class DbapiHandler implements AutoCloseable {
         if (uuids == null || uuids.isEmpty()) {
             return devices;
         }
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DEVICES);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DEVICES);
         request.param("uuid", String.join(",", uuids));
         Json response = Json.read(request.send().getContentAsString());
         response.asJsonList().stream()
@@ -472,7 +472,7 @@ public class DbapiHandler implements AutoCloseable {
     public List<Connection> fetchConnections(List<Integer> ids, List<ConnectionProtocol> protocols) throws ExecutionException, InterruptedException, TimeoutException {
         List<Connection> connections = new ArrayList<>();
         for (int id : ids) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.CONNECTIONS);
+            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS);
             request.param("id", String.valueOf(id));
             Json response = Json.read(request.send().getContentAsString());
             Connection connection;
@@ -497,7 +497,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws TimeoutException     If the connection with DB-API times out.
      */
     public List<ConnectionProtocol> fetchDiscoveryProtocols() throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS);
         return Json.read(request.send().getContentAsString()).asJsonList().stream()
                 .map(ConnectionProtocol::fromJson)
                 .collect(Collectors.toList());
@@ -510,7 +510,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception If the creation failed.
      */
     public void createDiscoveryProtocol(EntityHttpConnection entityHttpConnection) throws Exception {
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DISCOVERY_PROTOCOLS);
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS);
         Json requestContents = Json.object(
                 ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
                 ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
@@ -538,7 +538,7 @@ public class DbapiHandler implements AutoCloseable {
             createDiscoveryProtocol(entityHttpConnection);
         } else {
             int protocolId = protocol.getId();
-            Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
+            Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
             Json requestContents = Json.object(
                     ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
                     ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
@@ -564,7 +564,7 @@ public class DbapiHandler implements AutoCloseable {
         ConnectionProtocol protocol = getDiscoveryProtocolByTemplateId(uuid);
         if (protocol != null) {
             int protocolId = protocol.getId();
-            Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
+            Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
             ContentResponse response = request.send();
             if (response.getStatus() >= 400) {
                 throw new Exception("Error deleting discovery protocol: got unexpected status " + response.getStatus());
@@ -573,7 +573,7 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     public ConnectionProtocol getDiscoveryProtocolByTemplateId(String id) {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
         request.param("connection_template_id", id);
         try {
             Json response = Json.read(request.send().getContentAsString());
@@ -595,8 +595,8 @@ public class DbapiHandler implements AutoCloseable {
      * @return The id attributed by DB-API to the scan object.
      */
     public int notifyScanStarted(OffsetDateTime startDate) {
-        Json params = Json.object("started_at", DbapiUtils.localDateToDbapi(startDate).toString());
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.SCAN_EVENT_CREATION)
+        Json params = Json.object("started_at", DbapiUtilsForCSLScan.localDateToDbapi(startDate).toString());
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.SCAN_EVENT_CREATION)
                 .header(HttpHeader.CONTENT_TYPE, "application/json")
                 .content(new StringContentProvider(params.toString()));
         try {
@@ -630,8 +630,8 @@ public class DbapiHandler implements AutoCloseable {
         if (!scan.isFinished()) return;
         if (scan.getDbapiId() <= 0) return;
 
-        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
-        Json params = Json.object("ended_at", DbapiUtils.localDateToDbapi(scan.getEndDate()).toString());
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
+        Json params = Json.object("ended_at", DbapiUtilsForCSLScan.localDateToDbapi(scan.getEndDate()).toString());
         FinishedScanStatus status;
         if (scan.isSuccess()) {
             status = FinishedScanStatus.FINISHED_SUCCESS;
@@ -662,7 +662,7 @@ public class DbapiHandler implements AutoCloseable {
      * @throws Exception            If received an unexpected HTTP status code (i.e. != 200) or if the JSON was malformed.
      */
     public void notifySynchronisationEnded(ScanEntity scan) throws Exception {
-        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
         Json params = Json.object(
                 "is_synchronization_ended", true
         );
@@ -678,7 +678,7 @@ public class DbapiHandler implements AutoCloseable {
      * Send a request to DB-API to inform it the current scan provided no new CPE Item.
      */
     public void notifyNoNewCpe() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.NO_NEW_CPE_ITEM);
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.NO_NEW_CPE_ITEM);
         try {
             request.send();
         } catch (Exception e) {
@@ -690,7 +690,7 @@ public class DbapiHandler implements AutoCloseable {
      * Cancel all scan events in DB-API.
      */
     public void cancelAllScans() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.EVENTS_CANCEL_ALL);
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EVENTS_CANCEL_ALL);
         try {
             request.send();
         } catch (Exception e) {
@@ -704,7 +704,7 @@ public class DbapiHandler implements AutoCloseable {
      * @return The organization name. Defaults to "None" if the request failed.
      */
     public String getOrganizationName() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_ORGANIZATION_NAME);
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_ORGANIZATION_NAME);
         try {
             ContentResponse response = request.send();
             return response.getContentAsString();
@@ -715,7 +715,7 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     public String getMqttTopicPrefix() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpoint.GET_MQTT_TOPIC_PREFIX);
+        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_MQTT_TOPIC_PREFIX);
         try {
             ContentResponse response = request.send();
             String result = response.getContentAsString();
@@ -752,7 +752,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param endpoint The endpoint to contact in DB-API.
      * @return The crafted {@link Request}.
      */
-    private Request createDbapiRequest(HttpMethod method, DbapiEndpoint endpoint) {
+    private Request createDbapiRequest(HttpMethod method, DbapiEndpointForCSLScan endpoint) {
         return createDbapiRequest(method, endpoint.getEndpoint());
     }
 
@@ -764,7 +764,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param id       Additional argument.
      * @return The crafted {@link Request}, pointing to the endpoint <code>endpoint/id</code>.
      */
-    private Request createDbapiRequest(HttpMethod method, DbapiEndpoint endpoint, String id) {
+    private Request createDbapiRequest(HttpMethod method, DbapiEndpointForCSLScan endpoint, String id) {
         return createDbapiRequest(method, endpoint.getEndpoint() + "/" + id);
     }
 
@@ -789,7 +789,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param endpoint The endpoint to contact in DB-API.
      * @return The crafted {@link Request}.
      */
-    private Request createDbapiPatchRequest(DbapiEndpoint endpoint) {
+    private Request createDbapiPatchRequest(DbapiEndpointForCSLScan endpoint) {
         return createDbapiPatchRequest(endpoint.getEndpoint());
     }
 
@@ -801,7 +801,7 @@ public class DbapiHandler implements AutoCloseable {
      * @param id       Additional argument.
      * @return The crafted {@link Request}, pointing to the endpoint <code>endpoint/id</code>.
      */
-    private Request createDbapiPatchRequest(DbapiEndpoint endpoint, String id) {
+    private Request createDbapiPatchRequest(DbapiEndpointForCSLScan endpoint, String id) {
         return createDbapiPatchRequest(endpoint.getEndpoint() + '/' + id);
     }
 
@@ -909,12 +909,12 @@ public class DbapiHandler implements AutoCloseable {
         List<String> devicesToGet = new ArrayList<>();
 
         for (int connectionId : connectionUuidsInDevices) {
-            if (DbapiUtils.getConnectionById(connections, connectionId) == null) {
+            if (DbapiUtilsForCSLScan.getConnectionById(connections, connectionId) == null) {
                 connectionsToGet.add(connectionId);
             }
         }
         for (String deviceId : deviceUuidsInConnections) {
-            if (DbapiUtils.getDeviceById(devices, deviceId) == null) {
+            if (DbapiUtilsForCSLScan.getDeviceById(devices, deviceId) == null) {
                 devicesToGet.add(deviceId);
             }
         }

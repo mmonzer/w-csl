@@ -2,20 +2,18 @@ package com.csl.intercom.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.exceptions.SynchronizationException;
-import com.csl.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 public class CpeItemsSynchronizationService extends PaginatedSynchronizationService<CpeItem> {
-    private final DbapiHandler dbapiHandler = new DbapiHandler();
+    private final DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
     private final ScanApiHandler scanApiHandler = new ScanApiHandler();
     private final CpeScanService cpeScanService;
     private final Logger logger = LoggerFactory.getLogger(CpeItemsSynchronizationService.class);

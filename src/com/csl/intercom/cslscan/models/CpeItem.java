@@ -1,7 +1,7 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.ScanUtils;
-import com.csl.intercom.dbapi.DbapiUtils;
+import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.csl.interfaces.models.IDbapiSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -135,7 +135,7 @@ public class CpeItem implements IDbapiSerializable {
     public Json serializeForDbapi() {
         Json serialization = Json.object(
                 "cpe_data", this.cpeData,
-                "discovered_date", DbapiUtils.localDateToDbapi(this.discoveredDate).toString(),
+                "discovered_date", DbapiUtilsForCSLScan.localDateToDbapi(this.discoveredDate).toString(),
                 "mongo_entity_id", this.mongoEntityId,
                 "is_main_configuration", this.isMain
         );

@@ -9,7 +9,7 @@ import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
-import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
 import com.csl.intercom.dbapi.enums.SNMPv3ConnectionField;
@@ -44,7 +44,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     //    private String apiKey;
-    private DbapiHandler dbapiHandler = null;
+    private DbapiHandlerForCSLScan dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
     private CSLMqttBrokerHandler mqttBroker = null;
     private DataSynchronizationService cpeItemSynchronizationService = null;
@@ -96,7 +96,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         if (isConcentrator) {
         }
 
-        dbapiHandler = new DbapiHandler();
+        dbapiHandler = new DbapiHandlerForCSLScan();
         scanApiHandler = new ScanApiHandler();
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");

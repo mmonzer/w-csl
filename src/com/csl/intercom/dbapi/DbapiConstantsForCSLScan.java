@@ -3,7 +3,7 @@ package com.csl.intercom.dbapi;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DbapiConstants {
+public class DbapiConstantsForCSLScan {
     public static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>() {{
         put("discovery_protocol", "protocol");
         put("port_number", "port");

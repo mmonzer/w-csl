@@ -13,7 +13,7 @@ import java.util.Map;
 import com.csl.core.CSLContext;
 import com.csl.core.CSLUtil;
 //import com.csl.devdb.DevicesDB;
-import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLog;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
@@ -107,14 +107,14 @@ public class CSLAlertManager implements IAlertManager {
 
 	private String subdir_backup_alerts="alerts";
 
-	private DbapiHandler dbapiHandler;
+	private DbapiHandlerForCSLScan dbapiHandler;
 
 
 
 	public CSLAlertManager(IIDSMainProcessor x, Json jConfig) { 
 		this.idsMainProcessor=x;
 		this.idsMainProcessor.setAlertFactory( alertFactory);
-		dbapiHandler = new DbapiHandler();
+		dbapiHandler = new DbapiHandlerForCSLScan();
 		init(jConfig);
 	}
 

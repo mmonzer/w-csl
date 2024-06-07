@@ -1,7 +1,7 @@
 package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.cslscan.ScanUtils;
-import com.csl.intercom.dbapi.DbapiUtils;
+import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -51,7 +51,7 @@ public class Device implements IScannerSerializable {
             for (Json connectionId: connectionsJson) {
                 connections.add(connectionId.asInteger());
             }
-            OffsetDateTime updatedDate = DbapiUtils.dbapiDateToLocal(JsonUtil.getStringFromJson(deviceJson, "updated_at", null));
+            OffsetDateTime updatedDate = DbapiUtilsForCSLScan.dbapiDateToLocal(JsonUtil.getStringFromJson(deviceJson, "updated_at", null));
 
             return new Device(id, name, ipAddress, connections, updatedDate);
         } catch (NullPointerException | UnsupportedOperationException e) {
@@ -120,7 +120,7 @@ public class Device implements IScannerSerializable {
 
     public void setConnections(List<Connection> connections) {
         for (int id: connectionsIds) {
-            Connection connection = DbapiUtils.getConnectionById(connections, id);
+            Connection connection = DbapiUtilsForCSLScan.getConnectionById(connections, id);
             if (connection != null) {
                 this.connections.add(connection);
             }

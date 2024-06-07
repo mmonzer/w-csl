@@ -8,7 +8,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class DbapiUtils {
+public class DbapiUtilsForCSLScan {
     /**
      * Translate a date from DB-API's datetime format to LocalDateTime.
      *

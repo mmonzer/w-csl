@@ -1,4 +1,4 @@
-package com.csl.autocrypt.tests;
+package com.csl.autocrypt.tests.proxy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestAutoCryptService_CA {
 
     // API module
-    private static final int PORT_MODULE = 8989; // Change this to your actual base URL
+    private static final int PORT_MODULE = 8082; // Change this to your actual base URL
     private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
     private static final String ENDPOINT_MODULE = "/api";
     // API client
@@ -260,14 +260,7 @@ public class TestAutoCryptService_CA {
         returnOutput.at("common_name", commonName);
 
         // Define mocked service behavior
-        MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-intermediate"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
-                .withRequestBody((StringValuePattern) new EqualToPattern(expectedBody.toString()))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                );
-        stubFor(x);
+        // should not arrive to module
 
 
         // Define expected input/output of the api
@@ -280,7 +273,10 @@ public class TestAutoCryptService_CA {
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
-        recvOutput.at("success", true);
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "path is missing from body");
+        recvOutput.at("error", error);
 
         ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
 

@@ -12,7 +12,7 @@ public class OutilsForTesting {
      * Sends a POST request with the given content (body) to the given uri and returns the response
      */
     public static ContentResponse sendPostTo(String uri, String content) throws Exception {
-        // Define request to th mocked service
+        // Define request to the mocked service
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         Request request = httpClient.newRequest(uri);

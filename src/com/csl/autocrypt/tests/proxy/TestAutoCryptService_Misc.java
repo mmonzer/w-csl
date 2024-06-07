@@ -1,4 +1,4 @@
-package com.csl.autocrypt.tests;
+package com.csl.autocrypt.tests.proxy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestAutoCryptService_Misc {
 
     // API module
-    private static final int PORT_MODULE = 8989; // Change this to your actual base URL
+    private static final int PORT_MODULE = 8082; // Change this to your actual base URL
     private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
     private static final String ENDPOINT_MODULE = "/api";
     // API client

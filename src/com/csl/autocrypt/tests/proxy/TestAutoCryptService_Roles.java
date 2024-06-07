@@ -1,27 +1,24 @@
-package com.csl.autocrypt.tests;
+package com.csl.autocrypt.tests.proxy;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
-
-import static com.csl.autocrypt.tests.OutilsForTesting.sendPostTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-
 import com.ucsl.json.Json;
+import org.eclipse.jetty.client.api.ContentResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.eclipse.jetty.client.api.ContentResponse;
-
+import static com.csl.autocrypt.tests.OutilsForTesting.sendPostTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestAutoCryptService_Roles {
 
     // API module
-    private static final int PORT_MODULE = 8989; // Change this to your actual base URL
+    private static final int PORT_MODULE = 8082; // Change this to your actual base URL
     private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
     private static final String ENDPOINT_MODULE = "/api";
     // API client

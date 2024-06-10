@@ -18,6 +18,7 @@ import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
@@ -134,7 +135,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "\"is_http_api_reachable\": true/false" +
                                 "\"is_websocket_connected\": true/false" +
                                 "}" +
-                                "</code>", IJsonCmdHelp.JSON).setStatus(IJsonCmdHelp.STATUS_OK));
+                                "</code>", IJsonCmdHelp.JSON).setStatus(IJsonCmdHelp.STATUS_OK)
+        );
 //        addCmd("add_entity", this::addEntity);
         addCmd("list_entities", params -> scanApiHandler.listEntities().toJson(),
                 new JsonCmdHelp().setDesc("Retieve the entities registered in CSL-Scan")
@@ -195,7 +197,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Start a scan from CSL-Scan")
                         .setParam("entities", "An array of strings with the uuids of the entities to scan. May be omitted or null, resulting in scanning all entities.", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("stop_scan", params -> {
                     try {
@@ -258,7 +261,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Get all entity HTTP connections from CSL-Scan, also showing non-visible stages")
                         .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_entity_http_connection", params -> {
                     Json uuidJson = params.get("uuid");
@@ -322,7 +326,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan, also showing non-visible stages")
                         .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.STR)
                         .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("delete_entity_http_connection", params -> {
                     Json uuidJson = params.get("uuid");
@@ -357,7 +362,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("uuid", "The uuid of the EntityHttpConnection to delete", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("add_entity_http_connection", params -> {
                     Json entityHttpConnectionJson = params.get("entity_http_connection");
@@ -404,7 +410,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_connection", params -> {
                     String deviceUuid = JsonUtil.getStringFromJson(params, "device_uuid", null);
@@ -594,12 +601,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("password", "The password to test. Optional.", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": { \"page\": \"...\", \"status\": int }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_predefined_http_variables", params -> scanApiHandler.getPredefinedHttpVariables().toJson(),
                 new JsonCmdHelp().setDesc("Get the list of predefined HTTP variables")
                         .setResult("The list of predefined HTTP variables, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_http_template", params -> {
                     String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);
@@ -703,7 +712,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("template", "The template to test - optional", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
                         "where result contains <code>{ \"success\": true }</code> if the template is valid," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_discovery_cron", params -> {
                     try {
@@ -852,6 +862,31 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
         return apiCommands.registerCmd(name, cmd, help);
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name            The name of the command.
+     * @param cmd             The callback to be executed when the command is invoked.
+     * @param privilegeFamily The privilege family of the command.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmd cmd, JsonCmdPrivilegeFamily privilegeFamily) {
+        return apiCommands.registerCmd(name, cmd, privilegeFamily);
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name             The name of the command.
+     * @param cmd              The callback to be executed when the command is invoked.
+     * @param help             The helper to display in the '/apihelp' page.
+     * @param privilegeFamily  The privilege family of the command.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
+        return apiCommands.registerCmd(name, cmd, help, privilegeFamily);
     }
 
     public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {

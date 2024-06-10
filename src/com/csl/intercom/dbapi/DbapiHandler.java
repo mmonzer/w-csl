@@ -9,7 +9,10 @@ import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
+import com.csl.intercom.jsoncmd.ApiCommands;
+import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.util.Pair;
+import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -915,5 +918,25 @@ public class DbapiHandler implements AutoCloseable {
         devices.forEach(device -> device.setConnections(connections));
 
         return devices;
+    }
+
+    public void sendCommandsList(List<IApiCommands> apiCommandsList) throws Exception {
+        Json requestContents = Json.object();
+        apiCommandsList.stream()
+                .map(apiCommands -> new Pair<>(apiCommands.getName(), apiCommands.getListOfCommandPrivileges()))
+                .filter(Predicate.not(pair -> pair.getSecond().isEmpty()))
+                .map(pair -> pair.map((name, map) -> {
+                    Json result = Json.object();
+                    map.forEach((key, value) -> result.set(key, value.toString()));
+                    return new Pair<>(name, result);
+                }))
+                .forEach(pair -> requestContents.set(pair.getFirst(), pair.getSecond()));
+        logger.debug("Sending commands to DB-API: " + requestContents.toString());
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.JAVACOMM_SEND_COMMANDS)
+                .content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Error sending commands to dbapi: got unexpected status " + response.getStatus());
+        }
     }
 }

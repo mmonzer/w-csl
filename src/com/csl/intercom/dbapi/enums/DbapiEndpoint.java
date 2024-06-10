@@ -29,6 +29,8 @@ public enum DbapiEndpoint {
     ORGANIZATIONS("/organization_api_key"),
     GET_ORGANIZATION_NAME(ORGANIZATIONS.getEndpoint() + "/get_organization_name_from_api_key"),
     GET_MQTT_TOPIC_PREFIX(ORGANIZATIONS.getEndpoint() + "/get_mqtt_topic_prefix"),
+    JAVACOMM("/javacomm"),
+    JAVACOMM_SEND_COMMANDS(JAVACOMM.getEndpoint() + "/create_or_update_japi_commands"),
     ;
 
     private final String endpoint;

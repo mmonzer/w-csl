@@ -1,5 +1,7 @@
 package com.csl.util;
 
+import java.util.function.BiFunction;
+
 /**
  * Immutable object representing a pair or objects.
  *
@@ -55,5 +57,17 @@ public class Pair<T,U> {
      */
     public Pair<T,U> setSecond(U newSecond) {
         return new Pair<>(first, newSecond);
+    }
+
+    /**
+     * Apply a function to the pair.
+     *
+     * @param f The function to apply.
+     * @param <V> The type of the first element of the resulting pair.
+     * @param <W> The type of the second element of the resulting pair.
+     * @return The result of applying the function to the pair.
+     */
+    public <V,W> Pair<V,W> map(BiFunction<T,U,Pair<V,W>> f) {
+        return f.apply(first, second);
     }
 }

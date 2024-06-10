@@ -347,7 +347,7 @@ public class ApiHandler implements AutoCloseable {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-    //* TODO . doPost instead sendPost
+    //* TODO : doPost instead sendPost
 
     /**
      * Send a DELETE HTTP request to the scanner.
@@ -519,7 +519,7 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Add callback for cleaning output
-     * @param cleaner  callbacks that cleans output.
+     * @param cleaner callbacks that cleans output.
      */
     public void addCleaner(ICleaner cleaner) {
         this.outputCleaner = cleaner;

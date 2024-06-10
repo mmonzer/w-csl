@@ -1,10 +1,13 @@
 package com.csl.autocrypt.tests;
 
+import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+import com.ucsl.json.Json;
 import main.services.AutoCryptService;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -15,6 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -73,6 +77,90 @@ public class TestAutoCryptService {
         // assert behavior
         assertEquals(200, response.getStatus());
         assertEquals(returnedOutput, response.getContentAsString());
+    }
+
+    @Test
+    public void testBDConnection() throws Exception {
+        Json configObj = CSLContext.instance.getConfig();
+
+        Json globalConfig = configObj.get("global");
+        globalConfig.delAt("ip_server_remote");
+        globalConfig.at("ip_server_remote", "localhost:8787");
+        globalConfig.delAt("api_key");
+        globalConfig.at("api_key", "");
+        globalConfig.delAt("use_ssl");
+        globalConfig.at("use_ssl", false);
+
+        Json config = Json.object();
+        config.at("ip", "localhost");
+        config.at("port", 8083);
+        config.at("global", globalConfig);
+
+        AutoCryptService service = new AutoCryptService();
+        service.init(config, getUserDir());
+        service.getManager().getMethods().setSaveToDb(true);
+
+        WireMockServer wireMockServer1 = new WireMockServer(8083);
+        WireMock.configureFor("localhost", 8083);
+        wireMockServer1.start();
+
+        WireMockServer wireMockServer2 = new WireMockServer(8787);
+        WireMock.configureFor("localhost", 8787);
+        wireMockServer2.start();
+
+
+        String path = "/dev/null";
+        String roleName = "root-role";
+
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("role_name", roleName);
+
+        // Define mocked AutoCrypt service
+        MappingBuilder x = post(urlPathMatching("/api/certificate/issue"))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\""+roleName+"\"}"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput.toString())
+                );
+        wireMockServer1.stubFor(x);
+
+        Json returnOutput2 = Json.object();
+        returnOutput.at("role_name", roleName);
+        returnOutput2.at("idDB", "id");
+        // Define mocked bd service
+        MappingBuilder y = post(urlPathMatching("/api/autocrypt/certificates"))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                //.withRequestBody((StringValuePattern) new EqualToPattern(returnOutput.toString()))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput2.toString())
+                );
+        wireMockServer2.stubFor(y);
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("role_name", roleName);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "generate_certificate");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", true);
+        recvOutput.at("result", returnOutput2);
+
+        Json response = service.generateCertificate(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+
+
     }
 
     // TODO: test changeIp and changePort

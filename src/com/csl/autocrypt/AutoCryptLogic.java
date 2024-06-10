@@ -5,6 +5,7 @@ import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
+import org.eclipse.jetty.servlet.Source;
 
 public class AutoCryptLogic {
     private ApiHandler moduleHandler;
@@ -95,7 +96,7 @@ public class AutoCryptLogic {
                 body
         );
         if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPut(
+            return dbHandler.sendPost(
                     DbapiEndpointForCSLAutocrypt.ISSUER.toString(),
                     responseFromModule.getResult());
             // TODO : verify this import
@@ -216,7 +217,7 @@ public class AutoCryptLogic {
         );
         if (responseFromModule.isSuccess() && shouldSaveToDb) {
             return dbHandler.sendPost(
-                    DbapiEndpointForCSLAutocrypt.ISSUER.toString(),
+                    DbapiEndpointForCSLAutocrypt.CERTIFICATES.toString(),
                     responseFromModule.getResult());
         } else {
             return responseFromModule;

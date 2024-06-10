@@ -24,4 +24,8 @@ public enum DbapiEndpointForCSLAutocrypt {
     public String getEndpoint() {
         return endpoint;
     }
+
+    public String toString() {
+        return endpoint;
+    }
 }

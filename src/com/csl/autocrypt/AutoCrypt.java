@@ -2,6 +2,8 @@ package com.csl.autocrypt;
 
 import com.csl.intercom.cslscan.ApiHandler;
 
+import java.util.Objects;
+
 /**
  * API client of the module AutoCrypt
  */
@@ -67,8 +69,14 @@ public class AutoCrypt {
      */
     public void reinitApiHandler() {
         moduleApiHandler = new ApiHandler(name, "http://" + moduleIp + ":" + modulePort);
-        dbApiHandler = new ApiHandler("BDAPI - "+name, "https://" + dbIp + "/api");
-        dbApiHandler.setApiKey(dbApikey);
+        if (dbApikey.isEmpty()) {
+            dbApiHandler = new ApiHandler("BDAPI - "+name, "http://" + dbIp + "/api");
+        } else {
+            dbApiHandler = new ApiHandler("BDAPI - "+name, "https://" + dbIp + "/api");
+            dbApiHandler.setApiKey(dbApikey);
+        }
+        moduleApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
+        moduleApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
         logic = new AutoCryptLogic(moduleApiHandler, dbApiHandler);
     }
 

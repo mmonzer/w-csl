@@ -85,7 +85,7 @@ public class TestAutoCryptService {
 
         Json globalConfig = configObj.get("global");
         globalConfig.delAt("ip_server_remote");
-        globalConfig.at("ip_server_remote", "localhost:8787");
+        globalConfig.at("ip_server_remote", "localhost:8765");
         globalConfig.delAt("api_key");
         globalConfig.at("api_key", "");
         globalConfig.delAt("use_ssl");
@@ -104,8 +104,8 @@ public class TestAutoCryptService {
         WireMock.configureFor("localhost", 8083);
         wireMockServer1.start();
 
-        WireMockServer wireMockServer2 = new WireMockServer(8787);
-        WireMock.configureFor("localhost", 8787);
+        WireMockServer wireMockServer2 = new WireMockServer(8765);
+        WireMock.configureFor("localhost", 8765);
         wireMockServer2.start();
 
 

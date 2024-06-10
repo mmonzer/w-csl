@@ -5,12 +5,11 @@ import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
-import org.eclipse.jetty.servlet.Source;
 
 public class AutoCryptLogic {
     private ApiHandler moduleHandler;
     private ApiHandler dbHandler;
-    private boolean shouldSaveToDb = false;
+    private boolean shouldSaveToDb = true;
 
     public AutoCryptLogic(ApiHandler module, ApiHandler db) {
         this.moduleHandler = module;

@@ -1,21 +1,22 @@
-package com.csl.autocrypt.tests.proxy;
+package com.csl.autocrypt.tests.module;
 
+import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.ucsl.json.Json;
-import org.eclipse.jetty.client.api.ContentResponse;
+import main.services.AutoCryptService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.csl.autocrypt.tests.OutilsForTesting.sendPostTo;
+import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestAutoCryptService_Misc {
+public class TestAutoCryptModule_Misc {
 
     // API module
     private static final int PORT_MODULE = 8082; // Change this to your actual base URL
@@ -28,11 +29,19 @@ public class TestAutoCryptService_Misc {
 
     private WireMockServer wireMockServer;
 
+    private AutoCryptService service;
+    private static final Json configObj = CSLContext.instance.getConfig();
+
     @BeforeEach
     public void setUp() {
+        // Mock the module
         wireMockServer = new WireMockServer(PORT_MODULE);
         WireMock.configureFor("localhost", PORT_MODULE);
         wireMockServer.start();
+        // This ensures that we don't touch the DB
+        service = new AutoCryptService();
+        service.init(configObj.get(service.getConfigFileSectionName()), getUserDir());
+        service. getManager().getMethods().setSaveToDb(false);
     }
 
     @AfterEach
@@ -69,11 +78,10 @@ public class TestAutoCryptService_Misc {
         result.at("is_http_api_reachable", true);
         recvOutput.at("result", result);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.getStatus(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     // Activate OCSP (POST)
@@ -107,11 +115,10 @@ public class TestAutoCryptService_Misc {
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.activateOCSP(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -135,11 +142,10 @@ public class TestAutoCryptService_Misc {
         error.at("reason", "path is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.activateOCSP(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -163,10 +169,9 @@ public class TestAutoCryptService_Misc {
         error.at("reason", "ocsp_servers is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.activateOCSP(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 }

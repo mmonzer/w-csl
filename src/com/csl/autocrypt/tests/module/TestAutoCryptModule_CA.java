@@ -1,21 +1,22 @@
-package com.csl.autocrypt.tests.proxy;
+package com.csl.autocrypt.tests.module;
 
+import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.ucsl.json.Json;
-import org.eclipse.jetty.client.api.ContentResponse;
+import main.services.AutoCryptService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.csl.autocrypt.tests.OutilsForTesting.sendPostTo;
+import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestAutoCryptService_CA {
+public class TestAutoCryptModule_CA {
 
     // API module
     private static final int PORT_MODULE = 8082; // Change this to your actual base URL
@@ -28,11 +29,19 @@ public class TestAutoCryptService_CA {
 
     private WireMockServer wireMockServer;
 
+    private AutoCryptService service;
+    private static final Json configObj = CSLContext.instance.getConfig();
+
     @BeforeEach
     public void setUp() {
+        // Mock the module
         wireMockServer = new WireMockServer(PORT_MODULE);
         WireMock.configureFor("localhost", PORT_MODULE);
         wireMockServer.start();
+        // This ensures that we don't touch the DB
+        service = new AutoCryptService();
+        service.init(configObj.get(service.getConfigFileSectionName()), getUserDir());
+        service. getManager().getMethods().setSaveToDb(false);
     }
 
     @AfterEach
@@ -76,18 +85,14 @@ public class TestAutoCryptService_CA {
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateRootCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -125,11 +130,10 @@ public class TestAutoCryptService_CA {
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateRootCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -156,11 +160,10 @@ public class TestAutoCryptService_CA {
         error.at("reason", "common_name is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateRootCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -187,11 +190,10 @@ public class TestAutoCryptService_CA {
         error.at("reason", "ttl is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateRootCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     // Generate intermediate (POST)
@@ -238,11 +240,10 @@ public class TestAutoCryptService_CA {
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateIntermediateCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -278,11 +279,10 @@ public class TestAutoCryptService_CA {
         error.at("reason", "path is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateIntermediateCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -311,11 +311,10 @@ public class TestAutoCryptService_CA {
         error.at("reason", "common_name is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateIntermediateCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -344,11 +343,10 @@ public class TestAutoCryptService_CA {
         error.at("reason", "ttl is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateIntermediateCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -377,10 +375,9 @@ public class TestAutoCryptService_CA {
         error.at("reason", "type is missing from body");
         recvOutput.at("error", error);
 
-        ContentResponse response = sendPostTo(BASE_URL_CLIENT + ENDPOINT_CLIENT, sentInput.toString());
+        Json response = service.generateIntermediateCA(sentParams);
 
         // assert behavior
-        assertEquals(200, response.getStatus());
-        assertEquals(recvOutput.toString(), response.getContentAsString());
+        assertEquals(recvOutput, response);
     }
 }

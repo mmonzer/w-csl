@@ -44,7 +44,7 @@ public class TestAutoCryptService_Roles {
         // Mock the module
         wireMockServerModule = new WireMockServer(PORT_MODULE);
         wireMockServerModule.start();
-        wireMockServerBd = new WireMockServer(8787);
+        wireMockServerBd = new WireMockServer(PORT_DBAPI);
         wireMockServerBd.start();
         // This ensures that we touch the DB
         Json globalConfig = configObj.get("global");

@@ -37,6 +37,7 @@ public class TestAutoCryptService_CA {
 
     private AutoCryptService service;
     private static final Json configObj = CSLContext.instance.getConfig();
+
     @BeforeEach
     public void setUp() {
         // Mock the module

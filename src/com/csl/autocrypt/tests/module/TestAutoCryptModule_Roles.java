@@ -6,19 +6,19 @@ import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
+
+import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+
 import com.ucsl.json.Json;
 import main.services.AutoCryptService;
-import org.eclipse.jetty.client.api.ContentResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.csl.autocrypt.tests.OutilsForTesting.sendPostTo;
-import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestAutoCryptService_Certificate {
+public class TestAutoCryptModule_Roles {
 
     // API module
     private static final int PORT_MODULE = 8082; // Change this to your actual base URL
@@ -52,104 +52,76 @@ public class TestAutoCryptService_Certificate {
         wireMockServer.stop();
     }
 
-    // Get certificate  (GET)
+    // Get roles  (GET)
 
     @Test
-    public void testGetCertificate_normalUse() throws Exception {
+    public void testGetRole_normalUse() throws Exception {
         // Define expected input/output of the mocked module
-        String serialNumber = "serialNumber";
+        String name = "dummy";
         String path = "/dev/null";
 
-        // Define mock behavior
-        Json expectedInput = Json.object();
-        expectedInput.at("path", path);
-        Json returnOutput = Json.object();
-        returnOutput.at("key1", "val1");
-        returnOutput.at("key2", "val2");
-        // Define mocked service
-        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate/"+serialNumber))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
-                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(returnOutput.toString())
-                );
-        stubFor(x);
+        Json returnOutput = mockGetRole(path, name);
+
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
-        sentParams.at("serial_number", serialNumber);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
+        sentInput.at("cmd", "get_role");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
         recvOutput.at("result", returnOutput);
 
-        Json response = service.getCertificateInfo(sentParams);
+        Json response = service.getRole(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
     @Test
-    public void testGetCertificate_normalUse_extraParams() throws Exception {
+    public void testGetRole_normalUse_extraParams() throws Exception {
         // Define expected input/output of the mocked module
-        String serialNumber = "serialNumber";
+        String name = "dummy";
         String path = "/dev/null";
 
-        // Define mock behavior
-        Json expectedInput = Json.object();
-        expectedInput.at("path", path);
-        Json returnOutput = Json.object();
-        returnOutput.at("key1", "val1");
-        returnOutput.at("key2", "val2");
-        // Define mocked service
-        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate/"+serialNumber))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
-                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(returnOutput.toString())
-                );
-        stubFor(x);
+        Json returnOutput = mockGetRole(path, name);
+
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
-        sentParams.at("serial_number", serialNumber);
+        sentParams.at("name", name);
         sentParams.at("cmd", "extra");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
+        sentInput.at("cmd", "get_role");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
         recvOutput.at("result", returnOutput);
 
-        Json response = service.getCertificateInfo(sentParams);
+        Json response = service.getRole(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
     @Test
-    public void testGetCertificate_withoutPath() throws Exception {
+    public void testGetRole_woPath() throws Exception {
         // Define expected input/output of the mocked module
-        String serialNumber = "serialNumber";
+        String name = "dummy";
+        String path = "/dev/null";
 
-        // Define mock behavior
-        // should not arrive to module
+        mockGetRole(path, name);
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("certificate_ref", serialNumber);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
+        sentInput.at("cmd", "get_role");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
@@ -158,54 +130,76 @@ public class TestAutoCryptService_Certificate {
         error.at("reason", "path is missing from body");
         recvOutput.at("error", error);
 
-        Json response = service.getCertificateInfo(sentParams);
+        Json response = service.getRole(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
     @Test
-    public void testGetCertificate_withoutSerialNumber() throws Exception {
+    public void testGetRole_woName() throws Exception {
         // Define expected input/output of the mocked module
+        String name = "dummy";
         String path = "/dev/null";
 
-        // Define mock behavior
-        // should not arrive to module
+        mockGetRole(path, name);
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
+        sentInput.at("cmd", "get_role");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
         Json error = Json.object();
-        error.at("reason", "serial_number is missing from body");
+        error.at("reason", "name is missing from body");
         recvOutput.at("error", error);
 
-        Json response = service.getCertificateInfo(sentParams);
+        Json response = service.getRole(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
-    // list certificates (GET)
+    /**
+     * Mocks the getRole endpoint
+     */
+    private static Json mockGetRole(String path, String name) {
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("key1", "key1");
+        returnOutput.at("key2", "key2");
+        // Define mocked service
+        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/role/" + name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                //.withRequestBody(equalToJson(expectedInput.toString(), true, true))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput.toString())
+                );
+        stubFor(x);
+        return returnOutput;
+    }
+
+    // list roles (GET)
 
     @Test
-    public void testListCertificates_normalUseWithPath() throws Exception {
+    public void testListRoles_normalUseWithPath() throws Exception {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
 
-        // Define mock behavior
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.array();
         returnOutput.add("string1");
         returnOutput.add("string2");
         // Define mocked service
-        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate"))
+        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/role"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
@@ -220,30 +214,30 @@ public class TestAutoCryptService_Certificate {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificates");
+        sentInput.at("cmd", "get_roles");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
         recvOutput.at("result", returnOutput);
 
-        Json response = service.getCertificates(sentParams);
+        Json response = service.getRoles(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
     @Test
-    public void testListCertificates_normalUseWithoutPath() throws Exception {
+    public void testListRoles_normalUseWithoutPath() throws Exception {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
 
+        Json expectedInput = Json.object();
         Json returnOutput = Json.array();
         returnOutput.add("string1");
         returnOutput.add("string2");
-
-        // Define mocked service behavior
-        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate"))
+        // Define mocked service
+        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/role"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -255,30 +249,30 @@ public class TestAutoCryptService_Certificate {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificates");
+        sentInput.at("cmd", "get_roles");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
         recvOutput.at("result", returnOutput);
 
-        Json response = service.getCertificates(sentParams);
+        Json response = service.getRoles(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
     @Test
-    public void testListCertificates_normalUseWithOtherParams() throws Exception {
+    public void testListRoles_normalUseWithOtherParams() throws Exception {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
 
+        Json expectedInput = Json.object();
         Json returnOutput = Json.array();
         returnOutput.add("string1");
         returnOutput.add("string2");
-
-        // Define mocked service behavior
-        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate"))
+        // Define mocked service
+        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/role"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -292,37 +286,36 @@ public class TestAutoCryptService_Certificate {
         sentParams.at("path", path);
         sentParams.at("extra", "param");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificates");
+        sentInput.at("cmd", "get_roles");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
         recvOutput.at("result", returnOutput);
 
-        Json response = service.getCertificates(sentParams);
+        Json response = service.getRoles(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
-    // Import certificate (POST)
+    // create roles (POST)
 
     @Test
-    public void testGenerateCertificate_oneParam() throws Exception {
+    public void testCreateRole() throws Exception {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
-        String roleName = "roleName";
+        String name = "dummy";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
-        returnOutput.at("role_name", roleName);
-
-        // Define mocked service behavior
-        MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/certificate/issue"))
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "str");
+        // Define mocked service
+        MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/role"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\""+roleName+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -334,176 +327,51 @@ public class TestAutoCryptService_Certificate {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
-        sentParams.at("role_name", roleName);
+        sentParams.at("name", name);
+        sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
+        sentInput.at("cmd", "create_role");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
         recvOutput.at("result", returnOutput);
 
-        Json response = service.generateCertificate(sentParams);
+        Json response = service.createRole(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
     @Test
-    public void testGenerateCertificate_multipleParam() throws Exception {
+    public void testCreateRole_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
-        String roleName = "roleName";
-        String commonName = "commonName";
+        String name = "dummy";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
-        returnOutput.at("role_name", roleName);
-        returnOutput.at("commonName", commonName);
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "str");
 
-        // Define mocked service behavior
-        MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/certificate/issue"))
+        // Define mocked service
+        MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/role"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\""+roleName+"\",\"common_name\":\""+commonName+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("path", path);
-        sentParams.at("role_name", roleName);
-        sentParams.at("common_name", commonName);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", true);
-        recvOutput.at("result", returnOutput);
-
-        Json response = service.generateCertificate(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testGenerateCertificate_withoutPath() throws Exception {
-        // Define expected input/output of the mocked module
-        String name = "dummy";
-
-        // Define mocked service
-        // should not arrive to mocked service
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("role_name", name);
-        sentParams.at("certificate_ref", "str");
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "path is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.generateCertificate(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testGenerateCertificate_withoutRoleName() throws Exception {
-        // Define expected input/output of the mocked module
-        String path = "/dev/null";
-
-        // Define mocked service
-        // should not arrive to mocked service
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("path", path);
-        sentParams.at("certificate_ref", "str");
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "role_name is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.generateCertificate(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    // revoke certificate (DELETE)
-
-    @Test
-    public void testDeleteCertificate() throws Exception {
-        // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String serialNumber = "serialNumber";
-
-        Json expectedInput = Json.object();
-        expectedInput.at("path", path);
-        Json returnOutput = Json.object();
-
-        // Define mocked service behavior
-        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/certificate/revoke/"+serialNumber))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
-                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                );
-        stubFor(x);
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("path", path);
-        sentParams.at("serial_number", serialNumber);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", true);
-
-        Json response = service.revokeCertificate(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testDeleteCertificate_withoutPath() throws Exception {
-        // Define expected input/output of the mocked module
-        String name = "dummy";
-
-        // Define mocked service behavior
-        // should not arrive to service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("name", name);
-        sentParams.at("certificate_ref", "certificateRef");
+        sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
+        sentInput.at("cmd", "create_role");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
@@ -512,34 +380,312 @@ public class TestAutoCryptService_Certificate {
         error.at("reason", "path is missing from body");
         recvOutput.at("error", error);
 
-        Json response = service.revokeCertificate(sentParams);
+        Json response = service.createRole(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
     }
 
     @Test
-    public void testDeleteCertificate_withoutSerialNumber() throws Exception {
+    public void testCreateRole_withoutName() throws Exception {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
+        String name = "dummy";
 
-        // Define mocked service behavior
-        // should not arrive to service
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "str");
+
+        // Define mocked service
+        MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/role"))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput.toString())
+                );
+        stubFor(x);
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
+        sentInput.at("cmd", "create_role");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
         Json error = Json.object();
-        error.at("reason", "serial_number is missing from body");
+        error.at("reason", "name is missing from body");
         recvOutput.at("error", error);
 
-        Json response = service.revokeCertificate(sentParams);
+        Json response = service.createRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    // update roles (PUT)
+
+    @Test
+    public void testUpdateRole() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+        String name = "dummy";
+
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput.toString())
+                );
+        stubFor(x);
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("name", name);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", true);
+        recvOutput.at("result", returnOutput);
+
+        Json response = service.updateRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testUpdateRole_withoutPath() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+        String name = "dummy";
+
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput.toString())
+                );
+        stubFor(x);
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("name", name);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "path is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.updateRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testUpdateRole_withoutName() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+        String name = "dummy";
+
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput.toString())
+                );
+        stubFor(x);
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.updateRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    // delete roles (DELETE)
+
+    @Test
+    public void testDeleteRole() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+        String name = "dummy";
+
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                );
+        stubFor(x);
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("name", name);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", true);
+
+        Json response = service.deleteRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteRole_withoutPath() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+        String name = "dummy";
+
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                );
+        stubFor(x);
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("name", name);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "path is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.deleteRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteRole_withoutName() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+        String name = "dummy";
+
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                );
+        stubFor(x);
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.deleteRole(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);

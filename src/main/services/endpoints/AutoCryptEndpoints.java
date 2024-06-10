@@ -134,26 +134,6 @@ public enum AutoCryptEndpoints implements Endpoint  {
     private final String command;
     private final JsonCmdHelp help;
 
-    public static final String ISSUER_URI = "/api/issuer";
-    public static final String ISSUER_URI_ = ISSUER_URI+"/";
-    public static final String ISSUER_URI_IMPORT = ISSUER_URI_+"import";
-
-    public static final String ROLE_URI = "/api/role";
-    public static final String ROLE_URI_ = ROLE_URI+"/";
-
-    public static final String MISC_URI = "/api/general";
-    public static final String MISC_URI_ACTIVATE_OCSP = MISC_URI+"/activate-ocsp";
-    public static final String MISC_URI_IS_ALIVE = MISC_URI+"/health-check";
-
-    public static final String CERT_URI = "/api/certificate";
-    public static final String CERT_URI_ = CERT_URI+"/";
-    public static final String CERT_URI_ISSUE = CERT_URI_+"issue";
-    public static final String CERT_URI_REVOKE_ = CERT_URI_+"revoke/";
-
-    public static final String CA_URI = "/api/ca";
-    public static final String CA_URI_GENERATE_INTER = CA_URI+"/generate-intermediate";
-    public static final String CA_URI_GENERATE_ROOT = CA_URI+"/generate-root";
-
     /**
      * Constructor for the endpoints of Monitor service
      *

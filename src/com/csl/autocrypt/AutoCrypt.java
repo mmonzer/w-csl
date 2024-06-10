@@ -1,9 +1,5 @@
 package com.csl.autocrypt;
 
-import com.csl.intercom.cslscan.ApiHandler;
-
-import java.util.Objects;
-
 /**
  * API client of the module AutoCrypt
  */
@@ -13,8 +9,8 @@ public class AutoCrypt {
     private String name;
     private String dbIp;
     private String dbApikey;
-    private ApiHandler dbApiHandler = null;
-    private ApiHandler moduleApiHandler = null;
+    private DbapiHandlerForCSLAutoCrypt dbApiHandler = null;
+    private ApiHandlerForCSLAutoCrypt moduleApiHandler = null;
     private AutoCryptLogic logic = null;
 
     public AutoCrypt(String name) {
@@ -56,7 +52,7 @@ public class AutoCrypt {
     /**
      * Set the new configuration for connecting the DB (port par default)
      *
-     * @param ip ip of the DB
+     * @param ip     ip of the DB
      * @param apikey authentication key for DB
      */
     public void configureDbApiConnection(String ip, String apikey) {
@@ -68,11 +64,11 @@ public class AutoCrypt {
      * Reinit the handler point
      */
     public void reinitApiHandler() {
-        moduleApiHandler = new ApiHandler(name, "http://" + moduleIp + ":" + modulePort);
+        moduleApiHandler = new ApiHandlerForCSLAutoCrypt(name, "http://" + moduleIp + ":" + modulePort);
         if (dbApikey.isEmpty()) {
-            dbApiHandler = new ApiHandler("BDAPI - "+name, "http://" + dbIp + "/api");
+            dbApiHandler = new DbapiHandlerForCSLAutoCrypt("BDAPI - " + name, "http://" + dbIp + "/api");
         } else {
-            dbApiHandler = new ApiHandler("BDAPI - "+name, "https://" + dbIp + "/api");
+            dbApiHandler = new DbapiHandlerForCSLAutoCrypt("BDAPI - " + name, "https://" + dbIp + "/api");
             dbApiHandler.setApiKey(dbApikey);
         }
         moduleApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
@@ -85,5 +81,14 @@ public class AutoCrypt {
      */
     public AutoCryptLogic getMethods() {
         return logic;
+    }
+
+    /**
+     * Changes the saving to Db
+     *
+     * @param shouldSaveToDb
+     */
+    public void setSaveToDb(boolean shouldSaveToDb) {
+        logic.setSaveToDb(shouldSaveToDb);
     }
 }

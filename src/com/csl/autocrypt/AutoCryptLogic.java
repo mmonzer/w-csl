@@ -1,17 +1,14 @@
 package com.csl.autocrypt;
 
-import com.csl.autocrypt.enums.DbapiEndpointForCSLAutocrypt;
-import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
-import main.services.endpoints.AutoCryptEndpoints;
 
 public class AutoCryptLogic {
-    private ApiHandler moduleHandler;
-    private ApiHandler dbHandler;
+    private final ApiHandlerForCSLAutoCrypt moduleHandler;
+    private final DbapiHandlerForCSLAutoCrypt dbHandler;
     private boolean shouldSaveToDb = true;
 
-    public AutoCryptLogic(ApiHandler module, ApiHandler db) {
+    public AutoCryptLogic(ApiHandlerForCSLAutoCrypt module, DbapiHandlerForCSLAutoCrypt db) {
         this.moduleHandler = module;
         this.dbHandler = db;
     }
@@ -22,10 +19,7 @@ public class AutoCryptLogic {
      * @param params parameters with the path
      */
     public JsonApiResponse getIssuers(Json params) {
-        return moduleHandler.sendGet(
-                AutoCryptEndpoints.ISSUER_URI,
-                params
-        );
+        return moduleHandler.getIssuers(params);
     }
 
     /**
@@ -35,10 +29,7 @@ public class AutoCryptLogic {
      * @param body      parameters with the path and the issuer id
      */
     public JsonApiResponse getIssuerInfo(String issuerRef, Json body) {
-        return moduleHandler.sendGet(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
-                body
-        );
+        return moduleHandler.getIssuerInfo(issuerRef, body);
     }
 
     /**
@@ -49,18 +40,8 @@ public class AutoCryptLogic {
      * @param params    parameters of the request
      */
     public JsonApiResponse updateIssuerInfo(String issuerRef, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendPut(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPut(
-                    DbapiEndpointForCSLAutocrypt.ISSUER_ + issuerRef,
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, responseFromModule);
     }
 
     /**
@@ -69,18 +50,8 @@ public class AutoCryptLogic {
      * @param body parameters with the path and the issuer id
      */
     public JsonApiResponse deleteIssuer(String issuerRef, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendDelete(
-                AutoCryptEndpoints.ISSUER_URI_ + issuerRef,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendDelete(
-                    DbapiEndpointForCSLAutocrypt.ISSUER_ + issuerRef,
-                    null);
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, responseFromModule);
     }
 
     /**
@@ -89,19 +60,9 @@ public class AutoCryptLogic {
      * @param body parameters with the path and the file
      */
     public JsonApiResponse importCertificate(Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendPost(
-                AutoCryptEndpoints.ISSUER_URI_IMPORT,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPost(
-                    DbapiEndpointForCSLAutocrypt.ISSUER.toString(),
-                    responseFromModule.getResult());
-            // TODO : verify this import
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.importCertificate(body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::importCertificate, responseFromModule);
+        // TODO : verify this import
     }
 
     /**
@@ -110,10 +71,7 @@ public class AutoCryptLogic {
      * @param params parameters with the path
      */
     public JsonApiResponse getRoles(Json params) {
-        return moduleHandler.sendGet(
-                AutoCryptEndpoints.ROLE_URI,
-                params
-        );
+        return moduleHandler.getRoles(params);
     }
 
     /**
@@ -123,18 +81,8 @@ public class AutoCryptLogic {
      * @param params parameters with the path
      */
     public JsonApiResponse createRole(Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendPost(
-                AutoCryptEndpoints.ROLE_URI,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPost(
-                    DbapiEndpointForCSLAutocrypt.ROLE.toString(),
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.createRole(body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::createRole, responseFromModule);
     }
 
     /**
@@ -144,10 +92,7 @@ public class AutoCryptLogic {
      * @param params parameters with the path and name of role
      */
     public JsonApiResponse getRole(String name, Json params) {
-        return moduleHandler.sendGet(
-                AutoCryptEndpoints.ROLE_URI_ + name,
-                params
-        );
+        return moduleHandler.getRole(name, params);
     }
 
     /**
@@ -156,18 +101,8 @@ public class AutoCryptLogic {
      * @param body parameters with the path and name of role
      */
     public JsonApiResponse deleteRole(String name, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendDelete(
-                AutoCryptEndpoints.ROLE_URI_ + name,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendDelete(
-                    DbapiEndpointForCSLAutocrypt.ROLE_ + "id", // TODO : get ID
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.deleteRole(name, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteRole, "id", responseFromModule); // TODO : get ID
     }
 
     /**
@@ -176,18 +111,9 @@ public class AutoCryptLogic {
      * @param body parameters with the path and name of role, others?
      */
     public JsonApiResponse updateRole(String name, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendPut(
-                AutoCryptEndpoints.ROLE_URI_ + name,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPut(
-                    DbapiEndpointForCSLAutocrypt.ROLE_ + "id", // TODO : find id
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::updateRole, "id", responseFromModule);
+        // TODO : find id
     }
 
     /**
@@ -196,11 +122,7 @@ public class AutoCryptLogic {
      * @param body parameters with the path and name of role, others?
      */
     public JsonApiResponse activateOCSP(Json body, Json params) {
-        return moduleHandler.sendPost(
-                AutoCryptEndpoints.MISC_URI_ACTIVATE_OCSP,
-                params,
-                body
-        );
+        return moduleHandler.activateOCSP(body, params);
     }
 
     /**
@@ -209,18 +131,8 @@ public class AutoCryptLogic {
      * @param body parameters with the path and role
      */
     public JsonApiResponse generateCertificate(Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendPost(
-                AutoCryptEndpoints.CERT_URI_ISSUE,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPost(
-                    DbapiEndpointForCSLAutocrypt.CERTIFICATES.toString(),
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.generateCertificate(body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::generateCertificate, responseFromModule);
     }
 
     /**
@@ -229,10 +141,7 @@ public class AutoCryptLogic {
      * @param params parameters with the path
      */
     public JsonApiResponse getCertificates(Json params) {
-        return moduleHandler.sendGet(
-                AutoCryptEndpoints.CERT_URI,
-                params
-        );
+        return moduleHandler.getCertificates(params);
     }
 
     /**
@@ -242,10 +151,7 @@ public class AutoCryptLogic {
      * @param params       parameters with the serialNumber
      */
     public JsonApiResponse getCertificateInfo(String serialNumber, Json params) {
-        return moduleHandler.sendGet(
-                AutoCryptEndpoints.CERT_URI_ + serialNumber,
-                params
-        );
+        return moduleHandler.getCertificateInfo(serialNumber, params);
     }
 
     /**
@@ -255,17 +161,9 @@ public class AutoCryptLogic {
      * @param params       parameters with the path
      */
     public JsonApiResponse revokeCertificate(String serialNumber, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendDelete(
-                AutoCryptEndpoints.CERT_URI_REVOKE_ + serialNumber,
-                params
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendDelete(
-                    DbapiEndpointForCSLAutocrypt.CERTIFICATES_ + "id", // TODO : get ID
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.revokeCertificate(serialNumber, params);
+        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, "id", responseFromModule);
+        // TODO : get ID
     }
 
     /**
@@ -275,18 +173,8 @@ public class AutoCryptLogic {
      * @param params parameters with  path
      */
     public JsonApiResponse generateRootCA(Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendPost(
-                AutoCryptEndpoints.CA_URI_GENERATE_ROOT,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPost(
-                    DbapiEndpointForCSLAutocrypt.CA.toString(),
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.generateRootCA(body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, responseFromModule);
     }
 
     /**
@@ -295,18 +183,8 @@ public class AutoCryptLogic {
      * @param body parameters with commonName, ttl, and optionally path
      */
     public JsonApiResponse generateIntermediateCA(Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.sendPost(
-                AutoCryptEndpoints.CA_URI_GENERATE_INTER,
-                params,
-                body
-        );
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return dbHandler.sendPost(
-                    DbapiEndpointForCSLAutocrypt.CA.toString(),
-                    responseFromModule.getResult());
-        } else {
-            return responseFromModule;
-        }
+        JsonApiResponse responseFromModule = moduleHandler.generateIntermediateCA(body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, responseFromModule);
     }
 
     /**
@@ -315,15 +193,47 @@ public class AutoCryptLogic {
      * @return whether it is reachable
      */
     public Json getStatus() {
-       return Json.object("is_http_api_reachable", moduleHandler.sendGet(
-                AutoCryptEndpoints.MISC_URI_IS_ALIVE, Json.object()).isSuccess());
+        return moduleHandler.getStatus();
     }
 
     /**
      * Changes the saving to Db
-     * @param shouldSaveToDb
+     *
+     * @param shouldSaveToDb whether data should save into the DB
      */
     public void setSaveToDb(boolean shouldSaveToDb) {
         this.shouldSaveToDb = shouldSaveToDb;
+    }
+
+    /**
+     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
+     * returns the response from the module
+     *
+     * @param method             method to call when sending to DBApi
+     * @param responseFromModule response from the module
+     * @return new response if condition true, otherwise resend the same responseFromModule
+     */
+    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponser method, JsonApiResponse responseFromModule) {
+        if (responseFromModule.isSuccess() && shouldSaveToDb) {
+            return method.apply(responseFromModule.getResult());
+        } else {
+            return responseFromModule;
+        }
+    }
+
+    /**
+     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
+     * returns the response from the module
+     *
+     * @param method             method to call when sending to DBApi
+     * @param responseFromModule response from the module
+     * @return new response if condition true, otherwise resend the same responseFromModule
+     */
+    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponser2params method, String id, JsonApiResponse responseFromModule) {
+        if (responseFromModule.isSuccess() && shouldSaveToDb) {
+            return method.apply(id, responseFromModule.getResult());
+        } else {
+            return responseFromModule;
+        }
     }
 }

@@ -475,6 +475,7 @@ public class TestAutoCryptModule_Certificate {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "revoke_certificate");
         sentInput.at("params", sentParams);
@@ -500,6 +501,7 @@ public class TestAutoCryptModule_Certificate {
         Json sentParams = Json.object();
         sentParams.at("name", name);
         sentParams.at("certificate_ref", "certificateRef");
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "revoke_certificate");
         sentInput.at("params", sentParams);
@@ -527,6 +529,7 @@ public class TestAutoCryptModule_Certificate {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "revoke_certificate");
         sentInput.at("params", sentParams);
@@ -535,6 +538,34 @@ public class TestAutoCryptModule_Certificate {
         recvOutput.at("success", false);
         Json error = Json.object();
         error.at("reason", "serial_number is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.revokeCertificate(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteCertificate_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("certificate_ref", "certificateRef");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "revoke_certificate");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.revokeCertificate(sentParams);

@@ -38,6 +38,13 @@ public class TestAutoCryptService_Issuer {
 
     private AutoCryptService service;
     private static final Json configObj = CSLContext.instance.getConfig();
+
+
+    String path = "/dev/null";
+    String issuerRef = "issuerRef";
+    int id = 1;
+    
+    
     @BeforeEach
     public void setUp() {
         // Mock the module
@@ -76,7 +83,6 @@ public class TestAutoCryptService_Issuer {
     @Test
     public void testImportIssuer() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
         String file = "This is a file.";
 
         Json expectedInput = Json.object();
@@ -98,7 +104,7 @@ public class TestAutoCryptService_Issuer {
 
         Json returnBd = Json.object();
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/issuer"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
@@ -132,7 +138,6 @@ public class TestAutoCryptService_Issuer {
     @Test
     public void testImportIssuer_file500kB() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
         StringBuilder file = new StringBuilder("This is a file.");
         for (int i=0; i<15; i++) {
             file.append(file);
@@ -157,7 +162,7 @@ public class TestAutoCryptService_Issuer {
 
         Json returnBd = Json.object();
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/issuer"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
@@ -216,7 +221,7 @@ public class TestAutoCryptService_Issuer {
 
         Json returnBd = Json.object();
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/issuer"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
@@ -287,8 +292,6 @@ public class TestAutoCryptService_Issuer {
     @Test
     public void testUpdateIssuer_oneParamStr() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "id";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -309,9 +312,9 @@ public class TestAutoCryptService_Issuer {
 
         Json returnBd = Json.object();
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+"id")) // TODO: change id
+        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id)) // TODO: change id
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
@@ -325,6 +328,7 @@ public class TestAutoCryptService_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
+        sentParams.at("id", id);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("ttl", "24h");
         Json sentInput = Json.object();
@@ -344,9 +348,6 @@ public class TestAutoCryptService_Issuer {
     @Test
     public void testUpdateIssuer_oneParamBool() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "id";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -366,9 +367,9 @@ public class TestAutoCryptService_Issuer {
 
         Json returnBd = Json.object();
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+"id")) // TODO: change id
+        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
@@ -381,6 +382,7 @@ public class TestAutoCryptService_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("enable_aia_url_templating", false);
@@ -426,9 +428,9 @@ public class TestAutoCryptService_Issuer {
 
         Json returnBd = Json.object();
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+"id")) // TODO: change id
+        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
@@ -440,6 +442,7 @@ public class TestAutoCryptService_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("issuing_certificates", inputList);
@@ -488,9 +491,9 @@ public class TestAutoCryptService_Issuer {
 
         Json returnBd = Json.object();
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+"id")) // TODO: change id
+        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
@@ -503,6 +506,7 @@ public class TestAutoCryptService_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", 1);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("issuing_certificates", inputList);
@@ -533,6 +537,7 @@ public class TestAutoCryptService_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("issuer_ref", "str");
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
@@ -561,6 +566,7 @@ public class TestAutoCryptService_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
@@ -577,13 +583,41 @@ public class TestAutoCryptService_Issuer {
         assertEquals(recvOutput, response);
     }
 
+    @Test
+    public void testUpdateIssuer_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_issuer_info");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.updateIssuerInfo(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
     // delete issuers (DELETE)
 
     @Test
     public void testDeleteIssuer() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "id";
+        
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -600,9 +634,9 @@ public class TestAutoCryptService_Issuer {
         wireMockServerModule.stubFor(x);
 
         Json returnBd = Json.object();
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+"id")) // TODO: change id
+        MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -616,6 +650,7 @@ public class TestAutoCryptService_Issuer {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
+        sentParams.at("id", id);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -642,6 +677,7 @@ public class TestAutoCryptService_Issuer {
         Json sentParams = Json.object();
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "issuerRef");
+        sentParams.at("id", id);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -661,8 +697,6 @@ public class TestAutoCryptService_Issuer {
     @Test
     public void testDeleteIssuer_withoutIssuerRef() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
 
         // Define mocked service behavior
         // should not arrive to service
@@ -670,6 +704,7 @@ public class TestAutoCryptService_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
+        sentParams.at("id", id);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -678,6 +713,33 @@ public class TestAutoCryptService_Issuer {
         recvOutput.at("success", false);
         Json error = Json.object();
         error.at("reason", "issuer_ref is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.deleteIssuer(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteIssuer_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", issuerRef);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_issuer_info");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.deleteIssuer(sentParams);

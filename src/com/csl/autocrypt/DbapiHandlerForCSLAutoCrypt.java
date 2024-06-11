@@ -32,21 +32,22 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Updates the information of the given issuer in the module and the DB
      *
-     * @param issuerRef identifier of the issuer
+     * @param id identifier of the issuer in dbapi side
      * @param body      body of the request
      */
-    public JsonApiResponse updateIssuerInfo(String issuerRef, Json body) {
-        return this.sendPut(DbapiEndpointForCSLAutocrypt.ISSUER_ + issuerRef, body);
+    public JsonApiResponse updateIssuerInfo(int id, Json body) {
+        return this.sendPut(DbapiEndpointForCSLAutocrypt.ISSUER_.getEndpoint() + id, body);
     }
 
     /**
      * Deletes the given issuer from the module and the DB
      *
+     * @param id identifier of the issuer in dbapi side
      * @param body parameters with the path and the issuer id
      */
-    public JsonApiResponse deleteIssuer(String issuerRef, Json body) {
+    public JsonApiResponse deleteIssuer(int id,  Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ISSUER_ + issuerRef,
+                DbapiEndpointForCSLAutocrypt.ISSUER_.toString() + id,
                 null);
     }
 
@@ -76,22 +77,24 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Deletes the given role
      *
+     * @param id identifier of the issuer in dbapi side
      * @param body parameters with the path and name of role
      */
-    public JsonApiResponse deleteRole(String id, Json body) {
+    public JsonApiResponse deleteRole(int id, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ROLE_ + id, // TODO : get ID
+                DbapiEndpointForCSLAutocrypt.ROLE_.toString() + id,
                 body);
     }
 
     /**
      * Updates the information of the given role
      *
+     * @param id identifier of the issuer in dbapi side
      * @param body parameters with the path and name of role, others?
      */
-    public JsonApiResponse updateRole(String id, Json body) {
+    public JsonApiResponse updateRole(int id, Json body) {
         return this.sendPut(
-                DbapiEndpointForCSLAutocrypt.ROLE_ + id, // TODO : find id
+                DbapiEndpointForCSLAutocrypt.ROLE_.toString() + id,
                 body);
     }
 
@@ -109,12 +112,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Revokes the given certificate
      *
-     * @param id     identifier of the certificate
+     * @param id identifier of the issuer in dbapi side
      * @param params parameters with the path
      */
-    public JsonApiResponse revokeCertificate(String id, Json params) {
+    public JsonApiResponse revokeCertificate(int id, Json params) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.CERTIFICATES_ + id, // TODO : get ID
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES_.toString() + id, // TODO : get ID
                 params);
     }
 

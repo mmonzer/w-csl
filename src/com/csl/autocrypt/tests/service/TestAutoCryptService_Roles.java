@@ -39,6 +39,10 @@ public class TestAutoCryptService_Roles {
     private AutoCryptService service;
     private static final Json configObj = CSLContext.instance.getConfig();
 
+    String path = "/dev/null";
+    String name = "dummy";
+    int id = 1;
+
     @BeforeEach
     public void setUp() {
         // Mock the module
@@ -49,7 +53,7 @@ public class TestAutoCryptService_Roles {
         // This ensures that we touch the DB
         Json globalConfig = configObj.get("global");
         globalConfig.delAt("ip_server_remote");
-        globalConfig.at("ip_server_remote", "localhost:"+PORT_DBAPI);
+        globalConfig.at("ip_server_remote", "localhost:" + PORT_DBAPI);
         globalConfig.delAt("api_key");
         globalConfig.at("api_key", "");
         globalConfig.delAt("use_ssl");
@@ -62,7 +66,7 @@ public class TestAutoCryptService_Roles {
 
         service = new AutoCryptService();
         service.init(config, getUserDir());
-        service. getManager().getMethods().setSaveToDb(true);
+        service.getManager().getMethods().setSaveToDb(true);
     }
 
     @AfterEach
@@ -70,16 +74,14 @@ public class TestAutoCryptService_Roles {
         // Stop the WireMock server
         wireMockServerModule.stop();
         wireMockServerBd.stop();
-    };
+    }
+
 
     // create roles (POST)
 
     @Test
     public void testCreateRole() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -97,8 +99,10 @@ public class TestAutoCryptService_Roles {
         wireMockServerModule.stubFor(x);
 
         Json returnBd = Json.object();
-        returnBd.at("idDb", "id");
-        for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
+        returnBd.at("id", id);
+        for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {
+            returnBd.at(e.getKey(), e.getValue());
+        }
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
@@ -133,9 +137,6 @@ public class TestAutoCryptService_Roles {
     @Test
     public void testCreateRole_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -168,9 +169,6 @@ public class TestAutoCryptService_Roles {
     @Test
     public void testCreateRole_withoutName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -205,9 +203,6 @@ public class TestAutoCryptService_Roles {
     @Test
     public void testUpdateRole() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -215,7 +210,7 @@ public class TestAutoCryptService_Roles {
         returnModule.at("issuer_ref", "default");
         returnModule.at("ttl", "24h");
         // Define mocked service
-        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/role/" + name))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
@@ -226,10 +221,12 @@ public class TestAutoCryptService_Roles {
         wireMockServerModule.stubFor(x);
 
         Json returnBd = Json.object();
-        returnBd.at("idDb", "id");
-        for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
+        returnBd.at("id", id);
+        for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {
+            returnBd.at(e.getKey(), e.getValue());
+        }
         // Define mocked service behavior
-        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/"+"id"))
+        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/" + id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
@@ -242,6 +239,7 @@ public class TestAutoCryptService_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
@@ -262,9 +260,6 @@ public class TestAutoCryptService_Roles {
     @Test
     public void testUpdateRole_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -277,6 +272,7 @@ public class TestAutoCryptService_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
@@ -298,9 +294,6 @@ public class TestAutoCryptService_Roles {
     @Test
     public void testUpdateRole_withoutName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -313,6 +306,7 @@ public class TestAutoCryptService_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
@@ -331,14 +325,9 @@ public class TestAutoCryptService_Roles {
         assertEquals(recvOutput, response);
     }
 
-    // delete roles (DELETE)
-
     @Test
-    public void testDeleteRole() throws Exception {
+    public void testUpdateRole_withoutDbapiId() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -346,7 +335,43 @@ public class TestAutoCryptService_Roles {
         returnModule.at("issuer_ref", "default");
         returnModule.at("ttl", "24h");
         // Define mocked service
-        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+        // should not arrive
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("name", name);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.updateRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    // delete roles (DELETE)
+
+    @Test
+    public void testDeleteRole() throws Exception {
+        // Define expected input/output of the mocked module
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnModule = Json.object();
+        returnModule.at("name", name);
+        returnModule.at("issuer_ref", "default");
+        returnModule.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/role/" + name))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
@@ -356,9 +381,9 @@ public class TestAutoCryptService_Roles {
         wireMockServerModule.stubFor(x);
 
         Json returnBd = Json.object();
-        returnBd.at("idDb", "id");
+        returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/"+"id"))
+        MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/" + id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -369,6 +394,7 @@ public class TestAutoCryptService_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
@@ -388,9 +414,6 @@ public class TestAutoCryptService_Roles {
     @Test
     public void testDeleteRole_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -403,6 +426,7 @@ public class TestAutoCryptService_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
@@ -424,9 +448,6 @@ public class TestAutoCryptService_Roles {
     @Test
     public void testDeleteRole_withoutName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnModule = Json.object();
@@ -439,6 +460,7 @@ public class TestAutoCryptService_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
@@ -449,6 +471,40 @@ public class TestAutoCryptService_Roles {
         recvOutput.at("success", false);
         Json error = Json.object();
         error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.deleteRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteRole_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnModule = Json.object();
+        returnModule.at("name", name);
+        returnModule.at("issuer_ref", "default");
+        returnModule.at("ttl", "24h");
+        // Define mocked service
+        // should not arrive to module
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("name", name);
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.deleteRole(sentParams);

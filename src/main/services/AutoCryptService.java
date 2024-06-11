@@ -175,6 +175,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json updateIssuerInfo(Json body) {
+        // Dbapi id
+        if (!body.has("id") || !body.get("id").isNumber()) {
+            return errorVariableNotFound("id");
+        }
+        int id = body.get("id").asInteger();
+        body.delAt("id");
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -188,7 +194,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.getMethods().updateIssuerInfo(issuerRef, body, params).toJson();
+        return manager.getMethods().updateIssuerInfo(id, issuerRef, body, params).toJson();
     }
 
     /**
@@ -197,6 +203,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json deleteIssuer(Json body) {
+        // Dbapi id
+        if (!body.has("id") || !body.get("id").isNumber()) {
+            return errorVariableNotFound("id");
+        }
+        int id = body.get("id").asInteger();
+        body.delAt("id");
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -210,7 +222,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.getMethods().deleteIssuer(issuerRef,
+        return manager.getMethods().deleteIssuer(id,
+                issuerRef,
                 body,
                 params
         ).toJson();
@@ -297,6 +310,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and name of role
      */
     public Json deleteRole(Json body) {
+        // Dbapi id
+        if (!body.has("id") || !body.get("id").isNumber()) {
+            return errorVariableNotFound("id");
+        }
+        int id = body.get("id").asInteger();
+        body.delAt("id");
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -310,7 +329,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String name = body.get("name").asString();
         body.delAt("name");
 
-        return manager.getMethods().deleteRole(name, body, params).toJson();
+        return manager.getMethods().deleteRole(id, name, body, params).toJson();
     }
 
     /**
@@ -319,6 +338,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and name of role, others?
      */
     public Json updateRole(Json body) {
+        // Dbapi id
+        if (!body.has("id") || !body.get("id").isNumber()) {
+            return errorVariableNotFound("id");
+        }
+        int id = body.get("id").asInteger();
+        body.delAt("id");
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -332,7 +357,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String name = body.get("name").asString();
         body.delAt("name");
 
-        return manager.getMethods().updateRole(name, body, params).toJson();
+        return manager.getMethods().updateRole(id, name, body, params).toJson();
     }
 
     /**
@@ -428,6 +453,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json revokeCertificate(Json body) {
+        // Dbapi id
+        if (!body.has("id") || !body.get("id").isNumber()) {
+            return errorVariableNotFound("id");
+        }
+        int id = body.get("id").asInteger();
+        body.delAt("id");
         // check params
         Json params = Json.object();
         if (!body.has("path") || !body.get("path").isString()) {
@@ -441,7 +472,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String serialNumber = body.get("serial_number").asString();
         body.delAt("serial_number");
 
-        return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
+        return manager.getMethods().revokeCertificate(id, serialNumber, params).toJson();
     }
 
     /**

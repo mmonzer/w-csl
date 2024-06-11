@@ -33,6 +33,9 @@ public class TestAutoCryptModule_Roles {
 
     private AutoCryptService service;
     private static final Json configObj = CSLContext.instance.getConfig();
+    String path = "/dev/null";
+    String name = "dummy";
+    int id = 1;
 
     @BeforeEach
     public void setUp() {
@@ -57,9 +60,6 @@ public class TestAutoCryptModule_Roles {
     @Test
     public void testGetRole_normalUse() throws Exception {
         // Define expected input/output of the mocked module
-        String name = "dummy";
-        String path = "/dev/null";
-
         Json returnOutput = mockGetRole(path, name);
 
 
@@ -434,8 +434,6 @@ public class TestAutoCryptModule_Roles {
     @Test
     public void testUpdateRole() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -457,6 +455,7 @@ public class TestAutoCryptModule_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
@@ -477,9 +476,6 @@ public class TestAutoCryptModule_Roles {
     @Test
     public void testUpdateRole_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
@@ -500,6 +496,7 @@ public class TestAutoCryptModule_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
@@ -521,9 +518,48 @@ public class TestAutoCryptModule_Roles {
     @Test
     public void testUpdateRole_withoutName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+        // Define mocked service
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/role/"+name))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(returnOutput.toString())
+                );
+        stubFor(x);
 
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("id", id);
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.updateRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testUpdateRole_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
@@ -545,7 +581,7 @@ public class TestAutoCryptModule_Roles {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_role");
         sentInput.at("params", sentParams);
@@ -553,7 +589,7 @@ public class TestAutoCryptModule_Roles {
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
         Json error = Json.object();
-        error.at("reason", "name is missing from body");
+        error.at("reason", "id is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.updateRole(sentParams);
@@ -567,9 +603,6 @@ public class TestAutoCryptModule_Roles {
     @Test
     public void testDeleteRole() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
@@ -589,6 +622,7 @@ public class TestAutoCryptModule_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
@@ -630,6 +664,7 @@ public class TestAutoCryptModule_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
@@ -673,6 +708,7 @@ public class TestAutoCryptModule_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
@@ -683,6 +719,41 @@ public class TestAutoCryptModule_Roles {
         recvOutput.at("success", false);
         Json error = Json.object();
         error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.deleteRole(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteRole_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "default");
+        returnOutput.at("ttl", "24h");
+
+        // Define mocked service
+        // should not arrive here
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("name", name);
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_role");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.deleteRole(sentParams);

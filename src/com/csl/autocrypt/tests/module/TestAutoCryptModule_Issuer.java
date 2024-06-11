@@ -41,7 +41,7 @@ public class TestAutoCryptModule_Issuer {
         // This ensures that we don't touch the DB
         service = new AutoCryptService();
         service.init(configObj.get(service.getConfigFileSectionName()), getUserDir());
-        service. getManager().getMethods().setSaveToDb(false);
+        service.getManager().getMethods().setSaveToDb(false);
     }
 
     @AfterEach
@@ -65,7 +65,7 @@ public class TestAutoCryptModule_Issuer {
         returnOutput.at("key1", "val1");
         returnOutput.at("key2", "val2");
         // Define mocked service
-        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
+        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
@@ -106,7 +106,7 @@ public class TestAutoCryptModule_Issuer {
         returnOutput.at("key1", "val1");
         returnOutput.at("key2", "val2");
         // Define mocked service
-        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
+        MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
@@ -320,7 +320,7 @@ public class TestAutoCryptModule_Issuer {
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/issuer/import"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\""+file+"\"}"))
+                .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\"" + file + "\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -352,7 +352,7 @@ public class TestAutoCryptModule_Issuer {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
         StringBuilder file = new StringBuilder("This is a file.");
-        for (int i=0; i<15; i++) {
+        for (int i = 0; i < 15; i++) {
             file.append(file);
         }
 
@@ -365,7 +365,7 @@ public class TestAutoCryptModule_Issuer {
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/issuer/import"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\""+file+"\"}"))
+                .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\"" + file + "\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -397,7 +397,7 @@ public class TestAutoCryptModule_Issuer {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
         StringBuilder file = new StringBuilder("This is a file.");
-        for (int i=0; i<16; i++) {
+        for (int i = 0; i < 16; i++) {
             file.append(file);
         }
 
@@ -410,7 +410,7 @@ public class TestAutoCryptModule_Issuer {
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/issuer/import"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\""+file+"\"}"))
+                .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\"" + file + "\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -479,6 +479,7 @@ public class TestAutoCryptModule_Issuer {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
         String issuerRef = "issuerRef";
+        int id = 1;
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -486,7 +487,7 @@ public class TestAutoCryptModule_Issuer {
         returnOutput.at("ttl", "24h");
 
         // Define mocked service behavior
-        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"ttl\":\"24h\"}"))
@@ -500,6 +501,7 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("ttl", "24h");
@@ -529,7 +531,7 @@ public class TestAutoCryptModule_Issuer {
         returnOutput.at("enable_aia_url_templating", false);
 
         // Define mocked service behavior
-        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"enable_aia_url_templating\":false}"))
@@ -543,6 +545,7 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", 1);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("enable_aia_url_templating", false);
@@ -575,10 +578,10 @@ public class TestAutoCryptModule_Issuer {
         returnOutput.at("issuing_certificates", inputList);
 
         // Define mocked service behavior
-        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"issuing_certificates\":"+inputList+"}"))
+                .withRequestBody((StringValuePattern) new EqualToPattern("{\"issuing_certificates\":" + inputList + "}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -588,6 +591,7 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", 1);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("issuing_certificates", inputList);
@@ -622,11 +626,11 @@ public class TestAutoCryptModule_Issuer {
         returnOutput.at("enable_aia_url_templating", false);
 
         // Define mocked service behavior
-        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
+        MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern(
-                        "{\"issuing_certificates\":"+inputList+",\"ttl\":\"24h\",\"enable_aia_url_templating\":false}"))
+                        "{\"issuing_certificates\":" + inputList + ",\"ttl\":\"24h\",\"enable_aia_url_templating\":false}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -637,6 +641,7 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", 1);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("issuing_certificates", inputList);
@@ -667,6 +672,7 @@ public class TestAutoCryptModule_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("issuer_ref", "str");
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
@@ -695,6 +701,7 @@ public class TestAutoCryptModule_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
@@ -703,6 +710,35 @@ public class TestAutoCryptModule_Issuer {
         recvOutput.at("success", false);
         Json error = Json.object();
         error.at("reason", "issuer_ref is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.updateIssuerInfo(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testUpdateIssuer_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_issuer_info");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.updateIssuerInfo(sentParams);
@@ -724,7 +760,7 @@ public class TestAutoCryptModule_Issuer {
         Json returnOutput = Json.object();
 
         // Define mocked service behavior
-        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
+        MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
@@ -738,6 +774,7 @@ public class TestAutoCryptModule_Issuer {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -763,6 +800,7 @@ public class TestAutoCryptModule_Issuer {
         Json sentParams = Json.object();
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "issuerRef");
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -791,6 +829,7 @@ public class TestAutoCryptModule_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
+        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -799,6 +838,35 @@ public class TestAutoCryptModule_Issuer {
         recvOutput.at("success", false);
         Json error = Json.object();
         error.at("reason", "issuer_ref is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.deleteIssuer(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteIssuer_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+        String path = "/dev/null";
+        String issuerRef = "issuerRef";
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", issuerRef);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_issuer_info");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "id is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.deleteIssuer(sentParams);

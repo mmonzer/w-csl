@@ -224,7 +224,8 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponser method, JsonApiResponse responseFromModule) {
         if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            return method.apply(responseFromModule.getResult());
+            Json result = responseFromModule.getResult();
+            return method.apply(result!=null?result:Json.object());
         } else {
             return responseFromModule;
         }

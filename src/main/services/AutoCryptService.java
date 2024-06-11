@@ -48,8 +48,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         manager.setModuleIp(config.at("ip").asString());
         manager.setModulePort(config.at("port").asInteger());
         Json globalConfig = config.get("global");
-        manager.configureDbApiConnection(JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost"),
-                JsonUtil.getStringFromJson(globalConfig, "api_key", ""));
+//        manager.configureDbApiConnection(JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost"),
+//                JsonUtil.getStringFromJson(globalConfig, "api_key", ""));
         manager.reinitApiHandler();
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);

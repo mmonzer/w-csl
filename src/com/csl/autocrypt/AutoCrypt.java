@@ -1,5 +1,9 @@
 package com.csl.autocrypt;
 
+import com.csl.core.CSLContext;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+
 /**
  * API client of the module AutoCrypt
  */
@@ -15,6 +19,10 @@ public class AutoCrypt {
 
     public AutoCrypt(String name) {
         this.name = name;
+        Json config = CSLContext.instance.getConfig();
+        Json globalConfig = config.get("global");
+        dbIp = JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
+        dbApikey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
     }
 
     /**

@@ -1043,11 +1043,52 @@ public class DbapiHandler implements AutoCloseable {
      * @return The new BSON export ID.
      * @throws Exception If the request failed.
      */
-    public int requestBsonExportID() throws Exception {
-        // TODO implement
-        int min = 1;
-        int max = 10000;
-        int id = (int) (Math.random() * (max - min + 1) + min);
-        return id;
+    public int requestBsonExportID(ExportQuery exportQuery) throws Exception {
+        Json contents = Json.object("file_name", exportQuery.getFilename());
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.FILE_ACTION_STATUS_CREATE_FOR_HTTP_TEMPLATE_EXPORT);
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code: " + response.getStatus());
+        }
+        Json responseContents = Json.read(response.getContentAsString());
+        if (responseContents.isObject() && responseContents.has("file_action_status_id") && responseContents.get("file_action_status_id").isNumber()) {
+            int id = responseContents.get("file_action_status_id").asInteger();
+            logger.debug("Got BSON export ID: {}", id);
+            return id;
+        }
+        throw new Exception("Unexpected response: " + responseContents.toString());
+    }
+
+    /**
+     * Update the status of an export query in DB-API.
+     *
+     * @param exportQuery The export query to update.
+     * @throws Exception  If the request failed.
+     */
+    public void notifyExportFinished(int id, ExportQuery exportQuery) throws Exception {
+        Json contents;
+        switch (exportQuery.getStatus()) {
+            case SUCCESS:
+                contents = Json.object("status", FileActionStatus.SUCCEEDED.getValue());
+                break;
+            case ERROR:
+                // Add an error status
+                contents = Json.object("status", FileActionStatus.FAILED.getValue());
+                break;
+            default:
+                logger.warn("Unknown export status: {}", exportQuery.getStatus());
+                return;
+        }
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending import status to DB-API", e);
+        }
     }
 }

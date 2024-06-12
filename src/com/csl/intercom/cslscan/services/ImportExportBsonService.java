@@ -107,8 +107,8 @@ public class ImportExportBsonService {
 
     public int startNewExportTask() throws Exception {
         try {
-            int id = this.dbapiHandler.requestBsonExportID();
             ExportQuery exportQuery = this.scanApiHandler.requestExportHttpTemplates();
+            int id = this.dbapiHandler.requestBsonExportID(exportQuery);
             this.addExportTask(id, exportQuery);
             return id;
         } catch (Exception e) {
@@ -190,12 +190,14 @@ public class ImportExportBsonService {
             try {
                 this.scanApiHandler.downloadExportFile(exportQuery);
                 this.scanApiHandler.deleteExportFile(exportQuery);
-                // TODO: send the bson file to DB-API
                 this.dbapiHandler.uploadHttpTemplatesBsonFile(exportQuery);
+                this.dbapiHandler.notifyExportFinished(id, exportQuery);
                 this.fileStorageService.deleteFile(exportQuery.getFilename());
                 this.exportTasks.remove(id);
             } catch (ExecutionException | InterruptedException | TimeoutException e) {
                 logger.error("handleExportTask: error downloading file: {}", exportQuery.getFilename(), e);
+            } catch (Exception e) {
+                logger.error("handleExportTask: error uploading file: {}", exportQuery.getFilename(), e);
             }
         }
     }

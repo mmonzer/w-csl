@@ -35,6 +35,7 @@ public enum DbapiEndpoint {
     FILE_ACTION_STATUS_DETAILS(FILE_ACTION_STATUS.getEndpoint() + "/%d"),
 //    FILE_ACTION_STATUS_AVAILABLE(FILE_ACTION_STATUS.getEndpoint() + "/available"),
     FILE_ACTION_STATUS_AVAILABLE(FILE_ACTION_STATUS.getEndpoint()),
+    FILE_ACTION_STATUS_CREATE_FOR_HTTP_TEMPLATE_EXPORT("/cpecve/create_file_action_status_for_exported_http_templates/"),
     ;
 
     private final String endpoint;

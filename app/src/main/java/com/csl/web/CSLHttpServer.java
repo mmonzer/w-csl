@@ -80,14 +80,6 @@ public class CSLHttpServer {
 		sparkServer.staticFiles.externalLocation(sc.getRootdir());
 		sparkServer.staticFiles.expireTime(600);
 
-		if (!sc.getRootdir2().isEmpty()) {
-			sparkServer.staticFiles.externalLocation2(sc.getRootdir2());
-		}
-
-		if (!sc.getRootdir3().isEmpty()) {
-			sparkServer.staticFiles.externalLocation3(sc.getRootdir3());
-		}
-
 		sparkServer.port(sc.getPort());
 
 		// Websockets must be registered before regular HTTP routes

@@ -27,7 +27,7 @@ public class TestAutoCryptService {
     // API module
     protected static final int PORT_MODULE = 8082; // Change this to your actual base URL
     protected static final String IP_MODULE = "localhost"; // Change this to your actual base URL
-    protected static final String BASE_URL_MODULE = "http://"+IP_MODULE+":" + PORT_MODULE; // Change this to your actual base URL
+    protected static final String BASE_URL_MODULE = "http://" + IP_MODULE + ":" + PORT_MODULE; // Change this to your actual base URL
     protected static final String ENDPOINT_MODULE = "/api";
     // API client
     protected static final int PORT_CLIENT = 9900; // Change this to your actual base URL
@@ -63,7 +63,7 @@ public class TestAutoCryptService {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(returnedOutput)
-                        );
+                );
         stubFor(x);
 
         // Define request to th mocked service
@@ -111,6 +111,7 @@ public class TestAutoCryptService {
 
         String path = "/dev/null";
         String roleName = "root-role";
+        String name = "name";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -121,7 +122,7 @@ public class TestAutoCryptService {
         MappingBuilder x = post(urlPathMatching("/api/certificate/issue"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\""+roleName+"\"}"))
+                .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\"" + roleName + "\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -145,6 +146,7 @@ public class TestAutoCryptService {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("role_name", roleName);
         Json sentInput = Json.object();
@@ -159,8 +161,6 @@ public class TestAutoCryptService {
 
         // assert behavior
         assertEquals(recvOutput, response);
-
-
     }
 
     // TODO: test changeIp and changePort

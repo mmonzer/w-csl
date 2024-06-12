@@ -1,5 +1,6 @@
 package com.csl.autocrypt.tests.service;
 
+import com.csl.autocrypt.tests.TestConfig;
 import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -18,30 +19,7 @@ import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestAutoCryptService_Roles {
-
-    // API module
-    private static final int PORT_MODULE = 8082; // Change this to your actual base URL
-    private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
-    private static final String ENDPOINT_MODULE = "/api";
-    // API db
-    private static final int PORT_DBAPI = 8787; // Change this to your actual base URL
-    private static final String BASE_URL_DBAPI = "http://localhost:" + PORT_DBAPI; // Change this to your actual base URL
-    private static final String ENDPOINT_DBAPI = "/api/autocrypt";
-    // API client
-    private static final int PORT_CLIENT = 9900; // Change this to your actual base URL
-    private static final String BASE_URL_CLIENT = "http://localhost:" + PORT_CLIENT; // Change this to your actual base URL
-    private static final String ENDPOINT_CLIENT = "/autocrypt";
-
-    private WireMockServer wireMockServerModule;
-    private WireMockServer wireMockServerBd;
-
-    private AutoCryptService service;
-    private static final Json configObj = CSLContext.instance.getConfig();
-
-    String path = "/dev/null";
-    String name = "dummy";
-    int id = 1;
+public class TestAutoCryptService_Roles extends TestConfig {
 
     @BeforeEach
     public void setUp() {
@@ -60,8 +38,8 @@ public class TestAutoCryptService_Roles {
         globalConfig.at("use_ssl", false);
 
         Json config = Json.object();
-        config.at("ip", "localhost");
-        config.at("port", 8082);
+        config.at("ip", configObj.get("auto_crypt").get("ip").asString());
+        config.at("port", PORT_MODULE);
         config.at("global", globalConfig);
 
         service = new AutoCryptService();
@@ -76,7 +54,6 @@ public class TestAutoCryptService_Roles {
         wireMockServerBd.stop();
     }
 
-
     // create roles (POST)
 
     @Test
@@ -86,7 +63,7 @@ public class TestAutoCryptService_Roles {
         expectedInput.at("path", path);
         Json returnModule = Json.object();
         returnModule.at("name", name);
-        returnModule.at("issuer_ref", "str");
+        returnModule.at("issuer_ref", issuerRef);
         // Define mocked service
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/role"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
@@ -119,7 +96,7 @@ public class TestAutoCryptService_Roles {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "create_role");
         sentInput.at("params", sentParams);
@@ -141,7 +118,7 @@ public class TestAutoCryptService_Roles {
         expectedInput.at("path", path);
         Json returnModule = Json.object();
         returnModule.at("name", name);
-        returnModule.at("issuer_ref", "str");
+        returnModule.at("issuer_ref", issuerRef);
 
         // Define mocked service
         // should not be used
@@ -149,7 +126,7 @@ public class TestAutoCryptService_Roles {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "create_role");
         sentInput.at("params", sentParams);
@@ -173,7 +150,7 @@ public class TestAutoCryptService_Roles {
         expectedInput.at("path", path);
         Json returnModule = Json.object();
         returnModule.at("name", name);
-        returnModule.at("issuer_ref", "str");
+        returnModule.at("issuer_ref", issuerRef);
 
         // Define mocked service
         // should not be used
@@ -181,7 +158,7 @@ public class TestAutoCryptService_Roles {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("path", path);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "create_role");
         sentInput.at("params", sentParams);
@@ -226,7 +203,7 @@ public class TestAutoCryptService_Roles {
             returnBd.at(e.getKey(), e.getValue());
         }
         // Define mocked service behavior
-        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/" + id))
+        MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/"+id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
@@ -242,7 +219,7 @@ public class TestAutoCryptService_Roles {
         sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_role");
         sentInput.at("params", sentParams);
@@ -274,7 +251,7 @@ public class TestAutoCryptService_Roles {
         Json sentParams = Json.object();
         sentParams.at("id", id);
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_role");
         sentInput.at("params", sentParams);
@@ -308,7 +285,7 @@ public class TestAutoCryptService_Roles {
         Json sentParams = Json.object();
         sentParams.at("id", id);
         sentParams.at("path", path);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_role");
         sentInput.at("params", sentParams);
@@ -340,9 +317,9 @@ public class TestAutoCryptService_Roles {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("path", path);
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_role");
         sentInput.at("params", sentParams);
@@ -368,8 +345,8 @@ public class TestAutoCryptService_Roles {
         expectedInput.at("path", path);
         Json returnModule = Json.object();
         returnModule.at("name", name);
-        returnModule.at("issuer_ref", "default");
-        returnModule.at("ttl", "24h");
+        returnModule.at("issuer_ref", issuerRef);
+        returnModule.at("ttl", ttl);
         // Define mocked service
         MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/role/" + name))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
@@ -383,7 +360,7 @@ public class TestAutoCryptService_Roles {
         Json returnBd = Json.object();
         returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/" + id))
+        MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/"+id))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -397,7 +374,7 @@ public class TestAutoCryptService_Roles {
         sentParams.at("id", id);
         sentParams.at("path", path);
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_role");
         sentInput.at("params", sentParams);
@@ -428,7 +405,7 @@ public class TestAutoCryptService_Roles {
         Json sentParams = Json.object();
         sentParams.at("id", id);
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_role");
         sentInput.at("params", sentParams);
@@ -462,7 +439,7 @@ public class TestAutoCryptService_Roles {
         Json sentParams = Json.object();
         sentParams.at("id", id);
         sentParams.at("path", path);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_role");
         sentInput.at("params", sentParams);
@@ -496,7 +473,7 @@ public class TestAutoCryptService_Roles {
         Json sentParams = Json.object();
         sentParams.at("name", name);
         sentParams.at("path", path);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_role");
         sentInput.at("params", sentParams);

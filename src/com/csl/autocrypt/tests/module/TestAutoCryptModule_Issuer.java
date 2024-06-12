@@ -1,5 +1,6 @@
 package com.csl.autocrypt.tests.module;
 
+import com.csl.autocrypt.tests.TestConfig;
 import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -16,27 +17,15 @@ import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestAutoCryptModule_Issuer {
+public class TestAutoCryptModule_Issuer extends TestConfig {
 
-    // API module
-    private static final int PORT_MODULE = 8082; // Change this to your actual base URL
-    private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
-    private static final String ENDPOINT_MODULE = "/api";
-    // API client
-    private static final int PORT_CLIENT = 9900; // Change this to your actual base URL
-    private static final String BASE_URL_CLIENT = "http://localhost:" + PORT_CLIENT; // Change this to your actual base URL
-    private static final String ENDPOINT_CLIENT = "/autocrypt";
 
-    private WireMockServer wireMockServer;
-
-    private AutoCryptService service;
-    private static final Json configObj = CSLContext.instance.getConfig();
 
     @BeforeEach
     public void setUp() {
         // Mock the module
         wireMockServer = new WireMockServer(PORT_MODULE);
-        WireMock.configureFor("localhost", PORT_MODULE);
+        WireMock.configureFor(configObj.get("auto_crypt").get("ip").asString(), PORT_MODULE);
         wireMockServer.start();
         // This ensures that we don't touch the DB
         service = new AutoCryptService();
@@ -55,8 +44,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testGetIssuer_normalUse() throws Exception {
         // Define expected input/output of the mocked module
-        String issuerRef = "dummyRef";
-        String path = "/dev/null";
 
         // Define mock behavior
         Json expectedInput = Json.object();
@@ -96,8 +83,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testGetIssuer_normalUse_extraParams() throws Exception {
         // Define expected input/output of the mocked module
-        String issuerRef = "dummyRef";
-        String path = "/dev/null";
 
         // Define mock behavior
         Json expectedInput = Json.object();
@@ -165,7 +150,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testGetIssuer_withoutIssuerRef() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         // Define mock behavior
         // should not arrive to module
@@ -194,7 +178,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testListIssuers_normalUseWithPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         // Define mock behavior
         Json expectedInput = Json.object();
@@ -234,7 +217,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testListIssuers_normalUseWithoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         Json returnOutput = Json.array();
         returnOutput.add("string1");
@@ -269,7 +251,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testListIssuers_normalUseWithOtherParams() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         Json returnOutput = Json.array();
         returnOutput.add("string1");
@@ -308,7 +289,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testImportIssuer() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
         String file = "This is a file.";
 
         Json expectedInput = Json.object();
@@ -331,6 +311,7 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("file", file);
         Json sentInput = Json.object();
@@ -350,7 +331,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testImportIssuer_file500kB() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
         StringBuilder file = new StringBuilder("This is a file.");
         for (int i = 0; i < 15; i++) {
             file.append(file);
@@ -376,6 +356,7 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("file", file.toString());
         Json sentInput = Json.object();
@@ -395,7 +376,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testImportIssuer_file1MB() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
         StringBuilder file = new StringBuilder("This is a file.");
         for (int i = 0; i < 16; i++) {
             file.append(file);
@@ -421,6 +401,7 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("file", file.toString());
         Json sentInput = Json.object();
@@ -440,9 +421,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testImportIssuer_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String name = "dummy";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
@@ -472,14 +450,43 @@ public class TestAutoCryptModule_Issuer {
         assertEquals(recvOutput, response);
     }
 
+    @Test
+    public void testImportIssuer_withoutName() throws Exception {
+        // Define expected input/output of the mocked module
+        Json expectedInput = Json.object();
+        expectedInput.at("path", path);
+        Json returnOutput = Json.object();
+        returnOutput.at("name", name);
+        returnOutput.at("issuer_ref", "str");
+
+        // Define mocked service
+        // should not arrive to mocked service
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", "str");
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "import_issuer");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.importCertificate(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
     // update issuers (PUT)
 
     @Test
     public void testUpdateIssuer_oneParamStr() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
-        int id = 1;
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -502,6 +509,7 @@ public class TestAutoCryptModule_Issuer {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("id", id);
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("ttl", "24h");
@@ -522,8 +530,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testUpdateIssuer_oneParamBool() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -545,7 +551,8 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("id", 1);
+        sentParams.at("id", id);
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("enable_aia_url_templating", false);
@@ -566,8 +573,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testUpdateIssuer_oneParamList() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -591,7 +596,8 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("id", 1);
+        sentParams.at("id", id);
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("issuing_certificates", inputList);
@@ -612,8 +618,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testUpdateIssuer_multipleParams() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -641,7 +645,8 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("id", 1);
+        sentParams.at("id", id);
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("issuing_certificates", inputList);
@@ -671,8 +676,9 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("issuer_ref", "str");
-        sentParams.at("id", 1);
+        sentParams.at("id", id);
+        sentParams.at("issuer_ref", issuerRef);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
@@ -692,7 +698,6 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testUpdateIssuer_withoutIssuerRef() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         // Define mocked service behavior
         // should not arrive to service
@@ -700,8 +705,9 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
-        sentParams.at("id", 1);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
@@ -719,9 +725,8 @@ public class TestAutoCryptModule_Issuer {
     }
 
     @Test
-    public void testUpdateIssuer_withoutDbapiId() throws Exception {
+    public void testUpdateIssuer_withoutDbapiName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         // Define mocked service behavior
         // should not arrive to service
@@ -729,8 +734,38 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
-        sentParams.at("issuer_ref", "str");
+        sentParams.at("issuer_ref", issuerRef);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "update_issuer_info");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.updateIssuerInfo(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testUpdateIssuer_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("name", name);
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
@@ -746,14 +781,40 @@ public class TestAutoCryptModule_Issuer {
         // assert behavior
         assertEquals(recvOutput, response);
     }
+//
+//    @Test
+//    public void testUpdateIssuer_withoutDbapiName() throws Exception {
+//        // Define expected input/output of the mocked module
+//
+//        // Define mocked service behavior
+//        // should not arrive to service
+//
+//
+//        // Define expected input/output of the api
+//        Json sentParams = Json.object();
+//        sentParams.at("path", path);
+//        sentParams.at("issuer_ref", "str");
+//        Json sentInput = Json.object();
+//        sentInput.at("cmd", "update_issuer_info");
+//        sentInput.at("params", sentParams);
+//
+//        Json recvOutput = Json.object();
+//        recvOutput.at("success", false);
+//        Json error = Json.object();
+//        error.at("reason", "name is missing from body");
+//        recvOutput.at("error", error);
+//
+//        Json response = service.updateIssuerInfo(sentParams);
+//
+//        // assert behavior
+//        assertEquals(recvOutput, response);
+//    }
 
     // delete issuers (DELETE)
 
     @Test
     public void testDeleteIssuer() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -772,6 +833,8 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("id", 1);
@@ -798,9 +861,9 @@ public class TestAutoCryptModule_Issuer {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("name", name);
-        sentParams.at("issuer_ref", "issuerRef");
-        sentParams.at("id", 1);
+        sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -820,16 +883,15 @@ public class TestAutoCryptModule_Issuer {
     @Test
     public void testDeleteIssuer_withoutIssuerRef() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
 
         // Define mocked service behavior
         // should not arrive to service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
-        sentParams.at("id", 1);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
@@ -847,16 +909,43 @@ public class TestAutoCryptModule_Issuer {
     }
 
     @Test
-    public void testDeleteIssuer_withoutDbapiId() throws Exception {
+    public void testDeleteIssuer_withoutDbapiName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String issuerRef = "issuerRef";
 
         // Define mocked service behavior
         // should not arrive to service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
+        sentParams.at("path", path);
+        sentParams.at("issuer_ref", issuerRef);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "delete_issuer_info");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.deleteIssuer(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteIssuer_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();

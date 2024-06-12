@@ -1,5 +1,6 @@
 package com.csl.autocrypt.tests.module;
 
+import com.csl.autocrypt.tests.TestConfig;
 import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -16,27 +17,14 @@ import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestAutoCryptModule_Certificate {
+public class TestAutoCryptModule_Certificate extends TestConfig {
 
-    // API module
-    private static final int PORT_MODULE = 8082; // Change this to your actual base URL
-    private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
-    private static final String ENDPOINT_MODULE = "/api";
-    // API client
-    private static final int PORT_CLIENT = 9900; // Change this to your actual base URL
-    private static final String BASE_URL_CLIENT = "http://localhost:" + PORT_CLIENT; // Change this to your actual base URL
-    private static final String ENDPOINT_CLIENT = "/autocrypt";
-
-    private WireMockServer wireMockServer;
-
-    private AutoCryptService service;
-    private static final Json configObj = CSLContext.instance.getConfig();
 
     @BeforeEach
     public void setUp() {
         // Mock the module
         wireMockServer = new WireMockServer(PORT_MODULE);
-        WireMock.configureFor("localhost", PORT_MODULE);
+        WireMock.configureFor(configObj.get("auto_crypt").get("ip").asString(), PORT_MODULE);
         wireMockServer.start();
         // This ensures that we don't touch the DB
         service = new AutoCryptService();
@@ -145,7 +133,7 @@ public class TestAutoCryptModule_Certificate {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("certificate_ref", serialNumber);
+        sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
         sentInput.at("cmd", "get_certificate_info");
         sentInput.at("params", sentParams);
@@ -234,7 +222,6 @@ public class TestAutoCryptModule_Certificate {
     @Test
     public void testListCertificates_normalUseWithoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         Json returnOutput = Json.array();
         returnOutput.add("string1");
@@ -308,8 +295,6 @@ public class TestAutoCryptModule_Certificate {
     @Test
     public void testGenerateCertificate_oneParam() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String roleName = "roleName";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -331,6 +316,7 @@ public class TestAutoCryptModule_Certificate {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("role_name", roleName);
         Json sentInput = Json.object();
@@ -350,15 +336,12 @@ public class TestAutoCryptModule_Certificate {
     @Test
     public void testGenerateCertificate_multipleParam() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String roleName = "roleName";
-        String commonName = "commonName";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
         returnOutput.at("role_name", roleName);
-        returnOutput.at("commonName", commonName);
+        returnOutput.at("common_name", commonName);
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/certificate/issue"))
@@ -375,6 +358,7 @@ public class TestAutoCryptModule_Certificate {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("role_name", roleName);
         sentParams.at("common_name", commonName);
@@ -395,15 +379,15 @@ public class TestAutoCryptModule_Certificate {
     @Test
     public void testGenerateCertificate_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String name = "dummy";
 
         // Define mocked service
         // should not arrive to mocked service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("role_name", name);
-        sentParams.at("certificate_ref", "str");
+        sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_certificate");
         sentInput.at("params", sentParams);
@@ -423,15 +407,15 @@ public class TestAutoCryptModule_Certificate {
     @Test
     public void testGenerateCertificate_withoutRoleName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         // Define mocked service
         // should not arrive to mocked service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
-        sentParams.at("certificate_ref", "str");
+        sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_certificate");
         sentInput.at("params", sentParams);
@@ -448,14 +432,37 @@ public class TestAutoCryptModule_Certificate {
         assertEquals(recvOutput, response);
     }
 
+    @Test
+    public void testGenerateCertificate_withoutName() throws Exception {
+        // Define expected input/output of the mocked module
+        // Define mocked service
+        // should not arrive to mocked service
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("serial_number", serialNumber);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "generate_certificate");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.generateCertificate(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
     // revoke certificate (DELETE)
 
     @Test
     public void testDeleteCertificate() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String serialNumber = "serialNumber";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json returnOutput = Json.object();
@@ -473,9 +480,10 @@ public class TestAutoCryptModule_Certificate {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
-        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "revoke_certificate");
         sentInput.at("params", sentParams);
@@ -492,16 +500,15 @@ public class TestAutoCryptModule_Certificate {
     @Test
     public void testDeleteCertificate_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String name = "dummy";
 
         // Define mocked service behavior
         // should not arrive to service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("name", name);
-        sentParams.at("certificate_ref", "certificateRef");
-        sentParams.at("id", 1);
+        sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
         sentInput.at("cmd", "revoke_certificate");
         sentInput.at("params", sentParams);
@@ -521,15 +528,15 @@ public class TestAutoCryptModule_Certificate {
     @Test
     public void testDeleteCertificate_withoutSerialNumber() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         // Define mocked service behavior
         // should not arrive to service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
+        sentParams.at("name", name);
         sentParams.at("path", path);
-        sentParams.at("id", 1);
         Json sentInput = Json.object();
         sentInput.at("cmd", "revoke_certificate");
         sentInput.at("params", sentParams);
@@ -547,17 +554,45 @@ public class TestAutoCryptModule_Certificate {
     }
 
     @Test
-    public void testDeleteCertificate_withoutDbapiId() throws Exception {
+    public void testDeleteCertificate_withoutDbapiName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
 
         // Define mocked service behavior
         // should not arrive to service
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("id", id);
         sentParams.at("path", path);
-        sentParams.at("certificate_ref", "certificateRef");
+        sentParams.at("serial_number", serialNumber);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "revoke_certificate");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.revokeCertificate(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testDeleteCertificate_withoutDbapiId() throws Exception {
+        // Define expected input/output of the mocked module
+
+        // Define mocked service behavior
+        // should not arrive to service
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("name", name);
+        sentParams.at("path", path);
+        sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
         sentInput.at("cmd", "revoke_certificate");
         sentInput.at("params", sentParams);

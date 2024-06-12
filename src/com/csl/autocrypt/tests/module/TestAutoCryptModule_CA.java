@@ -1,5 +1,6 @@
 package com.csl.autocrypt.tests.module;
 
+import com.csl.autocrypt.tests.TestConfig;
 import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -16,27 +17,13 @@ import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestAutoCryptModule_CA {
-
-    // API module
-    private static final int PORT_MODULE = 8082; // Change this to your actual base URL
-    private static final String BASE_URL_MODULE = "http://localhost:" + PORT_MODULE; // Change this to your actual base URL
-    private static final String ENDPOINT_MODULE = "/api";
-    // API client
-    private static final int PORT_CLIENT = 9900; // Change this to your actual base URL
-    private static final String BASE_URL_CLIENT = "http://localhost:" + PORT_CLIENT; // Change this to your actual base URL
-    private static final String ENDPOINT_CLIENT = "/autocrypt";
-
-    private WireMockServer wireMockServer;
-
-    private AutoCryptService service;
-    private static final Json configObj = CSLContext.instance.getConfig();
+public class TestAutoCryptModule_CA extends TestConfig {
 
     @BeforeEach
     public void setUp() {
         // Mock the module
         wireMockServer = new WireMockServer(PORT_MODULE);
-        WireMock.configureFor("localhost", PORT_MODULE);
+        WireMock.configureFor(configObj.get("auto_crypt").get("ip").asString(), PORT_MODULE);
         wireMockServer.start();
         // This ensures that we don't touch the DB
         service = new AutoCryptService();
@@ -55,10 +42,6 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateRoot_withPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String commonName = "commonName";
-        String ttl = "24h";
-
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
         Json expectedBody = Json.object();
@@ -82,6 +65,7 @@ public class TestAutoCryptModule_CA {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+        sentParams.at("name", name);
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
@@ -98,9 +82,6 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateRoot_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String commonName = "commonName";
-        String ttl = "24h";
-
         Json expectedBody = Json.object();
         expectedBody.at("common_name", commonName);
         expectedBody.at("ttl", ttl);
@@ -122,6 +103,7 @@ public class TestAutoCryptModule_CA {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("common_name", commonName);
+        sentParams.at("name", name);
         sentParams.at("ttl", ttl);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_root_ca");
@@ -139,8 +121,6 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateRoot_withoutCommonName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String ttl = "24h";
 
         // Define mocked service behavior
         // should not arrive to mocker service
@@ -150,6 +130,7 @@ public class TestAutoCryptModule_CA {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         sentParams.at("ttl", ttl);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_root_ca");
         sentInput.at("params", sentParams);
@@ -169,8 +150,6 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateRoot_withoutTTL() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String commonName = "commonName";
 
         // Define mocked service behavior
         // should not arrive to mocker service
@@ -180,6 +159,7 @@ public class TestAutoCryptModule_CA {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_root_ca");
         sentInput.at("params", sentParams);
@@ -196,15 +176,39 @@ public class TestAutoCryptModule_CA {
         assertEquals(recvOutput, response);
     }
 
+    @Test
+    public void testGenerateRoot_withoutName() throws Exception {
+        // Define expected input/output of the mocked module
+
+        // Define mocked service behavior
+        // should not arrive to mocker service
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+        sentParams.at("path", path);
+        sentParams.at("common_name", commonName);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "generate_root_ca");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "name is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.generateRootCA(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
     // Generate intermediate (POST)
 
     @Test
     public void testGenerateIntermediate_withPath() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String commonName = "commonName";
-        String ttl = "24h";
-        String type = "type";
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -229,8 +233,10 @@ public class TestAutoCryptModule_CA {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
+        sentParams.at("name", name);
         sentParams.at("ttl", ttl);
         sentParams.at("type", type);
         Json sentInput = Json.object();
@@ -249,9 +255,6 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateIntermediate_withoutPath() throws Exception {
         // Define expected input/output of the mocked module
-        String commonName = "commonName";
-        String ttl = "24h";
-        String type = "type";
 
         Json expectedBody = Json.object();
         expectedBody.at("common_name", commonName);
@@ -266,8 +269,10 @@ public class TestAutoCryptModule_CA {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
+        sentParams.at("name", name);
         sentParams.at("type", type);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_inter_ca");
@@ -288,9 +293,6 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateIntermediate_withoutCommonName() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String ttl = "24h";
-        String type = "type";
 
         // Define mocked service behavior
         // should not arrive to mocker service
@@ -298,8 +300,10 @@ public class TestAutoCryptModule_CA {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+
         sentParams.at("path", path);
         sentParams.at("ttl", ttl);
+        sentParams.at("name", name);
         sentParams.at("type", type);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_inter_ca");
@@ -320,9 +324,6 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateIntermediate_withoutTTL() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String type = "type";
-        String commonName = "commonName";
 
         // Define mocked service behavior
         // should not arrive to mocker service
@@ -330,9 +331,11 @@ public class TestAutoCryptModule_CA {
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         sentParams.at("type", type);
+        sentParams.at("name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "generate_inter_ca");
         sentInput.at("params", sentParams);
@@ -352,16 +355,43 @@ public class TestAutoCryptModule_CA {
     @Test
     public void testGenerateIntermediate_withoutType() throws Exception {
         // Define expected input/output of the mocked module
-        String path = "/dev/null";
-        String ttl = "24h";
-        String commonName = "commonName";
-
         // Define mocked service behavior
         // should not arrive to mocker service
 
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
+
+        sentParams.at("path", path);
+        sentParams.at("common_name", commonName);
+        sentParams.at("ttl", ttl);
+        sentParams.at("name", name);
+        Json sentInput = Json.object();
+        sentInput.at("cmd", "generate_inter_ca");
+        sentInput.at("params", sentParams);
+
+        Json recvOutput = Json.object();
+        recvOutput.at("success", false);
+        Json error = Json.object();
+        error.at("reason", "type is missing from body");
+        recvOutput.at("error", error);
+
+        Json response = service.generateIntermediateCA(sentParams);
+
+        // assert behavior
+        assertEquals(recvOutput, response);
+    }
+
+    @Test
+    public void testGenerateIntermediate_withoutDbapiName() throws Exception {
+        // Define expected input/output of the mocked module
+        // Define mocked service behavior
+        // should not arrive to mocker service
+
+
+        // Define expected input/output of the api
+        Json sentParams = Json.object();
+
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
@@ -372,7 +402,7 @@ public class TestAutoCryptModule_CA {
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
         Json error = Json.object();
-        error.at("reason", "type is missing from body");
+        error.at("reason", "name is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.generateIntermediateCA(sentParams);

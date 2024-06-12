@@ -42,12 +42,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Deletes the given issuer from the module and the DB
      *
-     * @param id identifier of the issuer in dbapi side
+     * @param id identifier of the issuer in dbapi db
      * @param body parameters with the path and the issuer id
      */
-    public JsonApiResponse deleteIssuer(int id,  Json body) {
+    public JsonApiResponse deleteIssuer(int id,   Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ISSUER_.toString() + id,
+                DbapiEndpointForCSLAutocrypt.ISSUER_.toString() +id,
                 null);
     }
 
@@ -77,24 +77,24 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Deletes the given role
      *
-     * @param id identifier of the issuer in dbapi side
+     * @param id identifier of the issuer in dbapi db
      * @param body parameters with the path and name of role
      */
     public JsonApiResponse deleteRole(int id, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ROLE_.toString() + id,
+                DbapiEndpointForCSLAutocrypt.ROLE_.toString() +id,
                 body);
     }
 
     /**
      * Updates the information of the given role
      *
-     * @param id identifier of the issuer in dbapi side
+     * @param id identifier of the issuer in dbapi db
      * @param body parameters with the path and name of role, others?
      */
     public JsonApiResponse updateRole(int id, Json body) {
         return this.sendPut(
-                DbapiEndpointForCSLAutocrypt.ROLE_.toString() + id,
+                DbapiEndpointForCSLAutocrypt.ROLE_.toString() +id,
                 body);
     }
 
@@ -112,12 +112,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Revokes the given certificate
      *
-     * @param id identifier of the issuer in dbapi side
+     * @param id identifier of the issuer in dbapi db
      * @param params parameters with the path
      */
     public JsonApiResponse revokeCertificate(int id, Json params) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.CERTIFICATES_.toString() + id, // TODO : get ID
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES_.toString() +id,
                 params);
     }
 

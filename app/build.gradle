@@ -6,6 +6,7 @@
  */
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin : 'jacoco'
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -89,7 +90,14 @@ run{
 test{
     useJUnitPlatform()
 }
-
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
 
 task printEnvVariables {
     doLast {

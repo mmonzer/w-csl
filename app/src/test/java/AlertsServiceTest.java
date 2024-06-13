@@ -3,7 +3,6 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import main.services.AlertsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,14 +15,15 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-public class AlertServiceTest {
+public class AlertsServiceTest {
+
+    private AlertsService alertsService;
 
     @Mock
     private CSLContext cslContext;
 
     @Mock
     private CSLAlertManager cslAlertManager;
-    private AlertsService alertsService;
 
     @BeforeEach
     public void setUp(){
@@ -47,6 +47,7 @@ public class AlertServiceTest {
         //Then
         assert(result.equals("ok"));
     }
+
     @Test
     public void addCmdAlreadyExistsTest(){
         //Given
@@ -82,7 +83,6 @@ public class AlertServiceTest {
         //When
         boolean reussite = alertsService.init(jConfig, cslDir);
         List<String> listOfCommands = ((ApiCommands) alertsService.getApiCommands()).getListOfCommands();
-        System.out.println(listOfCommands.toString());
         //then
         assert(reussite);
         assert(listOfCommands.equals(listOfCommandsExpected));

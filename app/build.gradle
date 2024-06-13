@@ -21,6 +21,7 @@ dependencies {
     implementation files('src/main/java/lib/jar/xminiserver.jar')
 
     //MavenCentral() librairies
+    testImplementation 'org.mockito:mockito-core:3.12.4'
     implementation 'org.projectlombok:lombok:1.18.32'
     implementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
     implementation 'org.junit.jupiter:junit-jupiter-engine:5.11.0-M2'
@@ -69,8 +70,7 @@ dependencies {
     implementation 'org.apache.servicemix.bundles:org.apache.servicemix.bundles.velocity:1.7_6'
     implementation 'org.jetbrains:annotations:13.0'
     // Use JUnit test framework.
-    /*testImplementation libs.junit
-    implementation libs.guava*/
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -86,3 +86,14 @@ run{
     systemProperty 'javax.net.ssl.trustStore', '../cacerts.jks'
     systemProperty 'javax.net.ssl.trustStorePassword', 'changeit'
 }
+test{
+    useJUnitPlatform()
+}
+
+
+task printEnvVariables {
+    doLast {
+        println "JAVA_HOME: ${System.getenv('JAVA_HOME')}"
+    }
+}
+

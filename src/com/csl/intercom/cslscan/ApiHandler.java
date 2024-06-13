@@ -258,15 +258,27 @@ public class ApiHandler implements AutoCloseable {
     // endregion -- static methods
 
     /**
-     * Downloads a file from the given endpoint.
+     * Downloads a file from the given endpoint (from POST method)
+     *
+     * @param endpoint endpoint to fetch the file
+     * @param body   body needed for the fetch
+     * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
+     * @throws Exception if it couldn't fetch the file from the module
+     */
+    public JsonApiResponse downloadFilePost(String endpoint, Json body) throws Exception {
+        return downloadFile(HttpMethod.POST, endpoint, null, body);
+    }
+
+    /**
+     * Downloads a file from the given endpoint. (from GET method)
      *
      * @param endpoint endpoint to fetch the file
      * @param params   parameters needed for the fetch
      * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
      * @throws Exception if it couldn't fetch the file from the module
      */
-    public JsonApiResponse downloadFile(String endpoint, Json params) throws Exception {
-        return downloadFile(HttpMethod.POST, endpoint, null, params);
+    public JsonApiResponse downloadFileGet(String endpoint, Json params) throws Exception {
+        return downloadFile(HttpMethod.GET, endpoint, params, null);
     }
 
     /**
@@ -342,7 +354,7 @@ public class ApiHandler implements AutoCloseable {
         while (inputStream.read(buffer) != -1) {
             response.append(new String(buffer));
         }
-        return response.toString();
+        return response.toString().trim();
     }
 
 ////////////////////////////////////////////////////////////////////////////////

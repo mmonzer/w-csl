@@ -140,6 +140,16 @@ public class AutoCryptLogic {
     }
 
     /**
+     * Validate the template of a certificate
+     *
+     * @param body body of the request
+     * @param params parameters with the path and role
+     */
+    public JsonApiResponse validateTemplate(Json body, Json params) {
+        return moduleHandler.validateTemplate(body, params);
+    }
+
+    /**
      * Generates a certificates at the given path and role
      *
      * @param idName identifier in the dbapi side
@@ -168,6 +178,17 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse getCertificateInfo(String serialNumber, Json params) {
         return moduleHandler.getCertificateInfo(serialNumber, params);
+    }
+
+
+    /**
+     * Downloads the given certificate
+     *
+     * @param serialNumber identifier of the certificate
+     * @param params       parameters with the serialNumber
+     */
+    public JsonApiResponse downloadCertificate(String serialNumber, Json params) {
+        return moduleHandler.downloadCertificate(serialNumber, params);
     }
 
     /**

@@ -174,6 +174,20 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Validate the template of a certificate
+     *
+     * @param body body of the request
+     * @param params parameters with the path and role
+     */
+    public JsonApiResponse validateTemplate(Json body, Json params) {
+        return this.sendPost(
+                ApiEndpointForCSLAutocrypt.CERT_URI_TEMPLATE.endpoint(),
+                params,
+                body
+        );
+    }
+
+    /**
      * Generates a certificates at the given path and role
      *
      * @param body parameters with the path and role
@@ -209,6 +223,23 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
                 ApiEndpointForCSLAutocrypt.CERT_URI_ + serialNumber,
                 params
         );
+    }
+
+    /**
+     * Downloads the given certificate
+     *
+     * @param serialNumber identifier of the certificate
+     * @param params       parameters with the serialNumber
+     */
+    public JsonApiResponse downloadCertificate(String serialNumber, Json params) {
+        try {
+            return this.downloadFileGet(
+                    ApiEndpointForCSLAutocrypt.CERT_URI_DOWNLOAD_ + serialNumber,
+                    params
+            );
+        } catch (Exception e) {
+            return JsonApiResponse.error(e.getMessage());
+        }
     }
 
     /**

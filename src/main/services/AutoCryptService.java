@@ -76,9 +76,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.ACTIVATE_OCSP, this::activateOCSP);
         addCmd(AutoCryptEndpoints.IS_ALIVE, this::getStatus);
         // certificate-controller
+        addCmd(AutoCryptEndpoints.VALIDATE_TEMPLATE_CERTIFICATE, this::validateTemplate);
         addCmd(AutoCryptEndpoints.GENERATE_CERTIFICATE, this::generateCertificate);
         addCmd(AutoCryptEndpoints.GET_CERTIFICATES, this::getCertificates);
         addCmd(AutoCryptEndpoints.GET_CERTIFICATE_INFO, this::getCertificateInfo);
+        addCmd(AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, this::downloadCertificate);
         addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE, this::revokeCertificate);
         // ca-controller
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
@@ -406,6 +408,33 @@ public class AutoCryptService extends Service implements IStatusProvider {
     }
 
     /**
+     * Validates the template of a certificate
+     *
+     * @param body parameters with the path, name and issuer_ref
+     */
+    public Json validateTemplate(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path"));
+        body.delAt("path");
+        // Check body
+        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
+            return errorVariableNotFound("issuer_ref");
+        }
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
+        }
+
+        return manager.getMethods().validateTemplate(
+                body,
+                params
+        ).toJson();
+    }
+
+    /**
      * Generates a certificates at the given path and role
      *
      * @param body parameters with the path and role
@@ -472,6 +501,28 @@ public class AutoCryptService extends Service implements IStatusProvider {
         body.delAt("serial_number");
 
         return manager.getMethods().getCertificateInfo(serialNumber, params).toJson();
+    }
+
+    /**
+     * Downloads the certificate
+     *
+     * @param body parameters with the serialNumber
+     */
+    public Json downloadCertificate(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path").asString());
+        body.delAt("path");
+        if (!body.has("serial_number") || !body.get("serial_number").isString()) {
+            return errorVariableNotFound("serial_number");
+        }
+        String serialNumber = body.get("serial_number").asString();
+        body.delAt("serial_number");
+
+        return manager.getMethods().downloadCertificate(serialNumber, params).toJson();
     }
 
     /**

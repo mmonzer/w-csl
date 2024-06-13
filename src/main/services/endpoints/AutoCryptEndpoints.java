@@ -29,22 +29,28 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setDesc("Gives the information of a given issuer")
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("issuer_id", "", JsonCmdHelp.STR)
+                    .setResult("Information of the issuer sent by CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     UPDATE_ISSUER_INFO("update_issuer_info",
             new JsonCmdHelp()
                     .setDesc("Updates the information of a given issuer")
+                    .setParam("id", "id in the db dbapi", JsonCmdHelp.INT)
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("issuer_id", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     DELETE_ISSUER_INFO("delete_issuer_info",
             new JsonCmdHelp()
                     .setDesc("Deletes the given issuer")
+                    .setParam("id", "id in the db dbapi", JsonCmdHelp.INT)
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("issuer_id", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     IMPORT_CERTIFICATE("import_issuer",
             new JsonCmdHelp()
                     .setDesc("Imports a new issuer, usually a certificate")
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("file", "new certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
@@ -52,11 +58,13 @@ public enum AutoCryptEndpoints implements Endpoint  {
             new JsonCmdHelp()
                     .setDesc("Gets the list of issuers")
                     .setParam("path", "OPT", JsonCmdHelp.STR)
+                    .setResult("Lis of the issuers of CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_ROLES("get_roles",
             new JsonCmdHelp()
                     .setDesc("Gets the list of roles")
                     .setParam("path", "OPT", JsonCmdHelp.STR)
+                    .setResult("Lis of the issuers of CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     CREATE_ROLE("create_role",
             new JsonCmdHelp()
@@ -69,16 +77,19 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setDesc("Get the information of the given role")
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("name", "Name of the role", JsonCmdHelp.STR)
+                    .setResult("Information of the role sent by CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     DELETE_ROLE("delete_role",
             new JsonCmdHelp()
                     .setDesc("Delete the given role")
+                    .setParam("id", "id in the db dbapi", JsonCmdHelp.INT)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("name", "Name of the role", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     UPDATE_ROLE("update_role",
             new JsonCmdHelp()
                     .setDesc("Updates the information of the given role")
+                    .setParam("id", "id in the db dbapi", JsonCmdHelp.INT)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("name", "Name of the role", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
@@ -91,10 +102,19 @@ public enum AutoCryptEndpoints implements Endpoint  {
     IS_ALIVE("is_alive",
             new JsonCmdHelp()
                     .setDesc("Check if AutoCrypt api is reachable")
+                    .setResult("Whether the api is reachable or not", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+    VALIDATE_TEMPLATE_CERTIFICATE("validate_template",
+            new JsonCmdHelp()
+                    .setDesc("Validates the template of a certificate")
+                    .setParam("path", "", JsonCmdHelp.STR)
+                    .setParam("name", "", JsonCmdHelp.STR)
+                    .setParam("issuer_ref", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_CERTIFICATE("generate_certificate",
             new JsonCmdHelp()
                     .setDesc("Generates a certificate")
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("role_name", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
@@ -102,22 +122,34 @@ public enum AutoCryptEndpoints implements Endpoint  {
             new JsonCmdHelp()
                     .setDesc("Gives the list of certificates")
                     .setParam("path", "OPT", JsonCmdHelp.STR)
+                    .setResult("List of the certificates managed by CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_CERTIFICATE_INFO("get_certificate_info",
             new JsonCmdHelp()
-                    .setDesc("Gives the list of certificates")
+                    .setDesc("Gives the information of the given certificate")
                     .setParam("serialNumber", "Number of certificate", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
+                    .setResult("Information of the given certificates as sent by CSL_Autocrypt", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+    DOWNLOAD_CERTIFICATE("download_certificate",
+            new JsonCmdHelp()
+                    .setDesc("Downloads the given certificate")
+                    .setParam("serialNumber", "Number of certificate", JsonCmdHelp.STR)
+                    .setParam("path", "", JsonCmdHelp.STR)
+                    .setResult("Information of the given certificates as sent by CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     REVOKE_CERTIFICATE("revoke_certificate",
             new JsonCmdHelp()
                     .setDesc("Revoke the certificate")
+                    .setParam("id", "id in the db dbapi", JsonCmdHelp.INT)
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("serialNumber", "Serial number of the certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_ROOT_CA("generate_root_ca",
             new JsonCmdHelp()
                     .setDesc("Generates a root for CA")
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("common_name", "", JsonCmdHelp.STR)
                     .setParam("ttl", "", JsonCmdHelp.STR)
                     .setParam("path", "OPT: ", JsonCmdHelp.STR)
@@ -125,6 +157,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
     GENERATE_INTERMEDIATE_CA("generate_inter_ca",
             new JsonCmdHelp()
                     .setDesc("Generate intermediate ca")
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("common_name", "", JsonCmdHelp.STR)
                     .setParam("ttl", "", JsonCmdHelp.STR)

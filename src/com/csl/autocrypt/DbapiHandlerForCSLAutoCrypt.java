@@ -36,7 +36,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param body      body of the request
      */
     public JsonApiResponse updateIssuerInfo(int id, Json body) {
-        return this.sendPut(DbapiEndpointForCSLAutocrypt.ISSUER_.getEndpoint() + id, body);
+        return this.sendPut(DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() + id, body);
     }
 
     /**
@@ -47,7 +47,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse deleteIssuer(int id,   Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ISSUER_.toString() +id,
+                DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() +id,
                 null);
     }
 
@@ -58,7 +58,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse importCertificate(Json body) {
         return this.sendPost(
-                DbapiEndpointForCSLAutocrypt.ISSUER.toString(),
+                DbapiEndpointForCSLAutocrypt.ISSUER.endpoint(),
                 body);
         // TODO : verify this import
     }
@@ -70,7 +70,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse createRole(Json body) {
         return this.sendPost(
-                DbapiEndpointForCSLAutocrypt.ROLE.toString(),
+                DbapiEndpointForCSLAutocrypt.ROLE.endpoint(),
                 body);
     }
 
@@ -82,7 +82,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse deleteRole(int id, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ROLE_.toString() +id,
+                DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
                 body);
     }
 
@@ -94,7 +94,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse updateRole(int id, Json body) {
         return this.sendPut(
-                DbapiEndpointForCSLAutocrypt.ROLE_.toString() +id,
+                DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
                 body);
     }
 
@@ -105,7 +105,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse generateCertificate(Json body) {
         return this.sendPost(
-                DbapiEndpointForCSLAutocrypt.CERTIFICATES.toString(),
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES.endpoint(),
                 body);
     }
 
@@ -117,7 +117,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse revokeCertificate(int id, Json params) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.CERTIFICATES_.toString() +id,
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES_.endpoint() +id,
                 params);
     }
 
@@ -128,7 +128,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse generateRootCA(Json body) {
         return this.sendPost(
-                DbapiEndpointForCSLAutocrypt.CA.toString(),
+                DbapiEndpointForCSLAutocrypt.CA.endpoint(),
                 body);
     }
 
@@ -139,7 +139,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse generateIntermediateCA(Json body) {
         return this.sendPost(
-                DbapiEndpointForCSLAutocrypt.CA.toString(),
+                DbapiEndpointForCSLAutocrypt.CA.endpoint(),
                 body);
     }
 }

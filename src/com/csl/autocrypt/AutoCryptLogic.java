@@ -282,4 +282,74 @@ public class AutoCryptLogic {
             return responseFromModule;
         }
     }
+
+    /**
+     * Initial synchronisation for the issuers/ca (intermediate ca)
+     * @param path to synchronize the issuers
+     */
+    private void synchronizeIssuers(String path) {
+        Json body = Json.object("path", path);
+        JsonApiResponse issuers = moduleHandler.getIssuers(body);
+        if (issuers.isSuccess()) {
+            for (Json issuer_ref : issuers.getResult().asJsonList()) {
+                Json body2 = Json.read(body.toString());
+                body2.at("issuer_ref", issuer_ref.asString());
+                JsonApiResponse issuer = moduleHandler.getIssuerInfo(issuer_ref.asString(), body2);
+                if (issuer.isSuccess()) {
+                    dbHandler.generateIntermediateCA(issuer_ref.asString(), issuer.getResult());
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Initial synchronisation for the roles
+     * @param path to synchronize the roles
+     */
+    private void synchronizeRoles(String path) {
+        Json body = Json.object("path", path);
+        JsonApiResponse issuers = moduleHandler.getRoles(body);
+        if (issuers.isSuccess()) {
+            for (Json role_name : issuers.getResult().asJsonList()) {
+                Json body2 = Json.read(body.toString());
+                body2.at("name", role_name.asString());
+                JsonApiResponse role = moduleHandler.getRole(role_name.asString(), body2);
+                if (role.isSuccess()) {
+                    dbHandler.createRole(role_name.asString(), role.getResult());
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Initial synchronisation for the certificates
+     * @param path to synchronize the certificates
+     */
+    private void synchronizeCertificate(String path) {
+        Json body = Json.object("path", path);
+        JsonApiResponse certificates = moduleHandler.getCertificates(body);
+        if (certificates.isSuccess()) {
+            for (Json serial_number : certificates.getResult().asJsonList()) {
+                Json body2 = Json.read(body.toString());
+                body2.at("serial_number", serial_number.asString());
+                body2.at("path", path);
+                JsonApiResponse certificate = moduleHandler.getCertificateInfo(serial_number.asString(), body2);
+                if (certificate.isSuccess()) {
+                    dbHandler.generateCertificate(serial_number.asString(), certificate.getResult());
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Initial synchronisation: pki path par default (only one), db is empty so we only have to create
+     */
+    public void initialSynchronizeDb(String path) {
+        synchronizeIssuers(path);
+        synchronizeRoles(path);
+        synchronizeCertificate(path);
+    }
 }

@@ -3,6 +3,7 @@ package com.csl.autocrypt;
 import com.csl.core.CSLContext;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import main.services.JsonApiResponse;
 
 /**
  * API client of the module AutoCrypt
@@ -99,4 +100,5 @@ public class AutoCrypt {
     public void setSaveToDb(boolean shouldSaveToDb) {
         logic.setSaveToDb(shouldSaveToDb);
     }
+
 }

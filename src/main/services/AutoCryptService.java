@@ -86,6 +86,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
 
+        // Launch initial sync to dbapi
+        manager.getMethods().initialSynchronizeDb("pki");
+
         return true;
     }
 

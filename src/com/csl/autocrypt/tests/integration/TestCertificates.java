@@ -41,7 +41,8 @@ public class TestCertificates {
         Json params = Json.object();
         params.at("path","pki");
         params.at("role_name","root-role");
-        params.at("name","abg");
+        params.at("common_name","a.b");
+        params.at("name","abgsfggd");
         params.at("ttl","24h");
         Json inputJson = Json.object();
         inputJson.at("cmd", "generate_certificate");

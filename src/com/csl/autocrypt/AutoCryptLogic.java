@@ -234,8 +234,8 @@ public class AutoCryptLogic {
      * @return whether it is reachable
      */
     public Json getStatus() {
-        return Json.object();
-//        return  moduleHandler.getStatus();
+//        return Json.object();
+        return  moduleHandler.getStatus();
     }
 
     /**

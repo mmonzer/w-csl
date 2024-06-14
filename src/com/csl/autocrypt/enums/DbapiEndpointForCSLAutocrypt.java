@@ -11,7 +11,7 @@ public enum DbapiEndpointForCSLAutocrypt {
     ROLE_(ROLE+"/"),
     CERTIFICATES(SELF+"/certificates"),
     CERTIFICATES_(CERTIFICATES+"/"),
-    ISSUER(SELF+"/issuer"),
+    ISSUER(SELF+"/certificate_authorities"),
     ISSUER_(ISSUER+"/"),
     ;
 

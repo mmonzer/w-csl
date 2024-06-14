@@ -210,12 +210,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json deleteIssuer(Json body) {
-        // Dbapi id, name
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
+        // Dbapi id
         if (!body.has("id") || !body.get("id").isNumber()) {
             return errorVariableNotFound("id");
         }
@@ -457,6 +452,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!body.has("role_name") || !body.get("role_name").isString()) {
             return errorVariableNotFound("role_name");
         }
+        if (!body.has("common_name") || !body.get("common_name").isString()) {
+            return errorVariableNotFound("common_name");
+        }
+        if (!body.has("ttl") || !body.get("ttl").isString()) {
+            return errorVariableNotFound("ttl");
+        }
 
         return manager.getMethods().generateCertificate(
                 name,
@@ -532,11 +533,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json revokeCertificate(Json body) {
         // Dbapi id, name
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
         if (!body.has("id") || !body.get("id").isNumber()) {
             return errorVariableNotFound("id");
         }

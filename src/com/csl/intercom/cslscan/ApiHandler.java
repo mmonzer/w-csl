@@ -125,6 +125,7 @@ public class ApiHandler implements AutoCloseable {
      * @return the request created
      */
     private Request createRequest(HttpMethod method, String endpoint, Json params, Json body) {
+        endpoint = endpoint.replace(" ", "%20").replace(":", "%3A");
         Request request = initRequest(method, url + endpoint, httpClient);
         addHeadersToRequest(headers, request);
         addParamsToRequest(params, request);
@@ -142,14 +143,12 @@ public class ApiHandler implements AutoCloseable {
      * Creates the request
      *
      * @param method method of the new request
-     * @param url    url of the new request
+     * @param uri   uri of the new request
      * @param client client for the request
      * @return new request
      */
-    private static Request initRequest(HttpMethod method, String url, HttpClient client) {
-        String URI = url.replace(" ", "%20");
-
-        Request request = client.newRequest(URI);
+    private static Request initRequest(HttpMethod method, String uri, HttpClient client) {
+        Request request = client.newRequest(uri);
         request.method(method);
         return request;
     }

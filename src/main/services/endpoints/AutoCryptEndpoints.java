@@ -127,14 +127,14 @@ public enum AutoCryptEndpoints implements Endpoint  {
     GET_CERTIFICATE_INFO("get_certificate_info",
             new JsonCmdHelp()
                     .setDesc("Gives the information of the given certificate")
-                    .setParam("serialNumber", "Number of certificate", JsonCmdHelp.STR)
+                    .setParam("serial_number", "Number of certificate", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setResult("Information of the given certificates as sent by CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     DOWNLOAD_CERTIFICATE("download_certificate",
             new JsonCmdHelp()
                     .setDesc("Downloads the given certificate")
-                    .setParam("serialNumber", "Number of certificate", JsonCmdHelp.STR)
+                    .setParam("serial_number", "Number of certificate", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setResult("Information of the given certificates as sent by CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
@@ -144,7 +144,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam("id", "id in the db dbapi", JsonCmdHelp.INT)
                     .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("serialNumber", "Serial number of the certificate", JsonCmdHelp.STR)
+                    .setParam("serial_number", "Serial number of the certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_ROOT_CA("generate_root_ca",
             new JsonCmdHelp()

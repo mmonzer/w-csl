@@ -163,5 +163,26 @@ public class TestAutoCryptService {
         assertEquals(recvOutput, response);
     }
 
+    @Test
+    public void testValidate() throws Exception {
+        String expectedOutput = "{\"success\":true,\"result\":{\"status\":\"OK\"}}";
+        String returnedOutput = "{\"status\":\"OK\"}";
+        String inputJson = "{ \"cmd\" : \"validate_template\", \"params\" : { \"path\":\"pki\"," +
+                "        \"issuer_ref\":\"bbae9fe3-e1f6-6732-5d99-9b1b45856847\"," +
+                "        \"name\": \"abc\" } }";
+
+        // Define request to th mocked service
+        HttpClient httpClient = new HttpClient();
+        httpClient.start();
+        Request request = httpClient.newRequest("http://localhost:9900/autocrypt");
+        request.method(HttpMethod.POST);
+        request.content(new StringContentProvider(inputJson), "application/json");
+        ContentResponse response = request.send();
+
+        // assert behavior
+        assertEquals(200, response.getStatus());
+        assertEquals(returnedOutput, response.getContentAsString());
+    }
+
     // TODO: test changeIp and changePort
 }

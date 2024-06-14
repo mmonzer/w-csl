@@ -1,5 +1,6 @@
 package com.csl.autocrypt.tests;
 
+import com.ucsl.json.Json;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
@@ -21,4 +22,9 @@ public class OutilsForTesting {
         request.content(new StringContentProvider(content), "application/json");
         return request.send();
     }
+    public static ContentResponse sendPostTo(String uri, Json content) throws Exception {
+        return sendPostTo(uri, content.toString());
+    }
+
+
 }

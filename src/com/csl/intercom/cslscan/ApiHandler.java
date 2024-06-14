@@ -234,7 +234,7 @@ public class ApiHandler implements AutoCloseable {
     private static JsonApiResponse parseResponse(ContentResponse response, String moduleName) {
         JsonApiResponse parsedResponse;
         if (response.getStatus() >= 400) {
-            parsedResponse = JsonApiResponse.error("Error while sending request to " + moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
+            return JsonApiResponse.error("Error while sending request to " + moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
         }
         if (response.getContent().length > 0) {
             if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
@@ -289,7 +289,9 @@ public class ApiHandler implements AutoCloseable {
      * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
      */
     public JsonApiResponse downloadFile(HttpMethod method, String endpoint, Json params, Json body) {
+        endpoint = endpoint.replace(":", "%3A").replace(" ", "%20");
         Request request = createRequest(method, endpoint, params, body);
+        request.header("Accept", "application/octet-stream");
 
         // Send the request and get the response async
         InputStreamResponseListener listener = new InputStreamResponseListener();

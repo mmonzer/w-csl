@@ -234,8 +234,8 @@ public class AutoCryptLogic {
      * @return whether it is reachable
      */
     public Json getStatus() {
-//        return Json.object();
-        return  moduleHandler.getStatus();
+        return Json.object();
+//        return  moduleHandler.getStatus();
     }
 
     /**
@@ -259,8 +259,7 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess() && shouldSaveToDb) {
             Json nextRequestBody = responseFromModule.getResult();
             nextRequestBody = (nextRequestBody!=null) ? nextRequestBody : Json.object();
-            nextRequestBody.at("name", name);
-            return method.apply(nextRequestBody);
+            return method.apply(name, nextRequestBody);
         } else {
             return responseFromModule;
         }
@@ -278,8 +277,7 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess() && shouldSaveToDb) {
             Json nextRequestBody = responseFromModule.getResult();
             nextRequestBody = (nextRequestBody!=null) ? nextRequestBody : Json.object();
-            nextRequestBody.at("name", name);
-            return method.apply(id, nextRequestBody);
+            return method.apply(id, name, nextRequestBody);
         } else {
             return responseFromModule;
         }

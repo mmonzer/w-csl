@@ -4,5 +4,5 @@ import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
 public interface IJsonApiResponserWithId {
-    public JsonApiResponse apply(int id, Json callback);
+    public JsonApiResponse apply(int id, String name, Json callback);
 }

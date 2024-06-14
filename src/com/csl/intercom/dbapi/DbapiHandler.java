@@ -2,15 +2,13 @@ package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
+import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
+import com.csl.intercom.dbapi.enums.FileActionStatus;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
 import com.csl.intercom.dbapi.models.*;
-import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
+import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
@@ -19,15 +17,21 @@ import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.util.InputStreamResponseListener;
+import org.eclipse.jetty.client.util.MultiPartContentProvider;
+import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -44,6 +48,7 @@ public class DbapiHandler implements AutoCloseable {
     private HttpClient dbapiHttpClient = new HttpClient();
     private final int maxPageSize = 1000;
     private static final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
+    private final FileStorageService fileStorageService = new FileStorageService();
 
     public DbapiHandler() {
         this(CSLContext.instance.getConfig());
@@ -557,6 +562,16 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
+    public void deleteDiscoveryProtocolsList(List<String> uuids) {
+        uuids.forEach(uuid -> {
+            try {
+                deleteDiscoveryProtocol(uuid);
+            } catch (Exception e) {
+                logger.error("Error deleting discovery protocol", e);
+            }
+        });
+    }
+
     public ConnectionProtocol getDiscoveryProtocolByTemplateId(String id) {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
         request.param("connection_template_id", id);
@@ -937,6 +952,162 @@ public class DbapiHandler implements AutoCloseable {
         ContentResponse response = request.send();
         if (response.getStatus() != 200) {
             throw new Exception("Error sending commands to dbapi: got unexpected status " + response.getStatus());
+        }
+    }
+
+    public List<HttpTemplateImportNotification> getAvailableImportTasks() {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.FILE_ACTION_STATUS_AVAILABLE);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                logger.warn("Unable to fetch available import tasks from DB-API: Unexpected status code: {}", response.getStatus());
+                return new ArrayList<>();
+            }
+            return Json.read(response.getContentAsString()).asJsonList().stream()
+                    .map(HttpTemplateImportNotification::fromDbapiJson)
+                    .filter(Objects::nonNull)
+                    .filter(query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.warn("Error fetching available import tasks");
+            logger.debug("Error fetching available import tasks", e);
+            return new ArrayList<>();
+        }
+    }
+
+    public Path downloadHttpTemplatesBsonFile(HttpTemplateImportNotification query) throws ExecutionException, InterruptedException, TimeoutException {
+        Json contents = Json.object("file_action_status_id", query.getId());
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.DOWNLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint());
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        InputStreamResponseListener listener = new InputStreamResponseListener();
+        request.send(listener);
+        Response response = listener.get(30, TimeUnit.SECONDS);
+        if (response.getStatus() == 200) {
+            try {
+                return fileStorageService.saveFile(listener.getInputStream(), query.getFileName() + ".bson");
+            } catch (IOException e) {
+                logger.error("Error saving file");
+                logger.debug("Error saving file", e);
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public void uploadHttpTemplatesBsonFile(ExportQuery exportQuery) {
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.UPLOAD_HTTP_TEMPLATES_BSON_FILE);
+        MultiPartContentProvider multiPart = new MultiPartContentProvider();
+        try {
+            multiPart.addFilePart("file", exportQuery.getFilename(), new PathContentProvider(fileStorageService.getFilePath(exportQuery.getFilename())), null);
+        } catch (IOException e) {
+            logger.error("Error adding file to request", e);
+            return;
+        }
+        multiPart.close();
+        request.content(multiPart);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() >= 400) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending file to DB-API", e);
+        }
+    }
+
+    public void notifyImportStarted(int id, ImportQuery importQuery) {
+        Json contents = Json.object("status", FileActionStatus.FILE_PROCESSING.getValue());
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending import status to DB-API", e);
+        }
+    }
+
+    public void notifyImportFinished(int id, ImportQuery importQuery) {
+        Json contents;
+        switch (importQuery.getStatus()) {
+            case SUCCESS:
+                contents = Json.object("status", FileActionStatus.SUCCEEDED.getValue());
+                break;
+            case ERROR:
+                // Add an error status
+                contents = Json.object("status", FileActionStatus.FAILED.getValue());
+                break;
+            default:
+                logger.warn("Unknown import status: {}", importQuery.getStatus());
+                return;
+        }
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending import status to DB-API", e);
+        }
+    }
+
+    /**
+     * Request a new BSON export ID from DB-API.
+     *
+     * @return The new BSON export ID.
+     * @throws Exception If the request failed.
+     */
+    public int requestBsonExportID(ExportQuery exportQuery) throws Exception {
+        Json contents = Json.object("file_name", exportQuery.getFilename());
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpoint.FILE_ACTION_STATUS_CREATE_FOR_HTTP_TEMPLATE_EXPORT);
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code: " + response.getStatus());
+        }
+        Json responseContents = Json.read(response.getContentAsString());
+        if (responseContents.isObject() && responseContents.has("file_action_status_id") && responseContents.get("file_action_status_id").isNumber()) {
+            int id = responseContents.get("file_action_status_id").asInteger();
+            logger.debug("Got BSON export ID: {}", id);
+            return id;
+        }
+        throw new Exception("Unexpected response: " + responseContents.toString());
+    }
+
+    /**
+     * Update the status of an export query in DB-API.
+     *
+     * @param exportQuery The export query to update.
+     * @throws Exception  If the request failed.
+     */
+    public void notifyExportFinished(int id, ExportQuery exportQuery) throws Exception {
+        Json contents;
+        switch (exportQuery.getStatus()) {
+            case SUCCESS:
+                contents = Json.object("status", FileActionStatus.SUCCEEDED.getValue());
+                break;
+            case ERROR:
+                // Add an error status
+                contents = Json.object("status", FileActionStatus.FAILED.getValue());
+                break;
+            default:
+                logger.warn("Unknown export status: {}", exportQuery.getStatus());
+                return;
+        }
+        Request request = createDbapiPatchRequest(String.format(DbapiEndpoint.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+        request.content(new StringContentProvider(contents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.warn("Unexpected status code: {}", response.getStatus());
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            logger.error("Error sending import status to DB-API", e);
         }
     }
 }

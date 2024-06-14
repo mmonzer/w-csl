@@ -9,7 +9,7 @@ import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
-import com.csl.intercom.cslscan.models.MicrosoftKB;
+import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -22,7 +22,7 @@ import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
-import com.csl.util.Pair;
+import com.csl.util.FileStorageService;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
@@ -57,6 +57,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     //    private String apiKey;
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
+    private FileStorageService fileStorageService = null;
+    private ImportExportBsonService importExportBsonService = null;
     private CSLMqttBrokerHandler mqttBroker = null;
     private DataSynchronizationService cpeItemSynchronizationService = null;
     private DataSynchronizationService microsoftKbSynchronizationService = null;
@@ -95,6 +97,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
+        fileStorageService = new FileStorageService();
+
+        if (isConcentrator) {
+
+        }
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
@@ -105,7 +112,9 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
             deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
+            importExportBsonService = ImportExportBsonService.getInstance();
+            importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, importExportBsonService);
 
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
@@ -116,6 +125,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     deletedCpeItemsSynchronizationService.syncData();
                 } catch (SynchronizationException e) {
                     logger.error("Could not synchronize deleted CPE Items", e);
+                }
+            });
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.FILE_ACTION_STATUS, message -> {
+                HttpTemplateImportNotification notification = HttpTemplateImportNotification.fromMQTTMessage(Json.read(message.getResults()));
+                if (notification != null) {
+                    if (notification.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED) {
+                        importExportBsonService.startNewImportTask(notification);
+                    }
                 }
             });
         }
@@ -782,6 +799,34 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
+        );
+        addCmd("import_http_templates_bson", params -> {
+                    HttpTemplateImportNotification query = HttpTemplateImportNotification.fromHMIJson(params);
+                    if (query == null) {
+                        return JsonApiResponse.error("Could not parse BSON file",
+                                Json.object("exception", "Could not parse BSON file")
+                        ).toJson();
+                    } else {
+                        this.importExportBsonService.startNewImportTask(query);
+                        return JsonApiResponse.success().toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Import HTTP templates from a BSON file")
+                        .setParam("file", "The BSON file to import", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+        );
+        addCmd("export_http_templates_bson", params -> {
+            try {
+                int id = this.importExportBsonService.startNewExportTask();
+                return JsonApiResponse.result(Json.object("id", id)).toJson();
+            } catch (Exception e) {
+                return JsonApiResponse.error(e.getMessage()).toJson();
+            }
+        },
+                new JsonCmdHelp().setDesc("Request to export HTTP templates to a BSON file")
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
         );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);

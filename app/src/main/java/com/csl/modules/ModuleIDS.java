@@ -61,11 +61,9 @@ public class ModuleIDS implements IModule {
 		return sendToBrowser;
 	}
 
-
     public boolean isSendToConsole() {
 		return sendToConsole;
 	}
-
 
     public String runningState( ) {
 		
@@ -73,7 +71,6 @@ public class ModuleIDS implements IModule {
 		
 	}
 
-	//	
 	public void setModeIdle() {
 		idsDetectOn=false;
 		loggingOn=false;
@@ -91,8 +88,6 @@ public class ModuleIDS implements IModule {
 		loggingOn=true;
 	}
 
-	
-
 	public void outDisplay(Json jj) {
 		if (sendToBrowser) {
 			Json j=Json.object();
@@ -102,8 +97,6 @@ public class ModuleIDS implements IModule {
 		}
 		
 	}
-	
-	
 	
 	public void openLogFiles() {
 		
@@ -133,8 +126,7 @@ public class ModuleIDS implements IModule {
 		
 		
 	}
-	
-	
+
 	@Override
 	public IResult init(ICSLContext context,IModuleContext mcontext) {
 		// TODO Auto-generated method stub
@@ -243,8 +235,6 @@ public class ModuleIDS implements IModule {
 		return IResult.OK;
 	}
 
-
-
 	private List<String> getListOfString(Json config, String name) {
 		Json params=config.get(name);
 
@@ -280,16 +270,12 @@ public class ModuleIDS implements IModule {
 		return IResult.OK;
 	}
 
-
-
 	@Override
 	public IResult execInputPart(ICSLContext context,IModuleContext mcontext) {
 		// TODO Auto-generated method stub
 		return IResult.OK;
 
 	}
-
-	
 	
 	@Override
 	public IResult execStepPart(ICSLContext context,IModuleContext mcontext) {
@@ -306,7 +292,6 @@ public class ModuleIDS implements IModule {
 		return IResult.OK;
 
 	}
-
 
 	@Override
 	public IResult execCommand(ICSLContext context, IModuleContext mcontext, Map<String, String> params) {

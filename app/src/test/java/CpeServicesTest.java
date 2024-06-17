@@ -24,7 +24,7 @@ public class CpeServicesTest {
     @Test
     public void addCmdIsOkTest(){
         //Given
-        String name = "get-alert_list";
+        String name = "getVendor";
         //When
         String result = cpeServices.addCmd(name, new IJsonCmd(){
             @Override
@@ -40,7 +40,7 @@ public class CpeServicesTest {
     @Test
     public void addCmdAlreadyExistsTest(){
         //Given
-        String name = "get-alert_list";
+        String name = "getVendor";
         String resultCmd1 = cpeServices.addCmd(name, new IJsonCmd(){
             @Override
             public Json exec(Json params) {
@@ -62,11 +62,9 @@ public class CpeServicesTest {
 
     @Test
     public void initTest(){
-        //ReadDictionnaryFromJson or XML throws ParserConfigurationException, SAXException, IOException
-        //
         //Given
         Json jConfig = Json.object();
-        String cslDir = "test";
+        String cslDir = "cslDir";
         Json dictionnaryPath = Json.object();
 
         String DEFAULT_CONFIG_FILE = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "cslconf" + File.separator + "cpe" + File.separator + "CpeTree.json";
@@ -77,6 +75,7 @@ public class CpeServicesTest {
         List<String> listOfCommandsExcepted = List.of("getVersion", "getProduct", "getPrefix", "getVendor");
 
         //When
+        cpeServices = new CpeServices("cpe", "cpe_service");
         boolean result = cpeServices.init(jConfig, cslDir);
         List<String> listOfCommands = ((ApiCommands) cpeServices.getApiCommands()).getListOfCommands();
         System.out.println(listOfCommands.toString());
@@ -87,20 +86,4 @@ public class CpeServicesTest {
 
 
     }
-    /*@Test
-    public void initTestThrowException(){
-        //ReadDictionnaryFromJson or XML throws ParserConfigurationException, SAXException, IOException
-        //
-        //Given
-        Json jConfig = Json.object();
-        String cslDir = "test";
-        Json dictionnaryPath = Json.object();
-
-        jConfig.set("dictionaryPath", "unknown/Path.json");
-        jConfig.set("dictionnaryPath", dictionnaryPath.get("dictionaryPath"));
-
-        //When - Then
-        assertThrows(IOException.class, ()-> cpeServices.init(jConfig, cslDir))
-
-    ;}*/
 }

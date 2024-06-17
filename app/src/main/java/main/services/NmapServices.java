@@ -33,7 +33,6 @@ public class NmapServices implements ICSLService {
 	String name="nmap";
 	String configFileSectionName="nmap_service";
 	static String idsconf;
-	static Json tapList;
 	static boolean debugMode = false;
 	static boolean logMode = false;
 	static String debugPath = "";
@@ -45,12 +44,6 @@ public class NmapServices implements ICSLService {
 		this.name="nmap";
 		this.configFileSectionName="nmap_service";
 	}
-	public NmapServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-
-	
 
 	@Override
 	public String getConfigFileSectionName() {
@@ -76,6 +69,7 @@ public class NmapServices implements ICSLService {
 		scanDevice(machines, jConfig);
 
 	}
+
 	private static Json readJsonFile(String fileName) throws IOException {
 		String jsonRaw = "";
 		File fichierRegles = new File(fileName);
@@ -89,6 +83,7 @@ public class NmapServices implements ICSLService {
         br.close(); 
         return Json.read(jsonRaw);
 	}
+
 	static public Json scanDevice(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
@@ -118,6 +113,7 @@ public class NmapServices implements ICSLService {
 		}	
 		return result;
 	}
+
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("--- Initialisation des services Nmap ---");
@@ -243,7 +239,6 @@ public class NmapServices implements ICSLService {
 		return apiCommands.registerCmd(name, j);
 	}
 	
-	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
@@ -254,7 +249,6 @@ public class NmapServices implements ICSLService {
 		apiCommands.setName(name);
 		return apiCommands;
 	}
-	
 	
 	@Override
 	public boolean terminate() {

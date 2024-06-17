@@ -148,7 +148,6 @@ public class TapsServices implements ICSLService {
 		return out;
 	}
 	
-	
 	public static Json startReplay(String name, String pcap) {
 		String id = "", password ="";
 		String ip = null;
@@ -485,6 +484,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 	}
+
 	public static void setNetworkName(String name, String networkName) {
 		for(Json j : configuredTaps) {
 			if(j.at("idname").asString().contentEquals(name)) {
@@ -493,6 +493,7 @@ public class TapsServices implements ICSLService {
 			}
 		}
 	}
+
 	public static Json startSuricata(String name) {
 		String id = "", password ="";
 		int port = 22;
@@ -556,8 +557,6 @@ public class TapsServices implements ICSLService {
 		out.at("result", output);
 		return out;
 	}
-	
-
 
 	private static Json reloadRulesParseOutput(String output) {
 		if (output == null) {
@@ -579,6 +578,7 @@ public class TapsServices implements ICSLService {
 		}
 		return out;
 	}
+
 	public static Json reloadRules(String name) {
 		String id = "", password ="";
 		int port = 22;
@@ -609,45 +609,16 @@ public class TapsServices implements ICSLService {
 		return reloadRulesParseOutput(output);
 	}
 
-
 	public TapsServices() {
 		this.name="taps";
 		this.configFileSectionName="ssh_service";
 	}
-	
-	public TapsServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-	
-	
 
 	@Override
 	public String getConfigFileSectionName() {
 		return configFileSectionName;
 	}
 
-	public String getTapName(Json j) {
-		String n=JsonUtil.getStringFromJson(j, "name", "");
-		return n;
-	}
-	
-	
-	public String tapNameHasError(Json j) {
-		String n=JsonUtil.getStringFromJson(j, "name", "");
-		
-		if (n.isEmpty()) return "No tap name";
-		
-		String x=idsconf+"/taps/"+n;
-		
-		File file = new File(x);
-		 
-        if (!file.isDirectory()) return "No directory for tap "+n;
-        
-		return "";
-	}
-	
-	
 	public String missingParams(Json j,String ... params) {
 		String e="";
 		for (String s:params) {

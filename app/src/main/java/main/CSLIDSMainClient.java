@@ -180,13 +180,6 @@ public class CSLIDSMainClient {
 
     }
 
-
-    static public void printTime() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        System.out.println(dtf.format(now));
-    }
-
     /***
      * At a scheduled rate, check if the connection to the server socket (cmd) is open, if not try to connect
      */
@@ -208,37 +201,6 @@ public class CSLIDSMainClient {
                 0, 1, TimeUnit.SECONDS);
 
     }
-
-
-    static public void startTest() {
-        ScheduledExecutorService executorService;
-        executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(
-                new Runnable() {
-                    public void run() {
-                        Json j2 = Json.object();
-                        j2.set("line", "Test console");
-                        j2.set("console_id", "learn");
-
-                        System.out.println(j2);
-                        CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE, j2);
-
-                    }
-                },
-                0, 1, TimeUnit.SECONDS);
-
-    }
-
-
-    static void test() {
-        Json j2 = Json.object();
-        j2.set("line", "Test console");
-        j2.set("console_id", "learn");
-        //			CSLWebSocketForConsole.broadcastMessageJson("log", j);
-        CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE, j2);
-
-    }
-
 
     public static void main(String[] args) {
 
@@ -281,7 +243,6 @@ public class CSLIDSMainClient {
 
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
-        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
         JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
         JServiceLoader.registerService(new AlertsService(), configObj, true);
         JServiceLoader.registerService(new MonitorService(), configObj, true);

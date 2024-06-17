@@ -8,25 +8,18 @@ import com.ucsl.json.Json;
 import lombok.Getter;
 
 public class CSLServiceDemo implements ICSLService {
+	@Getter
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
 	@Getter
     String name="#undef";
 	@Getter
     String configFileSectionName="config_"+name;;
-	
-	
+
 	public CSLServiceDemo() {
 		this.name="demo";
 		this.configFileSectionName="demo_conf";
 		
 		
-	}
-	
-	public CSLServiceDemo(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
 	}
 
     @Override
@@ -35,13 +28,8 @@ public class CSLServiceDemo implements ICSLService {
 		return false;
 	}
 
-	// ajouter les commandes ici
-	// jConfig est la partie du fichier de conf dans le nom de section est donné plus haut
 	public boolean init(Json jConfig, String cslDir) {
-		
-		
 		addCmd("demo_cmd", new IJsonCmd() {
-			
 			@Override
 			public Json exec(Json params) {
 					
@@ -53,16 +41,9 @@ public class CSLServiceDemo implements ICSLService {
 		});
 		return true;  // ok to start
 	}
-	
 
 	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 	
 }

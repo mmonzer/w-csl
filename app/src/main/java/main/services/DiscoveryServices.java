@@ -26,6 +26,8 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +53,20 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private final boolean isConcentrator;
     private ScanWebSocketHandler scanWebSocketHandler = null;
 
+    @Getter
+    @Setter
     private DbapiHandler dbapiHandler = null;
+    @Getter
+    @Setter
     private ScanApiHandler scanApiHandler = null;
+    @Setter
     private DataSynchronizationService cpeItemSynchronizationService = null;
+    @Setter
     private DataSynchronizationService microsoftKbSynchronizationService = null;
     private DataSynchronizationService deletedCpeItemsSynchronizationService = null;
     private DataSynchronizationService deletedMicrosoftKbsSynchronizationService = null;
+    @Getter
+    @Setter
     private CpeScanService cpeScanService = null;
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
@@ -73,7 +83,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         this(defaultName, defaultConfigFileSectionName, isConcentrator);
     }
 
-
     /**
      * Initialize the service, setting the list of known managers and registering the commands.
      *
@@ -87,13 +96,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
 
-        if (isConcentrator) {
-        }
-
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
-
-        Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         if (isConcentrator) {
             cpeScanService = new CpeScanService();
@@ -130,7 +134,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "\"is_websocket_connected\": true/false" +
                                 "}" +
                                 "</code>", IJsonCmdHelp.JSON).setStatus(IJsonCmdHelp.STATUS_OK));
-//        addCmd("add_entity", this::addEntity);
         addCmd("list_entities", params -> scanApiHandler.listEntities().toJson(),
                 new JsonCmdHelp().setDesc("Retieve the entities registered in CSL-Scan")
                         .setResult("The list of entities' information as returned by CSL-Scan, in the format" +
@@ -143,7 +146,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("The entity as returned by CSL-Scan", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-//        addCmd("update_entity", this::updateEntity);
         addCmd("delete_entity", params -> scanApiHandler.deleteEntity(params.get("id").asString()).toJson(),
                 new JsonCmdHelp().setDesc("Remove a specific entity from CSL-Scan")
                         .setParam("id", "The uuid of the entity to delete", IJsonCmdHelp.STR)
@@ -168,14 +170,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "<code>{\"success\": true, \"result\": [...]</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-//        addCmd("global_status", params -> getServiceStatus());
         addCmd("scan_status", params -> scanApiHandler.getScanStatus(params.get("id").asString()).toJson(),
                 new JsonCmdHelp().setDesc("Get the status of a specific scan")
                         .setParam("id", "The uuid of the scan to inquire", JsonCmdHelp.STR)
                         .setResult("The status of the scan, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-//        addCmd("entity_scan_status", params -> getEntityScanStatus(params.get("id").asString()));
         addCmd("start_scan", params -> {
                     List<String> entities = new ArrayList<>();
                     if (params.has("entities")) {
@@ -847,20 +847,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
         return apiCommands.registerCmd(name, cmd, help);
-    }
-
-    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {
-        return scanApiHandler.getCpeItemChangesSince(date);
-    }
-
-    /**
-     * Extract an entity's UUID
-     *
-     * @param entity The entity of which we will extract the UUID, in {@link Json} format
-     * @return The UUID of the entity passed in parameter
-     */
-    public static String getEntityUuid(Json entity) {
-        return JsonUtil.getStringFromJson(entity, "uuid", "");
     }
 
     /**

@@ -28,9 +28,8 @@ import lombok.Getter;
 
 public class CSLServiceIDS implements ICSLService {
 
-
+	@Getter
 	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-
 	@Getter
     String name="#undef";
 	@Getter
@@ -41,11 +40,6 @@ public class CSLServiceIDS implements ICSLService {
 		this.configFileSectionName="ids_conf";
 
 		
-	}
-
-	public CSLServiceIDS(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
 	}
 
     public boolean init(Json jConfig, String cslDir) {
@@ -66,7 +60,6 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-	
 		
 		addCmd("stats_links", new IJsonCmd() {
 
@@ -82,7 +75,6 @@ public class CSLServiceIDS implements ICSLService {
 				.setResult("{nb_links: , histo:[0 , 0,0, ... ], period: (s) }", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
-		
 		
 		addCmd("stats_network", new IJsonCmd() {
 
@@ -102,8 +94,7 @@ public class CSLServiceIDS implements ICSLService {
 				.setResult("{percent_flowrate:  }", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
-		
-		
+
 		addCmd("test_alert", new IJsonCmd() {
 
 			@Override
@@ -441,7 +432,6 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-
 		addCmd("get_learned_rules", new IJsonCmd() {
 
 			@Override
@@ -453,7 +443,6 @@ public class CSLServiceIDS implements ICSLService {
 				return jresult;
 			}
 		});
-
 
 		addCmd("getDataSetList", new IJsonCmd() {
 
@@ -471,7 +460,6 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-
 
 		// operations : create, delete, rename, select, copy
 		addCmd("dataSetOperation", new IJsonCmd() {
@@ -573,7 +561,6 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-
 		// operations : load, save, compile
 		addCmd("opRulesSet", new IJsonCmd() {
 
@@ -583,7 +570,6 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-
 		// operations : load, save, compile
 		addCmd("opSystemConfiguration", new IJsonCmd() {
 
@@ -592,7 +578,6 @@ public class CSLServiceIDS implements ICSLService {
 				return Json.object();
 			}
 		});
-
 
 		// operations : create, delete, rename, select, copy
 		addCmd("reset_learned_model", new IJsonCmd() {
@@ -638,7 +623,6 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-
 		// operations : create, delete, rename, select, copy
 		addCmd("start_learning", new IJsonCmd() {
 
@@ -656,6 +640,7 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
+
 		// operations : create, delete, rename, select, copy
 		addCmd("cancel_learning", new IJsonCmd() {
 
@@ -705,7 +690,6 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-
 		// operations : create, delete, rename, select, copy
 		addCmd("start_detection_offline", new IJsonCmd() {
 
@@ -722,6 +706,7 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
+
 		// operations : create, delete, rename, select, copy
 		addCmd("cancel_detection_offline", new IJsonCmd() {
 
@@ -735,6 +720,7 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
+
 		addCmd("get_CSL_detection_offline_args", new IJsonCmd() {
 
 			@Override
@@ -764,8 +750,6 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-
-
 		// operations : create, delete, rename, select, copy
 		addCmd("start_detection", new IJsonCmd() {
 
@@ -781,7 +765,6 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
-
 
 		// operations : create, delete, rename, select, copy
 		addCmd("start_recording_only", new IJsonCmd() {
@@ -803,6 +786,7 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
+
 		// operations : create, delete, rename, select, copy
 		addCmd("set_idle_mode", new IJsonCmd() {
 
@@ -823,6 +807,7 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
+
 		addCmd("get_CSL_running_args", new IJsonCmd() {
 
 			@Override
@@ -860,7 +845,6 @@ public class CSLServiceIDS implements ICSLService {
 			}
 		});
 
-		
 		// Gestion des alertes
 		addCmd("get_alerts_list", new IJsonCmd() {
 
@@ -871,8 +855,7 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-		
-		// 
+
 		addCmd("op_alert", new IJsonCmd() {
 
 			@Override
@@ -882,9 +865,7 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-		
-		
-		
+
 		addCmd("generate_suricata_rules", new IJsonCmd() {
 
 			@Override
@@ -898,72 +879,16 @@ public class CSLServiceIDS implements ICSLService {
 				return rules;
 			}
 		});
-		
 
 		return true;  // ok to start
 	}
-
-	static private  String readAnyFile(String path) 
-	{
-		String content = "";
-
-		try
-		{
-			content = new String ( Files.readAllBytes( Paths.get(path) ) );
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-			return "{\"Error\":\"File not found:"+e.getMessage()+"\"}";
-		}
-
-		return content;
-	}
-
-	static private Json loadAnyFileAsJson(String fullname) {
-
-		String result="";
-		Json j=Json.object();
-
-		if (fullname!=null) {
-			result=readAnyFile(fullname);
-			Json z=Json.read(result);
-			j.set("contents",z);
-			System.err.println(
-					"File Contents="+result);
-
-		} else {
-			j.set("contents",Json.object());
-			j.set("error", "Nof file with name:"+fullname);
-			System.err.println(
-					"File Load error="+j.toString());
-
-		}
-
-		return j;
-	}
-
-	static public String startOf(String s) {
-		int MAX=50;
-		if (s.length()<=MAX) return s;
-		else return s.substring(0,MAX-1)+"...";
-	}
-
 
 	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
 	
-	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 
 	@Override

@@ -113,15 +113,19 @@ public class IDSRunner implements IIDSRunner {
 	public void switchModeToIdle() {
 		switchModeTo(IDSParams.MODE_IDLE);
 	}
+
 	public void switchModeToRecording() {
 		switchModeTo(IDSParams.MODE_RECORD_ONLY);
 	}
+
 	public void switchModeToDetectOnline() {
 		switchModeTo(IDSParams.MODE_DETECT_ONLINE);
 	}
+
 	public void switchModeToDetectOffline() {
 		switchModeTo(IDSParams.MODE_DETECT_OFFLINE);
 	}
+
 	public void switchModeToLearn() {
 		switchModeTo(IDSParams.MODE_LEARN);
 	}

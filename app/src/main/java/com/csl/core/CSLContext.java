@@ -227,7 +227,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     }
 
     public CSLUDPServer getCslUDPServer() {
-        if (cslHttpServer == null) System.err.println("Warning, no CSL UDP server registered");
+        if (cslUDPServer == null) System.err.println("Warning, no CSL UDP server registered");
 
         return cslUDPServer;
     }

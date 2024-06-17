@@ -19,7 +19,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
     //local librairies
-    implementation files('src/main/java/lib/jar/xminiserver.jar')
+    implementation files('src/main/resources/lib/jar/xminiserver.jar')
 
     //MavenCentral() librairies
     testImplementation 'org.mockito:mockito-core:3.12.4'

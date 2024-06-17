@@ -37,7 +37,7 @@ public class CSLHttpServer {
 	Service sparkServer=null;
 	ServerConfig serverConfig=null;
 
-	private List<String> listOfWebsocketPath= new ArrayList<String>();
+	private final List<String> listOfWebsocketPath= new ArrayList<String>();
 
 	static public int REFRESH_SOCKET_PERIOD=280;  // 280 sec (timeout after 300 sec)
 

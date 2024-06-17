@@ -37,8 +37,7 @@ public class SuricataServices implements ICSLService {
 		return "cd "+SURICATA_CONF_DIR+" && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
 				"sudo suricata -D -c "+SURICATA_CONF_DIR+"/suricata/suricata.yaml -i enp0s3 --pidfile "+SURICATA_CONF_DIR+"/suricataPID";
 	}
-	
-	
+
 	private static Json readJsonFile(String fileName) throws IOException {
 		String jsonRaw = "";
 		File fichierRegles = new File(fileName);
@@ -125,8 +124,6 @@ public class SuricataServices implements ICSLService {
 		out.at("result", output);
 		return out;
 	}
-	
-
 	
 	public static Json reloadRules(String id, String password, String name) {
 		String ip = null;
@@ -259,15 +256,6 @@ public class SuricataServices implements ICSLService {
 		}
 		configuredSuricata = suricataClone;
 	}
-	public SuricataServices() {
-		this.name="suricata";
-		this.configFileSectionName="ssh_service";
-	}
-	public SuricataServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-	
 	
 	@Override
 	public String getConfigFileSectionName() {

@@ -29,11 +29,6 @@ public class MonitorService implements ICSLService {
 		this.configFileSectionName="ids_conf";
 	}
 
-	public MonitorService(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-
     public boolean init(Json jConfig, String cslDir) {
 		addCmd("stats_devices", new IJsonCmd() {
 
@@ -81,56 +76,9 @@ public class MonitorService implements ICSLService {
 		return true;  // ok to start
 	}
 
-	static private  String readAnyFile(String path) 
-	{
-
-
-
-		String content = "";
-
-		try
-		{
-			content = new String ( Files.readAllBytes( Paths.get(path) ) );
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-			return "{\"Error\":\"File not found:"+e.getMessage()+"\"}";
-		}
-
-		return content;
-	}
-
-	static private Json loadAnyFileAsJson(String fullname) {
-
-
-		String result="";
-		Json j=Json.object();
-
-		if (fullname!=null) {
-			result=readAnyFile(fullname);
-			Json z=Json.read(result);
-			j.set("contents",z);
-		} else {
-			j.set("contents",Json.object());
-			j.set("error", "Nof file with name:"+fullname);
-
-		}
-
-		return j;
-	}
-
-	static public String startOf(String s) {
-		int MAX=50;
-		if (s.length()<=MAX) return s;
-		else return s.substring(0,MAX-1)+"...";
-	}
-
-
 	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
 	}
-	
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);

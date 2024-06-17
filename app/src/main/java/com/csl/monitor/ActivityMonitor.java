@@ -74,25 +74,6 @@ public class ActivityMonitor implements IStatusProvider {
 		return Json.object("active_taps", activeTaps);
 	}
 
-
-    public int getHistorySize() {
-		/**
-		 * Get the number of elements in the history
-		 *
-		 * @return the number of elements held in the history
-		 */
-		return history.currentHistorySize();
-	}
-
-	public int getMaxHistorySize() {
-		/**
-		 * Get the maximum number of elements in the history
-		 *
-		 * @return the maximum length of the history
-		 */
-		return history.maxHistorySize();
-	}
-
 	public void setMaxHistorySize(int size) {
 		/**
 		 * Set the maximum number of elements in the history
@@ -101,7 +82,6 @@ public class ActivityMonitor implements IStatusProvider {
 		 */
 		history.setHistorySize(size);
 	}
-
 
 	public void sendTickFromIDS(Json jj) {
 		Json j=Json.object();
@@ -116,8 +96,6 @@ public class ActivityMonitor implements IStatusProvider {
 		addTick(jj);
 	}
 
-
-	// build tic json
 	synchronized Json tic2Json() {
 
 		Json tick = Json.object();
@@ -144,7 +122,6 @@ public class ActivityMonitor implements IStatusProvider {
 		history.addTick(tick);
 		return tick;
 	}
-
 
 	public  void startTicTask() {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);

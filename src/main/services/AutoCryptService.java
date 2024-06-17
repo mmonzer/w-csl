@@ -23,9 +23,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Default constructor of the Suricata service.
      */
     public AutoCryptService() {
-        this("autocrypt",
-                "Service for managing the different certificates",
-                "auto_crypt");
+        this("autocrypt", "Service for managing the different certificates", "auto_crypt");
     }
 
     /**
@@ -180,12 +178,17 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json updateIssuerInfo(Json body) {
-        // Dbapi id, name
+        // Dbapi id, name,descrip
         if (!body.has("name") || !body.get("name").isString()) {
             return errorVariableNotFound("name");
         }
         String name = body.get("name").asString();
         body.delAt("name");
+        String description = null;
+        if (body.has("description") && body.get("description").isString()) {
+            description = body.get("description").asString();
+            body.delAt("description");
+        }
         if (!body.has("id") || !body.get("id").isNumber()) {
             return errorVariableNotFound("id");
         }
@@ -204,7 +207,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.getMethods().updateIssuerInfo(id, name, issuerRef, body, params).toJson();
+        return manager.getMethods().updateIssuerInfo(id, name, description, issuerRef, body, params).toJson();
     }
 
     /**
@@ -232,13 +235,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.getMethods().deleteIssuer(
-                id,
-                name,
-                issuerRef,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().deleteIssuer(id, name, issuerRef, body, params).toJson();
     }
 
     /**
@@ -283,6 +280,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json createRole(Json body) {
+        String description = null;
+        if (body.has("description") && body.get("description").isString()) {
+            description = body.get("description").asString();
+            body.delAt("description");
+        }
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -296,11 +298,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
         String name = body.get("name").asString();
 
-        return manager.getMethods().createRole(
-                name,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().createRole(name, description, body, params).toJson();
     }
 
     /**
@@ -364,6 +362,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
         int id = body.get("id").asInteger();
         body.delAt("id");
+        String description = null;
+        if (body.has("description") && body.get("description").isString()) {
+            description = body.get("description").asString();
+            body.delAt("description");
+        }
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -377,7 +380,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String name = body.get("name").asString();
         body.delAt("name");
 
-        return manager.getMethods().updateRole(id, name, body, params).toJson();
+        return manager.getMethods().updateRole(id, name, description, body, params).toJson();
     }
 
     /**
@@ -399,10 +402,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         params.at("ocsp_servers", body.get("ocsp_servers"));
         body.delAt("ocsp_servers");
 
-        return manager.getMethods().activateOCSP(
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().activateOCSP(body, params).toJson();
     }
 
     /**
@@ -426,10 +426,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("name");
         }
 
-        return manager.getMethods().validateTemplate(
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().validateTemplate(body, params).toJson();
     }
 
     /**
@@ -438,12 +435,17 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and role
      */
     public Json generateCertificate(Json body) {
-        // dbapi name
+        // dbapi name,d escription
         if (!body.has("name") || !body.get("name").isString()) {
             return errorVariableNotFound("name");
         }
         String name = body.get("name").asString();
         body.delAt("name");
+        String description = null;
+        if (body.has("description") && body.get("description").isString()) {
+            description = body.get("description").asString();
+            body.delAt("description");
+        }
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -462,11 +464,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("ttl");
         }
 
-        return manager.getMethods().generateCertificate(
-                name,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().generateCertificate(name, description, body, params).toJson();
     }
 
     /**
@@ -568,7 +566,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("name");
         }
         String name = body.get("name").asString();
-        body.delAt("name");
+        String description = null;
+        if (body.has("description") && body.get("description").isString()) {
+            description = body.get("description").asString();
+            body.delAt("description");
+        }
         // check params
         Json params = Json.object();
         if (!body.has("common_name") || !body.get("common_name").isString()) {
@@ -587,11 +589,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             body.delAt("path");
         }
 
-        return manager.getMethods().generateRootCA(
-                name,
-                body,
-                params
-        ).toJson();
+        return manager.getMethods().generateRootCA(name, description, body, params).toJson();
     }
 
     /**
@@ -605,7 +603,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("name");
         }
         String name = body.get("name").asString();
-        body.delAt("name");
+        String description = null;
+        if (body.has("description") && body.get("description").isString()) {
+            description = body.get("description").asString();
+            body.delAt("description");
+        }
         Json params = Json.object();
         // check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -624,7 +626,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("ttl");
         }
 
-        return manager.getMethods().generateIntermediateCA(name, body, params).toJson();
+        return manager.getMethods().generateIntermediateCA(name, description, body, params).toJson();
     }
 
     /**

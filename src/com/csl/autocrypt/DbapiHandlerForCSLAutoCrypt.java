@@ -35,10 +35,10 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param id identifier of the issuer in dbapi side
      * @param body      body of the request
      */
-    public JsonApiResponse updateIssuerInfo(int id, String name, Json body) {
+    public JsonApiResponse updateIssuerInfo(int id, String name, String description, Json body) {
         return this.sendPut(
                 DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() + id,
-                formatBody("issuer", id, name, body));
+                formatBody("issuer", id, name, description, body));
     }
 
     /**
@@ -70,10 +70,10 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      *
      * @param body body with the information
      */
-    public JsonApiResponse createRole(String name, Json body) {
+    public JsonApiResponse createRole(String name, String description, Json body) {
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.ROLE.endpoint(),
-                formatBody("role", name, body));
+                formatBody("role", name, description, body));
     }
 
     /**
@@ -92,12 +92,14 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * Updates the information of the given role
      *
      * @param id identifier of the issuer in dbapi db
+     * @param name name of the role
+     * @param description description of the role in the dbapi
      * @param body parameters with the path and name of role, others?
      */
-    public JsonApiResponse updateRole(int id, String name, Json body) {
+    public JsonApiResponse updateRole(int id, String name, String description, Json body) {
         return this.sendPut(
                 DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
-                formatBody("role", id, name, body));
+                formatBody("role", id, name, description, body));
     }
 
     /**
@@ -105,10 +107,10 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      *
      * @param body parameters with the path and role
      */
-    public JsonApiResponse generateCertificate(String name, Json body) {
+    public JsonApiResponse generateCertificate(String name, String description, Json body) {
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CERTIFICATES.endpoint(),
-                formatBody("certificate", name, body));
+                formatBody("certificate", name, description, body));
     }
 
     /**
@@ -126,23 +128,27 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Generate root CA
      *
+     * @param name name of the CA
+     * @param description description of the CA in the dbapi
      * @param body body of the request with commonName, ttl, and optionally others
      */
-    public JsonApiResponse generateRootCA(String name, Json body) {
+    public JsonApiResponse generateRootCA(String name, String description, Json body) {
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CA.endpoint(),
-                formatBody("ca", name, body));
+                formatBody("ca", name, description, body));
     }
 
     /**
      * Generate intermediate CA
      *
+     * @param name name of the CA
+     * @param description description of the CA in the dbapi
      * @param body parameters with commonName, ttl, and optionally path
      */
-    public JsonApiResponse generateIntermediateCA(String name, Json body) {
+    public JsonApiResponse generateIntermediateCA(String name, String description, Json body) {
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CA.endpoint(),
-                formatBody("ca", name, body));
+                formatBody("ca", name, description, body));
     }
 
     /**
@@ -154,10 +160,20 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @return new body with the right format
      */
     private Json formatBody(String category, String name, Json body) {
-        Json newBody = Json.object();
-        newBody.at("name", name);
-        newBody.at(category+"_json",body);
-        return newBody;
+        return formatBody(category, null, name, null, body);
+    }
+
+
+    /**
+     * Format body to feed dbapi
+     *
+     * @param category either roles, issuer, certificates or ca
+     * @param name name of the thing in the dbapi db
+     * @param body old body
+     * @return new body with the right format
+     */
+    private Json formatBody(String category, String name, String description, Json body) {
+        return formatBody(category, null, name, description, body);
     }
 
     /**
@@ -169,10 +185,13 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param body old body
      * @return new body with the right format
      */
-    private Json formatBody(String category, int id, String name, Json body) {
+    private Json formatBody(String category, Integer id, String name, String description, Json body) {
         Json newBody = Json.object();
         newBody.at("id", id);
         newBody.at("name", name);
+        if (description!=null) {
+            newBody.at("description", description);
+        }
         newBody.at(category+"_json",body);
         return newBody;
     }

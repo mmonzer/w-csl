@@ -41,9 +41,22 @@ public class AutoCryptLogic {
      * @param body      body of the request
      * @param params    parameters of the request
      */
-    public JsonApiResponse updateIssuerInfo(int id, String name, String description, String issuerRef, Json body, Json params) {
+    public JsonApiResponse updateIssuerInfo(Integer id, String name, String description, String issuerRef, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, id, name, description, responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, id.toString(), name, description, responseFromModule);
+    }
+
+    /**
+     * Updates the information of the given issuer in the module and the DB
+     *
+     * @param name name for dbapi side
+     * @param issuerRef identifier of the issuer (module side)
+     * @param body      body of the request
+     * @param params    parameters of the request
+     */
+    public JsonApiResponse updateIssuerInfo(String issuerRef, String name, String description, Json body, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, responseFromModule);
     }
 
     /**
@@ -55,9 +68,22 @@ public class AutoCryptLogic {
      * @param body body of the request
      * @param params parameters with the path
      */
-    public JsonApiResponse deleteIssuer(int id, String name, String issuerRef, Json body, Json params) {
+    public JsonApiResponse deleteIssuer(Integer id, String name, String issuerRef, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, id, name, responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, id.toString(), name, responseFromModule);
+    }
+
+    /**
+     * Deletes the given issuer from the module and the DB
+     *
+     * @param name name in the dbapi side
+     * @param issuerRef identifier in the module side
+     * @param body body of the request
+     * @param params parameters with the path
+     */
+    public JsonApiResponse deleteIssuer(String issuerRef, String name, Json body, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
     }
 
     /**
@@ -113,7 +139,19 @@ public class AutoCryptLogic {
      * @param body body of the request
      * @param params parameters with the path
      */
-    public JsonApiResponse deleteRole(int id, String name, Json body, Json params) {
+    public JsonApiResponse deleteRole(Integer id, String name, Json body, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.deleteRole(name, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteRole, id.toString(), name, responseFromModule);
+    }
+    /**
+     * Deletes the given role
+     *
+     * @param id identifier in the module/dbapi
+     * @param name name in the module/dbapi side
+     * @param body body of the request
+     * @param params parameters with the path
+     */
+    public JsonApiResponse deleteRole(String id, String name, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.deleteRole(name, body, params);
         return sendToDbApiIfSaveToDb(dbHandler::deleteRole, id, name, responseFromModule);
     }
@@ -126,7 +164,20 @@ public class AutoCryptLogic {
      * @param body parameters with the path and name of role, others?
      * @param params parameters with the path
      */
-    public JsonApiResponse updateRole(int id, String name, String description, Json body, Json params) {
+    public JsonApiResponse updateRole(Integer id, String name, String description, Json body, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::updateRole, id.toString(), name, description, responseFromModule);
+    }
+
+    /**
+     * Updates the information of the given role
+     *
+     * @param name identifier in the module/dbapi side
+     * @param description description in the dbapi
+     * @param body parameters with the path and name of role, others?
+     * @param params parameters with the path
+     */
+    public JsonApiResponse updateRole(String id, String name, String description, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
         return sendToDbApiIfSaveToDb(dbHandler::updateRole, id, name, description, responseFromModule);
     }
@@ -154,13 +205,23 @@ public class AutoCryptLogic {
     /**
      * Generates a certificates at the given path and role
      *
-     * @param idName identifier in the dbapi side
+     * @param name identifier in the dbapi side
      * @param body body of the request
      * @param params parameters with the path and role
      */
-    public JsonApiResponse generateCertificate(String idName, String description, Json body, Json params) {
+    public JsonApiResponse generateCertificate(String name, String description, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateCertificate(body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::generateCertificate, idName, description, responseFromModule);
+        if (responseFromModule.isSuccess() &&
+                responseFromModule.getResult().has("serial_number") &&
+                responseFromModule.getResult().get("serial_number").isString()) {
+            return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
+                    responseFromModule.getResult().get("serial_number").asString(),
+                    name,
+                    description,
+                    responseFromModule);
+        } else {
+            return JsonApiResponse.error("Error creating the certificate");
+        }
     }
 
     /**
@@ -182,7 +243,6 @@ public class AutoCryptLogic {
         return moduleHandler.getCertificateInfo(serialNumber, params);
     }
 
-
     /**
      * Downloads the given certificate
      *
@@ -201,7 +261,20 @@ public class AutoCryptLogic {
      * @param serialNumber identifier of the certificate on the module side
      * @param params       parameters with the path
      */
-    public JsonApiResponse revokeCertificate(int id, String name, String serialNumber, Json params) {
+    public JsonApiResponse revokeCertificate(Integer id, String name, String serialNumber, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.revokeCertificate(serialNumber, params);
+        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id.toString(), name, responseFromModule);
+    }
+
+    /**
+     * Revokes the given certificate
+     *
+     * @param id identifier in the dbapi db
+     * @param name  name in the dbapi side
+     * @param serialNumber identifier of the certificate on the module side
+     * @param params       parameters with the path
+     */
+    public JsonApiResponse revokeCertificate(String id, String name, String serialNumber, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.revokeCertificate(serialNumber, params);
         return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id, name, responseFromModule);
     }
@@ -216,7 +289,13 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse generateRootCA(String idName, String description, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateRootCA(body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, idName, description, responseFromModule);
+        if (responseFromModule.isSuccess() &&
+                responseFromModule.getResult().has("serial_number") &&
+                responseFromModule.getResult().get("serial_number").isString()) {
+            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, responseFromModule.getResult().get("serial_number").asString(), idName, description, responseFromModule);
+        } else {
+            return JsonApiResponse.error("Error creating the CA");
+        }
     }
 
     /**
@@ -229,7 +308,13 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse generateIntermediateCA(String idName, String description, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateIntermediateCA(body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, idName, description, responseFromModule);
+        if (responseFromModule.isSuccess() &&
+                responseFromModule.getResult().has("serial_number") &&
+                responseFromModule.getResult().get("serial_number").isString()) {
+            return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, responseFromModule.getResult().get("serial_number").asString(), idName, description, responseFromModule);
+        } else {
+            return JsonApiResponse.error("Error creating the CA");
+        }
     }
 
     /**
@@ -314,6 +399,42 @@ public class AutoCryptLogic {
      * @return new response if condition true, otherwise resend the same responseFromModule
      */
     public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithIdWithDescription method, int id, String name, String description, JsonApiResponse responseFromModule) {
+        if (responseFromModule.isSuccess() && shouldSaveToDb) {
+            Json nextRequestBody = responseFromModule.getResult();
+            nextRequestBody = (nextRequestBody!=null) ? nextRequestBody : Json.object();
+            return method.apply(id, name, description, nextRequestBody);
+        } else {
+            return responseFromModule;
+        }
+    }
+
+    /**
+     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
+     * returns the response from the module
+     *
+     * @param method             method to call when sending to DBApi
+     * @param responseFromModule response from the module
+     * @return new response if condition true, otherwise resend the same responseFromModule
+     */
+//    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithIdStr method, String id, String name, JsonApiResponse responseFromModule) {
+//        if (responseFromModule.isSuccess() && shouldSaveToDb) {
+//            Json nextRequestBody = responseFromModule.getResult();
+//            nextRequestBody = (nextRequestBody!=null) ? nextRequestBody : Json.object();
+//            return method.apply(id, name, nextRequestBody);
+//        } else {
+//            return responseFromModule;
+//        }
+//    }
+
+    /**
+     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
+     * returns the response from the module
+     *
+     * @param method             method to call when sending to DBApi
+     * @param responseFromModule response from the module
+     * @return new response if condition true, otherwise resend the same responseFromModule
+     */
+    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithIdStrWithDescription method, String id, String name, String description, JsonApiResponse responseFromModule) {
         if (responseFromModule.isSuccess() && shouldSaveToDb) {
             Json nextRequestBody = responseFromModule.getResult();
             nextRequestBody = (nextRequestBody!=null) ? nextRequestBody : Json.object();

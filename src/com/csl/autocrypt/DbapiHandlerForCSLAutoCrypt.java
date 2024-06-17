@@ -32,10 +32,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Updates the information of the given issuer in the module and the DB
      *
-     * @param id identifier of the issuer in dbapi side
+     * @param id serial ref of the issuer in dbapi
+     * @param name identifier of the issuer in dbapi side
+     * @param description description of the issuer in dbapi side
      * @param body      body of the request
      */
-    public JsonApiResponse updateIssuerInfo(int id, String name, String description, Json body) {
+    public JsonApiResponse updateIssuerInfo(String id, String name, String description, Json body) {
         return this.sendPut(
                 DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() + id,
                 formatBody("issuer", id, name, description, body));
@@ -47,7 +49,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param id identifier of the issuer in dbapi db
      * @param body parameters with the path and the issuer id
      */
-    public JsonApiResponse deleteIssuer(int id, String name, Json body) {
+    public JsonApiResponse deleteIssuer(String id, String name, Json body) {
         return this.sendDelete(
                 DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() +id,
                 null);
@@ -82,7 +84,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param id identifier of the issuer in dbapi db
      * @param body parameters with the path and name of role
      */
-    public JsonApiResponse deleteRole(int id, String name, Json body) {
+    public JsonApiResponse deleteRole(String id, String name, Json body) {
         return this.sendDelete(
                 DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
                 formatBody("role", name, body));
@@ -96,10 +98,10 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param description description of the role in the dbapi
      * @param body parameters with the path and name of role, others?
      */
-    public JsonApiResponse updateRole(int id, String name, String description, Json body) {
+    public JsonApiResponse updateRole(String id, String name, String description, Json body) {
         return this.sendPut(
                 DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
-                formatBody("role", id, name, description, body));
+                formatBody("role", id.toString(), name, description, body));
     }
 
     /**
@@ -114,12 +116,24 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Generates a certificates at the given path and role
+     *
+     * @param body parameters with the path and role
+     */
+    public JsonApiResponse generateCertificate(String serialNumber, String name, String description, Json body) {
+        return this.sendPost(
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES.endpoint(),
+                formatBody("certificate", serialNumber, name, description, body));
+    }
+
+    /**
      * Revokes the given certificate
      *
-     * @param id identifier of the issuer in dbapi db
+     * @param id serial number of the certificate
+     * @param name identifier of the certificate in the dbapi
      * @param params parameters with the path
      */
-    public JsonApiResponse revokeCertificate(int id, String name, Json params) {
+    public JsonApiResponse revokeCertificate(String id, String name, Json params) {
         return this.sendDelete(
                 DbapiEndpointForCSLAutocrypt.CERTIFICATES_.endpoint() +id,
                 params);
@@ -139,6 +153,20 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Generate root CA
+     *
+     * @param id serial number of the CA
+     * @param name name of the CA
+     * @param description description of the CA in the dbapi
+     * @param body body of the request with commonName, ttl, and optionally others
+     */
+    public JsonApiResponse generateRootCA(String id, String name, String description, Json body) {
+        return this.sendPost(
+                DbapiEndpointForCSLAutocrypt.CA.endpoint(),
+                formatBody("ca", id, name, description, body));
+    }
+
+    /**
      * Generate intermediate CA
      *
      * @param name name of the CA
@@ -152,6 +180,20 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Generate intermediate CA
+     *
+     * @param id serial number of the CA
+     * @param name name of the CA
+     * @param description description of the CA in the dbapi
+     * @param body parameters with commonName, ttl, and optionally path
+     */
+    public JsonApiResponse generateIntermediateCA(String id, String name, String description, Json body) {
+        return this.sendPost(
+                DbapiEndpointForCSLAutocrypt.CA.endpoint(),
+                formatBody("ca", id, name, description, body));
+    }
+
+    /**
      * Format body to feed dbapi
      *
      * @param category either roles, issuer, certificates or ca
@@ -162,7 +204,6 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     private Json formatBody(String category, String name, Json body) {
         return formatBody(category, null, name, null, body);
     }
-
 
     /**
      * Format body to feed dbapi
@@ -185,7 +226,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param body old body
      * @return new body with the right format
      */
-    private Json formatBody(String category, Integer id, String name, String description, Json body) {
+    private Json formatBody(String category, String id, String name, String description, Json body) {
         Json newBody = Json.object();
         newBody.at("id", id);
         newBody.at("name", name);

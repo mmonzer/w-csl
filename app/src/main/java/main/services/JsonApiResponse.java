@@ -17,6 +17,7 @@ public class JsonApiResponse {
     @Getter
     public static class Error {
         private String reason;
+        @Getter
         private Json details;
 
         public Error(String reason, Json details) {
@@ -121,5 +122,9 @@ public class JsonApiResponse {
      */
     static public JsonApiResponse error(String reason) {
         return error(reason, null);
+    }
+    @Override
+    public String toString() {
+        return this.toJson().toString();
     }
 }

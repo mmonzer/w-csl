@@ -4,6 +4,7 @@ import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Setter;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;

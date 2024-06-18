@@ -47,10 +47,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     static private final String defaultName = "discovery";
 
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
+    @Getter
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
+    @Getter
     private final String configFileSectionName;
     private final boolean isConcentrator;
+    @Getter
+    @Setter
     private ScanWebSocketHandler scanWebSocketHandler = null;
 
     @Getter
@@ -63,6 +67,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private DataSynchronizationService cpeItemSynchronizationService = null;
     @Setter
     private DataSynchronizationService microsoftKbSynchronizationService = null;
+    @Getter
+    @Setter
     private DataSynchronizationService deletedCpeItemsSynchronizationService = null;
     private DataSynchronizationService deletedMicrosoftKbsSynchronizationService = null;
     @Getter
@@ -795,17 +801,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         return true;
     }
 
-    @Override
-    public String getConfigFileSectionName() {
-        return configFileSectionName;
-    }
-
-    @Override
-    public IApiCommands getApiCommands() {
-        apiCommands.setName(name);
-        return apiCommands;
-    }
-
     /**
      * Stop the service.
      *
@@ -912,7 +907,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         if (!syncResult.isSuccess()) {
             return JsonApiResponse.error(
                     "Could not retrieve devices from DB-API",
-                    Json.object("failed_devices", syncResult.getError().getDetails().get("failed_devices"))
+                    Json.object("failed_devices", syncResult.getError().getReason())
             );
         }
 

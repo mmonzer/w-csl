@@ -11,8 +11,12 @@ public enum DbapiEndpointForCSLAutocrypt {
     ROLE_(ROLE+"/"),
     CERTIFICATES(SELF+"/certificates"),
     CERTIFICATES_(CERTIFICATES+"/"),
+    CERTIFICATES_UPT_BY_SERIAL_NUMBER_(CERTIFICATES_+"update_by_serial_number/"),
+    CERTIFICATES_DEL_BY_SERIAL_NUMBER_(CERTIFICATES_+"delete_by_serial_number/"),
     ISSUER(SELF+"/certificate_authorities"),
     ISSUER_(ISSUER+"/"),
+    ISSUER_UPT_BY_REF_(ISSUER_+"update_by_issuer_ref/"),
+    ISSUER_DEL_BY_REF_(ISSUER_+"delete_by_issuer_ref/"),
     ;
 
     private final String endpoint;

@@ -213,16 +213,24 @@ public class AutoCryptService extends Service implements IStatusProvider {
         body.delAt("id");
         Json params = Json.object();
         // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
+//        if (!body.has("path") || !body.get("path").isString()) {
+//            return errorVariableNotFound("path");
+//        }
+//        params.at("path", body.get("path").asString());
+//        body.delAt("path");
+
+        params.at("path", name);
+        if ((!body.has("issuer_ref") || !body.get("issuer_ref").isString()) && (!body.has("issuer_id") || !body.get("issuer_id").isString())) {
+            return errorVariableNotFound("issuer_ref/issuer_id");
         }
-        params.at("path", body.get("path").asString());
-        body.delAt("path");
-        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
-            return errorVariableNotFound("issuer_ref");
+        String issuerRef;
+        if (body.has("issuer_ref")) {
+            issuerRef = body.get("issuer_ref").asString();
+            body.delAt("issuer_ref");
+        } else {issuerRef = body.get("issuer_id").asString();
+            body.delAt("issuer_id");
         }
-        String issuerRef = body.get("issuer_ref").asString();
-        body.delAt("issuer_ref");
+
 
         return manager.getMethods().updateIssuerInfo(id, name, description, issuerRef, body, params).toJson();
     }
@@ -240,12 +248,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
         int id = body.get("id").asInteger();
         body.delAt("id");
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path").asString());
-        body.delAt("path");
+//        // Check params
+//        if (!body.has("path") || !body.get("path").isString()) {
+//            return errorVariableNotFound("path");
+//        }
+//        params.at("path", body.get("path").asString());
+//        body.delAt("path");}
+        String name =  body.get("name").asString();
+        params.at("path", body.get("name").asString());
         if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
             return errorVariableNotFound("issuer_ref");
         }
@@ -314,8 +324,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("name");
         }
         String name = body.get("name").asString();
+        Integer certificateAuthorityId = body.get("certificate_authority").get("id").asInteger();
 
-        return manager.getMethods().createRole(name, description, body, params).toJson();
+        return manager.getMethods().createRole(name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
 
     /**
@@ -396,8 +407,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
         String name = body.get("name").asString();
         body.delAt("name");
+        Integer certificateAuthorityId = body.get("certificate_authority").get("id").asInteger();
 
-        return manager.getMethods().updateRole(id, name, description, body, params).toJson();
+        return manager.getMethods().updateRole(id, name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
 
     /**
@@ -579,10 +591,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json generateRootCA(Json body) {
         // dbapi identifier
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
+//        if (!body.has("name") || !body.get("name").isString()) {
+//            return errorVariableNotFound("name");
+//        }
+//        String name = body.get("name").asString();
         String description = null;
         if (body.has("description") && body.get("description").isString()) {
             description = body.get("description").asString();
@@ -594,6 +606,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("common_name");
         }
         params.at("common_name", body.get("common_name"));
+        String name = body.get("common_name").asString();
         body.delAt("common_name");
         if (!body.has("ttl") || !body.get("ttl").isString()) {
             return errorVariableNotFound("ttl");
@@ -616,10 +629,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json generateIntermediateCA(Json body) {
         // dbapi identifier
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
+//        if (!body.has("name") || !body.get("name").isString()) {
+//            return errorVariableNotFound("name");
+//        }
         String description = null;
         if (body.has("description") && body.get("description").isString()) {
             description = body.get("description").asString();
@@ -627,11 +639,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
         Json params = Json.object();
         // check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
+//        if (!body.has("path") || !body.get("path").isString()) {
+//            return errorVariableNotFound("path");
+//        }
         params.at("path", body.get("path"));
-        body.delAt("path");
+//        body.delAt("path");
         // check body
         if (!body.has("type") || !body.get("type").isString()) {
             return errorVariableNotFound("type");
@@ -639,6 +651,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!body.has("common_name") || !body.get("common_name").isString()) {
             return errorVariableNotFound("common_name");
         }
+        String name = body.get("common_name").asString();
+        params.at("path", name);
         if (!body.has("ttl") || !body.get("ttl").isString()) {
             return errorVariableNotFound("ttl");
         }

@@ -32,15 +32,21 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Updates the information of the given issuer in the module and the DB
      *
-     * @param id serial ref of the issuer in dbapi
+     * @param issuerRef serial ref of the issuer in dbapi
      * @param name identifier of the issuer in dbapi side
      * @param description description of the issuer in dbapi side
      * @param body      body of the request
      */
-    public JsonApiResponse updateIssuerInfo(String id, String name, String description, Json body) {
+    public JsonApiResponse updateIssuerInfo(String issuerRef, String name, String description, String path, Json body) {
+        Json input = Json.object();
+        input.at("name", name);
+        input.at("ca_json", body);
+        input.at("description", description);
+        input.at("issuer_ref", issuerRef);
+        input.at("path", path);
         return this.sendPut(
-                DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() + id,
-                formatBody("issuer", id, name, description, body));
+                DbapiEndpointForCSLAutocrypt.ISSUER_UPT_BY_REF_.endpoint() + issuerRef,
+                input);
     }
 
     /**
@@ -51,7 +57,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse deleteIssuer(String id, String name, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() +id,
+                DbapiEndpointForCSLAutocrypt.ISSUER_DEL_BY_REF_.endpoint() +id,
                 null);
     }
 
@@ -72,10 +78,16 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      *
      * @param body body with the information
      */
-    public JsonApiResponse createRole(String name, String description, Json body) {
+    public JsonApiResponse createRole(String name, String description, String certificateAuthorityId, Json body) {
+        Json input = Json.object();
+        input.at("name", name);
+        input.at("description", description);
+        input.at("certificate_authority_id", certificateAuthorityId);;
+        input.at("role_json", body);
+
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.ROLE.endpoint(),
-                formatBody("role", name, description, body));
+                input);
     }
 
     /**
@@ -98,10 +110,16 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param description description of the role in the dbapi
      * @param body parameters with the path and name of role, others?
      */
-    public JsonApiResponse updateRole(String id, String name, String description, Json body) {
+    public JsonApiResponse updateRole(String id, String name, String description, String certificateAuthorityId, Json body) {
+        Json input = Json.object();
+        input.at("name", name);
+        input.at("description", description);
+        input.at("certificate_authority_id", certificateAuthorityId);;
+        input.at("role_json", body);
+
         return this.sendPut(
                 DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
-                formatBody("role", id.toString(), name, description, body));
+                input);
     }
 
     /**
@@ -121,6 +139,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param body parameters with the path and role
      */
     public JsonApiResponse generateCertificate(String serialNumber, String name, String description, Json body) {
+        Json input = Json.object();
+        input.at("name", name);
+        input.at("description", description);
+        input.at("certificate_json", body);
+        input.at("serial_number", serialNumber);
+
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CERTIFICATES.endpoint(),
                 formatBody("certificate", serialNumber, name, description, body));
@@ -130,12 +154,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * Revokes the given certificate
      *
      * @param id serial number of the certificate
-     * @param name identifier of the certificate in the dbapi
+     * @param serialNumber identifier of the certificate in the dbapi
      * @param params parameters with the path
      */
-    public JsonApiResponse revokeCertificate(String id, String name, Json params) {
+    public JsonApiResponse revokeCertificate(String id, String serialNumber, Json params) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.CERTIFICATES_.endpoint() +id,
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES_DEL_BY_SERIAL_NUMBER_.endpoint() +serialNumber,
                 params);
     }
 
@@ -190,7 +214,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse generateIntermediateCA(String id, String name, String description, Json body) {
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CA.endpoint(),
-                formatBody("ca", id, name, description, body));
+                formatBodyCA("ca", id, name, description, body));
     }
 
     /**
@@ -229,6 +253,26 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     private Json formatBody(String category, String id, String name, String description, Json body) {
         Json newBody = Json.object();
         newBody.at("id", id);
+        newBody.at("name", name);
+        if (description!=null) {
+            newBody.at("description", description);
+        }
+        newBody.at(category+"_json",body);
+        return newBody;
+    }
+
+    /**
+     * Format body to feed dbapi
+     *
+     * @param issuerRef identifier in the dbapi
+     * @param category either roles, issuer, certificates or ca
+     * @param name name of the thing in the dbapi db
+     * @param body old body
+     * @return new body with the right format
+     */
+    private Json formatBodyCA(String category, String issuerRef, String name, String description, Json body) {
+        Json newBody = Json.object();
+        newBody.at("issuer_ref", issuerRef);
         newBody.at("name", name);
         if (description!=null) {
             newBody.at("description", description);

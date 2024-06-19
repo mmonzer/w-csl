@@ -45,7 +45,7 @@ public class CSLIDSMainServer {
         JServiceLoader.registerService(new CveServices(), configObj, true);
         JServiceLoader.registerService(new DiscoveryServices(false), configObj, true);
         JServiceLoader.registerService(new StatusService(), configObj, true);
-        JServiceLoader.registerService(new AutoCryptService(), configObj, true);
+        JServiceLoader.registerService(new AutoCryptService(true), configObj, true);
 
         // set services as remote services (to be called through socket)
         CSLContext.instance.setApiRemote("ids");

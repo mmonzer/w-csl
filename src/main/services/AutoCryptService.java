@@ -9,6 +9,12 @@ import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.endpoints.AutoCryptEndpoints;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * OCSP : Online Certificate Status Protocol
@@ -18,19 +24,30 @@ import main.services.endpoints.AutoCryptEndpoints;
  */
 public class AutoCryptService extends Service implements IStatusProvider {
     private final AutoCrypt manager;
+    private ScheduledExecutorService synchronizationSchedule;
+    private boolean isRemote = false;
+    private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
 
     /**
-     * Default constructor of the Suricata service.
+     * Default constructor of the AutoCrypt service (not remote)
      */
     public AutoCryptService() {
-        this("autocrypt", "Service for managing the different certificates", "auto_crypt");
+        this(false);
     }
 
     /**
-     * Generic constructor of the Suricata service.
+     * Default constructor of the AutoCrypt service.
      */
-    public AutoCryptService(String name, String description, String configFileSectionName) {
+    public AutoCryptService(boolean isRemote) {
+        this("autocrypt", "Service for managing the different certificates", "auto_crypt", isRemote);
+    }
+
+    /**
+     * Generic constructor of the AutoCrypt service.
+     */
+    public AutoCryptService(String name, String description, String configFileSectionName, boolean isRemote) {
         super(name, description, configFileSectionName);
+        this.isRemote = isRemote;
         manager = new AutoCrypt(name);
     }
 
@@ -43,12 +60,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     @Override
     public boolean init(Json config, String configFile) {
-        manager.setModuleIp(config.at("ip").asString());
-        manager.setModulePort(config.at("port").asInteger());
-        Json globalConfig = config.get("global");
-//        manager.configureDbApiConnection(JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost"),
-//                JsonUtil.getStringFromJson(globalConfig, "api_key", ""));
-        manager.reinitApiHandler();
+        if (!isRemote) {
+            manager.reinitApiHandler();
+        }
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 
@@ -85,8 +99,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
 
         // Launch initial sync to dbapi
-        manager.getMethods().initialSynchronizeDb("pki");
+        synchronizationSchedule = Executors.newScheduledThreadPool(1);
+        // TODO : change initial to continuous sync
+        synchronizationSchedule.scheduleAtFixedRate(()->{manager.getMethods().initialSynchronizeDb("pki");}, 0, 300, TimeUnit.SECONDS);
 
+        logger.info("Service autocrypt initilialized.");
         return true;
     }
 

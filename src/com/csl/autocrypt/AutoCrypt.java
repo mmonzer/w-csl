@@ -21,6 +21,9 @@ public class AutoCrypt {
     public AutoCrypt(String name) {
         this.name = name;
         Json config = CSLContext.instance.getConfig();
+        Json localConfig = config.get("auto_crypt");
+        moduleIp = JsonUtil.getStringFromJson(localConfig, "ip", "localhost");
+        modulePort = JsonUtil.getIntFromJson(localConfig, "port", 8002);
         Json globalConfig = config.get("global");
         dbIp = JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
         dbApikey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
@@ -74,6 +77,7 @@ public class AutoCrypt {
      */
     public void reinitApiHandler() {
         moduleApiHandler = new ApiHandlerForCSLAutoCrypt(name, "http://" + moduleIp + ":" + modulePort);
+//        moduleApiHandler = new ApiHandlerForCSLAutoCrypt(name, AutoCryptUtils.generateAutoCryptApiUrlFromConfig(CSLContext.instance.getConfig().get("auto_crypt")));
         if (dbApikey.isEmpty()) {
             dbApiHandler = new DbapiHandlerForCSLAutoCrypt("BDAPI - " + name, "http://" + dbIp + "/api");
         } else {

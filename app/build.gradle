@@ -84,11 +84,17 @@ java {
 
 run{
     systemProperty 'logback.configurationFile', './src/main/resources/logback.xml'
-    systemProperty 'javax.net.ssl.trustStore', '../cacerts.jks'
+    systemProperty 'javax.net.ssl.trustStore', '/home/lola/Documents/csl/w-csl/cacerts.jks'
     systemProperty 'javax.net.ssl.trustStorePassword', 'changeit'
 }
 test{
     useJUnitPlatform()
+    systemProperty 'logback.configurationFile', './src/main/resources/logback.xml'
+    systemProperty 'javax.net.ssl.trustStore', '/home/lola/Documents/csl/w-csl/cacerts.jks'
+    systemProperty 'javax.net.ssl.trustStorePassword', 'changeit'
+    onlyIf {
+        !project.hasProperty('test.skip') || !project.getProperty('test.skip').toBoolean()
+    }
 }
 jacocoTestReport {
     dependsOn test

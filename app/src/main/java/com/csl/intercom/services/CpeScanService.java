@@ -58,7 +58,6 @@ public class CpeScanService {
         }
     }
 
-
     /**
      * Add a scan in the list, or overwrite it if it already exists.
      *

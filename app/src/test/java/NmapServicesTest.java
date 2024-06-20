@@ -18,7 +18,7 @@ public class NmapServicesTest {
     @Test
     void initTest(){
         //Given
-        Json jConfig = Json.object();
+        Json jConfig = CSLContext.instance.getJConfig();
         String cslDir = "cslDir";
 
         Json tmp = Json.object();
@@ -43,23 +43,8 @@ public class NmapServicesTest {
         Json params = Json.object();
         params.set("tap", "tapTest");
 
-        Json jConfig = Json.object();
-
-        Json tmp = Json.object();
-        tmp.set("debug_mode", "false");
-        tmp.set("log_mode", "false");
-        tmp.set("log_dir", "testLogDir");
-        tmp.set("debug_dir", "testDebugDir");
-
-        jConfig.set("debug_mode", tmp.get("debug_mode"));
-        jConfig.set("log_mode", tmp.get("log_mode"));
-        jConfig.set("log_dir", tmp.get("log_dir"));
-        jConfig.set("debug_dir", tmp.get("debug_dir"));
-
         initTest();
         //When - Then
         assertThrows(NullPointerException.class, ()->nmapServices.scanDevice(params, jConfig));
-
-
     }
 }

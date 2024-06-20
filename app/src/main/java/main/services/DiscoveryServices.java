@@ -56,7 +56,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     @Getter
     @Setter
     private ScanWebSocketHandler scanWebSocketHandler = null;
-
     @Getter
     @Setter
     private DbapiHandler dbapiHandler = null;

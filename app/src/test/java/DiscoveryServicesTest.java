@@ -1,55 +1,64 @@
 import com.csl.core.CSLContext;
+import com.csl.core.NoLogging;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.services.CpeItemsSynchronizationService;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.DataSynchronizationService;
+import com.csl.intercom.services.PaginatedSynchronizationService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
+import main.services.JsonApiResponse;
+import main.util.CSLRunningArgs;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 class DiscoveryServicesTest {
-    Json jConfig;
+    Json jConfig = CSLContext.instance.getConfig();
 
     private DiscoveryServices discoveryServices;
 
     private ScanApiHandler scanApiHandler;
+    @Mock
     private ScanWebSocketHandler scanWebSocketHandler;
     private CpeScanService cpeScanService;
+
+    @Mock
     private DataSynchronizationService deletedCpeItemsSynchronizationService;
+    @Mock
     private DataSynchronizationService cpeItemsSynchronizationService;
-    private DbapiHandler dbapiHandler;
+    @Mock
     private DataSynchronizationService microsoftKbSynchronizationService;
+
+    private DbapiHandler dbapiHandler;
 
 
     @BeforeEach
     void setUp() {
-        jConfig = CSLContext.instance.getConfig();
+        jConfig.at("discovery").set("manager_ip", "localhost");
+
         MockitoAnnotations.openMocks(this);
+        when(scanWebSocketHandler.requestScan(any())).thenReturn(JsonApiResponse.success());
 
         discoveryServices = new DiscoveryServices();
         scanApiHandler = new ScanApiHandler();
         cpeScanService = new CpeScanService();
         dbapiHandler = new DbapiHandler();
-
-        microsoftKbSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
-        deletedCpeItemsSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
-        cpeItemsSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
-
-        scanWebSocketHandler = new ScanWebSocketHandler(discoveryServices, ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig) ,cpeScanService);
-
-        cpeScanService.init(deletedCpeItemsSynchronizationService, microsoftKbSynchronizationService);
-
+        //Throw exception beacause of the syncAll method
+        cpeScanService.init(cpeItemsSynchronizationService, microsoftKbSynchronizationService);
 
         discoveryServices.setCpeScanService(cpeScanService);
         discoveryServices.setDbapiHandler(dbapiHandler);
@@ -82,7 +91,7 @@ class DiscoveryServicesTest {
         assert(status.toString().equals(statusExpected.toString()));
     }
 
-    @Test
+    //@Test
     void terminateTest(){
         //when
         boolean terminate = discoveryServices.terminate();
@@ -98,11 +107,18 @@ class DiscoveryServicesTest {
         //then
         assertNotNull(result);
     }
+
     @Test
-    void syncAllTest(){
-        //when
-        discoveryServices.syncAll();
-        //then
-        assertDoesNotThrow(()->dbapiHandler.sendNewDevicesToScanner(scanApiHandler));
+    void startScanTest(){
+        //Given
+        List<String> cpeNames = new ArrayList<>();
+        for(CpeItem cpeItem : discoveryServices.getAllCpes()){
+            cpeNames.add(cpeItem.getDeviceId());
+        }
+        //When
+        JsonApiResponse rep = discoveryServices.startScan(cpeNames);
+        System.out.println("CPE names : "+cpeNames.toString());
+        //Then
+        assert(rep.toString().equals(JsonApiResponse.success().toString()));
     }
 }

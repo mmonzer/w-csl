@@ -309,7 +309,6 @@ public class DbapiHandler implements AutoCloseable {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Get the deleted devices from DB-API that were changed since an optional date.
      *

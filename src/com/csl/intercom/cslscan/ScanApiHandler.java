@@ -955,6 +955,10 @@ public class ScanApiHandler implements AutoCloseable {
         return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.EXTERNAL_CONNECTION_INFOS, externalConnectionInfo.serializeForScanner());
     }
 
+    public JsonApiResponse deleteExternalConnectionInfo(String connectionInfoId, boolean hardDelete) {
+        return sendRequestToScanManager(HttpMethod.DELETE, String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionInfoId), Json.object("hardDelete", hardDelete));
+    }
+
     public ExternalScan startExternalDiscoveryScan(String connectionInfoId) {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.EXTERNAL_DISCOVERY_START_SCAN.endpoint(), connectionInfoId), Json.object());
         if (response.isSuccess()) {

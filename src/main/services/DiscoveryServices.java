@@ -883,6 +883,24 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                 .setStatus(IJsonCmdHelp.STATUS_OK)
         );
+        addCmd("delete_external_connection_info", params -> {
+            if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
+                return JsonApiResponse.error("Missing required parameter connection_info_uuid",
+                        Json.object("exception", "Missing parameter connection_info_uuid")
+                ).toJson();
+            }
+            String connectionInfoId = params.get("connection_info_uuid").asString();
+            JsonApiResponse response = scanApiHandler.deleteExternalConnectionInfo(connectionInfoId, false);
+            if (response.isSuccess()) {
+                externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+            }
+            return response.toJson();
+        }, new JsonCmdHelp().setDesc("Remove a device discovery connection info")
+                .setParam("connection_info_uuid", "The id of the connection info to remove", IJsonCmdHelp.STR)
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
         addCmd("start_external_scan", params -> {
                     if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
                         return JsonApiResponse.error("Missing required parameter connection_info_uuid",

@@ -182,4 +182,12 @@ public class ExternalConnectionInfo {
         this.fields.forEach(result::set);
         return result;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
 }

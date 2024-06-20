@@ -32,6 +32,7 @@ public enum DbapiEndpoint {
     EXTERNAL_CONNECTION_INFO_TEMPLATES("/external_connection_info_templates"),
     EXTERNAL_CONNECTION_INFO_TEMPLATES_CREATE_OR_UPDATE(EXTERNAL_CONNECTION_INFO_TEMPLATES.getEndpoint() + "/create_or_update_external_connection_info_templates"),
     EXTERNAL_CONNECTION_INFO("/external_connections_info"),
+    EXTERNAL_CONNECTION_INFO_DETAILS(EXTERNAL_CONNECTION_INFO.getEndpoint() + "/%s"),
     EXTERNAL_CONNECTION_INFO_CREATE_OR_UPDATE(EXTERNAL_CONNECTION_INFO.getEndpoint() + "/create_or_update_external_connections_info"),
     EXTERNAL_DISCOVERED_DEVICES_LAST_UPDATED_DATE(EVENTS.getEndpoint() + "/get_last_discovered_device_updated_date"),
     EXTERNAL_DISCOVERED_DEVICES_CREATE_EVENT(EVENTS.getEndpoint() + "/create_discovery_devices_from_third_party_event"),

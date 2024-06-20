@@ -612,6 +612,14 @@ public class DbapiHandler implements AutoCloseable {
         }
     }
 
+    public void deleteExternalConnectionInfo(String id) throws DbapiUnexpectedStatusCodeException, ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.getEndpoint(), id));
+        ContentResponse response = request.send();
+        if (response.getStatus() >= 400) {
+            throw new DbapiUnexpectedStatusCodeException("Could not delete external connection info.", response.getStatus());
+        }
+    }
+
     public OffsetDateTime getExternalConnectionInfoTemplatesLastUpdateDate() {
         logger.debug("Fetching external connection info templates last update date from DB-API.");
         logger.warn("NOT IMPLEMENTED YET.");

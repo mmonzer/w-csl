@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class ExternalConnectionInfoSynchronizationService {
     private Logger logger = LoggerFactory.getLogger(ExternalConnectionInfoSynchronizationService.class);
@@ -35,9 +36,20 @@ public class ExternalConnectionInfoSynchronizationService {
 
     synchronized public void synchronizeExternalConnectionInfos() {
         logger.info("Synchronizing external connection infos");
-        List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(false);
+        List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(true);
+        List<ExternalConnectionInfo> deletedConnectionInfos = connectionInfos.stream().filter(ExternalConnectionInfo::isDeleted).collect(Collectors.toList());
+        connectionInfos.removeAll(deletedConnectionInfos);
         try {
             dbapiHandler.createOrUpdateExternalConnectionInfos(connectionInfos);
+            deletedConnectionInfos.forEach(deletedConnectionInfo -> {
+                try {
+                    dbapiHandler.deleteExternalConnectionInfo(deletedConnectionInfo.getId());
+                    scanApiHandler.deleteExternalConnectionInfo(deletedConnectionInfo.getId(), true);
+                } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
+                    logger.error("Error while deleting external connection info", e);
+                }
+
+            });
         } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
             logger.error("Error while synchronizing external connection infos", e);
         }

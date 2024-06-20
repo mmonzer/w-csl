@@ -480,8 +480,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!body.has("vault_role_id") || !body.get("vault_role_id").isNumber()) {
             return errorVariableNotFound("vault_role_id");
         }
-        Integer vaultRoleId = body.get("name").asInteger();
-        body.delAt("name");
+        String vaultRoleId = body.get("vault_role_id").asString();
+        body.delAt("vault_role_id");
         Json params = Json.object();
         // Check params
         if (!body.has("path") || !body.get("path").isString()) {
@@ -490,9 +490,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         params.at("path", body.get("path"));
         body.delAt("path");
         // Check body
-        if (!body.has("role_name") || !body.get("role_name").isString()) {
-            return errorVariableNotFound("role_name");
+        if (!body.has("vault_role_name") || !body.get("vault_role_name").isString()) {
+            return errorVariableNotFound("vault_role_name");
         }
+        body.set("role_name", body.get("vault_role_name").asString());
+        body.delAt("vault_role_name");
         if (!body.has("common_name") || !body.get("common_name").isString()) {
             return errorVariableNotFound("common_name");
         }
@@ -500,7 +502,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("ttl");
         }
 
-        return manager.getMethods().generateCertificate(name, description, vaultRoleId.toString(), body, params).toJson();
+        return manager.getMethods().generateCertificate(name, description, vaultRoleId, body, params).toJson();
     }
 
     /**

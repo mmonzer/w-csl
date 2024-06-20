@@ -328,6 +328,8 @@ public class AutoCryptLogic {
      * @param params parameters with  path
      */
     public JsonApiResponse generateIntermediateCA(String idName, String description, Json body, Json params) {
+        String caType = body.get("ca_type").asString();
+        body.delAt("ca_type");
         JsonApiResponse responseFromModule = moduleHandler.generateIntermediateCA(body, params);
 
         if (responseFromModule.isSuccess() &&
@@ -335,6 +337,9 @@ public class AutoCryptLogic {
                 responseFromModule.getResult().get("issuer_ref").isString()) {
             String issuerRef = responseFromModule.getResult().get("issuer_ref").asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+            Json result = responseFromModule.getResult();
+            result.set("ca_type", caType);
+            responseFromModule = JsonApiResponse.result(result);
             return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, issuerRef, idName, description, responseFromModule);
         } else {
             return JsonApiResponse.error("Error creating the CA");

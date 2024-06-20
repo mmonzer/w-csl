@@ -818,7 +818,7 @@ public class DbapiHandler implements AutoCloseable {
             deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
         } catch (Exception e) {
             logger.error("Could not get changes from DB-API.", e);
-            return JsonApiResponse.error("Could not get changes from DBAPI");
+            return JsonApiResponse.error("Could not get changes from DBAPI"+e.getCause());
         }
         //endregion Get changes from DB-API
 

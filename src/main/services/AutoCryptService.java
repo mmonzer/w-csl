@@ -241,19 +241,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json deleteIssuer(Json body) {
-        // Dbapi id
+        Json params = Json.object();
+        // Check params
         if (!body.has("id") || !body.get("id").isNumber()) {
             return errorVariableNotFound("id");
         }
         int id = body.get("id").asInteger();
-        body.delAt("id");
-        Json params = Json.object();
-//        // Check params
-//        if (!body.has("path") || !body.get("path").isString()) {
-//            return errorVariableNotFound("path");
-//        }
-//        params.at("path", body.get("path").asString());
-//        body.delAt("path");}
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
+        }
         String name =  body.get("name").asString();
         params.at("path", body.get("name").asString());
         if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
@@ -312,20 +308,22 @@ public class AutoCryptService extends Service implements IStatusProvider {
             description = body.get("description").asString();
             body.delAt("description");
         }
+        if (!body.has("certificate_authority_id") || !body.get("certificate_authority_id").isNumber()) {
+            return errorVariableNotFound("certificate_authority_id");
+        }
+        Integer certificateAuthorityId = body.get("certificate_authority_id").asInteger();
         Json params = Json.object();
         // Check params
-//        if (!body.has("path") || !body.get("path").isString()) {
-//            return errorVariableNotFound("path");
-//        }
-//        params.at("path", body.get("path"));
-//        body.delAt("path");
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path"));
+        body.delAt("path");
         // Check body
         if (!body.has("name") || !body.get("name").isString()) {
             return errorVariableNotFound("name");
         }
         String name = body.get("name").asString();
-        Integer certificateAuthorityId = body.get("certificate_authority").get("id").asInteger();
-        params.at("path", body.get("certificate_authority").get("name").asString());
 
         return manager.getMethods().createRole(name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
@@ -391,6 +389,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
         int id = body.get("id").asInteger();
         body.delAt("id");
+        if (!body.has("certificate_authority_id") || !body.get("certificate_authority_id").isNumber()) {
+            return errorVariableNotFound("certificate_authority_id");
+        }
+        Integer certificateAuthorityId = body.get("certificate_authority_id").asInteger();
         String description = null;
         if (body.has("description") && body.get("description").isString()) {
             description = body.get("description").asString();
@@ -398,17 +400,16 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
         Json params = Json.object();
         // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
         if (!body.has("name") || !body.get("name").isString()) {
             return errorVariableNotFound("name");
         }
         String name = body.get("name").asString();
         body.delAt("name");
-        Integer certificateAuthorityId = body.get("certificate_authority").get("id").asInteger();
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path"));
+        body.delAt("path");
 
         return manager.getMethods().updateRole(id, name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
@@ -465,7 +466,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and role
      */
     public Json generateCertificate(Json body) {
-        // dbapi name,d escription
+        // dbapi name,description
         if (!body.has("name") || !body.get("name").isString()) {
             return errorVariableNotFound("name");
         }
@@ -476,27 +477,28 @@ public class AutoCryptService extends Service implements IStatusProvider {
             description = body.get("description").asString();
             body.delAt("description");
         }
+        if (!body.has("vault_role_id") || !body.get("vault_role_id").isNumber()) {
+            return errorVariableNotFound("vault_role_id");
+        }
+        Integer vaultRoleId = body.get("name").asInteger();
+        body.delAt("name");
         Json params = Json.object();
         // Check params
-//        if (!body.has("path") || !body.get("path").isString()) {
-//            return errorVariableNotFound("path");
-//        }
-//        params.at("path", body.get("path"));
-//        body.delAt("path");
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path"));
+        body.delAt("path");
         // Check body
-//        if (!body.has("role_name") || !body.get("role_name").isString()) {
-//            return errorVariableNotFound("role_name");
-//        }
+        if (!body.has("role_name") || !body.get("role_name").isString()) {
+            return errorVariableNotFound("role_name");
+        }
         if (!body.has("common_name") || !body.get("common_name").isString()) {
             return errorVariableNotFound("common_name");
         }
         if (!body.has("ttl") || !body.get("ttl").isString()) {
             return errorVariableNotFound("ttl");
         }
-
-        params.at("path", body.get("role").get("certificate_authority").get("path").asString());
-        body.at("role_name", body.get("role").get("name").asString());
-        Integer vaultRoleId = body.get("role").get("id").asInteger();
 
         return manager.getMethods().generateCertificate(name, description, vaultRoleId.toString(), body, params).toJson();
     }
@@ -567,12 +569,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json revokeCertificate(Json body) {
-        // Dbapi id, name
-        if (!body.has("id") || !body.get("id").isNumber()) {
-            return errorVariableNotFound("id");
-        }
-        int id = body.get("id").asInteger();
-        body.delAt("id");
         // check params
         Json params = Json.object();
         if (!body.has("path") || !body.get("path").isString()) {
@@ -586,7 +582,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String serialNumber = body.get("serial_number").asString();
         body.delAt("serial_number");
 
-        return manager.getMethods().revokeCertificate(id, name, serialNumber, params).toJson();
+        return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
     }
 
     /**

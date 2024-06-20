@@ -90,8 +90,9 @@ public enum AutoCryptEndpoints implements Endpoint  {
             new JsonCmdHelp()
                     .setDesc("Updates the information of the given role")
                     .setParam("id", "id in the db dbapi", JsonCmdHelp.INT)
-                    .setParam("path", "", JsonCmdHelp.STR)
+                    .setParam("description", "OPT", JsonCmdHelp.INT)
                     .setParam("name", "Name of the role", JsonCmdHelp.STR)
+                    .setParam("certificate_authority", "object from dbapi (with id and path)", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     ACTIVATE_OCSP("activate_ocsp",
             new JsonCmdHelp()
@@ -114,9 +115,10 @@ public enum AutoCryptEndpoints implements Endpoint  {
     GENERATE_CERTIFICATE("generate_certificate",
             new JsonCmdHelp()
                     .setDesc("Generates a certificate")
-                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
-                    .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("role_name", "", JsonCmdHelp.STR)
+                    .setParam("name", "name of cert", JsonCmdHelp.STR)
+                    .setParam("role", "role object from dbapi (with role.id, role.name, role.certificate_authority.path)", JsonCmdHelp.JSON)
+                    .setParam("ttl", "", JsonCmdHelp.STR)
+                    .setParam("common_name", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_CERTIFICATES("get_certificates",
             new JsonCmdHelp()

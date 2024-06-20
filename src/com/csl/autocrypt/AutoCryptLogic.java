@@ -65,28 +65,51 @@ public class AutoCryptLogic {
     /**
      * Deletes the given issuer from the module and the DB
      *
-     * @param id identifier in the dbapi db
+     * @param id identifier in the dbapi side
      * @param name name in the dbapi side
      * @param issuerRef identifier in the module side
      * @param body body of the request
      * @param params parameters with the path
      */
-    public JsonApiResponse deleteIssuer(Integer id, String name, String issuerRef, Json body, Json params) {
+    public JsonApiResponse deleteIssuer(int id, String name, String issuerRef, Json body, Json params) {
+        // delete issuer
         JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+        JsonApiResponse responseFromDbapi = sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+        // delete roles of the issuer (one intermediate issuer per path)
+        deleteRolesOfPath(id, name, params, responseFromDbapi);
+        // delete certificates of the issuer (one intermediate issuer per path)
+        revokeCertificatesOfPath(params, responseFromDbapi);
+        return JsonApiResponse.success();
+
     }
 
-    /**
-     * Deletes the given issuer from the module and the DB
-     *
-     * @param name name in the dbapi side
-     * @param issuerRef identifier in the module side
-     * @param body body of the request
-     * @param params parameters with the path
-     */
-    public JsonApiResponse deleteIssuer(String issuerRef, String name, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+    private void deleteRolesOfPath(int id, String name, Json params, JsonApiResponse responseFromDbapi) {
+        if (responseFromDbapi.isSuccess()) {
+            JsonApiResponse rolesToDeleteModule = moduleHandler.getRoles(params);
+            JsonApiResponse rolesToDeleteDbapi = dbHandler.listRoles();
+            if (rolesToDeleteModule.isSuccess() && rolesToDeleteDbapi.isSuccess())
+            {
+                for (Json roleDbapi : rolesToDeleteDbapi.getResult()) {
+                    if (roleDbapi.has("certificate_authority_id") && roleDbapi.get("certificate_authority_id").isNumber() && roleDbapi.get("certificate_authority_id").asInteger() == id &&
+                            roleDbapi.has("name") && roleDbapi.get("name").isString() && roleDbapi.get("name").asString() == name) {
+                        dbHandler.deleteRole(roleDbapi.get("id").asString(), null, null);
+                    }
+                }
+                for (Json roleDbapi : rolesToDeleteModule.getResult()) {
+                    moduleHandler.deleteRole(roleDbapi.asString(), null, params);
+                }
+            }
+        }
+    }
+
+    private void revokeCertificatesOfPath(Json params, JsonApiResponse responseFromDbapi) {
+        if (responseFromDbapi.isSuccess()) {
+            JsonApiResponse certificatesToRevoke = moduleHandler.getCertificates(params);
+            for (Json cert : certificatesToRevoke.getResult()) {
+                moduleHandler.revokeCertificate(cert.asString(), params);
+                dbHandler.revokeCertificate(cert.asString(), params);
+            }
+        }
     }
 
     /**
@@ -263,28 +286,12 @@ public class AutoCryptLogic {
     /**
      * Revokes the given certificate
      *
-     * @param id identifier in the dbapi db
-     * @param name  name in the dbapi side
      * @param serialNumber identifier of the certificate on the module side
      * @param params       parameters with the path
      */
-    public JsonApiResponse revokeCertificate(Integer id, String name, String serialNumber, Json params) {
+    public JsonApiResponse revokeCertificate(String serialNumber, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.revokeCertificate(serialNumber, params);
-        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id.toString(), serialNumber, responseFromModule);
-//        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id.toString(), name, responseFromModule);
-    }
-
-    /**
-     * Revokes the given certificate
-     *
-     * @param id identifier in the dbapi db
-     * @param name  name in the dbapi side
-     * @param serialNumber identifier of the certificate on the module side
-     * @param params       parameters with the path
-     */
-    public JsonApiResponse revokeCertificate(String id, String name, String serialNumber, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.revokeCertificate(serialNumber, params);
-        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id, name, responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, serialNumber, responseFromModule);
     }
 
     /**

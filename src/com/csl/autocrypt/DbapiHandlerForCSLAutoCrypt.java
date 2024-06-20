@@ -103,6 +103,15 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Lists all the roles
+     */
+    public JsonApiResponse listRoles() {
+        return this.sendGet(
+                DbapiEndpointForCSLAutocrypt.ROLE.endpoint(),
+                null);
+    }
+
+    /**
      * Updates the information of the given role
      *
      * @param id identifier of the issuer in dbapi db
@@ -154,11 +163,10 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Revokes the given certificate
      *
-     * @param id serial number of the certificate
-     * @param serialNumber identifier of the certificate in the dbapi
+     * @param serialNumber identifier of the certificate
      * @param params parameters with the path
      */
-    public JsonApiResponse revokeCertificate(String id, String serialNumber, Json params) {
+    public JsonApiResponse revokeCertificate(String serialNumber, Json params) {
         return this.sendDelete(
                 DbapiEndpointForCSLAutocrypt.CERTIFICATES_DEL_BY_SERIAL_NUMBER_.endpoint() +serialNumber,
                 params);

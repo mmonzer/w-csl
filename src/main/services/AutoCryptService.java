@@ -560,7 +560,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String serialNumber = body.get("serial_number").asString();
         body.delAt("serial_number");
 
-        return manager.getMethods().downloadCertificate(serialNumber, params).toJson();
+        return manager.getMethods().downloadCertificate(serialNumber, params).getResult();
     }
 
     /**
@@ -629,10 +629,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with commonName, ttl, and optionally path
      */
     public Json generateIntermediateCA(Json body) {
-        // dbapi identifier
-//        if (!body.has("name") || !body.get("name").isString()) {
-//            return errorVariableNotFound("name");
-//        }
         String description = null;
         if (body.has("description") && body.get("description").isString()) {
             description = body.get("description").asString();
@@ -640,11 +636,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
         Json params = Json.object();
         // check params
-//        if (!body.has("path") || !body.get("path").isString()) {
-//            return errorVariableNotFound("path");
-//        }
-//        params.at("path", body.get("path"));
-//        body.delAt("path");
         // check body
         if (!body.has("type") || !body.get("type").isString()) {
             return errorVariableNotFound("type");

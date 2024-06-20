@@ -121,8 +121,12 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse importCertificate(String idName, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.importCertificate(body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::importCertificate, idName, responseFromModule);
-        // TODO : verify this import
+        String issuerRef= null;
+        if (responseFromModule.isSuccess()) {
+            issuerRef = responseFromModule.getResult().get("imported_issuers").asJsonList().get(0).asString();
+            responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+        }
+        return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, null, responseFromModule);
     }
 
     /**

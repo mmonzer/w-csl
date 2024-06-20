@@ -149,19 +149,20 @@ public enum AutoCryptEndpoints implements Endpoint  {
     GENERATE_ROOT_CA("generate_root_ca",
             new JsonCmdHelp()
                     .setDesc("Generates a root for CA")
-                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
-                    .setParam("common_name", "", JsonCmdHelp.STR)
+//                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
+                    .setParam("common_name", "Friendly name. Il devient name for dbapi", JsonCmdHelp.STR)
                     .setParam("ttl", "", JsonCmdHelp.STR)
                     .setParam("path", "OPT: ", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_INTERMEDIATE_CA("generate_inter_ca",
             new JsonCmdHelp()
                     .setDesc("Generate intermediate ca")
-                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
-                    .setParam("path", "", JsonCmdHelp.STR)
-                    .setParam("common_name", "", JsonCmdHelp.STR)
+//                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
+//                    .setParam("path", "", JsonCmdHelp.STR)
+                    .setParam("common_name", "Friendly name. Il devient path et name for dbapi", JsonCmdHelp.STR)
                     .setParam("ttl", "", JsonCmdHelp.STR)
                     .setParam("type", "", JsonCmdHelp.STR)
+                    .setParam("description", "OPT", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK));
 
     private final String command;

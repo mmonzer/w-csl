@@ -73,7 +73,7 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse deleteIssuer(Integer id, String name, String issuerRef, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, id.toString(), name, responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
     }
 
     /**
@@ -215,7 +215,7 @@ public class AutoCryptLogic {
      * @param body body of the request
      * @param params parameters with the path and role
      */
-    public JsonApiResponse generateCertificate(String name, String description, Json body, Json params) {
+    public JsonApiResponse generateCertificate(String name, String description, String vaultRoleId, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateCertificate(body, params);
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has("serial_number") &&
@@ -223,6 +223,7 @@ public class AutoCryptLogic {
             return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
                     responseFromModule.getResult().get("serial_number").asString(),
                     name,
+                    vaultRoleId,
                     description,
                     responseFromModule);
         } else {
@@ -269,7 +270,8 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse revokeCertificate(Integer id, String name, String serialNumber, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.revokeCertificate(serialNumber, params);
-        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id.toString(), name, responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id.toString(), serialNumber, responseFromModule);
+//        return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, id.toString(), name, responseFromModule);
     }
 
     /**
@@ -298,7 +300,9 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has("issuer_ref") &&
                 responseFromModule.getResult().get("issuer_ref").isString()) {
-            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, responseFromModule.getResult().get("issuer_ref").asString(), idName, description, responseFromModule);
+            String issuerRef = responseFromModule.getResult().get("issuer_ref").asString();
+            responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, description, responseFromModule);
         } else {
             return JsonApiResponse.error("Error creating the CA");
         }
@@ -314,10 +318,13 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse generateIntermediateCA(String idName, String description, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateIntermediateCA(body, params);
+
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has("issuer_ref") &&
                 responseFromModule.getResult().get("issuer_ref").isString()) {
-            return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, responseFromModule.getResult().get("issuer_ref").asString(), idName, description, responseFromModule);
+            String issuerRef = responseFromModule.getResult().get("issuer_ref").asString();
+            responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+            return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, issuerRef, idName, description, responseFromModule);
         } else {
             return JsonApiResponse.error("Error creating the CA");
         }

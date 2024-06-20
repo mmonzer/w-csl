@@ -13,6 +13,7 @@ import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.database.CSLServiceJsonDataBase;
@@ -308,6 +309,12 @@ public class CSLIDSMainClient {
         CSLContext.instance.getIdsRunner().start();
         ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
 
+        // Send API commands with specific privileges to the server
+        try (DbapiHandler dbapiHandler = new DbapiHandler()) {
+            dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
+        } catch (Exception e) {
+            logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);
+        }
 
         if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
             int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);

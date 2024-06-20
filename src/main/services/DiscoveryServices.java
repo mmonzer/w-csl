@@ -7,13 +7,14 @@ import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.services.ExternalDiscoveredDevicesSynchronizationService;
+import com.csl.intercom.services.ExternalConnectionInfoTemplatesSynchronizationService;
 import com.csl.intercom.services.ExternalConnectionInfoSynchronizationService;
 import com.csl.intercom.services.ExternalScansService;
 import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
+import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
@@ -22,9 +23,11 @@ import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
+import com.csl.util.FileStorageService;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
@@ -59,9 +62,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     //    private String apiKey;
     private DbapiHandler dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
+    private FileStorageService fileStorageService = null;
+    private ImportExportBsonService importExportBsonService = null;
     private CSLMqttBrokerHandler mqttBroker = null;
     private ExternalScansService externalScansService = null;
     private ExternalConnectionInfoSynchronizationService externalConnectionInfoSynchronizationService = null;
+    private ExternalConnectionInfoTemplatesSynchronizationService externalConnectionInfoTemplatesSynchronizationService = null;
     private ExternalDiscoveredDevicesSynchronizationService externalDiscoveredDevicesSynchronizationService = null;
     private DataSynchronizationService cpeItemSynchronizationService = null;
     private DataSynchronizationService microsoftKbSynchronizationService = null;
@@ -98,11 +104,13 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
 
-        if (isConcentrator) {
-        }
-
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
+        fileStorageService = new FileStorageService();
+
+        if (isConcentrator) {
+
+        }
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
@@ -113,6 +121,15 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
             deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
+            importExportBsonService = ImportExportBsonService.getInstance();
+            importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
+            externalConnectionInfoSynchronizationService = new ExternalConnectionInfoSynchronizationService(scanApiHandler, dbapiHandler);
+            externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+            externalConnectionInfoTemplatesSynchronizationService = new ExternalConnectionInfoTemplatesSynchronizationService(scanApiHandler, dbapiHandler, 3600);
+            externalDiscoveredDevicesSynchronizationService = new ExternalDiscoveredDevicesSynchronizationService(dbapiHandler, scanApiHandler);
+            externalScansService = new ExternalScansService(dbapiHandler, scanApiHandler, externalDiscoveredDevicesSynchronizationService);
+            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, importExportBsonService, externalScansService);
+            externalDiscoveredDevicesSynchronizationService.init(externalScansService);
 
             mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
@@ -125,12 +142,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                     logger.error("Could not synchronize deleted CPE Items", e);
                 }
             });
-
-            externalScansService = new ExternalScansService(dbapiHandler, scanApiHandler);
-            scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, externalScansService);
-            externalConnectionInfoSynchronizationService = new ExternalConnectionInfoSynchronizationService(scanApiHandler, dbapiHandler);
-            externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
-            externalDiscoveredDevicesSynchronizationService = new ExternalDiscoveredDevicesSynchronizationService(scanApiHandler, dbapiHandler, 3600);
+            mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.FILE_ACTION_STATUS, message -> {
+                HttpTemplateImportNotification notification = HttpTemplateImportNotification.fromMQTTMessage(Json.read(message.getResults()));
+                if (notification != null) {
+                    if (notification.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED) {
+                        importExportBsonService.startNewImportTask(notification);
+                    }
+                }
+            });
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
@@ -145,26 +164,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "\"is_http_api_reachable\": true/false" +
                                 "\"is_websocket_connected\": true/false" +
                                 "}" +
-                                "</code>", IJsonCmdHelp.JSON).setStatus(IJsonCmdHelp.STATUS_OK));
-//        addCmd("add_entity", this::addEntity);
-        addCmd("list_entities", params -> scanApiHandler.listEntities().toJson(),
-                new JsonCmdHelp().setDesc("Retieve the entities registered in CSL-Scan")
-                        .setResult("The list of entities' information as returned by CSL-Scan, in the format" +
-                                "<code>{\"success\": true, \"result\": [...]}</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
-        addCmd("get_entity", params -> scanApiHandler.getEntity(params.get("id").asString()).toJson(),
-                new JsonCmdHelp().setDesc("Retrieve a specific entity from CSL-Scan")
-                        .setParam("id", "The uuid of the entity to retrieve", IJsonCmdHelp.STR)
-                        .setResult("The entity as returned by CSL-Scan", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
-//        addCmd("update_entity", this::updateEntity);
-        addCmd("delete_entity", params -> scanApiHandler.deleteEntity(params.get("id").asString()).toJson(),
-                new JsonCmdHelp().setDesc("Remove a specific entity from CSL-Scan")
-                        .setParam("id", "The uuid of the entity to delete", IJsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true/false }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                                "</code>", IJsonCmdHelp.JSON).setStatus(IJsonCmdHelp.STATUS_OK)
         );
         addCmd("get_all_cpes", params -> Json.object("success", true, "result", Json.array(getAllCpes().toArray())),
                 new JsonCmdHelp().setDesc("Get the CPE Items in CSL-Scan")
@@ -184,14 +184,12 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "<code>{\"success\": true, \"result\": [...]</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-//        addCmd("global_status", params -> getServiceStatus());
         addCmd("scan_status", params -> scanApiHandler.getScanStatus(params.get("id").asString()).toJson(),
                 new JsonCmdHelp().setDesc("Get the status of a specific scan")
                         .setParam("id", "The uuid of the scan to inquire", JsonCmdHelp.STR)
                         .setResult("The status of the scan, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-//        addCmd("entity_scan_status", params -> getEntityScanStatus(params.get("id").asString()));
         addCmd("start_scan", params -> {
                     List<String> entities = new ArrayList<>();
                     if (params.has("entities")) {
@@ -206,7 +204,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Start a scan from CSL-Scan")
                         .setParam("entities", "An array of strings with the uuids of the entities to scan. May be omitted or null, resulting in scanning all entities.", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("stop_scan", params -> {
                     try {
@@ -219,13 +218,15 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Stop a scan in CSL-Scan")
                         .setParam("id", "The uuid of the scan to stop", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the scan was stopped successfully", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("synchronize_devices", params -> dbapiHandler.sendNewDevicesToScanner(scanApiHandler).toJson(),
                 new JsonCmdHelp().setDesc("Synchronize devices between DB-API and CSL-Scan.")
                         .setResult("<code>{\"success\": true }</code> if the synchronisation went without error," +
                                 "<code>{\"success\": false, \"error\", {\"reason\": \"...\", \"failed_devices\": [...]}}</code> otherwise. The failed_devices field is present if devices were actually fetched from DB-API.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_SCAN_DB
         );
         addCmd("drop_all_collections", params -> {
                     try {
@@ -241,7 +242,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Drop all collections in DB-API")
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_SCAN_DB
         );
         addCmd("get_entity_http_connections", params -> {
                     List<EntityHttpConnection> entityHttpConnections = scanApiHandler.getAllEntityHttpConnections(true);
@@ -269,7 +271,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Get all entity HTTP connections from CSL-Scan, also showing non-visible stages")
                         .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_entity_http_connection", params -> {
                     Json uuidJson = params.get("uuid");
@@ -333,7 +336,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan, also showing non-visible stages")
                         .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.STR)
                         .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("delete_entity_http_connection", params -> {
                     Json uuidJson = params.get("uuid");
@@ -368,7 +372,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("uuid", "The uuid of the EntityHttpConnection to delete", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("add_entity_http_connection", params -> {
                     Json entityHttpConnectionJson = params.get("entity_http_connection");
@@ -415,7 +420,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_connection", params -> {
                     String deviceUuid = JsonUtil.getStringFromJson(params, "device_uuid", null);
@@ -605,12 +611,14 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("password", "The password to test. Optional.", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": { \"page\": \"...\", \"status\": int }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_predefined_http_variables", params -> scanApiHandler.getPredefinedHttpVariables().toJson(),
                 new JsonCmdHelp().setDesc("Get the list of predefined HTTP variables")
                         .setResult("The list of predefined HTTP variables, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_http_template", params -> {
                     String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);
@@ -714,7 +722,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("template", "The template to test - optional", IJsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
                         "where result contains <code>{ \"success\": true }</code> if the template is valid," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_discovery_cron", params -> {
                     try {
@@ -762,7 +771,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("cron", "The cron to set", IJsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("is_discovery_cron_active", params -> {
                     try {
@@ -802,7 +812,36 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("isActive", "The status to set", IJsonCmdHelp.BOOL)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.START_CPE_SCAN
+        );
+        addCmd("import_http_templates_bson", params -> {
+                    HttpTemplateImportNotification query = HttpTemplateImportNotification.fromHMIJson(params);
+                    if (query == null) {
+                        return JsonApiResponse.error("Could not parse BSON file",
+                                Json.object("exception", "Could not parse BSON file")
+                        ).toJson();
+                    } else {
+                        this.importExportBsonService.startNewImportTask(query);
+                        return JsonApiResponse.success().toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Import HTTP templates from a BSON file")
+                        .setParam("file", "The BSON file to import", IJsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+        );
+        addCmd("export_http_templates_bson", params -> {
+            try {
+                int id = this.importExportBsonService.startNewExportTask();
+                return JsonApiResponse.result(Json.object("id", id)).toJson();
+            } catch (Exception e) {
+                return JsonApiResponse.error(e.getMessage()).toJson();
+            }
+        },
+                new JsonCmdHelp().setDesc("Request to export HTTP templates to a BSON file")
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
         );
         addCmd("get_external_connection_info_templates", params -> {
                     List<ExternalConnectionInfoTemplate> templates = scanApiHandler.getExternalConnectionInfoTemplates();
@@ -925,6 +964,31 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
         return apiCommands.registerCmd(name, cmd, help);
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name            The name of the command.
+     * @param cmd             The callback to be executed when the command is invoked.
+     * @param privilegeFamily The privilege family of the command.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmd cmd, JsonCmdPrivilegeFamily privilegeFamily) {
+        return apiCommands.registerCmd(name, cmd, privilegeFamily);
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name             The name of the command.
+     * @param cmd              The callback to be executed when the command is invoked.
+     * @param help             The helper to display in the '/apihelp' page.
+     * @param privilegeFamily  The privilege family of the command.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
+        return apiCommands.registerCmd(name, cmd, help, privilegeFamily);
     }
 
     public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {

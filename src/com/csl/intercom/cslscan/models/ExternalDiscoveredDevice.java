@@ -10,14 +10,16 @@ public class ExternalDiscoveredDevice {
     private String id;
     private String name;
     private String ipAddress;
+    private String connectionInfoUuid;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private boolean isDeleted;
 
-    private ExternalDiscoveredDevice(String id, String name, String ipAddress, OffsetDateTime createdAt, OffsetDateTime updatedAt, boolean isDeleted) {
+    private ExternalDiscoveredDevice(String id, String name, String ipAddress, String connectionInfoUuid, OffsetDateTime createdAt, OffsetDateTime updatedAt, boolean isDeleted) {
         this.id = id;
         this.name = name;
         this.ipAddress = ipAddress;
+        this.connectionInfoUuid = connectionInfoUuid;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isDeleted = isDeleted;
@@ -31,6 +33,7 @@ public class ExternalDiscoveredDevice {
         String id;
         String name;
         String ipAddress;
+        String connectionInfoUuid;
         OffsetDateTime createdAt;
         OffsetDateTime updatedAt;
         boolean isDeleted;
@@ -53,10 +56,16 @@ public class ExternalDiscoveredDevice {
             return null;
         }
 
+        if (json.has("connectionInfoUuid") && json.get("connectionInfoUuid").isString()) {
+            connectionInfoUuid = json.get("connectionInfoUuid").asString();
+        } else {
+            return null;
+        }
+
         if (json.has("createdAt") && json.get("createdAt").isString()) {
             createdAt = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(json.get("createdAt").asString()));
         } else {
-            return null;
+            createdAt = null;
         }
 
         if (json.has("updatedAt") && json.get("updatedAt").isString()) {
@@ -71,7 +80,7 @@ public class ExternalDiscoveredDevice {
             return null;
         }
 
-        return new ExternalDiscoveredDevice(id, name, ipAddress, createdAt, updatedAt, isDeleted);
+        return new ExternalDiscoveredDevice(id, name, ipAddress, connectionInfoUuid, createdAt, updatedAt, isDeleted);
     }
 
     public Json serializeForDbapi() {
@@ -79,6 +88,7 @@ public class ExternalDiscoveredDevice {
                 "uuid", id,
                 "name", name,
                 "ipAddress", ipAddress,
+                "connectionInfoUuid", connectionInfoUuid,
                 "deleted", isDeleted
         );
         if (createdAt != null) {

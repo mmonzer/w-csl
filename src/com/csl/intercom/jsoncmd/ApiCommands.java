@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 
@@ -22,6 +23,7 @@ public class ApiCommands implements IApiCommands {
     HashMap<String, IJsonCmd> listOfCommands = new HashMap<String, IJsonCmd>();
     HashMap<String, IJsonCmdHelp> listOfCommandHelps = new HashMap<String, IJsonCmdHelp>();
     List<String> listOfCommandNames = new ArrayList<String>();
+    Map<String, JsonCmdPrivilegeFamily> listOfCommandPrivileges = new HashMap<>();
     private String path = "";
 
     private ApiCommands(String path) {
@@ -66,6 +68,24 @@ public class ApiCommands implements IApiCommands {
         listOfCommandNames.add(name);
         if (jh != null) listOfCommandHelps.put(name, jh.setName(name));
         return "ok";
+    }
+
+    @Override
+    public String registerCmd(String name, IJsonCmd j, JsonCmdPrivilegeFamily privilegeFamily) {
+        String result = registerCmd(name, j);
+        if ("ok".equals(result)) {
+            listOfCommandPrivileges.put(name, privilegeFamily);
+        }
+        return result;
+    }
+
+    @Override
+    public String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh, JsonCmdPrivilegeFamily privilegeFamily) {
+        String result = registerCmd(name, j, jh);
+        if ("ok".equals(result)) {
+            listOfCommandPrivileges.put(name, privilegeFamily);
+        }
+        return result;
     }
 
     private String formatPath(String proxyPath) {
@@ -222,6 +242,10 @@ public class ApiCommands implements IApiCommands {
         }
 
         return null;
+    }
+
+    public Map<String, JsonCmdPrivilegeFamily> getListOfCommandPrivileges() {
+        return listOfCommandPrivileges;
     }
 
     public String toString() {

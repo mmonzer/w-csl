@@ -151,7 +151,9 @@ public class ExternalConnectionInfo {
         if (this.updatedAt != null) {
             result.set(ExternalConnectionInfoField.UPDATED_AT.getDbapiName(), DbapiUtils.localDateToDbapi(this.updatedAt).toString());
         }
-        this.fields.forEach(result::set);
+        Json otherData = Json.object();
+        this.fields.forEach(otherData::set);
+        result.set("other_data", otherData);
         return result;
     }
 

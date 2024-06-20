@@ -59,13 +59,15 @@ public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
     public static class Field implements IDbapiSerializable {
         private String name_en;
         private String name_fr;
+        String key;
         private boolean isRequired;
         private boolean isSecret;
         private Type type;
 
-        public Field(String name_en, String name_fr, boolean isRequired, boolean isSecret, Type type) {
+        public Field(String name_en, String name_fr, String key, boolean isRequired, boolean isSecret, Type type) {
             this.name_en = name_en;
             this.name_fr = name_fr;
+            this.key = key;
             this.isRequired = isRequired;
             this.isSecret = isSecret;
             this.type = type;
@@ -82,6 +84,13 @@ public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
             String name_en;
             if (json.has("name_en") && json.get("name_en").isString()) {
                 name_en = json.get("name_en").asString();
+            } else {
+                return null;
+            }
+
+            String key;
+            if (json.has("key") && json.get("key").isString()) {
+                key = json.get("key").asString();
             } else {
                 return null;
             }
@@ -107,7 +116,7 @@ public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
                 return null;
             }
 
-            return new Field(name_en, name_fr, isRequired, isSecret, type);
+            return new Field(name_en, name_fr, key, isRequired, isSecret, type);
         }
 
         @Override

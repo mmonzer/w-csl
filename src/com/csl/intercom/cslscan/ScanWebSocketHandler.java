@@ -3,6 +3,9 @@ package com.csl.intercom.cslscan;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.services.ExternalScansService;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.cslscan.models.ExportQuery;
+import com.csl.intercom.cslscan.models.ImportQuery;
+import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.ucsl.json.Json;
@@ -38,10 +41,13 @@ import java.util.concurrent.*;
  */
 public class ScanWebSocketHandler {
     static private final Logger logger = LoggerFactory.getLogger(ScanWebSocketHandler.class);
+    private final ImportExportBsonService importExportBsonService;
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
     private final String websocketExternalScanEndpoint = "/external_discovery/ready";
+    private final String websocketImportNotificationsEndpoint = "/import/ready";
+    private final String websocketExportNotificationsEndpoint = "/export/ready";
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private String scanManagerDiscoveryUrl;
     private ScheduledExecutorService webSocketsConnectionAttempts;
@@ -52,6 +58,8 @@ public class ScanWebSocketHandler {
     private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private ExternalScansService externalScansService;
     private CpeScanService cpeScanService;
+    private StompSession stompImportNotificationSession = null;
+    private StompSession stompExportNotificationSession = null;
 
 
     /**
@@ -60,9 +68,10 @@ public class ScanWebSocketHandler {
      * @param discoveryService        The parent {@link DiscoveryServices}, used to handle the necessary
      * @param scanManagerDiscoveryUrl The URL of CSL-Scan.
      */
-    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService, ExternalScansService externalScansService) {
+    public ScanWebSocketHandler(DiscoveryServices discoveryService, String scanManagerDiscoveryUrl, CpeScanService cpeScanService, ImportExportBsonService importExportBsonService, ExternalScansService externalScansService) {
         this.discoveryService = discoveryService;
         this.scanManagerDiscoveryUrl = scanManagerDiscoveryUrl;
+        this.importExportBsonService = importExportBsonService;
         this.cpeScanService = cpeScanService;
         this.externalScansService = externalScansService;
 
@@ -80,8 +89,18 @@ public class ScanWebSocketHandler {
      */
     public void stop() {
         webSocketsConnectionAttempts.shutdown();
-        stompRequestsSession.disconnect();
-        stompNotificationSession.disconnect();
+        if (stompRequestsSession != null) {
+            stompRequestsSession.disconnect();
+        }
+        if (stompNotificationSession != null) {
+            stompNotificationSession.disconnect();
+        }
+        if (stompImportNotificationSession != null) {
+            stompImportNotificationSession.disconnect();
+        }
+        if (stompExportNotificationSession != null) {
+            stompExportNotificationSession.disconnect();
+        }
     }
 
     /**
@@ -97,6 +116,8 @@ public class ScanWebSocketHandler {
 
         status.set("is_requests_websocket_connected", stompRequestsSession != null && stompRequestsSession.isConnected());
         status.set("is_notifications_websocket_connected", stompNotificationSession != null && stompNotificationSession.isConnected());
+        status.set("is_import_notifications_websocket_connected", stompImportNotificationSession != null && stompImportNotificationSession.isConnected());
+        status.set("is_export_notifications_websocket_connected", stompExportNotificationSession != null && stompExportNotificationSession.isConnected());
         status.set("scan_requests_queue", scanRequestsQueue.size());
 
         return status;
@@ -146,11 +167,13 @@ public class ScanWebSocketHandler {
                 new_notification_connection = true;
                 stompNotificationSession = subscribeToNotifications();
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
-                logger.warn("Error while connecting to notifications websocket", e);
+                logger.warn("Error while connecting to notifications websocket, retrying");
+                logger.debug("Error while connecting to notifications websocket, retrying", e);
                 stompNotificationSession = null;
                 new_notification_connection = false;
             } catch (Throwable e) {
-                logger.error("Error while connecting to notifications websocket", e);
+                logger.error("Error while connecting to notifications websocket, retrying");
+                logger.debug("Error while connecting to notifications websocket, retrying", e);
                 stompNotificationSession = null;
                 new_notification_connection = false;
             }
@@ -165,6 +188,32 @@ public class ScanWebSocketHandler {
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 stompRequestsSession = null;
                 new_request_connection = false;
+            }
+        }
+
+        if (stompImportNotificationSession == null || !stompImportNotificationSession.isConnected()) {
+            try {
+                stompImportNotificationSession = subscribeToImportNotifications();
+            } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
+                logger.warn("Error while connecting to import notifications websocket, retrying");
+                logger.debug("Error while connecting to import notifications websocket, retrying", e);
+                stompImportNotificationSession = null;
+            } catch (Throwable e) {
+                logger.error("Error while connecting to import notifications websocket", e);
+                stompImportNotificationSession = null;
+            }
+        }
+
+        if (stompExportNotificationSession == null || !stompExportNotificationSession.isConnected()) {
+            try {
+                stompExportNotificationSession = subscribeToExportNotifications();
+            } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
+                logger.warn("Error while connecting to export notifications websocket, retrying");
+                logger.debug("Error while connecting to export notifications websocket, retrying", e);
+                stompExportNotificationSession = null;
+            } catch (Throwable e) {
+                logger.error("Error while connecting to export notifications websocket", e);
+                stompExportNotificationSession = null;
             }
         }
 
@@ -272,6 +321,74 @@ public class ScanWebSocketHandler {
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 
+    private StompSession subscribeToImportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
+        WebSocketStompClient stompClient = createStompClient();
+
+        return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+            @Override
+            public void handleFrame(StompHeaders headers, Object payloadRaw) {
+                super.handleFrame(headers, payloadRaw);
+                Json payload = (Json) payloadRaw;
+
+                if (payload != null) {
+                    logger.debug("[STOMP] " + payload.toString());
+                } else {
+                    logger.debug("[STOMP] null");
+                    return;
+                }
+
+                ImportQuery importQuery = ImportQuery.fromScannerJson(payload);
+                if (importQuery != null) {
+                    logger.debug("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getStatus());
+                    importExportBsonService.updateImportQueryStatus(importQuery.getId(), importQuery.getStatus());
+                } else {
+                    logger.debug("Received import notification from CSL-Scan that could not be parsed: {}", payload.toString());
+                }
+            }
+
+            @Override
+            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                logger.debug("Connected to import notifications websocket");
+                super.afterConnected(session, connectedHeaders);
+                session.subscribe(websocketImportNotificationsEndpoint, this);
+            }
+        }).get(1000, TimeUnit.MILLISECONDS);
+    }
+
+    private StompSession subscribeToExportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
+        WebSocketStompClient stompClient = createStompClient();
+
+        return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+            @Override
+            public void handleFrame(StompHeaders headers, Object payloadRaw) {
+                super.handleFrame(headers, payloadRaw);
+                Json payload = (Json) payloadRaw;
+
+                if (payload != null) {
+                    logger.debug("[STOMP] " + payload.toString());
+                } else {
+                    logger.debug("[STOMP] null");
+                    return;
+                }
+
+                ExportQuery exportQuery = ExportQuery.fromScannerJson(payload);
+                if (exportQuery != null) {
+                    logger.debug("Received export notification from CSL-Scan: {} [{}]", exportQuery.getId(), exportQuery.getStatus());
+                    importExportBsonService.updateExportQueryStatus(exportQuery.getId(), exportQuery.getStatus());
+                } else {
+                    logger.debug("Received export notification from CSL-Scan that could not be parsed: {}", payload.toString());
+                }
+            }
+
+            @Override
+            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                logger.debug("Connected to import notifications websocket");
+                super.afterConnected(session, connectedHeaders);
+                session.subscribe(websocketExportNotificationsEndpoint, this);
+            }
+        }).get(1000, TimeUnit.MILLISECONDS);
+    }
+
     /**
      * Connect the requests socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
      * Blocks so should be called asynchronously.
@@ -315,7 +432,8 @@ public class ScanWebSocketHandler {
                 if (payload instanceof Json) {
                     logger.debug("[STOMP] " + payload.toString());
                     ExternalScan scan = ExternalScan.fromScannerJson((Json) payload);
-                    externalScansService.createOrUpdateExternalScan(scan);
+//                    externalScansService.createOrUpdateExternalScan(scan);
+                    externalScansService.handleScanNotification(scan);
                 } else {
                     logger.debug("[STOMP] null");
                 }

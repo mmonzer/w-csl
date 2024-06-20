@@ -12,6 +12,7 @@ import java.util.Set;
  */
 public class ExternalScan {
     private final String uuid;
+    private int dbapiId = 0;
     private final OffsetDateTime createdAt;
     private Status status;
 
@@ -61,6 +62,15 @@ public class ExternalScan {
 
     public OffsetDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public int getDbapiId() {
+        return dbapiId;
+    }
+
+    public ExternalScan setDbapiId(int dbapiId) {
+        this.dbapiId = dbapiId;
+        return this;
     }
 
     public enum Status {

@@ -33,6 +33,20 @@ public enum DbapiEndpoint {
     EXTERNAL_CONNECTION_INFO_TEMPLATES_CREATE_OR_UPDATE(EXTERNAL_CONNECTION_INFO_TEMPLATES.getEndpoint() + "/create_or_update_external_connection_info_templates"),
     EXTERNAL_CONNECTION_INFO("/external_connections_info"),
     EXTERNAL_CONNECTION_INFO_CREATE_OR_UPDATE(EXTERNAL_CONNECTION_INFO.getEndpoint() + "/create_or_update_external_connections_info"),
+    EXTERNAL_DISCOVERED_DEVICES_LAST_UPDATED_DATE(EVENTS.getEndpoint() + "/get_last_discovered_device_updated_date"),
+    EXTERNAL_DISCOVERED_DEVICES_CREATE_EVENT(EVENTS.getEndpoint() + "/create_discovery_devices_from_third_party_event"),
+    EXTERNAL_DISCOVERED_DEVICES_UPDATE_EVENT(EVENTS.getEndpoint() + "/update_discovery_scan_event/%d"),
+    EXTERNAL_DISCOVERED_DEVICES("/device_discovered_items"),
+    EXTERNAL_DISCOVERED_DEVICES_CREATE(EXTERNAL_DISCOVERED_DEVICES.getEndpoint() + "/create_discovery_device_entities"),
+    JAVACOMM("/javacomm"),
+    JAVACOMM_SEND_COMMANDS(JAVACOMM.getEndpoint() + "/create_or_update_japi_commands"),
+    DOWNLOAD_HTTP_TEMPLATES_BSON_FILE("/cpecve/download_http_template_bson_file/"),
+    UPLOAD_HTTP_TEMPLATES_BSON_FILE("/cpecve/upload_http_template_bson_file/"),
+    FILE_ACTION_STATUS("/file_action_status"),
+    FILE_ACTION_STATUS_DETAILS(FILE_ACTION_STATUS.getEndpoint() + "/%d"),
+//    FILE_ACTION_STATUS_AVAILABLE(FILE_ACTION_STATUS.getEndpoint() + "/available"),
+    FILE_ACTION_STATUS_AVAILABLE(FILE_ACTION_STATUS.getEndpoint()),
+    FILE_ACTION_STATUS_CREATE_FOR_HTTP_TEMPLATE_EXPORT("/cpecve/create_file_action_status_for_exported_http_templates/"),
     ;
 
     private final String endpoint;

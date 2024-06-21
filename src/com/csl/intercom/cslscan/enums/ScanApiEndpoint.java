@@ -50,8 +50,10 @@ public enum ScanApiEndpoint {
     EXTERNAL_CONNECTION_INFO_TEMPLATES(EXTERNAL_DISCOVERY.endpoint() + "/connectionInfoTemplates"),
     EXTERNAL_CONNECTION_INFOS(EXTERNAL_DISCOVERY.endpoint() + "/connectionInfo"),
     EXTERNAL_CONNECTION_INFO_DETAILS(EXTERNAL_DISCOVERY.endpoint() + "/connectionInfo/%s"),
+    EXTERNAL_CONNECTION_INFO_CLEAR(EXTERNAL_DISCOVERY.endpoint() + "/connectionInfo/clear"),
     EXTERNAL_DISCOVERY_START_SCAN(EXTERNAL_DISCOVERY.endpoint() + "/startDiscovery/%s"),
     EXTERNAL_DISCOVERED_DEVICES("/externalDiscoveredDevices/"),
+    EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "clear"),
     ;
 
     private String endpoint;

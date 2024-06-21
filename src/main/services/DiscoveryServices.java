@@ -901,6 +901,36 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                 .setStatus(IJsonCmdHelp.STATUS_OK)
         );
+        addCmd("clear_external_discovered_devices", params -> {
+                    try {
+                        externalDiscoveredDevicesSynchronizationService.clear();
+                        return JsonApiResponse.success().toJson();
+                    } catch (SynchronizationException e) {
+                        return JsonApiResponse.error("Could not clear the collection of discovered devices",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Clear the collection of discovered devices")
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
+        addCmd("clear_external_connection_infos", params -> {
+                    try {
+                        externalConnectionInfoSynchronizationService.clear();
+                        return JsonApiResponse.success().toJson();
+                    } catch (SynchronizationException e) {
+                        return JsonApiResponse.error("Could not clear the collection of device discovery connection infos",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Clear the collection of device discovery connection infos")
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK)
+        );
         addCmd("start_external_scan", params -> {
                     if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
                         return JsonApiResponse.error("Missing required parameter connection_info_uuid",

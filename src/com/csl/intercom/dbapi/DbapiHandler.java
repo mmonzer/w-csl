@@ -684,6 +684,22 @@ public class DbapiHandler implements AutoCloseable {
             throw new DbapiUnexpectedStatusCodeException("Could not send external discovered devices to DB-API.", response.getStatus());
         }
     }
+
+    public void clearExternalDiscoveredDevices() throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.EXTERNAL_DISCOVERED_DEVICES_CLEAR);
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new DbapiUnexpectedStatusCodeException("Could not clear external discovered devices.", response.getStatus());
+        }
+    }
+
+    public void clearExternalConnectionInfos() throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpoint.EXTERNAL_CONNECTION_INFO_CLEAR);
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            throw new DbapiUnexpectedStatusCodeException("Could not clear external connection infos.", response.getStatus());
+        }
+    }
     // endregion External discovery
 
     /**

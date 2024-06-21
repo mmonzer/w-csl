@@ -6,6 +6,7 @@ import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import main.services.JsonApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,18 @@ public class ExternalDiscoveredDevicesSynchronizationService extends PaginatedSy
             return dbapiHandler.getExternalDiscoveredDevicesLastUpdateDate();
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             throw new SynchronizationException("Could not get last update date from DB-API", e);
+        }
+    }
+
+    public void clear() throws SynchronizationException {
+        JsonApiResponse response = scanApiHandler.clearExternalDiscoveredDevices();
+        if (!response.isSuccess()) {
+            throw new SynchronizationException("Error while clearing external discovered devices in CSL-Scan");
+        }
+        try {
+            dbapiHandler.clearExternalDiscoveredDevices();
+        } catch (ExecutionException | InterruptedException | TimeoutException | DbapiUnexpectedStatusCodeException e) {
+            throw new SynchronizationException("Could not clear discovered devices in DB-API", e);
         }
     }
 }

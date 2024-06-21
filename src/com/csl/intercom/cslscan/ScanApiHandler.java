@@ -959,6 +959,10 @@ public class ScanApiHandler implements AutoCloseable {
         return sendRequestToScanManager(HttpMethod.DELETE, String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionInfoId), Json.object("hardDelete", hardDelete));
     }
 
+    public JsonApiResponse clearExternalConnectionInfos() {
+        return sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_CLEAR, Json.object());
+    }
+
     public ExternalScan startExternalDiscoveryScan(String connectionInfoId) {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.EXTERNAL_DISCOVERY_START_SCAN.endpoint(), connectionInfoId), Json.object());
         if (response.isSuccess()) {
@@ -991,6 +995,10 @@ public class ScanApiHandler implements AutoCloseable {
 
     public List<ExternalDiscoveredDevice> getExternalDiscoveredDevices(OffsetDateTime dateTime) {
         return getExternalDiscoveredDevices(dateTime, null, null);
+    }
+
+    public JsonApiResponse clearExternalDiscoveredDevices() {
+        return sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES_CLEAR, Json.object());
     }
 
     public ExternalScan getScanInfo(String uuid) {

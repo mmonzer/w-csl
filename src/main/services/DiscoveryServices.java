@@ -851,14 +851,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setResult("The list of device discovery fetcher templates, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("get_external_connection_infos", params -> {
-                    List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(true);
-                    return JsonApiResponse.result(Json.array(connectionInfos.stream().map(ExternalConnectionInfo::serializeForDbapi).toArray())).toJson();
-                },
-                new JsonCmdHelp().setDesc("Get the list of device discovery connection infos")
-                        .setResult("The list of device discovery connection infos, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
         addCmd("create_external_connection_info", params -> {
             if (!params.has("connection_info")) {
                 return JsonApiResponse.error("Missing required parameter connection_info",
@@ -881,7 +873,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 .setParam("connection_info", "The connection info to create", IJsonCmdHelp.JSON)
                 .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.CREATE_EXTERNAL_CONNECTION_INFO
         );
         addCmd("delete_external_connection_info", params -> {
             if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
@@ -899,22 +892,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 .setParam("connection_info_uuid", "The id of the connection info to remove", IJsonCmdHelp.STR)
                 .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                         "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
-        addCmd("clear_external_discovered_devices", params -> {
-                    try {
-                        externalDiscoveredDevicesSynchronizationService.clear();
-                        return JsonApiResponse.success().toJson();
-                    } catch (SynchronizationException e) {
-                        return JsonApiResponse.error("Could not clear the collection of discovered devices",
-                                Json.object("exception", e.getMessage())
-                        ).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Clear the collection of discovered devices")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.DELETE_EXTERNAL_CONNECTION_INFO
         );
         addCmd("clear_external_connection_infos", params -> {
                     try {
@@ -929,7 +908,24 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 new JsonCmdHelp().setDesc("Clear the collection of device discovery connection infos")
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.DELETE_EXTERNAL_CONNECTION_INFO
+        );
+        addCmd("clear_external_discovered_devices", params -> {
+                    try {
+                        externalDiscoveredDevicesSynchronizationService.clear();
+                        return JsonApiResponse.success().toJson();
+                    } catch (SynchronizationException e) {
+                        return JsonApiResponse.error("Could not clear the collection of discovered devices",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                },
+                new JsonCmdHelp().setDesc("Clear the collection of discovered devices")
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.DELETE_EXTERNAL_DISCOVERED_DEVICE
         );
         addCmd("start_external_scan", params -> {
                     if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
@@ -951,7 +947,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                         .setParam("connection_info_uuid", "The id of the connection info to use", IJsonCmdHelp.INT)
                         .setResult("<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.START_DEVICE_SCAN
         );
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);

@@ -876,6 +876,31 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 .setStatus(IJsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.CREATE_EXTERNAL_CONNECTION_INFO
         );
+        addCmd("update_external_connection_info", params -> {
+                    if (!params.has("connection_info")) {
+                        return JsonApiResponse.error("Missing required parameter connection_info",
+                                Json.object("exception", "Missing parameter connection_info")
+                        ).toJson();
+                    }
+                    ExternalConnectionInfo connectionInfo = ExternalConnectionInfo.fromHMIJson(params.get("connection_info"));
+                    if (connectionInfo == null) {
+                        return JsonApiResponse.error("Could not parse connection_info",
+                                Json.object("exception", "Could not parse connection_info")
+                        ).toJson();
+                    }
+                    JsonApiResponse response = scanApiHandler.updateExternalConnectionInfo(connectionInfo);
+                    if (response.isSuccess()) {
+                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                    }
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Update a device discovery connection info")
+                        .setParam("connection_info", "The connection info to update", IJsonCmdHelp.JSON)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.UPDATE_EXTERNAL_CONNECTION_INFO
+        );
         addCmd("delete_external_connection_info", params -> {
             if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
                 return JsonApiResponse.error("Missing required parameter connection_info_uuid",

@@ -6,6 +6,7 @@ public enum JsonCmdPrivilegeFamily {
     MANAGE_SCAN_DB("manage_scan_db"),
     START_DEVICE_SCAN("start_device_scan"),
     CREATE_EXTERNAL_CONNECTION_INFO("add_externalconnectioninfo"),
+    UPDATE_EXTERNAL_CONNECTION_INFO("change_externalconnectioninfo"),
     DELETE_EXTERNAL_CONNECTION_INFO("delete_externalconnectioninfo"),
     DELETE_EXTERNAL_DISCOVERED_DEVICE("delete_devicediscoveredcpevulnerability"),
     ;

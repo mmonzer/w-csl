@@ -76,6 +76,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
         this.name = name;
+        apiCommands.setName(name);
         this.configFileSectionName = configFileSectionName;
         this.isConcentrator = isConcentrator;
     }

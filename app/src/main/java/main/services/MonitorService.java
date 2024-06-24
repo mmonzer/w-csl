@@ -17,10 +17,10 @@ import com.ucsl.json.Json;
 import lombok.Getter;
 
 public class MonitorService implements ICSLService {
-	
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	@Getter
-    String name="#undef";
+    String name="monitor";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	@Getter
     String configFileSectionName="config_"+name;
 
@@ -82,13 +82,6 @@ public class MonitorService implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 
 	@Override

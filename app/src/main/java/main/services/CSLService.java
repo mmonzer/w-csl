@@ -10,16 +10,15 @@ import lombok.Getter;
 
 public class CSLService implements ICSLService {
 	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	@Getter
 	String name="#undef";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	@Getter
 	String configFileSectionName="config_"+name;;
 	
 	public CSLService() {
 		this.name="my_service";
 		this.configFileSectionName="config_"+name;
-		apiCommands.setName(name);
 	}
 	
 	public boolean init(Json jConfig, String cslDir) {

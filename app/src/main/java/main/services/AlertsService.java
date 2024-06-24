@@ -16,13 +16,10 @@ import com.ucsl.json.Json;
 import lombok.Getter;
 
 public class AlertsService implements ICSLService {
-
-
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-
 	@Getter
-    String name="#undef";
+    String name="alerts";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	@Getter
     String configFileSectionName="config_"+name;
 	
@@ -344,13 +341,6 @@ public class AlertsService implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 
 	@Override

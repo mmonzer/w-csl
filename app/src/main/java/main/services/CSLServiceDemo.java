@@ -9,14 +9,15 @@ import lombok.Getter;
 
 public class CSLServiceDemo implements ICSLService {
 	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	@Getter
     String name="#undef";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	@Getter
     String configFileSectionName="config_"+name;;
 
 	public CSLServiceDemo() {
 		this.name="demo";
+		apiCommands.setName(name);
 		this.configFileSectionName="demo_conf";
 		
 		

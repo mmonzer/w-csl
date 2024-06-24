@@ -10,13 +10,15 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 
 /**
  * Control the status notifications, mostly allow to remotely control the sending of them.
  * Also provides a command to directly retrieve the status message.
  */
 public class StatusService implements ICSLService {
-    private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
+    @Getter
+    IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("status");
     private StatusNotifier notifier = null;
 
 
@@ -51,12 +53,6 @@ public class StatusService implements ICSLService {
         return "status";
     }
 
-    @Override
-    public IApiCommands getApiCommands() {
-        String name = "status";
-        apiCommands.setName(name);
-        return apiCommands;
-    }
 
     @Override
     public boolean terminate() {

@@ -16,14 +16,14 @@ import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
+import lombok.Getter;
 import main.extensions.CveUtils;
 import main.extensions.Utils;
 
 public class CveServices implements ICSLService {
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
 	String name="cve";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	String configFileSectionName="cve_service";
 	
 	public CveServices() {
@@ -210,13 +210,6 @@ public class CveServices implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 	
 	@Override

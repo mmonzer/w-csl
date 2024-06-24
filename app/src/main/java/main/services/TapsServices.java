@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 
 import com.csl.core.CSLContext;
@@ -39,14 +40,12 @@ public class TapsServices implements ICSLService {
 	private static final String STOP_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./killSuricata.sh";
 	private static final String START_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./launchSuricata.sh";
 	private static final String CLEAR_SURICATA_LOG = "sudo rm /var/log/suricata/suricata.log";
-	private static final String SURICATA_CONF_DIR = "/opt/csl/configSuricata";
 	private static final String REMOVE_ADDITIONAL_RULES = "cd " + SCRIPTS_DIR + " && sudo ./removeAdditionnalRules.sh";
 	private static final String RELOAD_RULES = "cd " + SCRIPTS_DIR + " && sudo ./reloadSuricataRules.sh";
-
-	
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="taps";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	String configFileSectionName="ssh_service";	
 	static ArrayList<Json> configuredTaps;  
 	static String localIP;	
@@ -1224,13 +1223,6 @@ public class TapsServices implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 	
 	@Override

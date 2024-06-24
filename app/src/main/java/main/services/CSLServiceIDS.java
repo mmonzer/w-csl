@@ -27,11 +27,10 @@ import com.wcsl.ids.IDSOperationManagerFactory;
 import lombok.Getter;
 
 public class CSLServiceIDS implements ICSLService {
-
 	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
+    String name="ids";
 	@Getter
-    String name="#undef";
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	@Getter
     String configFileSectionName="config_"+name;
 	

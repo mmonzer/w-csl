@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import lombok.Getter;
 import org.apache.commons.net.util.SubnetUtils;
 
 import com.csl.core.CSLContext;
@@ -26,11 +27,9 @@ import main.extensions.SshUtils;
 import main.extensions.Utils;
 
 public class NmapServices implements ICSLService {
-
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
 	String name="nmap";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	String configFileSectionName="nmap_service";
 	static String idsconf;
 	static boolean debugMode = false;
@@ -241,13 +240,6 @@ public class NmapServices implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 	
 	@Override

@@ -17,12 +17,13 @@ import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 
+import lombok.Getter;
 import main.extensions.SshUtils;
 
 public class SuricataServices implements ICSLService {
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
 	String name="suricata";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	String configFileSectionName="ssh_service";
 	static ArrayList<Json> configuredSuricata;  
 	static String localIP;	
@@ -426,13 +427,6 @@ public class SuricataServices implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 
 	@Override

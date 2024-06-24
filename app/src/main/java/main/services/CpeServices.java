@@ -17,10 +17,10 @@ import com.ucsl.json.Json;
 import main.extensions.CpeSearch;
 
 public class CpeServices implements ICSLService {
-	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="cpe";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 
 	@Getter
 	String configFileSectionName="cpe_service";

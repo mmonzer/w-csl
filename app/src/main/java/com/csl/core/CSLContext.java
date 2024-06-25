@@ -14,7 +14,7 @@ import com.csl.interfaces.IModule;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
-import com.csl.web.CSLHttpServer;
+import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.csl.web.database.DataBaseServer;
 import com.ucsl.interfaces.*;
@@ -66,8 +66,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     DataBaseServer databaseServer = null;
 
-    CSLHttpServer cslHttpServer = null;
-    ;
+    CSLHttpServerJetty cslHttpServer = null;
     CSLUDPServer cslUDPServer = null;
 	
 	
@@ -216,13 +215,13 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         this.databaseServer = databaseServer;
     }
 
-    public CSLHttpServer getCslHttpServer() {
+    public CSLHttpServerJetty getCslHttpServer() {
         if (cslHttpServer == null) System.err.println("Warning, no CSL HTTP server registered");
 
         return cslHttpServer;
     }
 
-    private void setCslHttpServer(CSLHttpServer cslHttpServer) {
+    private void setCslHttpServer(CSLHttpServerJetty cslHttpServer) {
         this.cslHttpServer = cslHttpServer;
     }
 
@@ -473,7 +472,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         setDatabaseServer(new DataBaseServer());
 
-        setCslHttpServer(new CSLHttpServer());
+        setCslHttpServer(new CSLHttpServerJetty());
         setCslUDPServer(new CSLUDPServer());
     }
 

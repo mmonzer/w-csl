@@ -25,7 +25,9 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
+/*
+	Depreciated HttpServer using Spark
+ */
 
 /**
  * This class uses the ICRoute interface to create void routes.
@@ -51,6 +53,7 @@ public class CSLHttpServer {
 
 	private final List<String> listOfRemoteApi = new ArrayList<String>();
 
+	//good
 	public void initServer(Json j) { //String rootdir, int port, boolean verbose) {
 		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
 		if (!on) return;
@@ -63,7 +66,7 @@ public class CSLHttpServer {
 		am.addAuthentification(sparkServer);
 	}
 
-
+	//good
 	public void initServer(ServerConfig sc) {
 		if (initialized) {
 			logger.error("Already initialized");
@@ -269,7 +272,6 @@ public class CSLHttpServer {
 			}
 			else {
 				params.set(name, value);
-
 			}
 		}
 

@@ -16,11 +16,11 @@ public class CSLWebSocket {
 	
 	static public boolean VIA_BROKER=true; 
 	
-	public static String WEB_SOCKET_ALERT="/alerts";
-	public static String WEB_SOCKET_CONSOLE="/console";
-	public static String WEB_SOCKET_DATABASE="/database";
-	public static String WEB_SOCKET_VARIABLES="/chat";
-	public static String WEB_SOCKET_CMD="/cmd";
+	public static String WEB_SOCKET_ALERT="/alertsWS";
+	public static String WEB_SOCKET_CONSOLE="/consoleWS";
+	public static String WEB_SOCKET_DATABASE="/databaseWS";
+	public static String WEB_SOCKET_VARIABLES="/chatWS";
+	public static String WEB_SOCKET_CMD="/cmdWS";
 
 
 	static HashMap<String, String> websocketTags = new HashMap<String, String >();

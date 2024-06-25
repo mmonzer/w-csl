@@ -4,13 +4,14 @@ package com.csl.util;
 import com.csl.core.CSLContext;
 import com.csl.interfaces.IFileModificationViaUploadListener;
 import com.csl.logger.LogToString;
-import com.csl.web.CSLHttpServer;
+import com.csl.web.CSLHttpServerJetty;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Setter;
 import spark.Request;
 import spark.Response;
 
+import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -95,19 +96,20 @@ public class CSLConfigFileServer {
 	
 	//================================================================================================================
 	
-	public void initCommandsOnServer(CSLHttpServer httpServer) {
+	/*public void initCommandsOnServer(CSLHttpServerJetty httpServer) {
 	
 		
 		// config file
-		httpServer.addGetRoute(
-			"/getfile",                         (req, res)      -> renderGetFile(req,res));
+		HttpServlet req = httpServer.addGetRoute(
+			"/getfile");
+
 		httpServer.addGetRoute(
 			"/reversefile",                         (req, res)      -> renderReverseFile(req,res));
 		httpServer.addPostRoute(
 			"/setfile",(req, res)      -> renderSetFile(req,res));
 				
 		
-	}
+	}*/
 	
 	
 	/*
@@ -116,8 +118,10 @@ public class CSLConfigFileServer {
 	 * 
 	 */
 	
-	private  String renderGetFile(Request req, Response res) {
-
+	private  String renderGetFile(HttpServlet param) {
+		//TODO : Replace null by the request and response from httpServlet
+		Request req= null;
+		Response res = null;
 		Set<String> paramKeys= req.queryParams();
 		
 		String sresponse = req.body();

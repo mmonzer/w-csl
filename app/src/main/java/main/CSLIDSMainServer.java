@@ -48,7 +48,7 @@ public class CSLIDSMainServer {
         CSLContext.instance.setApiRemote("taps");
         CSLContext.instance.setApiRemote("discovery");
         CSLContext.instance.setApiRemote("status");
-//        CSLContext.instance.setApiRemote("demo");
+        CSLContext.instance.setApiRemote("demo");
 
         // Init Databaseserver, httpserver, udpserver, ...
 

@@ -40,6 +40,7 @@ import static java.lang.System.exit;
  */
 public class CSLHttpServerJetty {
     Server jettyServer=null;
+    ServletContextHandler context=null;
     ServerConfig serverConfig=null;
 
     private boolean initialized =false;
@@ -78,6 +79,7 @@ public class CSLHttpServerJetty {
 
         serverConfig = sc;
         jettyServer = new Server(serverConfig.getPort());
+        context= new ServletContextHandler();
         initialized = true;
 
         if (!sc.isRunning()) return;
@@ -86,7 +88,6 @@ public class CSLHttpServerJetty {
         //TODO : add location for staticfiles
 
         //Context initialization
-        ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
         context.addFilter(JettyFilterServlet.class, "/*", EnumSet.of(DispatcherType.REQUEST)); //Filter for the console log
 
@@ -218,6 +219,10 @@ public class CSLHttpServerJetty {
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                if("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))){
+                    context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/"+api.getName());
+                }
+
                 Set<String> paramKeys = req.getParameterMap().keySet();
 
                 String apiURI = req.getRequestURI();
@@ -258,6 +263,9 @@ public class CSLHttpServerJetty {
             }
             @Override
             protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                if("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))){
+                    context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/"+api.getName());
+                }
                 StringBuilder bodyReq = new StringBuilder();
                 BufferedReader reader = req.getReader();
                 String line;

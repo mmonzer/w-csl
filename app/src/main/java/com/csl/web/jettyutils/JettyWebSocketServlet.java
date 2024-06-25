@@ -30,7 +30,7 @@ public class JettyWebSocketServlet extends WebSocketServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("text/plain");
-        resp.getWriter().write("GET method is supported for /cmd");
+        resp.getWriter().write("GET method is supported for " + req.getRequestURI());
     }
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -39,6 +39,6 @@ public class JettyWebSocketServlet extends WebSocketServlet {
         System.out.println(body);
 
         resp.setContentType("application/json");
-        resp.getWriter().write("{\"status\":\"POST method is supported for /cmd\"}");
+        resp.getWriter().write("POST method is supported for "   + req.getRequestURI());
     }
 }

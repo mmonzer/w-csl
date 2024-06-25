@@ -69,6 +69,9 @@ public class MonitorService extends Service {
 		} catch (IOException e1) {
 			System.err.println("No tap config found");
 			configuredTaps = new ArrayList<Json>();
+		} catch (Exception e) {
+			System.err.println("Unable to parse conf or No tap config found");
+			configuredTaps = new ArrayList<Json>();
 		}
 		
 		addCmd(MonitorEndpoints.STATS_DEVICES, new IJsonCmd() {

@@ -960,6 +960,10 @@ public class TapsServices extends Service {
         } catch (IOException e1) {
             System.err.println("No tap config found");
             configuredTaps = new ArrayList<Json>();
+        } catch (Exception e) {
+            System.err.println("Unable to parse conf or No tap config found in " + idsconf + "/taps/TapsConfiguration.json");
+            configuredTaps = new ArrayList<Json>();
+            e.printStackTrace();
         }
         knownHostFilePath = config.at("knowHostFilePath").asString();
         localIP = config.at("localIpAddr").asString();

@@ -22,10 +22,10 @@ public class AutoCrypt {
         this.name = name;
         Json config = CSLContext.instance.getConfig();
         Json localConfig = config.get("auto_crypt");
-        moduleIp = JsonUtil.getStringFromJson(localConfig, "ip", "localhost");
+        moduleIp = JsonUtil.getStringFromJson(localConfig, "ip", "host.docker.internal");
         modulePort = JsonUtil.getIntFromJson(localConfig, "port", 8002);
         Json globalConfig = config.get("global");
-        dbIp = JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
+        dbIp = JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "host.docker.internal");
         dbApikey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
     }
 
@@ -78,6 +78,9 @@ public class AutoCrypt {
     public void reinitApiHandler() {
         moduleApiHandler = new ApiHandlerForCSLAutoCrypt(name, "http://" + moduleIp + ":" + modulePort);
 //        moduleApiHandler = new ApiHandlerForCSLAutoCrypt(name, AutoCryptUtils.generateAutoCryptApiUrlFromConfig(CSLContext.instance.getConfig().get("auto_crypt")));
+//        NOTE: APIKey is used to authorize the client when sending requests to DBAPI, HTTPS is used when passing by NGINX
+//        FIXME: DbapiHandlerForCSLAutoCrypt should get its own configuration from the global section without passing it here
+//        FIXME: I think we only use https for the connection with DBAPI
         if (dbApikey.isEmpty()) {
             dbApiHandler = new DbapiHandlerForCSLAutoCrypt("BDAPI - " + name, "http://" + dbIp + "/api");
         } else {

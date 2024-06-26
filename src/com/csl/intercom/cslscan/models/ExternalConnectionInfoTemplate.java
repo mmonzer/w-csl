@@ -122,6 +122,7 @@ public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
         @Override
         public Json serializeForDbapi() {
             return Json.object(
+                    "key", key,
                 "name_en", name_en,
                 "name_fr", name_fr,
                 "required", isRequired,

@@ -587,6 +587,19 @@ public class AutoCryptService extends Service implements IStatusProvider {
         return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
     }
 
+    /***
+     * Checks if a key exists in a json if its value is a String
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     * @param throwException whether to throw an exception or not
+     */
+    private boolean propertyExistsAndIsString(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isString()) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Generate root CA
      *
@@ -598,31 +611,24 @@ public class AutoCryptService extends Service implements IStatusProvider {
 //            return errorVariableNotFound("name");
 //        }
 //        String name = body.get("name").asString();
+        // region -- Verify required body keys
+        if (!this.propertyExistsAndIsString(body, "common_name")) {
+            return errorVariableNotFound("common_name");
+        }
+
+        if (!this.propertyExistsAndIsString(body, "ttl")) {
+            return errorVariableNotFound("ttl");
+        }
+        // endregion -- Verify required body keys
+        String name = body.get("common_name").asString();
         String description = null;
-        if (body.has("description") && body.get("description").isString()) {
+
+        if (this.propertyExistsAndIsString(body, "description")) {
             description = body.get("description").asString();
             body.delAt("description");
         }
-        // check params
-        Json params = Json.object();
-        if (!body.has("common_name") || !body.get("common_name").isString()) {
-            return errorVariableNotFound("common_name");
-        }
-        params.at("common_name", body.get("common_name"));
-        String name = body.get("common_name").asString();
-        body.delAt("common_name");
-        if (!body.has("ttl") || !body.get("ttl").isString()) {
-            return errorVariableNotFound("ttl");
-        }
-        params.at("ttl", body.get("ttl"));
-        body.delAt("ttl");
 
-        if (body.has("path") && body.get("path").isString()) {
-            params.at("path", body.get("path"));
-            body.delAt("path");
-        }
-
-        return manager.getMethods().generateRootCA(name, description, body, params).toJson();
+        return manager.getMethods().generateRootCA(name, description, body, null).toJson();
     }
 
     /**

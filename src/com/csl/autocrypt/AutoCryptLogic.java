@@ -315,7 +315,7 @@ public class AutoCryptLogic {
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
             return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, description, responseFromModule);
         } else {
-            return JsonApiResponse.error("Error creating the CA");
+            return JsonApiResponse.error("Error creating the CA: " + responseFromModule.getError().getReason());
         }
     }
 

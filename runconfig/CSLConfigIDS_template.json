@@ -176,7 +176,7 @@
 		"do_not_resent_same_alert":true,
 		"alert_duration":10000
 	},
-	"auto_crypt": {
+	"AUTOCRYPT": {
 		"ip": "host.docker.internal",
 		"port": 8002
 	}

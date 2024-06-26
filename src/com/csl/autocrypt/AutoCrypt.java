@@ -21,7 +21,7 @@ public class AutoCrypt {
     public AutoCrypt(String name) {
         this.name = name;
         Json config = CSLContext.instance.getConfig();
-        Json localConfig = config.get("auto_crypt");
+        Json localConfig = config.get("autocrypt");
         moduleIp = JsonUtil.getStringFromJson(localConfig, "ip", "host.docker.internal");
         modulePort = JsonUtil.getIntFromJson(localConfig, "port", 8002);
         Json globalConfig = config.get("global");

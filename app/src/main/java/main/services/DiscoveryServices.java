@@ -62,6 +62,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     @Getter
     @Setter
     private ScanApiHandler scanApiHandler = null;
+    private CSLMqttBrokerHandler mqttBroker = null;
     @Setter
     private DataSynchronizationService cpeItemSynchronizationService = null;
     @Setter
@@ -73,10 +74,11 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     @Getter
     @Setter
     private CpeScanService cpeScanService = null;
+    private ScheduledExecutorService synchronizationSchedule;
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
         this.name = name;
-        apiCommands.setName(name);
+        this.apiCommands.setName(name);
         this.configFileSectionName = configFileSectionName;
         this.isConcentrator = isConcentrator;
     }
@@ -105,6 +107,8 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
 
+        Json globalConfig = CSLContext.instance.getConfig().get("global");
+
         if (isConcentrator) {
             cpeScanService = new CpeScanService();
             cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
@@ -114,7 +118,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService);
 
-            CSLMqttBrokerHandler mqttBroker = CSLContext.instance.getMqttBroker();
+            mqttBroker = CSLContext.instance.getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             });
@@ -127,7 +131,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
             });
         }
 
-        ScheduledExecutorService synchronizationSchedule = Executors.newScheduledThreadPool(1);
+        synchronizationSchedule = Executors.newScheduledThreadPool(1);
         synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, 300, TimeUnit.SECONDS);
 
         addCmd("get_status", params -> getStatus(),
@@ -842,6 +846,20 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
      */
     public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
         return apiCommands.registerCmd(name, cmd, help);
+    }
+
+    public List<CpeItem> getCpeItemChangesSince(OffsetDateTime date) {
+        return scanApiHandler.getCpeItemChangesSince(date);
+    }
+
+    /**
+     * Extract an entity's UUID
+     *
+     * @param entity The entity of which we will extract the UUID, in {@link Json} format
+     * @return The UUID of the entity passed in parameter
+     */
+    public static String getEntityUuid(Json entity) {
+        return JsonUtil.getStringFromJson(entity, "uuid", "");
     }
 
     /**

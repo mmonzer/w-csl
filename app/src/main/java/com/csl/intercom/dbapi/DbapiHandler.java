@@ -16,22 +16,24 @@ import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.http.HttpHeader;
 
 /**
  * Manage HTTP communications with DB-API.
@@ -589,6 +591,15 @@ public class DbapiHandler implements AutoCloseable {
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             return 0;
         }
+    }
+
+    /**
+     * Inform DB-API that a scan just started.
+     *
+     * @return The id attributed by DB-API to the scan object.
+     */
+    public int notifyScanStarted() {
+        return notifyScanStarted(OffsetDateTime.now());
     }
 
     /**

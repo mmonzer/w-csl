@@ -494,20 +494,20 @@ public class ScanApiHandler extends ApiHandler  {
         }
     }
 
-    private JsonApiResponse sendPut(ScanApiEndpoint endpoint, Json params) {
-        return sendPut(endpoint.endpoint(), params);
+    private JsonApiResponse sendPut(ScanApiEndpoint endpoint, Json body) {
+        return sendPut(endpoint.endpoint(), body);
     }
 
     private JsonApiResponse sendGet(ScanApiEndpoint endpoint, Json params) {
         return sendGet(endpoint.endpoint(), params);
     }
 
-    private JsonApiResponse sendPost(ScanApiEndpoint endpoint, Json params) {
-        return sendGet(endpoint.endpoint(), params);
+    private JsonApiResponse sendPost(ScanApiEndpoint endpoint, Json body) {
+        return sendPost(endpoint.endpoint(), body);
     }
 
     private JsonApiResponse sendDelete(ScanApiEndpoint endpoint, Json params) {
-        return sendPut(endpoint.endpoint(), params);
+        return sendDelete(endpoint.endpoint(), params);
     }
 
     /**

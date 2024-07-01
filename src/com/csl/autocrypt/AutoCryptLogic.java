@@ -3,6 +3,8 @@ package com.csl.autocrypt;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
+import java.util.Objects;
+
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 
 public class AutoCryptLogic {
@@ -70,85 +72,126 @@ public class AutoCryptLogic {
     /**
      * Deletes the given issuer from the module and the DB
      *
+     * @param name      name in the dbapi side
+     * @param issuerRef identifier in the module side
+     * @param body      body of the request
+     * @param params    parameters with the path
+     */
+    public JsonApiResponse deleteIssuer(String name, String issuerRef, Json body, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+    }
+
+    /**
+     * Deletes the given issuer from the module and the DB in cascade (roles and certs)
+     *
      * @param id        identifier in the dbapi side
      * @param name      name in the dbapi side
      * @param issuerRef identifier in the module side
      * @param body      body of the request
      * @param params    parameters with the path
      */
-    public JsonApiResponse deleteIssuer(int id, String name, String issuerRef, Json body, Json params) {
+    public JsonApiResponse deleteIssuerCascade(int id, String name, String issuerRef, Json body, Json params) {
         // TODO : rewrite code properly
-        // delete issuer
-//        JsonApiResponse response = deleteIssuersOfPath(name, issuerRef, body,params);
-//        if (!response.isSuccess()){ return response; }
-        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
-        JsonApiResponse responseFromDbapi = sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+        // delete all issuers from path
+        JsonApiResponse response = deleteIssuersOfPath(name, issuerRef, body, params);
+        if (!response.isSuccess()) {
+            return response;
+        }
         // delete roles of the issuer (one intermediate issuer per path)
-        deleteRolesOfPath(id, name, params, responseFromDbapi);
+        response = deleteRolesOfPath(id, name, params);
+        if (!response.isSuccess()) {
+            return response;
+        }
         // delete certificates of the issuer (one intermediate issuer per path)
-        revokeCertificatesOfPath(params, responseFromDbapi);
+        return revokeCertificatesOfPath(params);
+    }
+
+    /**
+     * Revokes all the certificates from a given Vault path
+     *
+     * @param name      name of the issuer.
+     * @param issuerRef reference of the issuer.
+     * @param body      body for the request
+     * @param params    parameters for the request ( has the path at least)
+     */
+    private JsonApiResponse deleteIssuersOfPath(String name, String issuerRef, Json body, Json params) {
+        // Delete the issuer from module
+        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
+        if (!responseFromModule.isSuccess()) {
+            return JsonApiResponse.error("Error deleting the main issuer from Vault");
+        }
+        // Delete the issuer from dbapi
+        JsonApiResponse responseFromDbapi = sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+        if (!responseFromDbapi.isSuccess()) {
+            return JsonApiResponse.error("Error deleting the main issuer from DBapi");
+        }
+        JsonApiResponse issuersToDelete = moduleHandler.getIssuers(params);
+        // Delete the other issuers in the path, except for pki (only roots)
+        if (issuersToDelete.isSuccess() && params.has("path") &&
+                params.get("path").isString() && !params.get("path").asString().equals("pki")) {
+            JsonApiResponse responseFromOtherIssuers;
+            for (Json issuer : issuersToDelete.getResult()) {
+                responseFromOtherIssuers = moduleHandler.revokeCertificate(issuer.asString(), params);
+                if (!responseFromOtherIssuers.isSuccess()) {
+                    return JsonApiResponse.error("Error deleting the issuer (" + issuer + ") from module");
+                }
+            }
+        }
         return JsonApiResponse.success();
     }
 
     /**
      * Deletes all the roles from a given Vault path
-     * @param caId identifier of the CA in dbapi
-     * @param name name of the role
+     *
+     * @param caId   identifier of the CA in dbapi
+     * @param name   name of the role
      * @param params parameters for the request ( has the path at least)
-     * @param responseFromDbapi response from the delete of upper level.
+     * @return whether the delete was successful
      */
-    private void deleteRolesOfPath(int caId, String name, Json params, JsonApiResponse responseFromDbapi) {
-        if (responseFromDbapi.isSuccess()) {
-            JsonApiResponse rolesToDeleteModule = moduleHandler.getRoles(params);
-            JsonApiResponse rolesToDeleteDbapi = dbHandler.listRoles();
-            if (rolesToDeleteModule.isSuccess() && rolesToDeleteDbapi.isSuccess()) {
-                for (Json roleDbapi : rolesToDeleteDbapi.getResult()) {
-                    if (roleDbapi.has("certificate_authority_id") && roleDbapi.get("certificate_authority_id").isNumber() && roleDbapi.get("certificate_authority_id").asInteger() == caId &&
-                            roleDbapi.has("name") && roleDbapi.get("name").isString() && roleDbapi.get("name").asString() == name) {
-                        dbHandler.deleteRole(roleDbapi.get("id").asString(), null, null);
+    private JsonApiResponse deleteRolesOfPath(int caId, String name, Json params) {
+        JsonApiResponse rolesToDeleteModule = moduleHandler.getRoles(params);
+        JsonApiResponse rolesToDeleteDbapi = dbHandler.listRoles();
+        JsonApiResponse response;
+        if (rolesToDeleteModule.isSuccess() && rolesToDeleteDbapi.isSuccess()) {
+            for (Json roleDbapi : rolesToDeleteDbapi.getResult()) {
+                if (roleDbapi.has("certificate_authority_id") && roleDbapi.get("certificate_authority_id").isNumber() && roleDbapi.get("certificate_authority_id").asInteger() == caId &&
+                        roleDbapi.has("name") && roleDbapi.get("name").isString() && roleDbapi.get("name").asString().equals(name)) {
+                    response = dbHandler.deleteRole(roleDbapi.get("id").asString(), null, null);
+                    if (!response.isSuccess()) {
+                        return JsonApiResponse.error("Error when deleting '" + name + "' from dbapi");
                     }
                 }
-                for (Json roleDbapi : rolesToDeleteModule.getResult()) {
-                    moduleHandler.deleteRole(roleDbapi.asString(), null, params);
+            }
+            for (Json roleDbapi : rolesToDeleteModule.getResult()) {
+                response = moduleHandler.deleteRole(roleDbapi.asString(), null, params);
+                if (!response.isSuccess()) {
+                    return JsonApiResponse.error("Error when deleting '" + name + "' from module");
                 }
             }
-        }
-    }
-
-    /**
-     * Revokes all the certificates from a given Vault path
-     * @param name name of the issuer.
-     * @param issuerRef reference of the issuer.
-     * @param body body for the request
-     * @param params parameters for the request ( has the path at least)
-     */
-    private JsonApiResponse deleteIssuersOfPath(String name, String issuerRef, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
-        if (!responseFromModule.isSuccess()){ return JsonApiResponse.error("Error deleting the main issuer from Vault"); }
-        JsonApiResponse responseFromDbapi = sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
-        if (!responseFromDbapi.isSuccess()){ return JsonApiResponse.error("Error deleting the main issuer from DBapi"); }
-        JsonApiResponse issuersToDelete = moduleHandler.getIssuers(params);
-        JsonApiResponse responseFromOtherIssuers;
-        for (Json issuer : issuersToDelete.getResult()) {
-            responseFromOtherIssuers = moduleHandler.revokeCertificate(issuer.asString(), params);
-            if (!responseFromOtherIssuers.isSuccess()){ return JsonApiResponse.error("Error deleting the issuer ("+issuer+")from DBapi"); }
         }
         return JsonApiResponse.success();
     }
 
     /**
      * Revokes all the certificates from a given Vault path
+     *
      * @param params parameters for the request ( has the path at least)
-     * @param responseFromDbapi response from the delete of upper level.
+     * @return whether the delete was successful
      */
-    private void revokeCertificatesOfPath(Json params, JsonApiResponse responseFromDbapi) {
-        if (responseFromDbapi.isSuccess()) {
-            JsonApiResponse certificatesToRevoke = moduleHandler.getCertificates(params);
-            for (Json cert : certificatesToRevoke.getResult()) {
-                moduleHandler.revokeCertificate(cert.asString(), params);
+    private JsonApiResponse revokeCertificatesOfPath(Json params) {
+        JsonApiResponse certificatesToRevoke = moduleHandler.getCertificates(params);
+        JsonApiResponse response;
+        for (Json cert : certificatesToRevoke.getResult()) {
+            response = moduleHandler.revokeCertificate(cert.asString(), params);
+            if (response.isSuccess()) {
                 dbHandler.revokeCertificate(cert.asString(), params);
             }
+            if (!response.isSuccess()) {
+                return JsonApiResponse.error("Error while deleting the certificate '" + cert);
+            }
         }
+        return JsonApiResponse.success();
     }
 
     /**
@@ -195,10 +238,10 @@ public class AutoCryptLogic {
             result.set("organization", result.get("organization").asJsonList().get(0).asString());
             result.set("locality", result.get("locality").asJsonList().get(0).asString());
             result.set("certificate_authority_id", certificateAuthorityId);
-            return sendToDbApiIfSaveToDb(dbHandler::createRole, idName, description, certificateAuthorityId, JsonApiResponse.result(result));}
-        else {
+            return sendToDbApiIfSaveToDb(dbHandler::createRole, idName, description, certificateAuthorityId, JsonApiResponse.result(result));
+        } else {
 
-            return JsonApiResponse.error("Error creating role : "+responseFromModule.getError().toJson());
+            return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
         }
     }
 
@@ -310,7 +353,7 @@ public class AutoCryptLogic {
                     description,
                     responseFromModule);
         } else {
-            return JsonApiResponse.error("Error creating the certificate : "+responseFromModule.getError().toJson());
+            return JsonApiResponse.error("Error creating the certificate : " + responseFromModule.getError().toJson());
         }
     }
 
@@ -399,7 +442,7 @@ public class AutoCryptLogic {
             return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, issuerRef, idName, description,
                     JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
         } else {
-            return JsonApiResponse.error("Error creating the CA : "+responseFromModule.getError().toJson());
+            return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
     }
 

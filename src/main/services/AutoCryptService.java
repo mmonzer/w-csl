@@ -265,7 +265,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String issuerRef = body.get("issuer_ref").asString();
         body.delAt("issuer_ref");
 
-        return manager.getMethods().deleteIssuer(id, name, issuerRef, body, params).toJson();
+        return manager.getMethods().deleteIssuer(name, issuerRef, body, params).toJson();
+//        return manager.getMethods().deleteIssuerCascade(id, name, issuerRef, body, params).toJson();
     }
 
     /**

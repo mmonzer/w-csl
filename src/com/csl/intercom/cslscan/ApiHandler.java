@@ -33,7 +33,7 @@ public class ApiHandler implements AutoCloseable {
     private final String url;
     private final HashMap<HttpHeader, String> headers = new HashMap<>();
     private final HttpClient httpClient = new HttpClient();
-    private ICleaner outputCleaner = (e)->e;
+    private ICleaner outputCleaner = (e) -> e;
 
     /**
      * Constructor with no module name
@@ -80,7 +80,7 @@ public class ApiHandler implements AutoCloseable {
     /**
      * Adds a header to the api request
      *
-     * @param apiKey   apiKey for the connection
+     * @param apiKey apiKey for the connection
      */
     public void setApiKey(String apiKey) {
         addHeader(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
@@ -104,7 +104,7 @@ public class ApiHandler implements AutoCloseable {
             res = parseResponse(response, moduleName);
         } catch (UnsupportedOperationException e) {
             logger.error("Malformed json", e);
-            res = JsonApiResponse.error(e.getMessage());
+            res = JsonApiResponse.error("Malformed json : " + e.getMessage());
         } catch (Exception e) {
             if (!quiet) {
                 logger.error("Error while sending request to " + moduleName);
@@ -112,16 +112,19 @@ public class ApiHandler implements AutoCloseable {
             if (e.getCause() instanceof ConnectException) {
                 res = JsonApiResponse.error("Connection error with " + moduleName);
             }
+            res = JsonApiResponse.error("exception : " + e.getMessage());
         }
+
         return outputCleaner.clean(res);
     }
 
     /**
      * Creates the request with the custom parameters
-     * @param method http method to use : GET POST PUT DELETE
+     *
+     * @param method   http method to use : GET POST PUT DELETE
      * @param endpoint endpoint to send the request
-     * @param params parameters of the request
-     * @param body body of the request
+     * @param params   parameters of the request
+     * @param body     body of the request
      * @return the request created
      */
     private Request createRequest(HttpMethod method, String endpoint, Json params, Json body) {
@@ -143,7 +146,7 @@ public class ApiHandler implements AutoCloseable {
      * Creates the request
      *
      * @param method method of the new request
-     * @param uri   uri of the new request
+     * @param uri    uri of the new request
      * @param client client for the request
      * @return new request
      */
@@ -260,7 +263,7 @@ public class ApiHandler implements AutoCloseable {
      * Downloads a file from the given endpoint (from POST method)
      *
      * @param endpoint endpoint to fetch the file
-     * @param body   body needed for the fetch
+     * @param body     body needed for the fetch
      * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
      * @throws Exception if it couldn't fetch the file from the module
      */
@@ -298,7 +301,7 @@ public class ApiHandler implements AutoCloseable {
 
         JsonApiResponse responseApi = JsonApiResponse.error(null);
         try {
-        Response response = listener.get(5, TimeUnit.SECONDS); // Wait for the response
+            Response response = listener.get(5, TimeUnit.SECONDS); // Wait for the response
             responseApi = parseStreamResponse(response, listener);
         } catch (IOException e) {
             logger.error("Error while reading the response from {}", moduleName);
@@ -314,6 +317,7 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Parse stream response from http
+     *
      * @param response response
      * @param listener listener of the response
      * @return the string read from the http stream
@@ -532,6 +536,7 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Add callback for cleaning output
+     *
      * @param cleaner callbacks that cleans output.
      */
     public void addCleaner(ICleaner cleaner) {

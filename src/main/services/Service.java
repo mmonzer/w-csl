@@ -154,4 +154,5 @@ public abstract class Service implements ICSLService {
     public Json errorVariableNotFound(String variableName) {
         return JsonApiResponse.error(variableName + " is missing from body").toJson();
     }
+
 }

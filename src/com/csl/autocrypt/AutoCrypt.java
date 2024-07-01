@@ -88,7 +88,6 @@ public class AutoCrypt {
             dbApiHandler.setApiKey(dbApikey);
         }
         moduleApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
-        moduleApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
         logic = new AutoCryptLogic(moduleApiHandler, dbApiHandler);
     }
 

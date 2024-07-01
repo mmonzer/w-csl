@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpServer;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.IApiGetHelp;
 import com.ucsl.json.Json;
+import main.services.JsonApiResponse;
 import main.services.Service;
 import org.eclipse.jetty.server.Request;
 
@@ -134,7 +135,11 @@ public class ApiHttpServer {
                 params = Json.object();
             }
 
-            return api.exec(cmd.asString(), params);
+            try {
+                return api.exec(cmd.asString(), params);
+            } catch (IllegalArgumentException e) {
+                return JsonApiResponse.error(e.getMessage()+ "is missing").toJson();
+            }
         }
 
         /**
@@ -191,8 +196,8 @@ public class ApiHttpServer {
                 body = parseMultipart(rawBody, boundary).toString();
             }
 
-
             Json responseJson = this.execPostCommand(this.api, body);
+
             String response = responseJson.toString();
             if (responseJson.has("Content-Type")) {
                 exchange.setAttribute("Content-Type", responseJson.get("Content-Type").asString());

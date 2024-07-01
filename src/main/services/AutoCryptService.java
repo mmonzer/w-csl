@@ -219,7 +219,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
 //        params.at("path", body.get("path").asString());
 //        body.delAt("path");
 
-        params.at("path", name);
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path").asString());
         if ((!body.has("issuer_ref") || !body.get("issuer_ref").isString()) && (!body.has("issuer_id") || !body.get("issuer_id").isString())) {
             return errorVariableNotFound("issuer_ref/issuer_id");
         }
@@ -251,7 +254,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
             return errorVariableNotFound("name");
         }
         String name =  body.get("name").asString();
-        params.at("path", body.get("name").asString());
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path").asString());
+        body.delAt("path");
         if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
             return errorVariableNotFound("issuer_ref");
         }
@@ -323,7 +330,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!body.has("name") || !body.get("name").isString()) {
             return errorVariableNotFound("name");
         }
-        String name = body.get("name").asString();
+        String name = body.get("name").asString().replace(" ","-");
+        body.set("name", name);
+
+        if (body.has("key_type") && body.get("key_type").isString()) {
+            body.set("key_type", body.get("key_type").asString().toLowerCase());
+        }
 
         return manager.getMethods().createRole(name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
@@ -587,19 +599,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
     }
 
-    /***
-     * Checks if a key exists in a json if its value is a String
-     * @param obj the json object to check
-     * @param key the key inside the json obj
-     * @param throwException whether to throw an exception or not
-     */
-    private boolean propertyExistsAndIsString(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isString()) {
-            return true;
-        }
-        return false;
-    }
-
     /**
      * Generate root CA
      *
@@ -648,10 +647,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!body.has("type") || !body.get("type").isString()) {
             return errorVariableNotFound("type");
         }
+
         if (!body.has("common_name") || !body.get("common_name").isString()) {
             return errorVariableNotFound("common_name");
         }
-        String name = body.get("common_name").asString();
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
+        }
+        String name = body.get("name").asString();
         params.at("path", name);
         if (!body.has("ttl") || !body.get("ttl").isString()) {
             return errorVariableNotFound("ttl");
@@ -687,5 +690,17 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public AutoCrypt getManager() {
         return manager;
+    }
+
+    /**
+     * Checks if a key exists in a json if its value is a String
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     */
+    private boolean propertyExistsAndIsString(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isString()) {
+            return true;
+        }
+        return false;
     }
 }

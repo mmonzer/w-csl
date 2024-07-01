@@ -13,7 +13,7 @@ public class CSLAutocryptUtils {
      * @return reformated response
      */
     public static @NotNull JsonApiResponse reformatAutoCryptError(JsonApiResponse response) {
-        String errorMessage = Json.read(response.getError().getDetails().asJsonMap().get("content").asString()).get("message").asString();
+        String errorMessage = Json.read(response.getError().getDetails().get("content").toString()).toString();
         return JsonApiResponse.error(errorMessage);
     }
 

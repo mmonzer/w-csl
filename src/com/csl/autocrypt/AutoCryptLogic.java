@@ -3,8 +3,6 @@ package com.csl.autocrypt;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
-import java.util.Objects;
-
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 
 public class AutoCryptLogic {
@@ -46,10 +44,8 @@ public class AutoCryptLogic {
      * @param params    parameters of the request
      */
     public JsonApiResponse updateIssuerInfo(Integer id, String name, String description, String issuerRef, Json body, Json params) {
-        moduleHandler.updateIssuerInfo(issuerRef, body, params);
-        // TODO : change output of update
+        JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, body, params);
         params.at("issuer_ref", issuerRef);
-        JsonApiResponse responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
         body.set("id", id);
         body.set("type", "internal");
         return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, body.get("path").asString(),

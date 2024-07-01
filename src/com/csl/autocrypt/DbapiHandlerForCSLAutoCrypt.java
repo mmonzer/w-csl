@@ -47,8 +47,8 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
         input.at("path", path);
         input.at("ca_json", mergerJson(body, input));
         return this.sendPut(
-//                DbapiEndpointForCSLAutocrypt.ISSUER_UPT_BY_REF_.endpoint() + issuerRef,
-                DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() + body.get("id").asInteger(),
+                DbapiEndpointForCSLAutocrypt.ISSUER_UPT_BY_REF_.endpoint() + issuerRef,
+//                DbapiEndpointForCSLAutocrypt.ISSUER_.endpoint() + body.get("id").asInteger(),
                 input);
     }
 

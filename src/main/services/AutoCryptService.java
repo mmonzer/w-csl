@@ -235,7 +235,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (body.has("issuer_ref")) {
             issuerRef = body.get("issuer_ref").asString();
             body.delAt("issuer_ref");
-        } else {issuerRef = body.get("issuer_id").asString();
+        } else {
+            issuerRef = body.get("issuer_id").asString();
             body.delAt("issuer_id");
         }
 
@@ -667,7 +668,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!this.propertyExistsAndIsString(body, "common_name")) {
             return errorVariableNotFound("common_name");
         }
-
         if (!this.propertyExistsAndIsString(body, "ttl")) {
             return errorVariableNotFound("ttl");
         }

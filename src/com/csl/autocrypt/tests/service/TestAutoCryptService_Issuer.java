@@ -109,7 +109,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         recvOutput.at("success", true);
         recvOutput.at("result", returnBd);
 
-        Json response = service.importCertificate(sentParams);
+        Json response = service.importIssuerIntermediate(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
@@ -170,7 +170,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         recvOutput.at("success", true);
         recvOutput.at("result", returnBd);
 
-        Json response = service.importCertificate(sentParams);
+        Json response = service.importIssuerIntermediate(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
@@ -232,7 +232,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         recvOutput.at("success", true);
         recvOutput.at("result", returnBd);
 
-        Json response = service.importCertificate(sentParams);
+        Json response = service.importIssuerIntermediate(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);
@@ -267,7 +267,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         error.at("reason", "path is missing from body");
         recvOutput.at("error", error);
 
-        Json response = service.importCertificate(sentParams);
+        Json response = service.importIssuerIntermediate(sentParams);
 
         // assert behavior
         assertEquals(recvOutput, response);

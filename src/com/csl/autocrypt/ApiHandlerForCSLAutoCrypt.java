@@ -83,13 +83,14 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
-     * Imports a new certificate
+     * Imports a new issuer
      *
-     * @param body parameters with the path and the file
+     * @param params parameters with the path
+     * @param file certificate content
      */
-    public JsonApiResponse importCertificate(Json body, Json params) {
+    public JsonApiResponse importIssuer(Json params, String file) {
         Json newBody = Json.object();
-        newBody.set("pem_bundle", body.get("file").asString().replace("\r","").replace("\n","\\n"));
+        newBody.set("pem_bundle", file.replace("\r",""));
         return this.sendPost(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI_IMPORT.endpoint(),
                 params,

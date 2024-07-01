@@ -2,12 +2,8 @@ package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
-import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import main.services.endpoints.AutoCryptEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,11 +69,28 @@ public class AutoCryptService extends Service implements IStatusProvider {
 //        addCmd(AutoCryptEndpoints.GET_PORT, this::getPort);
 //        addCmd(AutoCryptEndpoints.SET_PORT, this::changePort);
         // issuer-controller
+        createEndpoints();
+
+        // Launch initial sync to dbapi
+        synchronizationSchedule = Executors.newScheduledThreadPool(1);
+        // TODO : change initial to continuous sync
+        synchronizationSchedule.scheduleAtFixedRate(()->{manager.getMethods().initialSynchronizeDb("pki");}, 0, 300, TimeUnit.SECONDS);
+
+        logger.info("Service autocrypt initilialized.");
+        return true;
+    }
+
+    /**
+     * Creates the endpoints of this service
+     */
+    private void createEndpoints() {
         addCmd(AutoCryptEndpoints.GET_ISSUERS, this::getIssuers);
         addCmd(AutoCryptEndpoints.GET_ISSUER_INFO, this::getIssuerInfo);
         addCmd(AutoCryptEndpoints.UPDATE_ISSUER_INFO, this::updateIssuerInfo);
         addCmd(AutoCryptEndpoints.DELETE_ISSUER_INFO, this::deleteIssuer);
-        addCmd(AutoCryptEndpoints.IMPORT_CERTIFICATE, this::importCertificate);
+        addCmd(AutoCryptEndpoints.IMPORT_ISSUER_INTERMEDIATE, this::importIssuerIntermediate);
+        addCmd(AutoCryptEndpoints.IMPORT_ISSUER_ROOT, this::importIssuerRoot);
+        addCmd(AutoCryptEndpoints.EXPORT_ISSUER, this::exportIssuer);
         // role-controller
         addCmd(AutoCryptEndpoints.GET_ROLES, this::getRoles);
         addCmd(AutoCryptEndpoints.CREATE_ROLE, this::createRole);
@@ -97,14 +110,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // ca-controller
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
-
-        // Launch initial sync to dbapi
-        synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        // TODO : change initial to continuous sync
-        synchronizationSchedule.scheduleAtFixedRate(()->{manager.getMethods().initialSynchronizeDb("pki");}, 0, 300, TimeUnit.SECONDS);
-
-        logger.info("Service autocrypt initilialized.");
-        return true;
     }
 
     /**
@@ -274,7 +279,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with the path and the file
      */
-    public Json importCertificate(Json body) {
+    public Json importIssuerIntermediate(Json body) {
         // Dbapi id
         if (!body.has("name") || !body.get("name").isString()) {
             return errorVariableNotFound("name");
@@ -292,8 +297,55 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!body.has("file") || !body.get("file").isString()) {
             return JsonApiResponse.error("File was not correctly uploaded").toJson();
         }
+        String file = body.get("file").asString();
 
-        return manager.getMethods().importCertificate(name, body, params).toJson();
+        return manager.getMethods().importIssuer(name, params, file, false).toJson();
+    }
+
+    /**
+     * Imports a new certificate
+     *
+     * @param body parameters with the path and the file
+     */
+    public Json importIssuerRoot(Json body) {
+        // Dbapi id
+        if (!body.has("name") || !body.get("name").isString()) {
+            return errorVariableNotFound("name");
+        }
+        String name = body.get("name").asString();
+        body.delAt("name");
+        Json params = Json.object();
+        // Check params
+        params.at("path", "pki");
+        body.delAt("path");
+        // Check file (body)
+        if (!body.has("file") || !body.get("file").isString()) {
+            return JsonApiResponse.error("File was not correctly uploaded").toJson();
+        }
+        String file = body.get("file").asString();
+
+        return manager.getMethods().importIssuer(name, params, file, true).toJson();
+    }
+
+    /**
+     * Exports the given certificate at the given path
+     *
+     * @param body parameters with the path and the issuer_ref
+     */
+    public Json exportIssuer(Json body) {
+        Json params = Json.object();
+        // Check params
+        if (!body.has("path") || !body.get("path").isString()) {
+            return errorVariableNotFound("path");
+        }
+        params.at("path", body.get("path").asString());
+        body.delAt("path");
+        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
+            return errorVariableNotFound("issuer_ref");
+        }
+        String issuerRef = body.get("issuer_ref").asString();
+
+        return manager.getMethods().exportIssuer(issuerRef, params).getResult();
     }
 
     /**

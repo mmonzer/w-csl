@@ -2,7 +2,6 @@ package main.services.endpoints;
 
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmdHelp;
-import com.ucsl.json.Json;
 
 public enum AutoCryptEndpoints implements Endpoint  {
     SET_IP("set_ip",
@@ -48,13 +47,27 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("issuer_id", "", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
-    IMPORT_CERTIFICATE("import_issuer",
+    IMPORT_ISSUER_INTERMEDIATE("import_issuer_intermediate",
             new JsonCmdHelp()
                     .setDesc("Imports a new issuer, usually a certificate")
                     .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setParam("file", "new certificate", JsonCmdHelp.STR)
                     .setResult("the information about the new certificate", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+    IMPORT_ISSUER_ROOT("import_issuer_root",
+            new JsonCmdHelp()
+                    .setDesc("Imports a new issuer, usually a certificate")
+                    .setParam("name", "name in the dbapi", JsonCmdHelp.STR)
+                    .setParam("file", "new certificate", JsonCmdHelp.STR)
+                    .setResult("the information about the new certificate", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+    EXPORT_ISSUER("export_issuer",
+            new JsonCmdHelp()
+                    .setDesc("Exports the given issuer at the given path")
+                    .setParam("path", "path of the issuer", JsonCmdHelp.STR)
+                    .setParam("issuer_ref", "identifier of the issuer", JsonCmdHelp.STR)
+                    .setResult("the exported issuerœ", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_ISSUERS("get_issuers",
             new JsonCmdHelp()

@@ -195,20 +195,43 @@ public class AutoCryptLogic {
     }
 
     /**
-     * Imports a new certificate
+     * Imports a new issuer
      *
      * @param idName identifier in the dbapi side
-     * @param body   body for the request
      * @param params parameters with the path and the file
+     * @param file   file content
      */
-    public JsonApiResponse importCertificate(String idName, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.importCertificate(body, params);
-        String issuerRef = null;
+    public JsonApiResponse importIssuer(String idName, Json params, String file, boolean isRoot) {
+        JsonApiResponse responseFromModule = moduleHandler.importIssuer(params, file);
         if (responseFromModule.isSuccess()) {
-            issuerRef = responseFromModule.getResult().get("imported_issuers").asJsonList().get(0).asString();
+            String issuerRef = responseFromModule.getResult().get("imported_issuers").asJsonList().get(0).asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+            responseFromModule.getResult().set("ca_type", isRoot?"root":"intermediate");
+            return sendToDbApiIfSaveToDb(isRoot?dbHandler::generateRootCA:dbHandler::generateIntermediateCA, issuerRef, idName, null,
+                    JsonApiResponse.result(mergerJson(responseFromModule.getResult(), params)));
+//            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, null, null, responseFromModule);
         }
-        return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, null, null, responseFromModule);
+        return responseFromModule;
+    }
+
+    /**
+     * Exports the given issuer
+     *
+     * @param issuerRef identifier of the issuer
+     * @param params parameters with the path
+     * @return the issuer certificate as a file
+     */
+    public JsonApiResponse exportIssuer(String issuerRef, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+        if (responseFromModule.isSuccess() &&
+        responseFromModule.getResult().has("certificate") && responseFromModule.getResult().get("certificate").isString()) {
+            Json response = Json.object();
+            // TODO : range this formating elsewhere, probably not the right place
+            response.at("Content-Type", "application/octet-stream");
+            response.at("Content", responseFromModule.getResult().get("certificate").asString());
+            return JsonApiResponse.result(response);
+        }
+        return responseFromModule;
     }
 
     /**
@@ -415,7 +438,7 @@ public class AutoCryptLogic {
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object("path", "pki"));
             responseFromModule.getResult().set("path", "pki");
             responseFromModule.getResult().set("ca_type", "root");
-            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, description, "pki",
+            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, description,
                     JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
         } else {
             return JsonApiResponse.error("Error creating the CA: " + responseFromModule.getError().toJson());

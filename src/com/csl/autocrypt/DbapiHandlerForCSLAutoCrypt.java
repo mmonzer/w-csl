@@ -196,12 +196,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param description description of the CA in the dbapi
      * @param body body of the request with commonName, ttl, and optionally others
      */
-    public JsonApiResponse generateRootCA(String issuerRef, String name, String description, String path, Json body) {
+    public JsonApiResponse generateRootCA(String issuerRef, String name, String description, Json body) {
         Json input = Json.object();
         input.at("name", name);
         input.at("description", description);
         input.at("issuer_ref", issuerRef);
-        input.at("path", path);
+        input.at("path", "pki");
         input.at("ca_json", mergerJson(body, input));
         System.out.println(input);
         return this.sendPost(

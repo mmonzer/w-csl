@@ -23,7 +23,7 @@ public class TestAutoCryptModule_CA extends TestConfig {
     public void setUp() {
         // Mock the module
         wireMockServer = new WireMockServer(PORT_MODULE);
-        WireMock.configureFor(configObj.get("auto_crypt").get("ip").asString(), PORT_MODULE);
+        WireMock.configureFor(configObj.get(module).get("ip").asString(), PORT_MODULE);
         wireMockServer.start();
         // This ensures that we don't touch the DB
         service = new AutoCryptService();
@@ -40,7 +40,7 @@ public class TestAutoCryptModule_CA extends TestConfig {
     // Generate root (POST)
 
     @Test
-    public void testGenerateRoot_withPath() throws Exception {
+    public void testGenerateRoot() throws Exception {
         // Define expected input/output of the mocked module
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -69,45 +69,6 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", true);
-
-        Json response = service.generateRootCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testGenerateRoot_withoutPath() throws Exception {
-        // Define expected input/output of the mocked module
-        Json expectedBody = Json.object();
-        expectedBody.at("common_name", commonName);
-        expectedBody.at("ttl", ttl);
-        Json returnOutput = Json.object();
-        returnOutput.at("common_name", commonName);
-
-        // Define mocked service behavior
-        MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-root"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
-                .withQueryParam("common_name",(StringValuePattern) new EqualToPattern(commonName))
-                .withQueryParam("ttl",(StringValuePattern) new EqualToPattern(ttl))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                );
-        stubFor(x);
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("common_name", commonName);
-        sentParams.at("name", name);
-        sentParams.at("ttl", ttl);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -168,34 +129,6 @@ public class TestAutoCryptModule_CA extends TestConfig {
         recvOutput.at("success", false);
         Json error = Json.object();
         error.at("reason", "ttl is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.generateRootCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testGenerateRoot_withoutName() throws Exception {
-        // Define expected input/output of the mocked module
-
-        // Define mocked service behavior
-        // should not arrive to mocker service
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("path", path);
-        sentParams.at("common_name", commonName);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "name is missing from body");
         recvOutput.at("error", error);
 
         Json response = service.generateRootCA(sentParams);

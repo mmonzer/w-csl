@@ -9,20 +9,21 @@ public class TestConfig {
 
     protected AutoCryptService service;
     protected static final Json configObj = CSLContext.instance.getConfig();
+    public static final String module = "autocrypt";
 
     static {
-        Json autoCrypt = configObj.get("auto_crypt");
-        configObj.delAt("auto_crypt");
+        Json autoCrypt = configObj.get(module);
+        configObj.delAt(module);
         autoCrypt.delAt("ip");
         autoCrypt.at("ip", "localhost");
         autoCrypt.delAt("port");
         autoCrypt.at("port", 8002);
-        configObj.at("auto_crypt", autoCrypt);
+        configObj.at(module, autoCrypt);
     }
 
     // API module
-    protected static final int PORT_MODULE = configObj.get("auto_crypt").get("port").asInteger(); // Change this to your actual base URL
-    protected static String BASE_URL_MODULE = "http://"+configObj.get("auto_crypt").get("ip").asString()+":" + PORT_MODULE;
+    protected static final int PORT_MODULE = configObj.get(module).get("port").asInteger(); // Change this to your actual base URL
+    protected static String BASE_URL_MODULE = "http://"+configObj.get(module).get("ip").asString()+":" + PORT_MODULE;
     protected static final String ENDPOINT_MODULE = "/api";
     // API db
     protected static final int PORT_DBAPI = 8787; // Change this to your actual base URL

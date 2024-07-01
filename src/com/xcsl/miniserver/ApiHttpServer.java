@@ -138,7 +138,7 @@ public class ApiHttpServer {
             try {
                 return api.exec(cmd.asString(), params);
             } catch (IllegalArgumentException e) {
-                return JsonApiResponse.error(e.getMessage()+ "is missing").toJson();
+                return JsonApiResponse.error(e.getMessage()+ " is missing from body").toJson();
             }
         }
 

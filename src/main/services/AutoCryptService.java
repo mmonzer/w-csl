@@ -2,8 +2,12 @@ package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.core.CSLContext;
+import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.IStatusProvider;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import main.services.endpoints.AutoCryptEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static com.csl.autocrypt.outils.JsonHelper.*;
 
 /**
  * OCSP : Online Certificate Status Protocol
@@ -62,13 +68,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 
-//        // TODO: needs to add persistence of changes
-//        // Connexion
-//        addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
-//        addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
-//        addCmd(AutoCryptEndpoints.GET_PORT, this::getPort);
-//        addCmd(AutoCryptEndpoints.SET_PORT, this::changePort);
-        // issuer-controller
         createEndpoints();
 
         // Launch initial sync to dbapi
@@ -84,6 +83,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Creates the endpoints of this service
      */
     private void createEndpoints() {
+//        // TODO: needs to add persistence of changes
+//        // Connexion
+//        addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
+//        addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
+//        addCmd(AutoCryptEndpoints.GET_PORT, this::getPort);
+//        addCmd(AutoCryptEndpoints.SET_PORT, this::changePort);
+        // issuer-controller
         addCmd(AutoCryptEndpoints.GET_ISSUERS, this::getIssuers);
         addCmd(AutoCryptEndpoints.GET_ISSUER_INFO, this::getIssuerInfo);
         addCmd(AutoCryptEndpoints.UPDATE_ISSUER_INFO, this::updateIssuerInfo);
@@ -181,15 +187,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json getIssuerInfo(Json body) {
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
-            return errorVariableNotFound("issuer_ref");
-        }
-        String issuerRef = body.get("issuer_ref").asString();
-        body.delAt("issuer_ref");
+
+        // region -- Verify required body keys and extract key values
+
+        getValueString(body, "path");
+        String issuerRef = extractValueString(body, "issuer_ref");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().getIssuerInfo(issuerRef, body).toJson();
     }
@@ -200,45 +204,27 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json updateIssuerInfo(Json body) {
-        // Dbapi id, name,descrip
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
-        String description = null;
-        if (body.has("description") && body.get("description").isString()) {
-            description = body.get("description").asString();
-            body.delAt("description");
-        }
-        if (!body.has("id") || !body.get("id").isNumber()) {
-            return errorVariableNotFound("id");
-        }
-        int id = body.get("id").asInteger();
-        body.delAt("id");
-        Json params = Json.object();
-        // Check params
-//        if (!body.has("path") || !body.get("path").isString()) {
-//            return errorVariableNotFound("path");
-//        }
-//        params.at("path", body.get("path").asString());
-//        body.delAt("path");
 
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path").asString());
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, "path");
+        String name = extractValueString(body, "name");
+        String description = getValueStringOrNull(body, "description");
+        Integer id = extractValueInteger(body, "id");
+
         if ((!body.has("issuer_ref") || !body.get("issuer_ref").isString()) && (!body.has("issuer_id") || !body.get("issuer_id").isString())) {
             return errorVariableNotFound("issuer_ref/issuer_id");
         }
-        String issuerRef;
-        if (body.has("issuer_ref")) {
-            issuerRef = body.get("issuer_ref").asString();
-            body.delAt("issuer_ref");
-        } else {
-            issuerRef = body.get("issuer_id").asString();
+        String issuerRef = getValueStringOrNull(body, "issuer_ref");
+        body.delAt("issuer_ref");
+        if (issuerRef==null) {
+            System.out.println("NEED CHANGE : to issuer_ref");
+            issuerRef = getValueStringOrNull(body, "issuer_id");
             body.delAt("issuer_id");
         }
+
+        // endregion -- Verify required body keys and extract key values
 
 
         return manager.getMethods().updateIssuerInfo(id, name, description, issuerRef, body, params).toJson();
@@ -250,29 +236,17 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer id
      */
     public Json deleteIssuer(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("id") || !body.get("id").isNumber()) {
-            return errorVariableNotFound("id");
-        }
-        int id = body.get("id").asInteger();
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name =  body.get("name").asString();
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path").asString());
-        body.delAt("path");
-        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
-            return errorVariableNotFound("issuer_ref");
-        }
-        String issuerRef = body.get("issuer_ref").asString();
-        body.delAt("issuer_ref");
+        String issuerRef = extractValueString(body, "issuer_ref");
+        String name = getValueString(body, "name");
+        transferValueString(body, params, "path");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().deleteIssuer(name, issuerRef, body, params).toJson();
-//        return manager.getMethods().deleteIssuerCascade(id, name, issuerRef, body, params).toJson();
     }
 
     /**
@@ -281,24 +255,18 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the file
      */
     public Json importIssuerIntermediate(Json body) {
-        // Dbapi id
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
-        // Check file (body)
+        String name = getValueString(body, "name");
+        transferValueString(body, params, "path");
         if (!body.has("file") || !body.get("file").isString()) {
             return JsonApiResponse.error("File was not correctly uploaded").toJson();
         }
         String file = body.get("file").asString();
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().importIssuer(name, params, file, false).toJson();
     }
@@ -309,21 +277,19 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the file
      */
     public Json importIssuerRoot(Json body) {
-        // Dbapi id
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
+        String name = extractValueString(body, "name");
         params.at("path", "pki");
         body.delAt("path");
-        // Check file (body)
         if (!body.has("file") || !body.get("file").isString()) {
             return JsonApiResponse.error("File was not correctly uploaded").toJson();
         }
         String file = body.get("file").asString();
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().importIssuer(name, params, file, true).toJson();
     }
@@ -334,17 +300,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the issuer_ref
      */
     public Json exportIssuer(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path").asString());
-        body.delAt("path");
-        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
-            return errorVariableNotFound("issuer_ref");
-        }
-        String issuerRef = body.get("issuer_ref").asString();
+        String issuerRef = getValueString(body, "issuer_ref");
+        transferValueString(body, params, "path");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().exportIssuer(issuerRef, params).getResult();
     }
@@ -364,32 +327,27 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json createRole(Json body) {
-        String description = null;
-        if (body.has("description") && body.get("description").isString()) {
-            description = body.get("description").asString();
-            body.delAt("description");
-        }
-        if (!body.has("certificate_authority_id") || !body.get("certificate_authority_id").isNumber()) {
-            return errorVariableNotFound("certificate_authority_id");
-        }
-        Integer certificateAuthorityId = body.get("certificate_authority_id").asInteger();
-        Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
         // Check body
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString().replace(" ","-");
-        body.set("name", name);
+//        if (!body.has("name") || !body.get("name").isString()) {
+//            return errorVariableNotFound("name");
+//        }
+//        String name = body.get("name").asString().replace(" ","-");
+//        body.set("name", name);
+
+        // region -- Verify required body keys and extract key values
 
         if (body.has("key_type") && body.get("key_type").isString()) {
             body.set("key_type", body.get("key_type").asString().toLowerCase());
         }
+
+        Json params = Json.object();
+        String name = getValueString(body, "name");
+        body.set("name", body.get("name").asString().replace(" ","-"));
+        String description = getValueStringOrNull(body, "description");
+        transferValueString(body, params, "path");
+        Integer certificateAuthorityId = getValueInteger(body, "certificate_authority_id");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().createRole(name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
@@ -400,17 +358,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and name of role
      */
     public Json getRole(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path").asString());
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
+        String name = getValueString(body, "name");
+        transferValueString(body, params, "path");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().getRole(name, params).toJson();
     }
@@ -421,24 +376,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and name of role
      */
     public Json deleteRole(Json body) {
-        // Dbapi id
-        if (!body.has("id") || !body.get("id").isNumber()) {
-            return errorVariableNotFound("id");
-        }
-        int id = body.get("id").asInteger();
-        body.delAt("id");
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
+        String name = extractValueString(body, "name");
+        Integer id = extractValueInteger(body, "id");
+        transferValueString(body, params, "path");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().deleteRole(id, name, body, params).toJson();
     }
@@ -449,33 +395,17 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and name of role, others?
      */
     public Json updateRole(Json body) {
-        // Dbapi id
-        if (!body.has("id") || !body.get("id").isNumber()) {
-            return errorVariableNotFound("id");
-        }
-        int id = body.get("id").asInteger();
-        body.delAt("id");
-        if (!body.has("certificate_authority_id") || !body.get("certificate_authority_id").isNumber()) {
-            return errorVariableNotFound("certificate_authority_id");
-        }
-        Integer certificateAuthorityId = body.get("certificate_authority_id").asInteger();
-        String description = null;
-        if (body.has("description") && body.get("description").isString()) {
-            description = body.get("description").asString();
-            body.delAt("description");
-        }
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
+        String name = extractValueString(body, "name");
+        Integer id = extractValueInteger(body, "id");
+        Integer certificateAuthorityId = getValueInteger(body, "certificate_authority_id");
+        String description = getValueStringOrNull(body, "description");
+        transferValueString(body, params, "path");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().updateRole(id, name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
@@ -486,18 +416,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and name of role, others?
      */
     public Json activateOCSP(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
-        if (!body.has("ocsp_servers") || !body.get("ocsp_servers").isString()) {
-            return errorVariableNotFound("ocsp_servers");
-        }
-        params.at("ocsp_servers", body.get("ocsp_servers"));
-        body.delAt("ocsp_servers");
+        transferValueString(body, params, "path");
+        transferValueString(body, params, "ocsp_servers");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().activateOCSP(body, params).toJson();
     }
@@ -508,20 +434,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path, name and issuer_ref
      */
     public Json validateTemplate(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
-        // Check body
-        if (!body.has("issuer_ref") || !body.get("issuer_ref").isString()) {
-            return errorVariableNotFound("issuer_ref");
-        }
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
+        transferValueString(body, params, "path");
+        getValueString(body,"issuer_ref");
+        getValueString(body,"name");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().validateTemplate(body, params).toJson();
     }
@@ -532,43 +453,24 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and role
      */
     public Json generateCertificate(Json body) {
-        // dbapi name,description
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
-        body.delAt("name");
-        String description = null;
-        if (body.has("description") && body.get("description").isString()) {
-            description = body.get("description").asString();
-            body.delAt("description");
-        }
-        if (!body.has("vault_role_id") || !body.get("vault_role_id").isNumber()) {
-            return errorVariableNotFound("vault_role_id");
-        }
-        String vaultRoleId = body.get("vault_role_id").asString();
-        body.delAt("vault_role_id");
-        Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
-        // Check body
-        if (!body.has("vault_role_name") || !body.get("vault_role_name").isString()) {
-            return errorVariableNotFound("vault_role_name");
-        }
-        body.set("role_name", body.get("vault_role_name").asString());
-        body.delAt("vault_role_name");
-        if (!body.has("common_name") || !body.get("common_name").isString()) {
-            return errorVariableNotFound("common_name");
-        }
-        if (!body.has("ttl") || !body.get("ttl").isString()) {
-            return errorVariableNotFound("ttl");
-        }
 
-        return manager.getMethods().generateCertificate(name, description, vaultRoleId, body, params).toJson();
+        // region -- Verify required body keys and extract key values
+
+        String name = extractValueString(body, "name");
+        String description = getValueStringOrNull(body, "description");
+        Integer vaultRoleId = extractValueInteger(body, "vault_role_id");
+        Json params = Json.object();
+
+        transferValueString(body, params, "path");
+
+        String roleName = extractValueString(body,"vault_role_name");
+        body.set("role_name", roleName);
+        getValueString(body, "common_name");
+        getValueString(body, "ttl");
+
+        // endregion -- Verify required body keys and extract key values
+
+        return manager.getMethods().generateCertificate(name, description, vaultRoleId.toString(), body, params).toJson();
     }
 
     /**
@@ -577,12 +479,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json getCertificates(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (body.has("path") && body.get("path").isString()) {
-            params.at("path", body.get("path").asString());
-            body.delAt("path");
-        }
+        transferValueString(body, params, "path");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().getCertificates(params).toJson();
     }
@@ -593,19 +496,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the serialNumber
      */
     public Json getCertificateInfo(Json body) {
-        Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path").asString());
-        body.delAt("path");
-        if (!body.has("serial_number") || !body.get("serial_number").isString()) {
-            return errorVariableNotFound("serial_number");
-        }
-        String serialNumber = body.get("serial_number").asString();
-        body.delAt("serial_number");
 
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, "path");
+        String serialNumber = transferValueString(body, params, "serial_number");
         return manager.getMethods().getCertificateInfo(serialNumber, params).toJson();
     }
 
@@ -614,19 +510,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with the serialNumber
      */
-    public Json downloadCertificate(Json body) {
+    public Json downloadCertificate(Json body) throws IllegalArgumentException {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        // Check params
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path").asString());
-        body.delAt("path");
-        if (!body.has("serial_number") || !body.get("serial_number").isString()) {
-            return errorVariableNotFound("serial_number");
-        }
-        String serialNumber = body.get("serial_number").asString();
-        body.delAt("serial_number");
+        transferValueString(body, params, "path");
+        String serialNumber = transferValueString(body, params, "serial_number");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().downloadCertificate(serialNumber, params).getResult();
     }
@@ -636,19 +528,16 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with the path
      */
-    public Json revokeCertificate(Json body) {
-        // check params
+    public Json revokeCertificate(Json body) throws IllegalArgumentException {
+
+        // region -- Verify required body keys and extract key values
+
         Json params = Json.object();
-        if (!body.has("path") || !body.get("path").isString()) {
-            return errorVariableNotFound("path");
-        }
-        params.at("path", body.get("path"));
-        body.delAt("path");
-        if (!body.has("serial_number") || !body.get("serial_number").isString()) {
-            return errorVariableNotFound("serial_number");
-        }
-        String serialNumber = body.get("serial_number").asString();
-        body.delAt("serial_number");
+        transferValueString(body, params, "path");
+        getValueString(body, "ttl");
+        String serialNumber = transferValueString(body, params, "serial_number");
+
+        // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
     }
@@ -658,27 +547,16 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with commonName, ttl, and optionally path
      */
-    public Json generateRootCA(Json body) {
-        // dbapi identifier
-//        if (!body.has("name") || !body.get("name").isString()) {
-//            return errorVariableNotFound("name");
-//        }
-//        String name = body.get("name").asString();
-        // region -- Verify required body keys
-        if (!this.propertyExistsAndIsString(body, "common_name")) {
-            return errorVariableNotFound("common_name");
-        }
-        if (!this.propertyExistsAndIsString(body, "ttl")) {
-            return errorVariableNotFound("ttl");
-        }
-        // endregion -- Verify required body keys
-        String name = body.get("common_name").asString();
-        String description = null;
+    public Json generateRootCA(Json body) throws IllegalArgumentException {
 
-        if (this.propertyExistsAndIsString(body, "description")) {
-            description = body.get("description").asString();
-            body.delAt("description");
-        }
+        // region -- Verify required body keys and extract key values
+
+        String name = getValueString(body, "common_name");
+        getValueString(body, "ttl");
+
+        // endregion -- Verify required body keys and extract key values
+
+        String description = getValueStringOrNull(body, "description");
 
         return manager.getMethods().generateRootCA(name, description, body, null).toJson();
     }
@@ -688,30 +566,21 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with commonName, ttl, and optionally path
      */
-    public Json generateIntermediateCA(Json body) {
-        String description = null;
-        if (body.has("description") && body.get("description").isString()) {
-            description = body.get("description").asString();
-            body.delAt("description");
-        }
-        Json params = Json.object();
-        // check params
-        // check body
-        if (!body.has("type") || !body.get("type").isString()) {
-            return errorVariableNotFound("type");
-        }
+    public Json generateIntermediateCA(Json body) throws IllegalArgumentException {
+        String description = getValueStringOrNull(body, "description");
 
-        if (!body.has("common_name") || !body.get("common_name").isString()) {
-            return errorVariableNotFound("common_name");
-        }
-        if (!body.has("name") || !body.get("name").isString()) {
-            return errorVariableNotFound("name");
-        }
-        String name = body.get("name").asString();
+        Json params = Json.object();
+
+        // region -- Verify required body keys and extract key values
+
+        getValueString(body, "type");
+        getValueString(body, "ttl");
+        getValueString(body, "common_name");
+        String name = getValueString(body, "name");
+
+        // endregion -- Verify required body keys and extract key values
+
         params.at("path", name);
-        if (!body.has("ttl") || !body.get("ttl").isString()) {
-            return errorVariableNotFound("ttl");
-        }
 
         return manager.getMethods().generateIntermediateCA(name, description, body, params).toJson();
     }

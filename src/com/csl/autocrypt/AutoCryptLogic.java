@@ -48,7 +48,7 @@ public class AutoCryptLogic {
         params.at("issuer_ref", issuerRef);
         body.set("id", id);
         body.set("type", "internal");
-        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, body.get("path").asString(),
+        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, params.get("path").asString(),
                 JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
     }
 

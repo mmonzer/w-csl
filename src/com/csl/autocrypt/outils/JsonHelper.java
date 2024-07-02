@@ -2,6 +2,8 @@ package com.csl.autocrypt.outils;
 
 import com.ucsl.json.Json;
 
+import static com.csl.autocrypt.enums.AutocryptConstants.COUNTRY;
+
 /**
  * Json helper
  */
@@ -58,7 +60,7 @@ public class JsonHelper {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static String getValueStringOrNull(Json obj, String key) throws IllegalArgumentException {
+    public static String getValueStringOrNull(Json obj, String key) {
         if (obj.has(key) && obj.get(key).isString()) {
             return obj.get(key).asString();
         } else {
@@ -113,5 +115,17 @@ public class JsonHelper {
             }
         }
         return obj;
+    }
+
+
+    /**
+     * If the field has a non-empty array, it extracts the first string and replaces the array
+     * @param obj obj to replace array by first element
+     * @param key key to replace
+     */
+    public static void replaceArrayByFirstElementIfExists(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isArray() && !obj.get(key).asJsonList().isEmpty()) {
+            obj.set(key, obj.get(key).asJsonList().get(0));
+        }
     }
 }

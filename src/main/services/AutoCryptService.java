@@ -110,6 +110,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GET_CERTIFICATE_INFO, this::getCertificateInfo);
         addCmd(AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, this::downloadCertificate);
         addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE, this::revokeCertificate);
+        addCmd(AutoCryptEndpoints.DELETE_REVOKED_CERTIFICATES, this::deleteRevokedCertificates);
         // ca-controller
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
@@ -199,10 +200,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
+        String name = getValueString(body, ISSUER_NAME);
         transferValueString(body, params, PATH);
-        String name = extractValueString(body, NAME);
         String description = getValueStringOrNull(body, DESCRIPTION);
-        Integer id = extractValueInteger(body, ID);
+        body.delAt(ID);
+        body.delAt(VAULT_ID);
+        body.delAt(TTL_UNIT);
 
         if ((!body.has(ISSUER_REF) || !body.get(ISSUER_REF).isString()) && (!body.has(ISSUER_ID) || !body.get(ISSUER_ID).isString())) {
             return errorVariableNotFound("issuer_ref/issuer_id");
@@ -218,7 +221,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // endregion -- Verify required body keys and extract key values
 
 
-        return manager.getMethods().updateIssuerInfo(id, name, description, issuerRef, body, params).toJson();
+        return manager.getMethods().updateIssuerInfo(name, description, issuerRef, body, params).toJson();
     }
 
     /**
@@ -232,12 +235,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String issuerRef = extractValueString(body, ISSUER_REF);
-        String name = getValueString(body, NAME);
         transferValueString(body, params, PATH);
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().deleteIssuer(name, issuerRef, body, params).toJson();
+        return manager.getMethods().deleteIssuer(issuerRef, body, params).toJson();
     }
 
     /**
@@ -366,12 +368,12 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String name = extractValueString(body, NAME);
-        Integer id = extractValueInteger(body, ID);
+        body.delAt(ID);
         transferValueString(body, params, PATH);
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().deleteRole(id, name, body, params).toJson();
+        return manager.getMethods().deleteRole(name, body, params).toJson();
     }
 
     /**
@@ -385,14 +387,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String name = extractValueString(body, NAME);
-        Integer id = extractValueInteger(body, ID);
+        body.delAt(ID);
         Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
         String description = getValueStringOrNull(body, DESCRIPTION);
         transferValueString(body, params, PATH);
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().updateRole(id, name, description, certificateAuthorityId.toString(), body, params).toJson();
+        return manager.getMethods().updateRole(name, description, certificateAuthorityId.toString(), body, params).toJson();
     }
 
     /**
@@ -519,12 +521,21 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         transferValueString(body, params, PATH);
-        getValueString(body, TTL);
+//        getValueString(body, TTL);
         String serialNumber = transferValueString(body, params, SERIAL_NUMBER);
 
         // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
+    }
+
+    /**
+     * Delete all the revoked certificates
+     *
+     * @param body  unused
+     */
+    public Json deleteRevokedCertificates(Json body) throws IllegalArgumentException {
+        return manager.getMethods().deleteRevokedCertificates().toJson();
     }
 
     /**
@@ -538,10 +549,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         String name = getValueString(body, COMMON_NAME);
         getValueString(body, TTL);
+        String description = getValueStringOrNull(body, DESCRIPTION);
 
         // endregion -- Verify required body keys and extract key values
-
-        String description = getValueStringOrNull(body, DESCRIPTION);
 
         return manager.getMethods().generateRootCA(name, description, body, null).toJson();
     }
@@ -558,8 +568,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String description = getValueStringOrNull(body, DESCRIPTION);
         getValueString(body, TYPE);
         getValueString(body, TTL);
-        getValueString(body, COMMON_NAME);
-        String name = getValueString(body, NAME);
+        String name = getValueString(body, COMMON_NAME);
         Json params = Json.object();
         params.at(PATH, name);
 

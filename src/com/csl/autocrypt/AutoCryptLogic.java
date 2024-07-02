@@ -4,7 +4,7 @@ import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
-import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
+import static com.csl.autocrypt.outils.JsonHelper.*;
 
 public class AutoCryptLogic {
     private final ApiHandlerForCSLAutoCrypt moduleHandler;
@@ -38,45 +38,31 @@ public class AutoCryptLogic {
     /**
      * Updates the information of the given issuer in the module and the DB
      *
-     * @param id        identifier in the dbapi side
-     * @param name      name for dbapi side
+     * @param name        identifier in the dbapi side
      * @param issuerRef identifier of the issuer (module side)
      * @param body      body of the request
      * @param params    parameters of the request
      */
-    public JsonApiResponse updateIssuerInfo(Integer id, String name, String description, String issuerRef, Json body, Json params) {
+    public JsonApiResponse updateIssuerInfo(String name, String description, String issuerRef, Json body, Json params) {
+        String ttl = extractValueString(body, TTL);
         JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, body, params);
         params.at(ISSUER_REF, issuerRef);
-        body.set(ID, id);
         body.set(TYPE, INTERNAL);
-        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, params.get(PATH).asString(),
+        body.set(TTL, ttl);
+        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, name, issuerRef, description, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
-    }
-
-    /**
-     * Updates the information of the given issuer in the module and the DB
-     *
-     * @param name      name for dbapi side
-     * @param issuerRef identifier of the issuer (module side)
-     * @param body      body of the request
-     * @param params    parameters of the request
-     */
-    public JsonApiResponse updateIssuerInfo(String issuerRef, String name, String description, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, name, responseFromModule);
     }
 
     /**
      * Deletes the given issuer from the module and the DB
      *
-     * @param name      name in the dbapi side
      * @param issuerRef identifier in the module side
      * @param body      body of the request
      * @param params    parameters with the path
      */
-    public JsonApiResponse deleteIssuer(String name, String issuerRef, Json body, Json params) {
+    public JsonApiResponse deleteIssuer(String issuerRef, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuerRef, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, responseFromModule);
     }
 
     /**
@@ -119,7 +105,7 @@ public class AutoCryptLogic {
             return JsonApiResponse.error("Error deleting the main issuer from Vault");
         }
         // Delete the issuer from dbapi
-        JsonApiResponse responseFromDbapi = sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, name, responseFromModule);
+        JsonApiResponse responseFromDbapi = sendToDbApiIfSaveToDb(dbHandler::deleteIssuer, issuerRef, responseFromModule);
         if (!responseFromDbapi.isSuccess()) {
             return JsonApiResponse.error("Error deleting the main issuer from DBapi");
         }
@@ -253,10 +239,9 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess()) {
 
             Json result = mergerJson(mergerJson(responseFromModule.getResult(), body), params);
-            result.set(NAME, idName);
-            result.set(COUNTRY, result.get(COUNTRY).asJsonList().get(0).asString());
-            result.set(ORGANIZATION, result.get(ORGANIZATION).asJsonList().get(0).asString());
-            result.set(LOCALITY, result.get(LOCALITY).asJsonList().get(0).asString());
+            replaceArrayByFirstElementIfExists(result, COUNTRY);
+            replaceArrayByFirstElementIfExists(result, ORGANIZATION);
+            replaceArrayByFirstElementIfExists(result, LOCALITY);
             result.set(CERTIFICATE_AUTHORITY_ID, certificateAuthorityId);
             return sendToDbApiIfSaveToDb(dbHandler::createRole, idName, description, certificateAuthorityId, JsonApiResponse.result(result));
         } else {
@@ -278,30 +263,16 @@ public class AutoCryptLogic {
     /**
      * Deletes the given role
      *
-     * @param id     identifier in the module/dbapi
      * @param name   name in the module/dbapi side
      * @param body   body of the request
      * @param params parameters with the path
      */
-    public JsonApiResponse deleteRole(Integer id, String name, Json body, Json params) {
+    public JsonApiResponse deleteRole(String name, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.deleteRole(name, body, params);
         return sendToDbApiIfSaveToDb(dbHandler::deleteRole, name, params.get(PATH).asString(), responseFromModule);
     }
 
     /**
-     * Deletes the given role
-     *
-     * @param id     identifier in the module/dbapi
-     * @param name   name in the module/dbapi side
-     * @param body   body of the request
-     * @param params parameters with the path
-     */
-    public JsonApiResponse deleteRole(String id, String name, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.deleteRole(name, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteRole, id, name, responseFromModule);
-    }
-
-    /**
      * Updates the information of the given role
      *
      * @param name        identifier in the module/dbapi side
@@ -309,28 +280,15 @@ public class AutoCryptLogic {
      * @param body        parameters with the path and name of role, others?
      * @param params      parameters with the path
      */
-    public JsonApiResponse updateRole(Integer id, String name, String description, String certificateAuthorityId, Json body, Json params) {
+    public JsonApiResponse updateRole(String name, String description, String certificateAuthorityId, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
         // TODO : change this
         params.at(NAME, name);
-        responseFromModule.getResult().set(COUNTRY, responseFromModule.getResult().get(COUNTRY).asJsonList().get(0).asString());
-        responseFromModule.getResult().set(ORGANIZATION, responseFromModule.getResult().get(ORGANIZATION).asJsonList().get(0).asString());
-        responseFromModule.getResult().set(LOCALITY, responseFromModule.getResult().get(LOCALITY).asJsonList().get(0).asString());
+        replaceArrayByFirstElementIfExists(responseFromModule.getResult(), COUNTRY);
+        replaceArrayByFirstElementIfExists(responseFromModule.getResult(), ORGANIZATION);
+        replaceArrayByFirstElementIfExists(responseFromModule.getResult(), LOCALITY);
         return sendToDbApiIfSaveToDb(dbHandler::updateRole, name, description, certificateAuthorityId, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
-    }
-
-    /**
-     * Updates the information of the given role
-     *
-     * @param name        identifier in the module/dbapi side
-     * @param description description in the dbapi
-     * @param body        parameters with the path and name of role, others?
-     * @param params      parameters with the path
-     */
-    public JsonApiResponse updateRole(String id, String name, String description, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::updateRole, id, name, description, null, responseFromModule);
     }
 
     /**
@@ -416,25 +374,37 @@ public class AutoCryptLogic {
         return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, serialNumber, responseFromModule);
     }
 
+
+    /**
+     * Delete all the revoked certificates
+     */
+    public JsonApiResponse deleteRevokedCertificates() {
+        JsonApiResponse responseFromModule = moduleHandler.deleteRevokedCertificates();
+        if (responseFromModule.isSuccess()) {
+            return dbHandler.deleteRevokedCertificates();
+        } else {
+            return responseFromModule;
+        }
+    }
+
     /**
      * Generate root CA
      *
-     * @param idName      identifier in the dbapi side
+     * @param name      identifier in the dbapi side
      * @param description description in the dbapi
      * @param body        body of the request with commonName, ttl, and optionally others
      * @param params      parameters with  path
      */
-    public JsonApiResponse generateRootCA(String idName, String description, Json body, Json params) {
+    public JsonApiResponse generateRootCA(String name, String description, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateRootCA(body, params);
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has(ISSUER_REF) &&
                 responseFromModule.getResult().get(ISSUER_REF).isString()) {
             String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
-            // params.at(PATH, idName);
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object(PATH, PKI));
             responseFromModule.getResult().set(PATH, PKI);
             responseFromModule.getResult().set(CA_TYPE, ROOT);
-            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, description,
+            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, name, description,
                     JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
         } else {
             return JsonApiResponse.error("Error creating the CA: " + responseFromModule.getError().toJson());
@@ -555,24 +525,6 @@ public class AutoCryptLogic {
             return responseFromModule;
         }
     }
-
-    /**
-     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
-     * returns the response from the module
-     *
-     * @param method             method to call when sending to DBApi
-     * @param responseFromModule response from the module
-     * @return new response if condition true, otherwise resend the same responseFromModule
-     */
-//    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithIdStr method, String id, String name, JsonApiResponse responseFromModule) {
-//        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-//            Json nextRequestBody = responseFromModule.getResult();
-//            nextRequestBody = (nextRequestBody!=null) ? nextRequestBody : Json.object();
-//            return method.apply(id, name, nextRequestBody);
-//        } else {
-//            return responseFromModule;
-//        }
-//    }
 
     /**
      * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise

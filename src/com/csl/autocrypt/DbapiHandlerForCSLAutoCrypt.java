@@ -36,14 +36,13 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * Updates the information of the given issuer in the module and the DB
      *
      * @param issuerRef serial ref of the issuer in dbapi
-     * @param name identifier of the issuer in dbapi side
      * @param description description of the issuer in dbapi side
      * @param body      body of the request
      */
-    public JsonApiResponse updateIssuerInfo(String issuerRef, String name, String description, String path, Json body) {
+    public JsonApiResponse updateIssuerInfo(String name, String issuerRef, String description, String path, Json body) {
         Json input = Json.object();
-        input.at(NAME, name);
         input.at(DESCRIPTION, description);
+        input.at(COMMON_NAME, name);
         input.at(ISSUER_REF, issuerRef);
         input.at(PATH, path);
         input.at(CA_JSON, mergerJson(body, input));
@@ -55,12 +54,11 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Deletes the given issuer from the module and the DB
      *
-     * @param id identifier of the issuer in dbapi db
-     * @param body parameters with the path and the issuer id
+     * @param issuerRef identifier of the issuer in dbapi db
      */
-    public JsonApiResponse deleteIssuer(String id, String name, Json body) {
+    public JsonApiResponse deleteIssuer(String issuerRef, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ISSUER_DEL_BY_REF_.endpoint() +id,
+                DbapiEndpointForCSLAutocrypt.ISSUER_DEL_BY_REF_.endpoint() +issuerRef,
                 null);
     }
 
@@ -89,7 +87,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse deleteRole(String name, String path, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ROLE_UPD_BY_NAME_AND_PATH.endpoint(),
+                DbapiEndpointForCSLAutocrypt.ROLE_DEL_BY_NAME_AND_PATH.endpoint(),
                 Json.object(NAME, name, PATH, path)
         );
     }
@@ -167,6 +165,13 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Delete all the revoked certificates
+     */
+    public JsonApiResponse deleteRevokedCertificates() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    /**
      * Generate root CA
      *
      * @param issuerRef serial number of the CA
@@ -176,7 +181,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse generateRootCA(String issuerRef, String name, String description, Json body) {
         Json input = Json.object();
-        input.at(NAME, name);
+        input.at(COMMON_NAME, name);
         input.at(DESCRIPTION, description);
         input.at(ISSUER_REF, issuerRef);
         input.at(PATH, PKI);
@@ -198,7 +203,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
 //                DbapiEndpointForCSLAutocrypt.CA.endpoint(),
 //                formatBody("ca", name, description, body));
         Json input = Json.object();
-        input.at(NAME, name);
+        input.at(COMMON_NAME, name);
         input.at(DESCRIPTION, description);
         input.at(PATH, PKI);
         input.at(CA_JSON, mergerJson(body, input));

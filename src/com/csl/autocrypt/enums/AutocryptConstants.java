@@ -23,6 +23,7 @@ public final class AutocryptConstants {
     public static final String IP = "ip";
     public static final String IS_HTTP_API_KEY_REACHABLE = "is_http_api_reachable";
     public static final String ISSUER_ID = "issuer_id";
+    public static final String ISSUER_NAME = "issuer_name";
     public static final String ISSUER_REF = "issuer_ref";
     public static final String KEY_TYPE = "key_type";
     public static final String LOCALITY = "locality";
@@ -38,7 +39,9 @@ public final class AutocryptConstants {
     public static final String ROOT = "root";
     public static final String SERIAL_NUMBER = "serial_number";
     public static final String TTL = "ttl";
+    public static final String TTL_UNIT = "ttl_unit";
     public static final String TYPE = "type";
+    public static final String VAULT_ID = "vault_id";
     public static final String VAULT_ROLE_ID = "vault_role_id";
     public static final String VAULT_ROLE_NAME = "vault_role_name";
 

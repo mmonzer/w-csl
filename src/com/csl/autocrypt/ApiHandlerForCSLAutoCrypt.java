@@ -262,6 +262,13 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Delete all the revoked certificates
+     */
+    public JsonApiResponse deleteRevokedCertificates() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    /**
      * Generate root CA
      *
      * @param body   body of the request with commonName, ttl, and optionally others

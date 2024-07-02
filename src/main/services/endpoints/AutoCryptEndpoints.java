@@ -169,7 +169,12 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setDesc("Revoke the certificate")
                     .setParam("path", "Where the certificate is store", JsonCmdHelp.STR)
                     .setParam("serial_number", "Serial number of the certificate", JsonCmdHelp.STR)
-                    .setResult("Whether the certificated was successfully revoked", JsonCmdHelp.STR)
+                    .setResult("Whether the certificates was successfully revoked", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+    DELETE_REVOKED_CERTIFICATES("delete_revoked_certificates",
+            new JsonCmdHelp()
+                    .setDesc("Delete all revoked certificate")
+                    .setResult("Whether the certificates were successfully deleted", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GENERATE_ROOT_CA("generate_root_ca",
             new JsonCmdHelp()

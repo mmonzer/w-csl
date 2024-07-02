@@ -284,7 +284,7 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse deleteRole(Integer id, String name, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.deleteRole(name, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteRole, id.toString(), name, responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteRole, name, params.get("path").asString(), responseFromModule);
     }
 
     /**
@@ -309,14 +309,13 @@ public class AutoCryptLogic {
      * @param params      parameters with the path
      */
     public JsonApiResponse updateRole(Integer id, String name, String description, String certificateAuthorityId, Json body, Json params) {
-        moduleHandler.updateRole(name, body, params);
+        JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
         // TODO : change this
         params.at("name", name);
-        JsonApiResponse responseFromModule = moduleHandler.getRole(name, params);
         responseFromModule.getResult().set("country", responseFromModule.getResult().get("country").asJsonList().get(0).asString());
         responseFromModule.getResult().set("organization", responseFromModule.getResult().get("organization").asJsonList().get(0).asString());
         responseFromModule.getResult().set("locality", responseFromModule.getResult().get("locality").asJsonList().get(0).asString());
-        return sendToDbApiIfSaveToDb(dbHandler::updateRole, id.toString(), name, description, certificateAuthorityId,
+        return sendToDbApiIfSaveToDb(dbHandler::updateRole, name, description, certificateAuthorityId, params.get("path").asString(),
                 JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
     }
 

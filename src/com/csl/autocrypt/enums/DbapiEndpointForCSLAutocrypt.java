@@ -9,6 +9,8 @@ public enum DbapiEndpointForCSLAutocrypt {
     CA_(CA+"/"),
     ROLE(SELF+"/vault_roles"),
     ROLE_(ROLE+"/"),
+    ROLE_UPD_BY_NAME_AND_PATH(ROLE_+"update_vault_role_by_name_and_path"),
+    ROLE_DEL_BY_NAME_AND_PATH(ROLE_+"delete_vault_role_by_name_and_path"),
     CERTIFICATES(SELF+"/certificates"),
     CERTIFICATES_(CERTIFICATES+"/"),
     CERTIFICATES_UPD_BY_SERIAL_NUMBER_(CERTIFICATES_+"update_by_serial_number/"),

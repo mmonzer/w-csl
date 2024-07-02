@@ -95,13 +95,14 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Deletes the given role
      *
-     * @param id identifier of the issuer in dbapi db
-     * @param body parameters with the path and name of role
+     * @param name name of the role in vault
+     * @param path path of the role in vault (unique couple name,path)
      */
-    public JsonApiResponse deleteRole(String id, String name, Json body) {
+    public JsonApiResponse deleteRole(String name, String path, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
-                formatBody("role", name, body));
+                DbapiEndpointForCSLAutocrypt.ROLE_UPD_BY_NAME_AND_PATH.endpoint(),
+                Json.object("name", name, "path", path)
+        );
     }
 
     /**
@@ -116,12 +117,12 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Updates the information of the given role
      *
-     * @param id identifier of the issuer in dbapi db
      * @param name name of the role
+     * @param path identifier of the role  (unique couple name,path)
      * @param description description of the role in the dbapi
      * @param body parameters with the path and name of role, others?
      */
-    public JsonApiResponse updateRole(String id, String name, String description, String certificateAuthorityId, Json body) {
+    public JsonApiResponse updateRole(String name, String description, String certificateAuthorityId, String path, Json body) {
         Json input = Json.object();
         input.at("name", name);
         input.at("description", description);
@@ -129,7 +130,9 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
         input.at("role_json", mergerJson(input, body));
 
         return this.sendPut(
-                DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
+//                DbapiEndpointForCSLAutocrypt.ROLE_.endpoint() +id,
+                DbapiEndpointForCSLAutocrypt.ROLE_UPD_BY_NAME_AND_PATH.endpoint(),
+                Json.object("name", name, "path", path),
                 input);
     }
 

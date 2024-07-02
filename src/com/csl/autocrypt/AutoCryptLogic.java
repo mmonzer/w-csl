@@ -3,6 +3,7 @@ package com.csl.autocrypt;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
+import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 
 public class AutoCryptLogic {
@@ -45,10 +46,10 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse updateIssuerInfo(Integer id, String name, String description, String issuerRef, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, body, params);
-        params.at("issuer_ref", issuerRef);
-        body.set("id", id);
-        body.set("type", "internal");
-        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, params.get("path").asString(),
+        params.at(ISSUER_REF, issuerRef);
+        body.set(ID, id);
+        body.set(TYPE, INTERNAL);
+        return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, issuerRef, name, description, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
     }
 
@@ -124,8 +125,8 @@ public class AutoCryptLogic {
         }
         JsonApiResponse issuersToDelete = moduleHandler.getIssuers(params);
         // Delete the other issuers in the path, except for pki (only roots)
-        if (issuersToDelete.isSuccess() && params.has("path") &&
-                params.get("path").isString() && !params.get("path").asString().equals("pki")) {
+        if (issuersToDelete.isSuccess() && params.has(PATH) &&
+                params.get(PATH).isString() && !params.get(PATH).asString().equals(PKI)) {
             JsonApiResponse responseFromOtherIssuers;
             for (Json issuer : issuersToDelete.getResult()) {
                 responseFromOtherIssuers = moduleHandler.revokeCertificate(issuer.asString(), params);
@@ -151,9 +152,9 @@ public class AutoCryptLogic {
         JsonApiResponse response;
         if (rolesToDeleteModule.isSuccess() && rolesToDeleteDbapi.isSuccess()) {
             for (Json roleDbapi : rolesToDeleteDbapi.getResult()) {
-                if (roleDbapi.has("certificate_authority_id") && roleDbapi.get("certificate_authority_id").isNumber() && roleDbapi.get("certificate_authority_id").asInteger() == caId &&
-                        roleDbapi.has("name") && roleDbapi.get("name").isString() && roleDbapi.get("name").asString().equals(name)) {
-                    response = dbHandler.deleteRole(roleDbapi.get("id").asString(), null, null);
+                if (roleDbapi.has(CERTIFICATE_AUTHORITY_ID) && roleDbapi.get(CERTIFICATE_AUTHORITY_ID).isNumber() && roleDbapi.get(CERTIFICATE_AUTHORITY_ID).asInteger() == caId &&
+                        roleDbapi.has(NAME) && roleDbapi.get(NAME).isString() && roleDbapi.get(NAME).asString().equals(name)) {
+                    response = dbHandler.deleteRole(roleDbapi.get(ID).asString(), null, null);
                     if (!response.isSuccess()) {
                         return JsonApiResponse.error("Error when deleting '" + name + "' from dbapi");
                     }
@@ -200,9 +201,9 @@ public class AutoCryptLogic {
     public JsonApiResponse importIssuer(String idName, Json params, String file, boolean isRoot) {
         JsonApiResponse responseFromModule = moduleHandler.importIssuer(params, file);
         if (responseFromModule.isSuccess()) {
-            String issuerRef = responseFromModule.getResult().get("imported_issuers").asJsonList().get(0).asString();
+            String issuerRef = responseFromModule.getResult().get(IMPORTED_ISSUERS).asJsonList().get(0).asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
-            responseFromModule.getResult().set("ca_type", isRoot?"root":"intermediate");
+            responseFromModule.getResult().set(CA_TYPE, isRoot?ROOT:INTERMEDIATE);
             return sendToDbApiIfSaveToDb(isRoot?dbHandler::generateRootCA:dbHandler::generateIntermediateCA, issuerRef, idName, null,
                     JsonApiResponse.result(mergerJson(responseFromModule.getResult(), params)));
 //            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, null, null, responseFromModule);
@@ -220,11 +221,11 @@ public class AutoCryptLogic {
     public JsonApiResponse exportIssuer(String issuerRef, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
         if (responseFromModule.isSuccess() &&
-        responseFromModule.getResult().has("certificate") && responseFromModule.getResult().get("certificate").isString()) {
+        responseFromModule.getResult().has(CERTIFICATE) && responseFromModule.getResult().get(CERTIFICATE).isString()) {
             Json response = Json.object();
             // TODO : range this formating elsewhere, probably not the right place
             response.at("Content-Type", "application/octet-stream");
-            response.at("Content", responseFromModule.getResult().get("certificate").asString());
+            response.at("Content", responseFromModule.getResult().get(CERTIFICATE).asString());
             return JsonApiResponse.result(response);
         }
         return responseFromModule;
@@ -252,11 +253,11 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess()) {
 
             Json result = mergerJson(mergerJson(responseFromModule.getResult(), body), params);
-            result.set("name", idName);
-            result.set("country", result.get("country").asJsonList().get(0).asString());
-            result.set("organization", result.get("organization").asJsonList().get(0).asString());
-            result.set("locality", result.get("locality").asJsonList().get(0).asString());
-            result.set("certificate_authority_id", certificateAuthorityId);
+            result.set(NAME, idName);
+            result.set(COUNTRY, result.get(COUNTRY).asJsonList().get(0).asString());
+            result.set(ORGANIZATION, result.get(ORGANIZATION).asJsonList().get(0).asString());
+            result.set(LOCALITY, result.get(LOCALITY).asJsonList().get(0).asString());
+            result.set(CERTIFICATE_AUTHORITY_ID, certificateAuthorityId);
             return sendToDbApiIfSaveToDb(dbHandler::createRole, idName, description, certificateAuthorityId, JsonApiResponse.result(result));
         } else {
 
@@ -284,7 +285,7 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse deleteRole(Integer id, String name, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.deleteRole(name, body, params);
-        return sendToDbApiIfSaveToDb(dbHandler::deleteRole, name, params.get("path").asString(), responseFromModule);
+        return sendToDbApiIfSaveToDb(dbHandler::deleteRole, name, params.get(PATH).asString(), responseFromModule);
     }
 
     /**
@@ -311,11 +312,11 @@ public class AutoCryptLogic {
     public JsonApiResponse updateRole(Integer id, String name, String description, String certificateAuthorityId, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
         // TODO : change this
-        params.at("name", name);
-        responseFromModule.getResult().set("country", responseFromModule.getResult().get("country").asJsonList().get(0).asString());
-        responseFromModule.getResult().set("organization", responseFromModule.getResult().get("organization").asJsonList().get(0).asString());
-        responseFromModule.getResult().set("locality", responseFromModule.getResult().get("locality").asJsonList().get(0).asString());
-        return sendToDbApiIfSaveToDb(dbHandler::updateRole, name, description, certificateAuthorityId, params.get("path").asString(),
+        params.at(NAME, name);
+        responseFromModule.getResult().set(COUNTRY, responseFromModule.getResult().get(COUNTRY).asJsonList().get(0).asString());
+        responseFromModule.getResult().set(ORGANIZATION, responseFromModule.getResult().get(ORGANIZATION).asJsonList().get(0).asString());
+        responseFromModule.getResult().set(LOCALITY, responseFromModule.getResult().get(LOCALITY).asJsonList().get(0).asString());
+        return sendToDbApiIfSaveToDb(dbHandler::updateRole, name, description, certificateAuthorityId, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
     }
 
@@ -362,10 +363,10 @@ public class AutoCryptLogic {
     public JsonApiResponse generateCertificate(String name, String description, String vaultRoleId, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateCertificate(body, params);
         if (responseFromModule.isSuccess() &&
-                responseFromModule.getResult().has("serial_number") &&
-                responseFromModule.getResult().get("serial_number").isString()) {
+                responseFromModule.getResult().has(SERIAL_NUMBER) &&
+                responseFromModule.getResult().get(SERIAL_NUMBER).isString()) {
             return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
-                    responseFromModule.getResult().get("serial_number").asString(),
+                    responseFromModule.getResult().get(SERIAL_NUMBER).asString(),
                     name,
                     vaultRoleId,
                     description,
@@ -426,13 +427,13 @@ public class AutoCryptLogic {
     public JsonApiResponse generateRootCA(String idName, String description, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.generateRootCA(body, params);
         if (responseFromModule.isSuccess() &&
-                responseFromModule.getResult().has("issuer_ref") &&
-                responseFromModule.getResult().get("issuer_ref").isString()) {
-            String issuerRef = responseFromModule.getResult().get("issuer_ref").asString();
-            // params.at("path", idName);
-            responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object("path", "pki"));
-            responseFromModule.getResult().set("path", "pki");
-            responseFromModule.getResult().set("ca_type", "root");
+                responseFromModule.getResult().has(ISSUER_REF) &&
+                responseFromModule.getResult().get(ISSUER_REF).isString()) {
+            String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
+            // params.at(PATH, idName);
+            responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object(PATH, PKI));
+            responseFromModule.getResult().set(PATH, PKI);
+            responseFromModule.getResult().set(CA_TYPE, ROOT);
             return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, description,
                     JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
         } else {
@@ -452,11 +453,11 @@ public class AutoCryptLogic {
         JsonApiResponse responseFromModule = moduleHandler.generateIntermediateCA(body, params);
 
         if (responseFromModule.isSuccess() &&
-                responseFromModule.getResult().has("issuer_ref") &&
-                responseFromModule.getResult().get("issuer_ref").isString()) {
-            String issuerRef = responseFromModule.getResult().get("issuer_ref").asString();
+                responseFromModule.getResult().has(ISSUER_REF) &&
+                responseFromModule.getResult().get(ISSUER_REF).isString()) {
+            String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
-            responseFromModule.getResult().set("ca_type", "intermediate");
+            responseFromModule.getResult().set(CA_TYPE, INTERMEDIATE);
             return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, issuerRef, idName, description,
                     JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
         } else {
@@ -615,12 +616,12 @@ public class AutoCryptLogic {
      * @param path to synchronize the issuers
      */
     private void synchronizeIssuers(String path) {
-        Json body = Json.object("path", path);
+        Json body = Json.object(PATH, path);
         JsonApiResponse issuers = moduleHandler.getIssuers(body);
         if (issuers.isSuccess()) {
             for (Json issuer_ref : issuers.getResult().asJsonList()) {
                 Json body2 = Json.read(body.toString());
-                body2.at("issuer_ref", issuer_ref.asString());
+                body2.at(ISSUER_REF, issuer_ref.asString());
                 JsonApiResponse issuer = moduleHandler.getIssuerInfo(issuer_ref.asString(), body2);
                 if (issuer.isSuccess()) {
                     dbHandler.generateIntermediateCA(issuer_ref.asString(), null, issuer.getResult());
@@ -635,12 +636,12 @@ public class AutoCryptLogic {
      * @param path to synchronize the roles
      */
     private void synchronizeRoles(String path) {
-        Json body = Json.object("path", path);
+        Json body = Json.object(PATH, path);
         JsonApiResponse issuers = moduleHandler.getRoles(body);
         if (issuers.isSuccess()) {
             for (Json role_name : issuers.getResult().asJsonList()) {
                 Json body2 = Json.read(body.toString());
-                body2.at("name", role_name.asString());
+                body2.at(NAME, role_name.asString());
                 JsonApiResponse role = moduleHandler.getRole(role_name.asString(), body2);
                 if (role.isSuccess()) {
                     dbHandler.createRole(role_name.asString(), null, null, role.getResult());
@@ -655,13 +656,13 @@ public class AutoCryptLogic {
      * @param path to synchronize the certificates
      */
     private void synchronizeCertificate(String path) {
-        Json body = Json.object("path", path);
+        Json body = Json.object(PATH, path);
         JsonApiResponse certificates = moduleHandler.getCertificates(body);
         if (certificates.isSuccess()) {
             for (Json serial_number : certificates.getResult().asJsonList()) {
                 Json body2 = Json.read(body.toString());
-                body2.at("serial_number", serial_number.asString());
-                body2.at("path", path);
+                body2.at(SERIAL_NUMBER, serial_number.asString());
+                body2.at(PATH, path);
                 JsonApiResponse certificate = moduleHandler.getCertificateInfo(serial_number.asString(), body2);
                 if (certificate.isSuccess()) {
                     dbHandler.generateCertificate(serial_number.asString(), null, certificate.getResult());

@@ -135,11 +135,7 @@ public class ApiHttpServer {
                 params = Json.object();
             }
 
-            try {
-                return api.exec(cmd.asString(), params);
-            } catch (IllegalArgumentException e) {
-                return JsonApiResponse.error(e.getMessage()+ " is missing from body").toJson();
-            }
+            return api.exec(cmd.asString(), params);
         }
 
         /**

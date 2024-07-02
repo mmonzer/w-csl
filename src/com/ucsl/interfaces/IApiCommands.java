@@ -15,8 +15,8 @@ public interface IApiCommands {
 	String getPathName();
 	String getDescription();
 
-	public Json execJcmd(Json jCmd);
-	public Json exec(String name, Json params) ;
+	public Json execJcmd(Json jCmd) throws IllegalArgumentException;
+	public Json exec(String name, Json params) throws IllegalArgumentException;
 
 	String getPathFilter();
 

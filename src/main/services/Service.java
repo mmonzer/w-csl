@@ -82,7 +82,7 @@ public abstract class Service implements ICSLService {
      * @return A {@link String}
      */
     public String addCmd(String name, IJsonCmd cmd) {
-        return apiCommands.registerCmd(name, cmd);
+        return addCmd(name, cmd, null);
     }
 
     /**

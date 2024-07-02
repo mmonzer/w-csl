@@ -5,6 +5,7 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import main.services.JsonApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
-
 
 public class ApiCommands implements IApiCommands {
 
@@ -47,7 +47,7 @@ public class ApiCommands implements IApiCommands {
             return jresult;
         }
 
-        return j.exec(params);
+        return wrapperForAPIRequest(j,params);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class ApiCommands implements IApiCommands {
             return "Command with this name already registered :" + name;
         listOfCommands.put(name, j);
         listOfCommandNames.add(name);
-        if (jh != null) listOfCommandHelps.put(name, jh.setName(name));
+        if (jh != null) {listOfCommandHelps.put(name, jh.setName(name));}
         return "ok";
     }
 
@@ -155,7 +155,11 @@ public class ApiCommands implements IApiCommands {
 
         if (debug) logger.debug("Exec {} {}", cmd, params);
 
-        return exec(cmd.asString(), params);
+        try {
+            return exec(cmd.asString(), params);
+        } catch (IllegalArgumentException e) {
+            return JsonApiResponse.error(e.getMessage()+ " is missing from body").toJson();
+        }
     }
 
     public Json getHelp(Json params) {
@@ -249,5 +253,19 @@ public class ApiCommands implements IApiCommands {
         return getCleanApiName() + ":[" + s + "]";
     }
 
+
+    /**
+     * Wrapper to catch the exceptions and format a correct answer
+     * @param cmd generic cmd to execute
+     * @param params params to execute the cmd
+     * @return the response of the cmd
+     */
+    public static Json wrapperForAPIRequest(IJsonCmd cmd, Json params) {
+        try {
+            return cmd.exec(params);
+        } catch (IllegalArgumentException e) {
+            return JsonApiResponse.error(e.getMessage() + " is missing from body").toJson();
+        }
+    }
 
 }

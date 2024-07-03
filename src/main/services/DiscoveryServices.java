@@ -450,115 +450,115 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
-        addCmd("test_new_connection", params -> {
-                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
-                    Json connectionJson = params.get("connection");
-                    Json baseConnectionIdJson = params.get("base_connection_id");
-
-                    connectionJson.set("id", 0);
-                    connectionJson.set("connected_devices", Json.array(0));
-                    List<ConnectionProtocol> protocols;
-                    try {
-                        protocols = dbapiHandler.fetchDiscoveryProtocols();
-                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
-                        logger.error("Could not fetch discovery protocols", e);
-                        throw new RuntimeException(e);
-                    }
-
-                    // Fetch the password from the base connection if needed
-                    if (baseConnectionIdJson != null && baseConnectionIdJson.isNumber()) {
-                        try {
-                            Connection baseConnection = dbapiHandler.fetchConnections(List.of(baseConnectionIdJson.asInteger()), protocols).get(0);
-                            if (!connectionJson.has("read_only_connection_data")) {
-                                connectionJson.set("read_only_connection_data", Json.object());
-                            }
-                            Json otherDataJson = connectionJson.get("read_only_other_data");
-                            switch (baseConnection.getProtocol()) {
-                                case SNMPv3:
-                                    if (!connectionJson.has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
-                                        connectionJson.set(SNMPv3ConnectionField.PASSWORD.dbapiName(), ((SNMPv3Connection) baseConnection).getPassword());
-                                    }
-                                    if (!otherDataJson.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
-                                        otherDataJson.set(SNMPv3ConnectionField.PASSPHRASE.dbapiName(), ((SNMPv3Connection) baseConnection).getPassphrase());
-                                    }
-                                    break;
-                                case RemotePowershell:
-                                    if (!connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
-                                        connectionJson.set(RemotePowershellConnectionField.PASSWORD.dbapiName(), ((RemotePowershellConnection) baseConnection).getPassword());
-                                    }
-                                    break;
-                                case SSH:
-                                    if (!connectionJson.has(SshConnectionField.PASSWORD.dbapiName())) {
-                                        connectionJson.set(SshConnectionField.PASSWORD.dbapiName(), ((SshConnection) baseConnection).getPassword());
-                                    }
-                                    if (!otherDataJson.has(SshConnectionField.PASSPHRASE.dbapiName())) {
-                                        otherDataJson.set(SshConnectionField.PASSPHRASE.dbapiName(), ((SshConnection) baseConnection).getPassphrase());
-                                    }
-                                    if (!otherDataJson.has(SshConnectionField.PRIVATE_KEY.dbapiName())) {
-                                        otherDataJson.set(SshConnectionField.PRIVATE_KEY.dbapiName(), ((SshConnection) baseConnection).getPrivateKey());
-                                    }
-                                    break;
-                                case HTTP:
-                                    if (!connectionJson.has(HttpConnectionField.PASSWORD.dbapiName())) {
-                                        connectionJson.set(HttpConnectionField.PASSWORD.dbapiName(), ((HttpConnection) baseConnection).getPassword());
-                                    }
-                                    // Add the password of the base connection to the stages config
-                                    Map<Integer, HttpConnection.StageConfig> baseStagesConfig = ((HttpConnection) baseConnection).getStagesConfig();
-                                    for (Map.Entry<String, Json> stageConfig : otherDataJson.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
-                                        try {
-                                            String stagePassword = baseStagesConfig.get(Integer.parseInt(stageConfig.getKey())).getPassword();
-                                            if (stagePassword != null) {
-                                                if (!stageConfig.getValue().has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
-                                                    stageConfig.getValue().set(SNMPv3ConnectionField.PASSWORD.dbapiName(), stagePassword);
-                                                }
-                                            }
-                                        } catch (NullPointerException e) {
-                                            continue;
-                                        }
-                                    }
-                                    // Add the inputs from the base connection
-                                    Map<String, String> baseInputs = ((HttpConnection) baseConnection).getInputs();
-                                    if (!otherDataJson.has(HttpConnectionField.INPUTS.dbapiName())) {
-                                        otherDataJson.set(HttpConnectionField.INPUTS.dbapiName(), Json.object());
-                                    }
-                                    Json inputsJson = otherDataJson.get(HttpConnectionField.INPUTS.dbapiName());
-                                    baseInputs.entrySet().stream()
-                                            .filter(input -> !inputsJson.has(input.getKey()) || !inputsJson.get(input.getKey()).isString() || !inputsJson.get(input.getKey()).asString().isEmpty())
-                                            .forEach(input -> inputsJson.set(input.getKey(), input.getValue()));
-                                    break;
-                                default:
-                                    break;
-
-                            }
-                        } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException |
-                                 NullPointerException e) {
-                            logger.error("Could not fetch base connection", e);
-                            return JsonApiResponse.error("Could not fetch base connection",
-                                    Json.object("exception", e.getMessage())
-                            ).toJson();
-                        }
-                    }
-
-                    Connection connection = Connection.fromDbapiJson(connectionJson, protocols);
-                    if (ipAddress == null || connection == null) {
-                        return JsonApiResponse.error("Missing required parameter device or connection",
-                                Json.object("exception", "Missing parameter device or connection, of type object")
-                        ).toJson();
-                    } else {
-                        Device device = Device.fromIpAddress(ipAddress);
-                        device.setConnections(List.of(connection));
-                        return scanApiHandler.testConnection(device).toJson();
-                    }
-                },
-                new JsonCmdHelp().setDesc("Test if a new connection is valid")
-                        .setParam("ip_address", "The IP address to test the connection on", IJsonCmdHelp.STR)
-                        .setParam("connection", "The connection to test", IJsonCmdHelp.JSON)
-                        .setParam("base_connection_id", "The id of the base connection to fetch the password from", IJsonCmdHelp.INT)
-                        .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
-                                "where result contains \"true\" (as a String) if the connection is valid," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
-        );
+//        addCmd("test_new_connection", params -> {
+//                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
+//                    Json connectionJson = params.get("connection");
+//                    Json baseConnectionIdJson = params.get("base_connection_id");
+//
+//                    connectionJson.set("id", 0);
+//                    connectionJson.set("connected_devices", Json.array(0));
+//                    List<ConnectionProtocol> protocols;
+//                    try {
+//                        protocols = dbapiHandler.fetchDiscoveryProtocols();
+//                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
+//                        logger.error("Could not fetch discovery protocols", e);
+//                        throw new RuntimeException(e);
+//                    }
+//
+//                    // Fetch the password from the base connection if needed
+//                    if (baseConnectionIdJson != null && baseConnectionIdJson.isNumber()) {
+//                        try {
+//                            Connection baseConnection = dbapiHandler.fetchConnections(List.of(baseConnectionIdJson.asInteger()), protocols).get(0);
+//                            if (!connectionJson.has("read_only_connection_data")) {
+//                                connectionJson.set("read_only_connection_data", Json.object());
+//                            }
+//                            Json otherDataJson = connectionJson.get("read_only_other_data");
+//                            switch (baseConnection.getProtocol()) {
+//                                case SNMPv3:
+//                                    if (!connectionJson.has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
+//                                        connectionJson.set(SNMPv3ConnectionField.PASSWORD.dbapiName(), ((SNMPv3Connection) baseConnection).getPassword());
+//                                    }
+//                                    if (!otherDataJson.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
+//                                        otherDataJson.set(SNMPv3ConnectionField.PASSPHRASE.dbapiName(), ((SNMPv3Connection) baseConnection).getPassphrase());
+//                                    }
+//                                    break;
+//                                case RemotePowershell:
+//                                    if (!connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
+//                                        connectionJson.set(RemotePowershellConnectionField.PASSWORD.dbapiName(), ((RemotePowershellConnection) baseConnection).getPassword());
+//                                    }
+//                                    break;
+//                                case SSH:
+//                                    if (!connectionJson.has(SshConnectionField.PASSWORD.dbapiName())) {
+//                                        connectionJson.set(SshConnectionField.PASSWORD.dbapiName(), ((SshConnection) baseConnection).getPassword());
+//                                    }
+//                                    if (!otherDataJson.has(SshConnectionField.PASSPHRASE.dbapiName())) {
+//                                        otherDataJson.set(SshConnectionField.PASSPHRASE.dbapiName(), ((SshConnection) baseConnection).getPassphrase());
+//                                    }
+//                                    if (!otherDataJson.has(SshConnectionField.PRIVATE_KEY.dbapiName())) {
+//                                        otherDataJson.set(SshConnectionField.PRIVATE_KEY.dbapiName(), ((SshConnection) baseConnection).getPrivateKey());
+//                                    }
+//                                    break;
+//                                case HTTP:
+//                                    if (!connectionJson.has(HttpConnectionField.PASSWORD.dbapiName())) {
+//                                        connectionJson.set(HttpConnectionField.PASSWORD.dbapiName(), ((HttpConnection) baseConnection).getPassword());
+//                                    }
+//                                    // Add the password of the base connection to the stages config
+//                                    Map<Integer, HttpConnection.StageConfig> baseStagesConfig = ((HttpConnection) baseConnection).getStagesConfig();
+//                                    for (Map.Entry<String, Json> stageConfig : otherDataJson.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
+//                                        try {
+//                                            String stagePassword = baseStagesConfig.get(Integer.parseInt(stageConfig.getKey())).getPassword();
+//                                            if (stagePassword != null) {
+//                                                if (!stageConfig.getValue().has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
+//                                                    stageConfig.getValue().set(SNMPv3ConnectionField.PASSWORD.dbapiName(), stagePassword);
+//                                                }
+//                                            }
+//                                        } catch (NullPointerException e) {
+//                                            continue;
+//                                        }
+//                                    }
+//                                    // Add the inputs from the base connection
+//                                    Map<String, String> baseInputs = ((HttpConnection) baseConnection).getInputs();
+//                                    if (!otherDataJson.has(HttpConnectionField.INPUTS.dbapiName())) {
+//                                        otherDataJson.set(HttpConnectionField.INPUTS.dbapiName(), Json.object());
+//                                    }
+//                                    Json inputsJson = otherDataJson.get(HttpConnectionField.INPUTS.dbapiName());
+//                                    baseInputs.entrySet().stream()
+//                                            .filter(input -> !inputsJson.has(input.getKey()) || !inputsJson.get(input.getKey()).isString() || !inputsJson.get(input.getKey()).asString().isEmpty())
+//                                            .forEach(input -> inputsJson.set(input.getKey(), input.getValue()));
+//                                    break;
+//                                default:
+//                                    break;
+//
+//                            }
+//                        } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException |
+//                                 NullPointerException e) {
+//                            logger.error("Could not fetch base connection", e);
+//                            return JsonApiResponse.error("Could not fetch base connection",
+//                                    Json.object("exception", e.getMessage())
+//                            ).toJson();
+//                        }
+//                    }
+//
+//                    Connection connection = Connection.fromDbapiJson(connectionJson, protocols);
+//                    if (ipAddress == null || connection == null) {
+//                        return JsonApiResponse.error("Missing required parameter device or connection",
+//                                Json.object("exception", "Missing parameter device or connection, of type object")
+//                        ).toJson();
+//                    } else {
+//                        Device device = Device.fromIpAddress(ipAddress);
+//                        device.setConnections(List.of(connection));
+//                        return scanApiHandler.testConnection(device).toJson();
+//                    }
+//                },
+//                new JsonCmdHelp().setDesc("Test if a new connection is valid")
+//                        .setParam("ip_address", "The IP address to test the connection on", IJsonCmdHelp.STR)
+//                        .setParam("connection", "The connection to test", IJsonCmdHelp.JSON)
+//                        .setParam("base_connection_id", "The id of the base connection to fetch the password from", IJsonCmdHelp.INT)
+//                        .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
+//                                "where result contains \"true\" (as a String) if the connection is valid," +
+//                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+//                        .setStatus(IJsonCmdHelp.STATUS_OK)
+//        );
         addCmd("fetch_http_connection_stage", params -> {
                     String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
                     String port = JsonUtil.getStringFromJson(params, "port", null);
@@ -621,109 +621,123 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_http_template", params -> {
-                    String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);
-                    Integer connectionId = null;
-                    if (params.has("connection_id")) {
-                        Json connectionIdJson = params.get("connection_id");
-                        if (connectionIdJson.isNumber()) {
-                            connectionId = connectionIdJson.asInteger();
-                        } else if (connectionIdJson.isString()) {
-                            connectionId = Integer.parseInt(connectionIdJson.asString());
-                        }
+//                region -- Get Body params from the request
+                String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);
+                Integer connectionId = null;
+                if (params.has("connection_id")) {
+                    Json connectionIdJson = params.get("connection_id");
+                    if (connectionIdJson.isNumber()) {
+                        connectionId = connectionIdJson.asInteger();
+                    } else if (connectionIdJson.isString()) {
+                        connectionId = Integer.parseInt(connectionIdJson.asString());
                     }
-                    String templateId = JsonUtil.getStringFromJson(params, "template_uuid", null);
-                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
-                    Json connectionJson = params.get("connection");
-                    Json templateJson = params.get("template");
+                }
+                String templateId = JsonUtil.getStringFromJson(params, "template_uuid", null);
+                String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
+                Json connectionJson = params.get("connection");
+                Json templateJson = params.get("template");
+//                endregion -- Get Body params
 
-                    EntityHttpConnection entityHttpConnection = null;
-                    Device device = null;
-                    Connection connection = null;
-                    List<ConnectionProtocol> protocols;
-                    try {
-                        protocols = dbapiHandler.fetchDiscoveryProtocols();
-                    } catch (Exception e) {
-                        logger.error("Could not fetch discovery protocols", e);
-                        return JsonApiResponse.error("Could not fetch discovery protocols from DB-API",
-                                Json.object("exception", e.getMessage())
-                        ).toJson();
-                    }
+                // region -- Get Connection Template & Connection Obj (create from data or get by id)
 
-                    if (connectionJson != null) {
-                        connectionJson.set("id", connectionId != null ? connectionId : 0);
-                        connectionJson.set("connected_devices", Json.array(deviceId != null ? deviceId : 0));
-                        // If the template is provided, use it instead of existing discovery protocols
-                        if (templateJson != null) {
-                            protocols = List.of(ConnectionProtocol.fromTemplateId(templateJson.has("id") ? templateJson.get("id").asString() : null));
-                            connectionJson.set("discovery_protocol", protocols.get(0).getId());
-                        }
-                        connection = Connection.fromDbapiJson(connectionJson, protocols);
-                    } else if (connectionId != null) {
-                        try {
-                            List<Connection> connections = dbapiHandler.fetchConnections(List.of(connectionId), protocols);
-                            if (!connections.isEmpty()) {
-                                connection = connections.get(0);
-                            }
-                        } catch (Exception e) {
-                            logger.error("Could not fetch connection from DB-API", e);
-                            return JsonApiResponse.error("Could not fetch connection from DB-API",
-                                    Json.object("exception", e.getMessage())
-                            ).toJson();
-                        }
-                    } else {
-                        return JsonApiResponse.error("Missing required parameter connection or connection_id",
-                                Json.object("exception", "Missing parameter connection or connection_id, of type object or int")
-                        ).toJson();
-                    }
+                // region -- Fetch All discovery protocols (containing the HttpTemplate details from dbapi)
+                EntityHttpConnection entityHttpConnection = null;   // Connection Template
+                Device device = null;
+                Connection connection = null;           // the connection instance from the EntityHttpConnection
+                List<ConnectionProtocol> dbapiDiscoveryProtocols;
+                try {
+                    dbapiDiscoveryProtocols = dbapiHandler.fetchDiscoveryProtocols();
+                } catch (Exception e) {
+                    logger.error("Could not fetch discovery protocols", e);
+                    return JsonApiResponse.error("Could not fetch discovery protocols from DB-API",
+                            Json.object("exception", e.getMessage())
+                    ).toJson();
+                }
+                // endregion -- Fetch All discovery protocols (containing the HttpTemplate details from dbapi)
 
-                    if (ipAddress != null && connection != null) {
-                        device = Device.fromIpAddress(ipAddress).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
-                        device.setConnections(List.of(connection));
-                    } else if (deviceId != null && connection != null) {
-                        try {
-                            List<Device> devices = dbapiHandler.fetchDevices(List.of(deviceId));
-                            if (!devices.isEmpty()) {
-                                device = devices.get(0).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
-                                device.setConnections(List.of(connection));
-                            }
-                        } catch (Exception e) {
-                            logger.error("Could not fetch device from DB-API", e);
-                            return JsonApiResponse.error("Could not fetch device from DB-API",
-                                    Json.object("exception", e.getMessage())
-                            ).toJson();
-                        }
-                    }
+                // region -- Get Connection by id (from dbapi) Or create Connection from jsonData
+                if (connectionJson != null) {
+                    connectionJson.set("id", connectionId != null ? connectionId : 0);
+                    connectionJson.set("connected_devices", Json.array(deviceId != null ? deviceId : 0));
+                    // If the template is provided, use it instead of existing discovery protocols
                     if (templateJson != null) {
-                        entityHttpConnection = EntityHttpConnection.fromDbapiJson(templateJson);
+                        // Template Does not necessarily exist in dbapi, create a list of fake discovery protocols (len = 1 in this case)
+                        dbapiDiscoveryProtocols = List.of(ConnectionProtocol.createFakeConnectionProtocol(templateJson.has("id") ? templateJson.get("id").asString() : null));
+                        connectionJson.set("discovery_protocol", dbapiDiscoveryProtocols.get(0).getId());
                     }
-                    EntityHttpConnectionTestResult result = null;
+                    connection = Connection.fromDbapiJson(connectionJson, dbapiDiscoveryProtocols);
+                } else if (connectionId != null) {
                     try {
-                        result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
+                        List<Connection> connections = dbapiHandler.fetchConnections(List.of(connectionId), dbapiDiscoveryProtocols);
+                        if (!connections.isEmpty()) {
+                            connection = connections.get(0);
+                        }
                     } catch (Exception e) {
-                        logger.error("Could not test entity HTTP connection", e);
-                        return JsonApiResponse.error("Could not test entity HTTP connection",
+                        logger.error("Could not fetch connection from DB-API", e);
+                        return JsonApiResponse.error("Could not fetch connection from DB-API",
                                 Json.object("exception", e.getMessage())
                         ).toJson();
                     }
-                    if (result == null) {
-                        return JsonApiResponse.error("Could not test entity HTTP connection",
-                                Json.object("exception", "Could not test entity HTTP connection")
+                } else {
+                    return JsonApiResponse.error("Missing required parameter connection or connection_id",
+                            Json.object("exception", "Missing parameter connection or connection_id, of type object or int")
+                    ).toJson();
+                }
+                // endregion -- Get Connection by id Or create Connection from jsonData
+
+                // region -- assign connections to the device
+                if (ipAddress != null && connection != null) {
+                    device = Device.fromIpAddress(ipAddress).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
+                    device.setConnections(List.of(connection));
+                } else if (deviceId != null && connection != null) {
+                    try {
+                        List<Device> devices = dbapiHandler.fetchDevices(List.of(deviceId));
+                        if (!devices.isEmpty()) {
+                            device = devices.get(0).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
+                            device.setConnections(List.of(connection));
+                        }
+                    } catch (Exception e) {
+                        logger.error("Could not fetch device from DB-API", e);
+                        return JsonApiResponse.error("Could not fetch device from DB-API",
+                                Json.object("exception", e.getMessage())
                         ).toJson();
-                    } else {
-                        return JsonApiResponse.result(result.serializeForDbapi()).toJson();
                     }
-                },
-                new JsonCmdHelp().setDesc("Test an HTTP template")
-                        .setParam("ip_address", "The IP address to test the connection on - optional", IJsonCmdHelp.STR)
-                        .setParam("device_uuid", "The uuid of the device to test the connection on - optional", IJsonCmdHelp.STR)
-                        .setParam("connection_id", "The id of the connection to test - optional", IJsonCmdHelp.INT)
-                        .setParam("connection", "The connection to test - optional", IJsonCmdHelp.JSON)
-                        .setParam("template_uuid", "The uuid of the template to test", IJsonCmdHelp.STR)
-                        .setParam("template", "The template to test - optional", IJsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
-                        "where result contains <code>{ \"success\": true }</code> if the template is valid," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
-                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
+                }
+                // endregion -- assign connections to the device
+
+                if (templateJson != null) {
+                    entityHttpConnection = EntityHttpConnection.fromDbapiJson(templateJson);
+                }
+//              endregion -- Get Connection Template & Connection Obj (create from data or get by id)
+
+                EntityHttpConnectionTestResult result = null;
+                try {
+                    result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
+                } catch (Exception e) {
+                    logger.error("Could not test entity HTTP connection", e);
+                    return JsonApiResponse.error("Could not test entity HTTP connection",
+                            Json.object("exception", e.getMessage())
+                    ).toJson();
+                }
+                if (result == null) {
+                    return JsonApiResponse.error("Could not test entity HTTP connection",
+                            Json.object("exception", "Could not test entity HTTP connection")
+                    ).toJson();
+                } else {
+                    return JsonApiResponse.result(result.serializeForDbapi()).toJson();
+                }
+            },
+            new JsonCmdHelp().setDesc("Test an HTTP template")
+                    .setParam("ip_address", "The IP address to test the connection on - optional", IJsonCmdHelp.STR)
+                    .setParam("device_uuid", "The uuid of the device to test the connection on - optional", IJsonCmdHelp.STR)
+                    .setParam("connection_id", "The id of the connection to test - optional", IJsonCmdHelp.INT)
+                    .setParam("connection", "The connection to test - optional", IJsonCmdHelp.JSON)
+                    .setParam("template_uuid", "The uuid of the template to test", IJsonCmdHelp.STR)
+                    .setParam("template", "The template to test - optional", IJsonCmdHelp.JSON)
+                    .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
+                    "where result contains <code>{ \"success\": true }</code> if the template is valid," +
+                    "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
+            JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_discovery_cron", params -> {
                     try {

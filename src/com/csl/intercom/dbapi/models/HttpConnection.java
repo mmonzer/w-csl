@@ -41,8 +41,8 @@ public class HttpConnection extends Connection {
         this.password = password;
         this.realm = realm;
         this.token = token;
-        this.stagesConfig = stagesConfig;
         this.inputs = inputs;
+        this.stagesConfig = stagesConfig;
     }
 
     /**
@@ -198,11 +198,11 @@ public class HttpConnection extends Connection {
 
     public static class StageConfig {
         private Integer port = null;
-        private EntityHttpConnectionStage.HttpAuthenticationMethod authMethod = null;
-        private String username = null;
-        private String password = null;
-        private String token = null;
-        private String realm = null;
+//        private EntityHttpConnectionStage.HttpAuthenticationMethod authMethod = null;
+//        private String username = null;
+//        private String password = null;
+//        private String token = null;
+//        private String realm = null;
         private Map<String, String> inputs = null;
 
         public Json serializeForScanner() {
@@ -215,11 +215,11 @@ public class HttpConnection extends Connection {
             }
 
             serialized.set(HttpConnectionField.PORT.scanName(), this.port);
-            serialized.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authMethod.name());
-            serialized.set(HttpConnectionField.USERNAME.scanName(), this.username);
-            serialized.set(HttpConnectionField.PASSWORD.scanName(), this.password);
-            serialized.set(HttpConnectionField.TOKEN.scanName(), this.token);
-            serialized.set(HttpConnectionField.REALM.scanName(), this.realm);
+//            serialized.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authMethod.name());
+//            serialized.set(HttpConnectionField.USERNAME.scanName(), this.username);
+//            serialized.set(HttpConnectionField.PASSWORD.scanName(), this.password);
+//            serialized.set(HttpConnectionField.TOKEN.scanName(), this.token);
+//            serialized.set(HttpConnectionField.REALM.scanName(), this.realm);
 
             return serialized;
         }
@@ -229,19 +229,19 @@ public class HttpConnection extends Connection {
             if (json.has(HttpConnectionField.PORT.dbapiName()) && json.get(HttpConnectionField.PORT.dbapiName()).isNumber()) {
                 stageConfig.port = json.get(HttpConnectionField.PORT.dbapiName()).asInteger();
             }
-            stageConfig.authMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, HttpConnectionField.AUTHENTICATION_METHOD.dbapiName(), EntityHttpConnectionStage.HttpAuthenticationMethod.NONE.name()));
-            if (json.has(HttpConnectionField.USERNAME.dbapiName()) && json.get(HttpConnectionField.USERNAME.dbapiName()).isString()) {
-                stageConfig.username = json.get(HttpConnectionField.USERNAME.dbapiName()).asString();
-            }
-            if (json.has(HttpConnectionField.PASSWORD.dbapiName()) && json.get(HttpConnectionField.PASSWORD.dbapiName()).isString()) {
-                stageConfig.password = json.get(HttpConnectionField.PASSWORD.dbapiName()).asString();
-            }
-            if (json.has(HttpConnectionField.TOKEN.dbapiName()) && json.get(HttpConnectionField.TOKEN.dbapiName()).isString()) {
-                stageConfig.token = json.get(HttpConnectionField.TOKEN.dbapiName()).asString();
-            }
-            if (json.has(HttpConnectionField.REALM.dbapiName()) && json.get(HttpConnectionField.REALM.dbapiName()).isString()) {
-                stageConfig.realm = json.get(HttpConnectionField.REALM.dbapiName()).asString();
-            }
+//            stageConfig.authMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, HttpConnectionField.AUTHENTICATION_METHOD.dbapiName(), EntityHttpConnectionStage.HttpAuthenticationMethod.NONE.name()));
+//            if (json.has(HttpConnectionField.USERNAME.dbapiName()) && json.get(HttpConnectionField.USERNAME.dbapiName()).isString()) {
+//                stageConfig.username = json.get(HttpConnectionField.USERNAME.dbapiName()).asString();
+//            }
+//            if (json.has(HttpConnectionField.PASSWORD.dbapiName()) && json.get(HttpConnectionField.PASSWORD.dbapiName()).isString()) {
+//                stageConfig.password = json.get(HttpConnectionField.PASSWORD.dbapiName()).asString();
+//            }
+//            if (json.has(HttpConnectionField.TOKEN.dbapiName()) && json.get(HttpConnectionField.TOKEN.dbapiName()).isString()) {
+//                stageConfig.token = json.get(HttpConnectionField.TOKEN.dbapiName()).asString();
+//            }
+//            if (json.has(HttpConnectionField.REALM.dbapiName()) && json.get(HttpConnectionField.REALM.dbapiName()).isString()) {
+//                stageConfig.realm = json.get(HttpConnectionField.REALM.dbapiName()).asString();
+//            }
 
             stageConfig.inputs = new HashMap<>();
             if (json.has(HttpConnectionField.INPUTS.dbapiName())) {
@@ -255,16 +255,16 @@ public class HttpConnection extends Connection {
             return port;
         }
 
-        public String getUsername() {
-            return username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public String getToken() {
-            return token;
-        }
+//        public String getUsername() {
+//            return username;
+//        }
+//
+//        public String getPassword() {
+//            return password;
+//        }
+//
+//        public String getToken() {
+//            return token;
+//        }
     }
 }

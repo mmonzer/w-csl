@@ -3,7 +3,6 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 
 import java.util.List;
 
@@ -103,7 +102,7 @@ public class ConnectionProtocol {
      * @param templateId The template id of the protocol to create.
      * @return A fake protocol.
      */
-    public static ConnectionProtocol fromTemplateId(String templateId) {
+    public static ConnectionProtocol createFakeConnectionProtocol(String templateId) {
         return new ConnectionProtocol(0, "Mock protocol", "Mock protocol", 0, templateId, true);
     }
 

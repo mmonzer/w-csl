@@ -283,10 +283,12 @@ public class AutoCryptLogic {
     public JsonApiResponse updateRole(String name, String description, String certificateAuthorityId, Json body, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.updateRole(name, body, params);
         // TODO : change this
-        params.at(NAME, name);
-        replaceArrayByFirstElementIfExists(responseFromModule.getResult(), COUNTRY);
-        replaceArrayByFirstElementIfExists(responseFromModule.getResult(), ORGANIZATION);
-        replaceArrayByFirstElementIfExists(responseFromModule.getResult(), LOCALITY);
+        if (responseFromModule.isSuccess()) {
+            params.at(NAME, name);
+            replaceArrayByFirstElementIfExists(responseFromModule.getResult(), COUNTRY);
+            replaceArrayByFirstElementIfExists(responseFromModule.getResult(), ORGANIZATION);
+            replaceArrayByFirstElementIfExists(responseFromModule.getResult(), LOCALITY);
+        }
         return sendToDbApiIfSaveToDb(dbHandler::updateRole, name, description, certificateAuthorityId, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(mergerJson(responseFromModule.getResult(), body), params)));
     }
@@ -373,7 +375,6 @@ public class AutoCryptLogic {
         JsonApiResponse responseFromModule = moduleHandler.revokeCertificate(serialNumber, params);
         return sendToDbApiIfSaveToDb(dbHandler::revokeCertificate, serialNumber, responseFromModule);
     }
-
 
     /**
      * Delete all the revoked certificates

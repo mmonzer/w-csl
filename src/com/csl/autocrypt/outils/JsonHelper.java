@@ -2,6 +2,11 @@ package com.csl.autocrypt.outils;
 
 import com.ucsl.json.Json;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import static com.csl.autocrypt.enums.AutocryptConstants.COUNTRY;
 
 /**
@@ -60,6 +65,25 @@ public class JsonHelper {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
+    public static String extractValueStringOrNull(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isString()) {
+            String str = obj.get(key).asString();
+            obj.delAt(key);
+            return str;
+        } else if (obj.has(key) && obj.get(key).isNull()) {
+            obj.delAt(key);
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Checks if a key exists in a json and return its value if it is a String
+     *
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     */
     public static String getValueStringOrNull(Json obj, String key) {
         if (obj.has(key) && obj.get(key).isString()) {
             return obj.get(key).asString();
@@ -97,6 +121,52 @@ public class JsonHelper {
     }
 
     /**
+     * Checks if a key exists in a json and return its value if it is a Integer
+     *
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     */
+    public static Integer getValueIntegerOrNull(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isNumber()) {
+            return obj.get(key).asInteger();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Checks if a key exists in a json and return its value if it is a boolean
+     *
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     */
+    public static Boolean getValueBooleanOrNull(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isBoolean()) {
+            return obj.get(key).asBoolean();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Checks if a key exists in a json and return its value if it is a list of strings
+     *
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     */
+    public static List<String> getValueListStrOrNull(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isArray()) {
+            List<String> list = new ArrayList<>();
+            for (Json e : obj.get(key).asJsonList()) {
+                if (e.isString()) {list.add(e.asString());}
+            }
+            return list;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Merges two json objects into a new object json
      *
      * @param obj1 the json object to merge (priority)
@@ -124,8 +194,43 @@ public class JsonHelper {
      * @param key key to replace
      */
     public static void replaceArrayByFirstElementIfExists(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isArray() && !obj.get(key).asJsonList().isEmpty()) {
+        if (obj.has(key) && obj.get(key)!=null && obj.get(key).isArray() && !obj.get(key).asJsonList().isEmpty()) {
             obj.set(key, obj.get(key).asJsonList().get(0));
         }
+    }
+
+    /**
+     * Adds value string if not null
+     */
+    public static void addIfNotNull(Json obj, String key, String val) {
+        if (val!=null) {obj.set(key, val);}
+    }
+
+    /**
+     * Adds value float if not null
+     */
+    public static void addIfNotNull(Json obj, String key, Float val) {
+        if (val!=null) {obj.set(key, val);}
+    }
+
+    /**
+     * Adds value integer if not null
+     */
+    public static void addIfNotNull(Json obj, String key, Integer val) {
+        if (val!=null) {obj.set(key, val);}
+    }
+
+    /**
+     * Adds value boolean if not null
+     */
+    public static void addIfNotNull(Json obj, String key, Boolean val) {
+        if (val!=null) {obj.set(key, val);}
+    }
+
+    /**
+     * Adds value list string if not null
+     */
+    public static void addIfNotNull(Json obj, String key, List<String> val) {
+        if (val!=null) {obj.set(key, val);}
     }
 }

@@ -202,21 +202,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json params = Json.object();
         String name = getValueString(body, ISSUER_NAME);
         transferValueString(body, params, PATH);
-        String description = getValueStringOrNull(body, DESCRIPTION);
-        body.delAt(ID);
-        body.delAt(VAULT_ID);
-        body.delAt(TTL_UNIT);
-
-        if ((!body.has(ISSUER_REF) || !body.get(ISSUER_REF).isString()) && (!body.has(ISSUER_ID) || !body.get(ISSUER_ID).isString())) {
-            return errorVariableNotFound("issuer_ref/issuer_id");
-        }
-        String issuerRef = getValueStringOrNull(body, ISSUER_REF);
-        body.delAt(ISSUER_REF);
-        if (issuerRef==null) {
-            System.out.println("NEED CHANGE : to issuer_ref");
-            issuerRef = getValueStringOrNull(body, ISSUER_ID);
-            body.delAt(ISSUER_ID);
-        }
+        String description = extractValueStringOrNull(body, DESCRIPTION);
+        if (body.has(ID)) {body.delAt(ID);}
+        if (body.has(VAULT_ID)) {body.delAt(VAULT_ID);}
+        if (body.has(TTL_UNIT)) {body.delAt(TTL_UNIT);}
+        String issuerRef = extractValueString(body, ISSUER_REF);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -330,7 +320,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json params = Json.object();
         String name = getValueString(body, NAME);
         body.set(NAME, name.replace(" ","-"));
-        String description = getValueStringOrNull(body, DESCRIPTION);
+        String description = extractValueStringOrNull(body, DESCRIPTION);
         transferValueString(body, params, PATH);
         Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
 
@@ -387,10 +377,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String name = extractValueString(body, NAME);
-        body.delAt(ID);
+        if (body.has(ID)) {body.delAt(ID);}
         Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
-        String description = getValueStringOrNull(body, DESCRIPTION);
+        String description = extractValueStringOrNull(body, DESCRIPTION);
         transferValueString(body, params, PATH);
+        if (body.has(CERTIFICATE_AUTHORITY)) {body.delAt(CERTIFICATE_AUTHORITY);}
+        if (body.has(VAULT_ID)) {body.delAt(VAULT_ID);}
+        if (body.has(CREATED_AT)) {body.delAt(CREATED_AT);}
+        if (body.has(UPDATED_AT)) {body.delAt(UPDATED_AT);}
 
         // endregion -- Verify required body keys and extract key values
 
@@ -444,7 +438,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         String name = extractValueString(body, NAME);
-        String description = getValueStringOrNull(body, DESCRIPTION);
+        String description = extractValueStringOrNull(body, DESCRIPTION);
         Integer vaultRoleId = extractValueInteger(body, VAULT_ROLE_ID);
         Json params = Json.object();
 
@@ -549,7 +543,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         String name = getValueString(body, COMMON_NAME);
         getValueString(body, TTL);
-        String description = getValueStringOrNull(body, DESCRIPTION);
+        String description = extractValueStringOrNull(body, DESCRIPTION);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -565,7 +559,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String description = getValueStringOrNull(body, DESCRIPTION);
+        String description = extractValueStringOrNull(body, DESCRIPTION);
         getValueString(body, TYPE);
         getValueString(body, TTL);
         String name = getValueString(body, COMMON_NAME);

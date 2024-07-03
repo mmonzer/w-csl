@@ -222,7 +222,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse generateIntermediateCA(String issuerRef, String name, String description, Json body) {
         Json input = Json.object();
-        input.at(NAME, name);
+        input.at(COMMON_NAME, name);
         input.at(DESCRIPTION, description);
         input.at(ISSUER_REF, issuerRef);
         input.at(PATH, name);

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAutoCryptModule_Issuer extends TestConfig {
 
@@ -25,7 +25,7 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
     public void setUp() {
         // Mock the module
         wireMockServer = new WireMockServer(PORT_MODULE);
-        WireMock.configureFor(configObj.get("auto_crypt").get("ip").asString(), PORT_MODULE);
+        WireMock.configureFor(configObj.get("autocrypt").get("ip").asString(), PORT_MODULE);
         wireMockServer.start();
         // This ensures that we don't touch the DB
         service = new AutoCryptService();
@@ -249,7 +249,7 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
     }
 
     @Test
-    public void testListIssuers_normalUseWithOtherParams() throws Exception {
+    public void testListIssuers_normalUseWithOtherParams() {
         // Define expected input/output of the mocked module
 
         Json returnOutput = Json.array();
@@ -489,15 +489,16 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
         // Define expected input/output of the mocked module
 
         Json expectedInput = Json.object();
-        expectedInput.at("path", path);
+        expectedInput.at("allow_any_name", true);
         Json returnOutput = Json.object();
-        returnOutput.at("ttl", "24h");
+        returnOutput.at("issuer_name", name);
+        returnOutput.at("allow_any_name", true);
 
         // Define mocked service behavior
         MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/" + issuerRef))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
-                .withRequestBody((StringValuePattern) new EqualToPattern("{\"ttl\":\"24h\"}"))
+                .withRequestBody((StringValuePattern) new EqualToPattern(returnOutput.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -509,17 +510,25 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         sentParams.at("id", id);
-        sentParams.at("name", name);
+        sentParams.at("issuer_name", name);
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
-        sentParams.at("ttl", "24h");
+        sentParams.at("ttl", ttl);
+        sentParams.at("allow_any_name", true);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
-        recvOutput.at("result", returnOutput);
+        Json result= Json.object();
+        result.set("path", path);
+        result.set("issuer_ref", issuerRef);
+        result.set("issuer_name", name);
+        result.set("allow_any_name", true);
+        result.set("type", type);
+        result.set("ttl", ttl);
+        recvOutput.at("result", result);
 
         Json response = service.updateIssuerInfo(sentParams);
 
@@ -678,21 +687,19 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("id", id);
         sentParams.at("issuer_ref", issuerRef);
-        sentParams.at("name", name);
+        sentParams.at("issuer_name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "path is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "path";
 
-        Json response = service.updateIssuerInfo(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.updateIssuerInfo(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 
     @Test
@@ -707,79 +714,19 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("id", id);
         sentParams.at("path", path);
-        sentParams.at("name", name);
+        sentParams.at("issuer_name", name);
         Json sentInput = Json.object();
         sentInput.at("cmd", "update_issuer_info");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "issuer_ref is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "issuer_ref";
 
-        Json response = service.updateIssuerInfo(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testUpdateIssuer_withoutDbapiName() throws Exception {
-        // Define expected input/output of the mocked module
-
-        // Define mocked service behavior
-        // should not arrive to service
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("id", id);
-        sentParams.at("path", path);
-        sentParams.at("issuer_ref", issuerRef);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "name is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.updateIssuerInfo(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testUpdateIssuer_withoutDbapiId() throws Exception {
-        // Define expected input/output of the mocked module
-
-        // Define mocked service behavior
-        // should not arrive to service
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("name", name);
-        sentParams.at("path", path);
-        sentParams.at("issuer_ref", issuerRef);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "id is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.updateIssuerInfo(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.updateIssuerInfo(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 //
 //    @Test
@@ -868,16 +815,14 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "path is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "path";
 
-        Json response = service.deleteIssuer(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.deleteIssuer(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 
     @Test
@@ -896,71 +841,13 @@ public class TestAutoCryptModule_Issuer extends TestConfig {
         sentInput.at("cmd", "delete_issuer_info");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "issuer_ref is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "issuer_ref";
 
-        Json response = service.deleteIssuer(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testDeleteIssuer_withoutDbapiName() throws Exception {
-        // Define expected input/output of the mocked module
-
-        // Define mocked service behavior
-        // should not arrive to service
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("id", id);
-        sentParams.at("path", path);
-        sentParams.at("issuer_ref", issuerRef);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_issuer_info");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "name is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.deleteIssuer(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testDeleteIssuer_withoutDbapiId() throws Exception {
-        // Define expected input/output of the mocked module
-
-        // Define mocked service behavior
-        // should not arrive to service
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-        sentParams.at("name", name);
-        sentParams.at("path", path);
-        sentParams.at("issuer_ref", issuerRef);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_issuer_info");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "id is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.deleteIssuer(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.deleteIssuer(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 }

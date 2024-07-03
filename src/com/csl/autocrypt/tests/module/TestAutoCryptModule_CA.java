@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestAutoCryptModule_CA extends TestConfig {
 
@@ -47,31 +48,49 @@ public class TestAutoCryptModule_CA extends TestConfig {
         Json expectedBody = Json.object();
         expectedBody.at("common_name", commonName);
         expectedBody.at("ttl", ttl);
+        expectedBody.at("type", type);
         Json returnOutput = Json.object();
         returnOutput.at("common_name", commonName);
 
-        // Define mocked service behavior
+        // Define mocked service behavior creation
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-root"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
-                .withQueryParam("common_name",(StringValuePattern) new EqualToPattern(commonName))
-                .withQueryParam("ttl",(StringValuePattern) new EqualToPattern(ttl))
-                .withQueryParam("path",(StringValuePattern) new EqualToPattern(path))
+                .withRequestBody((StringValuePattern) new EqualToPattern(expectedBody.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
+                        .withBody("{\"issuer_ref\":\"issuerRef\"}")
                 );
         stubFor(x);
+
+        // Define mocked service behavior get
+        MappingBuilder y = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/issuerRef"))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path",(StringValuePattern) new EqualToPattern("pki"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"issuer_ref\":\""+issuerRef+"\"}")
+                );
+        stubFor(y);
 
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
-        sentParams.at("name", name);
-        sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
+        sentParams.at("type", type);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
+        Json result = Json.object();
+        result.set("common_name", commonName);
+        result.set("ttl", ttl);
+        result.set("type", type);
+        result.set("issuer_ref", issuerRef);
+        result.set("path", "pki");
+        result.set("ca_type", "root");
+        recvOutput.at("result", result);
 
         Json response = service.generateRootCA(sentParams);
 
@@ -80,7 +99,7 @@ public class TestAutoCryptModule_CA extends TestConfig {
     }
 
     @Test
-    public void testGenerateRoot_withoutCommonName() throws Exception {
+    public void testGenerateRoot_withoutCommonName() {
         // Define expected input/output of the mocked module
 
         // Define mocked service behavior
@@ -96,16 +115,16 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentInput.at("cmd", "generate_root_ca");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "common_name is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "common_name";
 
-        Json response = service.generateRootCA(sentParams);
+        try {
+            service.generateRootCA(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
 
         // assert behavior
-        assertEquals(recvOutput, response);
     }
 
     @Test
@@ -125,26 +144,24 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentInput.at("cmd", "generate_root_ca");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "ttl is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "ttl";
 
-        Json response = service.generateRootCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.generateRootCA(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 
     // Generate intermediate (POST)
 
     @Test
-    public void testGenerateIntermediate_withPath() throws Exception {
+    public void testGenerateIntermediate() throws Exception {
         // Define expected input/output of the mocked module
 
         Json expectedInput = Json.object();
-        expectedInput.at("path", path);
+        expectedInput.at("path", commonName);
         Json expectedBody = Json.object();
         expectedBody.at("common_name", commonName);
         expectedBody.at("ttl", ttl);
@@ -155,21 +172,31 @@ public class TestAutoCryptModule_CA extends TestConfig {
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-intermediate"))
                 .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
-                .withQueryParam("path",(StringValuePattern) new EqualToPattern(path))
+                .withQueryParam("path",(StringValuePattern) new EqualToPattern(commonName))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedBody.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
+                        .withBody("{\"issuer_ref\":\""+issuerRef+"\"}")
                 );
         stubFor(x);
+
+        // Define mocked service behavior get
+        MappingBuilder y = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/issuerRef"))
+                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withQueryParam("path",(StringValuePattern) new EqualToPattern(commonName))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"issuer_ref\":\"issuerRef\"}")
+                );
+        stubFor(y);
 
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
 
-        sentParams.at("path", path);
         sentParams.at("common_name", commonName);
-        sentParams.at("name", name);
         sentParams.at("ttl", ttl);
         sentParams.at("type", type);
         Json sentInput = Json.object();
@@ -178,44 +205,14 @@ public class TestAutoCryptModule_CA extends TestConfig {
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
-
-        Json response = service.generateIntermediateCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testGenerateIntermediate_withoutPath() throws Exception {
-        // Define expected input/output of the mocked module
-
-        Json expectedBody = Json.object();
-        expectedBody.at("common_name", commonName);
-        expectedBody.at("ttl", ttl);
-        expectedBody.at("type", type);
-        Json returnOutput = Json.object();
-        returnOutput.at("common_name", commonName);
-
-        // Define mocked service behavior
-        // should not arrive to module
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-
-        sentParams.at("common_name", commonName);
-        sentParams.at("ttl", ttl);
-        sentParams.at("name", name);
-        sentParams.at("type", type);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "path is missing from body");
-        recvOutput.at("error", error);
+        Json result = Json.object();
+        result.set("common_name", commonName);
+        result.set("ttl", ttl);
+        result.set("type", type);
+        result.set("issuer_ref", issuerRef);
+        result.set("path", commonName);
+        result.set("ca_type", "intermediate");
+        recvOutput.at("result", result);
 
         Json response = service.generateIntermediateCA(sentParams);
 
@@ -242,16 +239,14 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentInput.at("cmd", "generate_inter_ca");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "common_name is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "common_name";
 
-        Json response = service.generateIntermediateCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.generateIntermediateCA(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 
     @Test
@@ -273,16 +268,14 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentInput.at("cmd", "generate_inter_ca");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "ttl is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "ttl";
 
-        Json response = service.generateIntermediateCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.generateIntermediateCA(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 
     @Test
@@ -303,44 +296,13 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentInput.at("cmd", "generate_inter_ca");
         sentInput.at("params", sentParams);
 
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "type is missing from body");
-        recvOutput.at("error", error);
+        String missingParam = "type";
 
-        Json response = service.generateIntermediateCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
-    }
-
-    @Test
-    public void testGenerateIntermediate_withoutDbapiName() throws Exception {
-        // Define expected input/output of the mocked module
-        // Define mocked service behavior
-        // should not arrive to mocker service
-
-
-        // Define expected input/output of the api
-        Json sentParams = Json.object();
-
-        sentParams.at("path", path);
-        sentParams.at("common_name", commonName);
-        sentParams.at("ttl", ttl);
-        Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
-
-        Json recvOutput = Json.object();
-        recvOutput.at("success", false);
-        Json error = Json.object();
-        error.at("reason", "name is missing from body");
-        recvOutput.at("error", error);
-
-        Json response = service.generateIntermediateCA(sentParams);
-
-        // assert behavior
-        assertEquals(recvOutput, response);
+        try {
+            service.generateIntermediateCA(sentParams);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertEquals(missingParam, e.getMessage());
+        }
     }
 }

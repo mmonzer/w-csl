@@ -49,11 +49,39 @@ public class JsonHelper {
      * Moves the value of one object to another if exists.
      *
      * @param objOrigin the json object origin to get the value to move
-     * @param objDest the json object destination where the new value is insert (overwritten if already exists)
-     * @param key the key inside the json obj
+     * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
+     * @param key       the key inside the json obj
      */
     public static String transferValueString(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         String value = getValueString(objOrigin, key);
+        objOrigin.delAt(key);
+        objDest.set(key, value);
+        return value;
+    }
+
+    /**
+     * Moves the value of one object to another if exists.
+     *
+     * @param objOrigin the json object origin to get the value to move
+     * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
+     * @param key       the key inside the json obj
+     */
+    public static String transferValueStringOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
+        String value = getValueStringOrNull(objOrigin, key);
+        objOrigin.delAt(key);
+        objDest.set(key, value);
+        return value;
+    }
+
+    /**
+     * Moves the value of one object to another if exists.
+     *
+     * @param objOrigin the json object origin to get the value to move
+     * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
+     * @param key       the key inside the json obj
+     */
+    public static Integer transferValueIntegerOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
+        Integer value = getValueIntegerOrNull(objOrigin, key);
         objOrigin.delAt(key);
         objDest.set(key, value);
         return value;
@@ -158,7 +186,9 @@ public class JsonHelper {
         if (obj.has(key) && obj.get(key).isArray()) {
             List<String> list = new ArrayList<>();
             for (Json e : obj.get(key).asJsonList()) {
-                if (e.isString()) {list.add(e.asString());}
+                if (e.isString()) {
+                    list.add(e.asString());
+                }
             }
             return list;
         } else {
@@ -187,50 +217,31 @@ public class JsonHelper {
         return obj;
     }
 
-
     /**
      * If the field has a non-empty array, it extracts the first string and replaces the array
+     *
      * @param obj obj to replace array by first element
      * @param key key to replace
      */
     public static void replaceArrayByFirstElementIfExists(Json obj, String key) {
-        if (obj.has(key) && obj.get(key)!=null && obj.get(key).isArray() && !obj.get(key).asJsonList().isEmpty()) {
+        if (obj.has(key) && obj.get(key) != null && obj.get(key).isArray() && !obj.get(key).asJsonList().isEmpty()) {
             obj.set(key, obj.get(key).asJsonList().get(0));
         }
     }
 
     /**
-     * Adds value string if not null
+     * Drop keys if exists
+     *
+     * @param obj
+     * @param keys
      */
-    public static void addIfNotNull(Json obj, String key, String val) {
-        if (val!=null) {obj.set(key, val);}
-    }
-
-    /**
-     * Adds value float if not null
-     */
-    public static void addIfNotNull(Json obj, String key, Float val) {
-        if (val!=null) {obj.set(key, val);}
-    }
-
-    /**
-     * Adds value integer if not null
-     */
-    public static void addIfNotNull(Json obj, String key, Integer val) {
-        if (val!=null) {obj.set(key, val);}
-    }
-
-    /**
-     * Adds value boolean if not null
-     */
-    public static void addIfNotNull(Json obj, String key, Boolean val) {
-        if (val!=null) {obj.set(key, val);}
-    }
-
-    /**
-     * Adds value list string if not null
-     */
-    public static void addIfNotNull(Json obj, String key, List<String> val) {
-        if (val!=null) {obj.set(key, val);}
+    public static void drop(Json obj, String... keys) {
+        if (obj != null) {
+            for (String key : keys) {
+                if (obj.has(key)) {
+                    obj.delAt(key);
+                }
+            }
+        }
     }
 }

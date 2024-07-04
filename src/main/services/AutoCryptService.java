@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
+import com.csl.autocrypt.Dto.IssuerDto;
 import com.csl.core.CSLContext;
 import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.json.Json;
@@ -70,7 +71,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // Launch initial sync to dbapi
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
         // TODO : change initial to continuous sync
-        synchronizationSchedule.scheduleAtFixedRate(()->{manager.getMethods().initialSynchronizeDb("pki");}, 0, 300, TimeUnit.SECONDS);
+        synchronizationSchedule.scheduleAtFixedRate(() -> {
+            manager.getMethods().initialSynchronizeDb("pki");
+        }, 0, 300, TimeUnit.SECONDS);
 
         logger.info("Service autocrypt initilialized.");
         return true;
@@ -195,23 +198,62 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with the path and the issuer id
      */
+    public Json updateIssuerInfo_dto(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
+        drop(body, ID, VAULT_ID);
+        IssuerDto issuer = IssuerDto.getIssuerFrom(body);
+        issuer.check(IssuerDto.ISSUER_NAME, IssuerDto.PATH, IssuerDto.ISSUER_REF);
+
+        // endregion -- Verify required body keys and extract key values
+
+
+        return manager.getMethods().updateIssuerInfo(issuer).toJson();
+    }
+
+    /**
+     * Updates the information of the given issuer
+     *
+     * @param body parameters with the path and the issuer id
+     */
     public Json updateIssuerInfo(Json body) {
 
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
         String name = getValueString(body, ISSUER_NAME);
-        transferValueString(body, params, PATH);
+        transferValueStringOrNull(body, params, PATH);
         String description = extractValueStringOrNull(body, DESCRIPTION);
-        if (body.has(ID)) {body.delAt(ID);}
-        if (body.has(VAULT_ID)) {body.delAt(VAULT_ID);}
-        if (body.has(TTL_UNIT)) {body.delAt(TTL_UNIT);}
         String issuerRef = extractValueString(body, ISSUER_REF);
+        Json bodyBase = Json.read(body.toString());
+        Json bodyExtra = Json.object();
+        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
+        transferValueStringOrNull(bodyBase, bodyExtra, VAULT_ID);
+        transferValueIntegerOrNull(bodyBase, bodyExtra, ID);
+        transferValueStringOrNull(bodyBase, bodyExtra, TTL);
+        if (body.has(ISSUER_REF)) {bodyExtra.set(ISSUER_REF, body.get(ISSUER_REF).asString());}
 
         // endregion -- Verify required body keys and extract key values
 
+        return manager.getMethods().updateIssuerInfo(name, description, issuerRef, params, bodyBase, bodyExtra).toJson();
+    }
 
-        return manager.getMethods().updateIssuerInfo(name, description, issuerRef, body, params).toJson();
+    /**
+     * Deletes the given issuer
+     *
+     * @param body parameters with the path and the issuer id
+     */
+    public Json deleteIssuer_dto(Json body) {
+
+        // region -- Verify required body keys and extract key values
+        drop(body, ID);
+        IssuerDto issuer = IssuerDto.getIssuerFrom(body);
+        issuer.check(IssuerDto.ISSUER_REF, IssuerDto.PATH);
+
+        // endregion -- Verify required body keys and extract key values
+
+        return manager.getMethods().deleteIssuer(issuer).toJson();
     }
 
     /**
@@ -266,7 +308,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json params = Json.object();
         String name = extractValueString(body, NAME);
         params.at(PATH, PKI);
-        body.delAt(PATH);
+        drop(body, PATH);
         if (!body.has(FILE) || !body.get(FILE).isString()) {
             return JsonApiResponse.error("File was not correctly uploaded").toJson();
         }
@@ -319,7 +361,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String name = getValueString(body, NAME);
-        body.set(NAME, name.replace(" ","-"));
+        body.set(NAME, name.replace(" ", "-"));
         String description = extractValueStringOrNull(body, DESCRIPTION);
         transferValueString(body, params, PATH);
         Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
@@ -358,7 +400,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String name = extractValueString(body, NAME);
-        body.delAt(ID);
+        drop(body, ID);
         transferValueString(body, params, PATH);
 
         // endregion -- Verify required body keys and extract key values
@@ -377,18 +419,30 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String name = extractValueString(body, NAME);
-        if (body.has(ID)) {body.delAt(ID);}
         Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
         String description = extractValueStringOrNull(body, DESCRIPTION);
         transferValueString(body, params, PATH);
-        if (body.has(CERTIFICATE_AUTHORITY)) {body.delAt(CERTIFICATE_AUTHORITY);}
-        if (body.has(VAULT_ID)) {body.delAt(VAULT_ID);}
-        if (body.has(CREATED_AT)) {body.delAt(CREATED_AT);}
-        if (body.has(UPDATED_AT)) {body.delAt(UPDATED_AT);}
+        drop(body, ID, CERTIFICATE_AUTHORITY, VAULT_ID, CREATED_AT, UPDATED_AT);
+        drop(body, "ip_sans", "uri_sans", "not_before_duration", "not_after", "allow_token_displayname");
+        Json bodyBase = Json.read(body.toString());
+        Json bodyExtra = Json.object();
+        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
+        transferValueStringOrNull(bodyBase, bodyExtra, CERTIFICATE_AUTHORITY_ID);
+        if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
+        if (body.has("organization_unit")) {
+            bodyBase.set("ou", body.get("organization_unit").asString());
+            bodyExtra.set("organization_unit", body.get("organization_unit").asString());
+            drop(bodyBase, "organization_unit");
+        }
+        if (body.has("state")) {
+            bodyBase.set("province", body.get("state").asString());
+            bodyExtra.set("state", body.get("state").asString());
+            drop(bodyBase, "state");
+        }
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().updateRole(name, description, certificateAuthorityId.toString(), body, params).toJson();
+        return manager.getMethods().updateRole(name, description, certificateAuthorityId.toString(), params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -420,8 +474,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         transferValueString(body, params, PATH);
-        getValueString(body,ISSUER_REF);
-        getValueString(body,NAME);
+        getValueString(body, ISSUER_REF);
+        getValueString(body, NAME);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -444,7 +498,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         transferValueString(body, params, PATH);
 
-        String roleName = extractValueString(body,VAULT_ROLE_NAME);
+        String roleName = extractValueString(body, VAULT_ROLE_NAME);
         body.set(ROLE_NAME, roleName);
         getValueString(body, COMMON_NAME);
         getValueString(body, TTL);
@@ -526,10 +580,23 @@ public class AutoCryptService extends Service implements IStatusProvider {
     /**
      * Delete all the revoked certificates
      *
-     * @param body  unused
+     * @param body unused
      */
     public Json deleteRevokedCertificates(Json body) throws IllegalArgumentException {
         return manager.getMethods().deleteRevokedCertificates().toJson();
+    }
+
+    /**
+     * Generate root CA
+     *
+     * @param body parameters with commonName, ttl, and optionally path
+     */
+    public Json generateRootCA_dto(Json body) throws IllegalArgumentException {
+        body.set(PATH, PKI);
+        IssuerDto ca = IssuerDto.getIssuerFrom(body);
+        ca.check(IssuerDto.PATH, IssuerDto.TTL, IssuerDto.COMMON_NAME, IssuerDto.ISSUER_NAME, IssuerDto.TYPE);
+
+        return manager.getMethods().generateRootCA(ca).toJson();
     }
 
     /**
@@ -541,13 +608,17 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String name = getValueString(body, COMMON_NAME);
-        getValueString(body, TTL);
+        String name = getValueStringOrNull(body, COMMON_NAME);
         String description = extractValueStringOrNull(body, DESCRIPTION);
+        Json bodyBase = Json.read(body.toString());
+        Json bodyExtra = Json.object();
+        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
+        transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
+        if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().generateRootCA(name, description, body, null).toJson();
+        return manager.getMethods().generateRootCA(name, description, null, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -560,15 +631,18 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         String description = extractValueStringOrNull(body, DESCRIPTION);
-        getValueString(body, TYPE);
-        getValueString(body, TTL);
         String name = getValueString(body, COMMON_NAME);
         Json params = Json.object();
         params.at(PATH, name);
+        Json bodyBase = Json.read(body.toString());
+        Json bodyExtra = Json.object();
+        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
+        transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
+        if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().generateIntermediateCA(name, description, body, params).toJson();
+        return manager.getMethods().generateIntermediateCA(name, description, params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -602,6 +676,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
     /**
      * Checks if a key exists in a json if its value is a String
+     *
      * @param obj the json object to check
      * @param key the key inside the json obj
      */

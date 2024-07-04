@@ -3,6 +3,7 @@ package com.ucsl.json;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -208,8 +209,18 @@ public class JsonUtil {
 		return v.asString();
 	}
 
+	static public  List<String> getListStrFromJson(Json j, String propName, List<String> defaultValue) {
+		Json v=findChild(j,propName);
+		if (v==null) return defaultValue;
+		List<String> list = new ArrayList<>();
+		for (Json val: v.asJsonList()) {
+			if (val.isString()) { list.add(val.asString()); }
+		}
+		return list;
+	}
 
-	static public  Boolean getBooleanFromJson(Json j, String propName,boolean defaultValue) {
+
+	static public  Boolean getBooleanFromJson(Json j, String propName, Boolean defaultValue) {
 		//Json v=j.get(propName);
 		Json v=findChild(j,propName);
 		if (v==null) return defaultValue;
@@ -217,14 +228,14 @@ public class JsonUtil {
 	}
 
 
-	public static long getLongFromJson(Json j, String propName, long defaultValue) {
+	public static Long getLongFromJson(Json j, String propName, long defaultValue) {
 		//Json v=j.get(propName);
 		Json v=findChild(j,propName);
 		if (v==null) return defaultValue;
 		return v.asLong();
 	}
 
-	public static int getIntFromJson(Json j, String propName, int defaultValue) {
+	public static Integer getIntFromJson(Json j, String propName, Integer defaultValue) {
 		//Json v=j.get(propName);
 		Json v=findChild(j,propName);
 		if (v==null) return defaultValue;
@@ -232,7 +243,7 @@ public class JsonUtil {
 	}
 
 
-	public static double getDoubleFromJson(Json j, String propName, double defaultValue) {
+	public static Double getDoubleFromJson(Json j, String propName, Double defaultValue) {
 		//Json v=j.get(propName);
 		Json v=findChild(j,propName);
 		if (v==null) return defaultValue;

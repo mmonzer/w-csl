@@ -452,8 +452,17 @@ public class AutoCryptLogic {
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object(PATH, PKI));
 //            responseFromModule.getResult().set(PATH, PKI);
 //            responseFromModule.getResult().set(CA_TYPE, ROOT);
-            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, name, description,
+            sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, name, description,
                     JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
+
+            // save to dbapi the certificate of ca
+            responseFromModule = moduleHandler.getCertificateInfo(responseFromModule.getResult().get("serial_number").asString(), params);
+            return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
+                    responseFromModule.getResult().get(SERIAL_NUMBER).asString(),
+                    name,
+                    null,
+                    "CA root certificate : " + (description!=null?description:""),
+                    responseFromModule);
         } else {
             return JsonApiResponse.error("Error creating the CA: " + responseFromModule.getError().toJson());
         }
@@ -474,9 +483,18 @@ public class AutoCryptLogic {
                 responseFromModule.getResult().get(ISSUER_REF).isString()) {
             String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
-            return sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, issuerRef, idName, description,
+            sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, issuerRef, idName, description,
                     JsonApiResponse.result(mergerJson(
                             responseFromModule.getResult(), bodyExtra)));
+
+            // save to dbapi the certificate of ca
+            responseFromModule = moduleHandler.getCertificateInfo(responseFromModule.getResult().get("serial_number").asString(), params);
+            return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
+                    responseFromModule.getResult().get(SERIAL_NUMBER).asString(),
+                    idName,
+                    null,
+                    "CA intermediate certificate : " + (description!=null?description:""),
+                    responseFromModule);
         } else {
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }

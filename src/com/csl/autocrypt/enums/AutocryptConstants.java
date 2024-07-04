@@ -31,7 +31,7 @@ public final class AutocryptConstants {
     public static final String LOCALITY = "locality";
     public static final String NAME = "name";
     public static final String OCSP_SERVERS = "ocsp_servers";
-    public static final String ORGANIZATION = "organisation";
+    public static final String ORGANIZATION = "organization";
     public static final String PATH = "path";
     public static final String PEM_BUNDLE = "pem_bundle";
     public static final String PKI = "pki";

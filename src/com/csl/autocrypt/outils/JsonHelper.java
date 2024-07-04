@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.csl.autocrypt.enums.AutocryptConstants.COUNTRY;
 
@@ -54,7 +55,7 @@ public class JsonHelper {
      */
     public static String transferValueString(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         String value = getValueString(objOrigin, key);
-        objOrigin.delAt(key);
+        if (objOrigin.has(key)) {objOrigin.delAt(key);}
         objDest.set(key, value);
         return value;
     }
@@ -68,7 +69,7 @@ public class JsonHelper {
      */
     public static String transferValueStringOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         String value = getValueStringOrNull(objOrigin, key);
-        objOrigin.delAt(key);
+        if (objOrigin.has(key)) {objOrigin.delAt(key);}
         objDest.set(key, value);
         return value;
     }
@@ -82,7 +83,7 @@ public class JsonHelper {
      */
     public static Integer transferValueIntegerOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         Integer value = getValueIntegerOrNull(objOrigin, key);
-        objOrigin.delAt(key);
+        if (objOrigin.has(key)) {objOrigin.delAt(key);}
         objDest.set(key, value);
         return value;
     }
@@ -243,5 +244,18 @@ public class JsonHelper {
                 }
             }
         }
+    }
+
+    public static String jsonListToString(Json array, String delimiter) {
+        if (array==null) {
+            return null;
+        }
+        if (array.isArray()) {
+            if (array.asJsonList().isEmpty()){ return "";}
+            String str = "";
+            for (Json e: array.asJsonList()){ str+=','+(e.isString()?e.asString():e.toString());}
+            return str.substring(1);
+        }
+        return array.toString();
     }
 }

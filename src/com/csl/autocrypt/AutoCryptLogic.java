@@ -4,6 +4,7 @@ import com.csl.autocrypt.Dto.IssuerDto;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
+
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.*;
 
@@ -252,23 +253,35 @@ public class AutoCryptLogic {
      *
      * @param idName      identifier in the dbapi side
      * @param description description in the dbapi side
-     * @param body        body with the information
      * @param params      parameters with the path
      */
-    public JsonApiResponse createRole(String idName, String description, String certificateAuthorityId, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.createRole(body, params);
+    public JsonApiResponse createRole(String idName, String description, String certificateAuthorityId, Json params, Json bodyBase, Json bodyExtra) {
+        JsonApiResponse responseFromModule = moduleHandler.createRole(bodyBase, params);
         if (responseFromModule.isSuccess()) {
 
-            Json result = mergerJson(mergerJson(responseFromModule.getResult(), body), params);
-            replaceArrayByFirstElementIfExists(result, COUNTRY);
-            replaceArrayByFirstElementIfExists(result, ORGANIZATION);
-            replaceArrayByFirstElementIfExists(result, LOCALITY);
+            Json result = responseFromModule.getResult();
+            convertRoleToDbapi(result);
             result.set(CERTIFICATE_AUTHORITY_ID, certificateAuthorityId);
+            result.set(TTL, result.get(TTL).asInteger()/3600+"h");
+            result.set(TTL_UNIT, "days");
+            result = mergerJson(result, bodyExtra);
             return sendToDbApiIfSaveToDb(dbHandler::createRole, idName, description, certificateAuthorityId, JsonApiResponse.result(result));
         } else {
 
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
         }
+    }
+
+    private static void convertRoleToDbapi(Json obj) {
+        obj.set(COUNTRY, jsonListToString(obj.get(COUNTRY),","));
+        obj.set("organization_unit", jsonListToString(obj.get("ou"),","));
+        obj.delAt("ou");
+        obj.set(ORGANIZATION, jsonListToString(obj.get(ORGANIZATION),","));
+        obj.set("state", jsonListToString(obj.get("province"),","));
+        obj.delAt("province");
+        obj.set(LOCALITY, jsonListToString(obj.get(LOCALITY),","));
+        obj.set("street_address", jsonListToString(obj.get("street_address"),","));
+        obj.set("postal_code", jsonListToString(obj.get("postal_code"),","));
     }
 
     /**
@@ -304,9 +317,8 @@ public class AutoCryptLogic {
         JsonApiResponse responseFromModule = moduleHandler.updateRole(name, bodyBase, params);
         // TODO : change this
         if (responseFromModule.isSuccess()) {
-            replaceArrayByFirstElementIfExists(responseFromModule.getResult(), COUNTRY);
-            replaceArrayByFirstElementIfExists(responseFromModule.getResult(), ORGANIZATION);
-            replaceArrayByFirstElementIfExists(responseFromModule.getResult(), LOCALITY);
+            convertRoleToDbapi(responseFromModule.getResult());
+            responseFromModule.getResult().set(TTL, responseFromModule.getResult().get(TTL).asInteger()/3600+"h");
             return sendToDbApiIfSaveToDb(dbHandler::updateRole, name, description, certificateAuthorityId, params.get(PATH).asString(),
                     JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
         } else {
@@ -338,11 +350,10 @@ public class AutoCryptLogic {
      * Generates a certificates at the given path and role
      *
      * @param name   identifier in the dbapi side
-     * @param body   body of the request
      * @param params parameters with the path and role
      */
-    public JsonApiResponse generateCertificate(String name, String description, String vaultRoleId, Json body, Json params) {
-        JsonApiResponse responseFromModule = moduleHandler.generateCertificate(body, params);
+    public JsonApiResponse generateCertificate(String name, String description, String vaultRoleId, Json params, Json bodyBase, Json bodyExtra) {
+        JsonApiResponse responseFromModule = moduleHandler.generateCertificate(bodyBase, params);
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has(SERIAL_NUMBER) &&
                 responseFromModule.getResult().get(SERIAL_NUMBER).isString()) {
@@ -351,7 +362,7 @@ public class AutoCryptLogic {
                     name,
                     vaultRoleId,
                     description,
-                    responseFromModule);
+                    JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
         } else {
             return JsonApiResponse.error("Error creating the certificate : " + responseFromModule.getError().toJson());
         }

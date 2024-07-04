@@ -72,7 +72,7 @@ public class WebsocketClientEndpoint {
     public void onOpen(Session userSession) {
         logger.info("Opening websocket {}", userSession.getRequestURI());
         this.userSession = userSession;
-        userSession.setMaxIdleTimeout(60000);
+        userSession.setMaxIdleTimeout(2000);
         logger.debug("Timeout = {}", userSession.getMaxIdleTimeout());
         {
     		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");

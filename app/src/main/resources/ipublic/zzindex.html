@@ -1,0 +1,62 @@
+
+<script src="js/vendor/handsontable.full.min.js"></script>
+<link href="css/handsontable.full.min.css" rel="stylesheet" media="screen">
+
+<script>
+
+function ready(callback){
+    // in case the document is already rendered
+    if (document.readyState!='loading') callback();
+    // modern browsers
+    else if (document.addEventListener) document.addEventListener('DOMContentLoaded', callback);
+    // IE <= 8
+    else document.attachEvent('onreadystatechange', function(){
+        if (document.readyState=='complete') callback();
+    });
+}
+
+ready(function(){
+   var btn = document.getElementById('MyButton'); 
+   btn.onclick = function(){
+   
+   
+  //alert('it works');
+   fetch('http://localhost:9999/core?command=%22startxx%22') // Call the fetch function passing the url of the API as a parameter
+.then(function(resp) {
+    // Your code for handling the data you get from the API
+    alert('resp='+resp);
+})
+.catch(function(resp) {
+    // This is where you run code if the server returns any errors
+     alert('resp='+resp);
+});
+   
+   };
+  });
+  
+  // table
+  var data = [
+  ["", "Ford", "Tesla", "Toyota", "Honda"],
+  ["2017", 10, 11, 12, 13],
+  ["2018", 20, 11, 14, 13],
+  ["2019", 30, 15, 12, 13]
+];
+
+var container = document.getElementById('example');
+var hot = new Handsontable(container, {
+  data: data,
+  rowHeaders: true,
+  colHeaders: true,
+  filters: true,
+  dropdownMenu: true
+});
+</script>
+
+<h1>Hello</h1>
+test
+<input type="button" value="Try it" onclick="CapacityChart();">
+
+
+
+<input type="button" value="test" id="MyButton" >
+<div id="example">xx</div>

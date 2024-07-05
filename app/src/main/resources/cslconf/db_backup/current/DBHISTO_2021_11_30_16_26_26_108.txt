@@ -1,0 +1,10 @@
+{"ip":"10.0.208.16","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"10.0.208.110","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"10.0.208.100","op":"set","name":"os","value":"test","user":{"name":"user1"}}
+{"ip":"10.0.208.92","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"10.0.208.17","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"217.146.21.135","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"159.122.182.208","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"10.0.208.212","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"10.0.208.213","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
+{"ip":"10.0.208.213","op":"set","name":"os_cpe","value":"cpe:undefined:undefined:undefined:undefined","user":{"name":"user1"}}

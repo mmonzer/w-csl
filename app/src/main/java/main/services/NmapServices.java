@@ -1,0 +1,314 @@
+package main.services;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+import org.apache.commons.net.util.SubnetUtils;
+
+import com.csl.core.CSLContext;
+import com.csl.intercom.jsoncmd.ApiCommands;
+import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.jcraft.jsch.JSchException;
+import com.ucsl.interfaces.IApiCommands;
+import com.ucsl.interfaces.ICSLService;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.interfaces.IJsonCmdHelp;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+
+import main.extensions.ScanActif;
+import main.extensions.SshUtils;
+import main.extensions.Utils;
+
+public class NmapServices implements ICSLService {
+	
+	//ApiCommands apiCommands= new ApiCommands("");
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
+	
+	
+	String name="nmap";
+	String configFileSectionName="nmap_service";
+	static String idsconf;
+	static Json tapList;
+	static boolean debugMode = false;
+	static boolean logMode = false;
+	static String debugPath = "";
+	static String logPath = "";
+
+	private static final String GET_TAP_NETWORK = "ip -o -f inet addr show $(cat ~/nmapInterface.txt) | awk '/scope global/ {print $4}'";
+	
+	public NmapServices() {
+		this.name="nmap";
+		this.configFileSectionName="nmap_service";
+	}
+	public NmapServices(String name, String configFileSectionName) {
+		this.name=name;
+		this.configFileSectionName=configFileSectionName;
+	}
+
+	
+
+	@Override
+	public String getConfigFileSectionName() {
+		return configFileSectionName;
+	}
+
+	
+	
+	
+	
+
+	
+	static public void lauchNmap(Json params, Json jConfig) {
+		System.out.println("launchNmap:"+params);
+		System.out.println("launchNmap:"+jConfig);
+
+		Json resultat = Json.object();
+		ScanActif sa = new ScanActif(false, true,params.at("list").asJsonList().get(0).asString(), debugMode, logMode, debugPath, logPath);
+		
+		Json result = sa.getIp(params);
+		result = result.at("result");
+		ArrayList<Json> cur = (ArrayList<Json>) result.asJsonList();				
+		Json machines = Json.object();
+		machines.at("list",cur.get(0).at("machines"));
+		System.out.println(machines);
+		System.out.println(jConfig);
+
+		machines.at("tap",params.at("list").asJsonList().get(0)); 
+		scanDevice(machines, jConfig);
+
+	}
+	private static Json readJsonFile(String fileName) throws IOException {
+		String jsonRaw = "";
+		File fichierRegles = new File(fileName);
+	    InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
+	    InputStreamReader ipsr =new InputStreamReader(lecteur);
+        BufferedReader br = new BufferedReader(ipsr);
+        String ligne;
+        while ((ligne=br.readLine())!=null){
+           jsonRaw+=ligne+"\n";
+        }
+        br.close(); 
+        return Json.read(jsonRaw);
+	}
+	static public Json scanDevice(Json params, Json jConfig) {
+		System.out.println("launchNmap:"+params);
+		System.out.println("launchNmap:"+jConfig);
+
+		
+		ScanActif sa = new ScanActif(false, true, params.at("tap").asString(), debugMode, logMode, debugPath, logPath);
+		Json result = sa.getIpInfo (params, new ArrayList<Json>());
+
+
+		// Insertion dans la base de données
+		ArrayList<Json> resultList = (ArrayList<Json>) result.at("devices").asJsonList();
+		for(Json j : resultList) {
+			
+			String ip = j.at("ip").asString();
+			j.delAt("ip");
+			Json mac = j.at("mac");
+			j.delAt("mac");			
+			System.out.println("insertion de "+ ip);
+			System.out.println(j);
+			j.at("related_tap" , params.at("tap"));
+			Utils.addDevice(ip, j);
+			Utils.setDeviceProp(ip, "macs" , mac);
+
+			j.at("lastScan",System.currentTimeMillis());
+			Utils.setDeviceProp(ip, "props" , j);
+
+		}	
+		return result;
+	}
+	@Override
+	public boolean init(Json jConfig, String cslDir) {
+		System.out.println("--- Initialisation des services Nmap ---");
+		NmapServices.debugMode = jConfig.at("debug_mode").asBoolean();
+		NmapServices.logMode = jConfig.at("log_mode").asBoolean();
+		NmapServices.logPath = jConfig.at("log_dir").asString();
+		NmapServices.debugPath = jConfig.at("debug_dir").asString(); 
+		
+		// Fonction mise ici en attendant d'avoir une vrai fonction backend permettant de faire la meme chose (compter le nombre de liens en tout)
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		addCmd("getLinksNumber", new IJsonCmd() {
+			
+			@Override
+			public Json exec(Json params) {
+				Json j =null;
+				try {
+					j = readJsonFile("./datafile/devices.json");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				Json result = Json.object();
+				if(j.at("links") != null) {
+					result.at("number",j.at("links").asJsonList().size());
+				}
+				else {
+					result.at("number",0);
+				}
+
+				return result;
+			}
+		});	
+		/////////////////////////////////////////////////////////////////////////////////////////////////////
+		/*
+		 * Permet de lancer nmap sur le sous réseau donné et de remplir le fichier devices.json en fonction du résultat de nmap.
+		 * Paramètre : un json de la forme {"list":["<ip1>"]}
+		 */
+		addCmd("launchNmap", new IJsonCmd() {
+			
+			@Override
+			public Json exec(Json params) {
+				lauchNmap(params,jConfig);
+				return Json.object();
+			}
+		});
+		
+		addCmd("scanDevice", new IJsonCmd() {
+			
+			@Override
+			public Json exec(Json params) {
+				String ip = params.at("ip").asString();
+				String tapName = JsonUtil.getStringFromJson(params, "props/related_tap", null);
+				
+				
+				// Recherche d'un tap compatible si jamais le champ related_tap est vide
+				// On interroge chaque tap pour récupérer l'adresse IP de leur interface reseau exterieur (pas forcement celle avec laquelle ils communiquent avec csl, d'ou la demande)
+				// On récupère l'ip et le netmask et on vérifie par rapport à l'ip à scanner.
+				// Si c'est compatible, on prend celui là, sinon le scan est impossible
+				if(tapName == null) {
+					boolean test = false;
+					idsconf = CSLContext.instance.getCslConfDir(); //getIdsRunner().getIdsParams().getIdsModelDir();
+					Json taps = Json.object();
+					try {
+						taps = readJsonFile(idsconf+"/taps/TapsConfiguration.json");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					for(Json j : taps.asJsonList()) {
+						boolean accessible = true;
+						String result = "";
+						try {
+							int port = 22;
+							try {
+								port = j.at("port").asInteger();
+							} catch (NullPointerException e) {
+								System.out.println("Using default SSH port (22)");
+							}
+							SshUtils ssh = new SshUtils(j.at("username").asString(),j.at("password").asString(),j.at("ip").asString(),port );
+							// result = ssh.remoteExec("ip -o -f inet addr show $(cat /home/"+j.at("username").asString()+"/nmapInterface.txt) | awk '/scope global/ {print $4}'");
+							 result = ssh.remoteExec(GET_TAP_NETWORK);
+						} catch (IOException e) {
+							accessible = false;
+							e.printStackTrace();
+						} catch (JSchException e) {
+							accessible = false;
+							System.out.println("Le tap "+j.at("ip").asString()+" est inacessible pour le moment");
+						}
+						if(accessible) {
+							result = result.substring(0, result.length()-2);							
+							SubnetUtils subnet = new SubnetUtils(result);
+							test = subnet.getInfo().isInRange(ip);	
+						}			
+						if(test) {
+							tapName = j.at("idname").asString();
+							break;
+						}
+					}
+					if(!test) {
+						System.out.println("Pas de tap trouvé, requête impossible");
+						return Json.object().at("error", "Requête impossible, pas de tap trouvé");
+					}
+					else {
+						System.out.println("Tap trouvé pour "+ip+", il s'agit de "+tapName);
+					}
+				}
+				
+				Json param = Json.object();
+				ArrayList<String> tmp = new ArrayList<String>();
+				tmp.add(ip);
+				param.at("list",tmp);
+				param.at("tap", tapName);
+				System.out.println("Scanning device");
+				System.out.println(param);
+				return	scanDevice(param,jConfig);
+
+			}
+		});	
+		/*addCmd("getMachineList", new JsonCmd() {
+			
+			@Override
+			public Json exec(Json params) {
+				String idsconf = IDSRunner.instance.getIdsParams().getIdsModelDir();
+
+				Json devicesList = Utils.listDevices();
+				Json tapList = null;
+				try {
+					tapList = readJsonFile(idsconf+"/taps/TapsConfiguration.json");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				Json result = Json.object();
+				
+				HashMap<String, ArrayList<Json>> map = new HashMap<String, ArrayList<Json>>();
+				System.out.println(devicesList);
+				for(Json tmp : devicesList.asJsonList()) {
+					if(!map.containsKey(tmp.at("ip").asString().split("@")[1])) {
+						tmp.at("ip", tmp.at("ip").asString().split("@"));
+						ArrayList<Json> tmp2 = new ArrayList<Json>();
+						tmp2.add(tmp);
+						map.put(tmp.at("ip").asString().split("@")[1], tmp2);
+					}
+					else {
+						map.get(tmp.at("ip").asString().split("@")[1]).add(tmp);
+					}
+				}
+				
+				HashMap<String, ArrayList<Json>> map2 = new HashMap<String, ArrayList<Json>>();
+				for(String key : map.keySet()) {
+					for(Json tap : tapList.asJsonList()) {
+						if(tap.at("networkName").asString().contentEquals(key))
+							map2.put(tap.at("idname").asString(), map.get(key));
+					}
+				}				
+				result.at("result",map2);
+				return result.at("result");
+
+			}
+		});	*/		
+		return true;
+	}
+	
+	public String addCmd(String name, IJsonCmd j) {
+		return apiCommands.registerCmd(name, j);
+	}
+	
+	
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
+		return apiCommands.registerCmd(name, j,jh);
+	}
+
+	@Override
+	public IApiCommands getApiCommands() {
+		// TODO Auto-generated method stub
+		apiCommands.setName(name);
+		return apiCommands;
+	}
+	
+	
+	@Override
+	public boolean terminate() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+}

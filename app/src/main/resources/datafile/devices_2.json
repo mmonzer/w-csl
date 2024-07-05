@@ -1,0 +1,59 @@
+{
+  "devices": [
+    {
+      "uuid": "90727b4c-d724-459c-828c-487331504ce2",
+      "ip": "178.12.13.3",
+      "macs": [
+        "abcd",
+        "ab12"
+      ],
+      "props": {
+        "os": "linux"
+      },
+      "links": []
+    },
+    {
+      "uuid": "fad6a174-ef3c-4349-8fb5-7cfdce26b2c0",
+      "ip": "2.2.2.3",
+      "macs": [
+        "abcd",
+        "efg"
+      ],
+      "props": {
+        "os": "linux"
+      },
+      "links": [
+        "02b2a6d3-5b05-4d3e-86fb-4d0ff56761c8"
+      ]
+    },
+    {
+      "uuid": "632d3566-a55d-4096-beec-9de6b8490bd2",
+      "ip": "2.2.2.4",
+      "macs": [
+        "mac1"
+      ],
+      "props": {
+        "vul": [
+          "vul1"
+        ],
+        "os": "mac os"
+      },
+      "links": [
+        "02b2a6d3-5b05-4d3e-86fb-4d0ff56761c8"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "src_uuid": "fad6a174-ef3c-4349-8fb5-7cfdce26b2c0",
+      "dst_uuid": "632d3566-a55d-4096-beec-9de6b8490bd2",
+      "props_list": [
+        {
+          "protocol": "icmp",
+          "_id": "#0"
+        }
+      ],
+      "uuid": "02b2a6d3-5b05-4d3e-86fb-4d0ff56761c8"
+    }
+  ]
+}

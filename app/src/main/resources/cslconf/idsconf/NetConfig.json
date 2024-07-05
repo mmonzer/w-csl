@@ -1,0 +1,47 @@
+{
+
+	"devices": {
+		"device_1221": {
+			"ip": "192.168.0.1",
+			"mac":[ "" ],
+			"ports":[],
+			"os_name":"linux",
+			"os_version":"3.0",
+			"softwares":[{
+				"name":"",
+				"version":""
+			}],
+			"manufacturer":"",
+			"role":["gateway","computer", "plc","... (au choix)"]
+		},
+		"plc1": {
+			"ip": "192.168.0.241",
+			"severity": "severe"
+		}
+	},
+
+	"networks": {
+		"test": "!192.168.1.0",
+		"set1": [
+			"192.168.2.0/24"
+		],
+		"set2": [
+			"192.168.1.0",
+			"192.168.1.1"
+		],
+		"HOME_NET": "192.168.1.1/24",
+		"green_list": {
+			"values": [
+				"192.168.1.0",
+				"192.168.1.1",
+				"192.168.1.2",
+				"192.168.2.0/24"
+			],
+			"modifiable": true
+		},
+		"red_list": [
+			"192.168.0.0/16"
+		]
+	}
+	}
+	

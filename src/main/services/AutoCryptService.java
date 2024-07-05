@@ -299,7 +299,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().exportIssuer(issuerRef, params).getResult();
+        return manager.getMethods().exportIssuer(issuerRef, params).toJson();
     }
 
     /**

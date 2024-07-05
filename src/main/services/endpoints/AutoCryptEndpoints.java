@@ -67,7 +67,7 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setDesc("Exports the given issuer at the given path")
                     .setParam("path", "path of the issuer", JsonCmdHelp.STR)
                     .setParam("issuer_ref", "identifier of the issuer", JsonCmdHelp.STR)
-                    .setResult("the exported issuerœ", JsonCmdHelp.STR)
+                    .setResult("the certificate of the given issuer", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_ISSUERS("get_issuers",
             new JsonCmdHelp()

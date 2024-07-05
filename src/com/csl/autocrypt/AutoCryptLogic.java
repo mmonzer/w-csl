@@ -194,13 +194,30 @@ public class AutoCryptLogic {
     }
 
     /**
-     * Exports the given issuer
+     * Exports the given issuer to JSON
      *
      * @param issuerRef identifier of the issuer
      * @param params    parameters with the path
      * @return the issuer certificate as a file
      */
     public JsonApiResponse exportIssuer(String issuerRef, Json params) {
+        JsonApiResponse responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+        if (responseFromModule.isSuccess() &&
+                responseFromModule.getResult().has(CERTIFICATE) && responseFromModule.getResult().get(CERTIFICATE).isString()) {
+            Json response = Json.object("certificate", responseFromModule.getResult().get(CERTIFICATE).asString());
+            return JsonApiResponse.result(response);
+        }
+        return responseFromModule;
+    }
+
+    /**
+     * Exports the given issuer into file
+     *
+     * @param issuerRef identifier of the issuer
+     * @param params    parameters with the path
+     * @return the issuer certificate as a file
+     */
+    public JsonApiResponse exportIssuerToFile(String issuerRef, Json params) {
         JsonApiResponse responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has(CERTIFICATE) && responseFromModule.getResult().get(CERTIFICATE).isString()) {

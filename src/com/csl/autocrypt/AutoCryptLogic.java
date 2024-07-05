@@ -182,13 +182,22 @@ public class AutoCryptLogic {
      */
     public JsonApiResponse importIssuer(String idName, Json params, String file, boolean isRoot) {
         JsonApiResponse responseFromModule = moduleHandler.importIssuer(params, file);
-        if (responseFromModule.isSuccess()) {
+        if (responseFromModule.isSuccess() && !responseFromModule.getResult().get(IMPORTED_ISSUERS).isNull() && !responseFromModule.getResult().get(IMPORTED_ISSUERS).asJsonList().isEmpty()) {
             String issuerRef = responseFromModule.getResult().get(IMPORTED_ISSUERS).asJsonList().get(0).asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
             responseFromModule.getResult().set(CA_TYPE, isRoot ? ROOT : INTERMEDIATE);
-            return sendToDbApiIfSaveToDb(isRoot ? dbHandler::generateRootCA : dbHandler::generateIntermediateCA, issuerRef, idName, null,
-                    JsonApiResponse.result(mergerJson(responseFromModule.getResult(), params)));
-//            return sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, idName, null, null, responseFromModule);
+            responseFromModule.getResult().set(ISSUER_NAME, idName);
+            if (isRoot) {
+                responseFromModule.getResult().set(CA_TYPE, ROOT);
+                return dbHandler.generateRootCA(issuerRef, idName, null,
+                        mergerJson(responseFromModule.getResult(), params));
+            } else {
+                responseFromModule.getResult().set(CA_TYPE, INTERMEDIATE);
+                return dbHandler.generateIntermediateCA(issuerRef, idName, null,
+                        mergerJson(responseFromModule.getResult(), params));
+            }
+        } else if (responseFromModule.isSuccess() && (responseFromModule.getResult().get(IMPORTED_ISSUERS).isNull() || responseFromModule.getResult().get(IMPORTED_ISSUERS).asJsonList().isEmpty())) {
+            return JsonApiResponse.error("Certificate already imported");
         }
         return responseFromModule;
     }

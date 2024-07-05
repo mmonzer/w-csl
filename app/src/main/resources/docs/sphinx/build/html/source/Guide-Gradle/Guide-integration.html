@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en"  data-content_root="../../">
+<head>
+    <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Guide d’intégration de Gradle à CSL &mdash; W-CSL  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=7e465603" />
+
+    
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html"/>
+    <link rel="search" title="Search" href="../../search.html"/> 
+</head>
+
+<body class="wy-body-for-nav"> 
+<div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+        <div class="wy-side-scroll">
+            <div class="wy-side-nav-search" >
+
+                
+                
+                <a href="../../index.html"  class="icon icon-home" >
+                    W-CSL
+                </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+            </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation"
+                 aria-label="Navigation menu">
+                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Documentation.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Documentation.html#organisation-of-project">Organisation of project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Documentation.html#connexions">Connexions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Documentation.html#endpoints">Endpoints</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Documentation.html#modules">Modules</a></li>
+</ul>
+
+            </div>
+
+            <hr><div class="wy-menu wy-menu-vertical" data-spy="affix" role="javadoc"
+                 aria-label="Link to Javadoc">
+                    <p class="caption" role="heading"><span class="caption-text">
+                    <a href="./javadoc/index.html" target="_blank">JavaDoc</a>
+            </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="apidoc"
+                 aria-label="Link to API doc">
+                <p class="caption" role="heading"><span class="caption-text">
+                <a href="./api/apihelp.html" target="_blank">API</a>
+              </span></p>
+            </div>
+            <hr>
+        </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+            <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+            <a href="../../index.html">W-CSL</a>
+        </nav>
+
+        <div class="wy-nav-content">
+                <div class="rst-content">
+                    <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Guide d’intégration de Gradle à CSL</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/Guide-Gradle/Guide-integration.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+                    <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+                        <div itemprop="articleBody">
+                            
+  <section id="guide-dintegration-de-gradle-a-csl">
+<h1>Guide d’intégration de Gradle à CSL<a class="headerlink" href="#guide-dintegration-de-gradle-a-csl" title="Link to this heading">¶</a></h1>
+<section id="partie-1-creer-une-copie-de-la-branche-souhaitee">
+<h2>Partie 1 : Créer une copie de la branche souhaitée<a class="headerlink" href="#partie-1-creer-une-copie-de-la-branche-souhaitee" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>&lt;branche<span class="w"> </span>souhaitee&gt;
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>&lt;nouvelle<span class="w"> </span>branche&gt;
+</pre></div>
+</div>
+</section>
+<section id="partie-2-initialisation-de-gradle">
+<h2>Partie 2 : Initialisation de Gradle<a class="headerlink" href="#partie-2-initialisation-de-gradle" title="Link to this heading">¶</a></h2>
+<p>a. Suivre le guide d’installation de Gradle</p>
+<p><a class="reference external" href="https://gradle.org/install/?_gl=1*1sf217q*_ga*MTQ0NTg3NTM3Ni4xNzE2MzA1NTU3*_ga_7W7NC6YNPT*MTcxNjQ3MzMxMy41LjEuMTcxNjQ3MzM4Ni42MC4wLjA">https://gradle.org/install/?_gl=1<em>1sf217q</em>_ga<em>MTQ0NTg3NTM3Ni4xNzE2MzA1NTU3</em>_ga_7W7NC6YNPT*MTcxNjQ3MzMxMy41LjEuMTcxNjQ3MzM4Ni42MC4wLjA</a>.</p>
+<p>b. Lancer la commande d’initialisation à la racine du projet : gradle init , puis répondre aux questions comme suit :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Select<span class="w"> </span><span class="nb">type</span><span class="w"> </span>of<span class="w"> </span>build<span class="w"> </span>to<span class="w"> </span>generate:
+<span class="w">  </span><span class="m">1</span>:<span class="w"> </span>Application
+<span class="w">  </span><span class="m">2</span>:<span class="w"> </span>Library
+<span class="w">  </span><span class="m">3</span>:<span class="w"> </span>Gradle<span class="w"> </span>plugin
+<span class="w">  </span><span class="m">4</span>:<span class="w"> </span>Basic<span class="w"> </span><span class="o">(</span>build<span class="w"> </span>structure<span class="w"> </span>only<span class="o">)</span>
+Enter<span class="w"> </span>selection<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>Application<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">1</span>..4<span class="o">]</span><span class="w"> </span><span class="m">1</span>
+
+Select<span class="w"> </span>implementation<span class="w"> </span>language:
+<span class="w">  </span><span class="m">1</span>:<span class="w"> </span>Java
+<span class="w">  </span><span class="m">2</span>:<span class="w"> </span>Kotlin
+<span class="w">  </span><span class="m">3</span>:<span class="w"> </span>Groovy
+<span class="w">  </span><span class="m">4</span>:<span class="w"> </span>Scala
+<span class="w">  </span><span class="m">5</span>:<span class="w"> </span>C++
+<span class="w">  </span><span class="m">6</span>:<span class="w"> </span>Swift
+Enter<span class="w"> </span>selection<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>Java<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">1</span>..6<span class="o">]</span><span class="w"> </span><span class="m">1</span>
+
+Enter<span class="w"> </span>target<span class="w"> </span>Java<span class="w"> </span>version<span class="w"> </span><span class="o">(</span>min:<span class="w"> </span><span class="m">7</span>,<span class="w"> </span>default:<span class="w"> </span><span class="m">21</span><span class="o">)</span>:<span class="w"> </span><span class="m">11</span>
+
+Project<span class="w"> </span>name<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>w-csl<span class="o">)</span>:<span class="w"> </span>
+
+Select<span class="w"> </span>application<span class="w"> </span>structure:
+<span class="w">  </span><span class="m">1</span>:<span class="w"> </span>Single<span class="w"> </span>application<span class="w"> </span>project
+<span class="w">  </span><span class="m">2</span>:<span class="w"> </span>Application<span class="w"> </span>and<span class="w"> </span>library<span class="w"> </span>project
+Enter<span class="w"> </span>selection<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>Single<span class="w"> </span>application<span class="w"> </span>project<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">1</span>..2<span class="o">]</span><span class="w"> </span><span class="m">1</span>
+
+Select<span class="w"> </span>build<span class="w"> </span>script<span class="w"> </span>DSL:
+<span class="w">  </span><span class="m">1</span>:<span class="w"> </span>Kotlin
+<span class="w">  </span><span class="m">2</span>:<span class="w"> </span>Groovy
+Enter<span class="w"> </span>selection<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>Kotlin<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">1</span>..2<span class="o">]</span><span class="w"> </span><span class="m">2</span>
+
+Select<span class="w"> </span><span class="nb">test</span><span class="w"> </span>framework:
+<span class="w">  </span><span class="m">1</span>:<span class="w"> </span>JUnit<span class="w"> </span><span class="m">4</span>
+<span class="w">  </span><span class="m">2</span>:<span class="w"> </span>TestNG
+<span class="w">  </span><span class="m">3</span>:<span class="w"> </span>Spock
+<span class="w">  </span><span class="m">4</span>:<span class="w"> </span>JUnit<span class="w"> </span>Jupiter
+Enter<span class="w"> </span>selection<span class="w"> </span><span class="o">(</span>default:<span class="w"> </span>JUnit<span class="w"> </span>Jupiter<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">1</span>..4<span class="o">]</span><span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p><em>Si la configuration est incorrecte, supprimer tous les fichiers ajoutés par Gradle et relancer la commande.</em></p>
+</section>
+<section id="partie-3-re-factoriser-les-dossiers">
+<h2>Partie 3 : Re-factoriser les dossiers<a class="headerlink" href="#partie-3-re-factoriser-les-dossiers" title="Link to this heading">¶</a></h2>
+<p>a. <strong>Déplacer les packages et les fichiers sources</strong></p>
+<p>Graddle a crée à la racine un dossier App. En laissant les librairies de cotés, il faut répartir les fichiers dans les dossiers qui leurs correspondent. Vous pouvez voir un exemple d’architecture en annexe</p>
+<p>b. <strong>Déplacer les librairies</strong></p>
+<p>Pour éviter de faire des noeuds, je gère le remplacement des dépendances des libraries très progressivement. Si des étapes vous semblent peu utile, n’hésitez pas à les sauter.</p>
+<ol class="arabic simple">
+<li><p>Créer 2 dossiers dans le dossier lib à la racine du projet : unpacked, y déplacer les librairies dépaquetées et jar, y déplacer les librairies sous .jar</p></li>
+<li><p>Déplacer le dossier unpacked la partie main/java , et .jar dans la partie main/ressources</p></li>
+</ol>
+</section>
+<section id="partie-4-configuration-de-gradle">
+<h2>Partie 4 : Configuration de Gradle<a class="headerlink" href="#partie-4-configuration-de-gradle" title="Link to this heading">¶</a></h2>
+<p>a. <strong>Configurer les fichiers de build</strong></p>
+<p>Automatiquement Gradle génère 2 types de fichiers :</p>
+<ul class="simple">
+<li><p><strong>settings.gradle</strong> : spécifiant le nom du module ou sous module reconnu par gradle à la compilation. En général nous avons pas besoin de le toucher.</p></li>
+<li><p><strong>build.gradle</strong> : fichier contenant toutes les dépendances nécessaires au projet + d’autres éléments de configuration. C’est le fichier le plus important ici.</p></li>
+</ul>
+<p><em>Sans ces 2 fichiers, Gradle ne pourra pas compiler.</em></p>
+<p>Le <strong>build.gradle</strong> ne peut run qu’un fichier main, on peut passer par une tâche pour un deuxième main. Mais ici nous avons choisi de séparer la configuration en 3 fichiers de build différents : <strong>build.gradle</strong> qui contiendra les dépendances et configurations communes au main client et serveur, <strong>buildClient.gradle</strong> , <strong>buildServer.gradle</strong> qui lanceront leurs main respectifs</p>
+<p><em>Il faut donc les créer, vous pouvez voir leurs configurations dans les fichiers annexes à la fin de la page.</em></p>
+<p>Maintenant que le <strong>build.gradle</strong> contient tout les liens vers les librairies nous pouvons supprimer la plupart des librairies du dossier .tar sauf xminiserver qui est une librairie faites main. Pareil pour le dossier unpacked, il faut grader la librairie mitre.cpe et nmap4j_csl qui sont des librairies locales.</p>
+<p>b. <strong>Configurer l’environnement SSL</strong></p>
+<p>Le fichier <strong>cacerts.jks</strong> doit se trouver dans le répertoire App</p>
+<ol class="arabic simple">
+<li><p>Créer un fichier <strong>properties.gradle</strong>, et y ajouter le code suivant :</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>org.gradle.caching<span class="o">=</span><span class="nb">true</span>
+
+org.gradle.jvmargs<span class="w"> </span><span class="o">=</span><span class="w"> </span>-Dlogback.configurationFile<span class="o">=</span>./src/main/resources/logback.xml<span class="w"> </span>-Djavax.net.ssl.trustStore<span class="o">=</span>./cacerts.jks<span class="w"> </span>-Djavax.net.ssl.trustStorePassword<span class="o">=</span>changeit
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Configurer les run du Main Client et du Main Server comme vous pouvez le voir dans le dossier annexes, avec les mêmes variables globales que celles passées à Gradle. L’option -x test, permet d’ignorer les tests à la compilation</p></li>
+</ol>
+</section>
+<section id="annexes">
+<h2>Annexes<a class="headerlink" href="#annexes" title="Link to this heading">¶</a></h2>
+<p><strong>build.gradle :</strong></p>
+<div class="highlight-groovy notranslate"><div class="highlight"><pre><span></span><span class="cm">/*</span>
+<span class="cm"> * This file was generated by the Gradle &#39;init&#39; task.</span>
+<span class="cm"> *</span>
+<span class="cm"> * This generated file contains a sample Java application project to get you started.</span>
+<span class="cm"> * For more details on building Java &amp; JVM projects, please refer to https://docs.gradle.org/8.7/userguide/building_java_projects.html in the Gradle documentation.</span>
+<span class="cm"> */</span>
+<span class="n">apply</span><span class="w"> </span><span class="nl">plugin:</span><span class="w"> </span><span class="s1">&#39;java&#39;</span>
+<span class="n">apply</span><span class="w"> </span><span class="nl">plugin:</span><span class="w"> </span><span class="s1">&#39;application&#39;</span>
+<span class="n">apply</span><span class="w"> </span><span class="n">plugin</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;jacoco&#39;</span>
+
+<span class="n">repositories</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="c1">// Use Maven Central for resolving dependencies.</span>
+<span class="w">    </span><span class="n">mavenCentral</span><span class="o">()</span>
+<span class="o">}</span>
+<span class="n">dependencies</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="c1">//to process lombock annotations while gradle building</span>
+<span class="w">    </span><span class="n">compileOnly</span><span class="w"> </span><span class="s1">&#39;org.projectlombok:lombok:1.18.32&#39;</span>
+<span class="w">    </span><span class="n">annotationProcessor</span><span class="w"> </span><span class="s1">&#39;org.projectlombok:lombok:1.18.32&#39;</span>
+
+<span class="w">    </span><span class="c1">//local librairies</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="n">files</span><span class="o">(</span><span class="s1">&#39;src/main/resources/lib/jar/xminiserver.jar&#39;</span><span class="o">)</span>
+
+<span class="w">    </span><span class="c1">//MavenCentral() librairies</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="w"> </span><span class="s1">&#39;com.github.tomakehurst:wiremock-jre8:2.31.0&#39;</span>
+<span class="w">    </span><span class="n">testImplementation</span><span class="w"> </span><span class="s1">&#39;org.mockito:mockito-core:3.12.4&#39;</span>
+
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;io.jsonwebtoken:jjwt-api:0.10.0&#39;</span>
+
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.jcraft:jsch:0.1.55&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.mindrot:jbcrypt:0.4&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.projectlombok:lombok:1.18.32&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.junit.jupiter:junit-jupiter-api:5.11.0-M2&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.junit.jupiter:junit-jupiter-engine:5.11.0-M2&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.json:json:20210307&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.apache.httpcomponents:fluent-hc:4.5.13&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.jetbrains:annotations:13.0&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.mongodb:bson:4.2.0&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.netbeans.external:org-apache-commons-codec:RELEASE190&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.netbeans.external:org-apache-commons-io:RELEASE113&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.apache.commons:commons-lang3:3.8.1&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.netbeans.external:org-apache-commons-logging:RELEASE210&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.google.code.gson:gson:2.8.6&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.netbeans.external:com-google-guava:RELEASE113&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.apache.httpcomponents:httpclient:4.5.12&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.fasterxml.jackson.core:jackson-annotations:2.11.2&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.fasterxml.jackson.core:jackson-core:2.11.2&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.fasterxml.jackson.core:jackson-databind:2.11.2&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.clumd.projects:java-json:1.2.1&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;io.javalin:javalin:2.4.0&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.mindrot:jbcrypt:0.4&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.eclipse.jetty.aggregate:jetty-all:9.4.14.v20181114&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.eclipse.jetty:jetty-util:9.4.28.v20200408&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;io.jsonwebtoken:jjwt:0.9.1&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.sun.jna:jna:3.0.9&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;jsch:jsch:0.1.7&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.lightcouch:lightcouch:0.2.0&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;ch.qos.logback:logback-classic:1.2.3&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;ch.qos.logback:logback-core:1.2.3&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;io.micrometer:micrometer-commons:1.10.4&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;io.micrometer:micrometer-observation:1.10.4&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.mongodb:mongo-java-driver:3.12.8&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.neuronrobotics:nrjavaserial:3.12.1&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.slf4j:slf4j-api:1.7.25&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;com.sparkjava:spark-core:2.8.0&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-aop:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-beans:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-context:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-core:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-expression:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-jcl:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-messaging:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-web:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.springframework:spring-websocket:5.2.22.RELEASE&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.apache.servicemix.bundles:org.apache.servicemix.bundles.velocity:1.7_6&#39;</span>
+<span class="w">    </span><span class="n">implementation</span><span class="w"> </span><span class="s1">&#39;org.jetbrains:annotations:13.0&#39;</span>
+<span class="o">}</span>
+<span class="c1">// Apply a specific Java toolchain to ease working on different environments.</span>
+<span class="n">java</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="n">toolchain</span><span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="n">languageVersion</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JavaLanguageVersion</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">11</span><span class="o">)</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+<span class="n">run</span><span class="o">{</span>
+<span class="w">    </span><span class="n">systemProperty</span><span class="w"> </span><span class="s1">&#39;logback.configurationFile&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;./src/main/resources/logback.xml&#39;</span>
+<span class="w">    </span><span class="n">systemProperty</span><span class="w"> </span><span class="s1">&#39;javax.net.ssl.trustStore&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;./cacerts.jks&#39;</span>
+<span class="w">    </span><span class="n">systemProperty</span><span class="w"> </span><span class="s1">&#39;javax.net.ssl.trustStorePassword&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;changeit&#39;</span>
+<span class="o">}</span>
+<span class="n">test</span><span class="o">{</span>
+<span class="w">    </span><span class="n">useJUnitPlatform</span><span class="o">()</span>
+<span class="w">    </span><span class="n">onlyIf</span><span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="o">!</span><span class="n">project</span><span class="o">.</span><span class="na">hasProperty</span><span class="o">(</span><span class="s1">&#39;test.skip&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">project</span><span class="o">.</span><span class="na">getProperty</span><span class="o">(</span><span class="s1">&#39;test.skip&#39;</span><span class="o">).</span><span class="na">toBoolean</span><span class="o">()</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+<span class="n">jacocoTestReport</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="n">dependsOn</span><span class="w"> </span><span class="n">test</span>
+<span class="w">    </span><span class="n">reports</span><span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="n">xml</span><span class="o">.</span><span class="na">required</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">        </span><span class="n">csv</span><span class="o">.</span><span class="na">required</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="n">html</span><span class="o">.</span><span class="na">outputLocation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">layout</span><span class="o">.</span><span class="na">buildDirectory</span><span class="o">.</span><span class="na">dir</span><span class="o">(</span><span class="s1">&#39;jacocoHtml&#39;</span><span class="o">)</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+
+<span class="n">task</span><span class="w"> </span><span class="n">printEnvVariables</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="n">doLast</span><span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="n">println</span><span class="w"> </span><span class="s2">&quot;JAVA_HOME: ${System.getenv(&#39;JAVA_HOME&#39;)}&quot;</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+<p><strong>buildClient.gradle et buildServer.gradle</strong></p>
+<div class="highlight-groovy notranslate"><div class="highlight"><pre><span></span><span class="n">plugins</span><span class="o">{</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="s1">&#39;java&#39;</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="s1">&#39;application&#39;</span>
+<span class="o">}</span>
+
+<span class="n">apply</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;build.gradle&#39;</span>
+
+<span class="n">application</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="n">mainClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;main.CSLIDSMainClient&#39;</span><span class="w"> </span><span class="c1">//CSLIDSMainServer</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                        </div>
+                    </div>
+                    <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+                </div>
+            </div>
+    </section>
+</div>
+<script>
+    jQuery(function () {
+        SphinxRtdTheme.Navigation.enable(true);
+    });
+</script> 
+
+</body>
+</html>

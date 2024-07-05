@@ -1,6 +1,5 @@
 package com.csl.autocrypt;
 
-import com.csl.autocrypt.Dto.IssuerDto;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
@@ -39,19 +38,6 @@ public class AutoCryptLogic {
 
     /**
      * Updates the information of the given issuer in the module and the DB
-     */
-    public JsonApiResponse updateIssuerInfo(IssuerDto issuer) {
-        JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuer.getIssuerRef(), issuer.getBodyForModule(), issuer.getParamsForModule());
-        if (responseFromModule.isSuccess()) {
-            issuer.update(responseFromModule.getResult());
-            return dbHandler.updateIssuerInfo(issuer.getName(), issuer.getIssuerRef(), issuer.getDescription(), issuer.getPath(), issuer.getBodyForDBApi());
-        } else {
-            return responseFromModule;
-        }
-    }
-
-    /**
-     * Updates the information of the given issuer in the module and the DB
      *
      * @param name      identifier in the dbapi side
      * @param issuerRef identifier of the issuer (module side)
@@ -61,18 +47,6 @@ public class AutoCryptLogic {
         JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, bodyBase, params);
         return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, name, issuerRef, description, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
-    }
-
-    /**
-     * Deletes the given issuer from the module and the DB
-     */
-    public JsonApiResponse deleteIssuer(IssuerDto issuer) {
-        JsonApiResponse responseFromModule = moduleHandler.deleteIssuer(issuer.getIssuerRef(), null, issuer.getParamsForModule());
-        if (responseFromModule.isSuccess()) {
-            return dbHandler.deleteIssuer(issuer.getIssuerRef(), null);
-        } else {
-            return responseFromModule;
-        }
     }
 
     /**
@@ -388,6 +362,21 @@ public class AutoCryptLogic {
     }
 
     /**
+     * Get the given certificate
+     *
+     * @param serialNumber identifier of the certificate
+     * @param needPrivateKey whether we need the private key
+     * @param params       parameters with the serialNumber
+     */
+    public JsonApiResponse getCertificate(String serialNumber, boolean needPrivateKey, Json params) {
+        if (needPrivateKey) {
+            return moduleHandler.getCertificateWithPrivateKey(serialNumber, params);
+        } else {
+            return moduleHandler.getCertificateWithoutPrivateKey(serialNumber, params);
+        }
+    }
+
+    /**
      * Downloads the given certificate
      *
      * @param serialNumber identifier of the certificate
@@ -422,22 +411,6 @@ public class AutoCryptLogic {
 
     /**
      * Generate root CA
-     */
-    public JsonApiResponse generateRootCA(IssuerDto ca) {
-        JsonApiResponse responseFromModule = moduleHandler.generateRootCA(ca.getBodyForModule(), ca.getParamsForModule());
-        if (responseFromModule.isSuccess() && responseFromModule.getResult() != null &&
-                responseFromModule.getResult().has(ISSUER_REF) &&
-                responseFromModule.getResult().get(ISSUER_REF).isString()) {
-            ca.update(responseFromModule.getResult());
-            return dbHandler.generateRootCA(ca.getIssuerRef(), ca.getName(), ca.getDescription(),
-                    ca.getBodyForDBApi());
-        } else {
-            return JsonApiResponse.error("Error creating the CA: " + responseFromModule.getError().toJson());
-        }
-    }
-
-    /**
-     * Generate root CA
      *
      * @param name        identifier in the dbapi side
      * @param description description in the dbapi
@@ -448,6 +421,7 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has(ISSUER_REF) &&
                 responseFromModule.getResult().get(ISSUER_REF).isString()) {
+            String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
             String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object(PATH, PKI));
 //            responseFromModule.getResult().set(PATH, PKI);
@@ -456,13 +430,13 @@ public class AutoCryptLogic {
                     JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
 
             // save to dbapi the certificate of ca
-            responseFromModule = moduleHandler.getCertificateInfo(responseFromModule.getResult().get("serial_number").asString(), params);
-            return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
-                    responseFromModule.getResult().get(SERIAL_NUMBER).asString(),
+            responseFromModule = moduleHandler.getCertificateInfo(serialNumber, params);
+            return dbHandler.generateCertificate(
+                    serialNumber,
                     name,
                     null,
                     "CA root certificate : " + (description!=null?description:""),
-                    responseFromModule);
+                    responseFromModule.toJson());
         } else {
             return JsonApiResponse.error("Error creating the CA: " + responseFromModule.getError().toJson());
         }

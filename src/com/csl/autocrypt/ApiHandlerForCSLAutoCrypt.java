@@ -232,6 +232,32 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Gets the certificate without the private key
+     *
+     * @param serialNumber identifier of the certificate
+     * @param params       parameters with the serialNumber
+     */
+    public JsonApiResponse getCertificateWithoutPrivateKey(String serialNumber, Json params) {
+            return this.sendGet(
+                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WO_PK_ + serialNumber,
+                    params
+            );
+    }
+
+    /**
+     * Gets the certificate with the private key
+     *
+     * @param serialNumber identifier of the certificate
+     * @param params       parameters with the serialNumber
+     */
+    public JsonApiResponse getCertificateWithPrivateKey(String serialNumber, Json params) {
+        return this.sendGet(
+                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WITH_PK_ + serialNumber,
+                    params
+            );
+    }
+
+    /**
      * Downloads the given certificate
      *
      * @param serialNumber identifier of the certificate

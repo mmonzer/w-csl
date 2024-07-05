@@ -47,6 +47,7 @@ public final class AutocryptConstants {
     public static final String VAULT_ID = "vault_id";
     public static final String VAULT_ROLE_ID = "vault_role_id";
     public static final String VAULT_ROLE_NAME = "vault_role_name";
+    public static final String WITH_PRIVATE_KEY = "with_private_key";
 
     /**
      * Unused constructor (mais private)

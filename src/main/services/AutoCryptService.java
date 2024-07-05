@@ -1,10 +1,10 @@
 package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
-import com.csl.autocrypt.Dto.IssuerDto;
 import com.csl.core.CSLContext;
 import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import main.services.endpoints.AutoCryptEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +111,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GENERATE_CERTIFICATE, this::generateCertificate);
         addCmd(AutoCryptEndpoints.GET_CERTIFICATES, this::getCertificates);
         addCmd(AutoCryptEndpoints.GET_CERTIFICATE_INFO, this::getCertificateInfo);
+        addCmd(AutoCryptEndpoints.GET_CERTIFICATE, this::getCertificate);
         addCmd(AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, this::downloadCertificate);
         addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE, this::revokeCertificate);
         addCmd(AutoCryptEndpoints.DELETE_REVOKED_CERTIFICATES, this::deleteRevokedCertificates);
@@ -198,25 +199,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with the path and the issuer id
      */
-    public Json updateIssuerInfo_dto(Json body) {
-
-        // region -- Verify required body keys and extract key values
-
-        drop(body, ID, VAULT_ID);
-        IssuerDto issuer = IssuerDto.getIssuerFrom(body);
-        issuer.check(IssuerDto.ISSUER_NAME, IssuerDto.PATH, IssuerDto.ISSUER_REF);
-
-        // endregion -- Verify required body keys and extract key values
-
-
-        return manager.getMethods().updateIssuerInfo(issuer).toJson();
-    }
-
-    /**
-     * Updates the information of the given issuer
-     *
-     * @param body parameters with the path and the issuer id
-     */
     public Json updateIssuerInfo(Json body) {
 
         // region -- Verify required body keys and extract key values
@@ -237,23 +219,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // endregion -- Verify required body keys and extract key values
 
         return manager.getMethods().updateIssuerInfo(name, description, issuerRef, params, bodyBase, bodyExtra).toJson();
-    }
-
-    /**
-     * Deletes the given issuer
-     *
-     * @param body parameters with the path and the issuer id
-     */
-    public Json deleteIssuer_dto(Json body) {
-
-        // region -- Verify required body keys and extract key values
-        drop(body, ID);
-        IssuerDto issuer = IssuerDto.getIssuerFrom(body);
-        issuer.check(IssuerDto.ISSUER_REF, IssuerDto.PATH);
-
-        // endregion -- Verify required body keys and extract key values
-
-        return manager.getMethods().deleteIssuer(issuer).toJson();
     }
 
     /**
@@ -568,6 +533,25 @@ public class AutoCryptService extends Service implements IStatusProvider {
      *
      * @param body parameters with the serialNumber
      */
+    public Json getCertificate(Json body) throws IllegalArgumentException {
+
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, PATH);
+        String serialNumber = transferValueString(body, params, SERIAL_NUMBER);
+        boolean withPrivateKey = JsonUtil.getBooleanFromJson(body, WITH_PRIVATE_KEY, false);
+
+        // endregion -- Verify required body keys and extract key values
+
+        return manager.getMethods().getCertificate(serialNumber, withPrivateKey, params).toJson();
+    }
+
+    /**
+     * Downloads the certificate
+     *
+     * @param body parameters with the serialNumber
+     */
     public Json downloadCertificate(Json body) throws IllegalArgumentException {
 
         // region -- Verify required body keys and extract key values
@@ -607,19 +591,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json deleteRevokedCertificates(Json body) throws IllegalArgumentException {
         return manager.getMethods().deleteRevokedCertificates().toJson();
-    }
-
-    /**
-     * Generate root CA
-     *
-     * @param body parameters with commonName, ttl, and optionally path
-     */
-    public Json generateRootCA_dto(Json body) throws IllegalArgumentException {
-        body.set(PATH, PKI);
-        IssuerDto ca = IssuerDto.getIssuerFrom(body);
-        ca.check(IssuerDto.PATH, IssuerDto.TTL, IssuerDto.COMMON_NAME, IssuerDto.ISSUER_NAME, IssuerDto.TYPE);
-
-        return manager.getMethods().generateRootCA(ca).toJson();
     }
 
     /**

@@ -164,6 +164,14 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam("path", "", JsonCmdHelp.STR)
                     .setResult("Information of the given certificates as sent by CSL_Autocrypt", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
+    GET_CERTIFICATE("get_certificate",
+            new JsonCmdHelp()
+                    .setDesc("Gets the given certificate, with or without the private key")
+                    .setParam("serial_number", "Number of certificate", JsonCmdHelp.STR)
+                    .setParam("path", "", JsonCmdHelp.STR)
+                    .setParam("with_private_key", "OPT: whether the private key is needed. Default is false.", JsonCmdHelp.STR)
+                    .setResult("{certificate: \"...\", ???:\"...\"}", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     REVOKE_CERTIFICATE("revoke_certificate",
             new JsonCmdHelp()
                     .setDesc("Revoke the certificate")

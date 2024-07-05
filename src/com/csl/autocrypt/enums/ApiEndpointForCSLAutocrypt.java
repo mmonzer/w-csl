@@ -20,6 +20,8 @@ public enum ApiEndpointForCSLAutocrypt {
     CERT_URI_(CERT_URI+"/"),
     CERT_URI_TEMPLATE(CERT_URI_+"validate-template"),
     CERT_URI_DOWNLOAD_(CERT_URI_+"download/"),
+    CERT_URI_GET_WO_PK_(CERT_URI_+"raw/"),
+    CERT_URI_GET_WITH_PK_(CERT_URI_+"raw-with-private-key/"),
     CERT_URI_ISSUE(CERT_URI_+"issue"),
     CERT_URI_REVOKE_(CERT_URI_+"revoke/"),
 

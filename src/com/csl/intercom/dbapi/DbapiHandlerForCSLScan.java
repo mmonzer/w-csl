@@ -14,7 +14,6 @@ import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -36,36 +35,21 @@ import java.util.stream.Collectors;
  * Provides an interface for retrieving the devices, connections and so on,
  * and to send information to it (CPE Items, a Scan's status, ...).
  */
-public class DbapiHandlerForCSLScan implements AutoCloseable {
-    private String dbapiUrl;
-    private String apiKey;
-    private HttpClient dbapiHttpClient = new HttpClient();
+public class DbapiHandlerForCSLScan extends DbapiHandler {
     private final int maxPageSize = 1000;
     private static final Logger logger = LoggerFactory.getLogger(DbapiHandlerForCSLScan.class);
 
+    // TODO : test change to extension DbapiHandler: constructors + createDbapiRequest
     public DbapiHandlerForCSLScan() {
-        this(CSLContext.instance.getConfig());
+        this("CSLScan", CSLContext.instance.getConfig());
+    }
+
+    public DbapiHandlerForCSLScan(String moduleName, Json config) {
+        super(moduleName, CSLContext.instance.getConfig());
     }
 
     public DbapiHandlerForCSLScan(Json config) {
-        Json globalConfig = config.get("global");
-        dbapiUrl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "https://" : "http://";
-        dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
-        dbapiUrl += "/api";
-        apiKey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
-        try {
-            dbapiHttpClient.start();
-        } catch (Exception e) {
-            logger.error("Could not start the DB-API HTTP client.", e);
-        }
-    }
-
-    public void close() {
-        try {
-            dbapiHttpClient.stop();
-        } catch (Exception e) {
-            logger.error("Could not stop the DB-API HTTP client.", e);
-        }
+        this("CSLScan", CSLContext.instance.getConfig());
     }
 
     /**
@@ -75,7 +59,7 @@ public class DbapiHandlerForCSLScan implements AutoCloseable {
      */
     private void deleteCpeItemsFromDbapi(List<CpeItem> deletedItems) {
         Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(CpeItem::getMongoEntityId).toArray()));
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_CPE_ITEMS.getEndpoint())
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_CPE_ITEMS)
                 .header(HttpHeader.CONTENT_TYPE, "application/json")
                 .content(new StringContentProvider(contents.toString()));
         try {
@@ -107,7 +91,7 @@ public class DbapiHandlerForCSLScan implements AutoCloseable {
 
     private void deleteMicrosoftKbsFromDbapi(List<MicrosoftKB> deletedItems) {
         Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(MicrosoftKB::getMongoEntityId).toArray()));
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_MICROSOFT_KBS.getEndpoint())
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_MICROSOFT_KBS)
                 .header(HttpHeader.CONTENT_TYPE, "application/json")
                 .content(new StringContentProvider(contents.toString()));
         try {
@@ -740,9 +724,8 @@ public class DbapiHandlerForCSLScan implements AutoCloseable {
      * @return The crafted {@link Request}.
      */
     private Request createDbapiRequest(HttpMethod method, String endpoint) {
-        return dbapiHttpClient.newRequest(dbapiUrl + endpoint)
-                .method(method)
-                .header(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
+        // TODO : test changes. api saved at constructor
+        return initRequestWithHeaders(method.toString(), endpoint);
     }
 
     /**
@@ -776,10 +759,8 @@ public class DbapiHandlerForCSLScan implements AutoCloseable {
      * @return The crafted {@link Request}.
      */
     private Request createDbapiPatchRequest(String endpoint) {
-        return dbapiHttpClient.newRequest(dbapiUrl + endpoint)
-                .method("PATCH")
-                .header(HttpHeader.CONTENT_TYPE, "application/json")
-                .header(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
+        // TODO : test changes. api saved at constructor
+        return initRequestWithHeaders("PATCH", endpoint);
     }
 
     /**
@@ -935,3 +916,4 @@ public class DbapiHandlerForCSLScan implements AutoCloseable {
         return devices;
     }
 }
+

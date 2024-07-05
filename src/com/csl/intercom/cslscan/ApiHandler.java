@@ -19,10 +19,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.ConnectException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Class to handle communication for API client.
@@ -30,9 +32,9 @@ import java.util.concurrent.TimeUnit;
 public class ApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ApiHandler.class);
     private final String moduleName;
-    private final String url;
-    private final HashMap<HttpHeader, String> headers = new HashMap<>();
-    private final HttpClient httpClient = new HttpClient();
+    protected final String url;
+    protected final HashMap<HttpHeader, String> headers = new HashMap<>();
+    protected final HttpClient httpClient = new HttpClient();
     private ICleaner outputCleaner = (e) -> e;
 
     /**
@@ -64,7 +66,11 @@ public class ApiHandler implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        this.httpClient.stop();
+        try {
+        this.httpClient.stop();}
+        catch (Exception e) {
+            logger.error("Could not stop the {} HTTP client.", moduleName, e);
+        }
     }
 
     /**
@@ -96,11 +102,23 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     private JsonApiResponse sendRequestToApi(HttpMethod method, String endpoint, Json params, Json body, boolean quiet) {
+        return sendRequestToApi(method.toString(), endpoint, params, body, quiet);
+    }
+
+    /**
+     * Send an HTTP request to the scanner.
+     *
+     * @param method   The HTTP method to use (GET, POST, PUT, ...)
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param body     The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    private JsonApiResponse sendRequestToApi(String method, String endpoint, Json params, Json body, boolean quiet) {
         JsonApiResponse res = JsonApiResponse.error(null);
 
         try {
-            Request request = createRequest(method, endpoint, params, body);
-            ContentResponse response = request.send();
+            ContentResponse response = sendRequest(method, endpoint, params, body);
             res = parseResponse(response, moduleName);
         } catch (UnsupportedOperationException e) {
             logger.error("Malformed json", e);
@@ -118,6 +136,12 @@ public class ApiHandler implements AutoCloseable {
         return outputCleaner.clean(res);
     }
 
+    protected ContentResponse sendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
+        Request request = createRequest(method, endpoint, params, body);
+        ContentResponse response = request.send();
+        return response;
+    }
+
     /**
      * Creates the request with the custom parameters
      *
@@ -130,6 +154,33 @@ public class ApiHandler implements AutoCloseable {
     private Request createRequest(HttpMethod method, String endpoint, Json params, Json body) {
         endpoint = endpoint.replace(" ", "%20").replace(":", "%3A");
         Request request = initRequest(method, url + endpoint, httpClient);
+        return fillRequest(request, params, body);
+    }
+
+    /**
+     * Creates the request with the custom parameters
+     *
+     * @param method   http method to use : GET POST PUT DELETE
+     * @param endpoint endpoint to send the request
+     * @param params   parameters of the request
+     * @param body     body of the request
+     * @return the request created
+     */
+    public Request createRequest(String method, String endpoint, Json params, Json body) {
+        endpoint = endpoint.replace(" ", "%20").replace(":", "%3A");
+        Request request = initRequest(method, url + endpoint, httpClient);
+        return fillRequest(request, params, body);
+    }
+
+    /**
+     * Fills the request with the custom information
+     *
+     * @param request   request to fill
+     * @param params   parameters of the request
+     * @param body     body of the request
+     * @return the request created
+     */
+    private Request fillRequest(Request request, Json params, Json body) {
         addHeadersToRequest(headers, request);
         addParamsToRequest(params, request);
         if (headers.get(HttpHeader.CONTENT_TYPE).contains("json")) {
@@ -140,7 +191,37 @@ public class ApiHandler implements AutoCloseable {
         return request;
     }
 
+    /**
+     * Initialize a request with the headers
+     *
+     * @param method method of the request
+     * @param endpoint endpoint of the request
+     */
+    protected Request initRequestWithHeaders(String method, String endpoint) {
+        Request request = initRequest(method, url+endpoint, httpClient);
+        addHeadersToRequest(headers, request);
+        return request;
+    }
+
     // region -- static methods
+
+    /**
+     * Creates the request
+     *
+     * @param method method of the new request
+     * @param uri    uri of the new request
+     * @param client client for the request
+     * @return new request
+     */
+    protected static Request initRequest(String method, String uri, HttpClient client) {
+        List<String> allowedMethods = List.of("GET","POST","PUT", "DELETE","PATCH");
+        if (!allowedMethods.contains(method)) {
+            throw new UnsupportedOperationException("Wrong http method : "+method);
+        }
+        Request request = client.newRequest(uri);
+        request.method(method);
+        return request;
+    }
 
     /**
      * Creates the request
@@ -182,7 +263,7 @@ public class ApiHandler implements AutoCloseable {
      * @param headers headers to add
      * @param request request to add parameters
      */
-    private static void addHeadersToRequest(HashMap<HttpHeader, String> headers, Request request) {
+    protected static void addHeadersToRequest(HashMap<HttpHeader, String> headers, Request request) {
         if (headers == null) {
             return;
         }
@@ -374,7 +455,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendDelete(String endpoint, Json params) {
-        return sendRequestToApi(HttpMethod.DELETE, endpoint, params, null, false);
+        return sendDelete( endpoint, params, null);
     }
 
     /**
@@ -432,7 +513,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendPost(String endpoint, Json body) {
-        return sendRequestToApi(HttpMethod.POST, endpoint, null, body, false);
+        return sendPost( endpoint, null, body);
     }
 
     /**
@@ -455,7 +536,30 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendPut(String endpoint, Json body) {
-        return sendRequestToApi(HttpMethod.PUT, endpoint, null, body, false);
+        return sendPut(endpoint, null, body);
+    }
+
+    /**
+     * Send an HTTP PATCH request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param body     The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendPatch(String endpoint, Json params, Json body) {
+        return sendRequestToApi("PATCH", endpoint, params, body, false);
+    }
+
+    /**
+     * Send an HTTP PATCH request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param body     The body to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendPatch(String endpoint, Json body) {
+        return sendPatch( endpoint, null, body);
     }
 
     /**

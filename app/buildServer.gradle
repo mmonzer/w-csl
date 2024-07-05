@@ -1,0 +1,10 @@
+plugins{
+    id 'java'
+    id 'application'
+}
+
+apply from : 'build.gradle'
+
+application {
+    mainClass = 'main.CSLIDSMainServer'
+}

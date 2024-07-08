@@ -3,7 +3,7 @@ package com.csl.autocrypt;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
-
+import static com.csl.autocrypt.ConvertDapiVault.transformToDbapi;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.*;
 
@@ -44,9 +44,18 @@ public class AutoCryptLogic {
      * @param params    parameters of the request
      */
     public JsonApiResponse updateIssuerInfo(String name, String description, String issuerRef, Json params, Json bodyBase, Json bodyExtra) {
+        JsonApiResponse oldValuesFromDbapi = dbHandler.getInfoIssuerFromDbapi(issuerRef);
+
+        if (!oldValuesFromDbapi.isSuccess()) {
+            return oldValuesFromDbapi;
+        }
+
         JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, bodyBase, params);
         return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, name, issuerRef, description, params.get(PATH).asString(),
-                JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
+                JsonApiResponse.result(mergerJson(responseFromModule.getResult(),
+                        mergerJson(bodyExtra, oldValuesFromDbapi.getResult()))
+                )
+        );
     }
 
     /**
@@ -273,15 +282,14 @@ public class AutoCryptLogic {
     }
 
     private static void convertRoleToDbapi(Json obj) {
-        obj.set(COUNTRY, jsonListToString(obj.get(COUNTRY),","));
-        obj.set("organization_unit", jsonListToString(obj.get("ou"),","));
-        obj.delAt("ou");
-        obj.set(ORGANIZATION, jsonListToString(obj.get(ORGANIZATION),","));
-        obj.set("state", jsonListToString(obj.get("province"),","));
-        obj.delAt("province");
-        obj.set(LOCALITY, jsonListToString(obj.get(LOCALITY),","));
-        obj.set("street_address", jsonListToString(obj.get("street_address"),","));
-        obj.set("postal_code", jsonListToString(obj.get("postal_code"),","));
+        transformToDbapi(obj, OU, PROVINCE);
+        jsonListToStringListAtJson(obj, COUNTRY, LIST_DELIMITER);
+        jsonListToStringListAtJson(obj, ORGANIZATION_UNIT, LIST_DELIMITER);
+        jsonListToStringListAtJson(obj, ORGANIZATION, LIST_DELIMITER);
+        jsonListToStringListAtJson(obj, STATE, LIST_DELIMITER);
+        jsonListToStringListAtJson(obj, LOCALITY, LIST_DELIMITER);
+        jsonListToStringListAtJson(obj, STREET_ADDRESS, LIST_DELIMITER);
+        jsonListToStringListAtJson(obj, POSTAL_CODE, LIST_DELIMITER);
     }
 
     /**

@@ -27,7 +27,7 @@ public enum ApiEndpointForCSLAutocrypt {
 
     CA_URI("/api/ca"),
     CA_URI_GENERATE_INTER(CA_URI+"/generate-intermediate"),
-    CA_URI_GENERATE_ROOT(CA_URI+"/generate-root")
+    CA_URI_GENERATE_ROOT(CA_URI+"/generate-root"),
     ;
 
     private final String endpoint;

@@ -33,6 +33,41 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * List all the ca
+
+     */
+    public JsonApiResponse listIssuers() {
+        return this.sendGet(
+                DbapiEndpointForCSLAutocrypt.ISSUER.endpoint(),
+                null);
+    }
+
+    /**
+     * Get the information of a ca
+     *
+     * @param issuerRef serial ref of the issuer in dbapi
+     */
+    public JsonApiResponse getInfoIssuerFromDbapi(String issuerRef) {
+        JsonApiResponse response = listIssuers();
+        if (!response.isSuccess()) {
+            return response;
+        }
+        Json result = response.getResult();
+
+        if (!result.isArray()) {
+            return response;
+        }
+
+        for (Json ca : result.asJsonList()) {
+            if (ca.isObject() && !ca.isNull() && ca.has(ISSUER_REF) && ca.get(ISSUER_REF).asString().equals(issuerRef)) {
+                return JsonApiResponse.result(ca);
+            }
+        }
+
+        return JsonApiResponse.error("CA not found in dbapi");
+    }
+
+    /**
      * Updates the information of the given issuer in the module and the DB
      *
      * @param issuerRef serial ref of the issuer in dbapi

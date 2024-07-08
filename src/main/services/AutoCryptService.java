@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.csl.autocrypt.ConvertDapiVault.transformToVault;
 import static com.csl.autocrypt.outils.JsonHelper.*;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 
@@ -209,7 +210,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String description = extractValueStringOrNull(body, DESCRIPTION);
         String issuerRef = extractValueString(body, ISSUER_REF);
         Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.object();
+        Json bodyExtra = Json.read(body.toString());
         transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
         transferValueStringOrNull(bodyBase, bodyExtra, VAULT_ID);
         transferValueIntegerOrNull(bodyBase, bodyExtra, ID);
@@ -331,17 +332,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         transferValueString(body, params, PATH);
         Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
         Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.object();
-        if (body.has("organization_unit")) {
-            bodyBase.set("ou", body.get("organization_unit").asString());
-            bodyExtra.set("organization_unit", body.get("organization_unit").asString());
-            drop(bodyBase, "organization_unit");
-        }
-        if (body.has("state")) {
-            bodyBase.set("province", body.get("state").asString());
-            bodyExtra.set("state", body.get("state").asString());
-            drop(bodyBase, "state");
-        }
+        Json bodyExtra = Json.read(body.toString());
+
+        transformToVault(bodyBase, ORGANIZATION_UNIT, STATE);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -400,23 +393,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String description = extractValueStringOrNull(body, DESCRIPTION);
         transferValueString(body, params, PATH);
         drop(body, ID, CERTIFICATE_AUTHORITY, VAULT_ID, CREATED_AT, UPDATED_AT);
-        drop(body, "ip_sans", "uri_sans", "not_before_duration", "not_after", "allow_token_displayname");
+        drop(body, IP_SANS, URI_SANS, NOT_BEFORE_DURATION, NOT_AFTER, ALLOW_TOKEN_DISPLAYNAME);
         Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.object();
+        Json bodyExtra = Json.read(body.toString());
 //        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
-        transferValueStringOrNull(bodyBase, bodyExtra, CERTIFICATE_AUTHORITY_ID);
-        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
+//        transferValueStringOrNull(bodyBase, bodyExtra, CERTIFICATE_AUTHORITY_ID);
+//        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
         if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
-        if (body.has("organization_unit")) {
-            bodyBase.set("ou", body.get("organization_unit").asString());
-            bodyExtra.set("organization_unit", body.get("organization_unit").asString());
-            drop(bodyBase, "organization_unit");
-        }
-        if (body.has("state")) {
-            bodyBase.set("province", body.get("state").asString());
-            bodyExtra.set("state", body.get("state").asString());
-            drop(bodyBase, "state");
-        }
+        transformToVault(bodyBase, ORGANIZATION_UNIT);
+        transformToVault(bodyBase, STATE);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -481,14 +466,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         getValueString(body, COMMON_NAME);
         String ttl = getValueString(body, TTL);
         Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.object();
+        Json bodyExtra = Json.read(body.toString());
         if (body.has(COMMON_NAME)) {bodyExtra.set(COMMON_NAME, body.get(COMMON_NAME).asString());}
-        transferValueStringOrNull(bodyBase, bodyExtra, COUNTRY);
-        transferValueStringOrNull(bodyBase, bodyExtra, "state");
-        transferValueStringOrNull(bodyBase, bodyExtra, "organization_unit");
-        transferValueStringOrNull(bodyBase, bodyExtra, ORGANIZATION);
-        transferValueStringOrNull(bodyBase, bodyExtra, LOCALITY);
-        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
         bodyExtra.set(TTL, ttl);
 
         // endregion -- Verify required body keys and extract key values
@@ -605,7 +584,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String name = getValueStringOrNull(body, COMMON_NAME);
         String description = extractValueStringOrNull(body, DESCRIPTION);
         Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.object();
+        Json bodyExtra = Json.read(body.toString());
         transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
         transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
         if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
@@ -629,7 +608,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json params = Json.object();
         params.at(PATH, name);
         Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.object();
+        Json bodyExtra = Json.read(body.toString());
         transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
         transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
         if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}

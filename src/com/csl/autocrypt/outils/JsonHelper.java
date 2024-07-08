@@ -246,6 +246,25 @@ public class JsonHelper {
         }
     }
 
+    /**
+     * Copy keys if exists
+     *
+     * @param objOrigin
+     * @param objDest
+     * @param keys
+     */
+    public static void copyTo(Json objOrigin, Json objDest, String... keys) {
+        if (objDest==null) { objDest = Json.object(); }
+        if (objOrigin != null) {
+            for (String key : keys) {
+                if (objOrigin.has(key)) {
+                    objDest.set(key, objOrigin.get(key));
+                    objOrigin.delAt(key);
+                }
+            }
+        }
+    }
+
     public static String jsonListToString(Json array, String delimiter) {
         if (array==null) {
             return null;
@@ -257,5 +276,18 @@ public class JsonHelper {
             return str.substring(1);
         }
         return array.toString();
+    }
+
+    public static void jsonListToStringListAtJson(Json obj, String key, String delimiter) {
+        if (obj != null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isArray()) {
+            List<Json> array = obj.get(key).asJsonList();
+            if (!array.isEmpty()) {
+                String str = "";
+                for (Json e : array) {
+                    str += ',' + (e.isString() ? e.asString() : e.toString());
+                }
+                obj.set(key, str.substring(1));
+            }
+        }
     }
 }

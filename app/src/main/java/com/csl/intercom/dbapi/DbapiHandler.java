@@ -4,7 +4,6 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpoint;
 import com.csl.intercom.dbapi.enums.FileActionStatus;
@@ -27,8 +26,10 @@ import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -58,6 +59,7 @@ public class DbapiHandler implements AutoCloseable {
     }
 
     public DbapiHandler(Json config) {
+        ensureSSLDbApiHandlerInitialization();
         Json globalConfig = config.get("global");
         dbapiUrl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "https://" : "http://";
         dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
@@ -69,6 +71,25 @@ public class DbapiHandler implements AutoCloseable {
             logger.error("Could not start the DB-API HTTP client.", e);
         }
     }
+    private void ensureSSLDbApiHandlerInitialization(){
+        // Retrieve system properties
+        String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
+        String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
+
+        // Ensure the properties are set
+        if (trustStorePath == null || trustStorePassword == null) {
+            throw new IllegalStateException("Trust store properties are not set.");
+        }
+
+        // Configure SslContextFactory with the retrieved properties
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setTrustStorePath(trustStorePath);
+        sslContextFactory.setTrustStorePassword(trustStorePassword);
+        //sslContextFactory.setTrustAll(true);
+
+        dbapiHttpClient = new HttpClient(sslContextFactory);
+    }
+
 
     public void close() {
         try {

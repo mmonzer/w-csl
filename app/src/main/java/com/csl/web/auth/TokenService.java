@@ -1,18 +1,17 @@
 package com.csl.web.auth;
 
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.User;
 import com.csl.web.auth.user.UserPrincipal;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.DefaultClaims;
+import io.jsonwebtoken.security.Keys;
+
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class TokenService {
 
@@ -36,11 +35,13 @@ public final class TokenService {
     	System.out.println("newtoken");
     
     	try {
-        DefaultClaims claims = new DefaultClaims();
-        claims.put(ROLES, user.getRoles().toString());
-        claims.setSubject(user.getUsername());
-        JwtBuilder builder = Jwts.builder();
-        System.out.println("builder="+builder);
+        Claims claims = Jwts.claims().build();
+            claims.put(ROLES, user.getRoles().toString());
+            JwtBuilder builder = Jwts.builder()
+                    .setClaims(claims)
+                    .setSubject(user.getUsername());
+
+            System.out.println("builder="+builder);
         
         SignatureAlgorithm sa = SignatureAlgorithm.HS512;
         String z = Jwts.builder()
@@ -58,11 +59,13 @@ public final class TokenService {
     }
 
     public final void revokeToken(String token) {
-        Date expirationDate = Jwts.parser()
-                .setSigningKey(jwtSecretKey)
+        Claims claims = Jwts.parser()
+                .setSigningKey(Keys.hmacShaKeyFor(jwtSecretKey.getBytes()))
+                .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
+                .getBody();
+
+        Date expirationDate = claims.getExpiration();
         blacklistedTokenRepository.addToken(token, expirationDate.getTime());
     }
 
@@ -75,8 +78,10 @@ public final class TokenService {
     public final UserPrincipal getUserPrincipal(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(jwtSecretKey)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
+
         List<String> roles = (List<String>) claims.get(ROLES);
         return UserPrincipal.of(claims.getSubject(), roles.stream().map(role -> Role.valueOf(role)).collect(Collectors.toList()));
     }

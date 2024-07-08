@@ -1,22 +1,11 @@
 package com.csl.web.auth;
 
+import com.csl.web.auth.user.UserService;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import com.csl.web.auth.controller.AuthController;
-import com.csl.web.auth.controller.HelpController;
-import com.csl.web.auth.controller.UserController;
-import com.csl.web.auth.user.Role;
-import com.csl.web.auth.user.User;
-import com.csl.web.auth.user.UserService;
-import com.ucsl.json.Json;
-
-import spark.Request;
-import spark.Response;
-import spark.Service;
 
 public final class AuthentificationManager {
 	
@@ -36,8 +25,6 @@ public final class AuthentificationManager {
     private final TokenService tokenService = new TokenService(SECRET_JWT);
 
     private UserService userService = new UserService();
-
-	private HelpController helpController;
     
     
 	/*
@@ -165,51 +152,6 @@ public final class AuthentificationManager {
 		Spark.webSocket(path, handler);
 	}
     */
-	
-	
-    public void addAuthentification(Service sparkServer) {
-    	
-    	//initServer(new ServerConfig());
-
-    	//userService.register("user123", "$2a$10$9xHgxps5MJ85eBl74RMhsuORACRuvDngy.ftbB/3G9lWxMGDIz8lO", "John", "Lacey",false);
-    	userService.register("user123", "123456", "John", "Lacey",true).assignRole(Role.INTEGRATOR).assignRole(Role.ADMIN);
-
-        new AuthController(sparkServer, userService, tokenService, debug).init();
-        new UserController(sparkServer, tokenService, debug).init();
-
-        helpController=new HelpController(sparkServer, tokenService, true).init();
-        
-        // PERIODIC TOKENS CLEAN UP
-        EXECUTOR_SERVICE.scheduleAtFixedRate(() -> {
-            if (debug) System.out.println("Removing expired tokens");
-            tokenService.removeExpired();
-        }, 60, 60, TimeUnit.SECONDS); // every minute
-
-        
-        // Spark.get("/users", (req, res)  -> renderGetCommand(req,res));
-        // Spark.post("*", (req, res)  -> renderPostCommand(req,res));
-
-
-        for (User u : userService.getUsers()) {
-            System.out.println(u);
-        }
-    }
-
-    private Object renderGetCommand(Request req, Response res) {
-		// TODO Auto-generated method stub
-    	Json rep=Json.object();
-    	rep.set("test", "hello");
-		return rep.toString();
-	}
-
-    
-    private Object renderPostCommand(Request req, Response res) {
- 		// TODO Auto-generated method stub
-     	Json rep=Json.object();
-     	rep.set("test", "connect:ok");
- 		return rep.toString();
- 	}
-
     
     /*
     

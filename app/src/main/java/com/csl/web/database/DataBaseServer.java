@@ -5,8 +5,6 @@ import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import spark.Request;
-import spark.Response;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,55 +82,6 @@ public class DataBaseServer {
 	public  String getDataBaseDirectory() {
 		return datafiledir;
 
-	}
-
-
-	private  String do_save_jsonfile(Request req, Response res) {
-
-
-
-		String fileName=req.params(":file");
-		String sresponse = req.body();
-		Json data = Json.read(sresponse);
-
-
-		Json jresult = saveJsonAsDataFile(fileName,data);
-
-
-		fileName=cleanDataFileName(fileName);
-		//IDSTrace.log(IDSTrace.WEB_DATABASE,"Save jsonfile:"+fileName);
-
-		return jresult.toString();
-	}
-
-
-
-	private  String do_load_jsonfile(Request req, Response res) {
-
-
-		String fileName=req.params(":file");
-
-		Json jresult =loadDataFileAsJson(fileName);
-
-
-		String result=jresult.toString();
-
-		res.body(result);
-		return result;
-	}
-
-	private  String do_dir_jsonfile(Request req, Response res) {
-
-
-		String fileName=req.params(":file");
-
-		Json jresult =listJsonFilesAsJson();
-
-
-		String result=jresult.toString();
-
-		res.body(result);
-		return result;
 	}
 
 	public  String cleanDataFileName(String filename) {

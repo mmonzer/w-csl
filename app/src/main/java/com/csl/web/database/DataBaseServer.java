@@ -1,21 +1,19 @@
 package com.csl.web.database;
 
+import com.csl.core.CSLContext;
+import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.web.websockets.CSLWebSocket;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+import spark.Request;
+import spark.Response;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.web.CSLHttpServer;
-import com.csl.web.websockets.CSLWebSocket;
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
-
-import spark.Request;
-import spark.Response;
 
 
 public class DataBaseServer {
@@ -80,13 +78,6 @@ public class DataBaseServer {
 
 	 */
 
-	}
-
-	public void addRoute(CSLHttpServer cslHttpServer ) {
-		cslHttpServer.addPostRoute("/save_jsonfile/:file", (req, res) -> do_save_jsonfile(req,res));
-		cslHttpServer.addGetRoute("/load_jsonfile/:file", (req, res) -> do_load_jsonfile(req,res));
-
-		cslHttpServer.addGetRoute("/dir_jsonfile", (req, res) -> do_dir_jsonfile(req,res));
 	}
 	
 	

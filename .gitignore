@@ -14,3 +14,4 @@ downloads/
 .DS_Store
 .python-version
 /build/
+/app/build/

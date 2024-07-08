@@ -13,3 +13,4 @@ mqtt_agent_concentrator*
 downloads/
 .DS_Store
 .python-version
+/build/

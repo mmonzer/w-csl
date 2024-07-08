@@ -1,5 +1,7 @@
 package com.csl.core;
 
+import com.ucsl.json.Json;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,8 +12,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-
-import com.ucsl.json.Json;
 
 public class CSLUtil {
 
@@ -54,7 +54,7 @@ public class CSLUtil {
 
 		if (config==null) return defaulValue;
 		Json obj=config.get(name);
-		if (obj==null) return new Boolean(defaulValue);
+		if (obj==null) return defaulValue;
 		return obj.asBoolean();
 
 	}

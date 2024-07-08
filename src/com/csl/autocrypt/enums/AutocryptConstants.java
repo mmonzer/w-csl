@@ -14,9 +14,11 @@ public final class AutocryptConstants {
     public static final String CERTIFICATE_AUTHORITY = "certificate_authority";
     public static final String CERTIFICATE_AUTHORITY_ID = "certificate_authority_id";
     public static final String CERTIFICATE_JSON = "certificate_json";
+    public static final String CERTIFICATE_OBJECT = "certificate_obj";
     public static final String COMMON_NAME = "common_name";
     public static final String COUNTRY = "country";
     public static final String CREATED_AT = "created_at";
+    public static final String CRL_DISTRIBUTION_POINTS = "crl_distribution_points";
     public static final String DESCRIPTION = "description";
     public static final String FILE = "file";
     public static final String ID = "id";
@@ -56,6 +58,7 @@ public final class AutocryptConstants {
     public static final String UPDATED_AT = "updated_at";
     public static final String URI_SANS = "uri_sans";
     public static final String VAULT_ID = "vault_id";
+    public static final String VAULT_ROLE = "vault_role";
     public static final String VAULT_ROLE_ID = "vault_role_id";
     public static final String VAULT_ROLE_NAME = "vault_role_name";
     public static final String WITH_PRIVATE_KEY = "with_private_key";

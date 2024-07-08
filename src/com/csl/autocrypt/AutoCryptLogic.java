@@ -51,6 +51,11 @@ public class AutoCryptLogic {
         }
 
         JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, bodyBase, params);
+//            responseFromModule.getResult().set(PATH, PKI);
+//            responseFromModule.getResult().set(CA_TYPE, ROOT);
+        transferValueStringOrNull(bodyExtra, responseFromModule.getResult(), CRL_DISTRIBUTION_POINTS);
+        transferValueStringOrNull(bodyExtra, responseFromModule.getResult(), OCSP_SERVERS);
+
         return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, name, issuerRef, description, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(responseFromModule.getResult(),
                         mergerJson(bodyExtra, oldValuesFromDbapi.getResult()))
@@ -196,13 +201,14 @@ public class AutoCryptLogic {
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
             responseFromModule.getResult().set(CA_TYPE, isRoot ? ROOT : INTERMEDIATE);
             responseFromModule.getResult().set(ISSUER_NAME, idName);
+            // TODO: deal with serial number and certificate object
             if (isRoot) {
                 responseFromModule.getResult().set(CA_TYPE, ROOT);
-                return dbHandler.generateRootCA(issuerRef, idName, null,
+                return dbHandler.generateRootCA(issuerRef, idName, null,null, null,
                         mergerJson(responseFromModule.getResult(), params));
             } else {
                 responseFromModule.getResult().set(CA_TYPE, INTERMEDIATE);
-                return dbHandler.generateIntermediateCA(issuerRef, idName, null,
+                return dbHandler.generateIntermediateCA(issuerRef, idName, null, null, null,
                         mergerJson(responseFromModule.getResult(), params));
             }
         } else if (responseFromModule.isSuccess() && (responseFromModule.getResult().get(IMPORTED_ISSUERS).isNull() || responseFromModule.getResult().get(IMPORTED_ISSUERS).asJsonList().isEmpty())) {
@@ -283,13 +289,13 @@ public class AutoCryptLogic {
 
     private static void convertRoleToDbapi(Json obj) {
         transformToDbapi(obj, OU, PROVINCE);
-        jsonListToStringListAtJson(obj, COUNTRY, LIST_DELIMITER);
-        jsonListToStringListAtJson(obj, ORGANIZATION_UNIT, LIST_DELIMITER);
-        jsonListToStringListAtJson(obj, ORGANIZATION, LIST_DELIMITER);
-        jsonListToStringListAtJson(obj, STATE, LIST_DELIMITER);
-        jsonListToStringListAtJson(obj, LOCALITY, LIST_DELIMITER);
-        jsonListToStringListAtJson(obj, STREET_ADDRESS, LIST_DELIMITER);
-        jsonListToStringListAtJson(obj, POSTAL_CODE, LIST_DELIMITER);
+        jsonListToStringListAtJson(obj, COUNTRY);
+        jsonListToStringListAtJson(obj, ORGANIZATION_UNIT);
+        jsonListToStringListAtJson(obj, ORGANIZATION);
+        jsonListToStringListAtJson(obj, STATE);
+        jsonListToStringListAtJson(obj, LOCALITY);
+        jsonListToStringListAtJson(obj, STREET_ADDRESS);
+        jsonListToStringListAtJson(obj, POSTAL_CODE);
     }
 
     /**
@@ -455,22 +461,27 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has(ISSUER_REF) &&
                 responseFromModule.getResult().get(ISSUER_REF).isString()) {
+            bodyExtra = mergerJson(responseFromModule.getResult(), bodyExtra);
             String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
             String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
             responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object(PATH, PKI));
 //            responseFromModule.getResult().set(PATH, PKI);
 //            responseFromModule.getResult().set(CA_TYPE, ROOT);
-            sendToDbApiIfSaveToDb(dbHandler::generateRootCA, issuerRef, name, description,
-                    JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
+            transformToDbapi(responseFromModule.getResult(), CRL_DISTRIBUTION_POINTS, OCSP_SERVERS);
 
             // save to dbapi the certificate of ca
+            params =Json.object(PATH, PKI);
             responseFromModule = moduleHandler.getCertificateInfo(serialNumber, params);
-            return dbHandler.generateCertificate(
-                    serialNumber,
-                    name,
-                    null,
-                    "CA root certificate : " + (description!=null?description:""),
-                    responseFromModule.toJson());
+            if (!responseFromModule.isSuccess()) {
+                return responseFromModule;
+            }
+            responseFromModule.getResult().set(SERIAL_NUMBER,serialNumber);
+            bodyExtra.set(CERTIFICATE_OBJECT, responseFromModule.getResult());
+            bodyExtra.set(CERTIFICATE_OBJECT, responseFromModule.getResult());
+
+            return dbHandler.generateRootCA(issuerRef, name, description, serialNumber, responseFromModule.getResult(),
+                    mergerJson(responseFromModule.getResult(), bodyExtra));
+
         } else {
             return JsonApiResponse.error("Error creating the CA: " + responseFromModule.getError().toJson());
         }
@@ -486,26 +497,29 @@ public class AutoCryptLogic {
     public JsonApiResponse generateIntermediateCA(String idName, String description, Json params, Json bodyBase, Json bodyExtra) {
         JsonApiResponse responseFromModule = moduleHandler.generateIntermediateCA(bodyBase, params);
 
-        if (responseFromModule.isSuccess() &&
-                responseFromModule.getResult().has(ISSUER_REF) &&
-                responseFromModule.getResult().get(ISSUER_REF).isString()) {
-            String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
-            responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
-            sendToDbApiIfSaveToDb(dbHandler::generateIntermediateCA, issuerRef, idName, description,
-                    JsonApiResponse.result(mergerJson(
-                            responseFromModule.getResult(), bodyExtra)));
-
-            // save to dbapi the certificate of ca
-            responseFromModule = moduleHandler.getCertificateInfo(responseFromModule.getResult().get("serial_number").asString(), params);
-            return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
-                    responseFromModule.getResult().get(SERIAL_NUMBER).asString(),
-                    idName,
-                    null,
-                    "CA intermediate certificate : " + (description!=null?description:""),
-                    responseFromModule);
-        } else {
+        if (!responseFromModule.isSuccess() ||
+                !responseFromModule.getResult().has(ISSUER_REF) ||
+                !responseFromModule.getResult().get(ISSUER_REF).isString()) {
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
+
+        bodyExtra = mergerJson(responseFromModule.getResult(), bodyExtra);
+        String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
+        responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
+
+        transformToDbapi(responseFromModule.getResult(), CRL_DISTRIBUTION_POINTS);
+        transformToDbapi(responseFromModule.getResult(), OCSP_SERVERS);
+
+        // save to dbapi the certificate of ca
+        params.set(PATH, PKI);
+        String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
+        responseFromModule = moduleHandler.getCertificateInfo(serialNumber, params);
+        if (!responseFromModule.isSuccess()) { return responseFromModule; }
+
+        bodyExtra.set(CERTIFICATE_OBJECT, responseFromModule.getResult());
+
+        return dbHandler.generateIntermediateCA(issuerRef, idName, description, serialNumber, responseFromModule.getResult(),
+                mergerJson(responseFromModule.getResult(), bodyExtra));
     }
 
     /**

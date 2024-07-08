@@ -2,6 +2,7 @@ package com.csl.autocrypt;
 
 import com.csl.autocrypt.enums.DbapiEndpointForCSLAutocrypt;
 import com.csl.intercom.cslscan.ApiHandler;
+import com.csl.intercom.dbapi.DbapiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
@@ -11,25 +12,23 @@ import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 /**
  * Extension of the Api Handler for implementing the specific methods of AutoCrypt that contact the DBAPI
  */
-public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
+public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
 
     /**
      * Constructor with no module name
      *
-     * @param url url of the service api
      */
-    public DbapiHandlerForCSLAutoCrypt(String url) {
-        this("", url);
+    public DbapiHandlerForCSLAutoCrypt() {
+        this("CSLAutoCrypt");
     }
 
     /**
      * General constructor
      *
      * @param nameModule nameof the module
-     * @param url        url of the service api
      */
-    public DbapiHandlerForCSLAutoCrypt(String nameModule, String url) {
-        super(nameModule, url);
+    public DbapiHandlerForCSLAutoCrypt(String nameModule) {
+        super(nameModule);
     }
 
     /**
@@ -39,7 +38,7 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse listIssuers() {
         return this.sendGet(
                 DbapiEndpointForCSLAutocrypt.ISSUER.endpoint(),
-                null);
+                Json.object());
     }
 
     /**
@@ -59,8 +58,8 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
         }
 
         for (Json ca : result.asJsonList()) {
-            if (ca.isObject() && !ca.isNull() && ca.has(ISSUER_REF) && ca.get(ISSUER_REF).asString().equals(issuerRef)) {
-                return JsonApiResponse.result(ca);
+            if (ca.isObject() && !ca.isNull() && ca.has(ISSUER_REF) && ca.get(ISSUER_REF).asString().equals(issuerRef) && ca.has(CA_JSON)) {
+                return JsonApiResponse.result(ca.get(CA_JSON));
             }
         }
 
@@ -214,8 +213,8 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param description description of the CA in the dbapi
      * @param body body of the request with commonName, ttl, and optionally others
      */
-    public JsonApiResponse generateRootCA(String issuerRef, String name, String description, Json body) {
-        return generateCA(issuerRef, name, PKI, description, body);
+    public JsonApiResponse generateRootCA(String issuerRef, String name, String description, String serialNumber, Json certificate, Json body) {
+        return generateCA(issuerRef, name, PKI, description, serialNumber, certificate, body);
     }
 
     /**
@@ -247,8 +246,8 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param description description of the CA in the dbapi
      * @param body parameters with commonName, ttl, and optionally path
      */
-    public JsonApiResponse generateIntermediateCA(String issuerRef, String name, String description, Json body) {
-        return generateCA(issuerRef, name, name, description, body);
+    public JsonApiResponse generateIntermediateCA(String issuerRef, String name, String description, String serialNumber, Json certificate, Json body) {
+        return generateCA(issuerRef, name, name, description, serialNumber, certificate, body);
     }
 
     /**
@@ -260,12 +259,14 @@ public class DbapiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param description description of the CA in the dbapi
      * @param body parameters with commonName, ttl, and optionally path
      */
-    private JsonApiResponse generateCA(String issuerRef, String name, String path, String description, Json body) {
+    private JsonApiResponse generateCA(String issuerRef, String name, String path, String description, String serialNumber, Json certificate, Json body) {
         Json input = Json.object();
         input.at(COMMON_NAME, name);
         input.at(DESCRIPTION, description);
         input.at(ISSUER_REF, issuerRef);
         input.at(PATH, path);
+        input.at(SERIAL_NUMBER, serialNumber);
+        input.at(CERTIFICATE_OBJECT, certificate);
         input.at(CA_JSON, mergerJson(body, input));
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CA.endpoint(),

@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.csl.autocrypt.enums.AutocryptConstants.COUNTRY;
+import static com.csl.autocrypt.enums.AutocryptConstants.LIST_DELIMITER;
 
 /**
  * Json helper
@@ -55,7 +56,9 @@ public class JsonHelper {
      */
     public static String transferValueString(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         String value = getValueString(objOrigin, key);
-        if (objOrigin.has(key)) {objOrigin.delAt(key);}
+        if (objOrigin.has(key)) {
+            objOrigin.delAt(key);
+        }
         objDest.set(key, value);
         return value;
     }
@@ -69,7 +72,9 @@ public class JsonHelper {
      */
     public static String transferValueStringOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         String value = getValueStringOrNull(objOrigin, key);
-        if (objOrigin.has(key)) {objOrigin.delAt(key);}
+        if (objOrigin.has(key)) {
+            objOrigin.delAt(key);
+        }
         objDest.set(key, value);
         return value;
     }
@@ -83,7 +88,9 @@ public class JsonHelper {
      */
     public static Integer transferValueIntegerOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         Integer value = getValueIntegerOrNull(objOrigin, key);
-        if (objOrigin.has(key)) {objOrigin.delAt(key);}
+        if (objOrigin.has(key)) {
+            objOrigin.delAt(key);
+        }
         objDest.set(key, value);
         return value;
     }
@@ -254,7 +261,9 @@ public class JsonHelper {
      * @param keys
      */
     public static void copyTo(Json objOrigin, Json objDest, String... keys) {
-        if (objDest==null) { objDest = Json.object(); }
+        if (objDest == null) {
+            objDest = Json.object();
+        }
         if (objOrigin != null) {
             for (String key : keys) {
                 if (objOrigin.has(key)) {
@@ -266,27 +275,37 @@ public class JsonHelper {
     }
 
     public static String jsonListToString(Json array, String delimiter) {
-        if (array==null) {
+        if (array == null) {
             return null;
         }
         if (array.isArray()) {
-            if (array.asJsonList().isEmpty()){ return "";}
+            if (array.asJsonList().isEmpty()) {
+                return "";
+            }
             String str = "";
-            for (Json e: array.asJsonList()){ str+=','+(e.isString()?e.asString():e.toString());}
+            for (Json e : array.asJsonList()) {
+                str += ',' + (e.isString() ? e.asString() : e.toString());
+            }
             return str.substring(1);
         }
         return array.toString();
     }
 
+    public static void jsonListToStringListAtJson(Json obj, String key) {
+        jsonListToStringListAtJson(obj, key, LIST_DELIMITER);
+    }
+
     public static void jsonListToStringListAtJson(Json obj, String key, String delimiter) {
         if (obj != null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isArray()) {
             List<Json> array = obj.get(key).asJsonList();
+            String str = "";
             if (!array.isEmpty()) {
-                String str = "";
                 for (Json e : array) {
-                    str += ',' + (e.isString() ? e.asString() : e.toString());
+                    str += delimiter + (e.isString() ? e.asString() : e.toString());
                 }
                 obj.set(key, str.substring(1));
+            } else {
+                obj.set(key, str);
             }
         }
     }

@@ -463,12 +463,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         String roleName = extractValueString(body, VAULT_ROLE_NAME);
         body.set(ROLE_NAME, roleName);
-        getValueString(body, COMMON_NAME);
+
         String ttl = getValueString(body, TTL);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
+        bodyBase.set(NAME, getValueString(body, ROLE_NAME));
         if (body.has(COMMON_NAME)) {bodyExtra.set(COMMON_NAME, body.get(COMMON_NAME).asString());}
         bodyExtra.set(TTL, ttl);
+        drop(bodyBase, VAULT_ROLE);
 
         // endregion -- Verify required body keys and extract key values
 

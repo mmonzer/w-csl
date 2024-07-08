@@ -81,12 +81,7 @@ public class AutoCrypt {
 //        NOTE: APIKey is used to authorize the client when sending requests to DBAPI, HTTPS is used when passing by NGINX
 //        FIXME: DbapiHandlerForCSLAutoCrypt should get its own configuration from the global section without passing it here
 //        FIXME: I think we only use https for the connection with DBAPI
-        if (dbApikey.isEmpty()) {
-            dbApiHandler = new DbapiHandlerForCSLAutoCrypt("BDAPI - " + name, "http://" + dbIp + "/api");
-        } else {
-            dbApiHandler = new DbapiHandlerForCSLAutoCrypt("BDAPI - " + name, "https://" + dbIp + "/api");
-            dbApiHandler.setApiKey(dbApikey);
-        }
+        dbApiHandler = new DbapiHandlerForCSLAutoCrypt();
         moduleApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
         logic = new AutoCryptLogic(moduleApiHandler, dbApiHandler);
     }

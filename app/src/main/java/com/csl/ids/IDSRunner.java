@@ -21,7 +21,6 @@ import com.ucsl.interfaces.ICancelChecker;
 import com.ucsl.interfaces.IIDSLearnedRules;
 import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.interfaces.IILearningProcessor;
-import com.ucsl.interfaces.ILearningProcessor;
 import com.ucsl.interfaces.IOffLineDetectionProcessor;
 import com.ucsl.json.Json;
 

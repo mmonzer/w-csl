@@ -1,4 +1,0 @@
-0:Reading process vars from /Users/flausj/git/w_csl/cslconf/idsconf/SystemConfiguration.json
-0:Reading rules        from /Users/flausj/git/w_csl/cslconf/idsconf/RulesForDetection.txt
-0:Reading IDS vars from SystemConfiguration.json
-0:Reading IDS vars from SystemConfiguration.json

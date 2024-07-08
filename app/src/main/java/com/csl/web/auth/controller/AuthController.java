@@ -1,21 +1,18 @@
 package com.csl.web.auth.controller;
 
-import java.io.IOException;
-import java.util.stream.Collectors;
-
-import org.mindrot.BCrypt;
-
 import com.csl.web.auth.AuthFilter;
 import com.csl.web.auth.TokenService;
 import com.csl.web.auth.user.Role;
 import com.csl.web.auth.user.User;
 import com.csl.web.auth.user.UserService;
 import com.ucsl.json.Json;
-
+import org.mindrot.jbcrypt.BCrypt;
 import spark.Request;
 import spark.Response;
-//import spark.Spark;
 import spark.Service;
+
+import java.io.IOException;
+import java.util.stream.Collectors;
 
 /*import static spark.Spark.before;
 import static spark.Spark.get;

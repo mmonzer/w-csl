@@ -41,16 +41,31 @@ import java.util.concurrent.TimeUnit;
 public class CSLContext implements ICSLContext, ICSLLogger {
     private static final Logger logger = LoggerFactory.getLogger(CSLContext.class);
 
+    /**
+     * Version of {@link CSLContext}
+     */
     public static String VERSION = "0.1.0-alpha1";
 
+    /**
+     * Date format : yyyy-MM-dd HH:mm:ss.SSS
+     */
     public static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
-
+    /**
+     * Default path for the configuration : current project path
+     */
     private static String DEFAULT_CONFIG_PATH = System.getProperty("user.dir");
-    private static String DEFAULT_CONFIG_FILE = "runconfig" + File.separator + "CSLConfigIDS.json";
+
+    /**
+     * Default relative path for the configuration file
+     */
+    private static String DEFAULT_CONFIG_FILE = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "runconfig" + File.separator + "CSLConfigIDS.json";
+
+    /**
+     * Default absolute path for the configuration file
+     */
     private String configFileName = DEFAULT_CONFIG_PATH + File.separator + DEFAULT_CONFIG_FILE;
 
-    //private String userDir=System.getProperty("user.dir");
     private String cslConfDir = "";
 
     public static CSLContext instance = new CSLContext();

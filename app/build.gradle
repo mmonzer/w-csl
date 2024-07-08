@@ -18,7 +18,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
     //local librairies
-    implementation files('src/main/resources/lib/jar/xminiserver.jar')
+    implementation files('src/main/resources/tar/xminiserver.jar')
 
     //MavenCentral() librairies
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.31.0'
@@ -75,6 +75,7 @@ dependencies {
     implementation 'org.springframework:spring-websocket:5.2.22.RELEASE'
     implementation 'org.apache.servicemix.bundles:org.apache.servicemix.bundles.velocity:1.7_6'
     implementation 'org.jetbrains:annotations:13.0'
+    implementation 'org.mindrot:jbcrypt:0.4'
 }
 // Apply a specific Java toolchain to ease working on different environments.
 java {

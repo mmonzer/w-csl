@@ -1,14 +1,14 @@
 package main.util;
 
-import java.io.File;
-
 import com.csl.ids.IDSParams;
 import com.ucsl.json.Json;
 
+import java.io.File;
+
 public class CSLRunningArgs {
-	
-	
-	String configFile="runconfig"+File.separator+"CSLConfigIDS.json";
+
+
+	String configFile="src" + File.separator + "main" + File.separator +"resources"+File.separator+"runconfig"+File.separator+"CSLConfigIDS.json";
 	//String pworkingDir="";
 	String error="";
 	

@@ -33,7 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package org.nmap4j_csl.core.flags;
+package lib.unpacked.org.nmap4j_csl.core.flags;
 
 /**
  * This enum contains all the publically available flags for NMap as 

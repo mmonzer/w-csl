@@ -32,7 +32,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.nmap4j_csl.parser;
+package lib.unpacked.org.nmap4j_csl.parser;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -41,9 +41,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.nmap4j_csl.data.NMapRun;
-import org.nmap4j_csl.parser.events.NMap4JParserEventListener;
-import org.nmap4j_csl.parser.events.ParserEvent;
+import lib.unpacked.org.nmap4j_csl.data.NMapRun;
+import lib.unpacked.org.nmap4j_csl.parser.events.NMap4JParserEventListener;
+import lib.unpacked.org.nmap4j_csl.parser.events.ParserEvent;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 

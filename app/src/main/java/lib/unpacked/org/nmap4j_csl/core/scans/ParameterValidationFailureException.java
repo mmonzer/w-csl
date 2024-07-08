@@ -33,7 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package org.nmap4j_csl.core.scans;
+package lib.unpacked.org.nmap4j_csl.core.scans;
 
 public class ParameterValidationFailureException extends Exception {
 

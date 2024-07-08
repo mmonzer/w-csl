@@ -1,4 +1,4 @@
-package org.nmap4j_csl.data.host;
+package lib.unpacked.org.nmap4j_csl.data.host;
 
 import java.util.StringTokenizer;
 

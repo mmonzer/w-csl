@@ -32,7 +32,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.nmap4j_csl.data.nmaprun.host.ports.port;
+package lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port;
 
 public class Service {
 	

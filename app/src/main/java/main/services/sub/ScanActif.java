@@ -8,9 +8,9 @@ import java.util.concurrent.Semaphore;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
-import org.nmap4j_csl.Nmap4j;
-import org.nmap4j_csl.core.nmap.NMapExecutionException;
-import org.nmap4j_csl.core.nmap.NMapInitializationException;
+import lib.unpacked.org.nmap4j_csl.Nmap4j;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapExecutionException;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapInitializationException;
 
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;

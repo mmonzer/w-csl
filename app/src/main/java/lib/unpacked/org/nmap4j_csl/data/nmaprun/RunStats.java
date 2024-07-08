@@ -32,10 +32,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.nmap4j_csl.data.nmaprun;
+package lib.unpacked.org.nmap4j_csl.data.nmaprun;
 
-import org.nmap4j_csl.data.nmaprun.runstats.Finished;
-import org.nmap4j_csl.data.nmaprun.runstats.Hosts;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.runstats.Finished;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.runstats.Hosts;
 
 public class RunStats {
 	

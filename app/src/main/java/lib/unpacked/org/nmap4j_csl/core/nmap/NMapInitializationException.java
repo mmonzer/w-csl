@@ -33,7 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package org.nmap4j_csl.core.nmap;
+package lib.unpacked.org.nmap4j_csl.core.nmap;
 
 /**
  * This exception is thrown when the NMapExecutor is initialized and 

@@ -33,9 +33,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package org.nmap4j_csl.core.scans;
+package lib.unpacked.org.nmap4j_csl.core.scans;
 
-import org.nmap4j_csl.core.flags.Flag;
+import lib.unpacked.org.nmap4j_csl.core.flags.Flag;
 
 /**
  * A ServiceDiscovery instance is used to scan a host or hosts to list all the 

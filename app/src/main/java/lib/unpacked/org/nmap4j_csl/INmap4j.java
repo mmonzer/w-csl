@@ -1,9 +1,9 @@
-package org.nmap4j_csl;
+package lib.unpacked.org.nmap4j_csl;
 
-import org.nmap4j_csl.core.nmap.ExecutionResults;
-import org.nmap4j_csl.core.nmap.NMapExecutionException;
-import org.nmap4j_csl.core.nmap.NMapInitializationException;
-import org.nmap4j_csl.data.NMapRun;
+import lib.unpacked.org.nmap4j_csl.core.nmap.ExecutionResults;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapExecutionException;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapInitializationException;
+import lib.unpacked.org.nmap4j_csl.data.NMapRun;
 
 public interface INmap4j {
 	void execute() throws NMapInitializationException, NMapExecutionException;

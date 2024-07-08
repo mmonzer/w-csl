@@ -1,4 +1,4 @@
-package org.nmap4j_csl.model;
+package lib.unpacked.org.nmap4j_csl.model;
 
 /**
  * A class to flatten the port data structure that comes out of Nmap.

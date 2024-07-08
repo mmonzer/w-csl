@@ -1,6 +1,6 @@
-package org.nmap4j_csl.data.host.trace;
+package lib.unpacked.org.nmap4j_csl.data.host.trace;
 
-import org.nmap4j_csl.data.nmaprun.Host;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Host;
 
 /**
  * This class has hop record on tracrout result

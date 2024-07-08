@@ -32,10 +32,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.nmap4j_csl.data.host.ports;
+package lib.unpacked.org.nmap4j_csl.data.host.ports;
 
-import org.nmap4j_csl.data.nmaprun.host.ports.port.Service;
-import org.nmap4j_csl.data.nmaprun.host.ports.port.State;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.Service;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.State;
 
 public class Port {
 	

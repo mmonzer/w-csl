@@ -33,15 +33,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package org.nmap4j_csl.data;
+package lib.unpacked.org.nmap4j_csl.data;
 
 import java.util.ArrayList;
 
-import org.nmap4j_csl.data.nmaprun.Debugging;
-import org.nmap4j_csl.data.nmaprun.Host;
-import org.nmap4j_csl.data.nmaprun.RunStats;
-import org.nmap4j_csl.data.nmaprun.ScanInfo;
-import org.nmap4j_csl.data.nmaprun.Verbose;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Debugging;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Host;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.RunStats;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.ScanInfo;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Verbose;
 
 /**
  * This class maps to the root element of NMap's XML output.

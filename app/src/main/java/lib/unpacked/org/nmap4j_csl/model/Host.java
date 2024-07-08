@@ -1,4 +1,4 @@
-package org.nmap4j_csl.model;
+package lib.unpacked.org.nmap4j_csl.model;
 
 import java.util.ArrayList;
 

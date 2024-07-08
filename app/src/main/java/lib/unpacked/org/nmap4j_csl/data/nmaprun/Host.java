@@ -32,22 +32,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.nmap4j_csl.data.nmaprun;
+package lib.unpacked.org.nmap4j_csl.data.nmaprun;
 
 import java.util.ArrayList;
 
-import org.nmap4j_csl.data.host.Address;
-import org.nmap4j_csl.data.host.Distance;
-import org.nmap4j_csl.data.host.Hostnames;
-import org.nmap4j_csl.data.host.IpIdSequence;
-import org.nmap4j_csl.data.host.Os;
-import org.nmap4j_csl.data.host.Ports;
-import org.nmap4j_csl.data.host.Status;
-import org.nmap4j_csl.data.host.TcpSequence;
-import org.nmap4j_csl.data.host.TcpTsSequence;
-import org.nmap4j_csl.data.host.Times;
-import org.nmap4j_csl.data.host.Uptime;
-import org.nmap4j_csl.data.host.trace.Trace;
+import lib.unpacked.org.nmap4j_csl.data.host.Address;
+import lib.unpacked.org.nmap4j_csl.data.host.Distance;
+import lib.unpacked.org.nmap4j_csl.data.host.Hostnames;
+import lib.unpacked.org.nmap4j_csl.data.host.IpIdSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Os;
+import lib.unpacked.org.nmap4j_csl.data.host.Ports;
+import lib.unpacked.org.nmap4j_csl.data.host.Status;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpTsSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Times;
+import lib.unpacked.org.nmap4j_csl.data.host.Uptime;
+import lib.unpacked.org.nmap4j_csl.data.host.trace.Trace;
 
 
 public class Host {

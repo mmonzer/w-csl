@@ -32,11 +32,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.nmap4j_csl.data.host.os;
+package lib.unpacked.org.nmap4j_csl.data.host.os;
 
 import java.util.ArrayList;
 
-import org.nmap4j_csl.data.host.Cpe;
+import lib.unpacked.org.nmap4j_csl.data.host.Cpe;
 
 public class OsClass {
 	

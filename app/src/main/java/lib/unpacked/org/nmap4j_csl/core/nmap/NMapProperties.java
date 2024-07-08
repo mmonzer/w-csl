@@ -32,11 +32,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.nmap4j_csl.core.nmap;
+package lib.unpacked.org.nmap4j_csl.core.nmap;
 
 import java.io.File ;
 
-import org.nmap4j_csl.core.flags.Flag;
+import lib.unpacked.org.nmap4j_csl.core.flags.Flag;
 
 /**
  * This class is used to manage the path to nmap.  This class attempts to look

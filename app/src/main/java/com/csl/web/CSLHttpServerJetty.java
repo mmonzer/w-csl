@@ -158,7 +158,7 @@ public class CSLHttpServerJetty {
             String path = api.getName();
             System.out.println("REGISTER API  : <" + path+">");
             if(ADD_GET_ROUTE)
-                context.addServlet(new ServletHolder(createGetServlet(api)), "/"+api.getName());
+                context.addServlet(new ServletHolder(createGetServlet(api)), "/"+api.getName()+"/*");
             context.addServlet(new ServletHolder(createPostServlet(api)), "/"+api.getPathFilter());
         }
         jettyServer.setHandler(context);

@@ -840,7 +840,6 @@ public class ScanApiHandler implements AutoCloseable {
 
     /**
      * Get the current cron expression for the periodic discovery task.
-     *
      * @return The cron expression for the periodic discovery task.
      */
     public Json getDiscoveryCron() {
@@ -866,7 +865,6 @@ public class ScanApiHandler implements AutoCloseable {
 
     /**
      * Set the cron expression for the periodic discovery task.
-     *
      * @param cron The new cron expression for the periodic discovery task.
      * @throws Exception If the request failed (ie status code != 200).
      */

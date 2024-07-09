@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -13,37 +12,15 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
-
-
-
-
 
 
 public class CSLDemo22OpModelIDSTestAlerts {
 
-	
-	static String uuid = UUID.randomUUID().toString();
-
-
-	Json testObject=null;
-	
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-
-	
-	
-
-	
-	
-	
-
-
-
 	public Json execCmd(String api,String cmd, Json jparams) {
-
 
 		Json j= Json.object();
 	
@@ -70,7 +47,6 @@ public class CSLDemo22OpModelIDSTestAlerts {
 			in.close();
 
 			String  result = sb.toString();
-			//System.out.println("RESULT="+result);
 			Json j2=Json.read(result);
 			return j2;
 
@@ -80,22 +56,6 @@ public class CSLDemo22OpModelIDSTestAlerts {
 		}
 
 		return Json.object();
-	}
-
-	public void testCmd() {
-		
-		
-		System.out.println("TEST EXEC_CMD");
-		Json jparams= Json.object();
-		jparams.set("x",1);
-		jparams.set("info", "test");
-
-		
-		Json result = execCmd("ids","op_model_ids", jparams);
-		
-		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
 	
 	//get_devices
@@ -129,26 +89,10 @@ public class CSLDemo22OpModelIDSTestAlerts {
 		jl.set("port_dst",8000);
 		
 		
-			/*
-		 * 	System.currentTimeMillis(),	
-			"tap01", 
-			"00:0c:29:2f:a0:1a","10.0.208.15", 22,
-			"00:0c:29:86:e2:e6","10.0.208.18", 80000);
-			
-			
-		 */
-		
-		
 		System.out.println("Process packet:"+jl);
 		Json r=exec("test_packet", jl);
-		//System.out.println(JsonUtil.prettyPrint(r));
-		
-		
-		
-	//	System.exit(0);
 		
 	}
-	
 
 	public void testAlerts() {
 		
@@ -181,20 +125,16 @@ public class CSLDemo22OpModelIDSTestAlerts {
 			params.set("alert", a);
 			
 			 r=exec("add_alert_to_model", params);
-			//System.out.println(JsonUtil.prettyPrint(r));
 		}
 		
 		
 		 r=exec("get_devices_and_links", Json.object());
-		//System.out.println(JsonUtil.prettyPrint(r));
 		
 		UtilDemo.printModel(r);
 		
 		r=exec("clear_all_alerts", Json.object());
 		execCmd("alerts","clear_list_of_all_alerts",Json.object());
-		
-		
-		
+
 		System.out.println("");
 		System.out.println("TEST PACKET WITH NEWMODEL WITH ALERTS");
 		
@@ -210,14 +150,11 @@ public class CSLDemo22OpModelIDSTestAlerts {
 		System.out.println("REMOVE ALERTS");
 		for (Json a:list.asJsonList()) {
 			
-		//	System.out.println(a);
-			
 			Json params=Json.object();
 			
 			params.set("alert", a);
 			
 			 r=exec("remove_alert_from_model", params);
-			//System.out.println(JsonUtil.prettyPrint(r));
 		}
 		
 		
@@ -234,26 +171,18 @@ public class CSLDemo22OpModelIDSTestAlerts {
 			System.out.println(a);
 			}
 		System.out.println();
-	
 	}
-	
-	
+
 	
 	public void test() {
-		
-		
 		testAlerts();
 	}
 	
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
 		CSLDemo22OpModelIDSTestAlerts runner= new CSLDemo22OpModelIDSTestAlerts();
-		
 		runner.test();
-	
-		
 		
 	}
 

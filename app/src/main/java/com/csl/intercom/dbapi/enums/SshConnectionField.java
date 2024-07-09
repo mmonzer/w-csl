@@ -8,8 +8,8 @@ public enum SshConnectionField {
     PASSPHRASE("passphrase", "passphrase"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     SshConnectionField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

@@ -1,18 +1,12 @@
 package com.csl.intercom.broker;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 // csl/services/requests/api_name
@@ -20,32 +14,12 @@ import com.ucsl.json.JsonUtil;
 
 
 public class SocketMessageMQTTHandler implements  MqttCallback {
-
-	public static long TIME_OUT=10000;
-
 	String moduleName="XXX";
 	int idebug=5;
 
 	private static  String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
 
-	//private static final String RESPONSE = "response";
-
-	//private static final String REQUEST = "request";
-
-	//private static final String REQ_ID = "reqId";
-
-	//public static int request_ctr=1; 
-
 	public static String SOCKET_TOPIC="csl/socket/";
-
-
-	//public static String RESPONSE_TOPIC="csl/response/";
-	//public static String API_NAME="api1";
-
-	//Map<String,Json> pendingMessages= new HashMap<>();
-	//List<Json> pendingMessages= new ArrayList<Json>();
-
-	//public String api="";
 
 	boolean subscribed=false;
 
@@ -57,7 +31,6 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 	boolean useBroker=true;
 
 	public SocketMessageMQTTHandler(String moduleName,String brokerUrl,boolean useBroker, int debugLevel) {
-
 		if (!brokerUrl.isEmpty()) BROKER_TCP_LOCALHOST_1883=brokerUrl;
 
 		this.useBroker=useBroker;
@@ -69,25 +42,12 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 
 	}
 
-//	public SocketMessageMQTTHandler(String moduleName, int debugLevel ) {
-//
-//		this(moduleName,"",true, debugLevel);
-//
-//	}
-
-
 	public boolean isDebug() {return idebug>1;}
 	public boolean isShowInfo() {return idebug>0;}
 	public void setDebugLevel(int d) {idebug=d;}
 
-
-
-
 	public void init() {
-
 		if (isShowInfo()) System.out.println("Init socket sender");
-
-
 		if (subscribed) close();
 		try {
 
@@ -111,23 +71,16 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("excep "+me);
 			me.printStackTrace();
 		}
-
-
 		connectClientToSend();
 
 	}
 
 	private void connectClientToSend() {
 		// client to send
-
 		try {
 			int qos             = 2;
-			// String broker       = BROKER_TCP_LOCALHOST_1883;
-
 			String clientId     = moduleName+"_sendsocket";
-
 			MemoryPersistence persistence = new MemoryPersistence();
-
 
 			if (clientToSend==null)	clientToSend = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, new MemoryPersistence());
 			clientToSend = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, persistence);
@@ -145,13 +98,9 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("excep "+me);
 			me.printStackTrace();
 		}
-
-		//		
-
 	}
 
 	public void close() {
-
 		if (clientToListen!=null) {
 			try {
 				clientToListen.unsubscribe(SOCKET_TOPIC);
@@ -159,11 +108,9 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 				clientToListen.close(true);
 				subscribed=false;
 			} catch (MqttException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-
 
 		if (clientToSend!=null) {
 
@@ -172,77 +119,32 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 				if (isDebug()) System.out.println("Disconnected");
 				clientToSend.close();
 			} catch (MqttException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
 
-
 	@Override
 	public void connectionLost(Throwable arg0) {
 		// TODO Auto-generated method stub
-
 	}
-
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
 		// TODO Auto-generated method stub
-
 	}
-
-
-	//	// listen the response to the request
-	//	@Override
-	//	public void messageArrived(String topic, MqttMessage message) throws Exception {
-	//		 System.out.println("*************  message is : "+message);
-	//	        
-	//	        String s=new String(message.getPayload());
-	//	        
-	//	        try {
-	//	        	Json j=Json.read(s);
-	//	        	System.out.println("JSON:"+j);
-	//	        	
-	//	        	String key="";
-	//	        	
-	//	        	if (j.has(REQ_ID)) key=j.get(REQ_ID).asString();
-	//	        	
-	//	        	if (!key.isEmpty()) {
-	//	        		Json jo=pendingMessages.get(key);
-	//	        		if (jo!=null) {
-	//	        			jo.set(RESPONSE, j);
-	//	        		}
-	//	        	}
-	//	        	
-	//	        }
-	//	        catch (Exception e) {
-	//	        	System.out.println(e);
-	//	        }
-	//	}
-	//
-	//
-	//	public void addToPendingRequest(Json j) {
-	//	
-	//		
-	//		
-	//	}
-
 
 	// listen the response to the request
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		if (isDebug())
 			System.out.println("*************  websocket sender received message  : "+message);
-
 		String s=new String(message.getPayload());
 
 		try {
 			Json j=Json.read(s);
 			if (isDebug())System.out.println("JSON:"+j);
 
-
-			//  to which send the result
 			String websocket="";
 			if (j.has("websocket")) {
 				websocket=j.get("websocket").asString();
@@ -253,24 +155,18 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 				for (ISocketMsgListener is:listeners) {
 					is.messageArrived(websocket, contents);
 				}
-
 			}
-
-
 		}
 		catch (Exception e) {
 			System.out.println(e);
 		}
 	}
 
-
 	public void sendWebSocketMsg(String socketname, String contents) {
-
 		Json fullMsg=Json.object();
 
 		fullMsg.set("websocket",socketname);
 		fullMsg.set("contents", contents);
-
 
 		if (useBroker) {
 			//sinon
@@ -283,10 +179,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 				is.messageArrived(socketname, contents);
 			}
 		}
-		
-
 	}
-
 
 	/*
 	 * 
@@ -295,23 +188,14 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 	 */
 	private void sendMqttMsg(Json j ) {
 
-
 		if (isDebug()) System.out.println("Socket send :"+j);
 		int qos             = 2;
-		// String broker       = BROKER_TCP_LOCALHOST_1883;
 
 		String clientId     = moduleName+"_sendsocket";
 
 		MemoryPersistence persistence = new MemoryPersistence();
 
 		try {
-			//            MqttClient sampleClient = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, persistence);
-			//            MqttConnectOptions connOpts = new MqttConnectOptions();
-			//            connOpts.setCleanSession(true);
-			//            if (isDebug())System.out.println("Connecting to broker: "+BROKER_TCP_LOCALHOST_1883);
-			//            sampleClient.connect(connOpts);
-			//            if (isDebug())System.out.println("Connected, topic="+SOCKET_TOPIC);
-
 			if (!clientToSend.isConnected()) {
 				connectClientToSend();
 			}
@@ -320,11 +204,6 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			message.setQos(qos);
 			clientToSend.publish(SOCKET_TOPIC, message);
 			if (isDebug())System.out.println("Message published "+content);
-
-			//			sampleClient.disconnect();
-			//			if (isDebug()) System.out.println("Disconnected");
-			//			sampleClient.close();
-
 
 		} catch(MqttException me) {
 			System.out.println("reason "+me.getReasonCode());
@@ -335,13 +214,6 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			me.printStackTrace();
 		}
 	}
-
-
-
-
-
-
-
 
 	public void addListener(ISocketMsgListener is) {
 		// TODO Auto-generated method stub

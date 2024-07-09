@@ -67,7 +67,7 @@ public class ServiceDiscovery extends BaseScan {
     includeHosts( includeHosts ) ;
     excludeHosts( excludeHosts ) ;
     
-    setTiming( IScan.TimingFlag.NORMAL ) ;
+    setTiming( TimingFlag.NORMAL ) ;
     
     argProps.addFlag( Flag.SERVICE_VERSION ) ;
     argProps.addFlag( Flag.OS_DETECTION ) ;

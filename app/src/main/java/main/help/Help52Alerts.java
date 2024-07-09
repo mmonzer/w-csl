@@ -14,9 +14,7 @@ public class Help52Alerts {
 
 	HelpGenerator hg ;
 	
-	
 	public Json exec(String cmd, Json params) {
-		
 		return hg.addExample(cmd,  params);
 		
 	}
@@ -24,58 +22,39 @@ public class Help52Alerts {
 	public Json exec(String cmd) {
 		return exec(cmd, Json.object());
 	}
-	
-	
-	
+
 	public void init() {
 		
 		String apiname="alerts";
 		hg = new HelpGenerator(apiname, "localhost", 8000);
 		hg.loadHelp();
-		
 		hg.setReplaceExisting(true);
-		
-		
-	
 	}
 	
 	
 
 	public void finish() {
-		
-		
-		
 		hg.saveHelp();
 	}
 	
 	public Json test1() {
-
 		Json result=Json.object();
-
 
 		Json p=Json.object();
 		
 		exec("test_alert1", p);
-		
-		
-		
-		
+
 		return result;
 	}
 
 	
 	public Json test_stats() {
-
 		Json result=Json.object();
-
 
 		Json p=Json.object();
 		
 		exec("stats", p);
-		
-		
-		
-		
+
 		return result;
 	}
 
@@ -159,17 +138,12 @@ public class Help52Alerts {
 		p.set("time_for_end_of_mask", System.currentTimeMillis()+1000*3600);
 		
 		return exec("set_masked", p);
-		
-		
-		
-		
 	}
 
 
 	public Json test_unset_masked() {
 
 		Json result=Json.object();
-
 
 		Json p=Json.object();
 		
@@ -190,7 +164,6 @@ public class Help52Alerts {
 
 		Json result=Json.object();
 
-
 		Json p=Json.object();
 		
 		String uuid=getUuid(1);
@@ -198,9 +171,6 @@ public class Help52Alerts {
 		p.set("value", true);
 		
 		return exec("set_acked", p);
-		
-		
-		
 		
 	}
 
@@ -209,7 +179,6 @@ public class Help52Alerts {
 
 		Json result=Json.object();
 
-
 		Json p=Json.object();
 		
 		String uuid=getUuid(1);
@@ -217,17 +186,12 @@ public class Help52Alerts {
 		p.set("value", false);
 		
 		return exec("set_acked", p);
-		
-		
-		
-		
 	}
 	
 	
 	public Json test_set_add_to_model() {
 
 		Json result=Json.object();
-
 
 		Json p=Json.object();
 		
@@ -236,17 +200,13 @@ public class Help52Alerts {
 		p.set("value", true);
 			
 		return exec("set_added_to_model", p);
-		
-		
-		
-		
+
 	}
 
 
 	public Json test_unset_add_to_model() {
 
 		Json result=Json.object();
-
 
 		Json p=Json.object();
 		
@@ -255,10 +215,7 @@ public class Help52Alerts {
 		p.set("value", false);
 		
 		return exec("set_added_to_model", p);
-		
-		
-		
-		
+
 	}
 	
 	
@@ -296,34 +253,27 @@ public class Help52Alerts {
 
 		r= test_get_list_active();
 		System.out.println(JsonUtil.prettyPrint(r));
-		
-		
-		
+
 		System.out.println("set masked");
 		r=test_set_masked();
 		print((r));
 		
 		System.out.println("TEST List of masked");
 		print(test_get_list_masked());
-		
-		
-		
+
 		System.out.println("set acked");
 		r=test_set_acked();
 		System.out.println(JsonUtil.prettyPrint(r));
 		
 		System.out.println("TEST List of acked");
 		print(test_get_list_acked());
-		
-		
+
 		System.out.println("set add to model");
 		r=test_set_add_to_model();
 		System.out.println(JsonUtil.prettyPrint(r));
 		
 		System.out.println("TEST List of added to model");
 		print(test_get_list_added());
-		
-	
 		
 		System.out.println("TEST List of active");
 		print(test_get_list_active());
@@ -339,10 +289,7 @@ public class Help52Alerts {
 		
 		System.out.println("TEST List of masked (empty)");
 		print(test_get_list_masked());
-		
-		//r= test_get_list_all();
-		
-				
+
 		finish();
 	}
 
@@ -351,13 +298,10 @@ public class Help52Alerts {
 	
 	
 	public static void main(String[] args) {
-		
-		
-		
+
 		Help52Alerts h = new Help52Alerts();
 		
 		h.run();
-		
 		
 	}
 	

@@ -10,6 +10,7 @@ import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Setter;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;

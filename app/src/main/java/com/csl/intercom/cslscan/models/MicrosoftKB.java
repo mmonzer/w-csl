@@ -1,22 +1,26 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.ScanUtils;
+import com.csl.intercom.cslscan.enums.MicrosoftKBField;
 import com.csl.interfaces.models.IDbapiSerializable;
+import com.ucsl.json.Json;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.csl.intercom.cslscan.enums.MicrosoftKBField;
-import com.ucsl.json.Json;
 
 import java.time.OffsetDateTime;
 
 public class MicrosoftKB implements IDbapiSerializable {
-    private String mongoEntityId;
-    private String deviceId;
-    private String discoveryConnectionId;
-    private OffsetDateTime discoveredDate;
-    private boolean isDeleted;
-    private String kbNumber;
-    private String installedDate;
+    @Getter
+    private final String mongoEntityId;
+    @Getter
+    private final String deviceId;
+    private final String discoveryConnectionId;
+    @Getter
+    private final OffsetDateTime discoveredDate;
+    private final boolean isDeleted;
+    private final String kbNumber;
+    private final String installedDate;
 
     private static final Logger logger = LoggerFactory.getLogger(MicrosoftKB.class);
 
@@ -35,7 +39,6 @@ public class MicrosoftKB implements IDbapiSerializable {
             String mongoEntityId = json.get(MicrosoftKBField.MONGO_ENTITY_ID.scanName()).asString();
             String deviceId = json.get(MicrosoftKBField.DEVICE_ID.scanName()).asString();
             String discoveryConnectionId = json.get(MicrosoftKBField.DISCOVERY_CONNECTION_ID.scanName()).asString();
-//            OffsetDateTime discoveredDate = OffsetDateTime.parse(json.get(MicrosoftKBField.DISCOVERED_DATE.scanName()).asString());
             OffsetDateTime discoveredDate = ScanUtils.getDateFieldFromJson(json, MicrosoftKBField.DISCOVERED_DATE.scanName());
             boolean isDeleted = json.get(MicrosoftKBField.IS_DELETED.scanName()).asBoolean();
             String kbNumber = json.get(MicrosoftKBField.KB_NUMBER.scanName()).asString();
@@ -53,7 +56,7 @@ public class MicrosoftKB implements IDbapiSerializable {
     }
 
     public Json serializeForDbapi() {
-        Json serialized = Json.object(
+        return Json.object(
                 MicrosoftKBField.MONGO_ENTITY_ID.dbapiName(), mongoEntityId,
                 MicrosoftKBField.DEVICE_ID.dbapiName(), deviceId,
                 MicrosoftKBField.DISCOVERY_CONNECTION_ID.dbapiName(), discoveryConnectionId,
@@ -62,22 +65,10 @@ public class MicrosoftKB implements IDbapiSerializable {
                 MicrosoftKBField.KB_NUMBER.dbapiName(), kbNumber,
                 MicrosoftKBField.INSTALLED_DATE.dbapiName(), installedDate
         );
-        return serialized;
-    }
-
-    public String getMongoEntityId() {
-        return mongoEntityId;
     }
 
     public boolean isDeleted() {
         return isDeleted;
     }
 
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public OffsetDateTime getDiscoveredDate() {
-        return discoveredDate;
-    }
 }

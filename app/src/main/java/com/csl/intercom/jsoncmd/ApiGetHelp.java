@@ -1,11 +1,11 @@
 package com.csl.intercom.jsoncmd;
 
-import java.util.List;
-import java.util.Map.Entry;
-
 import com.ucsl.interfaces.IApiGetHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+
+import java.util.List;
+import java.util.Map.Entry;
 
 public class ApiGetHelp implements IApiGetHelp {
 
@@ -214,15 +214,8 @@ public class ApiGetHelp implements IApiGetHelp {
 	
 
 	private Json getHelpInfoAsJson(String apiName, Json jparams) {
-
-
-		//Json jparams= Json.object();
 		jparams.set("user", "user1");
-		//jparams.set("op", "LST_DEVICES");
-
 		Json r=JServiceLoader.getCSLInterModuleCommunicationManager().executeCommand(apiName, Json.object().set("cmd", "help").set("params", jparams));
-		//System.out.println(JsonUtil.prettyPrint(r));
-
 		return r;
 	}
 

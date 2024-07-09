@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import lombok.Getter;
 import org.xml.sax.SAXException;
 
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
@@ -17,11 +17,12 @@ import com.ucsl.json.Json;
 import main.extensions.CpeSearch;
 
 public class CpeServices implements ICSLService {
-//	ApiCommands apiCommands= new ApiCommands("");
-	
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
 	
 	String name="cpe";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
+
+	@Getter
 	String configFileSectionName="cpe_service";
 	
 	public CpeServices() {
@@ -33,15 +34,15 @@ public class CpeServices implements ICSLService {
 		this.name=name;
 		this.configFileSectionName=configFileSectionName;
 	}
-	
-	
 
-	@Override
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
+	public String addCmd(String name, IJsonCmd j) {
+		return apiCommands.registerCmd(name, j);
 	}
 
-	
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
+		return apiCommands.registerCmd(name, j,jh);
+	}
+
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("Initialising CPE functions .."+jConfig);
@@ -61,6 +62,7 @@ public class CpeServices implements ICSLService {
 				System.err.println("Unknown extention "+path.split(".")[1]+", trying xml");
 			}
 		} catch (ParserConfigurationException | SAXException | IOException e) {
+
 			e.printStackTrace();
 		}
 		System.out.println("CPE functions opérational");
@@ -95,22 +97,6 @@ public class CpeServices implements ICSLService {
 			}
 		});			
 		return true;
-	}
-
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 
 	@Override

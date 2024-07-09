@@ -1,24 +1,32 @@
 package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.cslscan.models.EntityHttpConnectionStage;
-import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class HttpConnection extends Connection {
-    private String entityHttpConnectionUuid;
+    private final String entityHttpConnectionUuid;
+    @Getter
     private String port;
-    private EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod;
+    @Getter
+    private final EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod;
+    @Getter
     private String username;
+    @Getter
     private String password;
-    private String realm;
+    private final String realm;
+    @Getter
     private String token;
-    private Map<Integer, StageConfig> stagesConfig;
+    @Getter
+    private final Map<Integer, StageConfig> stagesConfig;
+    @Getter
     private Map<String, String> inputs;
 
     public HttpConnection(int id,
@@ -143,21 +151,9 @@ public class HttpConnection extends Connection {
         return entityHttpConnectionUuid;
     }
 
-    public String getPort() {
-        return port;
-    }
-
     public HttpConnection setPort(String port) {
         this.port = port;
         return this;
-    }
-
-    public EntityHttpConnectionStage.HttpAuthenticationMethod getAuthenticationMethod() {
-        return authenticationMethod;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public HttpConnection setUsername(String username) {
@@ -165,17 +161,9 @@ public class HttpConnection extends Connection {
         return this;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public HttpConnection setPassword(String password) {
         this.password = password;
         return this;
-    }
-
-    public String getToken() {
-        return token;
     }
 
     public HttpConnection setToken(String token) {
@@ -183,26 +171,15 @@ public class HttpConnection extends Connection {
         return this;
     }
 
-    public Map<String, String> getInputs() {
-        return inputs;
-    }
-
     public HttpConnection setInputs(Map<String, String> inputs) {
         this.inputs = inputs;
         return this;
     }
 
-    public Map<Integer, StageConfig> getStagesConfig() {
-        return stagesConfig;
-    }
-
     public static class StageConfig {
+        @Getter
         private Integer port = null;
-//        private EntityHttpConnectionStage.HttpAuthenticationMethod authMethod = null;
-//        private String username = null;
-//        private String password = null;
-//        private String token = null;
-//        private String realm = null;
+
         private Map<String, String> inputs = null;
 
         public Json serializeForScanner() {
@@ -215,12 +192,6 @@ public class HttpConnection extends Connection {
             }
 
             serialized.set(HttpConnectionField.PORT.scanName(), this.port);
-//            serialized.set(HttpConnectionField.AUTHENTICATION_METHOD.scanName(), this.authMethod.name());
-//            serialized.set(HttpConnectionField.USERNAME.scanName(), this.username);
-//            serialized.set(HttpConnectionField.PASSWORD.scanName(), this.password);
-//            serialized.set(HttpConnectionField.TOKEN.scanName(), this.token);
-//            serialized.set(HttpConnectionField.REALM.scanName(), this.realm);
-
             return serialized;
         }
 
@@ -229,19 +200,6 @@ public class HttpConnection extends Connection {
             if (json.has(HttpConnectionField.PORT.dbapiName()) && json.get(HttpConnectionField.PORT.dbapiName()).isNumber()) {
                 stageConfig.port = json.get(HttpConnectionField.PORT.dbapiName()).asInteger();
             }
-//            stageConfig.authMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(json, HttpConnectionField.AUTHENTICATION_METHOD.dbapiName(), EntityHttpConnectionStage.HttpAuthenticationMethod.NONE.name()));
-//            if (json.has(HttpConnectionField.USERNAME.dbapiName()) && json.get(HttpConnectionField.USERNAME.dbapiName()).isString()) {
-//                stageConfig.username = json.get(HttpConnectionField.USERNAME.dbapiName()).asString();
-//            }
-//            if (json.has(HttpConnectionField.PASSWORD.dbapiName()) && json.get(HttpConnectionField.PASSWORD.dbapiName()).isString()) {
-//                stageConfig.password = json.get(HttpConnectionField.PASSWORD.dbapiName()).asString();
-//            }
-//            if (json.has(HttpConnectionField.TOKEN.dbapiName()) && json.get(HttpConnectionField.TOKEN.dbapiName()).isString()) {
-//                stageConfig.token = json.get(HttpConnectionField.TOKEN.dbapiName()).asString();
-//            }
-//            if (json.has(HttpConnectionField.REALM.dbapiName()) && json.get(HttpConnectionField.REALM.dbapiName()).isString()) {
-//                stageConfig.realm = json.get(HttpConnectionField.REALM.dbapiName()).asString();
-//            }
 
             stageConfig.inputs = new HashMap<>();
             if (json.has(HttpConnectionField.INPUTS.dbapiName())) {
@@ -251,20 +209,5 @@ public class HttpConnection extends Connection {
             return stageConfig;
         }
 
-        public Integer getPort() {
-            return port;
-        }
-
-//        public String getUsername() {
-//            return username;
-//        }
-//
-//        public String getPassword() {
-//            return password;
-//        }
-//
-//        public String getToken() {
-//            return token;
-//        }
     }
 }

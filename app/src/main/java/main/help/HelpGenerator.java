@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -38,30 +40,16 @@ public class HelpGenerator {
 	String apiName="";
 	Json examplesForApi=null;
 	
-	boolean replaceExisting=true;
-	
-	
-	
-	
-	
+	@Setter
+    @Getter
+    boolean replaceExisting=true;
+
 	public HelpGenerator(String apiName, String ip, int port) {
-		
 		this.apiName=apiName;
 		this.URL_BACKEND="http:://"+ip+":"+port+"/";
 		
 	}
-	
-	
-	
-	public boolean isReplaceExisting() {
-		return replaceExisting;
-	}
-
-	public void setReplaceExisting(boolean replaceExisting) {
-		this.replaceExisting = replaceExisting;
-	}
-
-	public String getServerURL() {
+    public String getServerURL() {
 		return urlServer;
 	}
 
@@ -70,11 +58,7 @@ public class HelpGenerator {
 		return this;
 	}
 
-	
-	
 	public Json execCmd(String api,String cmd, Json jparams) {
-
-
 		Json j= Json.object();
 
 		j.set("cmd", cmd);
@@ -91,13 +75,8 @@ public class HelpGenerator {
 				.setConnectTimeout(timeout * 1000)
 				.setConnectionRequestTimeout(timeout * 1000)
 				.setSocketTimeout(timeout * 1000).build();
-		//CloseableHttpClient client = 
-		//  HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
-		HttpClient  client    = HttpClientBuilder.create().setDefaultRequestConfig(config).build(); //HttpClientBuilder.create().build();
-
-
-
+		HttpClient  client    = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
 		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
 		post.setEntity(postingString);
@@ -117,7 +96,6 @@ public class HelpGenerator {
 			in.close();
 
 			String  result = sb.toString();
-			//System.out.println("Result:"+result);
 			Json j2=Json.read(result);
 			return j2;
 
@@ -128,50 +106,6 @@ public class HelpGenerator {
 
 		return Json.object();
 	}
-
-
-
-
-
-
-
-
-//	public void listenDatabase() {
-//		try {
-//			String s= "ws://" + "127.0.0.1" + ":" + "7999" + "/database";
-//
-//			final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(s)); 
-//
-//			// add listener
-//			clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
-//				public void handleMessage(String message) {
-//					Json j=Json.read(message);
-//					System.out.println("Database:"+j);
-//					if (j.get("database")==null) return;
-//					j=j.get("database");
-//					String m_uuid="";
-//					if (j.get("uuid")!=null) {
-//						m_uuid=j.get("uuid").asString();
-//						System.out.println("modifier uuid="+m_uuid);
-//						if (uuid.compareTo(m_uuid)==0) return ; // this update is from this process
-//					}
-////					if (j.get("name").asString().compareTo(OBJECT_NAME)==0) {
-////						testObject=readObjectFromDatabase(OBJECT_NAME);
-////						System.out.println("***** Updated to "+testObject);
-////					}
-//				}
-//			});
-//
-//			Thread.sleep(100);
-//
-//
-//		} catch (InterruptedException ex) {
-//			System.err.println("InterruptedException exception: " + ex.getMessage());
-//		} catch (URISyntaxException ex) {
-//			System.err.println("URISyntaxException exception: " + ex.getMessage());
-//		}
-//	}
-
 
 	public Json readObjectFromDatabase(String name) {
 		Json p= Json.object();
@@ -198,33 +132,11 @@ public class HelpGenerator {
 		return execCmd(API_DBJSON,"dir_jsonfile", Json.object());
 	}
 
-
-
-//	public void updateData() {
-//
-//		System.out.println("TEST UPDATE TO DB");
-//
-//		if (testObject==null) testObject=Json.object();
-//
-//		if (testObject.get("ctr")==null) {
-//			testObject.set("ctr",0);
-//		}
-//		int ctr=testObject.get("ctr").asInteger();
-//		testObject.set("ctr",ctr+1);
-//
-//
-//		writeObjectToDatabase(OBJECT_NAME,testObject);
-//
-//		System.out.println("New value send to database:"+testObject);
-//		//System.out.println("\n\n\n");
-//	}
-
 	public void testdirJsonFile() {
 
 		System.out.println("TEST DIR");
 
 		System.out.println(getListOfObjects());
-		//System.out.println("\n\n\n");
 	}
 
 
@@ -244,7 +156,6 @@ public class HelpGenerator {
 		
 		jrow.set("cmd", cmd);
 		jrow.set("params", params);
-		//Json result= execCmd(apiname, cmd, jparams);
 		jrow.set("result",result);
 		
 		examples.add(jrow);
@@ -318,10 +229,5 @@ public class HelpGenerator {
 		saveHelp(apiName, examplesForApi);
 		return this;
 	}
-
-
-	
-
-	
 
 }

@@ -1,7 +1,5 @@
 package com.csl.intercom.dbapi.enums;
 
-import com.csl.intercom.dbapi.models.HttpConnection;
-
 public enum HttpConnectionField {
     PORT("port_number", "port"),
     ENTITY_HTTP_CONNECTION_ID("entityHttpConnectionId", "entityHttpConnectionId"),
@@ -14,8 +12,8 @@ public enum HttpConnectionField {
     STAGES_CONFIG("stagesConfig", "stagesConfig"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private HttpConnectionField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

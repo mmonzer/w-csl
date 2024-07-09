@@ -1,12 +1,11 @@
 package com.csl.web.websockets;
 
+import com.csl.core.CSLContext;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-
-import com.csl.core.CSLContext;
 
 @WebSocket
 public class CSLWebSocketHandler {

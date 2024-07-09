@@ -999,11 +999,6 @@ public class DbapiHandler implements AutoCloseable {
             return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }
 
-//        if (failedDevices.isEmpty()) {
-//            scanApiHandler.sendNewCpeItemsToDbapi(this);
-//            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
-//        }
-
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()
                 : JsonApiResponse.error(

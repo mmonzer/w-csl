@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -22,25 +21,9 @@ import com.ucsl.json.JsonUtil;
 
 public class CSLDemo21OpModelIDSTestOnePacket {
 
-	
-	static String uuid = UUID.randomUUID().toString();
-
-
-	Json testObject=null;
-	
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
-
-
-	
-	
-
-	
-	
-	
-
-
 
 	public Json execCmd(String cmd, Json jparams) {
 
@@ -81,22 +64,6 @@ public class CSLDemo21OpModelIDSTestOnePacket {
 
 		return Json.object();
 	}
-
-	public void testCmd() {
-		
-		
-		System.out.println("TEST EXEC_CMD");
-		Json jparams= Json.object();
-		jparams.set("x",1);
-		jparams.set("info", "test");
-
-		
-		Json result = execCmd("op_model_ids", jparams);
-		
-		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
-	}
 	
 	//get_devices
 	
@@ -128,33 +95,15 @@ public class CSLDemo21OpModelIDSTestOnePacket {
 		jl.set("mac_dst","00:0c:29:86:e2:e6");
 		jl.set("port_dst",8000);
 		
-		
-			/*
-		 * 	System.currentTimeMillis(),	
-			"tap01", 
-			"00:0c:29:2f:a0:1a","10.0.208.15", 22,
-			"00:0c:29:86:e2:e6","10.0.208.18", 80000);
-			
-			
-		 */
-		
-		
-		
 		Json r=exec("test_packet", jl);
 		System.out.println(JsonUtil.prettyPrint(r));
-		
-		
-		
-		
 		
 	}
 
 	
 	
 	public void test() {
-		
-		
-	testPacket();
+		testPacket();
 	}
 	
 	
@@ -162,11 +111,7 @@ public class CSLDemo21OpModelIDSTestOnePacket {
 		// TODO Auto-generated method stub
 		
 		CSLDemo21OpModelIDSTestOnePacket runner= new CSLDemo21OpModelIDSTestOnePacket();
-		
 		runner.test();
-	
-		
-		
 	}
 
 }

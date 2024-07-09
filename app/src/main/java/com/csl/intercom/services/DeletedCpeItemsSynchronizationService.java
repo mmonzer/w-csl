@@ -11,9 +11,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 public class DeletedCpeItemsSynchronizationService extends PaginatedSynchronizationService<Pair<String, OffsetDateTime>> {
-    private DbapiHandler dbapiHandler = new DbapiHandler();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private Logger logger = LoggerFactory.getLogger(DeletedCpeItemsSynchronizationService.class);
+    private final DbapiHandler dbapiHandler = new DbapiHandler();
+    private final ScanApiHandler scanApiHandler = new ScanApiHandler();
+    private final Logger logger = LoggerFactory.getLogger(DeletedCpeItemsSynchronizationService.class);
 
     @Override
     public List<Pair<String, OffsetDateTime>> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {

@@ -11,8 +11,8 @@ public enum MicrosoftKBField {
     INSTALLED_DATE("installed_date", "installedDate"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private MicrosoftKBField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

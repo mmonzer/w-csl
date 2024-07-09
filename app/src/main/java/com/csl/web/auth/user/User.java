@@ -1,7 +1,10 @@
 package com.csl.web.auth.user;
 
+import lombok.Getter;
+
 import java.util.List;
 
+@Getter
 public final class User {
 
     private final String username;
@@ -18,26 +21,6 @@ public final class User {
         this.roles = roles;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
     public User assignRole(Role role) {
         if (!roles.contains(role)) {
             roles.add(role);
@@ -52,7 +35,7 @@ public final class User {
         return this;
     }
 
-    public static final User of(String username, String password, String firstName, String lastName, List<Role> roles) {
+    public static User of(String username, String password, String firstName, String lastName, List<Role> roles) {
     	   
         return new User(username, password, firstName, lastName, roles);
     }

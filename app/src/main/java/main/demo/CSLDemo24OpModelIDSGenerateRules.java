@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -22,28 +21,12 @@ import com.ucsl.json.JsonUtil;
 
 public class CSLDemo24OpModelIDSGenerateRules {
 
-	
-	static String uuid = UUID.randomUUID().toString();
-
-
-	Json testObject=null;
-	
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
 
-	
-	
-
-	
-	
-	
-
-
-
 	public Json execCmd(String cmd, Json jparams) {
-
 
 		Json j= Json.object();
 	
@@ -82,22 +65,6 @@ public class CSLDemo24OpModelIDSGenerateRules {
 		return Json.object();
 	}
 
-	public void testCmd() {
-		
-		
-		System.out.println("TEST EXEC_CMD");
-		Json jparams= Json.object();
-		jparams.set("x",1);
-		jparams.set("info", "test");
-
-		
-		Json result = execCmd("op_model_ids", jparams);
-		
-		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
-	}
-	
 	//get_devices
 	
 	public Json exec(String op, Json params) {
@@ -141,17 +108,10 @@ public class CSLDemo24OpModelIDSGenerateRules {
 		r=exec("generate_rules", Json.object().set("authorized_flows", devs));
 		
 		System.out.println(JsonUtil.prettyPrint(r));
-	
 		
 	}
-
-	
-	
 	
 	public void test() {
-		
-		
-	
 		testGenerate();
 	}
 	
@@ -162,9 +122,6 @@ public class CSLDemo24OpModelIDSGenerateRules {
 		CSLDemo24OpModelIDSGenerateRules runner= new CSLDemo24OpModelIDSGenerateRules();
 		
 		runner.test();
-	
-		
-		
 	}
 
 }

@@ -1,5 +1,6 @@
 package main.extensions;
-
+import lombok.Getter;
+import lombok.Setter;
 import com.ucsl.json.Json;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -137,34 +138,7 @@ public class CpeSearch {
 	public Json exportToJson() {
 		return exportToJson(dictionnary);
 	}
-	
-	/**
-	 * Fonction récurcive qui fonctionne avec exportToJson(), meme principe
-	 * @param dict
-	 * @return Une partie de la solution
-	 */
-	/*private  Json exportToJson(Tree dict) {
-		Json result = Json.object();
-		Json biResult;
-		ArrayList<Json> list = new ArrayList<Json>();
 
-		if(dict.hasFils()) {
-			for(Tree t : dict.getFilsList()) {
-				biResult = exportToJson(t);
-				Json current = Json.object();
-				current.at(dict.getElement(),biResult);
-				list.add(current.at(dict.getElement()));
-			}
-			result.at(dict.getElement(),list);
-		}
-		else {
-			Json newFeuille = Json.object();
-			newFeuille.at("feuille",dict.getElement());
-			return newFeuille;
-		}
-		
-		return result;
-	}*/
 	private  Json exportToJson(Tree dict) {
 		Json result = Json.object();
 		Json biResult;
@@ -312,7 +286,9 @@ public class CpeSearch {
 	 * @author Antonin
 	 */
 	private class Tree{
-		private String element;
+		@Getter
+        @Setter
+        private String element;
 		private ArrayList<Tree> fils = new ArrayList<Tree>();
 		
 		public Tree getSubTree(String path) {
@@ -342,20 +318,12 @@ public class CpeSearch {
 		public Tree(String element) {
 			this.element = element;
 		}
-		
-		public void setElement(String element) {
-			this.element = element;
-		}
-		
-		public ArrayList<Tree> getFilsList() {
+
+        public ArrayList<Tree> getFilsList() {
 			return fils;
 		}
-		
-		public String getElement() {
-			return this.element;
-		}
-		
-		@SuppressWarnings("unused")
+
+        @SuppressWarnings("unused")
 		public void addFils(String element) {
 			Tree newNode = new Tree(element);
 			this.fils.add(newNode);

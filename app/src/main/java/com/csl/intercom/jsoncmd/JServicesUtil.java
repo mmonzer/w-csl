@@ -1,10 +1,10 @@
 package com.csl.intercom.jsoncmd;
 
+import com.ucsl.json.Json;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-
-import com.ucsl.json.Json;
 
 
 public class JServicesUtil {
@@ -14,18 +14,13 @@ public class JServicesUtil {
 	Json jConfig=null;
 	
 	public Json readConfigFileInJson(String fileName) {
-		//path, String fileName) {
 
-
-		//URL  url= new URL("file:///"+fileName);
 		String content="{}";
-		//String f=path+ File.separator+fileName;
 		try {
 			content = readFile(fileName);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			//CSLContext.cslLogger.error("Cannot read config file :"+f);
 		}
 
 		return Json.read(content);

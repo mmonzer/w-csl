@@ -1,4 +1,4 @@
-package org.mitre.cpe.common;
+package lib.unpacked.org.mitre.cpe.common;
 
 import java.text.ParseException;
 import java.util.Hashtable;

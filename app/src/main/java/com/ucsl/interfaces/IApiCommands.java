@@ -17,7 +17,6 @@ public interface IApiCommands {
 	String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh, JsonCmdPrivilegeFamily privilegeFamily);
 
 	String getName();
-	String getPathName();
 
 	Map<String, JsonCmdPrivilegeFamily> getListOfCommandPrivileges();
 

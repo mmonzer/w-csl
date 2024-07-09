@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -11,10 +12,13 @@ import java.util.List;
  * Abstract class, concrete children are tied to the actual protocols of a connection.
  */
 public abstract class Connection implements IScannerSerializable {
-    private int id;
-    private List<String> devicesIds;
-    private StaticConnectionProtocol protocol;
-    private Boolean isSimulated;
+    @Getter
+    private final int id;
+    @Getter
+    private final List<String> devicesIds;
+    @Getter
+    private final StaticConnectionProtocol protocol;
+    private final Boolean isSimulated;
 
     protected Connection(int id, List<String> devicesIds, StaticConnectionProtocol protocol) {
         this.id = id;
@@ -84,18 +88,6 @@ public abstract class Connection implements IScannerSerializable {
                 "queryProtocol", this.protocol.scanName(),
                 "uuid", this.id
         );
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public StaticConnectionProtocol getProtocol() {
-        return protocol;
-    }
-
-    public List<String> getDevicesIds() {
-        return devicesIds;
     }
 
     public Boolean isSimulated() {

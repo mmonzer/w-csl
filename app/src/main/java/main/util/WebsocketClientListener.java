@@ -27,7 +27,6 @@ public class WebsocketClientListener {
 
 	static List<WebsocketClientListener> list = new ArrayList<WebsocketClientListener>();
 
-
 	Session userSession = null;
 	private MessageHandler messageHandler;
 	String uriName="";
@@ -48,7 +47,6 @@ public class WebsocketClientListener {
 			return w;
 			
 		} catch (URISyntaxException ex) {
-			//System.err.println("URISyntaxException exception: " + ex.getMessage());
 			System.err.println("URISyntaxException exception: " + s);
 			CSLLogger.instance.error("URISyntaxException exception: " + s);
 			
@@ -77,7 +75,6 @@ public class WebsocketClientListener {
 			this.uriName=name;
 			container.connectToServer(this, endpointURI);
 		} catch (Exception e) {
-			//throw new RuntimeException(e);
 			System.err.println("Cannot connect to "+endpointURI);
 			CSLLogger.instance.error("Cannot connect to "+endpointURI);
 		}

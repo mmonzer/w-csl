@@ -1,5 +1,8 @@
 package com.csl.intercom.dbapi.models;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +30,21 @@ public class ScanEntity {
         }};
     }
 
+    @Setter
+    @Getter
     private int dbapiId;                // The scan's id in DB-API
+    @Setter
+    @Getter
     private String scanId;              // The scan's id in CSL-Scan
+    @Setter
+    @Getter
     private Status status;
+    @Getter
     private OffsetDateTime startDate;
     private OffsetDateTime endDate;
     private String description = null;  // Description of failure
+    @Setter
+    @Getter
     private double progress = 0.0;
 
     protected ScanEntity(int dbapiId, String scanId, Status status, OffsetDateTime startDate, OffsetDateTime endDate) {
@@ -62,22 +74,6 @@ public class ScanEntity {
         return new ScanEntity(0, scanId, Status.STARTED, startDate, null);
     }
 
-    public int getDbapiId() {
-        return dbapiId;
-    }
-
-    public String getScanId() {
-        return scanId;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public OffsetDateTime getStartDate() {
-        return startDate;
-    }
-
     public OffsetDateTime getEndDate() {
         if (Status.finishedStates.contains(this.status)) {
             return endDate;
@@ -94,24 +90,8 @@ public class ScanEntity {
         }
     }
 
-    public double getProgress() {
-        return progress;
-    }
-
-    public void setDbapiId(int dbapiId) {
-        this.dbapiId = dbapiId;
-    }
-
-    public void setScanId(String scanId) {
-        this.scanId = scanId;
-    }
-
     public void setStartDate(OffsetDateTime startDate) {
         this.startDate = startDate;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
     }
 
     /**
@@ -152,10 +132,6 @@ public class ScanEntity {
 
     public void setDiscarded() {
         setDiscarded(OffsetDateTime.now());
-    }
-
-    public void setProgress(double progress) {
-        this.progress = progress;
     }
 
     /**

@@ -1,20 +1,14 @@
-package main.xcom;
+package com.csl.web.websockets;
 
-import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.websocket.*;
 
-import com.ucsl.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +48,8 @@ public class WebsocketClientEndpoint {
 
     synchronized private void connect()  {
     	 try {
-//             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
              this.userSession = container.connectToServer(this, endpointURI);
          } catch (Exception e) {
-            // throw new RuntimeException(e);
              logger.warn("Error connecting to websocket {}, reason: {}", endpointURI, e.getMessage());
              logger.debug("Error connecting to websocket {}", endpointURI, e);
          }

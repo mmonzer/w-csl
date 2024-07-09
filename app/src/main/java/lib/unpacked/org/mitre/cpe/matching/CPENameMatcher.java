@@ -1,10 +1,12 @@
-package org.mitre.cpe.matching;
+package lib.unpacked.org.mitre.cpe.matching;
+
+import lib.unpacked.org.mitre.cpe.common.LogicalValue;
+import lib.unpacked.org.mitre.cpe.common.Utilities;
+import lib.unpacked.org.mitre.cpe.common.WellFormedName;
+import lib.unpacked.org.mitre.cpe.naming.CPENameUnbinder;
 
 import java.text.ParseException;
 import java.util.Hashtable;
-import org.mitre.cpe.naming.CPENameUnbinder;
-
-import org.mitre.cpe.common.*;
 
 /**
  * The CPENameMatcher is an implementation of the CPE Matching algorithm, 

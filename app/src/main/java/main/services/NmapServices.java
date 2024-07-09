@@ -9,10 +9,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import lombok.Getter;
 import org.apache.commons.net.util.SubnetUtils;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IApiCommands;
@@ -27,15 +27,11 @@ import main.extensions.SshUtils;
 import main.extensions.Utils;
 
 public class NmapServices implements ICSLService {
-	
-	//ApiCommands apiCommands= new ApiCommands("");
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
 	String name="nmap";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	String configFileSectionName="nmap_service";
 	static String idsconf;
-	static Json tapList;
 	static boolean debugMode = false;
 	static boolean logMode = false;
 	static String debugPath = "";
@@ -47,23 +43,11 @@ public class NmapServices implements ICSLService {
 		this.name="nmap";
 		this.configFileSectionName="nmap_service";
 	}
-	public NmapServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-
-	
 
 	@Override
 	public String getConfigFileSectionName() {
 		return configFileSectionName;
 	}
-
-	
-	
-	
-	
-
 	
 	static public void lauchNmap(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
@@ -84,6 +68,7 @@ public class NmapServices implements ICSLService {
 		scanDevice(machines, jConfig);
 
 	}
+
 	private static Json readJsonFile(String fileName) throws IOException {
 		String jsonRaw = "";
 		File fichierRegles = new File(fileName);
@@ -97,6 +82,7 @@ public class NmapServices implements ICSLService {
         br.close(); 
         return Json.read(jsonRaw);
 	}
+
 	static public Json scanDevice(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
@@ -126,6 +112,7 @@ public class NmapServices implements ICSLService {
 		}	
 		return result;
 	}
+
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("--- Initialisation des services Nmap ---");
@@ -243,48 +230,7 @@ public class NmapServices implements ICSLService {
 				return	scanDevice(param,jConfig);
 
 			}
-		});	
-		/*addCmd("getMachineList", new JsonCmd() {
-			
-			@Override
-			public Json exec(Json params) {
-				String idsconf = IDSRunner.instance.getIdsParams().getIdsModelDir();
-
-				Json devicesList = Utils.listDevices();
-				Json tapList = null;
-				try {
-					tapList = readJsonFile(idsconf+"/taps/TapsConfiguration.json");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				Json result = Json.object();
-				
-				HashMap<String, ArrayList<Json>> map = new HashMap<String, ArrayList<Json>>();
-				System.out.println(devicesList);
-				for(Json tmp : devicesList.asJsonList()) {
-					if(!map.containsKey(tmp.at("ip").asString().split("@")[1])) {
-						tmp.at("ip", tmp.at("ip").asString().split("@"));
-						ArrayList<Json> tmp2 = new ArrayList<Json>();
-						tmp2.add(tmp);
-						map.put(tmp.at("ip").asString().split("@")[1], tmp2);
-					}
-					else {
-						map.get(tmp.at("ip").asString().split("@")[1]).add(tmp);
-					}
-				}
-				
-				HashMap<String, ArrayList<Json>> map2 = new HashMap<String, ArrayList<Json>>();
-				for(String key : map.keySet()) {
-					for(Json tap : tapList.asJsonList()) {
-						if(tap.at("networkName").asString().contentEquals(key))
-							map2.put(tap.at("idname").asString(), map.get(key));
-					}
-				}				
-				result.at("result",map2);
-				return result.at("result");
-
-			}
-		});	*/		
+		});
 		return true;
 	}
 	
@@ -292,18 +238,9 @@ public class NmapServices implements ICSLService {
 		return apiCommands.registerCmd(name, j);
 	}
 	
-	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
-	}
-	
 	
 	@Override
 	public boolean terminate() {

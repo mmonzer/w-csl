@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -20,30 +19,12 @@ import com.ucsl.json.Json;
 
 
 public class CSLDemo03CmdServer {
-
-	
-	static String uuid = UUID.randomUUID().toString();
-
-
-	static Json testObject=null;
 	
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-
-	
-	
-
-	
-	
-	
-
-
-
 	static public Json execCmd(String cmd, Json jparams) {
-
-
 		Json j= Json.object();
 	
 		j.set("cmd", cmd);
@@ -82,31 +63,19 @@ public class CSLDemo03CmdServer {
 
 	
 	static public void testCmd() {
-		
-		
 		System.out.println("TEST EXEC_CMD");
 		Json jparams= Json.object();
 		jparams.set("x",1);
 		jparams.set("info", "test");
 
-		
 		Json result = execCmd("test_cmd", jparams);
 		
 		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
-	
-	
-
-	
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		testCmd();
-	
-		
-		
 	}
 
 }

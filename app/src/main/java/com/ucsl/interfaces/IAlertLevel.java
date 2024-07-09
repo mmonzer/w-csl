@@ -57,21 +57,5 @@ public enum IAlertLevel {
 		int level =getLevelAsInt();
 		return getLevellAsString()+':'+level;
 	}
-	
-	//public static AlertLevel UNDEF_LEVEL = new AlertLevel(-1);
-
-	//public static String UNDEF = "UNDEF";
-	// public static SeverityLevel UNDEF_LEVEL= new SeverityLevel(-1);
-
-	//int level = -1;
-
-	//public static String ALERT_INFO = "INFO";
-	//public static String ALERT_DEBUG = "IDEBUG";
-
-	//public static String[] LEVEL0 = new String[] { "INFO", "DEBUG" };
-	//public static String[] LEVEL1 = new String[] { "TOLERABLE" };
-	//public static String[] LEVEL2 = new String[] { "MODERATE" };
-	//public static String[] LEVEL3 = new String[] { "HIGH" };
-	//public static String[] LEVEL4 = new String[] { "CRITICAL" };
 
 }

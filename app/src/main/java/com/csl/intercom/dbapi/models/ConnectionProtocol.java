@@ -3,17 +3,23 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
+import lombok.Getter;
 
 import java.util.List;
 
 public class ConnectionProtocol {
-    private int id;
-    private String name;
-    private String description;
-    private int defaultPort;
-    private String connectionTemplateId;
-    private boolean isDynamic;
-    private StaticConnectionProtocol staticConnectionProtocol;
+    @Getter
+    private final int id;
+    @Getter
+    private final String name;
+    @Getter
+    private final String description;
+    private final int defaultPort;
+    @Getter
+    private final String connectionTemplateId;
+    private final boolean isDynamic;
+    @Getter
+    private final StaticConnectionProtocol staticConnectionProtocol;
 
     protected ConnectionProtocol(int id, String name, String description, int defaultPort, String connectionTemplateId, boolean isDynamic) {
         this.id = id;
@@ -29,32 +35,12 @@ public class ConnectionProtocol {
         }
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
     public int getDefaultPort() {
         return defaultPort;
     }
 
-    public String getConnectionTemplateId() {
-        return connectionTemplateId;
-    }
-
     public boolean isDynamic() {
         return isDynamic;
-    }
-
-    public StaticConnectionProtocol getStaticConnectionProtocol() {
-        return staticConnectionProtocol;
     }
 
     /**

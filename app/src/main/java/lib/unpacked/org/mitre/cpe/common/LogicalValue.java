@@ -1,4 +1,4 @@
-package org.mitre.cpe.common;
+package lib.unpacked.org.mitre.cpe.common;
 
 /**
  * This class represents a Logical Value.  

@@ -10,8 +10,8 @@ public enum SNMPv3AuhtenticationAlgorithm {
     MD5("MD5", "AuthMD5"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private SNMPv3AuhtenticationAlgorithm(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

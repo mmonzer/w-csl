@@ -6,8 +6,8 @@ public enum RemotePowershellConnectionField {
     PASSWORD("read_only_password", "password"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private RemotePowershellConnectionField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

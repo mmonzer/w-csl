@@ -1,21 +1,10 @@
 package com.csl.web.database;
 
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
-
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
+
+import java.io.IOException;
+import java.nio.file.*;
 
 public class DirWatcher implements Runnable {
 
@@ -68,8 +57,6 @@ public class DirWatcher implements Runnable {
                     Json j=Json.object();
     		        j.set("action","modified");
     		        j.set("name",filename);
-    		        
-//    		        CSLWebSocketForDatabase.broadcastMessageJson("database",j );
     		        CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_DATABASE,j );
     		        
                 }
@@ -82,27 +69,5 @@ public class DirWatcher implements Runnable {
         } catch (InterruptedException x) {
             return;
         }
-    }
-
-    public static void startWatcher(String dirpath) throws IOException, InterruptedException, ExecutionException,
-            TimeoutException {
-
-        Path dir = Paths.get(dirpath);
-        DirWatcher watcher = new DirWatcher(dir);
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<?> future = executor.submit(watcher);
-        executor.shutdown();
-
-        // Now, the watcher runs in parallel
-        // Do other stuff here
-
-        // Shutdown after 10 seconds
-        //executor.awaitTermination(10, TimeUnit.SECONDS);
-        // abort watcher
-        //future.cancel(true);
-
-        //executor.awaitTermination(1, TimeUnit.SECONDS);
-        //executor.shutdownNow();
     }
 }

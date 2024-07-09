@@ -4,10 +4,7 @@ package main.util;
 import static com.ucsl.util.FileUtils.readFile;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -21,8 +18,6 @@ import com.ucsl.json.Json;
 
 
 public class DBDjango {
-	
-	
 	static String CONFIGURATION_FILE = "configuration.json";
 	static String API_KEY = "";
 	static String BASE_URL = "http://localhost:8005/";

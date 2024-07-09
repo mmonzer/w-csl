@@ -3,14 +3,13 @@ package main.demo;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mitre.cpe.common.WellFormedName;
+import lib.unpacked.org.mitre.cpe.common.WellFormedName;
 
 import com.ucsl.json.Json;
 
 
 public class CVEDescriptor {
 
-	//List<String> expSet=null;
 	CVEDescriptorNode nodeExp;
 	String ID="";
 	String CWE="";
@@ -29,10 +28,6 @@ public class CVEDescriptor {
 		int n=0;
 		n=n+ID.length()+CWE.length()+publishedDate.length()+lastModifiedDate.length()+description.length()+vectorString.length();
 		return n+24*6+12+4*7;
-	}
-	
-	void initFromJson() {
-		
 	}
 	
 	public CVEDescriptor initFromCveJson(Json item) {
@@ -215,7 +210,6 @@ public class CVEDescriptor {
 	}
 	
 	public CVEDescriptor fromJson(Json j) {
-		
 		return this;
 	}
 

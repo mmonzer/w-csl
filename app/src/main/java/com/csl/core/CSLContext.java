@@ -14,7 +14,7 @@ import com.csl.interfaces.IModule;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
-import com.csl.web.CSLHttpServerJetty;
+import com.csl.web.CSLHttpServer;
 import com.csl.web.CSLUDPServer;
 import com.csl.web.database.DataBaseServer;
 import com.ucsl.interfaces.*;
@@ -37,7 +37,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-
+@Getter
+@Setter
 public class CSLContext implements ICSLContext, ICSLLogger {
     private static final Logger logger = LoggerFactory.getLogger(CSLContext.class);
 
@@ -66,6 +67,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
      */
     private String configFileName = DEFAULT_CONFIG_PATH + File.separator + DEFAULT_CONFIG_FILE;
 
+    //private String userDir=System.getProperty("user.dir");
     private String cslConfDir = "";
 
     public static CSLContext instance = new CSLContext();
@@ -76,6 +78,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     CSLAlertManager cslAlertManager = null;
     private IDSRunner idsRunner = null;
+
+    @Getter
     private IDSParams idsParams = null;
     private CSLMqttBrokerHandler mqttBroker = null;
     private StatusNotifier statusNotifier = null;
@@ -85,7 +89,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     DataBaseServer databaseServer = null;
 
 
-    CSLHttpServerJetty cslHttpServer = null;
+    CSLHttpServer cslHttpServer = null;
     ;
     CSLUDPServer cslUDPServer = null;
 	
@@ -100,11 +104,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 		database
 		servicemanager
 	 */
-    //private boolean CSLServerStarted=false;
-
-    //private CSLConfigFileManager cslConfigFileManager=new CSLConfigFileManager();
-    //	private CSLFileServer cslFileServer=null;  // created if port>0 and declard in configfile
-
 
     boolean replayMode = false; // run faster for test (not in real time)
     // time is set with setNewSystemCurre
@@ -112,54 +111,22 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     long lastSystemCurrentTimeMillis = 0;
     long currentSamplingTime = 0;
 
+    @Getter
     int samplingTime = 100;
+
+    @Setter
+    @Getter
     private boolean exitCSL = false;
-    boolean autostart = false;
-    int nExecSteps = 0;
-    boolean showProgression = false;
 
-    int numberOfExecLoops = 1; // can run modules in several loop
-    //  on each loop the order is :  input exec output
-    //	loops are executed one after the other (in fact there is one loop for control & data treatement
-    // and one loop for process simulation
-
-    //private String config_path= DEFAULT_CONFIG_PATH;
-    //HashMap<String,ParamDescriptor> listOfGlobalParamsDescriptors=new HashMap<String,ParamDescriptor>();
-
-
-    Json jConfig = null;
-    //List<VariablesTable> localVariablesTableList= new ArrayList<VariablesTable>();
-
-
-    Map<String, ModuleContext> modules = new HashMap<String, ModuleContext>();
-    List<ModuleContext> inputExecList = new ArrayList<ModuleContext>();
-    List<ModuleContext> outputExecList = new ArrayList<ModuleContext>();
-    List<ModuleContext> stepExecList = new ArrayList<ModuleContext>();
-
-
-    Map<String, Class<IModule>> moduleClassList = new HashMap<String, Class<IModule>>();
-
-
-    ScheduledExecutorService scheduler = null;
-
-    private int currentPortForUCP = 9001;
-    //private int currentPortForWEB=9000;
-    //private int currentPortForFileserver=-1;
-
-    private long initialTime = 0;
-
-    private static int PORTMAX = 9999;
-
-    private static int CSL_ID = 1234;
-
+    @Getter
     private boolean debug = true;
 
-    private Boolean openBrowser;
-    String homePageName = "";
-
-
-    //private String[] args;
+    @Setter
+    @Getter
     private boolean verbose = false;
+
+    @Getter
+    @Setter
     private boolean testMode = false;
 
     private IFileStoreService fileUtils;
@@ -169,15 +136,30 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     private IIDSMainProcessor idsMainProcessor;
 
 
+    boolean autostart = false;
+    int nExecSteps = 0;
+    boolean showProgression = false;
+
+    int numberOfExecLoops = 1; // can run modules in several loop
+
+    Json jConfig = null;
+
+    Map<String, ModuleContext> modules = new HashMap<String, ModuleContext>();
+    List<ModuleContext> inputExecList = new ArrayList<ModuleContext>();
+    List<ModuleContext> outputExecList = new ArrayList<ModuleContext>();
+    List<ModuleContext> stepExecList = new ArrayList<ModuleContext>();
+
+    Map<String, Class<IModule>> moduleClassList = new HashMap<String, Class<IModule>>();
+
+    ScheduledExecutorService scheduler = null;
+
+    private long initialTime = 0;
+
     private CSLContext() {
 
 
     }
 
-
-    public boolean isDebug() {
-        return debug;
-    }
 
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -187,27 +169,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     public void printError(String s) {
         System.err.println(s);
     }
-
-    public boolean isExitCSL() {
-        return exitCSL;
-    }
-
-    public void setExitCSL(boolean exitCSL) {
-        this.exitCSL = exitCSL;
-    }
-
-    //@Override
-    public Json takeObjectFromInputQueue(int n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    //@Override
-    public void putObjectToOutputQueue(int n, Json j) {
-        // TODO Auto-generated method stub
-
-    }
-
 
     @Override
     public void logError(String msg) {
@@ -245,18 +206,15 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         cslLogger.setLogLevel(v);
     }
 
-
     public String getUserDir() {
         return JServiceLoader.getUserDir();
     }
-
 
     public IAlertManager getCSLAlertManager() {
         if (cslAlertManager == null) System.err.println("Warning, no alertManager registered");
 
         return cslAlertManager;
     }
-
 
     public IFileLogFactory getFileLogFactory() {
         if (fileLogFactory == null) fileLogFactory = new FileLogFactory();
@@ -268,10 +226,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return idsRunner;
     }
 
-
-//	public void setIdsRunner(IIDSRunner idsRunner) {
-//		this.idsRunner = idsRunner;
-//	}
 
     public DataBaseServer getDatabaseServer() {
         if (idsRunner == null) System.err.println("Warning, no Database server registered");
@@ -294,7 +248,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     }
 
     public CSLUDPServer getCslUDPServer() {
-        if (cslHttpServer == null) System.err.println("Warning, no CSL UDP server registered");
+        if (cslUDPServer == null) System.err.println("Warning, no CSL UDP server registered");
 
         return cslUDPServer;
     }
@@ -308,31 +262,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return JServiceLoader.buildFullPathInUserDir(dir);
     }
 
-
-    public String buildFullPathInConfDir(String dir) {
-
-        if (dir == null) dir = "";
-        dir = dir.replace('\\', '/');
-
-        dir = clean(dir);
-
-        if (dir.startsWith(".")) dir = dir.substring(1);
-        if (dir.startsWith(File.separator)) dir = dir.substring(1);
-
-        return getCslConfDir() + File.separator + dir;
-    }
-
-    private String clean(String s) {
-        String z = "../";
-        while (s.indexOf(z) >= 0) {
-            int n = s.indexOf(z);
-            String s1 = s.substring(0, n);
-            String s2 = s.substring(n + z.length(), s.length());
-            s = s1 + s2;
-        }
-        return s;
-    }
-
     public void registerModuleClass(String name, Class c) {
 
         System.out.println("JMFXXXX__register:" + name + " --> " + c.getName());
@@ -343,8 +272,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         moduleClassList.put(name, c);
 
     }
-    //==
-
 
     public long getTimeFromStartingTime() {
 
@@ -356,36 +283,11 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return getSystemCurrentTimeMillis();
     }
 
-
     public long getSystemCurrentTimeMillis() {
         if (isReplayMode()) {
             return lastSystemCurrentTimeMillis;
         }
         return System.currentTimeMillis();
-    }
-
-    public String getSystemCurrentTimeMillisAsFormattedString() {
-        return sdf.format(getSystemCurrentTimeMillis());
-    }
-
-
-    public void setSystemCurrentTimeMillis(long t) {
-
-        if (t < lastSystemCurrentTimeMillis) {
-            return;
-        }
-        while (currentSamplingTime <= t) {
-            currentSamplingTime = currentSamplingTime + samplingTime;
-            lastSystemCurrentTimeMillis = currentSamplingTime;
-
-            execOneRunCycle();
-        }
-        lastSystemCurrentTimeMillis = t;
-    }
-
-
-    public int getSamplingTime() {
-        return samplingTime;
     }
 
     public static final String EOL = System.getProperty("line.separator");
@@ -457,15 +359,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return getConfig();
 
     }
-
-    public String getConfigFileName() {
-        return this.configFileName;
-    }
-
-    public String getCslConfDir() {
-        return cslConfDir;
-    }
-
     private void setUserDir(String dir) {
 
         JServiceLoader.setUserDir(dir);
@@ -534,12 +427,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         }
     }
 
-
-    public String getDefaultIdsDataDir() {
-        return CSLContext.instance.getUserDir() + File.separator + "idsdata";
-
-    }
-
     public void init(CSLRunningArgs cslRunningArgs) {
 
         if (cslRunningArgs.hasError()) {
@@ -560,7 +447,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         setVerbose(cslRunningArgs.isVerbose());
         setDebug(cslRunningArgs.isDebug());
 
-        setTestMode(cslRunningArgs.getTestParam());
+        setTestMode(cslRunningArgs.isTestparam());
 
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
@@ -585,7 +472,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             idsParams = new IDSParams(idsMainProcessor);
 
             idsParams.initFromJson(getConfig(), cslRunningArgs.getDataDir(),
-                    cslRunningArgs.getTestParam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
+                    cslRunningArgs.isTestparam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
 
 
             if (cslRunningArgs.hasIdsMode())
@@ -595,7 +482,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             if (cslRunningArgs.hasDataSetForLearning())
                 idsParams.setCurrentDataSetNameForLearning(cslRunningArgs.getDataSetForLearning());
             if (cslRunningArgs.hasDataSetForDetectionOffLine())
-                idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffLine());
+                idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffline());
 
 
         }
@@ -607,7 +494,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         setCslHttpServer(new CSLHttpServerJetty());
         setCslUDPServer(new CSLUDPServer());
     }
-
 
     /***
      * Set as distant API (to be called using socket --> CSLWebSocketForJcmd.execJCmd)
@@ -649,7 +535,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         }
     }
 
-
     public void start() {
         if (server) getCslHttpServer().start();
 
@@ -684,23 +569,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         new ModuleIDS();
 
-    }
-
-    public Json getConfigAsJsonOfModule(String nameOfModule) {
-
-        Json j = getConfig().get("modules");
-
-
-        Iterator<Json> itr = j.iterator();
-
-        while (itr.hasNext()) {
-            Json jj = itr.next();
-
-            String name = JsonUtil.getStringFromJson(jj, "name", "???");
-            if (nameOfModule.compareTo(name) == 0) return jj;
-        }
-
-        return null;
     }
 
     private void initModules() {
@@ -823,13 +691,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         autostart = JsonUtil.getBooleanFromJson(getConfig(), "module_exec/autostart", true);
     }
 
-
     Class getModuleClass(String name) {
         return moduleClassList.get(name);
     }
-
-
-    //== periodic exec
 
     private void logResult(IResult r) {
         if (r == null)
@@ -890,29 +754,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     };
 
-    public void execOneRunCycle() {
-        if (isReplayMode()) {
-            task.run();
-        }
-
-    }
-
     private boolean isReplayMode() {
         return replayMode;
-    }
-
-    private void setReplayMode(boolean testingMode) {
-        this.replayMode = testingMode;
-    }
-
-    public void startExecInReplayMode(long initialTimeForTest) {
-        setReplayMode(true);
-        execOneRunCycle();
-        initialTime = initialTimeForTest;
-        lastSystemCurrentTimeMillis = initialTimeForTest;
-        currentSamplingTime = initialTimeForTest;
-
-
     }
 
     public void startExec() {
@@ -929,141 +772,10 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     }
 
-
     public void stopExec() {
 
         scheduler.shutdown();
     }
-
-    public void restartExec() {
-
-        if (scheduler == null) {
-            startExec();
-            return;
-        }
-        stopExec();
-        startExec();
-
-    }
-
-    public boolean isAutostart() {
-        return autostart;
-    }
-
-    public boolean isOpenBrowser() {
-        return openBrowser;
-    }
-
-    public String getHomePageName() {
-        return homePageName;
-    }
-
-    private StringBuffer printToString(StringBuffer z, String s) {
-        z.append(s);
-        z.append("\n");
-        return z;
-    }
-
-
-    public String dump() {
-        // TODO Auto-generated method stub
-
-        StringBuffer z = new StringBuffer();
-
-        printToString(z, "************");
-        printToString(z, "* CSL Core *");
-        printToString(z, "************");
-        printToString(z, "Time:" + getTimeFromStartingTime() + "  (initial time in system time:" + initialTime + ")");
-
-        String s = "";
-        for (Entry<String, Class<IModule>> entry : moduleClassList.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            if (!s.isEmpty()) s = s + ",";
-            s = s + key;
-
-        }
-        printToString(z, "Module types:" + s);
-
-
-        s = "";
-        for (int nLoop = 0; nLoop < numberOfExecLoops; nLoop++) {
-            s = "Loop #" + nLoop;
-            printToString(z, s);
-
-            s = "  Input Exec order: ";
-            for (ModuleContext m : inputExecList) {
-                if (m.getLoopNumber() == nLoop)
-                    s = s + m.getName() + "(" + m.getInputPriority() + ") ";
-            }
-            printToString(z, s);
-            s = "  Step Exec order: ";
-            for (ModuleContext m : stepExecList) {
-                if (m.getLoopNumber() == nLoop)
-                    s = s + m.getName() + ":" + m.getStepPriority() + ") ";
-            }
-            printToString(z, s);
-            s = "  Output Exec order: ";
-            for (ModuleContext m : outputExecList) {
-                if (m.getLoopNumber() == nLoop)
-                    s = s + m.getName() + "(" + m.getOutputPriority() + ") ";
-            }
-            printToString(z, s);
-
-        }
-
-        printToString(z, "");
-        printToString(z, "Modules");
-        printToString(z, "=======");
-
-        for (Entry<String, ModuleContext> entry : modules.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            printToString(z, value.toString());
-        }
-
-
-        return z.toString();
-    }
-
-
-    public String moduleListtoJsonString() {
-        String retval = "";
-        String delta = "  ";
-
-        for (Entry<String, ModuleContext> e : modules.entrySet()) {
-
-            if (retval.length() > 0) retval = retval + ",";
-            retval += "{";
-            retval += delta + "\"name\":" + "\"" + e.getKey() + "\"";
-            retval += /*((CSLVariable)value).toString() +*/ "}";
-
-        }
-        return "[" + retval + "]\n";
-    }
-
-    public boolean isVerbose() {
-        return verbose;
-    }
-
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
-    }
-
-    public void setTestMode(boolean testMode) {
-        this.testMode = testMode;
-    }
-
-    public boolean isTestMode() {
-        return testMode;
-    }
-
-
-    public IDSParams getIdsParams() {
-        // TODO Auto-generated method stub
-        return idsParams;
-    }
-
 
     public IIDSMainProcessor getIDSMainProcessor() {
         // TODO Auto-generated method stub
@@ -1082,15 +794,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             statusNotifier = new StatusNotifier(false);
         }
         return statusNotifier;
-    }
-
-    public ZoneId getZoneId() {
-        if (zoneId == null) {
-            Json globalConfig = getConfig().get("global");
-            String timeZoneString = JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris");
-            zoneId = ZoneId.of(timeZoneString);
-        }
-        return zoneId;
     }
 }
 

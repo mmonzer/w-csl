@@ -2,7 +2,6 @@ package main.demo;
 
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
@@ -15,9 +14,6 @@ import com.ucsl.json.JsonUtil;
  * 
  */
 public class Test50ApiDevDb {
-
-
-	//IApiCommands api= new ApiCommands("essai");
 
 	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
 
@@ -32,10 +28,10 @@ public class Test50ApiDevDb {
 	
 	public Json exec(String cmd, Json params) {
 		params.set("user", "user1");
-		
+
 		Json r=imcm.executeCommand("devdb", Json.object().set("cmd", cmd).set("params", params));
-	
-		
+
+
 		return r;
 		
 	}
@@ -44,8 +40,8 @@ public class Test50ApiDevDb {
 	}
 
 	/*
-	 * 
-	 * 	
+	 *
+	 *
 	 */
 
 	public Json test_add_device() {

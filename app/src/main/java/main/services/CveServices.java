@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.IApiCommands;
@@ -17,15 +16,14 @@ import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
+import lombok.Getter;
 import main.extensions.CveUtils;
 import main.extensions.Utils;
 
 public class CveServices implements ICSLService {
-	//ApiCommands apiCommands= new ApiCommands("");
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
-	
 	String name="cve";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	String configFileSectionName="cve_service";
 	
 	public CveServices() {
@@ -36,17 +34,11 @@ public class CveServices implements ICSLService {
 		this.name=name;
 		this.configFileSectionName=configFileSectionName;
 	}
-	
-	
+
 	@Override
 	public String getConfigFileSectionName() {
 		return configFileSectionName;
 	}
-
-	
-
-
-	
 	
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
@@ -218,13 +210,6 @@ public class CveServices implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 	
 	@Override

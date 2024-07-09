@@ -35,10 +35,10 @@
  */
 package lib.unpacked.org.nmap4j_csl.core.flags;
 
-import java.util.HashSet ;
-import java.util.Iterator ;
-import java.util.LinkedHashMap ;
-import java.util.Set ;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
 /**
  * Instances of this class are used to manage the flags for a given 
@@ -71,7 +71,7 @@ public class ArgumentProperties {
     addFlag( f.toString() ) ;
   }
   
-  public void addFlag( Flag f, String value ) {
+  public void addFlag(Flag f, String value ) {
     addFlag( f.toString(), value ) ;
   }
   
@@ -99,7 +99,7 @@ public class ArgumentProperties {
     }
   }
   
-  public void replaceFlag( Flag f, String value ) {
+  public void replaceFlag(Flag f, String value ) {
     if( flagMap.get(  f.toString() ) != null ) {
       removeFlag(  f ) ;
     }

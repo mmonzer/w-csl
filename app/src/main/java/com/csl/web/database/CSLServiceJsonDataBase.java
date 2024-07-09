@@ -1,12 +1,5 @@
 package com.csl.web.database;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -18,20 +11,19 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
 public class CSLServiceJsonDataBase implements ICSLService {
 
 	
 	private static   String datafiledir = System.getProperty("user.dir")+File.separatorChar+"datafile";
 
-
-
-
-	static boolean debug =true;
-	//static CSLAlertManager cslAlertManager = new CSLAlertManager("Intrusion detection");
 	IApiCommands apiCommands=new ApiCommandsFactory().createApiCommands("/"+"dbjson");
-		//	new ApiCommands("/"+"dbjson");
-	
-	
 	
 	@Override
 	public IApiCommands getApiCommands() {
@@ -54,25 +46,14 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 	
 	public boolean init(Json j, String userDir) {
-
-		
-		
 		String datafilesubdir="datafile";
-
-
-
-
 
 		if (j!=null)
 			datafilesubdir=JsonUtil.getStringFromJson(j, "datafile_subdir","datafile");
 
 
 		datafiledir = CSLContext.instance.buildFullPathInUserDir(datafilesubdir);
-		//System.getProperty("user.dir")+File.separatorChar+datafilesubdir;
 		JServiceLoader.displayInfo(datafiledir);
-
-		//datafiledir = IDSRunner.instance.getUserDir()+File.separatorChar+datafilesubdir;
-
 
 		File f=new File(datafiledir);
 		f.mkdirs();
@@ -88,19 +69,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		 * newParams
 		 * oldP
 		 */
-		
 
-		// api : let x = await asyncExecApiCmd("devdb","op",
-
-	
-		
-		
-		//CSLHttpServer.addApiCommands(apiCommands);
-	
-		//JServiceLoader.addApi(apiCommands);
-
-	
-	
 		
 		apiCommands.registerCmd("dir_jsonfile", new IJsonCmd() {
 			@Override
@@ -179,9 +148,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 	
 	public  String cleanDataFileName(String filename) {
 
-
-
-
 		String ext="";
 		if (filename.indexOf(".") > 0) {
 			ext=filename.substring(filename.lastIndexOf(".")+1,filename.length());
@@ -223,12 +189,10 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		boolean ok=new File(path).delete();
 		if (ok) return "ok"; else return "error";
 
-
 	}
 
 	private  Json readDataFile(String path) 
 	{
-
 
 		path=datafiledir+File.separator+path;
 		System.out.println("READING_FILE:"+datafiledir);
@@ -243,8 +207,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		} 
 		catch (IOException e) 
 		{
-			//e.printStackTrace();
-			//return "{\"Error\":\"File not found:"+e.getMessage()+"\"}";
 			Json z=Json.object();
 			z.set("contents",Json.object());
 			z.set("error","Object not found ("+e.getMessage()+")");
@@ -252,19 +214,15 @@ public class CSLServiceJsonDataBase implements ICSLService {
 			return z;
 
 		}
-
-		//return content;
 	}
 
 
 	private  void sendEventFileModified(String fileName,String uuid) {
-
 		Json j=Json.object();
 		j.set("action","modified");
 		j.set("name",fileName);
 		j.set("uuid", uuid);
 
-//		CSLWebSocketForDatabase.broadcastMessageJson("database",j );
 		CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_DATABASE,j );
 	}
 
@@ -293,8 +251,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 	}
 
 	public  Json listJsonFilesAsJson() {
-
-
 		Json j=Json.array();
 
 		List<String> listOfFiles = listJsonFiles();
@@ -303,19 +259,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 			j.add(s);
 		}
 
-
-
 		return j;
-	}
-
-
-
-
-	public Json saveJsonAsDataFile(String fileName,Json data) {
-
-		
-	//	System.out.println("JMFJMF : WRITE JSON TO"+fileName);
-		return saveJsonAsDataFile(fileName, data,false);
 	}
 
 	public Json saveJsonAsDataFile(String fileName,Json data, boolean pretty) {
@@ -323,7 +267,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 
 		fileName=cleanDataFileName(fileName);
-		//IDSTrace.log(IDSTrace.WEB_DATABASE,"Save jsonfile:"+fileName);
 
 		String result="";
 		Json j=Json.object();
@@ -332,7 +275,6 @@ public class CSLServiceJsonDataBase implements ICSLService {
 		{
 
 			Json contents=data.get("contents");
-			//IDSTrace.log(IDSTrace.WEB_DATABASE,"Save Contents="+data.get("contents"));
 
 			String uuid=JsonUtil.getStringFromJson(data, "uuid","");
 
@@ -357,23 +299,7 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 			}
 		}
-
-
-
 		return j;
-	}
-
-
-
-
-
-	public boolean  docExists(String name) {
-		String fileName=cleanDataFileName(name);
-		String path=datafiledir+File.separator+fileName+".json";
-
-		return new File(path).isFile();
-
-
 	}
 
 
@@ -381,43 +307,21 @@ public class CSLServiceJsonDataBase implements ICSLService {
 
 
 		String fileName=cleanDataFileName(name);
-		//IDSTrace.log(IDSTrace.WEB_DATABASE,"Load jsonfile:"+fileName);
 
 
 		String result="";
 		Json j=Json.object();
 
 		if (fileName!=null) {
-			//result=DataBaseServer.readDataFile(fileName+".json");
 			j=readDataFile(fileName+".json");
-			//Json z=Json.read(result);
-			//j.set("contents",z);
-			//IDSTrace.log(IDSTrace.WEB_DATABASE,"File Contents="+result);
 
 		} else {
 			j.set("contents",Json.object());
 			j.set("error", "No file with name:"+name);
-			//IDSTrace.log(IDSTrace.WEB_DATABASE,"File Load error="+j.toString());
 
 		}
 
 		return j;
 	}
-
-
-
-	public Json deleteDataFileJson(String name) {
-		String fileName=cleanDataFileName(name);
-	//	IDSTrace.log(IDSTrace.WEB_DATABASE,"Delete jsonfile:"+fileName);
-
-
-		String result=deleteDataFile(fileName+".json");
-		Json j=Json.object();
-		j.set("result", result);
-		return j;
-
-	}
-
-		
 
 }

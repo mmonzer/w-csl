@@ -34,6 +34,8 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,15 +54,21 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
-//    private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
+    @Getter
     private final IApiCommands apiCommands = new ApiCommandsFactory().createApiCommands("");
     private final String name;
+    @Getter
     private final String configFileSectionName;
     private final boolean isConcentrator;
+    @Getter
+    @Setter
     private ScanWebSocketHandler scanWebSocketHandler = null;
-    //    private String apiKey;
+    @Getter
+    @Setter
     private DbapiHandler dbapiHandler = null;
+    @Getter
+    @Setter
     private ScanApiHandler scanApiHandler = null;
     private FileStorageService fileStorageService = null;
     private ImportExportBsonService importExportBsonService = null;
@@ -69,15 +77,22 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     private ExternalConnectionInfoSynchronizationService externalConnectionInfoSynchronizationService = null;
     private ExternalConnectionInfoTemplatesSynchronizationService externalConnectionInfoTemplatesSynchronizationService = null;
     private ExternalDiscoveredDevicesSynchronizationService externalDiscoveredDevicesSynchronizationService = null;
+    @Setter
     private DataSynchronizationService cpeItemSynchronizationService = null;
+    @Setter
     private DataSynchronizationService microsoftKbSynchronizationService = null;
+    @Getter
+    @Setter
     private DataSynchronizationService deletedCpeItemsSynchronizationService = null;
     private DataSynchronizationService deletedMicrosoftKbsSynchronizationService = null;
+    @Getter
+    @Setter
     private CpeScanService cpeScanService = null;
     private ScheduledExecutorService synchronizationSchedule;
 
     public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
         this.name = name;
+        this.apiCommands.setName(name);
         this.configFileSectionName = configFileSectionName;
         this.isConcentrator = isConcentrator;
     }
@@ -89,7 +104,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
     public DiscoveryServices(boolean isConcentrator) {
         this(defaultName, defaultConfigFileSectionName, isConcentrator);
     }
-
 
     /**
      * Initialize the service, setting the list of known managers and registering the commands.
@@ -107,10 +121,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         dbapiHandler = new DbapiHandler();
         scanApiHandler = new ScanApiHandler();
         fileStorageService = new FileStorageService();
-
-        if (isConcentrator) {
-
-        }
 
         Json globalConfig = CSLContext.instance.getConfig().get("global");
 
@@ -996,17 +1006,6 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         return true;
     }
 
-    @Override
-    public String getConfigFileSectionName() {
-        return configFileSectionName;
-    }
-
-    @Override
-    public IApiCommands getApiCommands() {
-        apiCommands.setName(name);
-        return apiCommands;
-    }
-
     /**
      * Stop the service.
      *
@@ -1152,7 +1151,7 @@ public class DiscoveryServices implements ICSLService, IStatusProvider {
         if (!syncResult.isSuccess()) {
             return JsonApiResponse.error(
                     "Could not retrieve devices from DB-API",
-                    Json.object("failed_devices", syncResult.getError().getDetails().get("failed_devices"))
+                    Json.object("failed_devices", syncResult.getError().getReason())
             );
         }
 

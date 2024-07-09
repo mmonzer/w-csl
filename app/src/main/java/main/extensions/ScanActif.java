@@ -544,12 +544,7 @@ public class ScanActif {
 				result.at("mac", "none");
 			}
 			System.err.println("Adresses IP ou MAC de la machine introuvable");
-		}	
-		
-//			if(hasIpForwarding(ip)) {
-//				result.at("role", "router");
-//			}
-//			else
+		}
 		{
 			result.at("role", "none");
 
@@ -599,58 +594,6 @@ public class ScanActif {
 
 		return result;
 	}
-	
-	/**
-	 * Vérifie si la machine de l'ip passée en paramètres a l'ip forwarding d'activé 
-	 * @param ip l'ip à vérifier
-	 * @return true si il a l'ip forwarding, false sinon
-	 */
-	/*private boolean hasIpForwarding(String ip) {
-		print("On tente de savoir si "+ip+" a l'ip forwarding avec ce paramètre : "+ipForwardTestParameter,1);
-		try {
-			// -O -> OS probe
-			// sudo nmap -sn 192.168.1.0/24 --script ip-forwarding --script-args='target=www.google.com'
-			// nmap4j.addFlags(" --script ip-forwarding.nse --script-args='target=www.google.com' ");
-			//nmap4j.addFlags(" --script /usr/share/nmap/scripts/ip-forwarding.nse --script-args='target=www.google.com' ");
-			//nmap4j.includeHosts("195.83.81.0/24");		
-			
-			// Exécution de nmap
-			Nmap4j nmap4j = new Nmap4j(nmapLocation);
-			nmap4j.includeHosts(ip);
-			//nmap4j.addFlags(" -vv -sn --script="+nmapScriptLocation+"ip-forwarding --script-args='"+ipForwardTestParameter+"' ");
-			//////////////////
-			nmap4j.addFlags(" --script-trace --script ip-forwarding.nse --script-args='target=www.google.com' ");
-
-
-			
-			//////////////////
-			nmap4j.execute() ;
-			String output ="Erreur";
-			if( !nmap4j.hasError() ) {
-				output = nmap4j.getOutput() ;
-			}
-			else {
-				print("Exécution impossible",2);
-				print(nmap4j.getExecutionResults().getErrors(),2) ;
-			}
-			String rawOutput = XMLtoJSON(output);
-			print("Réponse nmap : ",1);
-			print(output,1);
-			// Parsing de la réponse nmap
-			Json currentReponse = Json.object();
-			currentReponse = Json.read(rawOutput);
-			
-			print("Réponse nmap : ",1);
-			print(currentReponse.toString(),1);
-			print("-----------------------",1);
-
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}*/
-	
 
 	
 	/**

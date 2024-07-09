@@ -149,11 +149,11 @@ public interface IScan {
    * running consider using the executeAsynchronousExecute() method.
    * 
    * @return
-   * @throws NMapInitializationException 
+   * @throws NMapInitializationException
    */
-  public ExecutionResults executeScan() 
-    throws ParameterValidationFailureException, 
-           NMapExecutionException, NMapInitializationException ;
+  public ExecutionResults executeScan()
+    throws ParameterValidationFailureException,
+          NMapExecutionException, NMapInitializationException;
   
   /**
    * Execute a scan asynchronously; you must pass in a callback in order
@@ -161,9 +161,9 @@ public interface IScan {
    * 
    * @param isc
    */
-  public void executeAsynchronousScan( IScanCallback isc )  
-    throws ParameterValidationFailureException, 
-           NMapExecutionException ;
+  public void executeAsynchronousScan( IScanCallback isc )
+    throws ParameterValidationFailureException,
+          NMapExecutionException;
   
   /**
    * Allows for a controlled way to vet a scan configuration.  Allows API users

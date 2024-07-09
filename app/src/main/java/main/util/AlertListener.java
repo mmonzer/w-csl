@@ -7,7 +7,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

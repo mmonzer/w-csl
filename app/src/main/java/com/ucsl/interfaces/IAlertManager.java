@@ -11,9 +11,6 @@ public interface IAlertManager extends IAlertSender {
 	
 	public void sendAlert(IAlertDescriptor a);
 	public void sendAlert(IAlertDescriptor alertDescriptor,boolean toViewer, boolean toLog) ;
-	
-	
-	//public void register(IDSAlertListener listener);
 
 	public Json getListOfCurrentAlertsAsJson();
 
@@ -24,9 +21,5 @@ public interface IAlertManager extends IAlertSender {
 	public Json saveListOfCurrentAlerts();
 
 	public Json getAlertStats();
-
-	//public IAlertFactory getAlertFactory();
-
-	//void register(IDSAlertListener listener);
 	
 }

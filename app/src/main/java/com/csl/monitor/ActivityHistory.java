@@ -88,11 +88,6 @@ public class ActivityHistory {
          */
 
         Json res = Json.object();
-//        int nb_links = 0;
-//        for (int nb: links) {
-//            nb_links += nb;
-//        }
-//        res.set("nb_links", nb_links);
 
         Json jHisto = Json.array();
         Json jTimes = Json.array();

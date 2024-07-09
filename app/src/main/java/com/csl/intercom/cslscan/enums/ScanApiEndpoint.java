@@ -56,7 +56,7 @@ public enum ScanApiEndpoint {
     EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "clear"),
     ;
 
-    private String endpoint;
+    private final String endpoint;
 
     private ScanApiEndpoint(String endpoint) {
         this.endpoint = endpoint;

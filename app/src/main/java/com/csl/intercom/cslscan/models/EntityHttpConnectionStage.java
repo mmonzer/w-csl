@@ -6,15 +6,12 @@ import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.http.HttpMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSerializable {
-    private static final Logger logger = LoggerFactory.getLogger(EntityHttpConnectionStage.class);
     private String uuid;
     private String name;
     private boolean shouldDoARequest;
@@ -267,17 +264,6 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         NONE
     }
 
-//    public enum HttpMethod {
-//        GET,
-//        POST,
-//        PUT,
-//        DELETE,
-//        PATCH,
-//        HEAD,
-//        OPTIONS,
-//        TRACE
-//    }
-
     public static class OptionalInputField<K, V> {
         private K key;
         private V value;
@@ -314,10 +300,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         public static OptionalInputField<String, String> fromDbapiJson(Json json) {
             Json keyJson = json.get("key");
             Json valueJson = json.get("value");
-            Json isOptionalJson = json.get("isOptional");
-            Json isInputJson = json.get("isInput");
             Json isVisibleJson = json.get("isVisible");
-            Json isEditableJson = json.get("isEditable");
             return new OptionalInputField<>(
                     keyJson != null && keyJson.isString() ? keyJson.asString() : "",
                     valueJson != null && valueJson.isString() ? valueJson.asString() : "",

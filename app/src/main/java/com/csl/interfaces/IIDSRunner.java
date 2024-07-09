@@ -1,7 +1,6 @@
 package com.csl.interfaces;
 
 import com.csl.ids.IDSParams;
-import com.ucsl.interfaces.IIDSLearnedRules;
 
 
 public interface IIDSRunner {
@@ -28,10 +27,6 @@ public interface IIDSRunner {
 	public String getIDSModeAsString();
 	public int getIDSMode();
 	public void setIDSMode(int mode);
-
-
-	//public Json getLearnedRulesAsJson();
-	IIDSLearnedRules getLearnedRules();
 
 	public void start();
 

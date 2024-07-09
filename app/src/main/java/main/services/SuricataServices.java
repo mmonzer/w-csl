@@ -17,13 +17,13 @@ import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 
+import lombok.Getter;
 import main.extensions.SshUtils;
 
 public class SuricataServices implements ICSLService {
-	//ApiCommands apiCommands= new ApiCommands("");
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
-	
 	String name="suricata";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	String configFileSectionName="ssh_service";
 	static ArrayList<Json> configuredSuricata;  
 	static String localIP;	
@@ -38,8 +38,7 @@ public class SuricataServices implements ICSLService {
 		return "cd "+SURICATA_CONF_DIR+" && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
 				"sudo suricata -D -c "+SURICATA_CONF_DIR+"/suricata/suricata.yaml -i enp0s3 --pidfile "+SURICATA_CONF_DIR+"/suricataPID";
 	}
-	
-	
+
 	private static Json readJsonFile(String fileName) throws IOException {
 		String jsonRaw = "";
 		File fichierRegles = new File(fileName);
@@ -89,8 +88,6 @@ public class SuricataServices implements ICSLService {
 			}
 		}
 		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		// String command = "cd /home/"+id+"/configSuricata && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
-		// "sudo suricata -D -c /home/"+id+"configSuricata/suricata/suricata.yaml -i enp0s3 --pidfile /home/"+id+"configSuricata/suricataPID";
 		String command = startSuricataCommand(localIP, localPort);
 		String output = null;
 		try {
@@ -116,8 +113,7 @@ public class SuricataServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		// String command = "sudo kill -9 `cat /home/"+id+"configSuricata/suricataPID`";
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = STOP_SURICATA;
 		String output = null;
 		try {
@@ -129,8 +125,6 @@ public class SuricataServices implements ICSLService {
 		out.at("result", output);
 		return out;
 	}
-	
-
 	
 	public static Json reloadRules(String id, String password, String name) {
 		String ip = null;
@@ -145,8 +139,7 @@ public class SuricataServices implements ICSLService {
 				}
 			}
 		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		//String command = "sudo kill -USR2 `cat /home/"+id+"configSuricata/suricataPID`";
+		SshUtils ssh = new SshUtils(id,password,ip,port);
 		String command = RELOAD_RULES;
 		String output = null;
 		try {
@@ -169,7 +162,7 @@ public class SuricataServices implements ICSLService {
 				} catch (NullPointerException e) {
 					System.out.println("Using default SSH port (22)");
 				}
-				SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
+				SshUtils ssh = new SshUtils(username,password,ip,port);
 				try {
 					ssh.sendFile("./datafile/suricataRules/"+name+".rules","/home/"+username+"/configSuricata/suricata/rules/csl.rules");
 				} catch (IOException | JSchException e) {
@@ -190,7 +183,7 @@ public class SuricataServices implements ICSLService {
 				} catch (NullPointerException e) {
 					System.out.println("Using default SSH port (22)");
 				}
-				SshUtils ssh = new SshUtils(username,password,ip,port/*,knownHostFilePath*/);
+				SshUtils ssh = new SshUtils(username,password,ip,port);
 				try {
 					ssh.getFile("/home/"+username+"/configSuricata/suricata/rules/csl.rules","./datafile/suricataRules/"+name+".rules");
 					resultat = readFile("./datafile/suricataRules/"+name+".rules");
@@ -264,24 +257,11 @@ public class SuricataServices implements ICSLService {
 		}
 		configuredSuricata = suricataClone;
 	}
-	public SuricataServices() {
-		this.name="suricata";
-		this.configFileSectionName="ssh_service";
-	}
-	public SuricataServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-	
 	
 	@Override
 	public String getConfigFileSectionName() {
 		return configFileSectionName;
 	}
-
-	
-	
-	
 	
 	@Override
 	public boolean init(Json config, String cslDir) {
@@ -447,13 +427,6 @@ public class SuricataServices implements ICSLService {
 	
 	public String addCmd(String name, IJsonCmd j) {
 		return apiCommands.registerCmd(name, j);
-	}
-
-	@Override
-	public IApiCommands getApiCommands() {
-		// TODO Auto-generated method stub
-		apiCommands.setName(name);
-		return apiCommands;
 	}
 
 	@Override

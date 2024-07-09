@@ -3,9 +3,15 @@ package com.csl.util;
 
 import com.csl.core.CSLContext;
 import com.csl.interfaces.IFileModificationViaUploadListener;
+import com.csl.logger.LogToString;
+import com.csl.web.CSLHttpServerJetty;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Setter;
+import spark.Request;
+import spark.Response;
 
+import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -20,43 +26,25 @@ public class CSLConfigFileServer {
 	//static public CSLConfigFileServer  instance= new CSLConfigFileServer();
 	static boolean debug=false;
 
-	private String dirOfLocalFiles=System.getProperty("user.dir");
+	@Setter
+    private String dirOfLocalFiles=System.getProperty("user.dir");
 	List<String> listOfLocalFiles = new ArrayList<String>();
 	int maxNumberOfFileVersion=99;
 
 	List<IFileModificationViaUploadListener> fileModificationViaUploadListeners= new ArrayList<IFileModificationViaUploadListener>();
 
-	private boolean initialized=false;
-
-	private boolean running=false;
-	private boolean verbose=false;
-	
-	
-	
-	
-/*
- "config_file_manager": {
-	"on":true,
-	"verbose":true,
-	"port":8011,
-	"show_modified_files":true,
-	"root_conf_dir":"./idsconf",
-	"conf_files":["NewLearnedRules.json", "RulesForDetection.txt","RulesForLearning.txt","LearnedRules.json","SystemConfiguration.json"],
-	"max_number_of_version":10
-}
- */
 	public void initConfigFileManager(Json j) {
 		if (j==null) return;
-		
-		running = JsonUtil.getBooleanFromJson(j,"on", false);
+
+        boolean running = JsonUtil.getBooleanFromJson(j, "on", false);
 		if (!running) return;
-		
-		if (initialized) {
+
+        boolean initialized = false;
+        if (initialized) {
 			System.err.println("already initialized");
 			System.exit(0);
 		}
-		
-		//Json j=CSLContext.context.getConfig().get("file_server");
+
 		Json jarray=j.get("conf_files");
 		
 		for (Json je:jarray.asJsonList()) {
@@ -86,24 +74,16 @@ public class CSLConfigFileServer {
 			}
 		});
 		}
-		
-		
-		
-		
-		
-	
-		
-		verbose = JsonUtil.getBooleanFromJson(j,"verbose", false);
+
+
+        boolean verbose = JsonUtil.getBooleanFromJson(j, "verbose", false);
 		debug=JsonUtil.getBooleanFromJson(j,"debug", false);
-		
-		//int port=JsonUtil.getIntFromJson(j,"port", -1);
-		
-		
+
 		if (verbose) {
 			System.out.println("Config File server configuration:");
 			System.out.println("=================================");
 			
-			System.out.println(" running:"+running);
+			System.out.println(" running:"+ running);
 			System.out.println(" debug  :"+debug);
 			System.out.println(" file_directory:"+dirOfLocalFiles);
 			
@@ -115,40 +95,141 @@ public class CSLConfigFileServer {
 	
 	
 	//================================================================================================================
+	
+	/*public void initCommandsOnServer(CSLHttpServerJetty httpServer) {
+	
+		
+		// config file
+		HttpServlet req = httpServer.addGetRoute(
+			"/getfile");
 
+		httpServer.addGetRoute(
+			"/reversefile",                         (req, res)      -> renderReverseFile(req,res));
+		httpServer.addPostRoute(
+			"/setfile",(req, res)      -> renderSetFile(req,res));
+				
+		
+	}*/
+	
+	
 	/*
 	 * 
 	 * Config File transfer
 	 * 
 	 */
-
-
+	
+	private  String renderGetFile(HttpServlet param) {
+		//TODO : Replace null by the request and response from httpServlet
+		Request req= null;
+		Response res = null;
+		Set<String> paramKeys= req.queryParams();
+		
+		String sresponse = req.body();
+		String s=req.pathInfo();
+		if (s.length()>1) s=s.substring(1);
 		
 		
+		List<String> varNames= new ArrayList<String>(paramKeys);
+		String result="";
+		LogToString l= new LogToString();
+
+		CSLContext.instance.cslLogger.addListener(l);
+		
+		
+		String value = req.queryParams("filename");
+		if (value!=null) {
+			result=getFile(value);
+		} else {
+			result="No filename";
+		}
+		
+		
+		CSLContext.cslLogger.removeListener(l);
+
+		if (CSLContext.instance.isDebug())
+			result=result+"\n"+l.getContents();
+		res.body(result);
+		return result;
+	}
+
+	
+	private  String renderReverseFile(Request req, Response res) {
+
+		Set<String> paramKeys= req.queryParams();
+		
+		String sresponse = req.body();
+		String s=req.pathInfo();
+		if (s.length()>1) s=s.substring(1);
+		
+		
+		List<String> varNames= new ArrayList<String>(paramKeys);
+		String result="";
+		LogToString l= new LogToString();
+
+		CSLContext.instance.cslLogger.addListener(l);
+		
+		
+		String value = req.queryParams("filename");
+		if (value!=null) {
+			result=reverseToPreviousFileVersion(value);
+		} else {
+			result="No filename";
+		}
+		
+		
+		CSLContext.instance.cslLogger.removeListener(l);
+
+		if (CSLContext.instance.isDebug())
+			result=result+"\n"+l.getContents();
+		res.body(result);
+		return result;
+	}
+
+	
+
+
+	private  String renderSetFile(Request req, Response res) {
+
+		Set<String> paramKeys= req.queryParams();
+
+		String sresponse = req.body();
+
+		String s=req.pathInfo();
+		if (s.length()>1) s=s.substring(1);
+		
+		
+		LogToString l= new LogToString();
+		CSLContext.instance.cslLogger.addListener(l);
+		String result="";
+		
+		if (s.compareToIgnoreCase("setfile")==0) {
+			Json inputJson = Json.read(sresponse);
 			
+			String fileName=inputJson.get("filename").asString();
+			String contents=inputJson.get("contents").asString();
+			
+			if ((fileName!=null)&&(contents!=null)) {
+				result=setFile(fileName, contents);
+			
+			} else {
+				if (fileName==null) result=result+"Invalid file name ";
+				if (contents==null) result=result+"Invalid contents ";
 		
-//		List<String> varNames= new ArrayList<String>(paramKeys);
-//		String result="";
-//
-//	
-//		
-//		HashMap<String, String> keyvalues = new HashMap<String, String>();
-//
-//		for (String name:varNames) {
-//			if (!result.isEmpty()) result=result+";";
-//			String type="string";
-//			////System.out.println(name);
-//			String value = req.queryParams(name);
-//			keyvalues.put(name,  value);
-//			int idx=name.indexOf(':');
-//			if (idx>=0) {
-//				type=name.substring(idx+1);
-//				name=name.substring(0, idx);
-//			}
-//			VariableValueType vtype=CSLVariable.getVariableTypeFromString(type);
-//			////System.out.println("SETVAR:"+name+ " type:"+type+" vtype:"+vtype+" to "+value);
-//		}
+			}
+		}
+		else {
+			result="Invalid command:<"+s+">";
+		}
+	
+		CSLContext.instance.cslLogger.removeListener(l);
 
+		if (CSLContext.instance.isDebug())
+			result=result+"\n"+l.getContents();
+
+		
+		res.body(result);
+		return result;
+	}
 
 
 	
@@ -157,7 +238,6 @@ public class CSLConfigFileServer {
 	//================================================================================================================
 	
 	public String setFile(String filename,String contents) {
-		//System.out.println("setFile:"+filename+"\nContents:\n"+contents);
 		boolean ok=isValidLocalFileTransferableViaHttp(filename);
 		if (!ok) {
 			return "Invalid file name <"+filename+ ">: no rights to uploaded this file";
@@ -180,7 +260,6 @@ public class CSLConfigFileServer {
 	}
 
 	public String getFile(String filename) {
-		//System.out.println("getFile:"+filename);
 		boolean ok=isValidLocalFileTransferableViaHttp(filename);
 		if (!ok) {
 			return "Invalid file name <"+filename+ ">: no rights to read this file";
@@ -188,11 +267,9 @@ public class CSLConfigFileServer {
 		String path =dirOfLocalFiles+File.separatorChar+filename;
 		
 		return readAFile(path);
-		//return "not found";
 	}
 
 	public String reverseToPreviousFileVersion(String filename) {
-		//System.out.println("reverseFile:"+filename);
 		
 		boolean ok=isValidLocalFileTransferableViaHttp(filename);
 		if (!ok) {
@@ -201,13 +278,10 @@ public class CSLConfigFileServer {
 		String path =dirOfLocalFiles+File.separatorChar+filename;
 		
 		return doReverseFile(path);
-		
-		//return "ok";
 	}
 	
 	
 	public String cancelReverseToPreviousFileVersion(String filename) {
-		//System.out.println("reverseFile:"+filename);
 		
 		boolean ok=isValidLocalFileTransferableViaHttp(filename);
 		if (!ok) {
@@ -221,8 +295,6 @@ public class CSLConfigFileServer {
 	
 		
 		return doCancelReverseFile(path);
-		
-		//return "ok";
 	}
 	
 	
@@ -234,11 +306,7 @@ public class CSLConfigFileServer {
 			return dirOfLocalFiles;
 		}
 
-		public void setDirOfLocalFiles(String dirOfLocalFiles) {
-			this.dirOfLocalFiles = dirOfLocalFiles;
-		}
-
-		public void addLocalFileTransferableViaHttp(String fileName) {
+    public void addLocalFileTransferableViaHttp(String fileName) {
 			listOfLocalFiles.add(fileName);
 		}
 		
@@ -336,16 +404,13 @@ public class CSLConfigFileServer {
 		}
 		
 		Date date = new Date();
-		String dir=parentPath.toString(); //System.getProperty("user.dir");
+		String dir=parentPath.toString();
 		String newFileName=dir+File.separatorChar+fileNameWithoutExtension+'_'+sdf.format(date.getTime())+fileNameExtension+moreInfo;
 
 		
 		if (f.exists()&&!f.isDirectory()) {
 			File f2= new File(newFileName);
 			boolean success = f.renameTo(f2);
-		}
-		else {
-		//	System.out.println("File Does not Exists"); 
 		}
 
 	}
@@ -369,7 +434,6 @@ public class CSLConfigFileServer {
 		if (pos!=-1) {
 			fileNameExtension = fs.substring(pos);
 			fileNameWithoutExtension=fs.substring(0, pos);
-			//CSLFileManager.instance.reverseFile(filePath);
 		}
 		else {
 			fileNameWithoutExtension=fs;
@@ -411,11 +475,8 @@ public class CSLConfigFileServer {
 		int i=0;
 		for (File file:files) {
 			i=i+1;
-			//System.out.println(i+")"+file);
 			if (i>max) {
-				//System.out.println("--> to del");
 				boolean ok=file.delete();
-				//System.out.println("--> deleted");
 				
 			}
 		}
@@ -430,7 +491,6 @@ public class CSLConfigFileServer {
 	private void deleteReverseFile(String filePath) {
 		File[] files2=getListOfFilesWithTimeStamp(filePath,".reversed");
 		for (File file:files2) {
-			//System.out.println("Deleting "+file);
 			boolean ok=file.delete();
 			}
 	}
@@ -462,53 +522,34 @@ public class CSLConfigFileServer {
 		}
 		
 		if (f.exists()&&!f.isDirectory()) {
-			//System.out.println("Exists"); 
 			File f2= new File(filePath);
 			boolean success = f.renameTo(f2);
-			//System.out.println("success:"+success);
 		}
-		else {
-			//System.out.println("Does not Exists"); 
-		}
-		
 		return "ok";
-		
 	}
 	
 	private String doCancelReverseFile(String filePath) {
+		File[] files = getListOfFilesWithTimeStamp(filePath, ".reversed");
+		File f = null;
 
-		
-	
-
-		File[] files=getListOfFilesWithTimeStamp(filePath,".reversed");
-		File f=null;
-		
-		if (files.length>0) {
-			f=files[0];
+		if (files.length > 0) {
+			f = files[0];
 		} else {
 			return "No reversed version ";
 		}
-		
+
 		deleteReverseFile(filePath);
-		
-		
-		
-		if (f!=null) {
-			renameFileWithTimeStamp(filePath,".reversed"); // rename current file
+
+
+		if (f != null) {
+			renameFileWithTimeStamp(filePath, ".reversed"); // rename current file
 		}
-		
-		if (f.exists()&&!f.isDirectory()) {
-			//System.out.println("Exists"); 
-			File f2= new File(filePath);
+
+		if (f.exists() && !f.isDirectory()) {
+			File f2 = new File(filePath);
 			boolean success = f.renameTo(f2);
-			//System.out.println("success:"+success);
 		}
-		else {
-			//System.out.println("Does not Exists"); 
-		}
-		
 		return "ok";
-		
 	}
 
 	
@@ -518,14 +559,6 @@ public class CSLConfigFileServer {
 
 
 	public static void main(String[] args) {
-		//FileUtils.writeFile("test.txt", "zazaa\ncontent");
-		
-		
-		String filePath="test.txt";
-		
-		//FileUtils.renameFileWithTimeStamp(filePath,"");
-		//FileUtils.deleteFiles(filePath,6);
-		//CSLFileManager.instance.reverseFile(filePath);
 		CSLConfigFileServer cslFileManager= new CSLConfigFileServer();
 		
 		cslFileManager.setMaxNumberOfLocalFileVersion(3); // default 99, -1 keep all
@@ -539,8 +572,6 @@ public class CSLConfigFileServer {
 				System.out.println("File "+filename+" has been modified");
 			}
 		});
-		
-		//String s=cslFileManager.setFile("testfile.txt", "ligne 1");
 		String s=cslFileManager.reverseToPreviousFileVersion("testfile.txt");
 		System.out.println(s);
 		

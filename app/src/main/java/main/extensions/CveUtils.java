@@ -44,7 +44,7 @@ public class CveUtils {
 			Json props=JsonUtil.getJson(current,"props");
 			if (props==null) props=Json.object();
 			// Récupération des CPE de l'OS et des services
-			String os_cpe = JsonUtil.getStringFromJson(props, "os_cpe",""); //  , jse)getJson(current.at("props"), "os_cpe");
+			String os_cpe = JsonUtil.getStringFromJson(props, "os_cpe","");
 			System.out.println(current);
 			System.out.println(os_cpe);
 			boolean tracked= JsonUtil.getBooleanFromJson(props, "os_cpe_tracked", false);

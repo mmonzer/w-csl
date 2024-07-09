@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -51,7 +52,9 @@ public class SshUtils {
 		    JSch jsch=new JSch();  
 		    jsch.setKnownHosts(knownHostsPath);
 		    session=jsch.getSession(user, host, port);
-		    session.setConfig("server_host_key","ecdsa-sha2-nistp256");
+		  	Hashtable<String, String> config = new Hashtable<String, String>();
+		  	config.put("server_host_key", "ecdsa-sha2-nistp256");
+		  	session.setConfig(config);
 		    session.setPassword(password);
 		    session.connect();
 		  }  
@@ -72,7 +75,7 @@ public class SshUtils {
 		Channel channel=session.openChannel("exec");
 		((ChannelExec)channel).setCommand(command);
 		channel.setInputStream(null);
-		((ChannelExec)channel).setErrStream(System.err);
+		System.setErr(System.err);
 		InputStream in=channel.getInputStream();
 		channel.connect();
 		byte[] tmp=new byte[1024];
@@ -82,8 +85,8 @@ public class SshUtils {
 				if(i<0)break;
 					resultPart.add(new String(tmp, 0, i));
 			}
-			if(channel.isClosed()){
-				if(in.available()>0) continue; 
+			if(channel.getExitStatus()==-1){
+				if(in.available()>0) continue;
 				//System.out.println("exit-status: "+channel.getExitStatus());
 				break;
 			}
@@ -103,7 +106,7 @@ public class SshUtils {
 		Channel channel=session.openChannel("exec");
 		((ChannelExec)channel).setCommand(command);
 		channel.setInputStream(null);
-		((ChannelExec)channel).setErrStream(System.err);
+		System.setErr(System.err);
 		InputStream in=channel.getInputStream();
 		channel.connect();
 		byte[] tmp=new byte[1024];
@@ -114,7 +117,7 @@ public class SshUtils {
 				if(i<0)break;
 					resultPart.add(new String(tmp, 0, i));
 			}
-			if(channel.isClosed()){
+			if(channel.getExitStatus()==-1){
 				if(in.available()>0) continue; 
 				//System.out.println("exit-status: "+channel.getExitStatus());
 				break;
@@ -136,10 +139,6 @@ public class SshUtils {
 	
 	private int checkAck(InputStream in) throws IOException{
 	    int b=in.read();
-	    // b may be 0 for success,
-	    //          1 for error,
-	    //          2 for fatal error,
-	    //          -1
 	    if(b==0) return b;
 	    if(b==-1) return b;
 
@@ -189,18 +188,6 @@ public class SshUtils {
 		}
 		
 		File _lfile = new File(lfile);
-		if(ptimestamp){
-			command="T "+(_lfile.lastModified()/1000)+" 0";
-			// The access time should be sent here,
-			// but it is not accessible with JavaAPI ;-<
-			command+=(" "+(_lfile.lastModified()/1000)+" 0\n"); 
-			out.write(command.getBytes()); out.flush();
-			if(checkAck(in)!=0){
-				////System.exit(0);
-			}
-		}
-		
-		// send "C0644 filesize filename", where filename should not include '/'
 		long filesize=_lfile.length();
 		command="C0644 "+filesize+" ";
 		if(lfile.lastIndexOf('/')>0){
@@ -222,7 +209,7 @@ public class SshUtils {
 		while(true){
 			int len=fis.read(buf, 0, buf.length);
 			if(len<=0) break;
-				out.write(buf, 0, len); //out.flush();
+			out.write(buf, 0, len); //out.flush();
 		}
 		fis.close();
 		fis=null;
@@ -296,8 +283,6 @@ public class SshUtils {
 	  	  }
 	        }
 
-		//System.out.println("filesize="+filesize+", file="+file);
-
 	        // send '\0'
 	        buf[0]=0; out.write(buf, 0, 1); out.flush();
 
@@ -327,8 +312,5 @@ public class SshUtils {
 	        buf[0]=0; out.write(buf, 0, 1); out.flush();
 	      }
 
-
-
-		
 	}
 }

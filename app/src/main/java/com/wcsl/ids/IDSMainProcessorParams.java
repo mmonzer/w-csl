@@ -1,44 +1,35 @@
 package com.wcsl.ids;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.ucsl.interfaces.ICancelChecker;
-import com.ucsl.interfaces.IConsole;
 import com.ucsl.interfaces.IFileStoreService;
 import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.interfaces.IIDSMainProcessorParams;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.ucsl.util.IDSUtil;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class IDSMainProcessorParams implements IIDSMainProcessorParams {
-
 	
 	public static final String IDS_CONF = "";
 	private static final String IDS_CONF_SEP =""; //  IDS_CONF+"/";
-	
-	
+
 	public static String TAPS_ID="taps_id";
 	public static String TAPS_DIR="taps_dir";
-	
-	
-	
-	
 
-	
-	private IIDSMainProcessor idsMainProcessor;
-	private IFileStoreService fileUtils;
+	@Setter
+    @Getter
+    private IIDSMainProcessor idsMainProcessor;
+	@Getter
+    private final IFileStoreService fileUtils;
 
-	
 	List<String> listTapIds= new ArrayList<>();
 	String tapsDir="";
 
 	String rulesForSuricataBaseFileName="";
-	
-	
-	
-
 
 	public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Json config) {
 	
@@ -46,23 +37,8 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 		fileUtils=idsMainProcessor.getFileStoreServices();
 		initFromJson(config);
 	}
-	
-	
-	public IIDSMainProcessor getIdsMainProcessor() {
-		return idsMainProcessor;
-	}
-	public void setIdsMainProcessor(IIDSMainProcessor idsMainProcessor) {
-		this.idsMainProcessor = idsMainProcessor;
-	}
 
-	
-
-	public IFileStoreService getFileUtils() {
-		return fileUtils;
-	}
-	
-	
-	public String getIdsModelDirBackup() {
+    public String getIdsModelDirBackup() {
 		return getIdsModelDir()+IDSUtil.fileSeparator+"backup";
 	}
 
@@ -70,8 +46,6 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 		return "";
 	}
 
-
-	
 	
 	public String getTapsDir() {
 		return tapsDir;
@@ -82,14 +56,8 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 	}
 	
 	
-	
-	
 	public void initFromJson(Json j) {
-		
-		
 		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
-		
-		
 		Json listIDs=JsonUtil.getJson(j,  IDS_CONF_SEP+TAPS_ID);
 		
 		if (listIDs!=null) {
@@ -101,9 +69,6 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 			}
 		}
 		tapsDir=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+TAPS_DIR,"taps");
-
-
-
 		System.out.println(this);
 	}
 
@@ -113,7 +78,4 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 		// TODO Auto-generated method stub
 		return rulesForSuricataBaseFileName;
 	}
-
-
-	
 }

@@ -17,7 +17,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
 
-import main.xcom.WebsocketClientEndpoint;
+import com.csl.web.websockets.WebsocketClientEndpoint;
 
 
 
@@ -25,22 +25,16 @@ import main.xcom.WebsocketClientEndpoint;
 
 public class Help51ApiDBJson {
 
-	String apiName="dbjson"
-;
-	
-	
+	String apiName="dbjson";
 
-String api="dbjson";
+	String api="dbjson";
 	private static final String OBJECT_NAME = "obj.drx";
-
 
 	String token ="";
 	String uuid = UUID.randomUUID().toString();
 
-
 	Json testObject=null;
-	
-	
+
 	public Help51ApiDBJson(String apiname) {
 		this.apiName=apiname;
 	}
@@ -49,9 +43,7 @@ String api="dbjson";
 		return "http://localhost:8000/";
 	}
 
-
 	public Json execCmd(String api,String cmd, Json jparams) {
-
 
 		Json j= Json.object();
 
@@ -62,20 +54,14 @@ String api="dbjson";
 
 		post.addHeader("Authorization", "Bearer "+token);
 
-
 		int timeout = 5; // seconds
 
 		RequestConfig config = RequestConfig.custom()
 				.setConnectTimeout(timeout * 1000)
 				.setConnectionRequestTimeout(timeout * 1000)
 				.setSocketTimeout(timeout * 1000).build();
-		//CloseableHttpClient client = 
-		//  HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
-		HttpClient  client    = HttpClientBuilder.create().setDefaultRequestConfig(config).build(); //HttpClientBuilder.create().build();
-
-
-
+		HttpClient  client    = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
 		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
 		post.setEntity(postingString);

@@ -7,8 +7,8 @@ public enum SNMPv3PrivacyAlgorithm {
     AES256("AES-256", "PrivAES256"),
     DES("DES", "PrivDES"),
     ;
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private SNMPv3PrivacyAlgorithm(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

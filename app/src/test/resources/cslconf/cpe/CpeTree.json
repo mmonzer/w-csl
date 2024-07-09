@@ -1,0 +1,554 @@
+{
+    "cpe": {
+        "/o": {
+            "microsoft": {
+                "azure": {
+                    "feuille": "-"
+                },
+                "azure_devops_server": {
+                    "2019": {
+                        "feuille": "-"
+                    },
+                    "2019.0.1": {
+                        "feuille": "-"
+                    },
+                    "2020": {
+                        "feuille": "-"
+                    }
+                },
+                "azure_devops_server_2019": {
+                    "feuille": "-"
+                },
+                "ms-dos": {
+                    "feuille": "-",
+                    "4.01": {
+                        "": {
+                            "": {
+                                "feuille": "ru"
+                            }
+                        }
+                    }
+                },
+                "powershell_core": {
+                    "feuille": "6.0"
+                },
+                "surface_hub_firmware": {
+                    "feuille": "-"
+                },
+                "virtual_machine_manager": {
+                    "feuille": "2007"
+                },
+                "windows": {
+                    "-": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        }
+                    },
+                    "feuille": "1.0",
+                    "2000": {
+                        "feuille": "sp4"
+                    },
+                    "server_2008": {
+                        "unknown": {
+                            "feuille": "itanium"
+                        }
+                    },
+                    "vista": {
+                        "": {
+                            "feuille": "x32-enterprise"
+                        },
+                        "sp1": {
+                            "feuille": "x32-enterprise"
+                        },
+                        "unknown": {
+                            "feuille": "x64"
+                        }
+                    }
+                },
+                "windows-9x": {
+                    "95": {
+                        "feuille": "gold"
+                    },
+                    "98": {
+                        "feuille": "beta"
+                    },
+                    "me": {
+                        "feuille": "gold"
+                    }
+                },
+                "windows-ce": {
+                    "feuille": "-"
+                },
+                "windows-nt": {
+                    "feuille": "3.1",
+                    "4.0": {
+                        "gold": {
+                            "feuille": "embedded"
+                        },
+                        "sp1": {
+                            "feuille": "embedded"
+                        },
+                        "sp2": {
+                            "feuille": "embedded"
+                        },
+                        "sp3": {
+                            "feuille": "embedded"
+                        },
+                        "sp4": {
+                            "feuille": "embedded"
+                        },
+                        "sp5": {
+                            "feuille": "embedded"
+                        },
+                        "sp6": {
+                            "feuille": "embedded"
+                        },
+                        "sp6a": {
+                            "feuille": "embedded"
+                        },
+                        "sru": {
+                            "feuille": "embedded"
+                        }
+                    },
+                    "2000": {
+                        "feuille": "beta3",
+                        "gold": {
+                            "feuille": "adv_srv"
+                        },
+                        "sp1": {
+                            "feuille": "adv_srv"
+                        },
+                        "sp2": {
+                            "feuille": "adv_srv"
+                        },
+                        "sp3": {
+                            "feuille": "adv_srv"
+                        },
+                        "sp4": {
+                            "feuille": "adv_srv"
+                        }
+                    },
+                    "2003": {
+                        "gold": {
+                            "feuille": "compute_cluster"
+                        },
+                        "r2": {
+                            "feuille": "compute_cluster"
+                        },
+                        "sp1": {
+                            "feuille": "compute_cluster"
+                        },
+                        "sp2": {
+                            "feuille": "compute_cluster"
+                        }
+                    },
+                    "vista": {
+                        "sp1": {
+                            "feuille": "x64-home_premium"
+                        }
+                    },
+                    "xp": {
+                        "gold": {
+                            "feuille": "embedded"
+                        },
+                        "sp1": {
+                            "feuille": "embedded"
+                        },
+                        "sp2": {
+                            "feuille": "embedded"
+                        }
+                    }
+                },
+                "windows_10": {
+                    "-": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        },
+                        "gold": {
+                            "feuille": "~~~~x64~"
+                        }
+                    },
+                    "1511": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        }
+                    },
+                    "1607": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        }
+                    },
+                    "1703": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        }
+                    },
+                    "1709": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        }
+                    },
+                    "1803": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        }
+                    },
+                    "1809": {
+                        "": {
+                            "feuille": "~~~~arm64~"
+                        }
+                    },
+                    "1903": {
+                        "": {
+                            "feuille": "~~~~arm64~"
+                        }
+                    },
+                    "1909": {
+                        "": {
+                            "feuille": "~~~~arm64~"
+                        }
+                    },
+                    "2004": {
+                        "": {
+                            "feuille": "~~~~arm64~"
+                        }
+                    }
+                },
+                "windows_10_mobile": {
+                    "feuille": "-"
+                },
+                "windows_2000": {
+                    "-": {
+                        "-": {
+                            "feuille": "~~advanced_server~~~"
+                        },
+                        "feuille": "beta3",
+                        "gold": {
+                            "feuille": "advanced_server"
+                        },
+                        "sp1": {
+                            "feuille": "~~advanced_server~~~"
+                        },
+                        "sp2": {
+                            "feuille": "~~advanced_server~~~"
+                        },
+                        "sp3": {
+                            "feuille": "~~advanced_server~~~"
+                        },
+                        "sp4": {
+                            "feuille": "~~advanced_server~~~"
+                        }
+                    },
+                    "feuille": "beta3"
+                },
+                "windows_2000_terminal_services": {
+                    "-": {
+                        "feuille": "sp1"
+                    }
+                },
+                "windows_2003_server": {
+                    "-": {
+                        "gold": {
+                            "feuille": "compute_cluster"
+                        },
+                        "r2": {
+                            "feuille": "compute_cluster"
+                        },
+                        "feuille": "r2_sp2",
+                        "sp1": {
+                            "feuille": "compute_cluster"
+                        },
+                        "sp2": {
+                            "feuille": "~~~~itanium~"
+                        }
+                    }
+                },
+                "windows_7": {
+                    "-": {
+                        "": {
+                            "feuille": "~~~~x64~"
+                        },
+                        "-": {
+                            "feuille": "~~enterprise~~x64~"
+                        },
+                        "feuille": "beta",
+                        "sp1": {
+                            "feuille": "~~enterprise~~x64~"
+                        }
+                    },
+                    "feuille": "sp1"
+                },
+                "windows_8": {
+                    "-": {
+                        "": {
+                            "feuille": "~~enterprise~~x64~"
+                        },
+                        "-": {
+                            "feuille": "x64"
+                        }
+                    },
+                    "feuille": "consumer_preview"
+                },
+                "windows_8.0": {
+                    "feuille": "-"
+                },
+                "windows_8.1": {
+                    "-": {
+                        "": {
+                            "feuille": "~~enterprise~~x64~"
+                        },
+                        "-": {
+                            "feuille": "~-~-~-~x64~"
+                        }
+                    }
+                },
+                "windows_95": {
+                    "-": {
+                        "feuille": "gold"
+                    }
+                },
+                "windows_98": {
+                    "-": {
+                        "feuille": "beta"
+                    },
+                    "feuille": "beta"
+                },
+                "windows_98se": {
+                    "feuille": "-"
+                },
+                "windows_ce": {
+                    "feuille": "-"
+                },
+                "windows_me": {
+                    "-": {
+                        "feuille": "gold"
+                    }
+                },
+                "windows_mobile": {
+                    "feuille": "-",
+                    "5.0": {
+                        "": {
+                            "feuille": "pocket_pc"
+                        }
+                    },
+                    "6.0": {
+                        "": {
+                            "feuille": "pro"
+                        }
+                    }
+                },
+                "windows_nt": {
+                    "feuille": "-",
+                    "3.5.1": {
+                        "feuille": "sp1",
+                        "sp5": {
+                            "feuille": "alpha"
+                        }
+                    },
+                    "4.0": {
+                        "-": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "gold": {
+                            "feuille": "embedded"
+                        },
+                        "sp1": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "sp2": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "sp3": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "sp4": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "sp5": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "sp6": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "sp6a": {
+                            "feuille": "~~embedded~~x64~"
+                        },
+                        "sru": {
+                            "feuille": "embedded"
+                        }
+                    }
+                },
+                "windows_rt": {
+                    "-": {
+                        "feuille": "gold"
+                    }
+                },
+                "windows_rt_8.1": {
+                    "feuille": "-"
+                },
+                "windows_server_1709": {
+                    "feuille": "-"
+                },
+                "windows_server_2003": {
+                    "-": {
+                        "": {
+                            "feuille": "~~~~itanium~"
+                        },
+                        "-": {
+                            "feuille": "~~compute_cluster~~itanium~"
+                        },
+                        "sp1": {
+                            "feuille": "~~compute_cluster~~itanium~"
+                        },
+                        "sp2": {
+                            "feuille": "~~~~itanium~"
+                        }
+                    },
+                    "r2": {
+                        "-": {
+                            "feuille": "~~-~~-~"
+                        },
+                        "sp1": {
+                            "feuille": "~~compute_cluster~~itanium~"
+                        },
+                        "sp2": {
+                            "feuille": "~~~~x64~"
+                        }
+                    }
+                },
+                "windows_server_2008": {
+                    "-": {
+                        "": {
+                            "feuille": "~~-~~itanium~"
+                        },
+                        "-": {
+                            "feuille": "~~datacenter~~itanium~"
+                        },
+                        "gold": {
+                            "feuille": "datacenter"
+                        },
+                        "r2": {
+                            "feuille": "itanium"
+                        },
+                        "sp1": {
+                            "feuille": "enterprise"
+                        },
+                        "sp2": {
+                            "feuille": "~~datacenter~~itanium~"
+                        }
+                    },
+                    "r2": {
+                        "": {
+                            "feuille": "~~~~itanium~"
+                        },
+                        "-": {
+                            "feuille": "~~datacenter~~itanium~"
+                        },
+                        "sp1": {
+                            "feuille": "~~~~itanium~"
+                        },
+                        "sp2": {
+                            "feuille": "~~datacenter~~itanium~"
+                        }
+                    },
+                    "sp2": {
+                        "": {
+                            "feuille": "~~~itanium~~"
+                        }
+                    }
+                },
+                "windows_server_2012": {
+                    "-": {
+                        "": {
+                            "feuille": "~~datacenter~~x64~"
+                        },
+                        "feuille": "gold"
+                    },
+                    "r2": {
+                        "": {
+                            "feuille": "~~datacenter~~x64~"
+                        },
+                        "-": {
+                            "feuille": "~-~datacenter~~~"
+                        },
+                        "sp1": {
+                            "feuille": "~~~~x64~"
+                        }
+                    }
+                },
+                "windows_server_2016": {
+                    "feuille": "-"
+                },
+                "windows_server_2019": {
+                    "-": {
+                        "": {
+                            "feuille": "~~datacenter~~x64~"
+                        }
+                    }
+                },
+                "windows_small_business_server_2011": {
+                    "-": {
+                        "": {
+                            "feuille": "~~essentials~~x64~"
+                        }
+                    }
+                },
+                "windows_vista": {
+                    "-": {
+                        "": {
+                            "feuille": "x64"
+                        },
+                        "-": {
+                            "feuille": "~~business~~x64~"
+                        },
+                        "feuille": "beta",
+                        "sp1": {
+                            "feuille": "~~business~~x64~"
+                        },
+                        "sp2": {
+                            "feuille": "~~business~~x64~"
+                        }
+                    }
+                },
+                "windows_xp": {
+                    "-": {
+                        "": {
+                            "feuille": "x64"
+                        },
+                        "-": {
+                            "feuille": "~~embedded~~itanium~"
+                        },
+                        "gold": {
+                            "feuille": "64-bit-2002"
+                        },
+                        "sp1": {
+                            "feuille": "~~embedded~~itanium~"
+                        },
+                        "sp2": {
+                            "feuille": "~~embedded~~itanium~"
+                        },
+                        "sp3": {
+                            "feuille": "~~embedded~~x64~"
+                        }
+                    },
+                    "feuille": "sp2",
+                    "sp3": {
+                        "unknown": {
+                            "feuille": "english"
+                        }
+                    },
+                    "unknown": {
+                        "feuille": "sp3"
+                    }
+                },
+                "windowst": {
+                    "vista": {
+                        "sp1": {
+                            "feuille": "x64-ultimate"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

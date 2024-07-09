@@ -5,6 +5,7 @@ import com.csl.interfaces.models.IDbapiSerializable;
 import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +17,15 @@ import java.util.stream.Collectors;
 
 public class EntityHttpConnection implements IScannerSerializable, IDbapiSerializable {
     private static final Logger logger = LoggerFactory.getLogger(EntityHttpConnection.class);
+
+    @Getter
     private String uuid;
+
+    @Getter
     private String name;
     private Map<String, HttpApiVariable> variables;
+
+    @Getter
     private List<EntityHttpConnectionStage> stages;
     private List<EntityHttpConnectionInput> inputs;
 
@@ -34,7 +41,6 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         if (this.inputs != null) {
             this.inputs.forEach(input -> inputsSerialized.add(input.serializeForScanner()));
         }
-
 
         return Json.object(
                 EntityHttpConnectionField.UUID.scanName(), uuid,
@@ -131,18 +137,6 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         }
         this.stages.add(stage);
         return this;
-    }
-
-    public List<EntityHttpConnectionStage> getStages() {
-        return stages;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public enum Part {

@@ -1,4 +1,4 @@
-package org.mitre.cpe.matching;
+package lib.unpacked.org.mitre.cpe.matching;
 
 /**
  * Java enumeration for relational values.

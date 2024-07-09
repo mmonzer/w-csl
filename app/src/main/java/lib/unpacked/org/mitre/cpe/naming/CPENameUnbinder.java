@@ -1,9 +1,11 @@
-package org.mitre.cpe.naming;
+package lib.unpacked.org.mitre.cpe.naming;
 
+import lib.unpacked.org.mitre.cpe.common.LogicalValue;
+import lib.unpacked.org.mitre.cpe.common.Utilities;
+import lib.unpacked.org.mitre.cpe.common.WellFormedName;
+
+import java.io.IOException;
 import java.text.ParseException;
-import java.io.*;
-
-import org.mitre.cpe.common.*;
 
 /**
  * The CPENameUnBinder class is a simple implementation
@@ -264,7 +266,7 @@ public class CPENameUnbinder {
      * @param s String to be decoded
      * @return decoded string
      * @throws ParseException 
-     * @see CPENameBinder#pctEncode(java.lang.String) 
+     * @see CPENameBinder#pctEncode(String)
      */
     private Object decode(String s) throws ParseException {
         if (s.equals("")) {

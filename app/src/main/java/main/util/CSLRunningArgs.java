@@ -1,11 +1,11 @@
 package main.util;
 
-import java.io.File;
-
 import com.csl.ids.IDSParams;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.io.File;
 
 @Getter
 @Setter
@@ -43,6 +43,7 @@ public class CSLRunningArgs {
 	
 	public String dirForLearning="";
 	public String dirForRecording="";
+	@Getter
 	public String dirForDetectionOffline ="";
 
     public String databasedir="";

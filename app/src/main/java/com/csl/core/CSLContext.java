@@ -14,13 +14,15 @@ import com.csl.interfaces.IModule;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
-import com.csl.web.CSLHttpServer;
+import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.csl.web.database.DataBaseServer;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.wcsl.ids.IDSMainProcessorFactory;
+import lombok.Getter;
+import lombok.Setter;
 import main.util.CSLRunningArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -89,8 +90,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     DataBaseServer databaseServer = null;
 
 
-    CSLHttpServer cslHttpServer = null;
-    ;
+    CSLHttpServerJetty cslHttpServer = null;
     CSLUDPServer cslUDPServer = null;
 	
 	
@@ -404,7 +404,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         }
         if (cslRunningArgs.hasDirForDetectionOffLine()) {
             safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_DETECTION_OFFLINE,
-                    cslRunningArgs.getDirForDetectionOffLine());
+                    cslRunningArgs.getDirForDetectionOffline());
         }
         if (cslRunningArgs.hasIdsMode()) {
             safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.MODE,

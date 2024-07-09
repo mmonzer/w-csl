@@ -3,15 +3,10 @@ package com.csl.util;
 
 import com.csl.core.CSLContext;
 import com.csl.interfaces.IFileModificationViaUploadListener;
-import com.csl.logger.LogToString;
-import com.csl.web.CSLHttpServerJetty;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Setter;
-import spark.Request;
-import spark.Response;
 
-import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -92,149 +87,8 @@ public class CSLConfigFileServer {
 		
 		
 	}
-	
-	
-	//================================================================================================================
-	
-	/*public void initCommandsOnServer(CSLHttpServerJetty httpServer) {
-	
-		
-		// config file
-		HttpServlet req = httpServer.addGetRoute(
-			"/getfile");
-
-		httpServer.addGetRoute(
-			"/reversefile",                         (req, res)      -> renderReverseFile(req,res));
-		httpServer.addPostRoute(
-			"/setfile",(req, res)      -> renderSetFile(req,res));
-				
-		
-	}*/
-	
-	
-	/*
-	 * 
-	 * Config File transfer
-	 * 
-	 */
-	
-	private  String renderGetFile(HttpServlet param) {
-		//TODO : Replace null by the request and response from httpServlet
-		Request req= null;
-		Response res = null;
-		Set<String> paramKeys= req.queryParams();
-		
-		String sresponse = req.body();
-		String s=req.pathInfo();
-		if (s.length()>1) s=s.substring(1);
-		
-		
-		List<String> varNames= new ArrayList<String>(paramKeys);
-		String result="";
-		LogToString l= new LogToString();
-
-		CSLContext.instance.cslLogger.addListener(l);
-		
-		
-		String value = req.queryParams("filename");
-		if (value!=null) {
-			result=getFile(value);
-		} else {
-			result="No filename";
-		}
-		
-		
-		CSLContext.cslLogger.removeListener(l);
-
-		if (CSLContext.instance.isDebug())
-			result=result+"\n"+l.getContents();
-		res.body(result);
-		return result;
-	}
-
-	
-	private  String renderReverseFile(Request req, Response res) {
-
-		Set<String> paramKeys= req.queryParams();
-		
-		String sresponse = req.body();
-		String s=req.pathInfo();
-		if (s.length()>1) s=s.substring(1);
-		
-		
-		List<String> varNames= new ArrayList<String>(paramKeys);
-		String result="";
-		LogToString l= new LogToString();
-
-		CSLContext.instance.cslLogger.addListener(l);
-		
-		
-		String value = req.queryParams("filename");
-		if (value!=null) {
-			result=reverseToPreviousFileVersion(value);
-		} else {
-			result="No filename";
-		}
-		
-		
-		CSLContext.instance.cslLogger.removeListener(l);
-
-		if (CSLContext.instance.isDebug())
-			result=result+"\n"+l.getContents();
-		res.body(result);
-		return result;
-	}
-
-	
 
 
-	private  String renderSetFile(Request req, Response res) {
-
-		Set<String> paramKeys= req.queryParams();
-
-		String sresponse = req.body();
-
-		String s=req.pathInfo();
-		if (s.length()>1) s=s.substring(1);
-		
-		
-		LogToString l= new LogToString();
-		CSLContext.instance.cslLogger.addListener(l);
-		String result="";
-		
-		if (s.compareToIgnoreCase("setfile")==0) {
-			Json inputJson = Json.read(sresponse);
-			
-			String fileName=inputJson.get("filename").asString();
-			String contents=inputJson.get("contents").asString();
-			
-			if ((fileName!=null)&&(contents!=null)) {
-				result=setFile(fileName, contents);
-			
-			} else {
-				if (fileName==null) result=result+"Invalid file name ";
-				if (contents==null) result=result+"Invalid contents ";
-		
-			}
-		}
-		else {
-			result="Invalid command:<"+s+">";
-		}
-	
-		CSLContext.instance.cslLogger.removeListener(l);
-
-		if (CSLContext.instance.isDebug())
-			result=result+"\n"+l.getContents();
-
-		
-		res.body(result);
-		return result;
-	}
-
-
-	
-
-	
 	//================================================================================================================
 	
 	public String setFile(String filename,String contents) {

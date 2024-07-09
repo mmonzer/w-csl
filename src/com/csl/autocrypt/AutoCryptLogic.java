@@ -53,8 +53,8 @@ public class AutoCryptLogic {
         JsonApiResponse responseFromModule = moduleHandler.updateIssuerInfo(issuerRef, bodyBase, params);
 //            responseFromModule.getResult().set(PATH, PKI);
 //            responseFromModule.getResult().set(CA_TYPE, ROOT);
-        transferValueStringOrNull(bodyExtra, responseFromModule.getResult(), CRL_DISTRIBUTION_POINTS);
-        transferValueStringOrNull(bodyExtra, responseFromModule.getResult(), OCSP_SERVERS);
+//        transformToDbapi(responseFromModule.getResult(), CRL_DISTRIBUTION_POINTS);
+//        transformToDbapi(responseFromModule.getResult(), OCSP_SERVERS);
 
         return sendToDbApiIfSaveToDb(dbHandler::updateIssuerInfo, name, issuerRef, description, params.get(PATH).asString(),
                 JsonApiResponse.result(mergerJson(responseFromModule.getResult(),

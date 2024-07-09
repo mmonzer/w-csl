@@ -228,7 +228,7 @@ public class AutoCryptLogic {
         JsonApiResponse responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has(CERTIFICATE) && responseFromModule.getResult().get(CERTIFICATE).isString()) {
-            Json response = Json.object("certificate", responseFromModule.getResult().get(CERTIFICATE).asString());
+            Json response = Json.object(CERTIFICATE, responseFromModule.getResult().get(CERTIFICATE).asString());
             return JsonApiResponse.result(response);
         }
         return responseFromModule;

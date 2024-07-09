@@ -8,8 +8,6 @@ import com.sun.net.httpserver.HttpServer;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.IApiGetHelp;
 import com.ucsl.json.Json;
-import main.services.JsonApiResponse;
-import main.services.Service;
 import org.eclipse.jetty.server.Request;
 
 import javax.servlet.MultipartConfigElement;
@@ -373,7 +371,7 @@ public class ApiHttpServer {
          * @throws IOException if the content cannot be read.
          */
         protected String getContent(HttpExchange exchange) throws IOException {
-            BufferedReader httpInput = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8));
+            BufferedReader httpInput = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8), 32000);
             StringBuilder in = new StringBuilder();
 
             String input;

@@ -1,7 +1,6 @@
 package com.csl.autocrypt;
 
 import com.csl.autocrypt.enums.DbapiEndpointForCSLAutocrypt;
-import com.csl.intercom.cslscan.ApiHandler;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
@@ -261,13 +260,13 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      */
     private JsonApiResponse generateCA(String issuerRef, String name, String path, String description, String serialNumber, Json certificate, Json body) {
         Json input = Json.object();
-        input.at(COMMON_NAME, name);
-        input.at(DESCRIPTION, description);
-        input.at(ISSUER_REF, issuerRef);
-        input.at(PATH, path);
-        input.at(SERIAL_NUMBER, serialNumber);
-        input.at(CERTIFICATE_OBJECT, certificate);
-        input.at(CA_JSON, mergerJson(body, input));
+        input.set(COMMON_NAME, name);
+        input.set(DESCRIPTION, description);
+        input.set(ISSUER_REF, issuerRef);
+        input.set(PATH, path);
+        input.set(SERIAL_NUMBER, serialNumber);
+        input.set(CA_JSON, mergerJson(body, input));
+        input.set(CERTIFICATE_OBJECT, certificate);
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CA.endpoint(),
                 input);

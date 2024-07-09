@@ -2488,12 +2488,15 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		{
 			return toStringImpl(maxCharacters, new IdentityHashMap<Json, Json>());
 		}
-		
+
 		String toStringImpl(int maxCharacters, Map<Json, Json> done)
 		{
 			StringBuilder sb = new StringBuilder("{");
-			if (done.containsKey(this))
-				return sb.append("...}").toString();
+			if (done.containsKey(this)) {
+				// TODO : embedded json objects will fail because at second level => {...}
+//				return sb.append("...}").toString();
+				return this.toString();
+			}
 			done.put(this, this);
 			for (Iterator<Map.Entry<String, Json>> i = object.entrySet().iterator(); i.hasNext(); )
 			{

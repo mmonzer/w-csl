@@ -1,28 +1,20 @@
 package main.extensions;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
+import com.ucsl.json.Json;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.ucsl.json.Json;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class CpeSearch {
 	Tree dictionnary;
@@ -343,7 +335,7 @@ public class CpeSearch {
 		}
 		
 		public Tree() { 
-			infos.put(new Integer(0), 1);
+			infos.put(0, 1);
 			this.element = null;
 		}
 		
@@ -401,11 +393,11 @@ public class CpeSearch {
 					return cur;
 				}
 			}
-	        if(!infos.containsKey(new Integer(index))) {
-	            infos.put(new Integer(index), new Integer(1));
+	        if(!infos.containsKey(index)) {
+	            infos.put(index,1);
 	        }
 	        else {
-	            infos.put(new Integer(index),infos.get(new Integer(index))+1);
+	            infos.put(index,infos.get(index)+1);
 	        }
 			Tree newFils = new Tree(element);
 			this.addFils(newFils);

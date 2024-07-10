@@ -8,12 +8,20 @@ import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpointForCSLScan;
 import com.csl.intercom.dbapi.enums.FinishedScanStatus;
-import com.csl.intercom.dbapi.models.*;
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.ConnectionProtocol;
+import com.csl.intercom.dbapi.models.Device;
+import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.util.Pair;
 import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
+<<<<<<<< HEAD:app/src/main/java/com/csl/intercom/dbapi/DbapiHandlerForCSLScan.java
+========
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.eclipse.jetty.client.HttpClient;
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/intercom/dbapi/DbapiHandler.java
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -25,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -35,6 +44,7 @@ import java.util.stream.Collectors;
  * Provides an interface for retrieving the devices, connections and so on,
  * and to send information to it (CPE Items, a Scan's status, ...).
  */
+
 public class DbapiHandlerForCSLScan extends DbapiHandler {
     private final int maxPageSize = 1000;
     private static final Logger logger = LoggerFactory.getLogger(DbapiHandlerForCSLScan.class);
@@ -324,8 +334,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         int offset = 0;
         while (hasMore) {
             Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DELETED_DEVICES)
+
                     .param("offset", String.valueOf(offset))
-                    .param("limit", String.valueOf(this.maxPageSize));
+                    .param("limit", String.valueOf(maxPageSize));
             if (dateUtc != null) {
                 request.param("deleted_date__gt", dateUtc.toString());
             }
@@ -336,7 +347,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 deletedDevices.add(new Pair<>(uuid, deletedDate));
             }
             hasMore = !response.get("next").isNull();
-            offset += this.maxPageSize;
+            offset += maxPageSize;
         }
         return deletedDevices;
     }
@@ -824,7 +835,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
         } catch (Exception e) {
             logger.error("Could not get changes from DB-API.", e);
-            return JsonApiResponse.error("Could not get changes from DBAPI");
+            return JsonApiResponse.error("Could not get changes from DBAPI"+e.getCause());
         }
         //endregion Get changes from DB-API
 
@@ -844,11 +855,6 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         } catch (Exception e) {
             return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }
-
-//        if (failedDevices.isEmpty()) {
-//            scanApiHandler.sendNewCpeItemsToDbapi(this);
-//            scanApiHandler.sendNewMicrosoftKbsToDbapi(this);
-//        }
 
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()

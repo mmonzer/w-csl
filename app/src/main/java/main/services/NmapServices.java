@@ -9,10 +9,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import lombok.Getter;
 import org.apache.commons.net.util.SubnetUtils;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IApiCommands;
@@ -26,9 +26,16 @@ import main.extensions.ScanActif;
 import main.extensions.SshUtils;
 import main.extensions.Utils;
 
+<<<<<<< HEAD
 public class NmapServices extends Service {
+=======
+public class NmapServices implements ICSLService {
+	String name="nmap";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
+	String configFileSectionName="nmap_service";
+>>>>>>> origin/feature/refactor_code
 	static String idsconf;
-	static Json tapList;
 	static boolean debugMode = false;
 	static boolean logMode = false;
 	static String debugPath = "";
@@ -40,6 +47,7 @@ public class NmapServices extends Service {
 	 * Default constructor of the Nmap service.
 	 */
 	public NmapServices() {
+<<<<<<< HEAD
 		this("nmap",
 				"nmap description",
 				"nmap_service");
@@ -50,6 +58,15 @@ public class NmapServices extends Service {
 	 */
 	public NmapServices(String name, String description, String configFileSectionName) {
 		super(name,description,configFileSectionName);
+=======
+		this.name="nmap";
+		this.configFileSectionName="nmap_service";
+	}
+
+	@Override
+	public String getConfigFileSectionName() {
+		return configFileSectionName;
+>>>>>>> origin/feature/refactor_code
 	}
 	
 	static public void lauchNmap(Json params, Json jConfig) {
@@ -116,12 +133,15 @@ public class NmapServices extends Service {
 		return result;
 	}
 
+<<<<<<< HEAD
 	/**
 	 * Initialization of the Nmap commands
 	 * @param jConfig the configuration section of the configuration file
 	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
+=======
+>>>>>>> origin/feature/refactor_code
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("--- Initialisation des services Nmap ---");
@@ -239,48 +259,25 @@ public class NmapServices extends Service {
 				return	scanDevice(param,jConfig);
 
 			}
-		});	
-		/*addCmd("getMachineList", new JsonCmd() {
-			
-			@Override
-			public Json exec(Json params) {
-				String idsconf = IDSRunner.instance.getIdsParams().getIdsModelDir();
-
-				Json devicesList = Utils.listDevices();
-				Json tapList = null;
-				try {
-					tapList = readJsonFile(idsconf+"/taps/TapsConfiguration.json");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				Json result = Json.object();
-				
-				HashMap<String, ArrayList<Json>> map = new HashMap<String, ArrayList<Json>>();
-				System.out.println(devicesList);
-				for(Json tmp : devicesList.asJsonList()) {
-					if(!map.containsKey(tmp.at("ip").asString().split("@")[1])) {
-						tmp.at("ip", tmp.at("ip").asString().split("@"));
-						ArrayList<Json> tmp2 = new ArrayList<Json>();
-						tmp2.add(tmp);
-						map.put(tmp.at("ip").asString().split("@")[1], tmp2);
-					}
-					else {
-						map.get(tmp.at("ip").asString().split("@")[1]).add(tmp);
-					}
-				}
-				
-				HashMap<String, ArrayList<Json>> map2 = new HashMap<String, ArrayList<Json>>();
-				for(String key : map.keySet()) {
-					for(Json tap : tapList.asJsonList()) {
-						if(tap.at("networkName").asString().contentEquals(key))
-							map2.put(tap.at("idname").asString(), map.get(key));
-					}
-				}				
-				result.at("result",map2);
-				return result.at("result");
-
-			}
-		});	*/		
+		});
 		return true;
 	}
+<<<<<<< HEAD
+=======
+	
+	public String addCmd(String name, IJsonCmd j) {
+		return apiCommands.registerCmd(name, j);
+	}
+	
+	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
+		return apiCommands.registerCmd(name, j,jh);
+	}
+	
+	@Override
+	public boolean terminate() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+>>>>>>> origin/feature/refactor_code
 }

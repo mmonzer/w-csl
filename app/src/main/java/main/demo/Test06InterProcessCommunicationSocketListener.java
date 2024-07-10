@@ -3,7 +3,6 @@ package main.demo;
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.ISocketMsgListener;
 import com.csl.intercom.broker.MosquittoConfig;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
@@ -17,31 +16,18 @@ import com.ucsl.json.Json;
 public class Test06InterProcessCommunicationSocketListener {
 
 	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
-
-//	IApiCommands api= new ApiCommands("essai");
-	
-	
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("DB", new MosquittoConfig());
 	
 	public void init() {
-		
-		
-		
 		
 	}
 	
 	
 	
 	public static void main(String[] args) {
-		
-		
-		
 		Test06InterProcessCommunicationSocketListener test= new Test06InterProcessCommunicationSocketListener();
 		
-		
 		// Execute commande externe (module A)
-		
-		
 		
 		ISocketMsgListener is = new ISocketMsgListener() {
 			
@@ -58,9 +44,5 @@ public class Test06InterProcessCommunicationSocketListener {
 		jparams.set("op", "LST_DEVICES");
 			
 		test.imcm.registerSocketMsgListener(is);
-		
-		
-		
-		
 	}
 }

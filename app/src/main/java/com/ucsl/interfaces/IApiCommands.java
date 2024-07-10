@@ -12,8 +12,11 @@ public interface IApiCommands {
 	String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh);
 
 	String getName();
+<<<<<<< HEAD
 	String getPathName();
 	String getDescription();
+=======
+>>>>>>> origin/feature/refactor_code
 
 	public Json execJcmd(Json jCmd) throws IllegalArgumentException;
 	public Json exec(String name, Json params) throws IllegalArgumentException;

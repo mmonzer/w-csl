@@ -1,5 +1,8 @@
 package com.csl.logger;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,16 +10,17 @@ import java.util.List;
 public class CSLLogger {
 
 	static public CSLLogger instance= new CSLLogger();
-	
-	private static boolean DEBUG=false;
-	
-	public int levelToLog=2;
+
+    public int levelToLog=2;
 	
 	List<ILoggerListener> listeners =new ArrayList<ILoggerListener>();
 
-	private boolean debug;
+    // TODO Auto-generated method stub
+    @Getter
+    @Setter
+    private boolean debug;
 	
-	static private String[] labels= {"FATAL","LOG1","","ERROR","WARN ","INFO ","LOG6","LOG7","DEBUG"};
+	static private final String[] labels= {"FATAL","LOG1","","ERROR","WARN ","INFO ","LOG6","LOG7","DEBUG"};
 			
 	
 	static public String label(int l) {
@@ -36,8 +40,7 @@ public class CSLLogger {
 		if (level<=ILogLevel.ERROR) {
 			System.err.println(label(level)+message);
 		}
-		else { 
-			//System.out.println(label(level)+message);
+		else {
 		}
 		
 		for (ILoggerListener l:listeners) {
@@ -78,15 +81,8 @@ public class CSLLogger {
 
 	public boolean isDebugEnabled() {
 		// TODO Auto-generated method stub
-		return DEBUG;
+        boolean DEBUG = false;
+        return DEBUG;
 	}
 
-	public void setDebug(boolean debug2) {
-		// TODO Auto-generated method stub
-		this.debug=debug2;
-	}
-
-	public boolean isDebug() {
-		return debug;
-	}
 }

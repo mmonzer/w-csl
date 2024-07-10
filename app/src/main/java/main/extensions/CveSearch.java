@@ -10,9 +10,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+<<<<<<< HEAD
 import org.mitre.cpe.common.WellFormedName;
 import org.mitre.cpe.matching.CPENameMatcher;
 import org.mitre.cpe.naming.CPENameUnbinder;
+=======
+import lib.unpacked.org.mitre.cpe.common.WellFormedName;
+import lib.unpacked.org.mitre.cpe.matching.CPENameMatcher;
+import lib.unpacked.org.mitre.cpe.naming.CPENameUnbinder;
+>>>>>>> origin/feature/refactor_code
 
 import com.csl.core.CSLContext;
 import com.ucsl.json.Json;
@@ -301,6 +307,7 @@ public class CveSearch {
 		}
 		load3(path, keys);
 	}
+<<<<<<< HEAD
 	/*private String formatCpe(String cpe) {
 		cpe = cpe.trim();
 		if(!cpe.startsWith("cpe:2.3:")) {
@@ -582,4 +589,6 @@ public class CveSearch {
 		result.at("result",resultTab);
 		return result;
 	}*/
+=======
+>>>>>>> origin/feature/refactor_code
 }

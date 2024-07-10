@@ -2,6 +2,7 @@ package main.util;
 
 public class JsonCommands {
 
+<<<<<<< HEAD
 
 	//static CSLAlertManager cslAlertManager= CSLAlertManager.instance.setname("Intrusion detection");
 
@@ -83,11 +84,18 @@ public class JsonCommands {
 	}
 
 
+=======
+	static public void init() {
+		
+	}
+
+>>>>>>> origin/feature/refactor_code
 	static public String startOf(String s) {
 		int MAX=50;
 		if (s.length()<=MAX) return s;
 		else return s.substring(0,MAX-1)+"...";
 	}
+<<<<<<< HEAD
 	
 	
 
@@ -98,5 +106,7 @@ public class JsonCommands {
 		//	cslAlertManager.init();
 
 	}
+=======
+>>>>>>> origin/feature/refactor_code
 
 }

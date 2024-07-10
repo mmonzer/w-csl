@@ -1,4 +1,8 @@
-package com.csl.udp;
+package com.csl.web.udp;
+
+import com.csl.core.CSLContext;
+import com.ucsl.interfaces.ICSLFlowListener;
+import com.ucsl.json.Json;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,18 +11,19 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
 import com.csl.core.CSLContext;
 import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.json.Json;
 
 
+========
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 public class CSLFlowManager {
 
 	int maxflows=10;
 	int maxsize=1000;
 	boolean traceAllMessages=true;
-//	private CSLContext cslContext;
-
 	CSLUDPDataProcessor dataProcessor=null;
 	ExecutorService executorService =null;
 
@@ -34,8 +39,7 @@ public class CSLFlowManager {
 		this.maxflows=maxflows;
 		this.maxsize=maxsize;
 		this.traceAllMessages=trace;
-		
-		//this.cslContext=context;
+
 		inputflows=new ArrayList<BlockingQueue<Json>>();
 		for (int i=0;i<maxflows;i++) {
 			BlockingQueue<Json> b=  new ArrayBlockingQueue<>(maxsize);
@@ -81,6 +85,7 @@ public class CSLFlowManager {
 		return null;
 	}
 
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
 	//	public boolean addToFlow(int n, Json j) {
 //
 //		if ((n<0)|(n>=maxflows)) {
@@ -101,6 +106,10 @@ public class CSLFlowManager {
 //		return ok;
 //
 //	}
+========
+	
+	public boolean addToFlow(int n, Json j) {
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 
 	/**
 	 * Add an alert to the flow. It calls the listeners to treat it and stoke it to the input flows
@@ -135,29 +144,31 @@ public class CSLFlowManager {
 				break;
 			}
 		}
-		
-		
-		//CSLContext.context.logInfo(dumpInputs());
 
 		boolean ok= true;
 		
 		if (addToQueue) {
 			ok=inputflows.get(flowNumber).offer(alertData);
 		}
-		//CSLContext.context.logInfo("added to flow #"+n+" ok="+ok+" o="+j);
 		
 		if (traceAllMessages) System.out.println(" Queue size:"+getFlowSize(flowNumber));
 		
 		if (!ok) {
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
 			CSLContext.instance.logError("flow number "+flowNumber+" is full, lost of data: "+alertData);
 			//if (traceAllMessages) 
 				System.err.println("flow number "+flowNumber+" is full, lost of data: "+alertData);
+========
+			CSLContext.instance.logError("flow number "+n+" is full, lost of data: "+j);
+				System.err.println("flow number "+n+" is full, lost of data: "+j);
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 		}
 		
 		return ok;
 
 	}
 
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
 	public String dumpInputs() {
 		String s="";
 		for (int i=0;i<inputflows.size();i++) {
@@ -169,12 +180,11 @@ public class CSLFlowManager {
 
 	}
 
+========
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 	public void startListener() {
 		String ip= CSLContext.instance.getCslUDPServer().getCurrentIPForUCP();
 		int port = CSLContext.instance.getCslUDPServer().getCurrentPortForUCP();
-			//CSLContext.context.logInfo("Listening udp to port :"+port);
-		//IDSTrace.log(IDSTrace.UDP_TRACE,
-		//		""Listening udp to port :"+port);
 		
 		/**
 		 * The initial capacity for the blocking collection needs to be fine tuned
@@ -182,7 +192,6 @@ public class CSLFlowManager {
 		 */
 		BlockingQueue<byte[]> messageQueue = new ArrayBlockingQueue<>(1200);
 
-		//UDPSendTest server = new UDPSendTest();
 		// message queue is shared between UDP client and Data Processor
 		client = new CSLUdpUnicastClient(ip,port, messageQueue,traceAllMessages);
 		dataProcessor = new CSLUDPDataProcessor(this,messageQueue,traceAllMessages);
@@ -193,7 +202,6 @@ public class CSLFlowManager {
 		try {
 		executorService = Executors.newFixedThreadPool(3);
 		executorService.submit(client);
-		// executorService.submit(server);
 		executorService.submit(dataProcessor);
 		} catch (Exception e) {
 			System.out.println(e);
@@ -201,7 +209,6 @@ public class CSLFlowManager {
 	}
 
 	public void stopListener() {
-		
 		client.stop();
 		dataProcessor.stop();
 		if (executorService!=null) executorService.shutdownNow();

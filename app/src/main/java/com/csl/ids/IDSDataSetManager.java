@@ -1,5 +1,9 @@
 package com.csl.ids;
 
+import com.ucsl.json.Json;
+import com.ucsl.util.IDSUtil;
+import com.wcsl.ids.IDSMainProcessor;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -10,18 +14,11 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
 
-
-import com.ucsl.json.Json;
-import com.ucsl.util.IDSUtil;
-import com.wcsl.ids.IDSMainProcessor;
-
 public class IDSDataSetManager {
 
 	public static int RECORDING=1;
 	public static int LEARNING=2;
 	public static int DETECTION_OFFLINE=3;
-
-	// operations : create, delete, rename, select, copy
 
 	public static String CREATE="create";
 	public static String DELETE="delete";
@@ -29,15 +26,12 @@ public class IDSDataSetManager {
 	public static String SELECT="select";
 	public static String COPY="copy";
 	public static String LIST="list";
-		
-
 
 	IDSParams idsParams;
 
 	public IDSDataSetManager(IDSParams idsParams) {
 		this.idsParams=idsParams;
 	}
-
 
 	public String getDirOfCategory(int category) {
 		if (category==LEARNING) return idsParams.getPackets_dir_for_learning();
@@ -61,9 +55,7 @@ public class IDSDataSetManager {
 		else idsParams.setCurrentDataSetNameForRecording(name);
 	}
 
-
 	public String createDataSet(int category, String nameFile) {
-
 		if (nameFile.isEmpty()) {
 			nameFile=newdataSetName(getDirOfCategory(category));
 		}
@@ -75,7 +67,6 @@ public class IDSDataSetManager {
 	}
 
 	public Json getListOfDataSetAsJson(int category) {
-		
 		String selected=getCurrentdataSetOfCategory(category);
 		
 		return dataSetNamesAsJson(getDirOfCategory(category),selected,category);
@@ -94,7 +85,6 @@ public class IDSDataSetManager {
 		setCurrentdataSetOfCategory(category, name);
 		return name;
 	}
-
 
 	private String int2str(int n) {
 		if (n<=9999) {
@@ -122,30 +112,10 @@ public class IDSDataSetManager {
 			return directories[0];
 		}
 	}
-	
-	
-	
-	public String validName(String s) {
-		String z="";
-
-		for (int i=0;i<s.length();i++) {
-			char ch=s.charAt(i);
-
-			if (Character.isLetterOrDigit(ch)) {
-				z=z+ch;
-			}
-			else
-				z=z+"_";
-		}
-
-		return z;
-	}
 
 	public String renameDataSet(int category, String oldName, String newName) {
 		String dirName=getDirOfCategory(category);
-
 		String selected=getCurrentdataSetOfCategory(category);
-
 		File oldDir = new File(dirName+IDSUtil.fileSeparator + oldName);
 		if (!oldDir.isDirectory()) {
 			IDSMainProcessor.cslLogger().printError("cannot rename "+oldDir+" (not found)");
@@ -164,14 +134,9 @@ public class IDSDataSetManager {
 		}
 		return "";
 	}
-
-	
 	
 	public String deleteDataSet(int category, String name) {
 		String dirName=getDirOfCategory(category);
-
-
-
 		File dir = new File(dirName+IDSUtil.fileSeparator + name);
 		if (!dir.isDirectory()) {
 			IDSMainProcessor.cslLogger().printError("cannot delete "+dir+" (not found)");
@@ -182,15 +147,14 @@ public class IDSDataSetManager {
 		return "";
 	}
 
-
-	private boolean deleteDirectory(File directoryToBeDeleted) {
+	private void deleteDirectory(File directoryToBeDeleted) {
 		File[] allContents = directoryToBeDeleted.listFiles();
 		if (allContents != null) {
 			for (File file : allContents) {
 				deleteDirectory(file);
 			}
 		}
-		return directoryToBeDeleted.delete();
+		directoryToBeDeleted.delete();
 	}
 
 	public static void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation) 
@@ -208,7 +172,6 @@ public class IDSDataSetManager {
 			}
 		});
 	}
-
 
 	public String copyDataSet(int category, String name, int targetCategory, String targetName,boolean overwrite) {
 		String dirNameOfSource=getDirOfCategory(category);
@@ -238,16 +201,12 @@ public class IDSDataSetManager {
 		try {
 			copyDirectory(sourceDirectoryLocation, destinationDirectoryLocation);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return "Error:"+e.getMessage();
 
 		}
 		return "";
-
 	}
-
-
 
 	public String newdataSetName(String dirName) {
 		File file = new File(dirName);
@@ -360,8 +319,6 @@ public class IDSDataSetManager {
 	    
 	    return j;
 	}
-	
-	
 
 	private Json getFolderFilesListAsJson(int category, String folderName) {
 		
@@ -382,27 +339,22 @@ public class IDSDataSetManager {
 	    Json j=Json.array();
 	    
 	    for (int i = 0; i < count; i++) {
-	    	
 	        if (files[i].isFile()) {
 	        	Json jf= Json.object();
 			    jf.set("name",files[i].getName());
 			    jf.set("size",files[i].length());
 	            j.add(jf);
 	        }
-	      
 	    }
-	   
-	    
+
 	    
 	    return j;
 	}
 
-	// return {} if ok, {"error":"vvxvx"} otherwise
 	public Json exec(String cmd, int category, String name, int targetCategory, String targetName, boolean overwrite) {
-
 		String s="";
-
 		cmd=cmd.toLowerCase();
+
 		if (CREATE.compareTo(cmd)==0) {
 			s=createDataSet(category, name);
 			if (s.isEmpty()) return Json.object(); else return Json.object().set("error",s);
@@ -431,7 +383,5 @@ public class IDSDataSetManager {
 			s= "Invalid cmd:"+cmd;
 			if (s.isEmpty()) return Json.object(); else return Json.object().set("error",s);
 		}
-
-		
 	}
 }

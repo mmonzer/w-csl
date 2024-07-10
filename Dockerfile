@@ -13,13 +13,13 @@ RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/us
 FROM eclipse-temurin:11-jdk as production-stage
 WORKDIR /usr/src/app
 COPY --from=build-stage /usr/src/app/cslmainclient.jar ./
-COPY cslconf/ cslconf/
+COPY app/src/main/resources/cslconf/ cslconf/
 COPY csldata/ csldata/
-COPY datafile/ datafile/ 
-COPY idsdata/ idsdata/ 
+COPY app/src/main/resources/datafile/ datafile/
+COPY app/src/main/resources/idsdata/ idsdata/
 COPY resources/ resources/
-COPY runconfig/ runconfig/
-COPY runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
+COPY app/src/main/resources/runconfig/ runconfig/
+COPY app/src/main/resources/runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
 COPY entrypoint.sh .
 
 ARG GIT_COMMIT

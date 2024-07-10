@@ -4,6 +4,7 @@ import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Setter;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;
@@ -39,11 +40,11 @@ public class ScanWebSocketHandler {
     private final String websocketNotificationsEndpoint = "/discovery/ready";
     private final String websocketStartDiscoveryEndpoint = "/discovery/start";
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
-    private String scanManagerDiscoveryUrl;
-    private ScheduledExecutorService webSocketsConnectionAttempts;
+    private final String scanManagerDiscoveryUrl;
+    private final ScheduledExecutorService webSocketsConnectionAttempts;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
-    private CpeScanService cpeScanService;
+    private final CpeScanService cpeScanService;
 
 
     /**

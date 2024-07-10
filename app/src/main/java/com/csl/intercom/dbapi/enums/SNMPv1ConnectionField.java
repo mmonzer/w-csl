@@ -5,8 +5,8 @@ public enum SNMPv1ConnectionField {
     COMMUNITY("snmp_community", "community"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private SNMPv1ConnectionField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

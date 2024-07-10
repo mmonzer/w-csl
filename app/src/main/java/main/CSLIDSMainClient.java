@@ -1,14 +1,5 @@
 package main;
 
-
-import java.net.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
@@ -19,17 +10,23 @@ import com.csl.web.database.CSLServiceJsonDataBase;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
-
+import com.csl.web.websockets.WebsocketClientEndpoint;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.xcsl.miniserver.ApiHttpServer;
-
 import main.services.*;
 import main.util.CSLRunningArgs;
-import main.xcom.WebsocketClientEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class CSLIDSMainClient {
 
@@ -183,13 +180,6 @@ public class CSLIDSMainClient {
 
     }
 
-
-    static public void printTime() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        System.out.println(dtf.format(now));
-    }
-
     /***
      * At a scheduled rate, check if the connection to the server socket (cmd) is open, if not try to connect
      */
@@ -211,37 +201,6 @@ public class CSLIDSMainClient {
                 0, 1, TimeUnit.SECONDS);
 
     }
-
-
-    static public void startTest() {
-        ScheduledExecutorService executorService;
-        executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(
-                new Runnable() {
-                    public void run() {
-                        Json j2 = Json.object();
-                        j2.set("line", "Test console");
-                        j2.set("console_id", "learn");
-
-                        System.out.println(j2);
-                        CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE, j2);
-
-                    }
-                },
-                0, 1, TimeUnit.SECONDS);
-
-    }
-
-
-    static void test() {
-        Json j2 = Json.object();
-        j2.set("line", "Test console");
-        j2.set("console_id", "learn");
-        //			CSLWebSocketForConsole.broadcastMessageJson("log", j);
-        CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE, j2);
-
-    }
-
 
     public static void main(String[] args) {
 
@@ -284,7 +243,6 @@ public class CSLIDSMainClient {
 
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
-        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
         JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
         JServiceLoader.registerService(new AlertsService(), configObj, true);
         JServiceLoader.registerService(new MonitorService(), configObj, true);

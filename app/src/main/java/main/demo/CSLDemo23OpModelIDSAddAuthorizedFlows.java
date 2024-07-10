@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -21,29 +20,11 @@ import com.ucsl.json.JsonUtil;
 
 
 public class CSLDemo23OpModelIDSAddAuthorizedFlows {
-
-	
-	static String uuid = UUID.randomUUID().toString();
-
-
-	Json testObject=null;
-	
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-
-	
-	
-
-	
-	
-	
-
-
-
 	public Json execCmd(String cmd, Json jparams) {
-
 
 		Json j= Json.object();
 	
@@ -82,49 +63,22 @@ public class CSLDemo23OpModelIDSAddAuthorizedFlows {
 		return Json.object();
 	}
 
-	public void testCmd() {
-		
-		
-		System.out.println("TEST EXEC_CMD");
-		Json jparams= Json.object();
-		jparams.set("x",1);
-		jparams.set("info", "test");
-
-		
-		Json result = execCmd("op_model_ids", jparams);
-		
-		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
-	}
-	
 	//get_devices
 	
 	public Json exec(String op, Json params) {
-		
 		params.set("op", op);
-		
 		Json result = execCmd("op_model_ids", params);
-		
 		return result;
 	}
-
-	
 	
 	public void testAdd() {
-		
-		
 		Json r=exec("reset_learned_model_to_last_learned", Json.object());
 		r=exec("clear_all_alerts", Json.object());
-		
-		
+
 		r=exec("get_devices_and_links", Json.object());
-		//System.out.println(JsonUtil.prettyPrint(r));
 		
 		UtilDemo.printModel(r);
-		
-		
-		
+
 		Json dev=Json.object();
 		dev.set("name", "testxxx");
 		dev.set("ip", "1.2.3.7");
@@ -146,37 +100,25 @@ public class CSLDemo23OpModelIDSAddAuthorizedFlows {
 		devs.add(dev);
 		
 		System.out.println(JsonUtil.prettyPrint(devs));
-		
-		
+
 		r=exec("add_authorized_links", Json.object().set("authorized_links", devs));
 		
 		r=exec("get_devices_and_links", Json.object());
 		UtilDemo.printModel(r);
-		
-		
-	
-		
+
 	}
-
-
-	
 	
 	public void test() {
-		
-		
 		testAdd();
 	}
-	
-	
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
 		CSLDemo23OpModelIDSAddAuthorizedFlows runner= new CSLDemo23OpModelIDSAddAuthorizedFlows();
 		
 		runner.test();
-	
-		
-		
+
 	}
 
 }

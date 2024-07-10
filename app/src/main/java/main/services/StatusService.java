@@ -10,15 +10,22 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 
 /**
  * Control the status notifications, mostly allow to remotely control the sending of them.
  * Also provides a command to directly retrieve the status message.
  */
+<<<<<<< HEAD
 public class StatusService extends Service {
     /**
      * Status of the notifier
      */
+=======
+public class StatusService implements ICSLService {
+    @Getter
+    IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("status");
+>>>>>>> origin/feature/refactor_code
     private StatusNotifier notifier = null;
 
     /**
@@ -70,4 +77,41 @@ public class StatusService extends Service {
         System.out.println("Status service operational");
         return true;
     }
+<<<<<<< HEAD
+=======
+
+    @Override
+    public String getConfigFileSectionName() {
+        return "status";
+    }
+
+
+    @Override
+    public boolean terminate() {
+        return false;
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name The name of the command.
+     * @param cmd  The callback to be executed when the command is invoked.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmd cmd) {
+        return apiCommands.registerCmd(name, cmd);
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name The name of the command.
+     * @param cmd  The callback to be executed when the command is invoked.
+     * @param help The helper to display in the '/apihelp' page.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
+        return apiCommands.registerCmd(name, cmd, help);
+    }
+>>>>>>> origin/feature/refactor_code
 }

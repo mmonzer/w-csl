@@ -5,6 +5,7 @@ import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -14,12 +15,15 @@ import java.util.List;
  * Model to represent a device from DB-API.
  */
 public class Device implements IScannerSerializable {
-    private String id;
-    private String name;
-    private String ipAddress;
+    @Getter
+    private final String id;
+    @Getter
+    private final String name;
+    private final String ipAddress;
+    @Getter
     private List<Integer> connectionsIds;
-    private List<Connection> connections = new ArrayList<>();
-    private OffsetDateTime updatedDate;
+    private final List<Connection> connections = new ArrayList<>();
+    private final OffsetDateTime updatedDate;
 
     protected Device(String id, String name, String ipAddress, List<Integer> connectionsIds, OffsetDateTime updatedDate) {
         this.id = id;
@@ -97,20 +101,8 @@ public class Device implements IScannerSerializable {
         return result;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
     public String getIpAddress() {
         return ipAddress;
-    }
-
-    public List<Integer> getConnectionsIds() {
-        return connectionsIds;
     }
 
     public Device setConnectionsIds(List<Integer> connectionsIds) {

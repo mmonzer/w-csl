@@ -13,7 +13,6 @@ import java.util.Map;
 import com.csl.core.CSLContext;
 import com.csl.core.CSLUtil;
 //import com.csl.devdb.DevicesDB;
-import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLog;
 import com.csl.web.jcmdoversocket.IAlertForwarder;

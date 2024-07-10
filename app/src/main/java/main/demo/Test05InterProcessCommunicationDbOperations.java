@@ -2,7 +2,6 @@ package main.demo;
 
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
@@ -15,26 +14,14 @@ import com.ucsl.json.Json;
  */
 public class Test05InterProcessCommunicationDbOperations {
 
-	
-	//IApiCommands api= new ApiCommands("essai");
 	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
-
-	
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("DB", new MosquittoConfig());
 	
 	public void init() {
-		
-		
-		
-		
 	}
 	
-	
-	
 	public static void main(String[] args) {
-		
-		
-		
+
 		Test05InterProcessCommunicationDbOperations test= new Test05InterProcessCommunicationDbOperations();
 		
 		
@@ -46,7 +33,6 @@ public class Test05InterProcessCommunicationDbOperations {
 			
 		Json r=test.imcm.executeExternalCommand("devdb", Json.object().set("cmd", "op").set("params", jparams));
 		System.out.println(r);
-		
-		
+
 	}
 }

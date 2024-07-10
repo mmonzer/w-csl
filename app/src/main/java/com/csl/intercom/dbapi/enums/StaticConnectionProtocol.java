@@ -9,8 +9,8 @@ public enum StaticConnectionProtocol {
     SSH("SSH", "SSH"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private StaticConnectionProtocol(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

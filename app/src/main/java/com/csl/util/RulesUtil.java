@@ -1,8 +1,9 @@
 package com.csl.util;
-import java.util.Map;
 
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+
+import java.util.Map;
 
 public class RulesUtil {
 
@@ -63,8 +64,7 @@ links : [
 		link.set("ip_dst","10.0.208.18");		
 		link.set("port_dst","502");
 		link.set("permission","forbidden" );  // default
-	
-		
+
 		
 		return listDevices;
 		

@@ -4,6 +4,7 @@ import com.csl.core.CSLContext;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,9 +17,16 @@ import java.util.concurrent.TimeUnit;
  * collects them from registered status providers and, if necessary, sends them on the server's WebSocket.
  */
 public class StatusNotifier implements AutoCloseable {
-    private Map<String, IStatusProvider> providers = new HashMap<>();
+    private final Map<String, IStatusProvider> providers = new HashMap<>();
+    /**
+     * -- SETTER --
+     *  Tell whether we should periodically send notifications on the WebSocket.
+     *
+     * @param sendNotifications true if we should send notification, false if we shouldn't.
+     */
+    @Setter
     private boolean sendNotifications;
-    private ScheduledExecutorService sender;
+    private final ScheduledExecutorService sender;
     private static final String ticType = "status";
 
     /**
@@ -88,14 +96,6 @@ public class StatusNotifier implements AutoCloseable {
      */
     private void sendNotification(Json notification) {
         CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE, notification);
-    }
-
-    /**
-     * Tell whether we should periodically send notifications on the WebSocket.
-     * @param sendNotifications true if we should send notification, false if we shouldn't.
-     */
-    public void setSendNotifications(boolean sendNotifications) {
-        this.sendNotifications = sendNotifications;
     }
 
     public void close() {

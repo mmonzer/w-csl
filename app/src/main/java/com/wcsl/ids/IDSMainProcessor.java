@@ -1,39 +1,23 @@
 package com.wcsl.ids;
 
-import java.util.List;
-import java.util.Map;
-
 import com.csl.alert.CSLAlertFactory;
 import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.defaultclasses.FileLogFactory;
 import com.csl.defaultclasses.FileStoreService;
-import com.ucsl.interfaces.IAlertDescriptor;
-import com.ucsl.interfaces.IAlertFactory;
-import com.ucsl.interfaces.IAlertLevel;
-import com.ucsl.interfaces.IAlertManager;
-import com.ucsl.interfaces.IAlertSender;
-import com.ucsl.interfaces.ICSLLogger;
-import com.ucsl.interfaces.IConsole;
-import com.ucsl.interfaces.IFileLogFactory;
-import com.ucsl.interfaces.IFileStoreService;
-import com.ucsl.interfaces.IIDSLearnedRules;
-import com.ucsl.interfaces.IIDSMainProcessor;
-import com.ucsl.interfaces.IIDSMainProcessorParams;
-import com.ucsl.interfaces.IILearningProcessor;
-import com.ucsl.interfaces.IOffLineDetectionProcessor;
+import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.ucsl.util.DefaultLogger;
 import com.ucsl.util.IDSUtil;
+import lombok.Getter;
+import lombok.Setter;
 
-
-
-
+import java.util.List;
+import java.util.Map;
 
 
 public class IDSMainProcessor implements IIDSMainProcessor {
-
 	
 	private IFileStoreService fileStoreServices;
 
@@ -53,21 +37,14 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 	//=======================================================================================================================
 	// Logger
 	//
-	static private ICSLLogger logger= new DefaultLogger();
+	@Setter
+    @Getter
+    static private ICSLLogger logger= new DefaultLogger();
 	static public ICSLLogger cslLogger() {
 		return logger;
 	}
-	static public ICSLLogger getLogger() {
-		return logger;
-	}
-	static public void setLogger(ICSLLogger l) {
-		logger = l;
-	}
-	//=======================================================================================================================
 
-	
-	
-	
+    //=======================================================================================================================
 	public IDSMainProcessor(
 			Json jConfig,
 			String cslConfDir
@@ -88,8 +65,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		this.idsMainProcessorParams= new IDSMainProcessorParams(this, jConfig);
 
 		this.alertFactory= new CSLAlertFactory();
-
-		
 
 	}
 	
@@ -118,7 +93,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		// TODO Auto-generated method stub
 		
 	}
-
 
 	//==================================================================================
 	// Adavanced version
@@ -177,10 +151,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		return getFileStoreServices().readJsonFromFile(dir, fileName);
 	}
 	
-	
-	
-	
-	
 	@Override
 	public IFileStoreService getFileStoreServices() {
 		// TODO Auto-generated method stub
@@ -203,12 +173,18 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		
 		return idsMainProcessorParams;
 		}
+<<<<<<< HEAD
 
 	/**
 	 * From a raw Suricata alert, reformats it and calls {@link CSLAlertManager} to send the alert
 	 * @param evtsInfo suricata alert information
 	 */
 	private void generateAlertFromSuricataEvent(Json evtsInfo) {
+=======
+	
+	// process an event (from suricata for example)
+	private void generateAlertFRomSuricataEvent(Json evtsInfo) {
+>>>>>>> origin/feature/refactor_code
 		
 		// test pour eve event
 		
@@ -220,23 +196,20 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		if (evtsInfo.has("alert")) {
 
 			Json j=evtsInfo.get("alert");
-			if (j.has("signature")) { //cslAlertManager.sendToViewer(CSLAlertManager.INFO, evtsInfo.get("msg").asString());
+			if (j.has("signature")) {
 
 				String s=j.get("signature").asString();
 				if (s.startsWith("#")) {
 					int p=s.indexOf(" ");
 					if (p<0) {
-						//code=s;
 						msg=s;
 					}
 					else {
 						code=s.substring(1,p);
 						msg=s.substring(p+1,s.length());
 					}
-
 				}
 				else msg=s;
-
 			}
 
 			if (j.has("category")) {
@@ -284,18 +257,13 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 					.setMetaInfo("base_info", base_info);
 
 			CSLContext.instance.getCSLAlertManager().sendAlert(alert);
-		
 		}
 		else {
 
 			// System.out.println("Suricata EVE (not an alert)"+evtsInfo);
 		}
 
-
-
-
 	}
-
 	
 	private Json getEveInfo(Json jj) {
 		
@@ -345,7 +313,6 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 			
 	}
 	
-	
 	//=======================================================================================================================
 	// Learning
 	
@@ -360,8 +327,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		System.err.println("Not implemented in basic version");
 		return null;
 	}
-	
-	
+
 	@Override
 	public IOffLineDetectionProcessor getOffLineDetectionProcessor(String fullPackets_dir_for_detection_offline) {
 		System.err.println("Not implemented in basic version");
@@ -423,24 +389,17 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 	@Override
 	public void reverseBackupLearnedModel() {
 		System.err.println("Not implemented in basic version");
-		
-		
 	}
+
 	@Override
 	public void renameLearnedRulesWithTimeStamp() {
 		System.err.println("Not implemented in basic version");		
 	}
 	
-	
-	
-	
-	
-	
 	@Override
 	public void getParamsAsJsonNameValueArray(Json j) {
 		if (j==null) j=Json.array();
 		if (!j.isArray()) j= Json.array();
-
 	}
 	
 	@Override
@@ -449,5 +408,4 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		String s="";
 		return s;
 	}
-
 }

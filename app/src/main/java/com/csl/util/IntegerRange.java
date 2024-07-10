@@ -1,5 +1,8 @@
 package com.csl.util;
 
+import lombok.Getter;
+
+@Getter
 public class IntegerRange {
 
 	int min=0;
@@ -18,20 +21,8 @@ public class IntegerRange {
 		}
 			
 	}
-	
-	public IntegerRange(int min, int max) {
-	
-	}
 
-	public int getMin() {
-		return min;
-	}
-
-	public int getMax() {
-		return max;
-	}
-
-	public String toString() {
+    public String toString() {
 		return ""+min +':'+max;
 	}
 	

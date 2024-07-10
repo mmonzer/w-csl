@@ -1,19 +1,8 @@
-package com.csl.udp;
+package com.csl.web.udp;
 import com.ucsl.json.Json;
 
 
 public class UDPTargetDescriptor {
-	
-
-/*
- * {
-		  "name":"T2",
-		  "host_target":"localhost",
-		  "port_target":8001,
-		  "id_of_target":"cible",
-		  "flow_number":1
-		  }
- */
 
 
 

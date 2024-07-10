@@ -1,11 +1,15 @@
-package com.csl.udp;
-import java.util.concurrent.BlockingQueue;
+package com.csl.web.udp;
 
 import com.ucsl.json.Json;
 
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUDPDataProcessor.java
 /**
  * Runnable class that treats the alerts from suricata stored in a Queue
  */
+========
+import java.util.concurrent.BlockingQueue;
+
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUDPDataProcessor.java
 public class CSLUDPDataProcessor implements Runnable {
 	private final BlockingQueue<byte[]> messageQueue;
 	CSLFlowManager flowManager;
@@ -44,7 +48,6 @@ public class CSLUDPDataProcessor implements Runnable {
 				 * Try and take a message from the queue. Will block if the
 				 * message queue is empty, until an element becomes available.
 				 */
-				//CSLContext.context.logInfo("Loop received");
 				byte[] rawData = this.messageQueue.take();
 
 				if (interrupted) {
@@ -62,10 +65,7 @@ public class CSLUDPDataProcessor implements Runnable {
 
 					if (traceAllMessages) System.out.println(" Json msg:"+jsonObject);
 
-					// System.out.println(" JMFJson msg:"+jsonObject);
-
 					Json jdata=jsonObject.get("data");
-					//System.out.println("data="+jdata);
 					String id="cible";
 					if (jsonObject.has("idOfTarget")) id=jsonObject.get("idOfTarget").asString();
 					
@@ -76,13 +76,15 @@ public class CSLUDPDataProcessor implements Runnable {
 					if (jsonObject.has("fromPort") ) fromPort=jsonObject.get("fromPort").asString();
 
 					if (fromPort!=null ) {
-						//	new UDPSend().sendMsg(msg);  // answer ok
-						//System.err.println("acquit not implemented");
 					}
 					int n=Integer.parseInt(fn);
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUDPDataProcessor.java
 
 				//System.out.println("idOfTarget="+id+" fromPort="+fromPort+" flowNumber="+n);
 					//flowManager.addToFlow(n, jdata);
+========
+					
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUDPDataProcessor.java
 					if (jdata.isArray()) {
 						for (Json jj:jdata.asJsonList()) {
 							flowManager.addToFlow(n, jj);

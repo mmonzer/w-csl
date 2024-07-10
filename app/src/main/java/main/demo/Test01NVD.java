@@ -10,9 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.mitre.cpe.common.WellFormedName;
-import org.mitre.cpe.matching.CPENameMatcher;
-import org.mitre.cpe.naming.CPENameUnbinder;
+import lib.unpacked.org.mitre.cpe.common.WellFormedName;
+import lib.unpacked.org.mitre.cpe.matching.CPENameMatcher;
+import lib.unpacked.org.mitre.cpe.naming.CPENameUnbinder;
 
 import com.ucsl.json.Json;
 
@@ -22,9 +22,6 @@ public class Test01NVD {
 
 	private static Json readDataFile(String path) 
 	{
-
-
-
 		String content = "";
 
 		try
@@ -35,8 +32,6 @@ public class Test01NVD {
 		} 
 		catch (IOException e) 
 		{
-			//e.printStackTrace();
-			//return "{\"Error\":\"File not found:"+e.getMessage()+"\"}";
 			Json z=Json.object();
 			z.set("contents",Json.object());
 			z.set("error","Object not found ("+e.getMessage()+")");
@@ -44,8 +39,6 @@ public class Test01NVD {
 			return z;
 
 		}
-
-		//return content;
 	}
 
 
@@ -63,7 +56,6 @@ public class Test01NVD {
 			// TODO Auto-generated catch block
 			System.err.println("Invalid cpemask:"+cpeUri);
 			return false;
-			//	e.printStackTrace();
 		}
 
 		boolean b=(cpenm.isSubset(wfn, key)); // true, key is a subset of wfn
@@ -110,21 +102,16 @@ public class Test01NVD {
 
 
 	public static void load(String path) {
-
 		System.out.println("Loading cve database");
 		for (int i=2002; i<2022; i++ ) {
-		//for (int i=2020; i<2021; i++ ) {
 
 			System.out.println("  year "+i);
 			Json jf=readDataFile(path+"nvdcve-1.1-"+i+".json");
 
-
 			Json items = jf.get("CVE_Items");
 			for (Json ii:items.asJsonList()) {
 				all.add(ii);
-				//System.out.println(ii);
 			}
-			//	System.out.println(jf);
 		}
 		System.out.println("End of loading");
 
@@ -136,18 +123,13 @@ public class Test01NVD {
 
 		System.out.println("Loading cve database");
 		for (int i=2002; i<2022; i++ ) {
-		//for (int i=2020; i<2021; i++ ) {
-
 			System.out.println("  year "+i);
 			Json jf=readDataFile(path+"nvdcve-1.1-"+i+".json");
-
 
 			Json items = jf.get("CVE_Items");
 			for (Json ii:items.asJsonList()) {
 				allcve.add(new CVEDescriptor().initFromCveJson(ii));
-				//System.out.println(ii);
 			}
-			//	System.out.println(jf);
 		}
 		System.out.println("End of loading");
 
@@ -355,74 +337,15 @@ public class Test01NVD {
 		
 		CPENameUnbinder cpenu = new CPENameUnbinder();
 		try {
-			//WellFormedName key= cpenu.unbindURI("cpe:/o:linux:linux_kernel:2.6.32");
 			WellFormedName key= cpenu.unbindURI("cpe:/o:linux:linux_kernel:2.6");
 
-
-			//WellFormedName key= cpenu.unbindURI("cpe:/a:python:python:3.7.3");
-
-			//String key="siemens";
 			String path="/Users/flausj/Documents/usb/tempo/nvd/";
-			//Json jf=readDataFile("/Users/flausj/Downloads/nvdcve-1.1-2021.json");
-
-			//System.out.println(JsonUtil.prettyPrint(jf));0
-
-			//		System.out.println(jf);
 			load2(path);
-			Json items = all; //get("CVE_Items");
-//			int n=0,c=0,found =0;
-//			for (Json jj:items.asJsonList()) {
-//				//System.out.println(jj.get("configurations").get("nodes"));
-//				if (c>=1000) {
-//					System.out.println("Scanned "+n+" vulnerabilities");
-//					c=0;
-//				}
-//				n++;c++;
-//
-//				Json x=jj.get("configurations").get("nodes");
-//				for (Json term:x.asJsonList()) {
-//					//System.out.println(prettyPrint(term, ""));
-//					if (eval(term,key)) {
-//						System.err.println("==>> FOUND ");
-//						System.err.println(prettyPrint(term, ""));
-//						found++;
-//					}
-//				}
-//			}
 
-			//getAllCpe(all);
-
-			
-			String s="";
-			
-//			FileOutputStream fos = new FileOutputStream(path+"test.txt", false);
-//			 //fos.write("[\n".getBytes());
-//			    
-//			for (Json jj:items.asJsonList()) {
-//				CVEDescriptor cveDescriptor = new CVEDescriptor();
-//				cveDescriptor.initFromCveJson(jj);
-//				//System.out.println(JsonUtil.prettyPrint(cveDescriptor.toJson()));
-//				//if (!s.isEmpty()) s=",\n";
-//				s=cveDescriptor.toJson().toString();
-//				 fos.write(s.getBytes());
-//			}
-//			
-//			
-//			 //fos.write("]\n".getBytes());
-//			fos.close();
-			//System.out.println("Found "+found+" vulnerabilities");
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		
-//		catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		}
 		
 		
 		long heapFreeSizef = Runtime.getRuntime().freeMemory(); 
@@ -440,7 +363,6 @@ public class Test01NVD {
 		size=size/1024;
 		
 		System.out.println("Size:"+size);
-		//JsonUtil.readFileAsJson(f)
 		
 		List<WellFormedName> keys= new ArrayList<WellFormedName>();
 		
@@ -456,25 +378,17 @@ public class Test01NVD {
 		
 		int n=0,c=0, found=0;
 		for (CVEDescriptor cve:allcve) {
-//		//System.out.println(jj.get("configurations").get("nodes"));
 		if (c>=1000) {
 			System.out.println("Scanned "+n+" vulnerabilities");
 			c=0;
 		}
 		n++;c++;
-
-	
-		
-//		Json x=jj.get("configurations").get("nodes");
-//		for (Json term:x.asJsonList()) {
-//			//System.out.println(prettyPrint(term, ""));
 			if (cve.eval(keys)) {
 				System.err.println("==>> FOUND ");
 				System.err.println(prettyPrint(cve.toJson(), ""));
 				found++;
 			}
 		}
-//	}
 
 	}
 

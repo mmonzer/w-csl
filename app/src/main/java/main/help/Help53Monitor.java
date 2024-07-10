@@ -11,8 +11,7 @@ import com.ucsl.json.JsonUtil;
 public class Help53Monitor {
 
 	HelpGenerator hg ;
-	
-	
+
 	public Json exec(String cmd, Json params) {
 		
 		return hg.addExample(cmd,  params);
@@ -23,8 +22,6 @@ public class Help53Monitor {
 		return exec(cmd, Json.object());
 	}
 	
-	
-	
 	public void init() {
 		
 		String apiname="monitor";
@@ -32,17 +29,13 @@ public class Help53Monitor {
 		hg.loadHelp();
 		
 		hg.setReplaceExisting(true);
-		
-		
-	
+
 	}
 	
 	
 
 	public void finish() {
-		
-		
-		
+
 		hg.saveHelp();
 	}
 	
@@ -53,14 +46,10 @@ public class Help53Monitor {
 
 		Json result=Json.object();
 
-
 		Json p=Json.object();
 		
 		exec("stats_devices", p);
-		
-		
-		
-		
+
 		return result;
 	}
 
@@ -69,14 +58,10 @@ public class Help53Monitor {
 
 		Json result=Json.object();
 
-
 		Json p=Json.object();
 		
 		exec("stats_taps", p);
-		
-		
-		
-		
+
 		return result;
 	}
 
@@ -106,15 +91,11 @@ public class Help53Monitor {
 		Json r=exec("help", jparams);
 		System.out.println(JsonUtil.prettyPrint(r));
 
-		
-		
 		System.out.println("TEST Stats");
 		r= test_stats_devices();
 		
 		test_stats_taps();
-		//r= test_get_list_all();
-		
-				
+
 		finish();
 	}
 
@@ -123,14 +104,11 @@ public class Help53Monitor {
 	
 	
 	public static void main(String[] args) {
-		
-		
-		
+
 		Help53Monitor h = new Help53Monitor();
 		
 		h.run();
-		
-		
+
 	}
 	
 	/*

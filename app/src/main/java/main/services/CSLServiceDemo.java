@@ -1,11 +1,15 @@
 package main.services;
 
+<<<<<<< HEAD
 import com.csl.intercom.jsoncmd.ApiCommands;
+=======
+>>>>>>> origin/feature/refactor_code
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
+<<<<<<< HEAD
 
 public class CSLServiceDemo extends Service {
 	/**
@@ -35,6 +39,34 @@ public class CSLServiceDemo extends Service {
 		
 		addCmd("demo_cmd", new IJsonCmd() {
 			
+=======
+import lombok.Getter;
+
+public class CSLServiceDemo implements ICSLService {
+	@Getter
+    String name="#undef";
+	@Getter
+	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands("");
+	@Getter
+    String configFileSectionName="config_"+name;;
+
+	public CSLServiceDemo() {
+		this.name="demo";
+		apiCommands.setName(name);
+		this.configFileSectionName="demo_conf";
+		
+		
+	}
+
+    @Override
+	public boolean terminate() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public boolean init(Json jConfig, String cslDir) {
+		addCmd("demo_cmd", new IJsonCmd() {
+>>>>>>> origin/feature/refactor_code
 			@Override
 			public Json exec(Json params) {
 					
@@ -46,4 +78,12 @@ public class CSLServiceDemo extends Service {
 		});
 		return true;  // ok to start
 	}
+<<<<<<< HEAD
+=======
+
+	public String addCmd(String name, IJsonCmd j) {
+		return apiCommands.registerCmd(name, j);
+	}
+	
+>>>>>>> origin/feature/refactor_code
 }

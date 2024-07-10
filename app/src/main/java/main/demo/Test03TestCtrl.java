@@ -11,21 +11,12 @@ import com.ucsl.json.JsonUtil;
 
 
 public class Test03TestCtrl {
-
-
-
-
-
-	private static DatagramSocket socket;
-	private static InetAddress address;
 	private static String str = "{\"type\":\"CTRL\",\"cmd\":\"stop\"}";
 
 	
 	static public void sendEncapsulatedMsg(String host, int port, String msg) {
 		CSLContext.instance.logInfo("   sending to "+host+':'+port+" >>>> msg:"+msg);
 		try {
-			//String host = "localhost";
-			//int port = 9000;
 
 			byte[] message = msg.getBytes();
 
@@ -41,7 +32,6 @@ public class Test03TestCtrl {
 			dsocket.send(packet);
 			dsocket.close();
 		} catch (Exception e) {
-			//System.err.println(e);
 		}
 	}
 	
@@ -49,8 +39,6 @@ public class Test03TestCtrl {
 		// host, port is the target name and port
 		static public void sendObjectTo(String host,int port,String idOdTarget,int flowNumber,  Json objectToSend,
 				boolean acquit)  {
-
-			//String msg=encapsulateObject(idOdTarget, flowNumber, varName, objectToSend );
 			String msg=encapsulateObject(idOdTarget, flowNumber ,  objectToSend,acquit).toString();
 			sendEncapsulatedMsg(host, port, msg);
 		}
@@ -73,14 +61,8 @@ public class Test03TestCtrl {
 		}
 
 	public static void main(String[] args) throws IOException {
-		
-		
 		Json j= Json.read(str);
 		System.out.println(JsonUtil.prettyPrint(j));
-	//	sendEncapsulatedMsg("localhost",8001,"test");
-		
-		
-			
 			String host="localhost";
 			int port=8001;
 			

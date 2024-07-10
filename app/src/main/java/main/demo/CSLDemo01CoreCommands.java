@@ -14,22 +14,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
 
-
-/*
- * 
- * // config file
-		CSLServer.addGetRoute(
-			"/getfile",                         (req, res)      -> renderGetFile(req,res));
-		CSLServer.addGetRoute(
-			"/reversefile",                         (req, res)      -> renderReverseFile(req,res));
-		CSLServer.addPostRoute(
-			"/setfile",(req, res)      -> renderSetFile(req,res));
-				
-		
- */
-
-
-
 public class CSLDemo01CoreCommands {
 
 
@@ -112,12 +96,6 @@ public class CSLDemo01CoreCommands {
 
 		
 	}
-
-
-	
-
-	
-	
 	
 	static public void testCore1() {
 		
@@ -126,14 +104,11 @@ public class CSLDemo01CoreCommands {
 		System.out.println(doGet("/gettime"));
 		System.out.println("\n\n\n");
 	}
-	
-	
+
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
 			testCore1();
-		
 	}
 
 }

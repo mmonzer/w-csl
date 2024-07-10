@@ -118,8 +118,7 @@ public class Utils {
 		Json result = execCmd("op", jparams);
 		
 		System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
+
 	}
 	static public void addDevice(String ip, Json params) {
 		
@@ -142,10 +141,6 @@ public class Utils {
 		jparams.set("user",Json.object().set("name","admin"));
 		
 		return  execCmd("op", jparams);
-		
-		//System.out.println("Result ="+result);
-		
-	//	System.out.println("\n\n\n");
 	}
 	/**
 	 * Génère un identifiant unique lors de l'appel et le renvoie sous forme de String.

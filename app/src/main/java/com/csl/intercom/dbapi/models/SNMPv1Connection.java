@@ -1,7 +1,7 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.intercom.dbapi.enums.SNMPv2cConnectionField;
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
 
 import java.util.ArrayList;
@@ -11,8 +11,8 @@ import java.util.List;
  * Model to represent a SNMPv2c connection.
  */
 public class SNMPv1Connection extends Connection {
-    private int port;
-    private String community;
+    private final int port;
+    private final String community;
 
     protected SNMPv1Connection(int id, int port, List<String> devices, String community) {
         super(id, devices, StaticConnectionProtocol.SNMPv1);

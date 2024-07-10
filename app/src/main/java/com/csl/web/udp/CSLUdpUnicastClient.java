@@ -1,18 +1,23 @@
-package com.csl.udp;
+package com.csl.web.udp;
+
+import com.csl.core.CSLContext;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUdpUnicastClient.java
 import com.csl.core.CSLContext;
 
 /**
  * Class for a UDP client that listens to the given ip address and port, and adds the received message into
  * the messageQueue to be treated later.
  */
+========
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUdpUnicastClient.java
 public class CSLUdpUnicastClient implements Runnable {
 	private final int port;
 	private String ip="";
@@ -20,6 +25,7 @@ public class CSLUdpUnicastClient implements Runnable {
 	DatagramSocket clientSocket=null;
 	
 	boolean closing=false;
+<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUdpUnicastClient.java
 	private boolean traceAll;
 
 	/**
@@ -30,6 +36,10 @@ public class CSLUdpUnicastClient implements Runnable {
 	 * @param messageQueue list to add the incoming messages
 	 * @param traceAll true if we want to have the incoming messages written on the terminal.
 	 */
+========
+	private final boolean traceAll;
+	
+>>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUdpUnicastClient.java
 	public CSLUdpUnicastClient(String ip,int port, BlockingQueue<byte[]> messageQueue, boolean traceAll) {
 		this.ip=ip;
 		this.port = port;
@@ -39,7 +49,6 @@ public class CSLUdpUnicastClient implements Runnable {
 
 	
 	public void stop() {
-		//clientSocket.disconnect();
 		closing=true;
 		clientSocket.close();
 		
@@ -73,15 +82,10 @@ public class CSLUdpUnicastClient implements Runnable {
 		 */
 		
 		try {
-			//clientSocket = new DatagramSocket(port) ;
 			System.out.println("XXXJMFUDP on "+ip+":"+port);
-			//clientSocket = new DatagramSocket(port); //,Inet4Address.getByName("127.0.0.1")) ;
-			//clientSocket = new DatagramSocket(8001,InetAddress.getByName("192.168.56.1"));
 			
 			clientSocket = new DatagramSocket(port,Inet4Address.getByName(ip)) ;
-			
-			// Set a timeout of 3000 ms for the client.
-			//clientSocket.setSoTimeout(3000);
+
 			while (true) {
 				
 				

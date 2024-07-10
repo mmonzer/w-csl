@@ -1,19 +1,16 @@
 package main;
 
-import java.net.InetSocketAddress;
-
 import com.csl.core.CSLContext;
-//import com.csl.devdb.CSLServiceDevicesDB;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.xcsl.miniserver.ApiHttpServer;
 import com.csl.web.database.CSLServiceJsonDataBase;
-
 import com.ucsl.json.Json;
-
+import com.xcsl.miniserver.ApiHttpServer;
 import main.services.*;
 import main.util.CSLRunningArgs;
+
+import java.net.InetSocketAddress;
 
 public class CSLIDSMainServer {
 
@@ -33,8 +30,6 @@ public class CSLIDSMainServer {
         boolean USE_BROKER = false;
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
-
-        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
         JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
         JServiceLoader.registerService(new AlertsService(), configObj, true);
         JServiceLoader.registerService(new MonitorService(), configObj, true);
@@ -54,8 +49,12 @@ public class CSLIDSMainServer {
         CSLContext.instance.setApiRemote("taps");
         CSLContext.instance.setApiRemote("discovery");
         CSLContext.instance.setApiRemote("status");
+<<<<<<< HEAD
         CSLContext.instance.setApiRemote("autocrypt");
 //        CSLContext.instance.setApiRemote("demo");
+=======
+        CSLContext.instance.setApiRemote("demo");
+>>>>>>> origin/feature/refactor_code
 
         // Init Databaseserver, httpserver, udpserver, ...
 

@@ -11,20 +11,15 @@ import com.ucsl.json.JsonUtil;
 public class Help54IDS {
 
 	HelpGenerator hg ;
-	
-	
+
 	public Json exec(String cmd, Json params) {
-		
 		return hg.addExample(cmd,  params);
-		
 	}
 	
 	public Json exec(String cmd) {
 		return exec(cmd, Json.object());
 	}
-	
-	
-	
+
 	public void init() {
 		
 		String apiname="ids";
@@ -32,17 +27,12 @@ public class Help54IDS {
 		hg.loadHelp();
 		
 		hg.setReplaceExisting(true);
-		
-		
 	
 	}
 	
 	
 
 	public void finish() {
-		
-		
-		
 		hg.saveHelp();
 	}
 	
@@ -50,17 +40,12 @@ public class Help54IDS {
 
 	
 	public Json test_stats_links() {
-
 		Json result=Json.object();
-
 
 		Json p=Json.object();
 		
 		exec("stats_links", p);
-		
-		
-		
-		
+
 		return result;
 	}
 
@@ -69,14 +54,10 @@ public class Help54IDS {
 
 		Json result=Json.object();
 
-
 		Json p=Json.object();
 		
 		exec("stats_network", p);
-		
-		
-		
-		
+
 		return result;
 	}
 
@@ -107,15 +88,9 @@ public class Help54IDS {
 		Json r=exec("help", jparams);
 		System.out.println(JsonUtil.prettyPrint(r));
 
-		
-		
 		System.out.println("TEST Stats");
 		r= test_stats_links();
 		r= test_stats_network();
-		
-		
-		//r= test_get_list_all();
-		
 				
 		finish();
 	}
@@ -125,14 +100,9 @@ public class Help54IDS {
 	
 	
 	public static void main(String[] args) {
-		
-		
-		
 		Help54IDS h = new Help54IDS();
 		
 		h.run();
-		
-		
 	}
 	
 	/*

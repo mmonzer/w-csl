@@ -5,7 +5,10 @@ import lombok.Getter;
 /**
  * The various endpoints used in DB-API.
  */
+
+@Getter
 public enum DbapiEndpointForCSLScan {
+
     EVENTS("/events"),
     EVENTS_CANCEL_ALL(EVENTS.getEndpoint() + "/set_all_active_cpe_scan_event_to_discarded"),
     CPE_ITEMS_LAST_DATE(EVENTS.getEndpoint() + "/last_discovery_date"),

@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -15,20 +14,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
 
-
-
-
-
-
 public class CSLDemo10XApiCommand {
 
-	
-	String uuid = UUID.randomUUID().toString();
-
-	Json userDesc=Json.object();
 	String token ="";
-	
-	Json testObject=null;
 	
 	public String getServerURL() {
 		return "http://localhost:8000/";
@@ -65,7 +53,6 @@ public class CSLDemo10XApiCommand {
 			in.close();
 
 			String  result = sb.toString();
-			//System.out.println("result=<"+result+">");
 			Json j2=Json.read(result);
 			return j2;
 

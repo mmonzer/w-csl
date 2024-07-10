@@ -14,33 +14,13 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
 
-
-/*
- * 
- * // config file
-		CSLServer.addGetRoute(
-			"/getfile",                         (req, res)      -> renderGetFile(req,res));
-		CSLServer.addGetRoute(
-			"/reversefile",                         (req, res)      -> renderReverseFile(req,res));
-		CSLServer.addPostRoute(
-			"/setfile",(req, res)      -> renderSetFile(req,res));
-				
-		
- */
-
-
-
 public class CSLdemo04ConfigFileManager {
-
 
 	static public String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-
 	static public String doGet(String cmd) {
-
-
 
 		HttpGet get = new HttpGet(getServerURL()+cmd);
 		HttpClient  client    = HttpClientBuilder.create().build();
@@ -68,24 +48,22 @@ public class CSLdemo04ConfigFileManager {
 			return e.toString();
 		}
 
-		
-
 	}
 
 
 	static public String doSave(String filename, String fileContents) {
 
 
-		Json j= Json.object();
-	
-		j.set("contents",fileContents );
-		j.set("filename",filename );
-		
-		j.set("extra_info","more_info");
+		Json j = Json.object();
 
-		HttpPost post = new HttpPost(getServerURL()+"setfile");
-		HttpClient  client    = HttpClientBuilder.create().build();
-		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
+		j.set("contents", fileContents);
+		j.set("filename", filename);
+
+		j.set("extra_info", "more_info");
+
+		HttpPost post = new HttpPost(getServerURL() + "setfile");
+		HttpClient client = HttpClientBuilder.create().build();
+		StringEntity postingString = new StringEntity(j.toString(), StandardCharsets.UTF_8);
 		post.setEntity(postingString);
 		post.setHeader("Content-type", "application/json");
 		try {
@@ -101,24 +79,16 @@ public class CSLdemo04ConfigFileManager {
 			}
 			in.close();
 
-			String  result = sb.toString();
-		return result;
+			String result = sb.toString();
+			return result;
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return e.toString();
 		}
-
-		
 	}
 
-
-	
-
-	
-	
-	
 	static public void testLoadConfigFile() {
 		
 		System.out.println("TEST LOAD");
@@ -165,8 +135,7 @@ public class CSLdemo04ConfigFileManager {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
-	
+
 		testSaveConfigFile();
 		testLoadConfigFile();
 		

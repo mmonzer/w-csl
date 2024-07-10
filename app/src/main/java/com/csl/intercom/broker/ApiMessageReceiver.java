@@ -1,34 +1,10 @@
 package com.csl.intercom.broker;
 
-
-
-/*
- * 
- * 
- * 		listen the topic    csl/requests/api_name
- * 		
- * 			dispatch to 	csl/request/api_name (found in request)
- * 
- * 			if broker_url	useit
- */
-
-//ajouter timestap
-
-//et list par api des com envouess
-
-
-
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +21,7 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 	public String api="";
 
-	private IApiCommands apiCommands;
+	private final IApiCommands apiCommands;
 	MqttClient clientToListen=null;
 	boolean subscribed=false;
 	
@@ -83,16 +59,14 @@ public class ApiMessageReceiver implements  MqttCallback {
 	}
 	
 	public void init() {
-		
 		if (isShowInfo()) logger.info("Init receiver api: {}", api);
-		
 		if (subscribed) close();
-		
+
 		MemoryPersistence persistence = new MemoryPersistence();
 
 		try {
 			//We're using eclipse paho library  so we've to go with MqttCallback
-			clientToListen = new MqttClient(BROKER_TCP_LOCALHOST_1883,getClientToListenID(),persistence); //new MqttDefaultFilePersistence("./tmp"));
+			clientToListen = new MqttClient(BROKER_TCP_LOCALHOST_1883,getClientToListenID(),persistence);
 			clientToListen.setCallback(this);
 			MqttConnectOptions mqOptions=new MqttConnectOptions();
 			mqOptions.setCleanSession(true);
@@ -141,7 +115,6 @@ public class ApiMessageReceiver implements  MqttCallback {
 		} catch(Exception me) {
 			logger.warn("Error while closing MQTT client", me);
 		}
-		
 	}
 
 	@Override
@@ -153,11 +126,10 @@ public class ApiMessageReceiver implements  MqttCallback {
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
-	public void messageArrived(String topic, MqttMessage message) throws Exception {
+	public void messageArrived(String topic, MqttMessage message) {
 		if (isDebug()) logger.debug("message is: {}", message);
 
 		String payloadString = new String(message.getPayload());
@@ -166,7 +138,6 @@ public class ApiMessageReceiver implements  MqttCallback {
 			Json payload = Json.read(payloadString);
 			if (isDebug())System.out.println("JSON:"+payload);
 
-			// api to which send the result
 			String api="";
 			if (payload.has("api")) api=payload.get("api").asString();
 

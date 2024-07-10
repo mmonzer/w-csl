@@ -1,20 +1,15 @@
 package com.ucsl.json;
 
+<<<<<<< HEAD
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+=======
+import javax.script.*;
+>>>>>>> origin/feature/refactor_code
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
-import com.ucsl.interfaces.EvaluationException;
 
 
 public class JsonUtil {

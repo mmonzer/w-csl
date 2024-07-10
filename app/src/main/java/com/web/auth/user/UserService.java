@@ -1,10 +1,11 @@
 package com.csl.web.auth.user;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.mindrot.BCrypt;
 
 public final class UserService {
 
@@ -16,7 +17,7 @@ public final class UserService {
         if (users.stream().filter(user -> user.getUsername().equals(userName)).findAny().isPresent()) {
             throw new IllegalArgumentException("User already exists");
         }
-        User u=User.of(userName, password, firstName, lastName, new ArrayList<>());
+        com.csl.web.auth.user.User u= com.csl.web.auth.user.User.of(userName, password, firstName, lastName, new ArrayList<>());
         users.add(u);
         return u;
     }
@@ -27,7 +28,7 @@ public final class UserService {
             throw new IllegalArgumentException("User already exists");
         }
         if (encrypt) password =encrypt(password);
-        User u=User.of(userName, password, firstName, lastName, new ArrayList<>());
+        com.csl.web.auth.user.User u= com.csl.web.auth.user.User.of(userName, password, firstName, lastName, new ArrayList<>());
         users.add(u);
         return u;
         

@@ -1,16 +1,6 @@
 package com.csl.web;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import com.csl.core.NoLogging;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.logger.CSLLogger;
 import com.csl.util.CSLConfigFileServer;
 import com.csl.web.auth.AuthentificationManager;
 import com.csl.web.auth.ServerConfig;
@@ -21,26 +11,19 @@ import com.csl.web.websockets.CSLWebSocketHandler;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-
-/*
-import static spark.Spark.after;
-import static spark.Spark.before;
-import static spark.Spark.exception;
-import static spark.Spark.get;
-import static spark.Spark.init;
-import static spark.Spark.options;
-import static spark.Spark.port;
-import static spark.Spark.post;
-import static spark.Spark.staticFiles;
-import static spark.Spark.webSocket;
- */
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 import spark.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -101,13 +84,6 @@ public class CSLHttpServer {
 		sparkServer.staticFiles.externalLocation(sc.getRootdir());
 		sparkServer.staticFiles.expireTime(600);
 
-		if (!sc.getRootdir2().isEmpty()) {
-			sparkServer.staticFiles.externalLocation2(sc.getRootdir2());
-		}
-
-		if (!sc.getRootdir3().isEmpty()) {
-			sparkServer.staticFiles.externalLocation3(sc.getRootdir3());
-		}
 
 		sparkServer.port(sc.getPort());
 

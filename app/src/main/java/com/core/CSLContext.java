@@ -62,7 +62,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     /**
      * Default relative path for the configuration file
      */
-    private static String DEFAULT_CONFIG_FILE = "runconfig" + File.separator + "CSLConfigIDS.json";
+    private static String DEFAULT_CONFIG_FILE = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "runconfig" + File.separator + "CSLConfigIDS.json";
 
     /**
      * Default absolute path for the configuration file
@@ -159,10 +159,10 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     //List<VariablesTable> localVariablesTableList= new ArrayList<VariablesTable>();
 
 
-    Map<String, ModuleContext> modules = new HashMap<String, ModuleContext>();
-    List<ModuleContext> inputExecList = new ArrayList<ModuleContext>();
-    List<ModuleContext> outputExecList = new ArrayList<ModuleContext>();
-    List<ModuleContext> stepExecList = new ArrayList<ModuleContext>();
+    Map<String, com.csl.core.ModuleContext> modules = new HashMap<String, com.csl.core.ModuleContext>();
+    List<com.csl.core.ModuleContext> inputExecList = new ArrayList<com.csl.core.ModuleContext>();
+    List<com.csl.core.ModuleContext> outputExecList = new ArrayList<com.csl.core.ModuleContext>();
+    List<com.csl.core.ModuleContext> stepExecList = new ArrayList<com.csl.core.ModuleContext>();
 
 
     Map<String, Class<IModule>> moduleClassList = new HashMap<String, Class<IModule>>();
@@ -594,7 +594,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         setTestMode(cslRunningArgs.getTestParam());
 
-        org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+        org.eclipse.jetty.util.log.Log.setLog(new com.csl.core.NoLogging());
 
 
         this.idsMainProcessor = IDSMainProcessorFactory.instance.createIDSMainProcessor(
@@ -708,7 +708,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         samplingTime = JsonUtil.getIntFromJson(getConfig(), "module_exec/sampling_time", 100);
     }
 
-    public ModuleContext getModuleContext(String name) {
+    public com.csl.core.ModuleContext getModuleContext(String name) {
         return modules.get(name);
     }
 
@@ -774,7 +774,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
                 } else {
                     try {
                         IModule m = (IModule) clazz.newInstance();
-                        ModuleContext mc = new ModuleContext();
+                        com.csl.core.ModuleContext mc = new com.csl.core.ModuleContext();
                         mc.setClazz(clazz);
                         mc.setModule(m);
                         mc.setName(mname);
@@ -797,7 +797,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         // do init
 
-        for (ModuleContext m : modules.values()) {
+        for (com.csl.core.ModuleContext m : modules.values()) {
 
             if (m.getConfig().get("input_priority") != null) {
                 int n = m.getConfig().get("input_priority").asInteger();
@@ -833,21 +833,21 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             stepExecList.add(m);
         }
 
-        inputExecList.sort(new Comparator<ModuleContext>() {
+        inputExecList.sort(new Comparator<com.csl.core.ModuleContext>() {
             @Override
-            public int compare(ModuleContext o1, ModuleContext o2) {
+            public int compare(com.csl.core.ModuleContext o1, com.csl.core.ModuleContext o2) {
                 return -o1.getInputPriority() + o2.getInputPriority();
             }
         });
-        outputExecList.sort(new Comparator<ModuleContext>() {
+        outputExecList.sort(new Comparator<com.csl.core.ModuleContext>() {
             @Override
-            public int compare(ModuleContext o1, ModuleContext o2) {
+            public int compare(com.csl.core.ModuleContext o1, com.csl.core.ModuleContext o2) {
                 return -o1.getOutputPriority() + o2.getOutputPriority();
             }
         });
-        stepExecList.sort(new Comparator<ModuleContext>() {
+        stepExecList.sort(new Comparator<com.csl.core.ModuleContext>() {
             @Override
-            public int compare(ModuleContext o1, ModuleContext o2) {
+            public int compare(com.csl.core.ModuleContext o1, com.csl.core.ModuleContext o2) {
                 return -o1.getStepPriority() + o2.getStepPriority();
             }
         });
@@ -885,21 +885,21 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             try {
                 for (int nloop = 0; nloop < numberOfExecLoops; nloop++) {
                     cslLogger.info("Exec loop #" + nloop);
-                    for (ModuleContext m : inputExecList) {
+                    for (com.csl.core.ModuleContext m : inputExecList) {
                         if (m.getLoopNumber() == nloop) {
                             cslLogger.info("  input for " + m.getName());
                             IResult r = m.getModule().execInputPart(instance, m);
                             logResult(r);
                         }
                     }
-                    for (ModuleContext m : stepExecList) {
+                    for (com.csl.core.ModuleContext m : stepExecList) {
                         if (m.getLoopNumber() == nloop) {
                             cslLogger.info("  exec for " + m.getName());
                             IResult r = m.getModule().execStepPart(instance, m);
                             logResult(r);
                         }
                     }
-                    for (ModuleContext m : outputExecList) {
+                    for (com.csl.core.ModuleContext m : outputExecList) {
                         if (m.getLoopNumber() == nloop) {
                             cslLogger.info("  output for " + m.getName());
                             IResult r = m.getModule().execOutputPart(instance, m);
@@ -1024,19 +1024,19 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             printToString(z, s);
 
             s = "  Input Exec order: ";
-            for (ModuleContext m : inputExecList) {
+            for (com.csl.core.ModuleContext m : inputExecList) {
                 if (m.getLoopNumber() == nLoop)
                     s = s + m.getName() + "(" + m.getInputPriority() + ") ";
             }
             printToString(z, s);
             s = "  Step Exec order: ";
-            for (ModuleContext m : stepExecList) {
+            for (com.csl.core.ModuleContext m : stepExecList) {
                 if (m.getLoopNumber() == nLoop)
                     s = s + m.getName() + ":" + m.getStepPriority() + ") ";
             }
             printToString(z, s);
             s = "  Output Exec order: ";
-            for (ModuleContext m : outputExecList) {
+            for (com.csl.core.ModuleContext m : outputExecList) {
                 if (m.getLoopNumber() == nLoop)
                     s = s + m.getName() + "(" + m.getOutputPriority() + ") ";
             }
@@ -1048,7 +1048,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         printToString(z, "Modules");
         printToString(z, "=======");
 
-        for (Entry<String, ModuleContext> entry : modules.entrySet()) {
+        for (Entry<String, com.csl.core.ModuleContext> entry : modules.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             printToString(z, value.toString());
@@ -1063,7 +1063,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         String retval = "";
         String delta = "  ";
 
-        for (Entry<String, ModuleContext> e : modules.entrySet()) {
+        for (Entry<String, com.csl.core.ModuleContext> e : modules.entrySet()) {
 
             if (retval.length() > 0) retval = retval + ",";
             retval += "{";

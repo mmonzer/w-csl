@@ -6,5 +6,5 @@ plugins{
 apply from : 'build.gradle'
 
 application {
-    mainClass = 'main.CSLIDSMainClient' //CSLIDSMainServer
+    mainClass = 'main.CSLIDSMainServer' //CSLIDSMainServer
 }

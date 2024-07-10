@@ -70,11 +70,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         createEndpoints();
 
         // Launch initial sync to dbapi
-        synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        // TODO : change initial to continuous sync
-        synchronizationSchedule.scheduleAtFixedRate(() -> {
-            manager.getMethods().initialSynchronizeDb("pki");
-        }, 0, 300, TimeUnit.SECONDS);
+//        synchronizationSchedule = Executors.newScheduledThreadPool(1);
+//         TODO : change initial to continuous sync. Attention with certificates from ca, that are different that created/updated by the user
+//        synchronizationSchedule.scheduleAtFixedRate(() -> {
+//            manager.getMethods().initialSynchronizeDb("pki");
+//        }, 0, 300, TimeUnit.SECONDS);
 
         logger.info("Service autocrypt initilialized.");
         return true;

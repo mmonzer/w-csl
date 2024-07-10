@@ -371,12 +371,13 @@ public class AutoCryptLogic {
         if (responseFromModule.isSuccess() &&
                 responseFromModule.getResult().has(SERIAL_NUMBER) &&
                 responseFromModule.getResult().get(SERIAL_NUMBER).isString()) {
-            return sendToDbApiIfSaveToDb(dbHandler::generateCertificate,
+            return dbHandler.generateCertificate(
                     responseFromModule.getResult().get(SERIAL_NUMBER).asString(),
                     name,
                     vaultRoleId,
                     description,
-                    JsonApiResponse.result(mergerJson(responseFromModule.getResult(), bodyExtra)));
+                    params.get(PATH).asString(),
+                    mergerJson(responseFromModule.getResult(), bodyExtra));
         } else {
             return JsonApiResponse.error("Error creating the certificate : " + responseFromModule.getError().toJson());
         }

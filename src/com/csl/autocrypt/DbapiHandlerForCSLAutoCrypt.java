@@ -172,12 +172,13 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      *
      * @param body parameters with the path and role
      */
-    public JsonApiResponse generateCertificate(String serialNumber, String name, String vaultRoleId, String description, Json body) {
+    public JsonApiResponse generateCertificate(String serialNumber, String name, String vaultRoleId, String description,  String path, Json body) {
         Json input = Json.object();
         input.at(NAME, name);
         input.at(DESCRIPTION, description);
         input.at(CERTIFICATE_JSON, body);
         input.at(SERIAL_NUMBER, serialNumber);
+        input.at(PATH, path);
         input.at(VAULT_ROLE_ID, vaultRoleId);
 
         return this.sendPost(

@@ -1,0 +1,14 @@
+{"ip":"1.1.1.1","op":"set","name":"valid","value":0,"user":"user1"}
+{"ip":"1.1.1.1","op":"set","name":"brand","value":"siemens","user":"user1"}
+{"ip":"1.1.1.2","op":"set","name":"valid","value":0,"user":"user1"}
+{"ip":"1.1.1.2","op":"set","name":"brand","value":"schneider","user":"user1"}
+{"ip":"1.1.1.1","op":"set","name":"brand","value":"yokogawa","user":"user1"}
+{"ip":"1.1.1.1","op":"set","name":"impact level","value":4,"user":"user1"}
+{"ip":"1.1.1.1","op":"deldev","name":"valid","value":-1,"user":"user1"}
+{"ip":"1.1.1.1","op":"set","name":"valid","value":0,"user":"user1"}
+{"ip":"1.1.1.1","op":"set","name":"brand","value":"siemens","user":"user1"}
+{"ip":"1.1.1.2","op":"set","name":"valid","value":0,"user":"user1"}
+{"ip":"1.1.1.2","op":"set","name":"brand","value":"schneider","user":"user1"}
+{"ip":"1.1.1.1","op":"set","name":"brand","value":"yokogawa","user":"user1"}
+{"ip":"1.1.1.1","op":"set","name":"impact level","value":4,"user":"user1"}
+{"ip":"1.1.1.1","op":"deldev","name":"valid","value":-1,"user":"user1"}

@@ -1,0 +1,52 @@
+{
+"iplist":[
+{"ip":"192.168.0.1","name":"","mac":"e0:dc:a0:94:a7:c9","likelihood":"UNDEF","severity":"SEVERE","country":"Local network"},
+{"ip":"192.168.0.100","name":"","mac":"e4:b9:7a:d4:a6:7a","likelihood":"UNDEF","severity":"UNDEF","country":"Local network"},
+{"ip":"192.168.0.150","name":"","mac":"ec:f4:bb:1e:f7:31","extraMac":["00:e0:4c:68:00:d2"],"likelihood":"UNDEF","severity":"MINOR","country":"Local network"},
+{"ip":"192.168.0.241","name":"","mac":"b8:27:eb:78:02:26","extraMac":["00:e0:4c:68:00:d2"],"likelihood":"UNDEF","severity":"SEVERE","country":"Local network"},
+{"ip":"224.0.0.251","name":"","mac":"01:00:5e:00:00:fb","likelihood":"UNDEF","severity":"UNDEF","country":"Multicasted:Local subnetwork"},
+{"ip":"239.255.255.250","name":"","mac":"01:00:5e:7f:ff:fa","likelihood":"UNDEF","severity":"UNDEF","country":""}
+],
+"flows":[
+{"ip":"192.168.0.1","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":502,"ip_dst":"192.168.0.241","port_dst":-1,"size":68673,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590397829063,"last_time":1590397829063}] },
+{"ip":"192.168.0.100","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":-1,"ip_dst":"192.168.0.241","port_dst":502,"size":91368,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590397829098,"last_time":1590397829098},
+  {"likelihood":"UNDEF","severity":"MODERATE","protocol":"UDP","port_src":-1,"ip_dst":"224.0.0.251","port_dst":-1,"size":1350,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590397850978,"last_time":1590397850978},
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"UDP","port_src":-1,"ip_dst":"239.255.255.250","port_dst":1900,"size":252,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590405168990,"last_time":1590405168990}] },
+{"ip":"192.168.0.150","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"ICMP","port_src":-1,"ip_dst":"192.168.0.241","port_dst":-1,"size":-1,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590405169554,"last_time":1590405169554},
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":-1,"ip_dst":"192.168.0.241","port_dst":502,"size":31296,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590397829072,"last_time":1590397829072}] },
+{"ip":"192.168.0.241","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"ICMP","port_src":-1,"ip_dst":"192.168.0.150","port_dst":-1,"size":-1,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590405169554,"last_time":1590405169554},
+  {"likelihood":"VERY_LIKELY","severity":"SEVERE","protocol":"TCP","port_src":-1,"ip_dst":"192.168.0.1","port_dst":502,"size":73510,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590397829071,"last_time":1590397829071},
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":502,"ip_dst":"192.168.0.100","port_dst":-1,"size":83754,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590397829099,"last_time":1590397829099},
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":502,"ip_dst":"192.168.0.150","port_dst":-1,"size":49324,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1590397829394,"last_time":1590397829394}] }
+],
+"dpi":[
+{"ip":"192.168.0.1","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":502,"ip_dst":"192.168.0.241","port_dst":-1,"unit":1,"modbus":[]}]
+},
+{"ip":"192.168.0.100","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":-1,"ip_dst":"192.168.0.241","port_dst":502,"unit":0,"modbus":[
+    {"addr":"40000","fcts":["03"],"min":"","max":"","severity":""},
+    {"addr":"40001","fcts":["03"],"min":"","max":"","severity":""},
+    {"addr":"40002","fcts":["03"],"min":"","max":"","severity":""}]}]
+},
+{"ip":"192.168.0.150","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":-1,"ip_dst":"192.168.0.241","port_dst":502,"unit":0,"modbus":[
+    {"addr":"40000","fcts":["03","06"],"min":"","max":"","severity":"SEVERE"},
+    {"addr":"40001","fcts":["03","06"],"min":"","max":"","severity":"SEVERE"},
+    {"addr":"40002","fcts":["03"],"min":"","max":"","severity":""},
+    {"addr":"40003","fcts":["03"],"min":"","max":"","severity":""},
+    {"addr":"40004","fcts":["03"],"min":"","max":"","severity":""}]}]
+},
+{"ip":"192.168.0.241","name":"","links":[
+  {"likelihood":"VERY_LIKELY","severity":"SEVERE","protocol":"TCP","port_src":-1,"ip_dst":"192.168.0.1","port_dst":502,"unit":1,"modbus":[
+    {"addr":"40002","fcts":["03"],"min":"","max":"","severity":""},
+    {"addr":"40003","fcts":["03"],"min":"","max":"","severity":""},
+    {"addr":"40004","fcts":["03"],"min":"","max":"","severity":""}]},
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":502,"ip_dst":"192.168.0.100","port_dst":-1,"unit":0,"modbus":[]},
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","port_src":502,"ip_dst":"192.168.0.150","port_dst":-1,"unit":0,"modbus":[]}]
+}]
+}

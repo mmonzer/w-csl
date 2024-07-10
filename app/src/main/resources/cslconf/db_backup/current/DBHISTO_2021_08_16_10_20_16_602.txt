@@ -1,0 +1,3 @@
+{"ip":"1.1.1.45","op":"set","name":"valid","value":0,"user":{"name":"user1"}}
+{"@":{"ip_src":"192.168.1.1","ip_dst":"192.168.1.9","port_src":"10","port_dst":"","protocol":"","app_protocol":""},"name":"valid","value":"0","user":{"name":"user1"},"op":"SET"}
+{"@":{"ip_src":"192.168.1.1","ip_dst":"192.168.1.9","port_src":"10","port_dst":"","protocol":"","app_protocol":""},"name":"flow","value":{"severity":"","likelyhood":"","maxKBpersec":"","maxpktpersec":"","first_time":"","last_time":""},"user":{"name":"user1"},"op":"SET"}

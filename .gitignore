@@ -10,3 +10,7 @@ W_CSL.iml
 runconfig/CSLConfigIDS.json
 cacerts.jks
 mqtt_agent_concentrator*
+.gradle/
+build/
+app/.gradle
+app/build/

@@ -1,0 +1,15 @@
+{
+
+"flows":[
+{"ip":"140.82.118.3","name":"",
+"links":[
+  {"likelyhood":"UNDEF","severity":"UNDEF","protocol":"TCP","app_protocol":"","port_src":443,"ip_dst":"192.168.1.65","port_dst":-1,"maxKBpersec":1,"first_time":1588175947416,"last_time":1588175947416}] },
+{"ip":"192.168.1.58","name":"",
+"links":[
+  {"likelyhood":"UNDEF","severity":"UNDEF","protocol":"TCP","app_protocol":"modbus","port_src":1502,"ip_dst":"192.168.1.65","port_dst":-1,"maxKBpersec":3,"maxpktpersec":2,"first_time":1588175916476,"last_time":1588176041750}] },
+{"ip":"192.168.1.65","name":"",
+"links":[
+  {"likelyhood":"UNDEF","severity":"UNDEF","protocol":"TCP","app_protocol":"","port_src":-1,"ip_dst":"140.82.118.3","port_dst":443,"maxKBpersec":1,"first_time":1588175947464,"last_time":1588175947464},
+  {"likelyhood":"UNDEF","severity":"UNDEF","protocol":"TCP","app_protocol":"modbus","port_src":-1,"ip_dst":"192.168.1.58","port_dst":1502,"maxKBpersec":3,"first_time":1588175916439,"last_time":1588176041751}] }
+]
+}

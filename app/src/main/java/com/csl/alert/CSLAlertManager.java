@@ -1,5 +1,16 @@
 package com.csl.alert;
 
+import com.csl.core.CSLContext;
+import com.csl.core.CSLUtil;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.logger.CSLLogger;
+import com.csl.logger.FileLog;
+import com.csl.web.jcmdoversocket.IAlertForwarder;
+import com.csl.web.websockets.CSLWebSocket;
+import com.ucsl.interfaces.*;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -9,21 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.csl.core.CSLContext;
-import com.csl.core.CSLUtil;
-//import com.csl.devdb.DevicesDB;
-import com.csl.logger.CSLLogger;
-import com.csl.logger.FileLog;
-import com.csl.web.jcmdoversocket.IAlertForwarder;
-import com.csl.web.websockets.CSLWebSocket;
-import com.ucsl.interfaces.IAlertDescriptor;
-import com.ucsl.interfaces.IAlertFactory;
-import com.ucsl.interfaces.IAlertLevel;
-import com.ucsl.interfaces.IAlertManager;
-import com.ucsl.interfaces.IIDSMainProcessor;
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 
 /*  CONFIG
 
@@ -45,37 +41,18 @@ import com.ucsl.json.JsonUtil;
 public class CSLAlertManager implements IAlertManager {
 	
 	public boolean NO_ALERT_FILTERING=true;
-
-	//public static CSLAlertManager instance = new CSLAlertManager();
-
 	public IAlertFactory alertFactory=new CSLAlertFactory();
-
 	private IIDSMainProcessor idsMainProcessor =null;
-
-	//Json config=null;
 	boolean FDEBUG=false;
-
 
 	// id client, send over udp use sockets
 	IAlertForwarder alertForwarder=null;
-
-
-	//public static String DEBUG="DEBUG";
 	public static String INFO="INFO";	
 	public static String TOLERABLE="TOLERABLE";
 	public static String MODERATE="MODERATE";
 	public static String HIGH="HIGH";
-
-
-	//public static String WARN="WARN";	
-	//public static String WARNING="WARN";
-	//public static String ERROR="ERROR";
-	//public static String FATAL="FATAL";		  	
-	//public static String HIGH="HIGH";	  	
-
 	public static String CRITICAL="CRITICAL";  // RED
 	private String loggerName;
-
 	private int port;
 	private boolean logToFile;
 	private String datadir;
@@ -83,7 +60,6 @@ public class CSLAlertManager implements IAlertManager {
 	private long max_size;
 	private FileLog fileLog=null;;
 	private InetAddress iNetAddress=null;
-
 	private boolean alert_to_web=true;
 	private String alert_json_tag="alert";
 	private boolean alert_to_udp=true;
@@ -92,20 +68,13 @@ public class CSLAlertManager implements IAlertManager {
 	 * If the alert must be stocked into the DB
 	 */
 	private boolean alertToDb = true;
-
 	private String filename_current_alerts="";
-
 	private Json jConfig=null;
-
 	List<IAlertDescriptor> listOfCurrentAlerts= new ArrayList<>();
-	//private List<IDSAlertListener> listeners= new ArrayList<IDSAlertListener>();
-
 	// if >0 , after this duration, the alert is cleared
 	private int durationOfAlert=5000;
 	private boolean doNotResendSameAlert=false;
-
 	private String subdir_backup_alerts="alerts";
-
 	private DbapiHandlerForCSLScan dbapiHandler;
 
 
@@ -117,40 +86,20 @@ public class CSLAlertManager implements IAlertManager {
 		init(jConfig);
 	}
 
-	public IAlertFactory getAlertFactory() {
-		return alertFactory;
-	}
-	public CSLAlertManager setIDSMainProcessor(IIDSMainProcessor x) {
-		this.idsMainProcessor=x;
-		this.idsMainProcessor.setAlertFactory( alertFactory);
-		return this;
-	}
-
 	public CSLAlertManager setname(String loggerName) { 
 		if (loggerName.isEmpty()) return this;
 		this.loggerName=loggerName;
 		return this;
 	}
 
-	public void reinit(Json jConfig) {
-		init(jConfig);
-		clearAlerts();
-
-	}
-
 	public Json getConfig() {
 		return jConfig;
-	}
-
-	public String getLogDir() {
-		return datadir;
 	}
 
 	private void init(Json jConfig) {
 
 		this.jConfig=jConfig;
 
-		//if (j==null) return;
 		this.port= CSLUtil.getConfigIntegerValue(jConfig,  "port",8001);
 		String ip=CSLUtil.getConfigStringValue(jConfig,  "ip","127.0.0.1" ); //. j.get("ip").asString();
 
@@ -180,8 +129,6 @@ public class CSLAlertManager implements IAlertManager {
 			initFileLog();
 		}
 
-		//IDSTrace.log(IDSTrace.ALERT, "send alerts to UDP:"+alert_to_udp+" WEB:"+alert_to_web+" LOGFILE:"+logToFile);
-
 		this.durationOfAlert=CSLUtil.getConfigIntegerValue(jConfig,  "alert_duration",5000); 
 		this.doNotResendSameAlert=CSLUtil.getConfigBooleanValue(jConfig,  "do_not_resent_same_alert",false); 
 
@@ -198,42 +145,13 @@ public class CSLAlertManager implements IAlertManager {
 		}
 	}
 
-	//	@Override
-	//	public void register(IDSAlertListener listener) {
-	//		this.listeners.add(listener);
-	//	}
-
 	public List<IAlertDescriptor> getListOfCurrentAlerts() {
 		return listOfCurrentAlerts;
 	}
 
-	//	private void sendAlert(String level, String message) {
-	//		sendAlert(level, message, "",true,false);
-	//	}
-	//	
-
 	public void sendAlert(IAlertDescriptor alertDescriptor) {
 		sendAlert(alertDescriptor,true,false);
 	}
-
-	//	public void sendAlert(String level, String message, boolean toViewer, boolean toLog) {
-	//		sendAlert(level, message, "", toViewer,toLog);
-	//	}
-
-
-	//	// MAIN FCT to send alert
-	//	private void sendAlert(String level, String message, String properties,boolean toViewer, boolean toLog) {
-	//		
-	//		if (findAlert(level,message,properties)!=null) return;
-	//	
-	//			
-	//		System.err.println("send alert: "+message);
-	//		long t=CSLContext.instance.getTimeSystemCurrent();
-	//		
-	//		//IAlertDescriptor alertDescriptor= new IAlertDescriptor(level, message, properties, CSLContext.instance.getSystemCurrentTimeMillis());
-	//		IAlertDescriptor alertDescriptor = 
-	//	
-	//	}
 
 	/**
 	 * Checks if the alert is ok and calls the send function to forward it
@@ -265,8 +183,6 @@ public class CSLAlertManager implements IAlertManager {
 
 		for (IAlertDescriptor a:listOfCurrentAlerts) {
 			if (a.alertEqualTo(alert)) {
-				//System.err.println("Found alert:"+a);
-				//System.err.println("delta t="+(t-a.getTime()));
 				if (doNotResendSameAlert) return a;
 
 				if (t-a.getTime()<durationOfAlert)	
@@ -298,24 +214,6 @@ public class CSLAlertManager implements IAlertManager {
 	}
 
 
-	//	public void sendToViewer(String level, String message) {
-	//	
-	//		send(level, message,"",false,true);
-	//	}
-	//
-	//	public void sendToLog(String level, String message) {
-	//		send(level, message,"",true,false);
-	//	}
-	//
-	//	public void sendToViewer(String level, String message, String properties) {
-	//		send(level, message,properties,false,true);
-	//		
-	//	}
-	//	public void sendToLog(String level, String message, String properties) {
-	//		send(level, message,properties,true,false);
-	//	}
-
-
 	private String Log4jEvent(HashMap<String,String> event) {
 
 		return "\n" + 
@@ -342,44 +240,8 @@ public class CSLAlertManager implements IAlertManager {
 		return " <log4j:ndc><![CDATA["+data+"]]></log4j:ndc>\n";
 	}
 
-	private String Log4jThrowable(String data) {
-		return " <log4j:throwable><![CDATA["+data+"]]></log4j:throwable>\n";
-	}	
-
-	private String Log4jLocationInfo(String module, String method, String file, String line) {
-		return " <log4j:locationInfo class=\""+module+"\"\n" + 
-				"        method=\""+method+"\"\n" + 
-				"        file=\""+file+"\"\n" + 
-				"        line=\""+line+"\"/>\n";
-	}
-
 	private String escapeData(String data) {
 		return data.replace("]]>", "]]>]]&gt;<![CDATA[");
-	}
-
-	private String XMLformatter(String loggerName, String levelName, String message, String ndc, String throwable, Map<String, String>propsMap) {
-		long time = CSLContext.instance.getSystemCurrentTimeMillis(); //System.currentTimeMillis();
-
-		HashMap<String, String> event = new HashMap<String, String>();
-		event.put("name", loggerName);
-		event.put("levelName", levelName);
-		event.put("created", String.valueOf(time));
-		event.put("message", Log4jMessage(escapeData(message)));
-		event.put("ndc",Log4jNdc(escapeData(ndc)));
-		event.put("throwable", Log4jNdc(escapeData(throwable)));
-
-		if (propsMap!=null) {
-			String s ="";
-			String z;
-			for (String key : propsMap.keySet()) {
-				z=Log4jProperty(key, propsMap.get(key));
-				s=s+z;
-			}
-			String props = Log4jProperties(s);
-			event.put("props", props);
-		}
-		event.put("locationInfo", "");
-		return Log4jEvent(event);
 	}
 
 	/**
@@ -390,11 +252,6 @@ public class CSLAlertManager implements IAlertManager {
 	 */
 	private void send(IAlertDescriptor alert , boolean toViewer, boolean toFile) {
 
-
-		// Send to UDP : who is this?
-		if (this.alert_to_udp) {
-			//this.sendAlertToViewerUDP(alert.toJson());
-		}
 
 		// Send to DB
 		if (this.alertToDb) {
@@ -417,12 +274,10 @@ public class CSLAlertManager implements IAlertManager {
 				fileLog.send("["+alert.getLevelAsString()+"] "+alert.getMsg());
 		}
 
-		// String msg = XMLformatter(loggerName, alert.getLevelAsString(), alert.getMsg(),"","", alert.getPropsList());
-
 		// Send to viewer
 		if (toViewer) {
 			if (this.alert_to_web) {
-				this.sendAlertToViewerWeb(alert); //uuid,time,level,message,props);
+				this.sendAlertToViewerWeb(alert);
 			}
 		}
 	}
@@ -455,8 +310,6 @@ public class CSLAlertManager implements IAlertManager {
 			byte[]data = msg.getBytes();
 			DatagramSocket s;
 
-			//System.err.println("SEND MSG:"+msg);
-
 			try {
 				s = new DatagramSocket();
 				s.connect(this.iNetAddress, port);
@@ -477,8 +330,7 @@ public class CSLAlertManager implements IAlertManager {
 	 * Send the alert either to web socket
 	 * @param alert alert in format {@link IAlertDescriptor}
 	 */
-	private void sendAlertToViewerWeb(IAlertDescriptor alert
-			/*String uuid,long time,String level, String message, Map<String, String> props */) {
+	private void sendAlertToViewerWeb(IAlertDescriptor alert) {
 
 
 		Json jAlert=Json.object();
@@ -486,12 +338,6 @@ public class CSLAlertManager implements IAlertManager {
 		Json jAlertInfo=alertToJsonForHmi(alert); //Json.object();
 		jAlert.set("alertInfo",jAlertInfo);
 
-
-
-		// private String alert_json_tag="alert";
-
-		//IDSTrace.log(IDSTrace.ALERT,"Send alert tag="+alert_json_tag+" json="+jAlert.toString());
-		//CSLWebSocketForAlert.broadcastMessageJson(alert_json_tag, jAlert);
 
 		CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_ALERT, jAlert);
 
@@ -652,7 +498,6 @@ public class CSLAlertManager implements IAlertManager {
 		for (IAlertDescriptor a:listOfCurrentAlerts) {
 			jlist.add(a.toJson());
 		}
-		//System.out.println(jlist);
 
 		CSLContext.instance.getDatabaseServer().saveJsonAsDataFile(this.filename_current_alerts,
 				Json.object().set("contents",jlist),true);
@@ -660,38 +505,7 @@ public class CSLAlertManager implements IAlertManager {
 		return jlist;
 	}
 
-	public Json loadListOfCurrentAlerts( ) {
-		Json jlist=Json.array();
-		for (IAlertDescriptor a:listOfCurrentAlerts) {
-			jlist.add(a.toJson());
-		}
-		System.out.println(jlist);
-
-		Json j=CSLContext.instance.getDatabaseServer().loadDataFileAsJson(this.filename_current_alerts);
-
-		System.err.println("j - recuperer contents");
-		return jlist;
-	}
-
 	public Json resetListOfCurrentAlerts( /*IDSParams idsParams*/) {
-		/*		Json jlist=Json.array();
-		for (IAlertDescriptor a:listOfCurrentAlerts) {
-			jlist.add(a.toJson());
-		}
-
-
-		System.out.println(jlist);
-
-		//String dirname= idsParams.getIdsModelDirBackup()+File.separator+
-		String dir=
-				idsParams.getIdsModelDirBackup()+File.separator+subdir_backup_alerts;
-		String filename=
-						this.filename_current_alerts;
-
-		filename=FileUtils.setTimeStampToFilePath(filename);
-
-		FileUtils.saveJsonToFile( dir, filename,jlist); */
-
 		listOfCurrentAlerts.clear();
 		saveListOfCurrentAlerts();
 
@@ -767,7 +581,7 @@ public class CSLAlertManager implements IAlertManager {
 		}
 		else if (op.compareToIgnoreCase("reset_list")==0) {
 
-			resetListOfCurrentAlerts(); //CSLContext.instance.getIdsParams());
+			resetListOfCurrentAlerts();
 
 		}
 		else if (op.compareToIgnoreCase("dump_list")==0) {
@@ -796,12 +610,6 @@ public class CSLAlertManager implements IAlertManager {
 
 			return alertToJsonForHmi(a);
 		}
-		//		else if (op.compareToIgnoreCase("remove_from_model")==0) {
-		//			
-		//			IAlertDescriptor a=getAlert(alert_id);
-		//			if (a!=null) a.removeFromModel();
-		//			
-		//		}
 		else if (op.compareToIgnoreCase("set_acked")==0) {
 
 			boolean b= JsonUtil.getBooleanFromJson(params, "value",false);
@@ -836,12 +644,6 @@ public class CSLAlertManager implements IAlertManager {
 		else if (op.compareToIgnoreCase("test2")==0) {
 			test2();
 		}
-		/*else if (op.compareToIgnoreCase("config1")==0) {
-			DevicesDB.instance.config1();
-		}*/
-//		else if (op.compareToIgnoreCase("clear_devices")==0) {
-//			clearDevices();
-//		}
 		else if (op.compareToIgnoreCase("debug_alert")==0) {
 			boolean b= JsonUtil.getBooleanFromJson(params, "value",false);
 
@@ -879,18 +681,6 @@ public class CSLAlertManager implements IAlertManager {
 		return j;
 	}
 
-	IAlertDescriptor getAlert(Json params) {
-
-		String alert_id=JsonUtil.getStringFromJson(params,  "alert_id","");
-		for (IAlertDescriptor a:listOfCurrentAlerts) {
-			if (a.getUuid().compareTo(alert_id)==0) {
-				return a;
-			}
-		}
-
-		return null;
-	}
-
 	private Json test1() {
 		Json list=Json.array();
 
@@ -911,7 +701,6 @@ public class CSLAlertManager implements IAlertManager {
 		a.setMsg("This is a test yellow ");
 		a.setProp("t",""+System.currentTimeMillis());
 
-		//a.setLevel(new AlertLevel(2));
 		sendAlert(a);
 		list.add(a.toJson());
 
@@ -919,7 +708,6 @@ public class CSLAlertManager implements IAlertManager {
 		a.setMsg("This is a test orange");
 		a.setProp("t",""+System.currentTimeMillis());
 
-		//a.setLevel(new AlertLevel(3));
 		sendAlert(a);
 		list.add(a.toJson());
 
@@ -927,7 +715,6 @@ public class CSLAlertManager implements IAlertManager {
 		a.setMsg("This is a test red");
 		a.setProp("t",""+System.currentTimeMillis());
 
-		//a.setLevel(new AlertLevel(4));
 		sendAlert(a);
 		list.add(a.toJson());
 

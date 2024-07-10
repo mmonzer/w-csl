@@ -116,27 +116,10 @@ public class CSLContext implements ICSLContext, ICSLLogger {
      * Instance of the UDP server
      */
     CSLUDPServer cslUDPServer = null;
-	
-	
-	/*config
-
-		httpserver
-		udpserver
-		modulerunner
-		interprocess
-
-		database
-		servicemanager
-	 */
-    //private boolean CSLServerStarted=false;
-
-    //private CSLConfigFileManager cslConfigFileManager=new CSLConfigFileManager();
-    //	private CSLFileServer cslFileServer=null;  // created if port>0 and declard in configfile
 
 
-    boolean replayMode = false; // run faster for test (not in real time)
-    // time is set with setNewSystemCurre
-    //   setSystemCurrentTimeMillis() {
+
+    boolean replayMode = false;
     long lastSystemCurrentTimeMillis = 0;
     long currentSamplingTime = 0;
 
@@ -146,17 +129,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     int nExecSteps = 0;
     boolean showProgression = false;
 
-    int numberOfExecLoops = 1; // can run modules in several loop
-    //  on each loop the order is :  input exec output
-    //	loops are executed one after the other (in fact there is one loop for control & data treatement
-    // and one loop for process simulation
-
-    //private String config_path= DEFAULT_CONFIG_PATH;
-    //HashMap<String,ParamDescriptor> listOfGlobalParamsDescriptors=new HashMap<String,ParamDescriptor>();
-
-
+    int numberOfExecLoops = 1;
     Json jConfig = null;
-    //List<VariablesTable> localVariablesTableList= new ArrayList<VariablesTable>();
 
 
     Map<String, com.csl.core.ModuleContext> modules = new HashMap<String, com.csl.core.ModuleContext>();
@@ -171,8 +145,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     ScheduledExecutorService scheduler = null;
 
     private int currentPortForUCP = 9001;
-    //private int currentPortForWEB=9000;
-    //private int currentPortForFileserver=-1;
 
     private long initialTime = 0;
 
@@ -543,7 +515,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         }
         if (cslRunningArgs.hasDirForDetectionOffLine()) {
             safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_DETECTION_OFFLINE,
-                    cslRunningArgs.getDirForDetectionOffLine());
+                    cslRunningArgs.getDirForDetectionOffline());
         }
         if (cslRunningArgs.hasIdsMode()) {
             safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.MODE,
@@ -592,7 +564,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         setVerbose(cslRunningArgs.isVerbose());
         setDebug(cslRunningArgs.isDebug());
 
-        setTestMode(cslRunningArgs.getTestParam());
+        setTestMode(cslRunningArgs.isTestparam());
 
         org.eclipse.jetty.util.log.Log.setLog(new com.csl.core.NoLogging());
 
@@ -617,7 +589,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             idsParams = new IDSParams(idsMainProcessor);
 
             idsParams.initFromJson(getConfig(), cslRunningArgs.getDataDir(),
-                    cslRunningArgs.getTestParam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
+                    cslRunningArgs.isTestparam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
 
 
             if (cslRunningArgs.hasIdsMode())
@@ -627,7 +599,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             if (cslRunningArgs.hasDataSetForLearning())
                 idsParams.setCurrentDataSetNameForLearning(cslRunningArgs.getDataSetForLearning());
             if (cslRunningArgs.hasDataSetForDetectionOffLine())
-                idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffLine());
+                idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffline());
 
 
         }

@@ -396,6 +396,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         drop(body, IP_SANS, URI_SANS, NOT_BEFORE_DURATION, NOT_AFTER, ALLOW_TOKEN_DISPLAYNAME);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
+        drop(bodyBase, TTL_UNIT, CERTIFICATE_AUTHORITY_ID);
 //        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
 //        transferValueStringOrNull(bodyBase, bodyExtra, CERTIFICATE_AUTHORITY_ID);
 //        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
@@ -647,18 +648,5 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public AutoCrypt getManager() {
         return manager;
-    }
-
-    /**
-     * Checks if a key exists in a json if its value is a String
-     *
-     * @param obj the json object to check
-     * @param key the key inside the json obj
-     */
-    private boolean propertyExistsAndIsString(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isString()) {
-            return true;
-        }
-        return false;
     }
 }

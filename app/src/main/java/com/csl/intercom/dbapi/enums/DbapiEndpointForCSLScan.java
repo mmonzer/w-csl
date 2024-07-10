@@ -1,5 +1,7 @@
 package com.csl.intercom.dbapi.enums;
 
+import lombok.Getter;
+
 /**
  * The various endpoints used in DB-API.
  */
@@ -31,13 +33,11 @@ public enum DbapiEndpointForCSLScan {
     GET_MQTT_TOPIC_PREFIX(ORGANIZATIONS.getEndpoint() + "/get_mqtt_topic_prefix"),
     ;
 
+    @Getter
     private final String endpoint;
 
     DbapiEndpointForCSLScan(String endpoint) {
         this.endpoint = endpoint;
     }
 
-    public String getEndpoint() {
-        return endpoint;
-    }
 }

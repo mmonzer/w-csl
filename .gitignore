@@ -17,4 +17,4 @@ build/
 app/build/
 app/.gradle/
 .gradle/
-
+app/src/main/resources/docs/sphinx/

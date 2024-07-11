@@ -73,7 +73,8 @@
     "logJsonCommandsToFile": true,
     "log_dir": "./idslogs/jcmds",
     "log_prefix_filename": "JCMD",
-    "max_size_of_log_files": 10000
+    "max_size_of_log_files": 10000,
+    "websocket_timeout" : 20000
   },
   "udp_server_conf": {
     "on": true,

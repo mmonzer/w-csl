@@ -10,7 +10,7 @@ import com.csl.web.database.CSLServiceJsonDataBase;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
-import com.csl.web.websockets.WebsocketClientEndpoint;
+import main.xcom.WebsocketClientEndpoint;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;

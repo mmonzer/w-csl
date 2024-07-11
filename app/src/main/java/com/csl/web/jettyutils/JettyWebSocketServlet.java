@@ -1,5 +1,7 @@
 package com.csl.web.jettyutils;
 
+import com.csl.core.CSLContext;
+import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.slf4j.Logger;
@@ -19,9 +21,7 @@ public class JettyWebSocketServlet extends WebSocketServlet {
     }
     @Override
     public void configure(WebSocketServletFactory factory) {
-        factory.getPolicy().setIdleTimeout(1000000);
-        factory.getPolicy().setMaxTextMessageSize(1024 * 1024);
-        factory.getPolicy().setMaxBinaryMessageSize(1024 * 1024);
+        factory.getPolicy().setIdleTimeout(JsonUtil.getIntFromJson(CSLContext.instance.getConfig(), "web_server_conf/websocket_timeout", 20000));
         factory.register(handler);
     }
     @Override

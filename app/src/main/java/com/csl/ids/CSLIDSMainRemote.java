@@ -6,7 +6,7 @@ import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
-import com.csl.web.websockets.WebsocketClientEndpoint;
+import main.xcom.WebsocketClientEndpoint;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;

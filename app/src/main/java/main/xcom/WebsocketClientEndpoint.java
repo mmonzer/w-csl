@@ -1,5 +1,7 @@
-package com.csl.web.websockets;
+package main.xcom;
 
+import com.csl.core.CSLContext;
+import com.ucsl.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +43,6 @@ public class WebsocketClientEndpoint {
     public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
         this.endpointURI=endpointURI;
         this.apiKey = apiKey;
-        container.setDefaultMaxBinaryMessageBufferSize(1024 * 1024);
-        container.setAsyncSendTimeout(40000);
-        container.setDefaultMaxSessionIdleTimeout(7000);
         connect();
     }
 
@@ -65,7 +64,7 @@ public class WebsocketClientEndpoint {
     public void onOpen(Session userSession) {
         logger.info("Opening websocket {}", userSession.getRequestURI());
         this.userSession = userSession;
-        userSession.setMaxIdleTimeout(20000);
+        userSession.setMaxIdleTimeout(JsonUtil.getIntFromJson(CSLContext.instance.getConfig(), "web_server_conf/websocket_timeout", 20000));
         logger.debug("Timeout = {}", userSession.getMaxIdleTimeout());
         {
     		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");

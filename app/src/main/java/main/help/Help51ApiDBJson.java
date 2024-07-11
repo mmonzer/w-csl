@@ -1,6 +1,6 @@
 package main.help;
 
-import com.csl.web.websockets.WebsocketClientEndpoint;
+import main.xcom.WebsocketClientEndpoint;
 import com.ucsl.json.Json;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

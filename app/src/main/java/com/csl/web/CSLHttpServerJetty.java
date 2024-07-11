@@ -15,11 +15,13 @@ import com.ucsl.json.JsonUtil;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.websocket.api.WebSocketBehavior;
+import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import javax.servlet.*;
+import javax.servlet.DispatcherType;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -85,11 +87,23 @@ public class CSLHttpServerJetty {
         if (!sc.isRunning()) return;
 
         jettyServer.setErrorHandler(new JettyServerErrorHandler());
+
+
         //TODO : add location for staticfiles
 
         //Context initialization
         context.setContextPath("/");
         context.addFilter(JettyFilterServlet.class, "/*", EnumSet.of(DispatcherType.REQUEST)); //Filter for the console log
+
+
+
+
+
+
+        //Policy for websockets
+        WebSocketPolicy policy = new WebSocketPolicy(WebSocketBehavior.SERVER);
+        policy.setMaxTextMessageSize(1024 * 1024);
+
 
         //WebSockets initalization
         CSLWebSocket.registerAll();
@@ -158,7 +172,7 @@ public class CSLHttpServerJetty {
             String path = api.getName();
             System.out.println("REGISTER API  : <" + path+">");
             if(ADD_GET_ROUTE)
-                context.addServlet(new ServletHolder(createGetServlet(api)), "/"+api.getName());
+                context.addServlet(new ServletHolder(createGetServlet(api)), "/"+api.getName()+"/*");
             context.addServlet(new ServletHolder(createPostServlet(api)), "/"+api.getPathFilter());
         }
         jettyServer.setHandler(context);

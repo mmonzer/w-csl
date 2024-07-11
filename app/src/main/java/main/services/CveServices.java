@@ -1,26 +1,19 @@
 package main.services;
 
+import com.csl.core.CSLContext;
+import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+import main.extensions.CveUtils;
+import main.extensions.Utils;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommandsFactory;
-import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.ucsl.interfaces.IApiCommands;
-import com.ucsl.interfaces.ICSLService;
-import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
-
-import lombok.Getter;
-import main.extensions.CveUtils;
-import main.extensions.Utils;
-
-<<<<<<< HEAD
 public class CveServices extends Service {
 	/**
 	 * Default constructor of the CVE service.
@@ -46,28 +39,6 @@ public class CveServices extends Service {
 	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-=======
-public class CveServices implements ICSLService {
-	String name="cve";
-	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
-	String configFileSectionName="cve_service";
-	
-	public CveServices() {
-		this.name="cve";
-		this.configFileSectionName="cve_service";
-	}
-	public CveServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-
-	@Override
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
-	}
-	
->>>>>>> origin/feature/refactor_code
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		addCmd("getCve", new IJsonCmd() {
@@ -221,22 +192,4 @@ public class CveServices implements ICSLService {
 		});
 		return true;
 	}
-<<<<<<< HEAD
-=======
-
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-	
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
->>>>>>> origin/feature/refactor_code
 }

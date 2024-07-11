@@ -1,5 +1,20 @@
 package com.csl.ids;
 
+import com.csl.core.CSLContext;
+import com.csl.core.NoLogging;
+import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.web.websockets.CSLWebSocket;
+import com.csl.web.websockets.IMessageBroadcaster;
+import com.csl.web.websockets.WebsocketClientEndpoint;
+import com.ucsl.interfaces.IApiCommands;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+import main.services.AlertsService;
+import main.services.CSLServiceDemo;
+import main.services.CSLServiceIDS;
+import main.util.CSLRunningArgs;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
@@ -8,22 +23,6 @@ import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import com.csl.core.CSLContext;
-import com.csl.core.NoLogging;
-import com.csl.intercom.broker.MosquittoConfig;
-import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.web.websockets.CSLWebSocket;
-import com.csl.web.websockets.IMessageBroadcaster;
-import com.ucsl.interfaces.IApiCommands;
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
-
-import main.services.AlertsService;
-import main.services.CSLServiceDemo;
-import main.services.CSLServiceIDS;
-import main.util.CSLRunningArgs;
-import com.csl.web.websockets.WebsocketClientEndpoint;
 
 public class CSLIDSMainRemote {
 	
@@ -231,25 +230,11 @@ public class CSLIDSMainRemote {
 		//CSLContext.instance.setApiRemote("alerts");
 		//JServiceLoader.registerService(new MonitorService(), j, true);
 		JServiceLoader.registerService(new CSLServiceIDS(), j, true);
-		//CSLContext.instance.setApiRemote("ids");
-		
-		//JServiceLoader.registerService(new CSLServiceJsonDataBase(), j, true);
-		
-		
-		
 		iniServices();
     	startRemoteConnectTask();
     	CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
-   
-		
 		CSLContext.instance.postInit(false,true);
-    	
     	CSLContext.instance.getIdsRunner().start();
-    	
-    	
-    	
     	printTime();
-    	
-    	//startTest();
     }
 }

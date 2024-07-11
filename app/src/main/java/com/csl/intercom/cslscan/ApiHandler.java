@@ -12,16 +12,16 @@ import org.eclipse.jetty.client.util.MultiPartContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.jetbrains.annotations.NotNull;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.ConnectException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -34,7 +34,7 @@ public class ApiHandler implements AutoCloseable {
     private final String moduleName;
     protected final String url;
     protected final HashMap<HttpHeader, String> headers = new HashMap<>();
-    protected final HttpClient httpClient = new HttpClient();
+    protected HttpClient httpClient;
     private ICleaner outputCleaner = (e) -> e;
 
     /**
@@ -53,6 +53,7 @@ public class ApiHandler implements AutoCloseable {
      * @param url        url of the service api
      */
     public ApiHandler(String nameModule, String url) {
+        ensureSSLDbApiHandlerInitialization();
         this.url = url;
         this.moduleName = nameModule;
         headers.put(HttpHeader.CONTENT_TYPE, "application/json");
@@ -62,6 +63,24 @@ public class ApiHandler implements AutoCloseable {
         } catch (Exception e) {
             logger.error("Could not start the http client for " + nameModule + " API.", e);
         }
+    }
+    private void ensureSSLDbApiHandlerInitialization(){
+        // Retrieve system properties
+        String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
+        String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
+
+        // Ensure the properties are set
+        if (trustStorePath == null || trustStorePassword == null) {
+            throw new IllegalStateException("Trust store properties are not set.");
+        }
+
+        // Configure SslContextFactory with the retrieved properties
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setTrustStorePath(trustStorePath);
+        sslContextFactory.setTrustStorePassword(trustStorePassword);
+        sslContextFactory.setTrustAll(true);
+
+        httpClient = new HttpClient(sslContextFactory);
     }
 
     @Override

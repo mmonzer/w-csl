@@ -1,13 +1,7 @@
 package com.ucsl.json;
 
-<<<<<<< HEAD
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-=======
 import javax.script.*;
->>>>>>> origin/feature/refactor_code
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

@@ -173,18 +173,12 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 		
 		return idsMainProcessorParams;
 		}
-<<<<<<< HEAD
 
 	/**
 	 * From a raw Suricata alert, reformats it and calls {@link CSLAlertManager} to send the alert
 	 * @param evtsInfo suricata alert information
 	 */
 	private void generateAlertFromSuricataEvent(Json evtsInfo) {
-=======
-	
-	// process an event (from suricata for example)
-	private void generateAlertFRomSuricataEvent(Json evtsInfo) {
->>>>>>> origin/feature/refactor_code
 		
 		// test pour eve event
 		

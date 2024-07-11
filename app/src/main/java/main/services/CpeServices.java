@@ -1,22 +1,13 @@
 package main.services;
 
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import lombok.Getter;
+import com.ucsl.interfaces.IJsonCmd;
+import com.ucsl.json.Json;
+import main.extensions.CpeSearch;
 import org.xml.sax.SAXException;
 
-import com.csl.intercom.jsoncmd.ApiCommandsFactory;
-import com.ucsl.interfaces.IApiCommands;
-import com.ucsl.interfaces.ICSLService;
-import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
-import com.ucsl.json.Json;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 
-import main.extensions.CpeSearch;
-
-<<<<<<< HEAD
 public class CpeServices extends Service {
 	/**
 	 * Default constructor of the CPE service.
@@ -40,35 +31,6 @@ public class CpeServices extends Service {
 	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-=======
-public class CpeServices implements ICSLService {
-	
-	String name="cpe";
-	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
-
-	@Getter
-	String configFileSectionName="cpe_service";
-	
-	public CpeServices() {
-		this.name="cpe";
-		this.configFileSectionName="cpe_service";
-	}
-	
-	public CpeServices(String name, String configFileSectionName) {
-		this.name=name;
-		this.configFileSectionName=configFileSectionName;
-	}
-
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
->>>>>>> origin/feature/refactor_code
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("Initialising CPE functions .."+jConfig);
@@ -124,14 +86,4 @@ public class CpeServices implements ICSLService {
 		});			
 		return true;
 	}
-<<<<<<< HEAD
-=======
-
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
->>>>>>> origin/feature/refactor_code
 }

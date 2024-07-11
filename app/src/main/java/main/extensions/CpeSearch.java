@@ -1,27 +1,8 @@
 package main.extensions;
 
-<<<<<<< HEAD
 import com.ucsl.json.Json;
-=======
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import lombok.Getter;
 import lombok.Setter;
->>>>>>> origin/feature/refactor_code
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -381,17 +362,10 @@ public class CpeSearch {
 				}
 			}
 	        if(!infos.containsKey(index)) {
-<<<<<<< HEAD
-	            infos.put(index,1);
-	        }
-	        else {
-	            infos.put(index,infos.get(index)+1);
-=======
 	            infos.put(index, 1);
 	        }
 	        else {
 	            infos.put(index ,infos.get(index+1));
->>>>>>> origin/feature/refactor_code
 	        }
 			Tree newFils = new Tree(element);
 			this.addFils(newFils);

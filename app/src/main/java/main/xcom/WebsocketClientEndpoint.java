@@ -1,16 +1,15 @@
 package com.csl.web.websockets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.websocket.*;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.websocket.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 @ClientEndpoint(subprotocols = {"xsCrossfire"}, configurator = WebsocketClientEndpoint.Configurator.class)
@@ -36,13 +35,15 @@ public class WebsocketClientEndpoint {
     }
 
     public WebsocketClientEndpoint(URI endpointURI) {
-       this.endpointURI=endpointURI;
-       connect();
+       this(endpointURI, null);
 	}
 
     public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
         this.endpointURI=endpointURI;
         this.apiKey = apiKey;
+        container.setDefaultMaxBinaryMessageBufferSize(1024 * 1024);
+        container.setAsyncSendTimeout(40000);
+        container.setDefaultMaxSessionIdleTimeout(7000);
         connect();
     }
 
@@ -64,7 +65,7 @@ public class WebsocketClientEndpoint {
     public void onOpen(Session userSession) {
         logger.info("Opening websocket {}", userSession.getRequestURI());
         this.userSession = userSession;
-        userSession.setMaxIdleTimeout(2000);
+        userSession.setMaxIdleTimeout(20000);
         logger.debug("Timeout = {}", userSession.getMaxIdleTimeout());
         {
     		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");

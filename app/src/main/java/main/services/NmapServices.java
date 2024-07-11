@@ -1,40 +1,19 @@
 package main.services;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-
-import lombok.Getter;
-import org.apache.commons.net.util.SubnetUtils;
-
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.jcraft.jsch.JSchException;
-import com.ucsl.interfaces.IApiCommands;
-import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-
 import main.extensions.ScanActif;
 import main.extensions.SshUtils;
 import main.extensions.Utils;
+import org.apache.commons.net.util.SubnetUtils;
 
-<<<<<<< HEAD
+import java.io.*;
+import java.util.ArrayList;
+
 public class NmapServices extends Service {
-=======
-public class NmapServices implements ICSLService {
-	String name="nmap";
-	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
-	String configFileSectionName="nmap_service";
->>>>>>> origin/feature/refactor_code
 	static String idsconf;
 	static boolean debugMode = false;
 	static boolean logMode = false;
@@ -47,7 +26,6 @@ public class NmapServices implements ICSLService {
 	 * Default constructor of the Nmap service.
 	 */
 	public NmapServices() {
-<<<<<<< HEAD
 		this("nmap",
 				"nmap description",
 				"nmap_service");
@@ -58,15 +36,6 @@ public class NmapServices implements ICSLService {
 	 */
 	public NmapServices(String name, String description, String configFileSectionName) {
 		super(name,description,configFileSectionName);
-=======
-		this.name="nmap";
-		this.configFileSectionName="nmap_service";
-	}
-
-	@Override
-	public String getConfigFileSectionName() {
-		return configFileSectionName;
->>>>>>> origin/feature/refactor_code
 	}
 	
 	static public void lauchNmap(Json params, Json jConfig) {
@@ -133,15 +102,12 @@ public class NmapServices implements ICSLService {
 		return result;
 	}
 
-<<<<<<< HEAD
 	/**
 	 * Initialization of the Nmap commands
 	 * @param jConfig the configuration section of the configuration file
 	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-=======
->>>>>>> origin/feature/refactor_code
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
 		System.out.println("--- Initialisation des services Nmap ---");
@@ -262,22 +228,4 @@ public class NmapServices implements ICSLService {
 		});
 		return true;
 	}
-<<<<<<< HEAD
-=======
-	
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-	
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
->>>>>>> origin/feature/refactor_code
 }

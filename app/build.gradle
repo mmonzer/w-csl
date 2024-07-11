@@ -18,7 +18,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
     // Local libraries
-    implementation files('src/main/resources/tar/xminiserver.jar')
+    implementation files('src/main/resources/lib/jar/xminiserver.jar')
 
     // Test dependencies
     testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
@@ -86,6 +86,7 @@ java {
 }
 run{
     systemProperty 'logback.configurationFile', './src/main/resources/logback.xml'
+    systemProperty 'javax.net.ssl.trustStore', './cacerts.jks'
     systemProperty 'javax.net.ssl.trustStorePassword', 'changeit'
 }
 test{

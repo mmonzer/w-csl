@@ -2,6 +2,7 @@ package com.csl.intercom.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import org.slf4j.Logger;

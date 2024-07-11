@@ -506,6 +506,7 @@ public class AutoCryptLogic {
 
         bodyExtra = mergerJson(responseFromModule.getResult(), bodyExtra);
         String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
+        String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
         responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
 
         transformToDbapi(responseFromModule.getResult(), CRL_DISTRIBUTION_POINTS);
@@ -513,7 +514,6 @@ public class AutoCryptLogic {
 
         // save to dbapi the certificate of ca
         params.set(PATH, PKI);
-        String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
         responseFromModule = moduleHandler.getCertificateInfo(serialNumber, params);
         if (!responseFromModule.isSuccess()) { return responseFromModule; }
 

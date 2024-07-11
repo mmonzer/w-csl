@@ -17,11 +17,6 @@ import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
-<<<<<<<< HEAD:app/src/main/java/com/csl/intercom/dbapi/DbapiHandlerForCSLScan.java
-========
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.eclipse.jetty.client.HttpClient;
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/intercom/dbapi/DbapiHandler.java
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -33,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;

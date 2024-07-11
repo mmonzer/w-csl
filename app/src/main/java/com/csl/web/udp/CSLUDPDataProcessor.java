@@ -2,14 +2,11 @@ package com.csl.web.udp;
 
 import com.ucsl.json.Json;
 
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUDPDataProcessor.java
+import java.util.concurrent.BlockingQueue;
+
 /**
  * Runnable class that treats the alerts from suricata stored in a Queue
  */
-========
-import java.util.concurrent.BlockingQueue;
-
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUDPDataProcessor.java
 public class CSLUDPDataProcessor implements Runnable {
 	private final BlockingQueue<byte[]> messageQueue;
 	CSLFlowManager flowManager;
@@ -78,13 +75,6 @@ public class CSLUDPDataProcessor implements Runnable {
 					if (fromPort!=null ) {
 					}
 					int n=Integer.parseInt(fn);
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUDPDataProcessor.java
-
-				//System.out.println("idOfTarget="+id+" fromPort="+fromPort+" flowNumber="+n);
-					//flowManager.addToFlow(n, jdata);
-========
-					
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUDPDataProcessor.java
 					if (jdata.isArray()) {
 						for (Json jj:jdata.asJsonList()) {
 							flowManager.addToFlow(n, jj);

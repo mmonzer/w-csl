@@ -30,6 +30,8 @@ public class CSLIDSMainServer {
         boolean USE_BROKER = false;
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
+
+        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
         JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
         JServiceLoader.registerService(new AlertsService(), configObj, true);
         JServiceLoader.registerService(new MonitorService(), configObj, true);
@@ -49,12 +51,7 @@ public class CSLIDSMainServer {
         CSLContext.instance.setApiRemote("taps");
         CSLContext.instance.setApiRemote("discovery");
         CSLContext.instance.setApiRemote("status");
-<<<<<<< HEAD
         CSLContext.instance.setApiRemote("autocrypt");
-//        CSLContext.instance.setApiRemote("demo");
-=======
-        CSLContext.instance.setApiRemote("demo");
->>>>>>> origin/feature/refactor_code
 
         // Init Databaseserver, httpserver, udpserver, ...
 

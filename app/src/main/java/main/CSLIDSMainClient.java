@@ -21,8 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -243,6 +241,7 @@ public class CSLIDSMainClient {
 
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
+        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
         JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
         JServiceLoader.registerService(new AlertsService(), configObj, true);
         JServiceLoader.registerService(new MonitorService(), configObj, true);

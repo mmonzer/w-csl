@@ -2699,7 +2699,6 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	    private static Map<Character, Character> escapes = new HashMap<Character, Character>();
 	    static 
 	    {
-<<<<<<< HEAD
 			escapes.put('"', '"');
 			escapes.put('\\', '\\');
 			escapes.put('/', '/');
@@ -2708,16 +2707,6 @@ public class Json implements java.io.Serializable, Iterable<Json>
 			escapes.put('n', '\n');
 			escapes.put('r', '\r');
 			escapes.put('t', '\t');
-=======
-	        escapes.put('"','"');
-	        escapes.put('\\', '\\');
-	        escapes.put('/', '/');
-	        escapes.put('b', '\b');
-	        escapes.put('f', '\f');
-	        escapes.put('n', '\n');
-	        escapes.put('r', '\r');
-	        escapes.put('t', '\t');
->>>>>>> origin/feature/refactor_code
 	    }
 
 	    private CharacterIterator it;

@@ -17,6 +17,7 @@ public class DbapiHandler extends ApiHandler {
         this(CSLContext.instance.getConfig());
     }
 
+
     public DbapiHandler(Json config) {
         super("DB-API",
                 (JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true) ? "https://" : "http://")+

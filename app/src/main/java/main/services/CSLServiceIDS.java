@@ -1,32 +1,25 @@
 package main.services;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 import com.csl.core.CSLContext;
 import com.csl.devdb.DevicesUtil;
-//import com.csl.devdb.DevicesUtil;
 import com.csl.ids.IDSDataSetManager;
 import com.csl.ids.IDSTapManager;
-import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.modules.ModuleIDS;
 import com.csl.monitor.ActivityMonitor;
 import com.csl.util.RulesUtil;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.interfaces.IAlertDescriptor;
-import com.ucsl.interfaces.IApiCommands;
-import com.ucsl.interfaces.ICSLService;
 import com.ucsl.interfaces.IIDSOperationManager;
 import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.wcsl.ids.IDSOperationManagerFactory;
-import lombok.Getter;
 
-<<<<<<< HEAD
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 public class CSLServiceIDS extends Service {
 
 
@@ -40,23 +33,11 @@ public class CSLServiceIDS extends Service {
 	/**
 	 * Default constructor of the IDS service.
 	 */
-=======
-public class CSLServiceIDS implements ICSLService {
-	@Getter
-    String name="ids";
-	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
-	@Getter
-    String configFileSectionName="config_"+name;
-	
->>>>>>> origin/feature/refactor_code
 	public CSLServiceIDS() {
 		this("ids",
 				"Service for managing previous IDS: start/stop, configure, change the running mode (learning, idle, recording, ...), ...",
 				"ids_conf");
 	}
-
-<<<<<<< HEAD
 	/**
 	 * Generic constructor of the IDS service.
 	 */
@@ -71,9 +52,6 @@ public class CSLServiceIDS implements ICSLService {
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
 	public boolean init(Json jConfig, String cslDir) {
-=======
-    public boolean init(Json jConfig, String cslDir) {
->>>>>>> origin/feature/refactor_code
 		
 		addCmd("test_console", new IJsonCmd() {
 
@@ -106,11 +84,6 @@ public class CSLServiceIDS implements ICSLService {
 				.setResult("{nb_links: , histo:[0 , 0,0, ... ], period: (s) }", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
-<<<<<<< HEAD
-
-=======
-		
->>>>>>> origin/feature/refactor_code
 		addCmd("stats_network", new IJsonCmd() {
 
 			@Override
@@ -129,11 +102,6 @@ public class CSLServiceIDS implements ICSLService {
 				.setResult("{percent_flowrate:  }", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
-<<<<<<< HEAD
-		
-=======
-
->>>>>>> origin/feature/refactor_code
 		addCmd("test_alert", new IJsonCmd() {
 
 			@Override
@@ -280,26 +248,6 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-
-<<<<<<< HEAD
-		//		addCmd("switch_send_to_console", new JsonCmd() {
-		//			
-		//			@Override
-		//			public Json exec(Json params) {
-		//				// TODO Auto-generated method stub
-		//				
-		//				
-		//				boolean b= CSLContext.instance.getIdsRunner().isIdsSendToConsole();
-		//				CSLContext.instance.getIdsRunner().setIdsSendToConsole(!b);
-		//				Json j= Json.object();
-		//				j.set("state", !b);
-		//				
-		//				return j;
-		//			}
-		//		});
-
-=======
->>>>>>> origin/feature/refactor_code
 		addCmd("set_send_to_console", new IJsonCmd() {
 
 			@Override
@@ -351,10 +299,6 @@ public class CSLServiceIDS implements ICSLService {
 			@Override
 			public Json exec(Json params) {
 				// TODO Auto-generated method stub
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/feature/refactor_code
 				Json j=CSLContext.instance.getIDSMainProcessor().getLearnedRules();
 
 				System.out.println(j);
@@ -362,29 +306,12 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-<<<<<<< HEAD
-		
-		//IDSOperationManager opManager= new IDSOperationManager(CSLContext.instance.getIDSMainProcessor());
-=======
-
->>>>>>> origin/feature/refactor_code
 		IIDSOperationManager opManager= IDSOperationManagerFactory.instance.createIDSOperationManagerFactory(CSLContext.instance.getIDSMainProcessor());
 		
 		addCmd("op_model_ids", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
-<<<<<<< HEAD
-				// TODO Auto-generated method stub
-				//Json j=CSLContext.instance.getIDSMainProcessor().getLearnedRules();
-						//getIdsRunner().getLearnedRulesAsJson();
-				
-				// CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
-				
-
-				
-=======
->>>>>>> origin/feature/refactor_code
 				Json j=opManager.exec(params);
 
 				System.out.println(j);
@@ -519,31 +446,6 @@ public class CSLServiceIDS implements ICSLService {
 				return jresult;
 			}
 		});
-
-<<<<<<< HEAD
-		//		addCmd("getCSLRunningArgs", new JsonCmd() {
-		//
-		//			@Override
-		//			public Json exec(Json params) {
-		//				System.out.println("start exec");
-		//				System.out.println("Exec JCmd test_cmd :"+params);
-		//				System.out.println("Fin exec");
-		//				Json j=Json.object();
-		//				j.set("params", CSLContext.instance.getIdsRunner().getIdsParams().getAsJson());
-		//				j.set("idsmode",CSLContext.instance.getIdsRunner().getIDSMode());
-		//				j.set("idsmodestr",CSLContext.instance.getIdsRunner().getIDSModeAsString());
-		//
-		//				j.set("ids_output_to_console",  CSLContext.instance.getIdsRunner().isIdsSendToConsole());
-		//				j.set("ids_output_to_browser",  CSLContext.instance.getIdsRunner().isIdsSendToBrowser());
-		//				
-		//
-		//
-		//				return j;
-		//			}
-		//		});
-
-=======
->>>>>>> origin/feature/refactor_code
 		addCmd("getDataSetList", new IJsonCmd() {
 
 			@Override
@@ -648,13 +550,7 @@ public class CSLServiceIDS implements ICSLService {
 				desc.set("type", type);
 
 				IDSTapManager t=	new IDSTapManager(CSLContext.instance.getIDSMainProcessor().getIdsMainProcessorParams());
-				
-<<<<<<< HEAD
 				Json result= t.exec(operation,idname, desc,text);
-=======
-				Json result=
-						t.exec(operation,idname, desc,text);
->>>>>>> origin/feature/refactor_code
 
 				System.out.println("RESULT:"+result);
 
@@ -689,108 +585,12 @@ public class CSLServiceIDS implements ICSLService {
 				System.out.println("EXEC start Learning:"+params);
 
 				CSLContext.instance.getIdsRunner().switchModeToIdle();
-<<<<<<< HEAD
-			
-				//CSLContext.instance.getIdsRunner().getIdsParams().setLearningMode();
-				
-=======
-
->>>>>>> origin/feature/refactor_code
 				CSLContext.instance.getIDSMainProcessor().resetLearnedModel();
 				Json result=Json.object();
 
 				return result;
 			}
 		});
-
-<<<<<<< HEAD
-//		// operations : create, delete, rename, select, copy
-//		addCmd("add_to_dbdevices", new IJsonCmd() {
-//
-//			@Override
-//			public Json exec(Json params) {
-//
-//				System.out.println("EXEC add_to_dbdevices:"+params);
-//
-//
-////				String filePath=
-////						CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-////						CSLContext.instance.getIdsRunner().getIdsParams().getLearnedRulesFileName();
-////				FileUtils.backupFileWithTimeStamp(filePath, CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-//				
-//				CSLContext.instance.getIDSMainProcessor().backupLearnedModel();
-//
-////				String dirfilePathOps=
-////						CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-////						"internal";
-//
-//				//FileUtils.backupFileWithTimeStamp(dirfilePathOps+File.separator+"ops", CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-//				//IDSTrace.log(IDSTrace.GENERAL, "test");
-//				
-//				CSLContext.instance.getIDSMainProcessor().backupFileInModelDir("internal", "ops");
-//				
-//				//Json ops=DevicesUtil.updateLearnedModelFromDevicesDB(CSLContext.instance.getIdsRunner().getIdsParams());
-//
-//				Json ops=DevicesUtil.updateDevicesDBFromLearnedModel(CSLContext.instance.getIDSMainProcessor());
-//
-//				//FileUtils.saveJsonToFile(dirfilePathOps, "ops", ops);
-//				
-//				CSLContext.instance.getIDSMainProcessor().saveJsonInModelDir("internal", "ops", ops);
-//				
-//				Json result=Json.object();
-//
-//				return result;
-//			}
-//		});
-		
-		
-		/*
-		 * geneate the model used for detection
-		 * 
-		 * 	1) the learned model (added to the device db)
-		 * 	2- the device db (with user modif)
-		 * 	3) the alerts model (list of alert with ok or risk level)
-		 */
-//		addCmd("generate_ids_model", new IJsonCmd() {
-//
-//					@Override
-//					public Json exec(Json params) {
-//
-//						System.out.println("EXEC add_to_dbdevices:"+params);
-//
-//
-////						String filePath=
-////								CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-////								CSLContext.instance.getIdsRunner().getIdsParams().getLearnedRulesFileName();
-////						FileUtils.backupFileWithTimeStamp(filePath, CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-//
-//						CSLContext.instance.getIDSMainProcessor().backupLearnedModel();
-//						
-////						String dirfilePathOps=
-////								CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDir()+File.separator+
-////								"internal";
-//						
-//						
-//						IDSTrace.log(IDSTrace.GENERAL, "test");
-//						
-//						
-//
-//						//Json ops=DevicesUtil.updateLearnedModelFromDevicesDB(CSLContext.instance.getIDSMainProcessor());
-//						
-//						//FileUtils.backupFileWithTimeStamp(dirfilePathOps+File.separator+"ops", CSLContext.instance.getIdsRunner().getIdsParams().getIdsModelDirBackup());
-//
-//						//Json ops=DevicesUtil.updateDevicesDB(CSLContext.instance.getIdsRunner().getIdsParams());
-//
-//						//FileUtils.saveJsonToFile(dirfilePathOps, "ops", ops);
-//						Json result=Json.object();
-//
-//						return result;
-//					}
-//				});
-//
-
-=======
->>>>>>> origin/feature/refactor_code
 		// operations : create, delete, rename, select, copy
 		addCmd("get_learned_model_table", new IJsonCmd() {
 
@@ -809,57 +609,9 @@ public class CSLServiceIDS implements ICSLService {
 			@Override
 			public Json exec(Json params) {
 				Json result =DevicesUtil.getLearnedModelTableAsJsonDpi(CSLContext.instance.getIDSMainProcessor());
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/feature/refactor_code
 				return result;
 			}
 		});
-
-<<<<<<< HEAD
-//		addCmd("get_devices_table", new IJsonCmd() {
-//
-//			@Override
-//			public Json exec(Json params) {
-//
-//				System.out.println("EXEC get devices table:"+params);
-//
-//				try {
-//					Json result =DevicesUtil.exportToJsonTable();
-//
-//					return result;
-//				} catch (Exception e) {
-//					System.out.println(e);
-//					e.printStackTrace();
-//				}
-//
-//				return Json.array();
-//			}
-//		});
-		
-//		addCmd("get_devices_json", new IJsonCmd() {
-//
-//			@Override
-//			public Json exec(Json params) {
-//
-//				System.out.println("EXEC get devices json:"+params);
-//
-//				try {
-//					Json result =DevicesUtil.exportToJson();
-//
-//					return result;
-//				} catch (Exception e) {
-//					System.out.println(e);
-//					e.printStackTrace();
-//				}
-//
-//				return Json.array();
-//			}
-//		});
-
-=======
->>>>>>> origin/feature/refactor_code
 		// operations : create, delete, rename, select, copy
 		addCmd("start_learning", new IJsonCmd() {
 			@Override
@@ -893,44 +645,6 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
-<<<<<<< HEAD
-		
-//		addCmd("generate_rules", new IJsonCmd() {
-//
-//			@Override
-//			public Json exec(Json params) {
-//
-//				System.out.println("Generate Rules:"+params);
-//
-//				// IDSLearnedRules z = DevicesUtil.getLearnedModelFromFile(CSLContext.instance.getIdsRunner().getIdsParams());
-//				 
-//				 IDSLearnedRules z = CSLContext.instance.getIDSMainProcessor().getLearnedModelFromFile();
-//				 
-//					
-//				 System.out.println("Taps subdir:"+CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsDir());
-//			     System.out.println("Taps IDs   :"+CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsIDs());
-//			      
-//			     String lines=z.toSuricataRules(Json.object());
-//			     System.out.println("Generated Suricata Rules");
-//			     System.out.println(lines);
-//			     
-//			     // cslconf/taps/<nomTap>/genrules.rules
-//			     for (String tapId:CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsIDs()) {
-//			    	 String filename =CSLContext.instance.getCslConfDir()+File.separator+
-//			    			 CSLContext.instance.getIDSMainProcessor().getTapManager().getTapsDir()+File.separator+tapId+File.separator+"genrules.rules";
-//			    	 System.out.println("  --> write rules to "+filename);
-//			    	 FileUtils.writeFile(filename, lines);
-//			    	 
-//			     }
-//				
-//			       
-//				Json result=Json.object();
-//
-//				return result;
-//			}
-//		});
-=======
->>>>>>> origin/feature/refactor_code
 			
 		addCmd("get_CSL_learning_args", new IJsonCmd() {
 			@Override
@@ -988,20 +702,11 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
-<<<<<<< HEAD
-=======
-
-		addCmd("get_CSL_detection_offline_args", new IJsonCmd() {
->>>>>>> origin/feature/refactor_code
 
 		addCmd("get_CSL_detection_offline_args", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				// TODO Auto-generated method stub
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/feature/refactor_code
 				Json j= Json.array();
 				j.add(Json.object().set("name", "IDS_MODE")
 						.set("value", CSLContext.instance.getIdsRunner().getIDSModeAsString()));
@@ -1031,12 +736,6 @@ public class CSLServiceIDS implements ICSLService {
 			public Json exec(Json params) {
 
 				System.out.println("EXEC start detection :"+params);
-<<<<<<< HEAD
-				
-//				CSLContext.instance.getIdsRunner().getIdsParams().setDetectOnLineMode();
-=======
-
->>>>>>> origin/feature/refactor_code
 				CSLContext.instance.getIdsRunner().switchModeToDetectOnline();
 
 				Json result=Json.object();
@@ -1084,21 +783,11 @@ public class CSLServiceIDS implements ICSLService {
 				return result;
 			}
 		});
-<<<<<<< HEAD
-=======
-
-		addCmd("get_CSL_running_args", new IJsonCmd() {
->>>>>>> origin/feature/refactor_code
 
 		addCmd("get_CSL_running_args", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				// TODO Auto-generated method stub
-
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/feature/refactor_code
 				Json j= Json.array();
 				j.add(Json.object().set("name", "IDS_MODE")
 						.set("value", CSLContext.instance.getIdsRunner().getIDSModeAsString()));
@@ -1129,11 +818,6 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-<<<<<<< HEAD
-		
-=======
-
->>>>>>> origin/feature/refactor_code
 		// Gestion des alertes
 		addCmd("get_alerts_list", new IJsonCmd() {
 
@@ -1154,11 +838,6 @@ public class CSLServiceIDS implements ICSLService {
 				return j;
 			}
 		});
-<<<<<<< HEAD
-		
-=======
-
->>>>>>> origin/feature/refactor_code
 		addCmd("generate_suricata_rules", new IJsonCmd() {
 
 			@Override
@@ -1175,8 +854,6 @@ public class CSLServiceIDS implements ICSLService {
 
 		return true;  // ok to start
 	}
-
-<<<<<<< HEAD
 	static private  String readAnyFile(String path) {
 		String content = "";
 
@@ -1221,19 +898,5 @@ public class CSLServiceIDS implements ICSLService {
 		int MAX=50;
 		if (s.length()<=MAX) return s;
 		else return s.substring(0,MAX-1)+"...";
-=======
-	public String addCmd(String name, IJsonCmd j) {
-		return apiCommands.registerCmd(name, j);
-	}
-	
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-		return apiCommands.registerCmd(name, j,jh);
-	}
-
-	@Override
-	public boolean terminate() {
-		// TODO Auto-generated method stub
-		return false;
->>>>>>> origin/feature/refactor_code
 	}
 }

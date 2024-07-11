@@ -9,15 +9,10 @@ import java.net.Inet4Address;
 import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUdpUnicastClient.java
-import com.csl.core.CSLContext;
-
 /**
  * Class for a UDP client that listens to the given ip address and port, and adds the received message into
  * the messageQueue to be treated later.
  */
-========
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUdpUnicastClient.java
 public class CSLUdpUnicastClient implements Runnable {
 	private final int port;
 	private String ip="";
@@ -25,7 +20,6 @@ public class CSLUdpUnicastClient implements Runnable {
 	DatagramSocket clientSocket=null;
 	
 	boolean closing=false;
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLUdpUnicastClient.java
 	private boolean traceAll;
 
 	/**
@@ -36,10 +30,6 @@ public class CSLUdpUnicastClient implements Runnable {
 	 * @param messageQueue list to add the incoming messages
 	 * @param traceAll true if we want to have the incoming messages written on the terminal.
 	 */
-========
-	private final boolean traceAll;
-	
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLUdpUnicastClient.java
 	public CSLUdpUnicastClient(String ip,int port, BlockingQueue<byte[]> messageQueue, boolean traceAll) {
 		this.ip=ip;
 		this.port = port;

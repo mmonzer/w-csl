@@ -1,13 +1,7 @@
 package main.help;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-
+import com.csl.web.websockets.WebsocketClientEndpoint;
+import com.ucsl.json.Json;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -15,12 +9,13 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import com.ucsl.json.Json;
-
-import com.csl.web.websockets.WebsocketClientEndpoint;
-
-
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 
 public class Help51ApiDBJson {
@@ -104,7 +99,7 @@ public class Help51ApiDBJson {
 		try {
 			String s= "ws://" + "127.0.0.1" + ":" + "7999" + "/database";
 
-			final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(s)); 
+			final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(s));
 
 			// add listener
 			clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {

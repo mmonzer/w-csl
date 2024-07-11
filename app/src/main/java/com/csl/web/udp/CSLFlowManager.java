@@ -11,14 +11,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
-import com.csl.core.CSLContext;
-import com.ucsl.interfaces.ICSLFlowListener;
-import com.ucsl.json.Json;
-
-
-========
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 public class CSLFlowManager {
 
 	int maxflows=10;
@@ -85,31 +77,6 @@ public class CSLFlowManager {
 		return null;
 	}
 
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
-	//	public boolean addToFlow(int n, Json j) {
-//
-//		if ((n<0)|(n>=maxflows)) {
-//			CSLContext.context.logError("Invalid flow number "+n+" (max="+maxflows+")");
-//			return false ;
-//		}
-//		boolean ok= inputflows.get(n).offer(j);
-//		//CSLContext.context.logInfo("added to flow #"+n+" ok="+ok+" o="+j);
-//		if (!ok)
-//			CSLContext.context.logError("flow number "+n+" is full, lost of data: "+j);
-//
-//		for (ICSLFlowListener l: listeners.get(n)) {
-//			l.newElementOnQueue();
-//		}
-//		
-//		//CSLContext.context.logInfo(dumpInputs());
-//
-//		return ok;
-//
-//	}
-========
-	
-	public boolean addToFlow(int n, Json j) {
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 
 	/**
 	 * Add an alert to the flow. It calls the listeners to treat it and stoke it to the input flows
@@ -154,21 +121,14 @@ public class CSLFlowManager {
 		if (traceAllMessages) System.out.println(" Queue size:"+getFlowSize(flowNumber));
 		
 		if (!ok) {
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
 			CSLContext.instance.logError("flow number "+flowNumber+" is full, lost of data: "+alertData);
 			//if (traceAllMessages) 
 				System.err.println("flow number "+flowNumber+" is full, lost of data: "+alertData);
-========
-			CSLContext.instance.logError("flow number "+n+" is full, lost of data: "+j);
-				System.err.println("flow number "+n+" is full, lost of data: "+j);
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 		}
 		
 		return ok;
 
 	}
-
-<<<<<<<< HEAD:app/src/main/java/com/csl/udp/CSLFlowManager.java
 	public String dumpInputs() {
 		String s="";
 		for (int i=0;i<inputflows.size();i++) {
@@ -179,9 +139,6 @@ public class CSLFlowManager {
 		return s;
 
 	}
-
-========
->>>>>>>> origin/feature/refactor_code:app/src/main/java/com/csl/web/udp/CSLFlowManager.java
 	public void startListener() {
 		String ip= CSLContext.instance.getCslUDPServer().getCurrentIPForUCP();
 		int port = CSLContext.instance.getCslUDPServer().getCurrentPortForUCP();

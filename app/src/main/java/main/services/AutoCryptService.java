@@ -5,6 +5,7 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
 import main.services.endpoints.AutoCryptEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import static com.csl.autocrypt.enums.AutocryptConstants.*;
  * Issuer :
  */
 public class AutoCryptService extends Service implements IStatusProvider {
+    @Getter
     private final AutoCrypt manager;
     private ScheduledExecutorService synchronizationSchedule;
     private boolean isRemote = false;
@@ -71,7 +73,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // Launch initial sync to dbapi
 //        synchronizationSchedule = Executors.newScheduledThreadPool(1);
-//         TODO : change initial to continuous sync. Attention with certificates from ca, that are different that created/updated by the user
+        //  TODO : change initial to continuous sync. Attention with certificates from ca, that are different that created/updated by the user
 //        synchronizationSchedule.scheduleAtFixedRate(() -> {
 //            manager.getMethods().initialSynchronizeDb("pki");
 //        }, 0, 300, TimeUnit.SECONDS);
@@ -584,7 +586,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String name = getValueStringOrNull(body, COMMON_NAME);
+        String name = getValueStringOrNull(body, ISSUER_NAME);  // or COMMON _NAME?
         String description = extractValueStringOrNull(body, DESCRIPTION);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
@@ -607,7 +609,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         String description = extractValueStringOrNull(body, DESCRIPTION);
-        String name = getValueString(body, COMMON_NAME);
+        String name = getValueString(body, ISSUER_NAME);  // or COMMON _NAME?
         Json params = Json.object();
         params.at(PATH, name);
         Json bodyBase = Json.read(body.toString());
@@ -639,14 +641,5 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getStatus(Json body) {
         return JsonApiResponse.result(getStatus()).toJson();
-    }
-
-    /**
-     * Returns the manager of the module
-     *
-     * @return manager of the module
-     */
-    public AutoCrypt getManager() {
-        return manager;
     }
 }

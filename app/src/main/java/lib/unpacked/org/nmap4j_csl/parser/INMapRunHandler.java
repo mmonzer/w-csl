@@ -35,7 +35,18 @@
 package lib.unpacked.org.nmap4j_csl.parser;
 
 import lib.unpacked.org.nmap4j_csl.data.NMapRun;
-import lib.unpacked.org.nmap4j_csl.data.host.*;
+import lib.unpacked.org.nmap4j_csl.data.host.Address;
+import lib.unpacked.org.nmap4j_csl.data.host.Cpe;
+import lib.unpacked.org.nmap4j_csl.data.host.Distance;
+import lib.unpacked.org.nmap4j_csl.data.host.Hostnames;
+import lib.unpacked.org.nmap4j_csl.data.host.IpIdSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Os;
+import lib.unpacked.org.nmap4j_csl.data.host.Ports;
+import lib.unpacked.org.nmap4j_csl.data.host.Status;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpTsSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Times;
+import lib.unpacked.org.nmap4j_csl.data.host.Uptime;
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsClass;
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsMatch;
 import lib.unpacked.org.nmap4j_csl.data.host.os.PortUsed;
@@ -43,7 +54,11 @@ import lib.unpacked.org.nmap4j_csl.data.host.ports.ExtraPorts;
 import lib.unpacked.org.nmap4j_csl.data.host.ports.Port;
 import lib.unpacked.org.nmap4j_csl.data.host.trace.Hop;
 import lib.unpacked.org.nmap4j_csl.data.host.trace.Trace;
-import lib.unpacked.org.nmap4j_csl.data.nmaprun.*;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Debugging;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Host;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.RunStats;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.ScanInfo;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Verbose;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.extraports.ExtraReasons;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.Service;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.State;
@@ -67,66 +82,66 @@ import org.xml.sax.Attributes;
  */
 public interface INMapRunHandler {
 	
-	public NMapRun createNMapRun(Attributes attributes ) ;
+	public NMapRun createNMapRun( Attributes attributes ) ;
 	
-	public Host createHost(Attributes attributes ) ;
+	public Host createHost( Attributes attributes ) ;
 	
-	public Distance createDistance(Attributes attributes ) ;
+	public Distance createDistance( Attributes attributes ) ;
 
-	public Address createAddress(Attributes attributes ) ;
+	public Address createAddress(  Attributes attributes ) ; 
 	
-	public Hostnames createHostnames(Attributes attributes ) ;
+	public Hostnames createHostnames(  Attributes attributes ) ;
 	
-	public Hostname createHostname(Attributes attributes ) ;
+	public Hostname createHostname( Attributes attributes ) ;
 	
-	public IpIdSequence createIpIdSequence(Attributes attributes ) ;
+	public IpIdSequence createIpIdSequence(  Attributes attributes ) ;
 	
-	public Os createOs(Attributes attributes ) ;
+	public Os createOs(  Attributes attributes ) ;
 	
-	public Ports createPorts(Attributes attributes ) ;
+	public Ports createPorts(  Attributes attributes ) ;
 	
-	public Status createStatus(Attributes attributes ) ;
+	public Status createStatus(  Attributes attributes ) ;
 	
-	public TcpSequence createTcpSequence(Attributes attributes ) ;
+	public TcpSequence createTcpSequence(  Attributes attributes ) ;
 	
-	public TcpTsSequence createTcpTsSequence(Attributes attributes ) ;
+	public TcpTsSequence createTcpTsSequence(  Attributes attributes ) ;
 	
-	public Times createTimes(Attributes attributes ) ;
+	public Times createTimes(  Attributes attributes ) ;
 	
-	public Uptime createUptime(Attributes attributes ) ;
+	public Uptime createUptime(  Attributes attributes ) ;
 
-	public OsClass createOsClass(Attributes attributes ) ;
+	public OsClass createOsClass(  Attributes attributes ) ;
 	
-	public OsMatch createOsMatch(Attributes attributes ) ;
+	public OsMatch createOsMatch(  Attributes attributes ) ;
 	
-	public PortUsed createPortUsed(Attributes attributes ) ;
+	public PortUsed createPortUsed(  Attributes attributes ) ;
 	
-	public ExtraPorts createExtraPorts(Attributes attributes ) ;
+	public ExtraPorts createExtraPorts(  Attributes attributes ) ;
 	
-	public Port createPort(Attributes attributes ) ;
+	public Port createPort(  Attributes attributes ) ;
 	
-	public Debugging createDebugging(Attributes attributes ) ;
+	public Debugging createDebugging(  Attributes attributes ) ;
 	
-	public RunStats createRunStats(Attributes attributes ) ;
+	public RunStats createRunStats(  Attributes attributes ) ;
 	
-	public ScanInfo createScanInfo(Attributes attributes ) ;
+	public ScanInfo createScanInfo(  Attributes attributes ) ;
 	
-	public Verbose createVerbose(Attributes attributes ) ;
+	public Verbose createVerbose(  Attributes attributes ) ;
 	
-	public ExtraReasons createExtraReasons(Attributes attributes ) ;
+	public ExtraReasons createExtraReasons(  Attributes attributes ) ;
 	
-	public Service createService(Attributes attributes ) ;
+	public Service createService(  Attributes attributes ) ;
 	
-	public State createState(Attributes attributes ) ;
+	public State createState(  Attributes attributes ) ;
 	
-	public Finished createFinished(Attributes attributes ) ;
+	public Finished createFinished(  Attributes attributes ) ;
 	
-	public Hosts createHosts(Attributes attributes ) ;
+	public Hosts createHosts(  Attributes attributes ) ;
 	
-	public Cpe createCpe(Attributes attributes ) ;
+	public Cpe createCpe( Attributes attributes ) ;
 	
-	public Trace createTrace(Attributes attributes ) ;
+	public Trace createTrace( Attributes attributes ) ;
 
-	public Hop createHop(Attributes attributes ) ;
+	public Hop createHop( Attributes attributes ) ;
 
 }

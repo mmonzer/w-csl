@@ -35,15 +35,33 @@
  */
 package lib.unpacked.org.nmap4j_csl.parser;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import lib.unpacked.org.nmap4j_csl.data.NMapRun;
-import lib.unpacked.org.nmap4j_csl.data.host.*;
+import lib.unpacked.org.nmap4j_csl.data.host.Address;
+import lib.unpacked.org.nmap4j_csl.data.host.Cpe;
+import lib.unpacked.org.nmap4j_csl.data.host.Distance;
+import lib.unpacked.org.nmap4j_csl.data.host.Hostnames;
+import lib.unpacked.org.nmap4j_csl.data.host.Os;
+import lib.unpacked.org.nmap4j_csl.data.host.Ports;
+import lib.unpacked.org.nmap4j_csl.data.host.Status;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpTsSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Times;
+import lib.unpacked.org.nmap4j_csl.data.host.Uptime;
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsClass;
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsMatch;
 import lib.unpacked.org.nmap4j_csl.data.host.os.PortUsed;
 import lib.unpacked.org.nmap4j_csl.data.host.ports.Port;
 import lib.unpacked.org.nmap4j_csl.data.host.trace.Hop;
 import lib.unpacked.org.nmap4j_csl.data.host.trace.Trace;
-import lib.unpacked.org.nmap4j_csl.data.nmaprun.*;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Debugging;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Host;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.RunStats;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.ScanInfo;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Verbose;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.Service;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.State;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.hostnames.Hostname;
@@ -54,10 +72,6 @@ import lib.unpacked.org.nmap4j_csl.parser.events.ParserEvent;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * This class is the implementation of the DefaultHandler and receives 
@@ -98,7 +112,7 @@ public class NMapXmlHandler extends DefaultHandler {
 	private OsMatch osMatch ;
 	private Distance distance ;
 	private TcpSequence tcpSequence ;
-    private TcpTsSequence tcpTsSequence ;
+    private TcpTsSequence tcpTsSequence ;	
     private Times times ;
     private Uptime uptime ;
     private RunStats runStats ;

@@ -34,17 +34,18 @@
  */
 package lib.unpacked.org.nmap4j_csl.parser;
 
+import java.io.IOException;
+import java.io.StringReader;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import lib.unpacked.org.nmap4j_csl.data.NMapRun;
 import lib.unpacked.org.nmap4j_csl.parser.events.NMap4JParserEventListener;
 import lib.unpacked.org.nmap4j_csl.parser.events.ParserEvent;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.io.IOException;
-import java.io.StringReader;
 
 
 
@@ -70,7 +71,7 @@ public class OnePassParser implements NMap4JParserEventListener {
 	public static final int STRING_INPUT = 1 ;
 	public static final int FILE_NAME_INPUT = 2 ;
 	
-	private NMapRun nmapRun ;
+	private  NMapRun nmapRun ;
 	
 	private INMapRunHandler nmrh ;
 	private NMapXmlHandler nmxh ;
@@ -78,10 +79,10 @@ public class OnePassParser implements NMap4JParserEventListener {
 	
 	public OnePassParser() {
 		nmrh = new NMapRunHandlerImpl() ;
-		nmxh = new NMapXmlHandler( nmrh ) ;
+		nmxh = new NMapXmlHandler( nmrh ) ;	
 	}
 	
-	public NMapRun parse(String input, int type  ) {
+	public NMapRun parse( String input, int type  ) {
 		
 		NMapXmlHandler.addListener( this ) ;
 		
@@ -119,13 +120,13 @@ public class OnePassParser implements NMap4JParserEventListener {
 
 	public void parseEventNotification(ParserEvent event) {
 		//System.out.println( event.getPayload() ) ;
-		if( event.getPayload() instanceof NMapRun) {
+		if( event.getPayload() instanceof NMapRun ) {
 			nmapRun = (NMapRun) event.getPayload() ;
 		}
 	}
 	
 	public void addListener(NMap4JParserEventListener aListener ) {
-		NMapXmlHandler.addListener( aListener ) ;
+		NMapXmlHandler.addListener( aListener ) ; 
  	}
 	
 	public void removeListener( NMap4JParserEventListener aListener ) {

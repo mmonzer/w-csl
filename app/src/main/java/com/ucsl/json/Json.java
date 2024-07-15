@@ -2475,12 +2475,11 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		{
 			return toStringImpl(maxCharacters, new IdentityHashMap<Json, Json>());
 		}
-
+		
 		String toStringImpl(int maxCharacters, Map<Json, Json> done)
 		{
 			StringBuilder sb = new StringBuilder("{");
 			if (done.containsKey(this)) {
-				// TODO : embedded json objects will fail because at second level => {...}
 //				return sb.append("...}").toString();
 				return this.toString();
 			}
@@ -2699,14 +2698,14 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	    private static Map<Character, Character> escapes = new HashMap<Character, Character>();
 	    static 
 	    {
-			escapes.put('"', '"');
-			escapes.put('\\', '\\');
-			escapes.put('/', '/');
-			escapes.put('b', '\b');
-			escapes.put('f', '\f');
-			escapes.put('n', '\n');
-			escapes.put('r', '\r');
-			escapes.put('t', '\t');
+	        escapes.put('"','"');
+	        escapes.put('\\', '\\');
+	        escapes.put('/', '/');
+	        escapes.put('b', '\b');
+	        escapes.put('f', '\f');
+	        escapes.put('n', '\n');
+	        escapes.put('r', '\r');
+	        escapes.put('t', '\t');
 	    }
 
 	    private CharacterIterator it;

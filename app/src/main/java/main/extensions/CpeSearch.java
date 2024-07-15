@@ -1,8 +1,24 @@
 package main.extensions;
 
-import com.ucsl.json.Json;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import lombok.Getter;
 import lombok.Setter;
+import com.ucsl.json.Json;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -52,7 +68,16 @@ public class CpeSearch {
 		}
 	}
 
-    /**
+	/**
+	 * Fonction de debug permettant d'obtenir une hashmap contenant le nombre d'element par niveau du graph
+	 * Pour qu'elle soit remplie, décommenter le code entre balise \/\* \*\/ de la fonction addToTree
+	 * @return une hashmap contenant les infos
+	 */
+	public HashMap<Integer,Integer> getInfos(){
+		return infos;
+	}
+
+	/**
 	 * Affiche pour chaque niveau le nombre maximal de fils qu'un element du niveau possède.
 	 */
 	public void getMaxes() {

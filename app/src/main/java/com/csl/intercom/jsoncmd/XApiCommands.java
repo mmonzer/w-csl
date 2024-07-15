@@ -28,7 +28,6 @@ public class XApiCommands {
 		return s;
 	}
 
-
 	public String getCleanApiName() {
 		
 		String s=path;
@@ -44,5 +43,5 @@ public class XApiCommands {
 	
 		return getCleanApiName();
 	}
-	
+
 }

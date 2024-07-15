@@ -1,5 +1,7 @@
 package lib.unpacked.org.nmap4j_csl.data.host;
 
+import java.util.StringTokenizer;
+
 /**
  * A representation of the Common Platform Enumeration (CPE) in Nmap output.
  * <p>

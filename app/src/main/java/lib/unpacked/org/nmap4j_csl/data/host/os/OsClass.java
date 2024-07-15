@@ -34,9 +34,9 @@
  */
 package lib.unpacked.org.nmap4j_csl.data.host.os;
 
-import lib.unpacked.org.nmap4j_csl.data.host.Cpe;
-
 import java.util.ArrayList;
+
+import lib.unpacked.org.nmap4j_csl.data.host.Cpe;
 
 public class OsClass {
 	

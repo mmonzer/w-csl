@@ -4,6 +4,8 @@ import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.database.CSLServiceJsonDataBase;
@@ -21,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -253,9 +257,10 @@ public class CSLIDSMainClient {
 
         JServiceLoader.registerService(new NmapServices(), configObj, true);
 
+
         iniServices();
 
-        startRemoteConnectTask();    // connect/reconnect CSL-Server via wss
+        startRemoteConnectTask();    // connect/reconnect
         CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
 
         CSLContext.instance.postInit(false, true);
@@ -263,6 +268,13 @@ public class CSLIDSMainClient {
 
         CSLContext.instance.getIdsRunner().start();
         ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
+
+        // Send API commands with specific privileges to the server
+        try (DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan()) {
+            dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
+        } catch (Exception e) {
+            logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);
+        }
 
         if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
             int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);

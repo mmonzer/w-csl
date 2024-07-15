@@ -41,6 +41,5 @@ public class JettyServerErrorHandler extends ErrorHandler {
         }catch (ServletException e) {
             logger.error("Error handling server error: ", e);
         }
-
     }
 }

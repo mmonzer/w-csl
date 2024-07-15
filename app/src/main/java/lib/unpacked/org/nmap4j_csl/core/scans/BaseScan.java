@@ -32,11 +32,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package lib.unpacked.org.nmap4j_csl.core.scans;
+package lib.unpacked.org.nmap4j_csl.core.scans ;
 
 import lib.unpacked.org.nmap4j_csl.core.flags.ArgumentProperties;
 import lib.unpacked.org.nmap4j_csl.core.flags.Flag;
-import lib.unpacked.org.nmap4j_csl.core.nmap.*;
+import lib.unpacked.org.nmap4j_csl.core.nmap.ExecutionResults;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapExecutionException;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapExecutor;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapInitializationException;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapProperties;
 
 /**
  * This is the base class for all convenience scan classes.  The 
@@ -128,7 +132,7 @@ public class BaseScan implements IScan {
 
   @Override
   public ExecutionResults executeScan() throws ParameterValidationFailureException,
-          NMapExecutionException, NMapInitializationException {
+      NMapExecutionException, NMapInitializationException {
     NMapExecutor executor = new NMapExecutor( argProps, nmapProps ) ;
     ExecutionResults results = executor.execute() ;
     executedCommand = executor.toString() ;

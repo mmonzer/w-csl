@@ -1,7 +1,8 @@
 package com.csl.web.auth.user;
 
-import lombok.Getter;
 import org.mindrot.jbcrypt.BCrypt;
+
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,6 @@ public final class UserService {
 
 	private static final String BCRYPT_SALT = BCrypt.gensalt();
 
-    // TODO Auto-generated method stub
     private final List<User> users = new CopyOnWriteArrayList<>();
 
     public final User register(String userName, String password, String firstName, String lastName) {

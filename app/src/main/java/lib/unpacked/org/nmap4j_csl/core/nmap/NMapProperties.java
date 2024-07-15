@@ -34,9 +34,9 @@
  */
 package lib.unpacked.org.nmap4j_csl.core.nmap;
 
-import lib.unpacked.org.nmap4j_csl.core.flags.Flag;
+import java.io.File ;
 
-import java.io.File;
+import lib.unpacked.org.nmap4j_csl.core.flags.Flag;
 
 /**
  * This class is used to manage the path to nmap.  This class attempts to look

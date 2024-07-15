@@ -33,16 +33,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package lib.unpacked.org.nmap4j_csl.core.nmap;
+package lib.unpacked.org.nmap4j_csl.core.nmap ;
 
-import lib.unpacked.org.nmap4j_csl.core.flags.ArgumentProperties;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.BufferedReader ;
+import java.io.IOException ;
+import java.io.InputStream ;
+import java.io.InputStreamReader ;
+import java.io.OutputStream ;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+
+import lib.unpacked.org.nmap4j_csl.core.flags.ArgumentProperties;
 
 /**
  * A simple class that encapsulates executing NMap.
@@ -66,7 +67,7 @@ public class NMapExecutor {
      * @param nmapProps
      * @throws NMapInitializationException
      */
-    public NMapExecutor(ArgumentProperties argProps, NMapProperties nmapProps )
+    public NMapExecutor( ArgumentProperties argProps, NMapProperties nmapProps )
             throws NMapInitializationException {
         nmapArguments = argProps ;
         nmapProperties = nmapProps ;

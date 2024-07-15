@@ -74,7 +74,7 @@
     "log_dir": "./idslogs/jcmds",
     "log_prefix_filename": "JCMD",
     "max_size_of_log_files": 10000,
-    "websocket_timeout" : 20000
+    "websocket_timeout": 10000
   },
   "udp_server_conf": {
     "on": true,
@@ -150,9 +150,6 @@
     "send_to_browser": true,
     "show_ticks": false,
     "kill_previous_instance": true,
-    "taps_id": [
-      "tap01"
-    ],
     "taps_dir": "taps",
     "history_length": 60
   },
@@ -174,4 +171,5 @@
     "ip": "host.docker.internal",
     "port": 8002
   }
+
 }

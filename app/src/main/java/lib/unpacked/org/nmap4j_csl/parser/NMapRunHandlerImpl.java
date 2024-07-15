@@ -35,7 +35,18 @@
 package lib.unpacked.org.nmap4j_csl.parser;
 
 import lib.unpacked.org.nmap4j_csl.data.NMapRun;
-import lib.unpacked.org.nmap4j_csl.data.host.*;
+import lib.unpacked.org.nmap4j_csl.data.host.Address;
+import lib.unpacked.org.nmap4j_csl.data.host.Cpe;
+import lib.unpacked.org.nmap4j_csl.data.host.Distance;
+import lib.unpacked.org.nmap4j_csl.data.host.Hostnames;
+import lib.unpacked.org.nmap4j_csl.data.host.IpIdSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Os;
+import lib.unpacked.org.nmap4j_csl.data.host.Ports;
+import lib.unpacked.org.nmap4j_csl.data.host.Status;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpTsSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Times;
+import lib.unpacked.org.nmap4j_csl.data.host.Uptime;
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsClass;
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsMatch;
 import lib.unpacked.org.nmap4j_csl.data.host.os.PortUsed;
@@ -43,7 +54,11 @@ import lib.unpacked.org.nmap4j_csl.data.host.ports.ExtraPorts;
 import lib.unpacked.org.nmap4j_csl.data.host.ports.Port;
 import lib.unpacked.org.nmap4j_csl.data.host.trace.Hop;
 import lib.unpacked.org.nmap4j_csl.data.host.trace.Trace;
-import lib.unpacked.org.nmap4j_csl.data.nmaprun.*;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Debugging;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Host;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.RunStats;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.ScanInfo;
+import lib.unpacked.org.nmap4j_csl.data.nmaprun.Verbose;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.extraports.ExtraReasons;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.Service;
 import lib.unpacked.org.nmap4j_csl.data.nmaprun.host.ports.port.State;
@@ -87,10 +102,10 @@ public class NMapRunHandlerImpl implements INMapRunHandler {
 	public Host createHost(Attributes attributes) {
 		Host host  = new Host() ;
 		if( attributes.getValue( Host.STARTTIME_ATTR ) != null ) {
-			host.setStartTime( Long.parseLong( attributes.getValue( Host.STARTTIME_ATTR ) ) ) ;
+			host.setStartTime( Long.parseLong( attributes.getValue( Host.STARTTIME_ATTR ) ) ) ;	
 		}
 		if( attributes.getValue( Host.ENDTIME_ATTR ) != null ) {
-			host.setEndTime( Long.parseLong( attributes.getValue( Host.ENDTIME_ATTR ) ) ) ;
+			host.setEndTime( Long.parseLong( attributes.getValue( Host.ENDTIME_ATTR ) ) ) ;	
 		}
 		
 		return host ;
@@ -244,7 +259,7 @@ public class NMapRunHandlerImpl implements INMapRunHandler {
 		Uptime uptime = new Uptime() ;
 		uptime.setLastboot( attributes.getValue( Uptime.LASTBOOT_ATTR ) ) ;
 		if( attributes.getValue( Uptime.UPTIME_TAG ) != null ) {
-			uptime.setSeconds( Long.parseLong( attributes.getValue( Uptime.UPTIME_TAG ) ) ) ;
+			uptime.setSeconds( Long.parseLong( attributes.getValue( Uptime.UPTIME_TAG ) ) ) ;	
 		}
 		
 		return uptime ;
@@ -261,7 +276,7 @@ public class NMapRunHandlerImpl implements INMapRunHandler {
 		Finished finished = new Finished() ;
 		finished.setElapsed( attributes.getValue( Finished.ELAPSED_ATTR ) ) ;
 		finished.setTime( attributes.getValue( Finished.TIME_ATTR ) ) ;
-		finished.setTimestr( attributes.getValue( Finished.TIMESTR_ATTR ) ) ;
+		finished.setTimestr( attributes.getValue( Finished.TIMESTR_ATTR ) ) ; 
 		
 		return finished ;
 	}

@@ -35,9 +35,9 @@
  */
 package lib.unpacked.org.nmap4j_csl.data.host;
 
-import lib.unpacked.org.nmap4j_csl.data.host.ports.Port;
-
 import java.util.ArrayList;
+
+import lib.unpacked.org.nmap4j_csl.data.host.ports.Port;
 
 
 public class Ports {

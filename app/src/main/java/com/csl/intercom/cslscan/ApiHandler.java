@@ -53,40 +53,30 @@ public class ApiHandler implements AutoCloseable {
      * @param url        url of the service api
      */
     public ApiHandler(String nameModule, String url) {
-        ensureSSLDbApiHandlerInitialization();
-        this.url = url;
         this.moduleName = nameModule;
+        this.url = url;
         headers.put(HttpHeader.CONTENT_TYPE, "application/json");
+        httpClient = initClient();
 
         try {
             httpClient.start();
         } catch (Exception e) {
-            logger.error("Could not start the http client for " + nameModule + " API.", e);
+            logger.error("Could not start the http client for {} API.", nameModule, e);
         }
     }
-    private void ensureSSLDbApiHandlerInitialization(){
-        // Retrieve system properties
-        String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
-        String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
 
-        // Ensure the properties are set
-        if (trustStorePath == null || trustStorePassword == null) {
-            throw new IllegalStateException("Trust store properties are not set.");
-        }
-
-        // Configure SslContextFactory with the retrieved properties
-        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-        sslContextFactory.setTrustStorePath(trustStorePath);
-        sslContextFactory.setTrustStorePassword(trustStorePassword);
-        sslContextFactory.setTrustAll(true);
-
-        httpClient = new HttpClient(sslContextFactory);
+    /**
+     * Initialize the httpClient
+     * @return the new client
+     */
+    protected HttpClient initClient() {
+        return new HttpClient();
     }
 
     @Override
     public void close() throws Exception {
         try {
-        this.httpClient.stop();}
+            this.httpClient.stop();}
         catch (Exception e) {
             logger.error("Could not stop the {} HTTP client.", moduleName, e);
         }

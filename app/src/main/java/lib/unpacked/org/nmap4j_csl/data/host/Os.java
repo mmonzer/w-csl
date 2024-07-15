@@ -34,11 +34,11 @@
  */
 package lib.unpacked.org.nmap4j_csl.data.host;
 
+import java.util.ArrayList;
+
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsClass;
 import lib.unpacked.org.nmap4j_csl.data.host.os.OsMatch;
 import lib.unpacked.org.nmap4j_csl.data.host.os.PortUsed;
-
-import java.util.ArrayList;
 
 
 public class Os {

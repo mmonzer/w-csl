@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSerializable {
     private String uuid;
     private String name;
+    private boolean shouldDoARequest;
     private String url;
     private String ip_address;
     private String port;
@@ -46,6 +47,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         return Json.object(
                 EntityHttpConnectionStageField.UUID.scanName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.scanName(), this.name,
+                EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.scanName(), this.shouldDoARequest,
                 EntityHttpConnectionStageField.IP_ADDRESS.scanName(), this.ip_address,
                 EntityHttpConnectionStageField.URL.scanName(), this.url,
                 EntityHttpConnectionStageField.PORT.scanName(), this.port,
@@ -79,6 +81,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         return Json.object(
                 EntityHttpConnectionStageField.UUID.dbapiName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.dbapiName(), this.name,
+                EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName(), this.shouldDoARequest,
                 EntityHttpConnectionStageField.URL.dbapiName(), this.url,
                 EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), this.ip_address,
                 EntityHttpConnectionStageField.PORT.dbapiName(), this.port,
@@ -112,6 +115,12 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
             stage.uuid = json.get(EntityHttpConnectionStageField.UUID.dbapiName()).asString();
         } else {
             stage.uuid = null;
+        }
+
+        if (json.has(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName()) && json.get(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName()).isBoolean()) {
+            stage.shouldDoARequest = json.get(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName()).asBoolean();
+        } else {
+            stage.shouldDoARequest = true;
         }
 
         if (json.has(EntityHttpConnectionStageField.NAME.dbapiName()) && json.get(EntityHttpConnectionStageField.NAME.dbapiName()).isString()) {
@@ -219,6 +228,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         if (json.get(EntityHttpConnectionStageField.TOKEN.scanName()).isString() && !json.get(EntityHttpConnectionStageField.TOKEN.scanName()).asString().equals("")) {
             stage.token = json.get(EntityHttpConnectionStageField.TOKEN.scanName()).asString();
         }
+        stage.shouldDoARequest = json.get(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.scanName()).asBoolean();
         stage.protocol = HttpProtocol.valueOf(json.get(EntityHttpConnectionStageField.PROTOCOL.scanName()).asString());
         stage.method = HttpMethod.valueOf(json.get(EntityHttpConnectionStageField.METHOD.scanName()).asString());
         stage.authenticationMethod = HttpAuthenticationMethod.valueOf(json.get(EntityHttpConnectionStageField.AUTHENTICATION_METHOD.scanName()).asString());

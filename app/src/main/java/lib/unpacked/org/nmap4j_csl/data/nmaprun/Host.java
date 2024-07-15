@@ -34,10 +34,20 @@
  */
 package lib.unpacked.org.nmap4j_csl.data.nmaprun;
 
-import lib.unpacked.org.nmap4j_csl.data.host.*;
-import lib.unpacked.org.nmap4j_csl.data.host.trace.Trace;
-
 import java.util.ArrayList;
+
+import lib.unpacked.org.nmap4j_csl.data.host.Address;
+import lib.unpacked.org.nmap4j_csl.data.host.Distance;
+import lib.unpacked.org.nmap4j_csl.data.host.Hostnames;
+import lib.unpacked.org.nmap4j_csl.data.host.IpIdSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Os;
+import lib.unpacked.org.nmap4j_csl.data.host.Ports;
+import lib.unpacked.org.nmap4j_csl.data.host.Status;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.TcpTsSequence;
+import lib.unpacked.org.nmap4j_csl.data.host.Times;
+import lib.unpacked.org.nmap4j_csl.data.host.Uptime;
+import lib.unpacked.org.nmap4j_csl.data.host.trace.Trace;
 
 
 public class Host {
@@ -51,7 +61,7 @@ public class Host {
 	private long endTime ;
 	
 	private Status status ;
-	private ArrayList<Address> addresses ;
+	private ArrayList<Address> addresses ; 
 	private Ports ports ;
 	private Os os ;
 	private Uptime uptime ;

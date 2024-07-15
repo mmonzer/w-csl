@@ -1,7 +1,11 @@
 package lib.unpacked.org.nmap4j_csl;
 
 import lib.unpacked.org.nmap4j_csl.core.flags.ArgumentProperties;
-import lib.unpacked.org.nmap4j_csl.core.nmap.*;
+import lib.unpacked.org.nmap4j_csl.core.nmap.ExecutionResults;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapExecutionException;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapExecutor;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapInitializationException;
+import lib.unpacked.org.nmap4j_csl.core.nmap.NMapProperties;
 import lib.unpacked.org.nmap4j_csl.data.NMapRun;
 import lib.unpacked.org.nmap4j_csl.parser.OnePassParser;
 import lib.unpacked.org.nmap4j_csl.valid.HostsInputValidator;

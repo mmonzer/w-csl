@@ -34,6 +34,8 @@
  */
 package lib.unpacked.org.nmap4j_csl.core.scans;
 
+import lib.unpacked.org.nmap4j_csl.core.flags.Flag;
+
 /**
  * This is a convenience class that allows you to scan for hosts based on the
  * included/excluded hosts passed to the constructor.
@@ -47,7 +49,7 @@ public class HostDiscovery extends BaseScan {
 	    includeHosts( includeHosts ) ;
 	    excludeHosts( excludeHosts ) ;
 	    
-	    setTiming( TimingFlag.NORMAL ) ;
+	    setTiming( IScan.TimingFlag.NORMAL ) ;
 	    
 	    getArgumentProperties().addFlag("-sn" ) ;
 

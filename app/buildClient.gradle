@@ -8,3 +8,9 @@ apply from : 'build.gradle'
 application {
     mainClass = 'main.CSLIDSMainClient' //CSLIDSMainServer
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'app.src.main.java.main.CSLIDSMainClient' //CSLIDSMainServer
+    }
+}

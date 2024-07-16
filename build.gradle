@@ -84,6 +84,24 @@ sourceSets{
         }
     }
 }
+task buildAndRun {
+    dependsOn 'build' // Ensures 'build' task is executed first
+
+    doLast {
+        // Run the Java application
+        javaexec {
+
+            main = 'main.CSLIDSMainServer' // Replace with your main class
+            classpath = sourceSets.main.runtimeClasspath
+            jvmArgs = [
+                    '-Dlogback.configurationFile=./src/main/resources/resources/logback.xml',
+                    '-Djavax.net.ssl.trustStore=./cacerts.jks',
+                    '-Djavax.net.ssl.trustStorePassword=changeit'
+            ]
+        }
+    }
+}
+
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {

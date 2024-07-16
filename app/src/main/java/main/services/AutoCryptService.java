@@ -26,7 +26,7 @@ import static com.csl.autocrypt.enums.AutocryptConstants.*;
  */
 public class AutoCryptService extends Service implements IStatusProvider {
     @Getter
-    private final AutoCrypt manager;
+    private final AutoCrypt autocrypt;
     private ScheduledExecutorService synchronizationSchedule;
     private boolean isRemote = false;
     private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
@@ -51,7 +51,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
     public AutoCryptService(String name, String description, String configFileSectionName, boolean isRemote) {
         super(name, description, configFileSectionName);
         this.isRemote = isRemote;
-        manager = new AutoCrypt(name);
+        autocrypt = new AutoCrypt(name);
     }
 
     /**
@@ -64,7 +64,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
     @Override
     public boolean init(Json config, String configFile) {
         if (!isRemote) {
-            manager.reinitApiHandler();
+            autocrypt.reinitApiHandlers();
         }
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
@@ -75,7 +75,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 //        synchronizationSchedule = Executors.newScheduledThreadPool(1);
         //  TODO : change initial to continuous sync. Attention with certificates from ca, that are different that created/updated by the user
 //        synchronizationSchedule.scheduleAtFixedRate(() -> {
-//            manager.getMethods().initialSynchronizeDb("pki");
+//            autocrypt.initialSynchronizeDb("pki");
 //        }, 0, 300, TimeUnit.SECONDS);
 
         logger.info("Service autocrypt initilialized.");
@@ -87,11 +87,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     private void createEndpoints() {
 //        // TODO: needs to add persistence of changes
-//        // Connexion
-//        addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
-//        addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
-//        addCmd(AutoCryptEndpoints.GET_PORT, this::getPort);
-//        addCmd(AutoCryptEndpoints.SET_PORT, this::changePort);
+        // Connexion
+        addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
+        addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
+        addCmd(AutoCryptEndpoints.GET_PORT, this::getPort);
+        addCmd(AutoCryptEndpoints.SET_PORT, this::changePort);
         // issuer-controller
         addCmd(AutoCryptEndpoints.GET_ISSUERS, this::getIssuers);
         addCmd(AutoCryptEndpoints.GET_ISSUER_INFO, this::getIssuerInfo);
@@ -129,10 +129,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the ip
      */
     public Json changeIp(Json body) {
-
-
-        manager.setModuleIp(getValueString(body, IP));
-        manager.reinitApiHandler();
+        autocrypt.setModuleIp(getValueString(body, IP));
+        autocrypt.reinitApiHandlers();
 
         return JsonApiResponse.success().toJson();
     }
@@ -144,7 +142,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getIp(Json body) {
         Json response = Json.object();
-        response.at(IP, manager.getModuleIp());
+        response.at(IP, autocrypt.getModuleIp());
         return JsonApiResponse.result(response).toJson();
     }
 
@@ -154,8 +152,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the port
      */
     public Json changePort(Json body) {
-        manager.setModulePort(getValueInteger(body, PORT));
-        manager.reinitApiHandler();
+        autocrypt.setModulePort(getValueInteger(body, PORT));
+        autocrypt.reinitApiHandlers();
 
         return JsonApiResponse.success().toJson();
     }
@@ -167,7 +165,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getPort(Json body) {
         Json response = Json.object();
-        response.at(PORT, manager.getModulePort());
+        response.at(PORT, autocrypt.getModulePort());
         return JsonApiResponse.result(response).toJson();
     }
 
@@ -177,7 +175,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json getIssuers(Json body) {
-        return manager.getMethods().getIssuers(body).toJson();
+        return autocrypt.getIssuers(body).toJson();
     }
 
     /**
@@ -194,7 +192,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().getIssuerInfo(issuerRef, body).toJson();
+        return autocrypt.getIssuerInfo(issuerRef, body).toJson();
     }
 
     /**
@@ -217,11 +215,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
         transferValueStringOrNull(bodyBase, bodyExtra, VAULT_ID);
         transferValueIntegerOrNull(bodyBase, bodyExtra, ID);
         transferValueStringOrNull(bodyBase, bodyExtra, TTL);
-        if (body.has(ISSUER_REF)) {bodyExtra.set(ISSUER_REF, body.get(ISSUER_REF).asString());}
+        if (body.has(ISSUER_REF)) {
+            bodyExtra.set(ISSUER_REF, body.get(ISSUER_REF).asString());
+        }
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().updateIssuerInfo(name, description, issuerRef, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.updateIssuerInfo(name, description, issuerRef, params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -239,7 +239,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().deleteIssuer(issuerRef, body, params).toJson();
+        return autocrypt.deleteIssuer(issuerRef, body, params).toJson();
     }
 
     /**
@@ -261,7 +261,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().importIssuer(name, params, file, false).toJson();
+        return autocrypt.importIssuer(name, params, file, false).toJson();
     }
 
     /**
@@ -284,7 +284,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().importIssuer(name, params, file, true).toJson();
+        return autocrypt.importIssuer(name, params, file, true).toJson();
     }
 
     /**
@@ -302,7 +302,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().exportIssuer(issuerRef, params).toJson();
+        return autocrypt.exportIssuer(issuerRef, params).toJson();
     }
 
     /**
@@ -311,7 +311,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path
      */
     public Json getRoles(Json body) {
-        return manager.getMethods().getRoles(body).toJson();
+        return autocrypt.getRoles(body).toJson();
     }
 
     /**
@@ -340,7 +340,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().createRole(name, description, certificateAuthorityId.toString(), params, bodyBase, bodyExtra).toJson();
+        return autocrypt.createRole(name, description, certificateAuthorityId.toString(), params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -358,7 +358,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().getRole(name, params).toJson();
+        return autocrypt.getRole(name, params).toJson();
     }
 
     /**
@@ -377,7 +377,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().deleteRole(name, body, params).toJson();
+        return autocrypt.deleteRole(name, body, params).toJson();
     }
 
     /**
@@ -402,13 +402,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
 //        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
 //        transferValueStringOrNull(bodyBase, bodyExtra, CERTIFICATE_AUTHORITY_ID);
 //        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
-        if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
+        if (body.has(TTL)) {
+            bodyExtra.set(TTL, body.get(TTL).asString());
+        }
         transformToVault(bodyBase, ORGANIZATION_UNIT);
         transformToVault(bodyBase, STATE);
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().updateRole(name, description, certificateAuthorityId.toString(), params, bodyBase, bodyExtra).toJson();
+        return autocrypt.updateRole(name, description, certificateAuthorityId.toString(), params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -426,7 +428,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().activateOCSP(body, params).toJson();
+        return autocrypt.activateOCSP(body, params).toJson();
     }
 
     /**
@@ -445,7 +447,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().validateTemplate(body, params).toJson();
+        return autocrypt.validateTemplate(body, params).toJson();
     }
 
     /**
@@ -471,13 +473,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
         bodyBase.set(NAME, getValueString(body, ROLE_NAME));
-        if (body.has(COMMON_NAME)) {bodyExtra.set(COMMON_NAME, body.get(COMMON_NAME).asString());}
+        if (body.has(COMMON_NAME)) {
+            bodyExtra.set(COMMON_NAME, body.get(COMMON_NAME).asString());
+        }
         bodyExtra.set(TTL, ttl);
         drop(bodyBase, VAULT_ROLE);
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().generateCertificate(name, description, vaultRoleId.toString(), params, bodyBase, bodyExtra).toJson();
+        return autocrypt.generateCertificate(name, description, vaultRoleId.toString(), params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -494,7 +498,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().getCertificates(params).toJson();
+        return autocrypt.getCertificates(params).toJson();
     }
 
     /**
@@ -509,7 +513,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json params = Json.object();
         transferValueString(body, params, PATH);
         String serialNumber = transferValueString(body, params, SERIAL_NUMBER);
-        return manager.getMethods().getCertificateInfo(serialNumber, params).toJson();
+        return autocrypt.getCertificateInfo(serialNumber, params).toJson();
     }
 
     /**
@@ -528,7 +532,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().getCertificate(serialNumber, withPrivateKey, params).toJson();
+        return autocrypt.getCertificate(serialNumber, withPrivateKey, params).toJson();
     }
 
     /**
@@ -546,7 +550,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().downloadCertificate(serialNumber, params).getResult();
+        return autocrypt.downloadCertificate(serialNumber, params).getResult();
     }
 
     /**
@@ -565,7 +569,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().revokeCertificate(serialNumber, params).toJson();
+        return autocrypt.revokeCertificate(serialNumber, params).toJson();
     }
 
     /**
@@ -574,7 +578,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body unused
      */
     public Json deleteRevokedCertificates(Json body) throws IllegalArgumentException {
-        return manager.getMethods().deleteRevokedCertificates().toJson();
+        return autocrypt.deleteRevokedCertificates().toJson();
     }
 
     /**
@@ -594,11 +598,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json bodyExtra = Json.read(body.toString());
         transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
         transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
-        if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
+        if (body.has(TTL)) {
+            bodyExtra.set(TTL, body.get(TTL).asString());
+        }
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().generateRootCA(name, description, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.generateRootCA(name, description, params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -618,11 +624,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json bodyExtra = Json.read(body.toString());
         transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
         transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
-        if (body.has(TTL)) {bodyExtra.set(TTL, body.get(TTL).asString());}
+        if (body.has(TTL)) {
+            bodyExtra.set(TTL, body.get(TTL).asString());
+        }
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().generateIntermediateCA(name, description, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.generateIntermediateCA(name, description, params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -632,7 +640,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     @Override
     public Json getStatus() {
-        return manager.getMethods().getStatus();
+        return autocrypt.getStatus();
     }
 
     /**

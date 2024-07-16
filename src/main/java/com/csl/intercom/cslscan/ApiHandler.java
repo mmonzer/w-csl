@@ -70,16 +70,9 @@ public class ApiHandler implements AutoCloseable {
         String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
 
         // Ensure the properties are set
-        if (trustStorePath == null || trustStorePassword == null) {
-            throw new IllegalStateException("Trust store properties are not set.");
-        }
-
-        // Configure SslContextFactory with the retrieved properties
         SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
         sslContextFactory.setTrustStorePath(trustStorePath);
         sslContextFactory.setTrustStorePassword(trustStorePassword);
-        sslContextFactory.setTrustAll(true);
-
         httpClient = new HttpClient(sslContextFactory);
     }
 

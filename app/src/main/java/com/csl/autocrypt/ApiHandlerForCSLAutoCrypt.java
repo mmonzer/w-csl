@@ -1,12 +1,13 @@
 package com.csl.autocrypt;
 
+import com.csl.autocrypt.enums.AutocryptConstants;
 import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import com.csl.autocrypt.enums.ApiEndpointForCSLAutocrypt;
 
-import static com.csl.autocrypt.enums.AutocryptConstants.IS_HTTP_API_KEY_REACHABLE;
-import static com.csl.autocrypt.enums.AutocryptConstants.PEM_BUNDLE;
+import static com.csl.autocrypt.enums.AutocryptConstants.Issuer;
+import static com.csl.autocrypt.enums.AutocryptConstants.Common;
 
 /**
  * Extension of the Api Handler for implementing the specific methods that contact the module AutoCrypt
@@ -93,7 +94,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse importIssuer(Json params, String file) {
         Json newBody = Json.object();
-        newBody.set(PEM_BUNDLE, file.replace("\r",""));
+        newBody.set(Issuer.PEM_BUNDLE, file.replace("\r",""));
         return this.sendPost(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI_IMPORT.endpoint(),
                 params,
@@ -327,7 +328,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      * @return whether it is reachable
      */
     public Json getStatus() {
-        return Json.object(IS_HTTP_API_KEY_REACHABLE, this.sendGet(
+        return Json.object(Common.IS_HTTP_API_KEY_REACHABLE, this.sendGet(
                 ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object()).isSuccess());
     }
 }

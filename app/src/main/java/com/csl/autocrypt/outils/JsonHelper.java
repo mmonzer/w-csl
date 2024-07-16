@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.csl.autocrypt.enums.AutocryptConstants.COUNTRY;
 import static com.csl.autocrypt.enums.AutocryptConstants.LIST_DELIMITER;
 
 /**
@@ -64,7 +63,20 @@ public class JsonHelper {
     }
 
     /**
-     * Moves the value of one object to another if exists.
+     * Transfers the value of the first object to the second one if key exists.
+     *
+     * @param objOrigin the json object origin to get the value to move
+     * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
+     * @param keys       the key inside the json obj
+     */
+    public static void transferValueStringOrNull(Json objOrigin, Json objDest, String... keys) throws IllegalArgumentException {
+        for (String key : keys) {
+            transferValueStringOrNull(objOrigin, objDest, key);
+        }
+    }
+
+    /**
+     * Transfers the value of the first object to the second one if key exists.
      *
      * @param objOrigin the json object origin to get the value to move
      * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
@@ -80,7 +92,7 @@ public class JsonHelper {
     }
 
     /**
-     * Moves the value of one object to another if exists.
+     * Transfers the value of the first object to the second one if key exists.
      *
      * @param objOrigin the json object origin to get the value to move
      * @param objDest   the json object destination where the new value is insert (overwritten if already exists)

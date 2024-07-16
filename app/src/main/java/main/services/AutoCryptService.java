@@ -10,11 +10,9 @@ import main.services.endpoints.AutoCryptEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import static com.csl.autocrypt.ConvertDapiVault.transformToVault;
+import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.outils.JsonHelper.*;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 
@@ -86,7 +84,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Creates the endpoints of this service
      */
     private void createEndpoints() {
-//        // TODO: needs to add persistence of changes
+        // TODO: needs to add persistence of changes
         // Connexion
         addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
         addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
@@ -129,7 +127,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the ip
      */
     public Json changeIp(Json body) {
-        autocrypt.setModuleIp(getValueString(body, IP));
+        autocrypt.setModuleIp(getValueString(body, Common.IP));
         autocrypt.reinitApiHandlers();
 
         return JsonApiResponse.success().toJson();
@@ -142,7 +140,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getIp(Json body) {
         Json response = Json.object();
-        response.at(IP, autocrypt.getModuleIp());
+        response.at(Common.IP, autocrypt.getModuleIp());
         return JsonApiResponse.result(response).toJson();
     }
 
@@ -152,7 +150,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the port
      */
     public Json changePort(Json body) {
-        autocrypt.setModulePort(getValueInteger(body, PORT));
+        autocrypt.setModulePort(getValueInteger(body, Common.PORT));
         autocrypt.reinitApiHandlers();
 
         return JsonApiResponse.success().toJson();
@@ -165,7 +163,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getPort(Json body) {
         Json response = Json.object();
-        response.at(PORT, autocrypt.getModulePort());
+        response.at(Common.PORT, autocrypt.getModulePort());
         return JsonApiResponse.result(response).toJson();
     }
 
@@ -187,8 +185,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        getValueString(body, PATH);
-        String issuerRef = extractValueString(body, ISSUER_REF);
+        getValueString(body, Common.PATH);
+        String issuerRef = extractValueString(body, Issuer.ISSUER_REF);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -205,19 +203,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        String name = getValueString(body, ISSUER_NAME);
-        transferValueStringOrNull(body, params, PATH);
-        String description = extractValueStringOrNull(body, DESCRIPTION);
-        String issuerRef = extractValueString(body, ISSUER_REF);
+        String name = getValueString(body, Issuer.ISSUER_NAME);
+        transferValueString(body, params, Common.PATH);
+        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
+        String issuerRef = extractValueString(body, Issuer.ISSUER_REF);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
-        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
-        transferValueStringOrNull(bodyBase, bodyExtra, VAULT_ID);
-        transferValueIntegerOrNull(bodyBase, bodyExtra, ID);
-        transferValueStringOrNull(bodyBase, bodyExtra, TTL);
-        if (body.has(ISSUER_REF)) {
-            bodyExtra.set(ISSUER_REF, body.get(ISSUER_REF).asString());
-        }
+        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT, Role.VAULT_ID, Common.TTL);
+        transferValueIntegerOrNull(bodyBase, bodyExtra, Common.ID);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -234,8 +227,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        String issuerRef = extractValueString(body, ISSUER_REF);
-        transferValueString(body, params, PATH);
+        String issuerRef = extractValueString(body, Issuer.ISSUER_REF);
+        transferValueString(body, params, Common.PATH);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -245,23 +238,33 @@ public class AutoCryptService extends Service implements IStatusProvider {
     /**
      * Imports a new certificate
      *
-     * @param body parameters with the path and the file
+     * @param body parameters with the name and the file
+     * @param path path for the new issuer
      */
-    public Json importIssuerIntermediate(Json body) {
+    public JsonApiResponse importIssuer(Json body, String path, boolean isRoot) {
 
         // region -- Verify required body keys and extract key values
 
+        String name = getValueString(body, Common.NAME);
         Json params = Json.object();
-        String name = getValueString(body, NAME);
-        transferValueString(body, params, PATH);
-        if (!body.has(FILE) || !body.get(FILE).isString()) {
-            return JsonApiResponse.error("File was not correctly uploaded").toJson();
+        params.set( Common.PATH, path);
+        if (!body.has(Common.FILE) || !body.get(Common.FILE).isString()) {
+            return JsonApiResponse.error("File was not correctly uploaded");
         }
-        String file = body.get(FILE).asString();
+        String file = body.get(Common.FILE).asString();
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.importIssuer(name, params, file, false).toJson();
+        return autocrypt.importIssuer(name, params, file, isRoot);
+    }
+
+    /**
+     * Imports a new certificate
+     *
+     * @param body parameters with the path and the file
+     */
+    public Json importIssuerIntermediate(Json body) {
+        return importIssuer(body, extractValueString(body, Common.PATH), false).toJson();
     }
 
     /**
@@ -270,21 +273,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the file
      */
     public Json importIssuerRoot(Json body) {
-
-        // region -- Verify required body keys and extract key values
-
-        Json params = Json.object();
-        String name = extractValueString(body, NAME);
-        params.at(PATH, PKI);
-        drop(body, PATH);
-        if (!body.has(FILE) || !body.get(FILE).isString()) {
-            return JsonApiResponse.error("File was not correctly uploaded").toJson();
-        }
-        String file = body.get(FILE).asString();
-
-        // endregion -- Verify required body keys and extract key values
-
-        return autocrypt.importIssuer(name, params, file, true).toJson();
+        return importIssuer(body, Common.PKI, true).toJson();
     }
 
     /**
@@ -297,8 +286,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        String issuerRef = getValueString(body, ISSUER_REF);
-        transferValueString(body, params, PATH);
+        String issuerRef = getValueString(body, Issuer.ISSUER_REF);
+        transferValueString(body, params, Common.PATH);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -323,20 +312,20 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        if (body.has(KEY_TYPE) && body.get(KEY_TYPE).isString()) {
-            body.set(KEY_TYPE, body.get(KEY_TYPE).asString().toLowerCase());
+        if (body.has(Role.KEY_TYPE) && body.get(Role.KEY_TYPE).isString()) {
+            body.set(Role.KEY_TYPE, body.get(Role.KEY_TYPE).asString().toLowerCase());
         }
 
         Json params = Json.object();
-        String name = getValueString(body, NAME);
-        body.set(NAME, name.replace(" ", "-"));
-        String description = extractValueStringOrNull(body, DESCRIPTION);
-        transferValueString(body, params, PATH);
-        Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
+        String name = getValueString(body, Common.NAME);
+//        body.set(Common.NAME, name.replace(" ", "-"));
+        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
+        transferValueString(body, params, Common.PATH);
+        Integer certificateAuthorityId = getValueInteger(body, Role.CERTIFICATE_AUTHORITY_ID);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
 
-        transformToVault(bodyBase, ORGANIZATION_UNIT, STATE);
+        transformKeysFromDbapiToVault(bodyBase, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -353,8 +342,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        String name = getValueString(body, NAME);
-        transferValueString(body, params, PATH);
+        String name = getValueString(body, Common.NAME);
+        transferValueString(body, params, Common.PATH);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -371,9 +360,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        String name = extractValueString(body, NAME);
-        drop(body, ID);
-        transferValueString(body, params, PATH);
+        String name = extractValueString(body, Common.NAME);
+        drop(body, Common.ID);
+        transferValueString(body, params, Common.PATH);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -390,23 +379,16 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        String name = extractValueString(body, NAME);
-        Integer certificateAuthorityId = getValueInteger(body, CERTIFICATE_AUTHORITY_ID);
-        String description = extractValueStringOrNull(body, DESCRIPTION);
-        transferValueString(body, params, PATH);
-        drop(body, ID, CERTIFICATE_AUTHORITY, VAULT_ID, CREATED_AT, UPDATED_AT);
-        drop(body, IP_SANS, URI_SANS, NOT_BEFORE_DURATION, NOT_AFTER, ALLOW_TOKEN_DISPLAYNAME);
+        String name = extractValueString(body, Common.NAME);
+        Integer certificateAuthorityId = getValueInteger(body, Role.CERTIFICATE_AUTHORITY_ID);
+        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
+        transferValueString(body, params, Common.PATH);
+        drop(body, Common.ID, Role.CERTIFICATE_AUTHORITY, Role.VAULT_ID, Common.CREATED_AT, Common.UPDATED_AT);
+        drop(body, Issuer.IP_SANS, Issuer.URI_SANS, Issuer.NOT_BEFORE_DURATION, Issuer.NOT_AFTER, Role.ALLOW_TOKEN_DISPLAYNAME);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
-        drop(bodyBase, TTL_UNIT, CERTIFICATE_AUTHORITY_ID);
-//        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
-//        transferValueStringOrNull(bodyBase, bodyExtra, CERTIFICATE_AUTHORITY_ID);
-//        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
-        if (body.has(TTL)) {
-            bodyExtra.set(TTL, body.get(TTL).asString());
-        }
-        transformToVault(bodyBase, ORGANIZATION_UNIT);
-        transformToVault(bodyBase, STATE);
+        drop(bodyBase, Common.TTL_UNIT, Role.CERTIFICATE_AUTHORITY_ID);
+        transformKeysFromDbapiToVault(bodyBase, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -423,8 +405,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        transferValueString(body, params, PATH);
-        transferValueString(body, params, OCSP_SERVERS);
+        transferValueString(body, params, Common.PATH);
+        transferValueString(body, params, Issuer.OCSP_SERVERS);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -441,9 +423,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        transferValueString(body, params, PATH);
-        getValueString(body, ISSUER_REF);
-        getValueString(body, NAME);
+        transferValueString(body, params, Common.PATH);
+        getValueString(body, Issuer.ISSUER_REF);
+        getValueString(body, Common.NAME);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -459,25 +441,25 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String name = extractValueString(body, NAME);
-        String description = extractValueStringOrNull(body, DESCRIPTION);
-        Integer vaultRoleId = extractValueInteger(body, VAULT_ROLE_ID);
+        String name = extractValueString(body, Common.NAME);
+        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
+        Integer vaultRoleId = extractValueInteger(body, Certificate.VAULT_ROLE_ID);
         Json params = Json.object();
 
-        transferValueString(body, params, PATH);
+        transferValueString(body, params, Common.PATH);
 
-        String roleName = extractValueString(body, VAULT_ROLE_NAME);
-        body.set(ROLE_NAME, roleName);
+        String roleName = extractValueString(body, Role.VAULT_ROLE_NAME);
+        body.set(Role.ROLE_NAME, roleName);
 
-        String ttl = getValueString(body, TTL);
+        String ttl = getValueString(body, Common.TTL);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
-        bodyBase.set(NAME, getValueString(body, ROLE_NAME));
-        if (body.has(COMMON_NAME)) {
-            bodyExtra.set(COMMON_NAME, body.get(COMMON_NAME).asString());
+        bodyBase.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
+        if (body.has(Common.COMMON_NAME)) {
+            bodyExtra.set(Common.COMMON_NAME, body.get(Common.COMMON_NAME).asString());
         }
-        bodyExtra.set(TTL, ttl);
-        drop(bodyBase, VAULT_ROLE);
+        bodyExtra.set(Common.TTL, ttl);
+        drop(bodyBase, Certificate.VAULT_ROLE);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -494,7 +476,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        transferValueString(body, params, PATH);
+        transferValueString(body, params, Common.PATH);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -511,8 +493,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        transferValueString(body, params, PATH);
-        String serialNumber = transferValueString(body, params, SERIAL_NUMBER);
+        transferValueString(body, params, Common.PATH);
+        String serialNumber = transferValueString(body, params, Certificate.SERIAL_NUMBER);
         return autocrypt.getCertificateInfo(serialNumber, params).toJson();
     }
 
@@ -526,9 +508,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        transferValueString(body, params, PATH);
-        String serialNumber = transferValueString(body, params, SERIAL_NUMBER);
-        boolean withPrivateKey = JsonUtil.getBooleanFromJson(body, WITH_PRIVATE_KEY, false);
+        transferValueString(body, params, Common.PATH);
+        String serialNumber = transferValueString(body, params, Certificate.SERIAL_NUMBER);
+        boolean withPrivateKey = JsonUtil.getBooleanFromJson(body, Certificate.WITH_PRIVATE_KEY, false);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -545,8 +527,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        transferValueString(body, params, PATH);
-        String serialNumber = transferValueString(body, params, SERIAL_NUMBER);
+        transferValueString(body, params, Common.PATH);
+        String serialNumber = transferValueString(body, params, Certificate.SERIAL_NUMBER);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -563,9 +545,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        transferValueString(body, params, PATH);
+        transferValueString(body, params, Common.PATH);
 //        getValueString(body, TTL);
-        String serialNumber = transferValueString(body, params, SERIAL_NUMBER);
+        String serialNumber = transferValueString(body, params, Certificate.SERIAL_NUMBER);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -590,16 +572,16 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String name = getValueStringOrNull(body, ISSUER_NAME);  // or COMMON _NAME?
-        String description = extractValueStringOrNull(body, DESCRIPTION);
+        String name = getValueStringOrNull(body, Issuer.ISSUER_NAME);  // or COMMON _Common.NAME?
+        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
         Json params = Json.object();
-        params.at(PATH, PKI);
+        params.at(Common.PATH, Common.PKI);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
-        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
-        transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
-        if (body.has(TTL)) {
-            bodyExtra.set(TTL, body.get(TTL).asString());
+        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT);
+        transferValueStringOrNull(bodyBase, bodyExtra, Issuer.CA_TYPE);
+        if (body.has(Common.TTL)) {
+            bodyExtra.set(Common.TTL, body.get(Common.TTL).asString());
         }
 
         // endregion -- Verify required body keys and extract key values
@@ -616,16 +598,16 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String description = extractValueStringOrNull(body, DESCRIPTION);
-        String name = getValueString(body, ISSUER_NAME);  // or COMMON _NAME?
+        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
+        String name = getValueString(body, Issuer.ISSUER_NAME);  // or COMMON _Common.NAME?
         Json params = Json.object();
-        params.at(PATH, name);
+        params.at(Common.PATH, name);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
-        transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
-        transferValueStringOrNull(bodyBase, bodyExtra, CA_TYPE);
-        if (body.has(TTL)) {
-            bodyExtra.set(TTL, body.get(TTL).asString());
+        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT);
+        transferValueStringOrNull(bodyBase, bodyExtra, Issuer.CA_TYPE);
+        if (body.has(Common.TTL)) {
+            bodyExtra.set(Common.TTL, body.get(Common.TTL).asString());
         }
 
         // endregion -- Verify required body keys and extract key values

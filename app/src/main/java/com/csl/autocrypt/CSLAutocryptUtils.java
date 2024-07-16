@@ -1,8 +1,11 @@
 package com.csl.autocrypt;
 
+import com.csl.autocrypt.enums.AutocryptConstants;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import org.jetbrains.annotations.NotNull;
+
+import static com.csl.autocrypt.enums.AutocryptConstants.Common;
 
 public class CSLAutocryptUtils {
 
@@ -32,6 +35,15 @@ public class CSLAutocryptUtils {
             } catch (Exception ignored) {
                 return response;
             }
+        }
+    }
+
+    /**
+     * Converts the ttl in seconds to hours in format "xxxh".
+     */
+    public static void convertTTLSecondsToStrHours(Json obj) {
+        if (!obj.isNull() && obj.has(Common.TTL) && obj.get(Common.TTL).isNumber()) {
+            obj.set(Common.TTL, obj.get(Common.TTL).asInteger() / 3600 + "h");
         }
     }
 }

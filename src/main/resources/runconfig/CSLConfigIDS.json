@@ -1,0 +1,177 @@
+{
+  "global": {
+    "remote": true,
+    "ip_server_remote": "127.0.0.1",
+    "port_server_remote": 8000,
+    "server_remote_url_prefix": "",
+    "force_host_name_resolution": false,
+    "api_key": "",
+    "use_ssl": true,
+    "launch_web_api_server": false,
+    "web_api_server_port": 9900
+  },
+  "discovery": {
+    "manager_ip": "host.docker.internal",
+    "manager_port": 8081,
+    "manager_protocol": "http",
+    "manager_timezone": "UTC"
+  },
+  "status": {
+    "send_notifications": true,
+    "notifications_period": 1
+  },
+  "nmap_service": {
+    "debug_mode": true,
+    "debug_dir": "/home/anto/Documents/nmaplog/",
+    "log_mode": false,
+    "log_dir": "/home/anto/Documents/nmaplog/"
+  },
+  "cpe_service": {
+    "dictionaryPath": "src/main/resources/cslconf/cpe/CpeTree.json"
+  },
+  "cve_service": {
+  },
+  "ssh_service": {
+    "localIpAddr": "16.0.0.1",
+    "localPort": "8001",
+    "knowHostFilePath": "~/.ssh/known_hosts"
+  },
+  "database_server_conf": {
+    "on": true,
+    "datafile_subdir": "datafile"
+  },
+  "my_service": {
+    "xs": "hello"
+  },
+  "service_loader": {
+    "trace_service_execution": true,
+    "trace_library_search": true,
+    "services": [
+      "./service1.jar"
+    ]
+  },
+  "web_server_conf": {
+    "on": true,
+    "verbose": true,
+    "debug": true,
+    "webserver_port": 8000,
+    "web_rootdir": "./public",
+    "web_rootdir2": "./public3",
+    "web_rootdir3": "./public3",
+    "datafile_subdir": "datafile",
+    "__//datafile_subdir": "used by data server to store json objects",
+    "core_commands": true,
+    "vars_commands": true,
+    "modbus_commands": true,
+    "external_commands": true,
+    "json_commands": true,
+    "database_commands": true,
+    "config_file_commands": true,
+    "mx_commands": true,
+    "send_alerts": true,
+    "send_console_output": true,
+    "logJsonCommandsToFile": true,
+    "log_dir": "./idslogs/jcmds",
+    "log_prefix_filename": "JCMD",
+    "max_size_of_log_files": 10000,
+    "websocket_timeout" : 20000
+  },
+  "udp_server_conf": {
+    "on": true,
+    "verbose": true,
+    "trace_all_messages": false,
+    "ip": "0.0.0.0",
+    "port": 8001,
+    "max_input_queues": 10,
+    "max_size_of_input_queues": 100
+  },
+  "module_exec": {
+    "sampling_time": 1000,
+    "modules_package_name": "main.modules",
+    "number_of_exec_loops": 2,
+    "autostart": true
+  },
+  "modules": [
+    {
+      "name": "module_ids",
+      "type": "ModuleIDS",
+      "config": {
+        "autostart": true,
+        "exec_loop_number": 1,
+        "input_priority": 90,
+        "step_priority": 99,
+        "output_priority": 98
+      }
+    }
+  ],
+  "ids_conf": {
+    "on": true,
+    "mode": 1,
+    "help_mode": "0:idle, 1:record only, 2: detect online 3: learning 4: detect offline",
+    "relative_to_CSLConfig_dir": false,
+    "idsconf_dir": "idsconf",
+    "idsconf_dir_relative_to_data_dir": false,
+    "packets_dir_for_detection_offline": "../zzidsdir/data/test/",
+    "packets_dir_for_detection_offline_info": "used for detection off line (mode 4) and mode 3 if validation after lerarning ",
+    "packets_dir_for_recording": "../zzidsdir/data/test",
+    "packets_dir_for_recording_info": "used for mode record and detect on line with log (mode 1 and 2)",
+    "packets_dir_for_learning": "../zzidsdir/data/test",
+    "packets_dir_for_learning_info": "used for leraning  (mode 3)",
+    "validation_after_learning": false,
+    "log_to_file": true,
+    "variables_prefix_filename": "VARIABLES",
+    "packets_prefix_filename": "PACKETS",
+    "network_prefix_filename": "NETWORK",
+    "max_size_of_log_files": 100000000,
+    "subdir_learn": "",
+    "help_subdir_learn": "The data for learning are in a subdir of working_dir",
+    "subdir_offline_detect": "test",
+    "help_subdir_detect": "The data for off line detect are in a subdir of working_dir",
+    "rules_for_detection": "RulesForDetection.txt",
+    "rules_for_learning": "RulesForLearning.txt",
+    "rules_for_suricata_base": "RulesForSuricata.txt",
+    "rules_for_suricata_learned": "RulesForSuricataLearned.txt",
+    "learned_model": "LearnedRules.json",
+    "new_learned_model": "NewLearnedRules.json",
+    "system_configuration": "SystemConfiguration.json",
+    "current_idsparams_file": "CurrentIDSParams.json",
+    "idstrace_flags": [
+      "general:1",
+      "alert:0",
+      "dpi:false",
+      "syslearn:0",
+      "setrisk:0",
+      "XTERNAL_COMMANDS:1",
+      "TEST_PKT_IDS:0"
+    ],
+    "idstrace_dir": "./idslogs/trace",
+    "idstrace_on": true,
+    "send_to_console": false,
+    "send_to_browser": true,
+    "show_ticks": false,
+    "kill_previous_instance": true,
+    "taps_id": [
+      "tap01"
+    ],
+    "taps_dir": "taps",
+    "history_length": 60
+  },
+  "alert_viewer": {
+    "ip": "127.0.0.1",
+    "port": 4445,
+    "name": "My Alerts",
+    "logToFile": true,
+    "log_dir": "./idslogs/alerts",
+    "prefix_filename": "AL",
+    "max_size_of_log_files": 10000,
+    "alert_to_web": true,
+    "alert_json_tag": "alert",
+    "alert_to_udp": true,
+    "do_not_resent_same_alert": true,
+    "alert_duration": 10000
+  },
+  "autocrypt": {
+    "ip": "host.docker.internal",
+    "port": 8002
+  }
+}

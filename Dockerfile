@@ -13,14 +13,14 @@ RUN ["gradle","jar"]
 
 FROM eclipse-temurin:17.0.11_9-jre as production-stage
 WORKDIR /usr/src/app
-COPY --from=build-stage /usr/w-csl/app/build/libs/app.jar ./cslmainclient.jar
-COPY app/src/main/resources/cslconf/ cslconf/
+COPY --from=build-stage /usr/w-csl/build/libs/app.jar ./cslmainclient.jar
+COPY src/main/resources/cslconf/ cslconf/
 #COPY app/src/main/resources/csldata/ csldata/
-COPY app/src/main/resources/datafile/ datafile/
-COPY app/src/main/resources/idsdata/ idsdata/
-COPY app/src/main/resources/resources/ resources/
-COPY app/src/main/resources/runconfig/ runconfig/
-COPY app/src/main/resources/runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
+COPY src/main/resources/datafile/ datafile/
+COPY src/main/resources/idsdata/ idsdata/
+COPY src/main/resources/resources/ resources/
+COPY src/main/resources/runconfig/ runconfig/
+COPY src/main/resources/runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
 
 COPY entrypoint.sh .
 

@@ -5,12 +5,31 @@ plugins{
 
 apply from : 'build.gradle'
 
+def mainClassName = 'main.CSLIDSMainClient'
+
 application {
-    mainClass = 'main.CSLIDSMainClient' //CSLIDSMainServer
+    mainClass = mainClassName
 }
 
-/*jar {
-    manifest {
-        attributes 'Main-Class': 'app.src.main.java.main.CSLIDSMainClient' //CSLIDSMainServer
+jar {
+    archiveBaseName.set('cslmainclient')
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
     }
-}*/
+
+    manifest {
+        attributes 'Implementation-Title': 'CSLIDS Client',
+                'Implementation-Version': version,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Main-Class': mainClassName
+    }
+}

@@ -89,16 +89,7 @@ task buildAndRun {
 
     doLast {
         // Run the Java application
-        javaexec {
 
-            main = 'main.CSLIDSMainServer' // Replace with your main class
-            classpath = sourceSets.main.runtimeClasspath
-            jvmArgs = [
-                    '-Dlogback.configurationFile=./src/main/resources/resources/logback.xml',
-                    '-Djavax.net.ssl.trustStore=./cacerts.jks',
-                    '-Djavax.net.ssl.trustStorePassword=changeit'
-            ]
-        }
     }
 }
 

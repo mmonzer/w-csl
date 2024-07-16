@@ -18,7 +18,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
     // Local libraries
-    implementation files('src/main/resources/lib/jar/xminiserver.jar')
+    implementation files('lib/jar/xminiserver.jar')
 
     // Test dependencies
     testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
@@ -77,7 +77,13 @@ dependencies {
     // Use javax.websocket-api
     //implementation 'javax.websocket:javax.websocket-api:1.1'
 }
-
+sourceSets{
+    main{
+        java{
+            srcDirs 'lib/unpacked'
+        }
+    }
+}
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {

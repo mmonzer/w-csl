@@ -7,7 +7,7 @@ FROM gradle:jdk17 as build-stage
 RUN #apt-get update && apt-get install ant -y
 COPY . /usr/w-csl
 WORKDIR /usr/w-csl
-RUN ["gradle","jar"]
+RUN ["gradlew","jar","-b","buildClient.gradle"]
 #RUN ["ant","-f","build.xml"]
 #RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/usr/src/app/exportjarclient.xml"]
 

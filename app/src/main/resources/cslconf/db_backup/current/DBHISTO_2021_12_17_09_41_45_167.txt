@@ -1,1 +1,0 @@
-{"ip":"10.0.208.115","op":"set","name":"os_cpe","value":"cpe:/o:microsoft:windows_10:1511","user":{"name":"user1"}}

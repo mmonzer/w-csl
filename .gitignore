@@ -16,3 +16,5 @@ app/.gradle
 app/build/
 .python-version
 csl-dev
+app/src/main/resources/docs/sphinx/.venv
+app/src/main/resources/runconfig/CSLConfigIDS.json

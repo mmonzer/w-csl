@@ -14,7 +14,7 @@ public final class AutocryptConstants {
     public static final String CERTIFICATE_AUTHORITY = "certificate_authority";
     public static final String CERTIFICATE_AUTHORITY_ID = "certificate_authority_id";
     public static final String CERTIFICATE_JSON = "certificate_json";
-    public static final String CERTIFICATE_OBJECT = "certificate_obj";
+    public static final String CERTIFICATE_OBJECT = "certificate_obj_json";
     public static final String COMMON_NAME = "common_name";
     public static final String COUNTRY = "country";
     public static final String CREATED_AT = "created_at";

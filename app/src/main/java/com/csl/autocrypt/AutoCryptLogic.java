@@ -667,12 +667,12 @@ public class AutoCryptLogic {
         logger.info("{} ({}/{}) : certificate ({}) of root issuer ({}) fetched from AutoCrypt", AutoCryptEndpoints.GENERATE_ROOT_CA, 3, 4, serialNumber, issuerRef);
 
         responseFromModule.getResult().set(SERIAL_NUMBER, serialNumber);
-        bodyExtra.set(CERTIFICATE_OBJECT, responseFromModule.getResult());
+        responseFromModule.getResult().set(PATH, PKI);
 
         // Save CA into dbapi : 4
         logger.debug("{} ({}/{}) : saving root CA ({}) in Dbapi ...", AutoCryptEndpoints.GENERATE_ROOT_CA, 4, 4, issuerRef);
         JsonApiResponse responseFromDbapi = dbHandler.generateRootCA(issuerRef, name, description, serialNumber, responseFromModule.getResult(),
-                mergerJson(responseFromModule.getResult(), bodyExtra));
+                bodyExtra);
 
         if (!responseFromDbapi.isSuccess()) {
             logger.error("{} ({}/{}) : saving root CA ({}) in Dbapi failed", AutoCryptEndpoints.GENERATE_ROOT_CA, 4, 4, issuerRef);
@@ -691,7 +691,7 @@ public class AutoCryptLogic {
      * @param description description in the dbapi
      * @param params      parameters with  path
      */
-    public JsonApiResponse generateIntermediateCA(String name, String description, Json params, Json bodyBase, Json bodyExtra) {
+    public JsonApiResponse generateIntermediateCA(String name, String description, Json params, Json bodyBase, Json bodyDBapi) {
         logger.info("Generating intermediate CA ...");
 
         // Creating intermediate CA in Autocrypt : 1
@@ -705,7 +705,7 @@ public class AutoCryptLogic {
         }
         logger.info("{} ({}/{}) : intermediate CA created in Autocrypt", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 1, 4);
 
-        bodyExtra = mergerJson(responseFromModule.getResult(), bodyExtra);
+        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
         String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
         String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
 
@@ -718,7 +718,7 @@ public class AutoCryptLogic {
         }
         logger.info("{} ({}/{}) : intermediate issuer ({}) information gathered from AutoCrypt", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 2, 4, issuerRef);
 
-        bodyExtra = mergerJson(responseFromModule.getResult(), bodyExtra);
+        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
 
         // Get the certificate of CA from Autocrypt : 3
         logger.debug("{} ({}/{}) : fetching certificate ({}) of intermediate issuer ({}) from AutoCrypt ...", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 3, 4, serialNumber, issuerRef);
@@ -730,12 +730,12 @@ public class AutoCryptLogic {
         logger.info("{} ({}/{}) : certificate ({}) of intermediate issuer ({}) fetched from AutoCrypt", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 3, 4, serialNumber, issuerRef);
 
         responseFromModule.getResult().set(SERIAL_NUMBER, serialNumber);
-        bodyExtra.set(CERTIFICATE_OBJECT, responseFromModule.getResult());
+        responseFromModule.getResult().set(PATH, PKI);
 
         // Save CA into dbapi : 4
         logger.debug("{} ({}/{}) : saving intermediate CA ({}) in Dbapi ...", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 4, 4, issuerRef);
         JsonApiResponse responseFromDbapi = dbHandler.generateIntermediateCA(issuerRef, name, description, serialNumber, responseFromModule.getResult(),
-                mergerJson(responseFromModule.getResult(), bodyExtra));
+                bodyDBapi);
         if (!responseFromDbapi.isSuccess()) {
             logger.error("{} ({}/{}) : saving intermediate CA ({}) in Dbapi failed", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 4, 4, issuerRef);
         }

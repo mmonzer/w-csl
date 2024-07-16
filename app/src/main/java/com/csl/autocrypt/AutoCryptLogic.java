@@ -252,13 +252,11 @@ public class AutoCryptLogic {
             // TODO: deal with serial number and certificate object
             if (isRoot) {
                 responseFromModule.getResult().set(CA_TYPE, ROOT);
-                return dbHandler.generateRootCA(issuerRef, idName, null, null, null,
-                        mergerJson(responseFromModule.getResult(), params));
             } else {
                 responseFromModule.getResult().set(CA_TYPE, INTERMEDIATE);
-                return dbHandler.generateIntermediateCA(issuerRef, idName, null, null, null,
-                        mergerJson(responseFromModule.getResult(), params));
             }
+            return dbHandler.generateCA(issuerRef, idName, isRoot ? PKI : idName, null, null, null,
+                    mergerJson(responseFromModule.getResult(), params));
         } else if (responseFromModule.isSuccess() && (responseFromModule.getResult().get(IMPORTED_ISSUERS).isNull() || responseFromModule.getResult().get(IMPORTED_ISSUERS).asJsonList().isEmpty())) {
             return JsonApiResponse.error("Certificate already imported");
         }
@@ -629,59 +627,7 @@ public class AutoCryptLogic {
      * @param params      parameters with  path
      */
     public JsonApiResponse generateRootCA(String name, String description, Json params, Json bodyBase, Json bodyExtra) {
-        logger.info("Generating root CA ...");
-
-        // Creating root CA in Autocrypt : 1
-        logger.debug("{} ({}/{}) : creating root CA creation in Autocrypt ...", AutoCryptEndpoints.GENERATE_ROOT_CA, 1, 4);
-        JsonApiResponse responseFromModule = moduleHandler.generateRootCA(bodyBase, params);
-        if (!responseFromModule.isSuccess() ||
-                !responseFromModule.getResult().has(ISSUER_REF) ||
-                !responseFromModule.getResult().get(ISSUER_REF).isString()) {
-            logger.error("{} ({}/{}) : creating root CA creation in Autocrypt failed", AutoCryptEndpoints.GENERATE_ROOT_CA, 1, 4);
-            return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
-        }
-        logger.info("{} ({}/{}) : root CA created in Autocrypt", AutoCryptEndpoints.GENERATE_ROOT_CA, 1, 4);
-
-        String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
-        String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
-        bodyExtra = mergerJson(responseFromModule.getResult(), bodyExtra);
-
-        // Get issuer info from Autocrypt
-        logger.debug("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt ...", AutoCryptEndpoints.GENERATE_ROOT_CA, 2, 4, issuerRef);
-        responseFromModule = moduleHandler.getIssuerInfo(issuerRef, Json.object(PATH, PKI));
-        if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt failed", AutoCryptEndpoints.GENERATE_ROOT_CA, 2, 4, issuerRef);
-            return responseFromModule;
-        }
-        logger.info("{} ({}/{}) : root issuer ({}) information gathered from AutoCrypt", AutoCryptEndpoints.GENERATE_ROOT_CA, 2, 4, issuerRef);
-
-        bodyExtra = mergerJson(responseFromModule.getResult(), bodyExtra);
-
-        // Get the certificate of CA from Autocrypt : 3
-        logger.debug("{} ({}/{}) : fetching certificate ({}) of root issuer ({}) ...", AutoCryptEndpoints.GENERATE_ROOT_CA, 3, 4, serialNumber, issuerRef);
-        responseFromModule = moduleHandler.getCertificateInfo(serialNumber, Json.object(PATH, PKI));
-        if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : fetching certificate ({}) of root issuer ({}) from AutoCrypt failed", AutoCryptEndpoints.GENERATE_ROOT_CA, 3, 4, serialNumber, issuerRef);
-            return responseFromModule;
-        }
-        logger.info("{} ({}/{}) : certificate ({}) of root issuer ({}) fetched from AutoCrypt", AutoCryptEndpoints.GENERATE_ROOT_CA, 3, 4, serialNumber, issuerRef);
-
-        responseFromModule.getResult().set(SERIAL_NUMBER, serialNumber);
-        responseFromModule.getResult().set(PATH, PKI);
-
-        // Save CA into dbapi : 4
-        logger.debug("{} ({}/{}) : saving root CA ({}) in Dbapi ...", AutoCryptEndpoints.GENERATE_ROOT_CA, 4, 4, issuerRef);
-        JsonApiResponse responseFromDbapi = dbHandler.generateRootCA(issuerRef, name, description, serialNumber, responseFromModule.getResult(),
-                bodyExtra);
-
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : saving root CA ({}) in Dbapi failed", AutoCryptEndpoints.GENERATE_ROOT_CA, 4, 4, issuerRef);
-        }
-        logger.info("{} ({}/{}) : root CA ({}) saved in Dbapi", AutoCryptEndpoints.GENERATE_ROOT_CA, 4, 4, issuerRef);
-
-        logger.info("Root CA was successfully generated with id {} and certificate number {}", issuerRef, serialNumber);
-
-        return responseFromDbapi;
+        return generateCA(GENERATE_ROOT_CA, name, description, params, bodyBase, bodyExtra);
     }
 
     /**
@@ -691,58 +637,81 @@ public class AutoCryptLogic {
      * @param description description in the dbapi
      * @param params      parameters with  path
      */
-    public JsonApiResponse generateIntermediateCA(String name, String description, Json params, Json bodyBase, Json bodyDBapi) {
-        logger.info("Generating intermediate CA ...");
+    public JsonApiResponse generateIntermediateCA(String name, String description, Json params, Json bodyBase, Json bodyExtra) {
+        return generateCA(GENERATE_INTERMEDIATE_CA, name, description, params, bodyBase, bodyExtra);
+    }
 
-        // Creating intermediate CA in Autocrypt : 1
-        logger.debug("{} ({}/{}) : creating intermediate CA creation in Autocrypt ...", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 1, 4);
-        JsonApiResponse responseFromModule = moduleHandler.generateIntermediateCA(bodyBase, params);
+    /**
+     * Generic method to generate a intermediate or root CA
+     *
+     * @param typeCA        either GENERATE_ROOT_CA either GENERATE_INTERMEDIATE_CA
+     * @param name        identifier of the CA (issuerName)
+     * @param description description in the dbapi
+     * @param params      parameters with  path
+     * @param bodyAutocrypt  body for creating the CA in CSL-Autocrypt
+     * @param bodyDBapi      body for creating the CA in CSL-Dbapi
+     * @return if creation was successful, the body for HMI, otherwise, the error message
+     */
+    private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, String name, String description, Json params, Json bodyAutocrypt, Json bodyDBapi) {
+        boolean isRoot = typeCA==AutoCryptEndpoints.GENERATE_ROOT_CA;
+        String type = isRoot?"root":"intermediate";
+        String path = params.get(PATH).asString();
+        logger.info("Generating {} CA ...", type);
+
+        // Creating CA in Autocrypt : 1
+        logger.debug("{} ({}/{}) : creating {} CA creation in Autocrypt at path {} ...", typeCA, 1, 4, type, path);
+        JsonApiResponse responseFromModule;
+        if (isRoot) {
+            responseFromModule = moduleHandler.generateRootCA(bodyAutocrypt, params);
+        } else {
+            responseFromModule = moduleHandler.generateIntermediateCA(bodyAutocrypt, params);
+        }
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(ISSUER_REF) ||
                 !responseFromModule.getResult().get(ISSUER_REF).isString()) {
-            logger.error("{} ({}/{}) : creating intermediate CA creation in Autocrypt failed", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 1, 4);
+            logger.error("{} ({}/{}) : {} CA creation at path {} in Autocrypt failed", typeCA, 1, 4, type, path);
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
-        logger.info("{} ({}/{}) : intermediate CA created in Autocrypt", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 1, 4);
-
-        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
         String issuerRef = responseFromModule.getResult().get(ISSUER_REF).asString();
-        String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
+        logger.info("{} ({}/{}) : {} CA ({}) created in Autocrypt at path {}", typeCA, 1, 4, type, issuerRef, path);
 
-        // Get issuer info from autocrypt : 2
-        logger.debug("{} ({}/{}) : gathering issuer information from AutoCrypt ...", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 2, 4);
+        String serialNumber = responseFromModule.getResult().get(SERIAL_NUMBER).asString();
+        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
+
+        // Get issuer info from Autocrypt
+        logger.debug("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt ...", typeCA, 2, 4, issuerRef);
         responseFromModule = moduleHandler.getIssuerInfo(issuerRef, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : gathering issuer information from AutoCrypt failed", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 2, 4);
+            logger.error("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt failed", typeCA, 2, 4, issuerRef);
             return responseFromModule;
         }
-        logger.info("{} ({}/{}) : intermediate issuer ({}) information gathered from AutoCrypt", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 2, 4, issuerRef);
+        logger.info("{} ({}/{}) : {} issuer ({}) information gathered from AutoCrypt", typeCA, 2, 4, type, issuerRef);
 
         bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
 
         // Get the certificate of CA from Autocrypt : 3
-        logger.debug("{} ({}/{}) : fetching certificate ({}) of intermediate issuer ({}) from AutoCrypt ...", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 3, 4, serialNumber, issuerRef);
-        responseFromModule = moduleHandler.getCertificateInfo(serialNumber, Json.object(PATH, PKI));
-        if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : fetching certificate ({}) of intermediate issuer ({}) failed", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 3, 4, serialNumber, issuerRef);
-            return responseFromModule;
+        logger.debug("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) ...", typeCA, 3, 4, serialNumber, issuerRef, type);
+        JsonApiResponse responseWithCertificate = moduleHandler.getCertificateInfo(serialNumber, Json.object(PATH, PKI));
+        if (!responseWithCertificate.isSuccess()) {
+            logger.error("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) from AutoCrypt failed", typeCA, 3, 4, serialNumber, type, issuerRef);
+            return responseWithCertificate;
         }
-        logger.info("{} ({}/{}) : certificate ({}) of intermediate issuer ({}) fetched from AutoCrypt", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 3, 4, serialNumber, issuerRef);
+        logger.info("{} ({}/{}) : certificate ({}) of {} issuer ({}) fetched from AutoCrypt", typeCA, 3, 4, serialNumber, type, issuerRef);
 
-        responseFromModule.getResult().set(SERIAL_NUMBER, serialNumber);
-        responseFromModule.getResult().set(PATH, PKI);
+        responseWithCertificate.getResult().set(SERIAL_NUMBER, serialNumber);
+        responseWithCertificate.getResult().set(PATH, PKI);
 
         // Save CA into dbapi : 4
-        logger.debug("{} ({}/{}) : saving intermediate CA ({}) in Dbapi ...", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 4, 4, issuerRef);
-        JsonApiResponse responseFromDbapi = dbHandler.generateIntermediateCA(issuerRef, name, description, serialNumber, responseFromModule.getResult(),
+        logger.debug("{} ({}/{}) : saving {} CA ({}) in Dbapi ...", typeCA, 4, 4, type, issuerRef);
+        JsonApiResponse responseFromDbapi = dbHandler.generateCA(issuerRef, name, path, description, serialNumber, responseWithCertificate.getResult(),
                 bodyDBapi);
+
         if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : saving intermediate CA ({}) in Dbapi failed", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 4, 4, issuerRef);
+            logger.error("{} ({}/{}) : saving {} CA ({}) in Dbapi failed", typeCA, 4, 4, type, issuerRef);
         }
-        logger.info("{} ({}/{}) : intermediate CA ({}) saved in Dbapi", AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, 4, 4, issuerRef);
+        logger.info("{} ({}/{}) : {} CA ({}) saved in Dbapi", typeCA, 4, 4, type, issuerRef);
 
-
-        logger.info("Intermediate CA was successfully generated with id {} and certificate number {}", issuerRef, serialNumber);
+        logger.info("{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
 
         return responseFromDbapi;
     }

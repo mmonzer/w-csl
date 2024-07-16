@@ -162,9 +162,15 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      * @param body parameters with the path and role
      */
     public JsonApiResponse generateCertificate(String name, String description, Json body) {
+        Json input = Json.object();
+        input.at(NAME, name);
+        if (description!=null) {
+            input.at(DESCRIPTION, description);
+        }
+        input.at(CERTIFICATE_JSON, body);
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CERTIFICATES.endpoint(),
-                formatBody(CERTIFICATE, name, description, body));
+                input);
     }
 
     /**
@@ -243,23 +249,11 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      *
      * @param issuerRef serial number of the CA
      * @param name name of the CA
-     * @param description description of the CA in the dbapi
-     * @param body parameters with commonName, ttl, and optionally path
-     */
-    public JsonApiResponse generateIntermediateCA(String issuerRef, String name, String description, String serialNumber, Json certificate, Json body) {
-        return generateCA(issuerRef, name, name, description, serialNumber, certificate, body);
-    }
-
-    /**
-     * Generate intermediate CA
-     *
-     * @param issuerRef serial number of the CA
-     * @param name name of the CA
      * @param path path of the CA
      * @param description description of the CA in the dbapi
      * @param body parameters with commonName, ttl, and optionally path
      */
-    private JsonApiResponse generateCA(String issuerRef, String name, String path, String description, String serialNumber, Json certificate, Json body) {
+    public JsonApiResponse generateCA(String issuerRef, String name, String path, String description, String serialNumber, Json certificate, Json body) {
         Json input = Json.object();
         input.set(COMMON_NAME, name);
         input.set(DESCRIPTION, description);
@@ -273,35 +267,4 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
                 input);
     }
 
-    /**
-     * Format body to feed dbapi
-     *
-     * @param category either roles, issuer, certificates or ca
-     * @param name name of the thing in the dbapi db
-     * @param body old body
-     * @return new body with the right format
-     */
-    private Json formatBody(String category, String name, String description, Json body) {
-        return formatBody(category, null, name, description, body);
-    }
-
-    /**
-     * Format body to feed dbapi
-     *
-     * @param id identifier in the dbapi
-     * @param category either roles, issuer, certificates or ca
-     * @param name name of the thing in the dbapi db
-     * @param body old body
-     * @return new body with the right format
-     */
-    private Json formatBody(String category, String id, String name, String description, Json body) {
-        Json newBody = Json.object();
-        newBody.at(ID, id);
-        newBody.at(NAME, name);
-        if (description!=null) {
-            newBody.at(DESCRIPTION, description);
-        }
-        newBody.at(category+"_json",body);
-        return newBody;
-    }
 }

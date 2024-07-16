@@ -588,6 +588,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         String name = getValueStringOrNull(body, ISSUER_NAME);  // or COMMON _NAME?
         String description = extractValueStringOrNull(body, DESCRIPTION);
+        Json params = Json.object();
+        params.at(PATH, PKI);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
         transferValueStringOrNull(bodyBase, bodyExtra, TTL_UNIT);
@@ -596,7 +598,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return manager.getMethods().generateRootCA(name, description, null, bodyBase, bodyExtra).toJson();
+        return manager.getMethods().generateRootCA(name, description, params, bodyBase, bodyExtra).toJson();
     }
 
     /**

@@ -2,6 +2,7 @@ package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.autocrypt.services.IssuerSynchronizationService;
+import com.csl.autocrypt.services.RoleSynchronizationService;
 import com.csl.core.CSLContext;
 import com.csl.intercom.services.CpeItemsSynchronizationService;
 import com.csl.intercom.services.exceptions.SynchronizationException;
@@ -34,6 +35,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
     private boolean isRemote = false;
     private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
     private IssuerSynchronizationService issuerSynchronizationService = null;
+    private RoleSynchronizationService roleSynchronizationService = null;
     private int syncFrequency;
 
     /**
@@ -72,6 +74,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         if (!isRemote) {
             autocrypt.reinitApiHandlers();
             issuerSynchronizationService = new IssuerSynchronizationService(autocrypt);
+            roleSynchronizationService = new RoleSynchronizationService(autocrypt);
             syncAll();
         }
 
@@ -654,7 +657,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
     private void syncAll() {
         if (!isRemote) {
             try {
-                if (issuerSynchronizationService!= null) {issuerSynchronizationService.syncData();}
+                // if (issuerSynchronizationService!= null) {issuerSynchronizationService.syncData();}
+                if (roleSynchronizationService!= null) {roleSynchronizationService.syncData();}
             } catch (SynchronizationException e) {
                 logger.error("Could not synchronize Autocrypt Items", e);
             }

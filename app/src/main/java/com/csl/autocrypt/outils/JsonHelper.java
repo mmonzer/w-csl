@@ -98,8 +98,8 @@ public class JsonHelper {
      * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
      * @param keys       list of keys
      */
-    public static void copyValueStringOrNull(Json objOrigin, Json objDest, String... keys) throws IllegalArgumentException {
-        for (String key : keys){objDest.set(key, getValueStringOrNull(objOrigin, key));}
+    public static void copyValueOrNull(Json objOrigin, Json objDest, String... keys) throws IllegalArgumentException {
+        for (String key : keys){objDest.set(key, objOrigin.get(key));}
     }
 
     /**

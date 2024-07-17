@@ -74,9 +74,9 @@ public class CSLAutocryptUtils {
      */
     public static Json formatIssuer(Json issuerRaw) {
         Json issuer = Json.object();
-        copyValueStringOrNull(issuerRaw, issuer, Common.COMMON_NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Common.PATH, Certificate.SERIAL_NUMBER);
+        copyValueOrNull(issuerRaw, issuer, Common.COMMON_NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Common.PATH, Certificate.SERIAL_NUMBER);
         Json certificate = Json.object();
-        copyValueStringOrNull(issuerRaw, certificate, Certificate.CA_CHAIN, Certificate.CERTIFICATE, Certificate.EXPIRATION, Certificate.ISSUING_CA, Certificate.PRIVATE_KEY, Certificate.PRIVATE_KEY_TYPE, Certificate.SERIAL_NUMBER);
+        copyValueOrNull(issuerRaw, certificate, Certificate.CA_CHAIN, Certificate.CERTIFICATE,  Certificate.EXPIRATION, Certificate.ISSUING_CA, Certificate.PRIVATE_KEY, Certificate.PRIVATE_KEY_TYPE, Certificate.SERIAL_NUMBER);
         certificate.set(Common.PATH, Common.PKI);
         issuer.set(Issuer.CA_JSON, issuerRaw);
         issuer.set(Certificate.CERTIFICATE_OBJECT, certificate);
@@ -107,7 +107,7 @@ public class CSLAutocryptUtils {
      */
     public static Json formatRole(Json roleRaw) {
         Json role = Json.object();
-        copyValueStringOrNull(roleRaw, role, Common.NAME, Common.DESCRIPTION, Role.CERTIFICATE_AUTHORITY_ID);
+        copyValueOrNull(roleRaw, role, Common.NAME, Common.DESCRIPTION, Role.CERTIFICATE_AUTHORITY_ID);
         role.set(Role.ROLE_JSON, roleRaw);
         return role;
     }
@@ -136,7 +136,7 @@ public class CSLAutocryptUtils {
      */
     public static Json formatCertificate(Json certificateRaw) {
         Json certificate = Json.object();
-        copyValueStringOrNull(certificateRaw, certificate, Common.NAME, Common.DESCRIPTION, Certificate.SERIAL_NUMBER, Common.PATH, Certificate.VAULT_ROLE_ID);
+        copyValueOrNull(certificateRaw, certificate, Common.NAME, Common.DESCRIPTION, Certificate.SERIAL_NUMBER, Common.PATH, Certificate.VAULT_ROLE_ID);
         certificate.at(Certificate.CERTIFICATE_JSON, certificateRaw);
         return certificate;
     }

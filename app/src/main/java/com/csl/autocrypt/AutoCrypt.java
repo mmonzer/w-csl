@@ -30,7 +30,9 @@ public class AutoCrypt {
     private String name;
     private String dbIp;
     private String dbApikey;
+    @Getter
     private DbapiHandlerForCSLAutoCrypt dbApiHandler = null;
+    @Getter
     private ApiHandlerForCSLAutoCrypt autocryptApiHandler = null;
     private boolean shouldSaveToDb = true;
     private static final Logger logger = LoggerFactory.getLogger(AutoCrypt.class);

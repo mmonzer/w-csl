@@ -93,7 +93,8 @@ public final class AutocryptConstants {
         public static final String CREATED_AT = "created_at";
         public static final String UPDATED_AT = "updated_at";
 
-        public static final String LIST_DELIMITER = ",";
+        public static final String VALUE = "value";
+        public static final String AFTER_UPDATED_DATE = "afterUpdatedDate";
     }
 
     public static final class Issuer {
@@ -133,7 +134,14 @@ public final class AutocryptConstants {
         public static final String VAULT_ROLE = "vault_role";
         public static final String VAULT_ROLE_ID = "vault_role_id";
         public static final String WITH_PRIVATE_KEY = "with_private_key";
+        public static final String CA_CHAIN = "ca_chain";
+        public static final String EXPIRATION = "expiration";
+        public static final String ISSUING_CA = "issuing_ca";
+        public static final String PRIVATE_KEY = "private_key";
+        public static final String PRIVATE_KEY_TYPE = "private_key_type";
     }
+
+
 
     /**
      * Unused constructor (mais private)

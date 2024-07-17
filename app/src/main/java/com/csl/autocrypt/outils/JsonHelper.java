@@ -92,6 +92,17 @@ public class JsonHelper {
     }
 
     /**
+     * Copy the value of the first object to the second one if key exists.
+     *
+     * @param objOrigin the json object origin to get the value to move
+     * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
+     * @param keys       list of keys
+     */
+    public static void copyValueStringOrNull(Json objOrigin, Json objDest, String... keys) throws IllegalArgumentException {
+        for (String key : keys){objDest.set(key, getValueStringOrNull(objOrigin, key));}
+    }
+
+    /**
      * Transfers the value of the first object to the second one if key exists.
      *
      * @param objOrigin the json object origin to get the value to move

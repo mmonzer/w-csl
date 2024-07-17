@@ -2,9 +2,14 @@ package com.csl.autocrypt;
 
 import com.csl.autocrypt.enums.DbapiEndpointForCSLAutocrypt;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
+import java.time.OffsetDateTime;
+import java.util.List;
+
+import static com.csl.autocrypt.CSLAutocryptUtils.*;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 
@@ -63,6 +68,25 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
         }
 
         return JsonApiResponse.error("CA not found in dbapi");
+    }
+
+    /**
+     * Creates or modifies the issuers in the database
+     */
+    public JsonApiResponse upsertIssuers(Json issuers) {
+        // TODO: check format for input
+        return this.sendPost(
+                DbapiEndpointForCSLAutocrypt.ISSUER_UPSERT.endpoint(),
+                formatListOfIssuers(issuers));
+    }
+
+    /**
+     * Fetch the last update date for issuers
+     */
+    public JsonApiResponse getIssuerLastUpdateDate() {
+        return this.sendGet(
+                DbapiEndpointForCSLAutocrypt.ISSUER_GET_LAST_UPDATE_DATE.endpoint(),
+                null);
     }
 
     /**
@@ -131,6 +155,25 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
     public JsonApiResponse listRoles() {
         return this.sendGet(
                 DbapiEndpointForCSLAutocrypt.ROLE.endpoint(),
+                null);
+    }
+
+    /**
+     * Creates or modifies the roles in the database
+     */
+    public JsonApiResponse upsertRoles(Json roles) {
+        // TODO: check format for input
+        return this.sendPost(
+                DbapiEndpointForCSLAutocrypt.ROLE_UPSERT.endpoint(),
+                formatListOfRoles(roles));
+    }
+
+    /**
+     * Fetch the last update date for the roles
+     */
+    public JsonApiResponse getRoleLastUpdateDate() {
+        return this.sendGet(
+                DbapiEndpointForCSLAutocrypt.ROLE_GET_LAST_UPDATE_DATE.endpoint(),
                 null);
     }
 
@@ -209,6 +252,25 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      */
     public JsonApiResponse deleteRevokedCertificates() {
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    /**
+     * Creates or modifies the certificates in the database
+     */
+    public JsonApiResponse upsertCertificates(Json certificates) {
+        // TODO: check format for input
+        return this.sendPost(
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES_UPSERT.endpoint(),
+                formatListOfCertificates(certificates));
+    }
+
+    /**
+     * Fetch the last update date for the certificates
+     */
+    public JsonApiResponse getCertificateLastUpdateDate() {
+        return this.sendGet(
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES_GET_LAST_UPDATE_DATE.endpoint(),
+                null);
     }
 
     /**

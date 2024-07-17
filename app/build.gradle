@@ -18,7 +18,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
     // Local libraries
-    implementation files('src/main/resources/tar/xminiserver.jar')
+    // implementation files('src/main/resources/tar/xminiserver.jar')
 
     // Test dependencies
     testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'

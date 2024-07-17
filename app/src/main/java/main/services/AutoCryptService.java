@@ -1,7 +1,10 @@
 package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
+import com.csl.autocrypt.services.IssuerSynchronizationService;
 import com.csl.core.CSLContext;
+import com.csl.intercom.services.CpeItemsSynchronizationService;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -10,7 +13,9 @@ import main.services.endpoints.AutoCryptEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.outils.JsonHelper.*;
@@ -28,6 +33,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
     private ScheduledExecutorService synchronizationSchedule;
     private boolean isRemote = false;
     private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
+    private IssuerSynchronizationService issuerSynchronizationService = null;
+    private int syncFrequency;
 
     /**
      * Default constructor of the AutoCrypt service (not remote)
@@ -50,6 +57,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         super(name, description, configFileSectionName);
         this.isRemote = isRemote;
         autocrypt = new AutoCrypt(name);
+        syncFrequency = JsonUtil.getIntFromJson(CSLContext.instance.getConfig(),"autocrypt/sync_frequency", 300);
     }
 
     /**
@@ -63,6 +71,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
     public boolean init(Json config, String configFile) {
         if (!isRemote) {
             autocrypt.reinitApiHandlers();
+            issuerSynchronizationService = new IssuerSynchronizationService(autocrypt);
+            syncAll();
         }
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
@@ -634,4 +644,29 @@ public class AutoCryptService extends Service implements IStatusProvider {
     public Json getStatus(Json body) {
         return JsonApiResponse.result(getStatus()).toJson();
     }
+
+    /**
+     * Synchronize Dbapi with Autocrypt : (Autocrypt is the source of trust : Autocrypt -> Dbapi only)
+     * - Issuers
+     * - Roles
+     * - Certificates
+     */
+    private void syncAll() {
+        if (!isRemote) {
+            try {
+                if (issuerSynchronizationService!= null) {issuerSynchronizationService.syncData();}
+            } catch (SynchronizationException e) {
+                logger.error("Could not synchronize Autocrypt Items", e);
+            }
+        }
+    }
+
+    /**
+     * Synchronize Dbapi with Autocrypt automatically every 300s by default
+     */
+    private void launchAutoSync() {
+        synchronizationSchedule = Executors.newScheduledThreadPool(1);
+        synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, syncFrequency, TimeUnit.SECONDS);
+    }
+
 }

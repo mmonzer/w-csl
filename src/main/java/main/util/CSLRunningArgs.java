@@ -10,7 +10,7 @@ import java.io.File;
 public class CSLRunningArgs {
 
 
-		String configFile = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "runconfig" + File.separator + "CSLConfigIDS.json";
+		String configFile = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "configuration_template" + File.separator + "application.json";
 		String error = "";
 
 		boolean debug = false;
@@ -201,7 +201,7 @@ public class CSLRunningArgs {
 			String path = System.getProperty("user.home");
 
 			if (configFile.isEmpty())
-				configFile = getUserDir() + File.separator + "src/name/resources/runconfig/CSLConfigIDS.json";
+				configFile = getUserDir() + File.separator + "src/name/resources/runconfig/application.json";
 
 			File file = new File(configFile);
 
@@ -215,7 +215,7 @@ public class CSLRunningArgs {
 				if (!file.exists()) {
 					System.out.println("Cannot not find config file :" + file.getAbsolutePath());
 
-					fname = getUserDir() + File.separator + "runconfig" + File.separator + configFile;
+					fname = getUserDir() + File.separator + "configuration_template" + File.separator + configFile;
 
 					file = new File(fname);
 					if (!file.exists()) {

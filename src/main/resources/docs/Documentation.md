@@ -204,7 +204,7 @@ Dockerfile for the docker configuration for the CSL-Server.
 ### entrypoint.sh
 Docker entrypoint script for CSL-Client adn CSL-Server.
 ### export*.xml
-Export configuration files for creating the different jars: clients, servers, tests, ... REMARK : cleaning?
+Export configuration files for creating the different jars: clients, servers, autocrypt, ... REMARK : cleaning?
 ### jar-in-jar-loader.zip
 Jar loader for the different jars created with previous configurations.
 ### TRACE*.txt
@@ -247,7 +247,7 @@ An HMI to control something through WebSocket at localhost:63342, probably a CSL
 Main classes, services and other classes in the interface with the outer of the CSL-Client. Some services contain also
 some business logic.
 ### scr / main / demo
-Demo and tests files
+Demo and autocrypt files
 ### scr / main / extensions
 TODO : complete
 ### scr / main / help
@@ -256,7 +256,7 @@ TODO : complete
 Router for the API commands separated in services depending on the scope of these commands. These services may contain some business logic.
 These services are detailed in section [Services](#services).
 ### scr / main / test
-Dummy tests for API runner and UDP connexion
+Dummy autocrypt for API runner and UDP connexion
 ### scr / main / util
 Some tools.
 ### scr / main / xcom

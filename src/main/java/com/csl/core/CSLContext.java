@@ -62,14 +62,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     /**
      * Default relative path for the configuration file
      */
-    private static String DEFAULT_CONFIG_FILE = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "runconfig" + File.separator + "CSLConfigIDS.json";
+    private static String configFileName = CSLContext.class.getResource("/configuration_template/application.json").getPath();
 
-    /**
-     * Default absolute path for the configuration file
-     */
-    private String configFileName = DEFAULT_CONFIG_PATH + File.separator + DEFAULT_CONFIG_FILE;
-
-    //private String userDir=System.getProperty("user.dir");
     private String cslConfDir = "";
 
 

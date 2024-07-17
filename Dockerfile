@@ -7,20 +7,20 @@ FROM gradle:jdk17 as build-stage
 RUN #apt-get update && apt-get install ant -y
 COPY . /usr/w-csl
 WORKDIR /usr/w-csl
-RUN ["gradlew","jar","-b","buildClient.gradle"]
+RUN ["./gradlew","jar","-b","buildClient.gradle"]
 #RUN ["ant","-f","build.xml"]
 #RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/usr/src/app/exportjarclient.xml"]
 
 FROM eclipse-temurin:17.0.11_9-jre as production-stage
 WORKDIR /usr/src/app
-COPY --from=build-stage /usr/w-csl/build/libs/app.jar ./cslmainclient.jar
+COPY --from=build-stage /usr/w-csl/build/libs/cslmainclient.jar ./cslmainclient.jar
 COPY src/main/resources/cslconf/ cslconf/
 #COPY app/src/main/resources/csldata/ csldata/
 COPY src/main/resources/datafile/ datafile/
 COPY src/main/resources/idsdata/ idsdata/
 COPY src/main/resources/resources/ resources/
 COPY src/main/resources/runconfig/ runconfig/
-COPY src/main/resources/runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
+COPY src/main/resources/configuration_template/application_template.json configuration_template/application.json
 
 COPY entrypoint.sh .
 

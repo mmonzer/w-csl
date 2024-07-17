@@ -28,6 +28,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
         if (since != null) {
             params.set(Common.AFTER_UPDATED_DATE, ScanUtils.localTimeToScan(since).toString());
         }
+        getLogger().debug("{} : retrieving data from Autocrypt after {}", prefixLogger, since);
         JsonApiResponse listIssuers = method.apply(params);
 
         if (!listIssuers.isSuccess() || listIssuers.getResult().isNull() || !listIssuers.getResult().isArray()) {
@@ -35,30 +36,40 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             throw new SynchronizationException("Could not get retrieve data from Autocrypt");
         }
 
+        getLogger().debug("{} : retrieved data from Autocrypt after {}", prefixLogger, since);
+
         return listIssuers.getResult().asJsonList();
     }
 
     public void sendData(IJsonToJsonApiResponse method, Json items) throws SynchronizationException {
+        getLogger().debug("{} : sending data to DB-API : {}", prefixLogger, items);
         JsonApiResponse response = method.apply(items);
         if (!response.isSuccess()) {
             getLogger().error("{} : Could not send data to DB-API for Autocrypt service.", prefixLogger);
-            throw new SynchronizationException(prefixLogger+" : Could not send data to DB-API for Autocrypt service.");
+            throw new SynchronizationException(prefixLogger + " : Could not send data to DB-API for Autocrypt service.");
         }
+        getLogger().debug("{} : sent data to DB-API : {}", prefixLogger, items);
     }
 
     public OffsetDateTime getLastChangeDate(IVoidToJsonApiResponse method) throws SynchronizationException {
         try {
+            getLogger().debug("{} : fetching last update time from Dbapi", prefixLogger);
             JsonApiResponse response = method.apply();
 
-            if (!response.isSuccess() || response.getResult().has(Common.VALUE)) {
+            if (!response.isSuccess()) {
                 throw new RuntimeException("Could not fetch last update time from Dbapi");
             }
-            String lastUpdateDateString = response.getResult().get(Common.VALUE).asString();
+
+            String lastUpdateDateString = Common.MIN_DATE;
+            if (response.getResult()!=null && response.getResult().has(Common.VALUE) && response.getResult().get(Common.VALUE).isString()) {
+                lastUpdateDateString = response.getResult().get(Common.VALUE).asString();
+            }
+            getLogger().debug("{} : fetched last update time from Dbapi : {}", prefixLogger, lastUpdateDateString);
 
             return DbapiUtilsForCSLScan.dbapiDateToLocal(lastUpdateDateString);
         } catch (Exception e) {
             getLogger().error("{} : Could not get last update date from DB-API for Autocrypt service.", prefixLogger);
-            throw new SynchronizationException(prefixLogger+" : Could not get last update date from DB-API for Autocrypt service", e);
+            throw new SynchronizationException(prefixLogger + " : Could not get last update date from DB-API for Autocrypt service", e);
         }
     }
 
@@ -69,6 +80,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
 
     @Override
     public void syncData() throws SynchronizationException {
+        getLogger().debug("{} : synchronizing ...", prefixLogger);
         super.syncData();
         getLogger().info("{} : Synchronization was successful", prefixLogger);
     }

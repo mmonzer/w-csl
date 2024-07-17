@@ -95,6 +95,7 @@ public final class AutocryptConstants {
 
         public static final String VALUE = "value";
         public static final String AFTER_UPDATED_DATE = "afterUpdatedDate";
+        public static final String MIN_DATE = "1900-01-01T00:00+18:00";
     }
 
     public static final class Issuer {

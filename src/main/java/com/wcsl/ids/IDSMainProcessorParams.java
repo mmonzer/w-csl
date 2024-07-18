@@ -69,7 +69,7 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 			}
 		}
 		tapsDir=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+TAPS_DIR,"taps");
-		System.out.println(this);
+//		System.out.println(this);
 	}
 
 

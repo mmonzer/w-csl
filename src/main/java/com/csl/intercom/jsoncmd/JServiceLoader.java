@@ -184,7 +184,7 @@ public class JServiceLoader {
 
 
     static public void addApiCommands(IApiCommands api) {
-        logger.info("Register api for http:" + api);
+        logger.debug("Register api for http:" + api);
         listOfAPIToRegister.add(api);
     }
 
@@ -194,7 +194,7 @@ public class JServiceLoader {
 
 
     static public void addXApiCommands(XApiCommands api) {
-        logger.info("Register api for http:" + api);
+        logger.debug("Register api for http:" + api);
         listOfXAPIToRegister.add(api);
     }
 

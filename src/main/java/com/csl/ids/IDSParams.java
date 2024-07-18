@@ -278,7 +278,7 @@ public class IDSParams {
 
 		validDirectories();
 
-		System.out.println(this);
+//		System.out.println(this);
 	}
 
 	public void validDirectories() {

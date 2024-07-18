@@ -25,7 +25,7 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
     @Override
     public List<CpeItem> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
         if (cpeScanService.getRunningScan() == null && cpeScanService.getFinishedScan() == null) {
-            throw new SynchronizationException("No scan is running or finished");
+            throw new SynchronizationException("No scan is running or finished (CpeItemsSynchronizationService)");
         }
         return scanApiHandler.getCpeItemChangesSince(since, limit, offset);
     }

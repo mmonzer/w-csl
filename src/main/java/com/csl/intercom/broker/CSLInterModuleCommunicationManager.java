@@ -1,10 +1,13 @@
 package com.csl.intercom.broker;
 
+import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.intercom.jsoncmd.XApiCommands;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +25,7 @@ IMqttClient receiver = new MqttClient(
                 "tcp://" + properties.getProperty("host") + ":" + properties.getProperty("port"), receiverId, new MqttDefaultFilePersistence("/tmp"));
  */
 public class CSLInterModuleCommunicationManager {
-	
+	private static final Logger logger = LoggerFactory.getLogger(JServiceLoader.class);
 	int idebug=1;
 
     @Getter
@@ -67,12 +70,12 @@ public class CSLInterModuleCommunicationManager {
 	}
 
     public void registerAPI(IApiCommands api) {
-		if (isShowInfo()) System.out.println("REGISTER API FOR BROKER :"+api.getName());
+		if (isShowInfo()) logger.info("REGISTER API FOR BROKER :"+api.getName());
 		listOfRegisteredAPI.put(api.getName(), api);
 	}
 	
 	public void registerExternalAPI(XApiCommands api) {
-		if (isShowInfo()) System.out.println("REGISTER X API FOR BROKER :"+api.getCleanApiName());
+		if (isShowInfo()) logger.info("REGISTER X API FOR BROKER :"+api.getCleanApiName());
 		listOfRegisteredExternalAPI.put(api.getCleanApiName(), api);
 	}
 	

@@ -1,8 +1,6 @@
 package com.csl.autocrypt;
 
-import com.csl.autocrypt.services.CertificateSynchronizationService;
-import com.csl.autocrypt.services.IssuerSynchronizationService;
-import com.csl.autocrypt.services.RoleSynchronizationService;
+import com.csl.autocrypt.services.*;
 import com.csl.core.CSLContext;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.ucsl.json.Json;
@@ -32,9 +30,7 @@ public class AutoCrypt {
     @Setter
     @Getter
     private int modulePort;
-    private String name;
-    private String dbIp;
-    private String dbApikey;
+    private final String name;
     @Getter
     private DbapiHandlerForCSLAutoCrypt dbApiHandler = null;
     @Getter
@@ -42,7 +38,9 @@ public class AutoCrypt {
     private boolean shouldSaveToDb = true;
     private static final Logger logger = LoggerFactory.getLogger(AutoCrypt.class);
     private IssuerSynchronizationService issuerSynchronizationService = null;
+    private IssuerDeletionSynchronizationService issuerDeletionSynchronizationService = null;
     private RoleSynchronizationService roleSynchronizationService = null;
+    private RoleDeletionSynchronizationService roleDeletionSynchronizationService = null;
     private CertificateSynchronizationService certificateSynchronizationService = null;
 
     public AutoCrypt(String name) {
@@ -65,6 +63,7 @@ public class AutoCrypt {
         autocryptApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
 
         issuerSynchronizationService = new IssuerSynchronizationService(dbApiHandler, autocryptApiHandler);
+        issuerDeletionSynchronizationService = new IssuerDeletionSynchronizationService(dbApiHandler, autocryptApiHandler);
         roleSynchronizationService = new RoleSynchronizationService(dbApiHandler, autocryptApiHandler);
         certificateSynchronizationService = new CertificateSynchronizationService(dbApiHandler, autocryptApiHandler);
     }
@@ -412,24 +411,28 @@ public class AutoCrypt {
         }
         logger.info("{} ({}/{}) : Created role {} at path {} in autocrypt", AutoCryptEndpoints.CREATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
 
-        Json result = responseFromModule.getResult();
-        convertTTLSecondsToStrHours(result);
-        transformKeysFromVaultToDbapi(result, Common.OU, Common.PROVINCE);
-        result.set(Role.CERTIFICATE_AUTHORITY_ID, certificateAuthorityId);
-        result = mergerJson(result, bodyExtra);
+//        Json result = responseFromModule.getResult();
+//        convertTTLSecondsToStrHours(result);
+//        transformKeysFromVaultToDbapi(result, Common.OU, Common.PROVINCE);
+//        result.set(Role.CERTIFICATE_AUTHORITY_ID, certificateAuthorityId);
+//        result = mergerJson(result, bodyExtra);
+//
+//        // save creation into dbapi : 2
+//        logger.debug("{} ({}/{}) : Creating role {} at path {} in dbapi ...", AutoCryptEndpoints.CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//        JsonApiResponse responseFromDbapi = dbApiHandler.createRole(name, description, certificateAuthorityId, result);
+//        if (!responseFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : Creating role {} at path {} in dbapi failed", AutoCryptEndpoints.CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//            return responseFromDbapi;
+//        }
+//        logger.info("{} ({}/{}) : Created role {} at path {} in dbapi", CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
 
-        // save creation into dbapi : 2
-        logger.debug("{} ({}/{}) : Creating role {} at path {} in dbapi ...", AutoCryptEndpoints.CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromDbapi = dbApiHandler.createRole(name, description, certificateAuthorityId, result);
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : Creating role {} at path {} in dbapi failed", AutoCryptEndpoints.CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-            return responseFromDbapi;
-        }
-        logger.info("{} ({}/{}) : Created role {} at path {} in dbapi", CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+
+        JsonApiResponse rolesSynchronization = syncRoles();
+        if (rolesSynchronization != null) {return rolesSynchronization;}
 
         logger.info("Created role {} at path {}", name, params.get(Common.PATH).asString());
 
-        return responseFromDbapi;
+        return responseFromModule;
     }
 
     /**
@@ -461,18 +464,23 @@ public class AutoCrypt {
         }
         logger.info("{} ({}/{}) : Deleted role {} at path {} in autocrypt", AutoCryptEndpoints.DELETE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
 
-        // save delete into dbapi : 2
-        logger.debug("{} ({}/{}) : Deleting role {} at path {} in dbapi ...", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromDbapi = dbApiHandler.deleteRole(name, params.get(Common.PATH).asString(), responseFromModule.getResult());
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : Deleting role {} at path {} in dbapi failed", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-            return responseFromDbapi;
-        }
-        logger.info("{} ({}/{}) : Deleted role {} at path {} in dbapi", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//        // save delete into dbapi : 2
+//        logger.debug("{} ({}/{}) : Deleting role {} at path {} in dbapi ...", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//        JsonApiResponse responseFromDbapi = dbApiHandler.deleteRole(name, params.get(Common.PATH).asString(), responseFromModule.getResult());
+//        if (!responseFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : Deleting role {} at path {} in dbapi failed", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//            return responseFromDbapi;
+//        }
+//        logger.info("{} ({}/{}) : Deleted role {} at path {} in dbapi", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//
+//        logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
+
+        JsonApiResponse rolesSynchronization = syncRoles();
+        if (rolesSynchronization != null) {return rolesSynchronization;}
 
         logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
 
-        return responseFromDbapi;
+        return responseFromModule;
     }
 
     /**
@@ -497,19 +505,25 @@ public class AutoCrypt {
         convertTTLSecondsToStrHours(responseFromModule.getResult());
         transformKeysFromVaultToDbapi(responseFromModule.getResult(), Common.OU, Common.PROVINCE);
 
-        // save update into dbapi : 2
-        logger.debug("{} ({}/{}) : Updating role {} at path {} in dbapi ...", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromDbapi = dbApiHandler.updateRole(name, description, certificateAuthorityId, params.get(Common.PATH).asString(),
-                mergerJson(responseFromModule.getResult(), bodyExtra));
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : Updating role {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-            return responseFromDbapi;
-        }
-        logger.info("{} ({}/{}) : Updated role {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//        // save update into dbapi : 2
+//        logger.debug("{} ({}/{}) : Updating role {} at path {} in dbapi ...", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//        JsonApiResponse responseFromDbapi = dbApiHandler.updateRole(name, description, certificateAuthorityId, params.get(Common.PATH).asString(),
+//                mergerJson(responseFromModule.getResult(), bodyExtra));
+//        if (!responseFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : Updating role {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//            return responseFromDbapi;
+//        }
+//        logger.info("{} ({}/{}) : Updated role {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
+//
+//        logger.info("Updated role {} at path {}", name, params.get(Common.PATH).asString());
+
+
+        JsonApiResponse rolesSynchronization = syncRoles();
+        if (rolesSynchronization != null) {return rolesSynchronization;}
 
         logger.info("Updated role {} at path {}", name, params.get(Common.PATH).asString());
 
-        return responseFromDbapi;
+        return responseFromModule;
     }
 
     /**
@@ -796,6 +810,9 @@ public class AutoCrypt {
      */
     private @Nullable JsonApiResponse syncIssuers() {
         try {
+            if (issuerDeletionSynchronizationService != null) {
+                issuerDeletionSynchronizationService.syncData();
+            }
             if (issuerSynchronizationService != null) {
                 issuerSynchronizationService.syncData();
             }
@@ -814,6 +831,9 @@ public class AutoCrypt {
      */
     private @Nullable JsonApiResponse syncRoles() {
         try {
+            if (roleDeletionSynchronizationService != null) {
+                roleDeletionSynchronizationService.syncData();
+            }
             if (roleSynchronizationService != null) {
                 roleSynchronizationService.syncData();
             }
@@ -853,15 +873,6 @@ public class AutoCrypt {
     public Json getStatus() {
 //        return Json.object();
         return autocryptApiHandler.getStatus();
-    }
-
-    /**
-     * Set the synchronizers fo each entity
-     */
-    public void setSynchronizers(IssuerSynchronizationService issuerSynchronizationService, RoleSynchronizationService roleSynchronizationService, CertificateSynchronizationService certificateSynchronizationService) {
-        this.issuerSynchronizationService = issuerSynchronizationService;
-        this.roleSynchronizationService = roleSynchronizationService;
-        this.certificateSynchronizationService = certificateSynchronizationService;
     }
 
     /**
@@ -970,75 +981,5 @@ public class AutoCrypt {
         } else {
             return responseFromModule;
         }
-    }
-
-    /**
-     * Initial synchronisation for the issuers/ca (intermediate ca)
-     *
-     * @param path to synchronize the issuers
-     */
-    private void synchronizeIssuers(String path) {
-        Json body = Json.object(Common.PATH, path);
-        JsonApiResponse issuers = autocryptApiHandler.getIssuers(body);
-        if (issuers.isSuccess()) {
-            for (Json issuer_ref : issuers.getResult().asJsonList()) {
-                Json body2 = Json.read(body.toString());
-                body2.at(Issuer.ISSUER_REF, issuer_ref.asString());
-                JsonApiResponse issuer = autocryptApiHandler.getIssuerInfo(issuer_ref.asString(), body2);
-                if (issuer.isSuccess()) {
-                    dbApiHandler.generateIntermediateCA(issuer_ref.asString(), null, issuer.getResult());
-                }
-            }
-        }
-    }
-
-    /**
-     * Initial synchronisation for the roles
-     *
-     * @param path to synchronize the roles
-     */
-    private void synchronizeRoles(String path) {
-        Json body = Json.object(Common.PATH, path);
-        JsonApiResponse issuers = autocryptApiHandler.getRoles(body);
-        if (issuers.isSuccess()) {
-            for (Json role_name : issuers.getResult().asJsonList()) {
-                Json body2 = Json.read(body.toString());
-                body2.at(Common.NAME, role_name.asString());
-                JsonApiResponse role = autocryptApiHandler.getRole(role_name.asString(), body2);
-                if (role.isSuccess()) {
-                    dbApiHandler.createRole(role_name.asString(), null, null, role.getResult());
-                }
-            }
-        }
-    }
-
-    /**
-     * Initial synchronisation for the certificates
-     *
-     * @param path to synchronize the certificates
-     */
-    private void synchronizeCertificate(String path) {
-        Json body = Json.object(Common.PATH, path);
-        JsonApiResponse certificates = autocryptApiHandler.getCertificates(body);
-        if (certificates.isSuccess()) {
-            for (Json serial_number : certificates.getResult().asJsonList()) {
-                Json body2 = Json.read(body.toString());
-                body2.at(Certificate.SERIAL_NUMBER, serial_number.asString());
-                body2.at(Common.PATH, path);
-                JsonApiResponse certificate = autocryptApiHandler.getCertificateInfo(serial_number.asString(), body2);
-                if (certificate.isSuccess()) {
-                    dbApiHandler.generateCertificate(serial_number.asString(), null, certificate.getResult());
-                }
-            }
-        }
-    }
-
-    /**
-     * Initial synchronisation: pki path par default (only one), db is empty so we only have to create
-     */
-    public void initialSynchronizeDb(String path) {
-        synchronizeIssuers(path);
-        synchronizeRoles(path);
-        synchronizeCertificate(path);
     }
 }

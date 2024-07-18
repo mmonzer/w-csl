@@ -1,7 +1,6 @@
 package com.csl.autocrypt.services;
 
 import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
-import com.csl.autocrypt.AutoCrypt;
 import com.csl.autocrypt.DbapiHandlerForCSLAutoCrypt;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.ucsl.json.Json;
@@ -13,21 +12,20 @@ import java.util.List;
 /**
  * Service for synchronization of Issuers
  */
-public class RoleSynchronizationService extends AutocryptTemplateSynchronizationService {
-    public RoleSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
+public class RoleDeletionSynchronizationService extends AutocryptTemplateSynchronizationService {
+    public RoleDeletionSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
         super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Roles");
-        logger = LoggerFactory.getLogger(IssuerSynchronizationService.class);
+        logger = LoggerFactory.getLogger(RoleDeletionSynchronizationService.class);
     }
 
     @Override
     public List<Json> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
-        return super.retrieveData(apiHandlerForCSLAutoCrypt::getRoles, since, limit, offset);
+        return super.retrieveData(apiHandlerForCSLAutoCrypt::getDeletedRoles, since, limit, offset);
     }
 
     @Override
     public void sendData(List<Json> items) throws SynchronizationException {
-//        super.sendData(dbapiHandlerForCSLAutoCrypt::deleteRoles, dbapiHandlerForCSLAutoCrypt::upsertRoles, items);
-        super.sendData(dbapiHandlerForCSLAutoCrypt::upsertRoles, Json.make(items));
+        super.sendData(dbapiHandlerForCSLAutoCrypt::deleteRoles, Json.make(items));
     }
 
     @Override

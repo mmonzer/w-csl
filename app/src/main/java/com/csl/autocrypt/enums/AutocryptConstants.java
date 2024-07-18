@@ -92,10 +92,13 @@ public final class AutocryptConstants {
         public static final String CRL_DISTRIBUTION_POINTS = "crl_distribution_points";
         public static final String CREATED_AT = "created_at";
         public static final String UPDATED_AT = "updated_at";
+        public static final String VAULT_ID = "vault_id";
 
         public static final String VALUE = "value";
         public static final String AFTER_UPDATED_DATE = "afterUpdatedDate";
         public static final String MIN_DATE = "1900-01-01T00:00+18:00";
+        public static final String DELETED = "deleted";
+        public static final String GET_DELETED = "get_deleted";
     }
 
     public static final class Issuer {

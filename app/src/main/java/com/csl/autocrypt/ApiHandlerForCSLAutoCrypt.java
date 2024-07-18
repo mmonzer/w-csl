@@ -41,7 +41,19 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse getIssuers(Json params) {
         return this.sendGet(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI.endpoint(),
-                params
+                params.set(Common.GET_DELETED, false)
+        );
+    }
+
+    /**
+     * Gets the list of issuers
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getDeletedIssuers(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.ISSUER_URI.endpoint(),
+                params.set(Common.GET_DELETED, true)
         );
     }
 
@@ -110,9 +122,22 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse getRoles(Json params) {
         return this.sendGet(
                 ApiEndpointForCSLAutocrypt.ROLE_URI.endpoint(),
-                params
+                params.set(Common.GET_DELETED, false)
         );
     }
+
+    /**
+     * Gets the list of deleted roles
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getDeletedRoles(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.ISSUER_URI.endpoint(),
+                params.set(Common.GET_DELETED, true)
+        );
+    }
+
 
     /**
      * Creates a new role

@@ -107,7 +107,7 @@ public class CSLAutocryptUtils {
      */
     public static Json formatRole(Json roleRaw) {
         Json role = Json.object();
-        copyValueOrNull(roleRaw, role, Common.NAME, Common.DESCRIPTION, Role.CERTIFICATE_AUTHORITY_ID);
+        copyValueOrNull(roleRaw, role, Common.NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Common.PATH);
         role.set(Role.ROLE_JSON, roleRaw);
         return role;
     }

@@ -27,7 +27,8 @@ public class CertificateSynchronizationService extends AutocryptTemplateSynchron
 
     @Override
     public void sendData(List<Json> items) throws SynchronizationException {
-         super.sendData(dbapiHandlerForCSLAutoCrypt::upsertCertificates, Json.make(items));
+//        super.sendData(dbapiHandlerForCSLAutoCrypt::revokeCertificates, dbapiHandlerForCSLAutoCrypt::upsertCertificates, items);
+        super.sendData(dbapiHandlerForCSLAutoCrypt::upsertCertificates, Json.make(items));
     }
 
     @Override

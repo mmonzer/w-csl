@@ -13,6 +13,7 @@ import main.services.JsonApiResponse;
 import org.slf4j.Logger;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AutocryptTemplateSynchronizationService extends PaginatedSynchronizationService<Json> {
@@ -53,8 +54,40 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             getLogger().error("{} : Could not send data to DB-API for Autocrypt service.", prefixLogger);
             throw new SynchronizationException(prefixLogger + " : Could not send data to DB-API for Autocrypt service.");
         }
-        getLogger().debug("{} : sent data to DB-API : {}", prefixLogger, items);
+        getLogger().info("{} : sent data to DB-API : {}", prefixLogger, items);
     }
+//
+//    public void sendData(IJsonToJsonApiResponse methodDelete, IJsonToJsonApiResponse methodUpsert, List<Json> items) throws SynchronizationException {
+//        List<Json> itemsToDelete = new ArrayList<>();
+//        List<Json> itemsToUpsert = new ArrayList<>();
+//
+//        // Prepare items
+//        for (Json item : items) {
+//            if (item.has(Common.DELETED) && item.get(Common.DELETED).asBoolean()) {
+//                itemsToDelete.add(item);
+//            } else {
+//                itemsToUpsert.add(item);
+//            }
+//        }
+//
+//        // deleting items
+//        getLogger().debug("{} : deleting data to DB-API : {}", prefixLogger, items);
+//        JsonApiResponse response = methodDelete.apply(Json.make(itemsToDelete));
+//        if (!response.isSuccess()) {
+//            getLogger().error("{} : Could not delete data from DB-API for Autocrypt service.", prefixLogger);
+//            throw new SynchronizationException(prefixLogger + " : Could not delete data to DB-API for Autocrypt service.");
+//        }
+//
+//        // upserting items
+//        getLogger().debug("{} : sending data to DB-API : {}", prefixLogger, items);
+//        response = methodUpsert.apply(Json.make(itemsToUpsert));
+//        if (!response.isSuccess()) {
+//            getLogger().error("{} : Could not send data from DB-API for Autocrypt service.", prefixLogger);
+//            throw new SynchronizationException(prefixLogger + " : Could not send data to DB-API for Autocrypt service.");
+//        }
+//
+//        getLogger().info("{} : sent data to DB-API : {}", prefixLogger, items);
+//    }
 
     public OffsetDateTime getLastChangeDate(IVoidToJsonApiResponse method) throws SynchronizationException {
         try {

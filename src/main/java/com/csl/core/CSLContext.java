@@ -62,7 +62,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     /**
      * Default relative path for the configuration file
      */
-    private static String configFileName = CSLContext.class.getResource("/configuration_template/application.json").getPath();
+    private static String configFileName = CSLContext.class.getClassLoader().getResource("configuration_template/application_template.json").getFile();
 
     private String cslConfDir = "";
 
@@ -267,10 +267,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     }
 
 
-//	public void setIdsRunner(IIDSRunner idsRunner) {
-//		this.idsRunner = idsRunner;
-//	}
-
     public DataBaseServer getDatabaseServer() {
         if (idsRunner == null) System.err.println("Warning, no Database server registered");
 
@@ -442,7 +438,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         if (jConfig.get("web_server_conf") == null) {
             System.out.println("Invalid config file, update to new format");
             System.exit(0);
-            ;
         }
         return jConfig;
     }
@@ -457,7 +452,11 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     }
 
     public String getConfigFileName() {
-        return this.configFileName;
+        String prefix = "file:";
+        String s = java.net.URLDecoder.decode(configFileName);
+        if(s.startsWith(prefix))
+            s = "jar:"+s;
+        return s;
     }
 
     public String getCslConfDir() {

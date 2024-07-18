@@ -12,6 +12,7 @@ application {
 }
 
 jar {
+    dependsOn(createConfigFromTemplate)
     archiveBaseName.set('cslmainclient')
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

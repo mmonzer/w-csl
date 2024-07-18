@@ -21,6 +21,7 @@ import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.wcsl.ids.IDSMainProcessorFactory;
+import lombok.Getter;
 import main.util.CSLRunningArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,15 +54,11 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     public static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     /**
-     * Default path for the configuration : current project path
-     */
-    private static String DEFAULT_CONFIG_PATH = System.getProperty("user.dir");
-
-    /**
      * Default relative path for the configuration file
      */
     private static String configFileName = "application.json";
 
+    @Getter
     private String cslConfDir = "";
 
 
@@ -109,13 +106,12 @@ public class CSLContext implements ICSLContext, ICSLLogger {
      */
     CSLUDPServer cslUDPServer = null;
 
-
-
     boolean replayMode = false;
     long lastSystemCurrentTimeMillis = 0;
     long currentSamplingTime = 0;
 
     int samplingTime = 100;
+    @Getter
     private boolean exitCSL = false;
     boolean autostart = false;
     int nExecSteps = 0;
@@ -136,14 +132,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     ScheduledExecutorService scheduler = null;
 
-    private int currentPortForUCP = 9001;
-
     private long initialTime = 0;
 
-    private static int PORTMAX = 9999;
-
-    private static int CSL_ID = 1234;
-
+    @Getter
     private boolean debug = true;
 
     private Boolean openBrowser;
@@ -167,12 +158,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     private CSLContext() {
 
-
-    }
-
-
-    public boolean isDebug() {
-        return debug;
     }
 
     public void setDebug(boolean debug) {
@@ -184,26 +169,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         System.err.println(s);
     }
 
-    public boolean isExitCSL() {
-        return exitCSL;
-    }
-
     public void setExitCSL(boolean exitCSL) {
         this.exitCSL = exitCSL;
     }
-
-    //@Override
-    public Json takeObjectFromInputQueue(int n) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    //@Override
-    public void putObjectToOutputQueue(int n, Json j) {
-        // TODO Auto-generated method stub
-
-    }
-
 
     @Override
     public void logError(String msg) {
@@ -241,18 +209,15 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         cslLogger.setLogLevel(v);
     }
 
-
     public String getUserDir() {
         return JServiceLoader.getUserDir();
     }
-
 
     public IAlertManager getCSLAlertManager() {
         if (cslAlertManager == null) System.err.println("Warning, no alertManager registered");
 
         return cslAlertManager;
     }
-
 
     public IFileLogFactory getFileLogFactory() {
         if (fileLogFactory == null) fileLogFactory = new FileLogFactory();
@@ -263,7 +228,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         if (idsRunner == null) System.err.println("Warning, no idsRunner registered");
         return idsRunner;
     }
-
 
     public DataBaseServer getDatabaseServer() {
         if (idsRunner == null) System.err.println("Warning, no Database server registered");
@@ -300,20 +264,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return JServiceLoader.buildFullPathInUserDir(dir);
     }
 
-
-    public String buildFullPathInConfDir(String dir) {
-
-        if (dir == null) dir = "";
-        dir = dir.replace('\\', '/');
-
-        dir = clean(dir);
-
-        if (dir.startsWith(".")) dir = dir.substring(1);
-        if (dir.startsWith(File.separator)) dir = dir.substring(1);
-
-        return getCslConfDir() + File.separator + dir;
-    }
-
     private String clean(String s) {
         String z = "../";
         while (s.indexOf(z) >= 0) {
@@ -335,8 +285,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         moduleClassList.put(name, c);
 
     }
-    //==
-
 
     public long getTimeFromStartingTime() {
 
@@ -354,30 +302,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             return lastSystemCurrentTimeMillis;
         }
         return System.currentTimeMillis();
-    }
-
-    public String getSystemCurrentTimeMillisAsFormattedString() {
-        return sdf.format(getSystemCurrentTimeMillis());
-    }
-
-
-    public void setSystemCurrentTimeMillis(long t) {
-
-        if (t < lastSystemCurrentTimeMillis) {
-            return;
-        }
-        while (currentSamplingTime <= t) {
-            currentSamplingTime = currentSamplingTime + samplingTime;
-            lastSystemCurrentTimeMillis = currentSamplingTime;
-
-            execOneRunCycle();
-        }
-        lastSystemCurrentTimeMillis = t;
-    }
-
-
-    public int getSamplingTime() {
-        return samplingTime;
     }
 
     public static final String EOL = System.getProperty("line.separator");
@@ -449,18 +373,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     }
 
-    public String getConfigFileName() {
-        String prefix = "file:";
-        String s = java.net.URLDecoder.decode(configFileName);
-        if(s.startsWith(prefix))
-            s = "jar:"+s;
-        return s;
-    }
-
-    public String getCslConfDir() {
-        return cslConfDir;
-    }
-
     private void setUserDir(String dir) {
 
         JServiceLoader.setUserDir(dir);
@@ -527,12 +439,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
             safeGet(getConfig(), "database_server_conf").set("datafile_subdir", cslRunningArgs.getDatabasedir());
         }
-    }
-
-
-    public String getDefaultIdsDataDir() {
-        return CSLContext.instance.getUserDir() + File.separator + "idsdata";
-
     }
 
     public void init(CSLRunningArgs cslRunningArgs) {

@@ -3,6 +3,9 @@ package main.util;
 import com.csl.ids.IDSParams;
 import lombok.Getter;
 import lombok.Setter;
+import main.CSLIDSMainClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,7 +18,7 @@ import java.nio.file.Paths;
 @Getter
 @Setter
 public class CSLRunningArgs {
-
+		private static final Logger logger = LoggerFactory.getLogger(CSLIDSMainClient.class);
 
 		String configFile = "application.json";
 		String error = "";
@@ -254,9 +257,9 @@ public class CSLRunningArgs {
 			}
 
 			if (configContent != null) {
-				System.out.println("Config file content:\n" + configContent);
+				logger.trace("Config file content:\n" + configContent);
 			} else {
-				System.out.println("Cannot find config file: " + configFile);
+				System.err.println("Cannot find config file: " + configFile);
 			}
 
 			return this;

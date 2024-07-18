@@ -7,11 +7,11 @@ FROM gradle:jdk17 AS build-stage
 RUN #apt-get update && apt-get install ant -y
 COPY . /usr/w-csl
 WORKDIR /usr/w-csl
-RUN ["./gradlew","jar","-b","buildClient.gradle"]
+RUN ["./gradlew","shadowJar","-b","buildClient.gradle"]
 
 FROM eclipse-temurin:17.0.11_9-jre AS production-stage
 WORKDIR /usr/src/app
-COPY --from=build-stage /usr/w-csl/build/libs/cslmainclient.jar ./cslmainclient.jar
+COPY --from=build-stage /usr/w-csl/build/libs/cslmainclient-all.jar ./cslmainclient.jar
 
 COPY src/main/resources/resources/ resources/
 

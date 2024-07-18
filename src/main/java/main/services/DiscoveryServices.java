@@ -115,7 +115,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 try {
                     deletedCpeItemsSynchronizationService.syncData();
                 } catch (SynchronizationException e) {
-                    logger.error("Could not synchronize deleted CPE Items", e);
+                    logger.trace("Could not synchronize deleted CPE Items", e);
                 }
             });
         }
@@ -722,7 +722,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 deletedCpeItemsSynchronizationService.syncData();
                 deletedMicrosoftKbsSynchronizationService.syncData();
             } catch (SynchronizationException e) {
-                logger.error("Could not synchronize CPE Items", e);
+                logger.trace("Could not synchronize CPE Items", e);
             }
         }
     }

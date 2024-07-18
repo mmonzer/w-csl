@@ -201,6 +201,8 @@ public class CSLIDSMainClient {
     }
 
     public static void main(String[] args) {
+        System.out.println("TrustStore: " + System.getProperty("javax.net.ssl.trustStore"));
+        System.out.println("TrustStorePassword: " + System.getProperty("javax.net.ssl.trustStorePassword"));
 
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 

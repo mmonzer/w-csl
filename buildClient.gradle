@@ -1,6 +1,7 @@
 plugins{
     id 'java'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 apply from : 'build.gradle'
@@ -31,5 +32,12 @@ jar {
                 'Built-Date': new Date(),
                 'Built-JDK': System.getProperty('java.version'),
                 'Main-Class': mainClassName
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('cslmainclient')
+    manifest {
+        attributes 'Main-Class': mainClassName
     }
 }

@@ -16,9 +16,11 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,20 +66,32 @@ public class ApiHandler implements AutoCloseable {
             logger.error("Could not start the http client for " + nameModule + " API.", e);
         }
     }
+
+    public static KeyStore loadTrustStore(String trustStorePath, String trustStorePassword) throws Exception {
+        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        try (FileInputStream trustStoreStream = new FileInputStream(trustStorePath)) {
+            trustStore.load(trustStoreStream, trustStorePassword.toCharArray());
+        }
+        return trustStore;
+    }
+
     private void ensureSSLDbApiHandlerInitialization(){
         // Retrieve system properties
         String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
         String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
 
         // Ensure the properties are set
-        if (trustStorePath == null || trustStorePassword == null) {
-            throw new IllegalStateException("Trust store properties are not set.");
+
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        try{
+            KeyStore trustStore = loadTrustStore(trustStorePath, trustStorePassword);
+            sslContextFactory.setTrustStore(trustStore);
+            sslContextFactory.setTrustStorePassword(trustStorePassword);
+        }catch (Exception e) {
+            logger.error("Could not load the trust store.", e);
         }
 
-        // Configure SslContextFactory with the retrieved properties
-        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-        sslContextFactory.setTrustStorePath(trustStorePath);
-        sslContextFactory.setTrustStorePassword(trustStorePassword);
+        // Configure SslContextFactory with the retrieved propertie
         //sslContextFactory.setTrustAll(true);
 
         httpClient = new HttpClient(sslContextFactory);

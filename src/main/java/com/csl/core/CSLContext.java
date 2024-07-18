@@ -25,10 +25,8 @@ import main.util.CSLRunningArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.*;
@@ -62,7 +60,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     /**
      * Default relative path for the configuration file
      */
-    private static String configFileName = CSLContext.class.getClassLoader().getResource("configuration_template/application_template.json").getFile();
+    private static String configFileName = "application.json";
 
     private String cslConfDir = "";
 
@@ -385,23 +383,23 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     public static final String EOL = System.getProperty("line.separator");
 
     private static String readFile(String filename) throws IOException {
-        BufferedReader br = null;
-        FileReader fr = null;
+        try (InputStream inputStream = CSLContext.class.getClassLoader().getResourceAsStream(filename);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
 
-        try {
-            fr = new FileReader(filename);
-            br = new BufferedReader(fr);
-            String nextLine = "";
-            StringBuilder sb = new StringBuilder();
-            while ((nextLine = br.readLine()) != null) {
-                sb.append(nextLine); // note: BufferedReader strips the EOL character
-                //   so we add a new one!
-                sb.append(EOL);
+            if (inputStream == null) {
+                throw new IllegalArgumentException("Resource not found: " + filename);
             }
-            return sb.toString();
-        } finally {
-            if (br != null) br.close();
-            if (fr != null) fr.close();
+
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+            return content.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

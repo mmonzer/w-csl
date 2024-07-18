@@ -118,7 +118,29 @@ jacocoTestReport {
         html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
 }
+// Define a custom task to copy the configuration file
+task createConfigFromTemplate {
+    def srcFile = file('src/main/resources/configtemplate/application_template.json')
+    def destFile = file('src/main/resources/application.json')
 
+    doFirst {
+        println "COPYING the configuration file..."
+    }
+
+    doLast {
+        if (!destFile.exists()) {
+            copy {
+                from srcFile
+                into destFile.parent
+                rename { String fileName -> fileName.replace('application_template.json', 'application.json') }
+            }
+            println "Copied application_template.json to application.json"
+        } else {
+            println "application.json already exists"
+        }
+    }
+
+}
 task printEnvVariables {
     doLast {
         println "JAVA_HOME: ${System.getenv('JAVA_HOME')}"

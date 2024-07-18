@@ -4,13 +4,20 @@ import com.csl.ids.IDSParams;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 @Getter
 @Setter
 public class CSLRunningArgs {
 
 
-		String configFile = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "configuration_template" + File.separator + "application.json";
+		String configFile = "application.json";
 		String error = "";
 
 		boolean debug = false;
@@ -144,6 +151,35 @@ public class CSLRunningArgs {
 		}
 
 
+	public static String readResourceAsString(String resourcePath) {
+		try (InputStream inputStream = CSLRunningArgs.class.getClassLoader().getResourceAsStream(resourcePath);
+			 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+			if (inputStream == null) {
+				return null;
+			}
+
+			StringBuilder content = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				content.append(line).append("\n");
+			}
+			return content.toString();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static String readFileAsString(String filePath) {
+		try {
+			return new String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 		public CSLRunningArgs parseArgs(String[] args) {
 
 
@@ -198,44 +234,30 @@ public class CSLRunningArgs {
 
 
 			// LIRE LA CONFIG DE CONTEXT
-			String path = System.getProperty("user.home");
 
-			if (configFile.isEmpty())
-				configFile = getUserDir() + File.separator + "src/name/resources/runconfig/application.json";
+			String configContent = readResourceAsString(configFile);
 
-			File file = new File(configFile);
+			if (configContent == null) {
+				// If not found, try reading from the file system paths
+				String[] fallbackPaths = {
+						getUserDir() + File.separator + "src/main/resources/" + configFile,
+						getUserDir() + File.separator + "configuration_template/" + configFile
+				};
 
-			if (!file.exists()) {
-
-				System.out.println("Cannot not find config file :" + file.getAbsolutePath());
-
-				String fname = getUserDir() + File.separator + configFile;
-
-				file = new File(fname);
-				if (!file.exists()) {
-					System.out.println("Cannot not find config file :" + file.getAbsolutePath());
-
-					fname = getUserDir() + File.separator + "configuration_template" + File.separator + configFile;
-
-					file = new File(fname);
-					if (!file.exists()) {
-						System.out.println("Cannot find config file " + file.getAbsolutePath());
-						error = "Cannot find config file " + file.getAbsolutePath();
-					} else
-						configFile = fname;
-
-				} else {
-					configFile = fname;
-
+				for (String path : fallbackPaths) {
+					configContent = readFileAsString(path);
+					if (configContent != null) {
+						configFile = path;
+						break;
+					}
 				}
-
-
 			}
-			System.out.println("Config file :" + file.getAbsolutePath() + " in " + getPathOfConfigFile());
-			System.out.println("User dir :" + getUserDir());
-			System.out.println("Data dir :" + getDataDir());
-			System.out.println();
 
+			if (configContent != null) {
+				System.out.println("Config file content:\n" + configContent);
+			} else {
+				System.out.println("Cannot find config file: " + configFile);
+			}
 
 			return this;
 		}

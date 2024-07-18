@@ -34,6 +34,15 @@ import java.util.List;
  */
 public abstract class PaginatedSynchronizationService<T> implements DataSynchronizationService {
     private int batch_max_size = 200;
+    private final String moduleName;
+
+    public PaginatedSynchronizationService(String module) {
+        moduleName = module;
+    }
+
+    public PaginatedSynchronizationService() {
+        this("CSL-Scan");
+    }
 
     @Override
     public void syncData() throws SynchronizationException {
@@ -41,7 +50,7 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
         try {
             lastChangeDate = getLastChangeDate();
         } catch (Exception e) {
-            getLogger().warn("Could not retrieve last update date from DB-API, retrieving all discovered devices from CSL-Scan");
+            getLogger().warn("Could not retrieve last update date from DB-API, retrieving all data from {}", moduleName);
             getLogger().debug("Could not retrieve last update date from DB-API", e);
             lastChangeDate = null;
         }

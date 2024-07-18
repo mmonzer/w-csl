@@ -1,6 +1,8 @@
 package com.csl.autocrypt.services;
 
+import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
 import com.csl.autocrypt.AutoCrypt;
+import com.csl.autocrypt.DbapiHandlerForCSLAutoCrypt;
 import com.csl.autocrypt.enums.AutocryptConstants.Common;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
@@ -14,12 +16,15 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 public abstract class AutocryptTemplateSynchronizationService extends PaginatedSynchronizationService<Json> {
-    protected final AutoCrypt autocrypt;
+    protected final DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt;
+    protected final ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt;
     protected final String prefixLogger;
     protected Logger logger;
 
-    public AutocryptTemplateSynchronizationService(AutoCrypt autocrypt, String prefixLogger) {
-        this.autocrypt = autocrypt;
+    public AutocryptTemplateSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt, String prefixLogger) {
+        super("CSL-Autocrypt");
+        this.dbapiHandlerForCSLAutoCrypt = dbapiHandlerForCSLAutoCrypt;
+        this.apiHandlerForCSLAutoCrypt = apiHandlerForCSLAutoCrypt;
         this.prefixLogger = prefixLogger;
     }
 

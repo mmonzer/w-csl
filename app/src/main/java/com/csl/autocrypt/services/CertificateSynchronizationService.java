@@ -1,6 +1,8 @@
 package com.csl.autocrypt.services;
 
+import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
 import com.csl.autocrypt.AutoCrypt;
+import com.csl.autocrypt.DbapiHandlerForCSLAutoCrypt;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.ucsl.json.Json;
 import org.slf4j.LoggerFactory;
@@ -12,23 +14,24 @@ import java.util.List;
  * Service for synchronization of Issuers
  */
 public class CertificateSynchronizationService extends AutocryptTemplateSynchronizationService {
-    public CertificateSynchronizationService(AutoCrypt autocrypt) {
-        super( autocrypt, "SYNC-Autocrypt:Certificates");
-        logger = LoggerFactory.getLogger(CertificateSynchronizationService.class);
+
+    public CertificateSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
+        super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Certificates");
+        logger = LoggerFactory.getLogger(IssuerSynchronizationService.class);
     }
 
     @Override
     public List<Json> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
-        return super.retrieveData(autocrypt.getAutocryptApiHandler()::getCertificates, since, limit, offset);
+        return super.retrieveData(apiHandlerForCSLAutoCrypt::getCertificates, since, limit, offset);
     }
 
     @Override
     public void sendData(List<Json> items) throws SynchronizationException {
-         super.sendData(autocrypt.getDbApiHandler()::upsertCertificates, Json.make(items));
+         super.sendData(dbapiHandlerForCSLAutoCrypt::upsertCertificates, Json.make(items));
     }
 
     @Override
     public OffsetDateTime getLastChangeDate() throws SynchronizationException {
-        return super.getLastChangeDate(autocrypt.getDbApiHandler()::getCertificateLastUpdateDate);
+        return super.getLastChangeDate(dbapiHandlerForCSLAutoCrypt::getCertificateLastUpdateDate);
     }
 }

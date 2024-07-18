@@ -1,12 +1,17 @@
 package com.csl.autocrypt;
 
+import com.csl.autocrypt.services.CertificateSynchronizationService;
+import com.csl.autocrypt.services.IssuerSynchronizationService;
+import com.csl.autocrypt.services.RoleSynchronizationService;
 import com.csl.core.CSLContext;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +41,9 @@ public class AutoCrypt {
     private ApiHandlerForCSLAutoCrypt autocryptApiHandler = null;
     private boolean shouldSaveToDb = true;
     private static final Logger logger = LoggerFactory.getLogger(AutoCrypt.class);
+    private IssuerSynchronizationService issuerSynchronizationService = null;
+    private RoleSynchronizationService roleSynchronizationService = null;
+    private CertificateSynchronizationService certificateSynchronizationService = null;
 
     public AutoCrypt(String name) {
         this.name = name;
@@ -55,6 +63,26 @@ public class AutoCrypt {
         autocryptApiHandler = new ApiHandlerForCSLAutoCrypt(name, "http://" + moduleIp + ":" + modulePort);
         dbApiHandler = new DbapiHandlerForCSLAutoCrypt();
         autocryptApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
+
+        issuerSynchronizationService = new IssuerSynchronizationService(dbApiHandler, autocryptApiHandler);
+        roleSynchronizationService = new RoleSynchronizationService(dbApiHandler, autocryptApiHandler);
+        certificateSynchronizationService = new CertificateSynchronizationService(dbApiHandler, autocryptApiHandler);
+    }
+
+    /**
+     * Synchronize Dbapi with Autocrypt : (Autocrypt is the source of trust : Autocrypt -> Dbapi only)
+     * - Issuers
+     * - Roles
+     * - Certificates
+     */
+    public void syncAll() {
+            try {
+                if (issuerSynchronizationService!= null) {issuerSynchronizationService.syncData();}
+                if (roleSynchronizationService!= null) {roleSynchronizationService.syncData();}
+            } catch (SynchronizationException e) {
+                logger.error("Could not synchronize Autocrypt Items", e);
+            }
+
     }
 
     /**
@@ -63,7 +91,7 @@ public class AutoCrypt {
      * @param shouldSaveToDb whether should be saved into dbapi
      */
     public void setSaveToDb(boolean shouldSaveToDb) {
-            this.shouldSaveToDb=shouldSaveToDb;
+        this.shouldSaveToDb = shouldSaveToDb;
     }
 
     /**
@@ -95,40 +123,45 @@ public class AutoCrypt {
     public JsonApiResponse updateIssuerInfo(String name, String description, String issuerRef, Json params, Json bodyBase, Json bodyExtra) {
         logger.info("Updating info from issuer {} at path {} ...", issuerRef, params.get(Common.PATH).asString());
 
-        // Get all information from issuer dbapi : 1
-        logger.debug("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi ...", UPDATE_ISSUER_INFO,3, 3,issuerRef, params.get(Common.PATH).asString());
-        JsonApiResponse oldValuesFromDbapi = dbApiHandler.getInfoIssuerFromDbapi(issuerRef);
-        if (!oldValuesFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO,3, 3,issuerRef, params.get(Common.PATH).asString());
-            return JsonApiResponse.error("Error creating role : " + oldValuesFromDbapi.getError().toJson());
-        }
-        logger.info("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ISSUER_INFO,3, 3, issuerRef, params.get(Common.PATH).asString());
+//        // Get all information from issuer dbapi : 1
+//        logger.debug("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi ...", UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
+//        JsonApiResponse oldValuesFromDbapi = dbApiHandler.getInfoIssuerFromDbapi(issuerRef);
+//        if (!oldValuesFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
+//            return JsonApiResponse.error("Error creating role : " + oldValuesFromDbapi.getError().toJson());
+//        }
+//        logger.info("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
 
         // Update issuer in autocrypt : 2
         logger.debug("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt ...", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, bodyBase, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO,2, 3, issuerRef, params.get(Common.PATH).asString());
+            logger.error("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
         }
         logger.info("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
 
-        // Update issuer in autocrypt : 3
-        logger.debug("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt ...", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromDbapi = dbApiHandler.updateIssuerInfo(name, issuerRef, description, params.get(Common.PATH).asString(),
-                mergerJson(responseFromModule.getResult(), mergerJson(bodyExtra, oldValuesFromDbapi.getResult())
-                )
-        );
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : Updating info issuer {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-            return responseFromDbapi;
-        }
-        logger.info("{} ({}/{}) : Updating info issuer {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
+//        // Update issuer in autocrypt : 3
+//        logger.debug("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt ...", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
+//        JsonApiResponse responseFromDbapi = dbApiHandler.updateIssuerInfo(name, issuerRef, description, params.get(Common.PATH).asString(),
+//                mergerJson(responseFromModule.getResult(), mergerJson(bodyExtra, oldValuesFromDbapi.getResult())
+//                )
+//        );
+//        if (!responseFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : Updating info issuer {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
+//            return responseFromDbapi;
+//        }
+//        logger.info("{} ({}/{}) : Updating info issuer {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
+//
+//        logger.info("Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
+
+
+        JsonApiResponse issuerSynchronization = syncIssuers();
+        if (issuerSynchronization != null) {return issuerSynchronization;}
 
         logger.info("Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
-        return responseFromDbapi;
-
+        return responseFromModule;
     }
 
     /**
@@ -150,18 +183,22 @@ public class AutoCrypt {
         }
         logger.info("{} ({}/{}) : Deleting issuer {} at path {} in autocrypt", AutoCryptEndpoints.DELETE_ISSUER_INFO, 1, 2, issuerRef, params.get(Common.PATH).asString());
 
-        // delete issuer in  dbapi : 2
-        logger.debug("{} ({}/{}) : Deleting issuer {} at path {} in dbapi ...", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromDbapi = dbApiHandler.deleteIssuer(issuerRef, responseFromModule.getResult());
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : Deleting issuer {} at path {} in dbapi failed", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
-            return responseFromDbapi;
-        }
-        logger.info("{} ({}/{}) : Deleting issuer {} at path {} in dbapi", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
+//        // delete issuer in  dbapi : 2
+//        logger.debug("{} ({}/{}) : Deleting issuer {} at path {} in dbapi ...", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
+//        JsonApiResponse responseFromDbapi = dbApiHandler.deleteIssuer(issuerRef, responseFromModule.getResult());
+//        if (!responseFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : Deleting issuer {} at path {} in dbapi failed", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
+//            return responseFromDbapi;
+//        }
+//        logger.info("{} ({}/{}) : Deleting issuer {} at path {} in dbapi", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
+
+
+        JsonApiResponse issuerSynchronization = syncIssuers();
+        if (issuerSynchronization != null) {return issuerSynchronization;}
 
         logger.info("Deleted issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
-        return responseFromDbapi;
+        return responseFromModule;
     }
 
     /**
@@ -309,7 +346,6 @@ public class AutoCrypt {
         }
         return dbApiHandler.generateCA(issuerRef, idName, isRoot ? Common.PKI : idName, null, null, null,
                 mergerJson(responseFromModule.getResult(), params));
-
     }
 
     /**
@@ -360,7 +396,7 @@ public class AutoCrypt {
     /**
      * Creates a new role
      *
-     * @param name      identifier in the dbapi side
+     * @param name        identifier in the dbapi side
      * @param description description in the dbapi side
      * @param params      parameters with the path
      */
@@ -394,7 +430,6 @@ public class AutoCrypt {
         logger.info("Created role {} at path {}", name, params.get(Common.PATH).asString());
 
         return responseFromDbapi;
-
     }
 
     /**
@@ -682,16 +717,16 @@ public class AutoCrypt {
      * Generic method to generate a intermediate or root CA
      *
      * @param typeCA        either GENERATE_ROOT_CA either GENERATE_INTERMEDIATE_CA
-     * @param name        identifier of the CA (issuerName)
-     * @param description description in the dbapi
-     * @param params      parameters with  path
-     * @param bodyAutocrypt  body for creating the CA in CSL-Autocrypt
-     * @param bodyDBapi      body for creating the CA in CSL-Dbapi
+     * @param name          identifier of the CA (issuerName)
+     * @param description   description in the dbapi
+     * @param params        parameters with  path
+     * @param bodyAutocrypt body for creating the CA in CSL-Autocrypt
+     * @param bodyDBapi     body for creating the CA in CSL-Dbapi
      * @return if creation was successful, the body for HMI, otherwise, the error message
      */
     private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, String name, String description, Json params, Json bodyAutocrypt, Json bodyDBapi) {
-        boolean isRoot = typeCA==AutoCryptEndpoints.GENERATE_ROOT_CA;
-        String type = isRoot?"root":"intermediate";
+        boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
+        String type = isRoot ? "root" : "intermediate";
         String path = params.get(Common.PATH).asString();
         logger.info("Generating {} CA ...", type);
 
@@ -713,44 +748,101 @@ public class AutoCrypt {
         logger.info("{} ({}/{}) : {} CA ({}) created in Autocrypt at path {}", typeCA, 1, 4, type, issuerRef, path);
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
-        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
+//        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
+//
+//        // Get issuer info from Autocrypt
+//        logger.debug("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt ...", typeCA, 2, 4, issuerRef);
+//        responseFromModule = autocryptApiHandler.getIssuerInfo(issuerRef, params);
+//        if (!responseFromModule.isSuccess()) {
+//            logger.error("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt failed", typeCA, 2, 4, issuerRef);
+//            return responseFromModule;
+//        }
+//        logger.info("{} ({}/{}) : {} issuer ({}) information gathered from AutoCrypt", typeCA, 2, 4, type, issuerRef);
+//
+//        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
+//
+//        // Get the certificate of CA from Autocrypt : 3
+//        logger.debug("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) ...", typeCA, 3, 4, serialNumber, issuerRef, type);
+//        JsonApiResponse responseWithCertificate = autocryptApiHandler.getCertificateInfo(serialNumber, Json.object(Common.PATH, Common.PKI));
+//        if (!responseWithCertificate.isSuccess()) {
+//            logger.error("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) from AutoCrypt failed", typeCA, 3, 4, serialNumber, type, issuerRef);
+//            return responseWithCertificate;
+//        }
+//        logger.info("{} ({}/{}) : certificate ({}) of {} issuer ({}) fetched from AutoCrypt", typeCA, 3, 4, serialNumber, type, issuerRef);
+//
+//        responseWithCertificate.getResult().set(Certificate.SERIAL_NUMBER, serialNumber);
+//        responseWithCertificate.getResult().set(Common.PATH, Common.PKI);
+//
+//        // Save CA into dbapi : 4
+//        logger.debug("{} ({}/{}) : saving {} CA ({}) in Dbapi ...", typeCA, 4, 4, type, issuerRef);
+//        JsonApiResponse responseFromDbapi = dbApiHandler.generateCA(issuerRef, name, path, description, serialNumber, responseWithCertificate.getResult(),
+//                bodyDBapi);
+//
+//        if (!responseFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : saving {} CA ({}) in Dbapi failed", typeCA, 4, 4, type, issuerRef);
+//        }
+//        logger.info("{} ({}/{}) : {} CA ({}) saved in Dbapi", typeCA, 4, 4, type, issuerRef);
 
-        // Get issuer info from Autocrypt
-        logger.debug("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt ...", typeCA, 2, 4, issuerRef);
-        responseFromModule = autocryptApiHandler.getIssuerInfo(issuerRef, params);
-        if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt failed", typeCA, 2, 4, issuerRef);
-            return responseFromModule;
-        }
-        logger.info("{} ({}/{}) : {} issuer ({}) information gathered from AutoCrypt", typeCA, 2, 4, type, issuerRef);
-
-        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
-
-        // Get the certificate of CA from Autocrypt : 3
-        logger.debug("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) ...", typeCA, 3, 4, serialNumber, issuerRef, type);
-        JsonApiResponse responseWithCertificate = autocryptApiHandler.getCertificateInfo(serialNumber, Json.object(Common.PATH, Common.PKI));
-        if (!responseWithCertificate.isSuccess()) {
-            logger.error("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) from AutoCrypt failed", typeCA, 3, 4, serialNumber, type, issuerRef);
-            return responseWithCertificate;
-        }
-        logger.info("{} ({}/{}) : certificate ({}) of {} issuer ({}) fetched from AutoCrypt", typeCA, 3, 4, serialNumber, type, issuerRef);
-
-        responseWithCertificate.getResult().set(Certificate.SERIAL_NUMBER, serialNumber);
-        responseWithCertificate.getResult().set(Common.PATH, Common.PKI);
-
-        // Save CA into dbapi : 4
-        logger.debug("{} ({}/{}) : saving {} CA ({}) in Dbapi ...", typeCA, 4, 4, type, issuerRef);
-        JsonApiResponse responseFromDbapi = dbApiHandler.generateCA(issuerRef, name, path, description, serialNumber, responseWithCertificate.getResult(),
-                bodyDBapi);
-
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : saving {} CA ({}) in Dbapi failed", typeCA, 4, 4, type, issuerRef);
-        }
-        logger.info("{} ({}/{}) : {} CA ({}) saved in Dbapi", typeCA, 4, 4, type, issuerRef);
+        JsonApiResponse issuerSynchronization = syncIssuers();
+        if (issuerSynchronization != null) {return issuerSynchronization;}
 
         logger.info("{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
 
-        return responseFromDbapi;
+        return responseFromModule;
+    }
+
+    /**
+     * Synchronizes the issuers autocrypt -> dbapi
+     */
+    private @Nullable JsonApiResponse syncIssuers() {
+        try {
+            if (issuerSynchronizationService != null) {
+                issuerSynchronizationService.syncData();
+            }
+        } catch (NullPointerException e) {
+            logger.error("Issuer synchronizer not initialized");
+            return JsonApiResponse.error("Issuer synchronizer not initialized");
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize Autocrypt issuers", e);
+            return JsonApiResponse.error("Could not synchronize Autocrypt issuers");
+        }
+        return null;
+    }
+
+    /**
+     * Synchronizes the roles autocrypt -> dbapi
+     */
+    private @Nullable JsonApiResponse syncRoles() {
+        try {
+            if (roleSynchronizationService != null) {
+                roleSynchronizationService.syncData();
+            }
+        } catch (NullPointerException e) {
+            logger.error("Roles synchronizer not initialized");
+            return JsonApiResponse.error("Roles synchronizer not initialized");
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize Autocrypt roles", e);
+            return JsonApiResponse.error("Could not synchronize Autocrypt roles");
+        }
+        return null;
+    }
+
+    /**
+     * Synchronizes the certificates autocrypt -> dbapi
+     */
+    private @Nullable JsonApiResponse syncCertificates() {
+        try {
+            if (certificateSynchronizationService != null) {
+                certificateSynchronizationService.syncData();
+            }
+        } catch (NullPointerException e) {
+            logger.error("Certificates synchronizer not initialized");
+            return JsonApiResponse.error("Certificates synchronizer not initialized");
+        } catch (SynchronizationException e) {
+            logger.error("Could not synchronize Autocrypt certificates", e);
+            return JsonApiResponse.error("Could not synchronize Autocrypt certificates");
+        }
+        return null;
     }
 
     /**
@@ -761,6 +853,15 @@ public class AutoCrypt {
     public Json getStatus() {
 //        return Json.object();
         return autocryptApiHandler.getStatus();
+    }
+
+    /**
+     * Set the synchronizers fo each entity
+     */
+    public void setSynchronizers(IssuerSynchronizationService issuerSynchronizationService, RoleSynchronizationService roleSynchronizationService, CertificateSynchronizationService certificateSynchronizationService) {
+        this.issuerSynchronizationService = issuerSynchronizationService;
+        this.roleSynchronizationService = roleSynchronizationService;
+        this.certificateSynchronizationService = certificateSynchronizationService;
     }
 
     /**
@@ -940,5 +1041,4 @@ public class AutoCrypt {
         synchronizeRoles(path);
         synchronizeCertificate(path);
     }
-
 }

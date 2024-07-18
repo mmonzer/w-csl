@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
+import com.csl.autocrypt.services.CertificateSynchronizationService;
 import com.csl.autocrypt.services.IssuerSynchronizationService;
 import com.csl.autocrypt.services.RoleSynchronizationService;
 import com.csl.core.CSLContext;
@@ -36,6 +37,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
     private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
     private IssuerSynchronizationService issuerSynchronizationService = null;
     private RoleSynchronizationService roleSynchronizationService = null;
+    private CertificateSynchronizationService certificateSynchronizationService = null;
     private int syncFrequency;
 
     /**
@@ -73,9 +75,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
     public boolean init(Json config, String configFile) {
         if (!isRemote) {
             autocrypt.reinitApiHandlers();
-            issuerSynchronizationService = new IssuerSynchronizationService(autocrypt);
-            roleSynchronizationService = new RoleSynchronizationService(autocrypt);
-            syncAll();
+            autocrypt.syncAll();
         }
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
@@ -617,11 +617,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
         params.at(Common.PATH, name);
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
-        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT);
-        transferValueStringOrNull(bodyBase, bodyExtra, Issuer.CA_TYPE);
-        if (body.has(Common.TTL)) {
-            bodyExtra.set(Common.TTL, body.get(Common.TTL).asString());
-        }
+//        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT);
+//        transferValueStringOrNull(bodyBase, bodyExtra, Issuer.CA_TYPE);
+//        if (body.has(Common.TTL)) {
+//            bodyExtra.set(Common.TTL, body.get(Common.TTL).asString());
+//        }
 
         // endregion -- Verify required body keys and extract key values
 
@@ -649,28 +649,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
     }
 
     /**
-     * Synchronize Dbapi with Autocrypt : (Autocrypt is the source of trust : Autocrypt -> Dbapi only)
-     * - Issuers
-     * - Roles
-     * - Certificates
-     */
-    private void syncAll() {
-        if (!isRemote) {
-            try {
-                // if (issuerSynchronizationService!= null) {issuerSynchronizationService.syncData();}
-                if (roleSynchronizationService!= null) {roleSynchronizationService.syncData();}
-            } catch (SynchronizationException e) {
-                logger.error("Could not synchronize Autocrypt Items", e);
-            }
-        }
-    }
-
-    /**
      * Synchronize Dbapi with Autocrypt automatically every 300s by default
      */
     private void launchAutoSync() {
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, syncFrequency, TimeUnit.SECONDS);
+        synchronizationSchedule.scheduleAtFixedRate(autocrypt::syncAll, 0, syncFrequency, TimeUnit.SECONDS);
     }
 
 }

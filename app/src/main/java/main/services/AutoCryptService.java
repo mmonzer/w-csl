@@ -208,7 +208,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json params = Json.object();
         getValueString(body, Issuer.ISSUER_NAME);
         transferValueString(body, params, Common.PATH);
-        drop(body, Common.VAULT_ID, Common.ID);
         String issuerRef = extractValueString(body, Issuer.ISSUER_REF);
         Json bodyBase = Json.read(body.toString());
 
@@ -377,7 +376,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         Json params = Json.object();
         String name = extractValueString(body, Common.NAME);
         transferValueString(body, params, Common.PATH);
-        drop(body, Common.ID, Role.CERTIFICATE_AUTHORITY, Role.VAULT_ID, Common.CREATED_AT, Common.UPDATED_AT);
         transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // endregion -- Verify required body keys and extract key values
@@ -437,7 +435,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         body.set(Role.ROLE_NAME, roleName);
         getValueString(body, Common.TTL);
         body.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
-        drop(body, Certificate.VAULT_ROLE);
 
         // endregion -- Verify required body keys and extract key values
 

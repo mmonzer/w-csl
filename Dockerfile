@@ -2,24 +2,20 @@ ARG GIT_COMMIT=unknown
 ARG GIT_BRANCH=unknown
 ARG APP_VERSION=unknown
 
-FROM eclipse-temurin:11-jdk as build-stage
+FROM gradle:jdk17 AS build-stage
 
-RUN apt-get update && apt-get install ant -y
-COPY . /usr/src/app
-WORKDIR /usr/src/app
-RUN ["ant","-f","build.xml"]
-RUN ["ant","-Ddir.workspace=/usr/src/app","-Ddir.jarfile=/usr/src/app","-f","/usr/src/app/exportjarclient.xml"]
+RUN #apt-get update && apt-get install ant -y
+COPY . /usr/w-csl
+#COPY build.gradle buildClient.gradle settings.gradle /usr/w-csl/
+WORKDIR /usr/w-csl
+RUN ["./gradlew","shadowJar","-b","buildClient.gradle"]
 
-FROM eclipse-temurin:11-jdk as production-stage
+FROM eclipse-temurin:17.0.11_9-jre AS production-stage
 WORKDIR /usr/src/app
-COPY --from=build-stage /usr/src/app/cslmainclient.jar ./
-COPY app/src/main/resources/cslconf/ cslconf/
-COPY csldata/ csldata/
-COPY app/src/main/resources/datafile/ datafile/
-COPY app/src/main/resources/idsdata/ idsdata/
-COPY resources/ resources/
-COPY app/src/main/resources/runconfig/ runconfig/
-COPY app/src/main/resources/runconfig/CSLConfigIDS_template.json runconfig/CSLConfigIDS.json
+COPY --from=build-stage /usr/w-csl/build/libs/cslmainclient-all.jar ./cslmainclient.jar
+
+COPY src/main/resources/resources/ resources/
+
 COPY entrypoint.sh .
 
 ARG GIT_COMMIT

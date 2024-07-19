@@ -1,3 +1,0 @@
-{"ip":"1.1.1.3","op":"set","name":"valid","value":0,"user":"user1"}
-{"@":{"ip_src":"1.1.1.1","ip_dst":"1.1.1.2","port_src":"-1","port_dst":"-1","protocol":"","app_protocol":""},"name":"valid","value":"0","user":"user1","op":"SET"}
-{"@":{"ip_src":"1.1.1.1","ip_dst":"1.1.1.2","port_src":"-1","port_dst":"-1","protocol":"","app_protocol":""},"name":"testp","value":"blue","user":"user1","op":"SET"}

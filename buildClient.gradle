@@ -1,0 +1,24 @@
+plugins{
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+apply from : 'build.gradle'
+
+def mainClassName = 'main.CSLIDSMainClient'
+def jarName = 'cslmainclient'
+
+application {
+    mainClass = mainClassName
+}
+
+shadowJar {
+    archiveBaseName.set(jarName)
+    mergeServiceFiles()
+    configurations = [project.configurations.runtimeClasspath]  // Ensure it captures all runtime dependencies
+
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}

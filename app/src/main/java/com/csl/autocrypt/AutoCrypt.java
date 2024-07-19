@@ -117,39 +117,16 @@ public class AutoCrypt {
     public JsonApiResponse updateIssuerInfo(String name, String description, String issuerRef, Json params, Json bodyBase, Json bodyExtra) {
         logger.info("Updating info from issuer {} at path {} ...", issuerRef, params.get(Common.PATH).asString());
 
-//        // Get all information from issuer dbapi : 1
-//        logger.debug("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi ...", UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-//        JsonApiResponse oldValuesFromDbapi = dbApiHandler.getInfoIssuerFromDbapi(issuerRef);
-//        if (!oldValuesFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-//            return JsonApiResponse.error("Error creating role : " + oldValuesFromDbapi.getError().toJson());
-//        }
-//        logger.info("{} ({}/{}) : Fetching info from issuer {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-
-        // Update issuer in autocrypt : 2
-        logger.debug("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt ...", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
+        // Update issuer chez Autocrypt
+        logger.debug("Updating info from issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, bodyBase, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
         }
-        logger.info("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
+        logger.info("Updating info from issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 
-//        // Update issuer in autocrypt : 3
-//        logger.debug("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt ...", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-//        JsonApiResponse responseFromDbapi = dbApiHandler.updateIssuerInfo(name, issuerRef, description, params.get(Common.PATH).asString(),
-//                mergerJson(responseFromModule.getResult(), mergerJson(bodyExtra, oldValuesFromDbapi.getResult())
-//                )
-//        );
-//        if (!responseFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : Updating info issuer {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-//            return responseFromDbapi;
-//        }
-//        logger.info("{} ({}/{}) : Updating info issuer {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 3, 3, issuerRef, params.get(Common.PATH).asString());
-//
-//        logger.info("Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
-
-
+        // Sync issuers
         try {
             syncIssuers();
         } catch (SynchronizationException e) {
@@ -171,25 +148,16 @@ public class AutoCrypt {
     public JsonApiResponse deleteIssuer(String issuerRef, Json body, Json params) {
         logger.info("Deleting issuer {} at path {} ...", issuerRef, params.get(Common.PATH).asString());
 
-        // Delete issuer in autocrypt : 1
-        logger.debug("{} ({}/{}) : Deleting issuer {} at path {} in autocrypt ...", AutoCryptEndpoints.DELETE_ISSUER_INFO, 1, 2, issuerRef, params.get(Common.PATH).asString());
+        // Delete issuer in autocrypt
+        logger.debug("Deleting issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.deleteIssuer(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : Deleting issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.DELETE_ISSUER_INFO, 1, 2, issuerRef, params.get(Common.PATH).asString());
+            logger.error("Deleting issuer {} at path {} in autocrypt failed", issuerRef, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
         }
-        logger.info("{} ({}/{}) : Deleting issuer {} at path {} in autocrypt", AutoCryptEndpoints.DELETE_ISSUER_INFO, 1, 2, issuerRef, params.get(Common.PATH).asString());
+        logger.info("Deleting issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 
-//        // delete issuer in  dbapi : 2
-//        logger.debug("{} ({}/{}) : Deleting issuer {} at path {} in dbapi ...", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
-//        JsonApiResponse responseFromDbapi = dbApiHandler.deleteIssuer(issuerRef, responseFromModule.getResult());
-//        if (!responseFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : Deleting issuer {} at path {} in dbapi failed", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
-//            return responseFromDbapi;
-//        }
-//        logger.info("{} ({}/{}) : Deleting issuer {} at path {} in dbapi", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
-
-
+        // Sync issuers
         try {
             syncIssuers();
         } catch (SynchronizationException e) {
@@ -199,118 +167,6 @@ public class AutoCrypt {
         logger.info("Deleted issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
         return responseFromModule;
-    }
-
-    /**
-     * Deletes the given issuer from the module and the DB in cascade (roles and certs)
-     *
-     * @param id        identifier in the dbapi side
-     * @param name      name in the dbapi side
-     * @param issuerRef identifier in the module side
-     * @param body      body of the request
-     * @param params    parameters with the path
-     */
-    public JsonApiResponse deleteIssuerCascade(int id, String name, String issuerRef, Json body, Json params) {
-        // TODO : rewrite code properly
-        // delete all issuers from path
-        JsonApiResponse response = deleteIssuersOfPath(name, issuerRef, body, params);
-        if (!response.isSuccess()) {
-            return response;
-        }
-        // delete roles of the issuer (one intermediate issuer per path)
-        response = deleteRolesOfPath(id, name, params);
-        if (!response.isSuccess()) {
-            return response;
-        }
-        // delete certificates of the issuer (one intermediate issuer per path)
-        return revokeCertificatesOfPath(params);
-    }
-
-    /**
-     * Revokes all the certificates from a given Vault path
-     *
-     * @param name      name of the issuer.
-     * @param issuerRef reference of the issuer.
-     * @param body      body for the request
-     * @param params    parameters for the request ( has the path at least)
-     */
-    private JsonApiResponse deleteIssuersOfPath(String name, String issuerRef, Json body, Json params) {
-        // Delete the issuer from module
-        JsonApiResponse responseFromModule = autocryptApiHandler.deleteIssuer(issuerRef, body, params);
-        if (!responseFromModule.isSuccess()) {
-            return JsonApiResponse.error("Error deleting the main issuer from Vault");
-        }
-        // Delete the issuer from dbapi
-        JsonApiResponse responseFromDbapi = sendToDbApiIfSaveToDb(dbApiHandler::deleteIssuer, issuerRef, responseFromModule);
-        if (!responseFromDbapi.isSuccess()) {
-            return JsonApiResponse.error("Error deleting the main issuer from DBapi");
-        }
-        JsonApiResponse issuersToDelete = autocryptApiHandler.getIssuers(params);
-        // Delete the other issuers in the path, except for pki (only roots)
-        if (issuersToDelete.isSuccess() && params.has(Common.PATH) &&
-                params.get(Common.PATH).isString() && !params.get(Common.PATH).asString().equals(Common.PKI)) {
-            JsonApiResponse responseFromOtherIssuers;
-            for (Json issuer : issuersToDelete.getResult()) {
-                responseFromOtherIssuers = autocryptApiHandler.revokeCertificate(issuer.asString(), params);
-                if (!responseFromOtherIssuers.isSuccess()) {
-                    return JsonApiResponse.error("Error deleting the issuer (" + issuer + ") from module");
-                }
-            }
-        }
-        return JsonApiResponse.success();
-    }
-
-    /**
-     * Deletes all the roles from a given Vault path
-     *
-     * @param caId   identifier of the CA in dbapi
-     * @param name   name of the role
-     * @param params parameters for the request ( has the path at least)
-     * @return whether the deletion was successful
-     */
-    private JsonApiResponse deleteRolesOfPath(int caId, String name, Json params) {
-        JsonApiResponse rolesToDeleteModule = autocryptApiHandler.getRoles(params);
-        JsonApiResponse rolesToDeleteDbapi = dbApiHandler.listRoles();
-        JsonApiResponse response;
-        if (rolesToDeleteModule.isSuccess() && rolesToDeleteDbapi.isSuccess()) {
-            for (Json roleDbapi : rolesToDeleteDbapi.getResult()) {
-                if (roleDbapi.has(Role.CERTIFICATE_AUTHORITY_ID) && roleDbapi.get(Role.CERTIFICATE_AUTHORITY_ID).isNumber() && roleDbapi.get(Role.CERTIFICATE_AUTHORITY_ID).asInteger() == caId &&
-                        roleDbapi.has(Common.NAME) && roleDbapi.get(Common.NAME).isString() && roleDbapi.get(Common.NAME).asString().equals(name)) {
-                    response = dbApiHandler.deleteRole(roleDbapi.get(Common.ID).asString(), null, null);
-                    if (!response.isSuccess()) {
-                        return JsonApiResponse.error("Error when deleting '" + name + "' from dbapi");
-                    }
-                }
-            }
-            for (Json roleDbapi : rolesToDeleteModule.getResult()) {
-                response = autocryptApiHandler.deleteRole(roleDbapi.asString(), null, params);
-                if (!response.isSuccess()) {
-                    return JsonApiResponse.error("Error when deleting '" + name + "' from module");
-                }
-            }
-        }
-        return JsonApiResponse.success();
-    }
-
-    /**
-     * Revokes all the certificates from a given Vault path
-     *
-     * @param params parameters for the request ( has the path at least)
-     * @return whether the delete was successful
-     */
-    private JsonApiResponse revokeCertificatesOfPath(Json params) {
-        JsonApiResponse certificatesToRevoke = autocryptApiHandler.getCertificates(params);
-        JsonApiResponse response;
-        for (Json cert : certificatesToRevoke.getResult()) {
-            response = autocryptApiHandler.revokeCertificate(cert.asString(), params);
-            if (response.isSuccess()) {
-                dbApiHandler.revokeCertificate(cert.asString(), params);
-            }
-            if (!response.isSuccess()) {
-                return JsonApiResponse.error("Error while deleting the certificate '" + cert);
-            }
-        }
-        return JsonApiResponse.success();
     }
 
     /**
@@ -403,31 +259,16 @@ public class AutoCrypt {
     public JsonApiResponse createRole(String name, String description, String certificateAuthorityId, Json params, Json bodyBase, Json bodyExtra) {
         logger.info("Creating role {} at path {} ...", name, params.get(Common.PATH).asString());
 
-        // Delete role in autocrypt : 1
-        logger.debug("{} ({}/{}) : Creating role {} at path {} in autocrypt ...", AutoCryptEndpoints.CREATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+        // Create role in autocrypt
+        logger.debug("Creating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.createRole(bodyBase, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : Creating role {} at path {} in autocrypt failed", AutoCryptEndpoints.CREATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+            logger.error("Creating role {} at path {} in autocrypt failed", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
         }
-        logger.info("{} ({}/{}) : Created role {} at path {} in autocrypt", AutoCryptEndpoints.CREATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+        logger.info("Created role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
 
-//        Json result = responseFromModule.getResult();
-//        convertTTLSecondsToStrHours(result);
-//        transformKeysFromVaultToDbapi(result, Common.OU, Common.PROVINCE);
-//        result.set(Role.CERTIFICATE_AUTHORITY_ID, certificateAuthorityId);
-//        result = mergerJson(result, bodyExtra);
-//
-//        // save creation into dbapi : 2
-//        logger.debug("{} ({}/{}) : Creating role {} at path {} in dbapi ...", AutoCryptEndpoints.CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//        JsonApiResponse responseFromDbapi = dbApiHandler.createRole(name, description, certificateAuthorityId, result);
-//        if (!responseFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : Creating role {} at path {} in dbapi failed", AutoCryptEndpoints.CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//            return responseFromDbapi;
-//        }
-//        logger.info("{} ({}/{}) : Created role {} at path {} in dbapi", CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-
-
+        // Sync roles
         try {
             syncRoles();
         } catch (SynchronizationException e) {
@@ -459,27 +300,16 @@ public class AutoCrypt {
     public JsonApiResponse deleteRole(String name, Json body, Json params) {
         logger.info("Deleting role {} at path {} ...", name, params.get(Common.PATH).asString());
 
-        // Delete role in autocrypt : 1
-        logger.debug("{} ({}/{}) : Deleting role {} at path {} in autocrypt ...", AutoCryptEndpoints.DELETE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+        // Delete role in autocrypt
+        logger.debug("Deleting role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.deleteRole(name, body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : Deleting role {} at path {} in autocrypt failed", AutoCryptEndpoints.DELETE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
             return responseFromModule;
         }
-        logger.info("{} ({}/{}) : Deleted role {} at path {} in autocrypt", AutoCryptEndpoints.DELETE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+        logger.info("Deleted role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
 
-//        // save delete into dbapi : 2
-//        logger.debug("{} ({}/{}) : Deleting role {} at path {} in dbapi ...", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//        JsonApiResponse responseFromDbapi = dbApiHandler.deleteRole(name, params.get(Common.PATH).asString(), responseFromModule.getResult());
-//        if (!responseFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : Deleting role {} at path {} in dbapi failed", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//            return responseFromDbapi;
-//        }
-//        logger.info("{} ({}/{}) : Deleted role {} at path {} in dbapi", AutoCryptEndpoints.DELETE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//
-//        logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
-
-
+        // sync roles
         try {
             syncRoles();
         } catch (SynchronizationException e) {
@@ -501,31 +331,16 @@ public class AutoCrypt {
     public JsonApiResponse updateRole(String name, String description, String certificateAuthorityId, Json params, Json bodyBase, Json bodyExtra) {
         logger.info("Updating role {} at path {} ...", name, params.get(Common.PATH).asString());
 
-        // Update role in autocrypt : 1
-        logger.debug("{} ({}/{}) : Updating role {} at path {} in autocrypt ...", AutoCryptEndpoints.UPDATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+        // Update role in autocrypt
+        logger.debug("Updating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.updateRole(name, bodyBase, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : Updating role {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
             return responseFromModule;
         }
-        logger.info("{} ({}/{}) : Updated role {} at path {} in autocrypt", AutoCryptEndpoints.UPDATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+        logger.info("Updated role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
 
-        convertTTLSecondsToStrHours(responseFromModule.getResult());
-        transformKeysFromVaultToDbapi(responseFromModule.getResult(), Common.OU, Common.PROVINCE);
-
-//        // save update into dbapi : 2
-//        logger.debug("{} ({}/{}) : Updating role {} at path {} in dbapi ...", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//        JsonApiResponse responseFromDbapi = dbApiHandler.updateRole(name, description, certificateAuthorityId, params.get(Common.PATH).asString(),
-//                mergerJson(responseFromModule.getResult(), bodyExtra));
-//        if (!responseFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : Updating role {} at path {} in dbapi failed", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//            return responseFromDbapi;
-//        }
-//        logger.info("{} ({}/{}) : Updated role {} at path {} in dbapi", AutoCryptEndpoints.UPDATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
-//
-//        logger.info("Updated role {} at path {}", name, params.get(Common.PATH).asString());
-
-
+        // sync roles
         try {
             syncRoles();
         } catch (SynchronizationException e) {
@@ -567,34 +382,19 @@ public class AutoCrypt {
         logger.info("Generating certificate ...");
 
         // Generate certificate in autocrypt : 1
-        logger.debug("{} ({}/{}) : generating certificate in Autocrypt ...", AutoCryptEndpoints.GENERATE_CERTIFICATE, 1, 2);
+        logger.debug("generating certificate in Autocrypt ...");
         JsonApiResponse responseFromModule = autocryptApiHandler.generateCertificate(bodyBase, params);
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Certificate.SERIAL_NUMBER) ||
                 !responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).isString()) {
-            logger.error("{} ({}/{}) : certificate creation in Autocrypt failed ", AutoCryptEndpoints.GENERATE_CERTIFICATE, 1, 2);
+            logger.error("certificate creation in Autocrypt failed ");
             return JsonApiResponse.error("Error creating the certificate : " + responseFromModule.getError().toJson());
         }
-        logger.info("{} ({}/{}) : certificate ({}) created in Autocrypt", AutoCryptEndpoints.GENERATE_CERTIFICATE, 1, 2, responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString());
+        logger.info("certificate ({}) created in Autocrypt",  responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString());
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
 
-//        // saving certificate in dbapi : 2
-//        logger.debug("{} ({}/{}) : saving certificate in Dbapi ...", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2);
-//        JsonApiResponse responseFromDbapi = dbApiHandler.generateCertificate(
-//                serialNumber,
-//                name,
-//                vaultRoleId,
-//                description,
-//                params.get(Common.PATH).asString(),
-//                mergerJson(responseFromModule.getResult(), bodyExtra));
-//        if (responseFromDbapi.isSuccess()) {
-//            logger.info("{} ({}/{}) : certificate ({}) saved in Dbapi", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2, serialNumber);
-//        } else {
-//            logger.error("{} ({}/{}) : saving certificate ({}) in Dbapi failed", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2, serialNumber);
-//            return responseFromDbapi;
-//        }
-
+        // Sync certificates
         try {
             syncCertificates();
         } catch (SynchronizationException e) {
@@ -688,23 +488,16 @@ public class AutoCrypt {
         String path = params.get("path").asString();
         logger.info("Revoking certificate {} at path {} ...", serialNumber, path);
 
-        // Revoke from autocrypt : 1
-        logger.debug("{} ({}/{}) : revoking certificate {} at path {} in Autocrypt ...", AutoCryptEndpoints.REVOKE_CERTIFICATE, 1, 2, serialNumber, path);
+        // Revoke from autocrypt
+        logger.debug("revoking certificate {} at path {} in Autocrypt ...", serialNumber, path);
         JsonApiResponse responseFromModule = autocryptApiHandler.revokeCertificate(serialNumber, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : failed to revoked certificate {} at path {} in Autocrypt", AutoCryptEndpoints.REVOKE_CERTIFICATE, 1, 2, serialNumber, path);
             return responseFromModule;
         }
-        logger.info("{} ({}/{}) : revoked certificate {} at path {} in Autocrypt", AutoCryptEndpoints.REVOKE_CERTIFICATE, 1, 2, serialNumber, path);
+        logger.info("revoked certificate {} at path {} in Autocrypt", serialNumber, path);
 
-//        // Revoke certificate at dbapi : 2
-//        logger.debug("{} ({}/{}) : revoking certificate {} at path {} in Dbapi ...", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
-//        JsonApiResponse responseFromDbapi = dbApiHandler.revokeCertificate(serialNumber, responseFromModule.getResult());
-//        if (!responseFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : failed to revoked certificate {} at path {} in Dbapi", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
-//        }
-//        logger.info("{} ({}/{}) : revoked certificate {} at path {} in Dbapi", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
-
+        // sync certificates
         try {
             syncCertificates();
         } catch (SynchronizationException e) {
@@ -755,8 +548,8 @@ public class AutoCrypt {
         String path = params.get(Common.PATH).asString();
         logger.info("Generating {} CA ...", type);
 
-        // Creating CA in Autocrypt : 1
-        logger.debug("{} ({}/{}) : creating {} CA creation in Autocrypt at path {} ...", typeCA, 1, 4, type, path);
+        // Creating CA in Autocrypt
+        logger.debug("Creating {} CA creation in Autocrypt at path {} ...", type, path);
         JsonApiResponse responseFromModule;
         if (isRoot) {
             responseFromModule = autocryptApiHandler.generateRootCA(bodyAutocrypt, params);
@@ -770,44 +563,11 @@ public class AutoCrypt {
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
         String issuerRef = responseFromModule.getResult().get(Issuer.ISSUER_REF).asString();
-        logger.info("{} ({}/{}) : {} CA ({}) created in Autocrypt at path {}", typeCA, 1, 4, type, issuerRef, path);
+        logger.info("{} CA ({}) created in Autocrypt at path {}", type, issuerRef, path);
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
-//        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
-//
-//        // Get issuer info from Autocrypt
-//        logger.debug("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt ...", typeCA, 2, 4, issuerRef);
-//        responseFromModule = autocryptApiHandler.getIssuerInfo(issuerRef, params);
-//        if (!responseFromModule.isSuccess()) {
-//            logger.error("{} ({}/{}) : gathering issuer ({}) information from AutoCrypt failed", typeCA, 2, 4, issuerRef);
-//            return responseFromModule;
-//        }
-//        logger.info("{} ({}/{}) : {} issuer ({}) information gathered from AutoCrypt", typeCA, 2, 4, type, issuerRef);
-//
-//        bodyDBapi = mergerJson(responseFromModule.getResult(), bodyDBapi);
-//
-//        // Get the certificate of CA from Autocrypt : 3
-//        logger.debug("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) ...", typeCA, 3, 4, serialNumber, issuerRef, type);
-//        JsonApiResponse responseWithCertificate = autocryptApiHandler.getCertificateInfo(serialNumber, Json.object(Common.PATH, Common.PKI));
-//        if (!responseWithCertificate.isSuccess()) {
-//            logger.error("{} ({}/{}) : fetching certificate ({}) of {} issuer ({}) from AutoCrypt failed", typeCA, 3, 4, serialNumber, type, issuerRef);
-//            return responseWithCertificate;
-//        }
-//        logger.info("{} ({}/{}) : certificate ({}) of {} issuer ({}) fetched from AutoCrypt", typeCA, 3, 4, serialNumber, type, issuerRef);
-//
-//        responseWithCertificate.getResult().set(Certificate.SERIAL_NUMBER, serialNumber);
-//        responseWithCertificate.getResult().set(Common.PATH, Common.PKI);
-//
-//        // Save CA into dbapi : 4
-//        logger.debug("{} ({}/{}) : saving {} CA ({}) in Dbapi ...", typeCA, 4, 4, type, issuerRef);
-//        JsonApiResponse responseFromDbapi = dbApiHandler.generateCA(issuerRef, name, path, description, serialNumber, responseWithCertificate.getResult(),
-//                bodyDBapi);
-//
-//        if (!responseFromDbapi.isSuccess()) {
-//            logger.error("{} ({}/{}) : saving {} CA ({}) in Dbapi failed", typeCA, 4, 4, type, issuerRef);
-//        }
-//        logger.info("{} ({}/{}) : {} CA ({}) saved in Dbapi", typeCA, 4, 4, type, issuerRef);
 
+        // Sync issuers
         try {
             syncIssuers();
         } catch (SynchronizationException e) {

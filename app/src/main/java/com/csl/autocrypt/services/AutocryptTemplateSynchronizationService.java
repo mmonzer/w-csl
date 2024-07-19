@@ -102,7 +102,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
 
             String lastUpdateDateString = Common.MIN_DATE;
             if (response.getResult()!=null && response.getResult().has(Common.VALUE) && response.getResult().get(Common.VALUE).isString()) {
-                lastUpdateDateString = response.getResult().get(Common.VALUE).asString();
+                lastUpdateDateString = response.getResult().get(Common.VALUE).asString().replace("\"","");
             }
             getLogger().debug("{} : fetched last update time from Dbapi : {}", prefixLogger, lastUpdateDateString);
 

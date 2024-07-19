@@ -18,7 +18,6 @@ import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromVaultToDbapi;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 import static main.services.endpoints.AutoCryptEndpoints.*;
-import static main.services.endpoints.AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA;
 
 /**
  * API client of the module AutoCrypt

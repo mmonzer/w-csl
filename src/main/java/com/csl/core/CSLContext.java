@@ -420,7 +420,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         for (String section : jConfig.asJsonMap().keySet()) {
             if (jConfig.at(section).isObject()) {
                 for (String var : jConfig.at(section).asJsonMap().keySet()) {
-                    String separator = ".";
+                    String separator = "__";
                     String env_var = "CSL" + separator + section.toUpperCase() + separator + var.toUpperCase();
                     if (env.containsKey(env_var)) {
                         jConfig.at(section).set(var, env.get(env_var));

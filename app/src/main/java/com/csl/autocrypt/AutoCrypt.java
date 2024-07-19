@@ -9,12 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.csl.autocrypt.CSLAutocryptUtils.convertTTLSecondsToStrHours;
-import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromVaultToDbapi;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 import static main.services.endpoints.AutoCryptEndpoints.*;
@@ -29,13 +26,16 @@ public class AutoCrypt {
     @Setter
     @Getter
     private int modulePort;
+
     private final String name;
+
     @Getter
     private DbapiHandlerForCSLAutoCrypt dbApiHandler = null;
     @Getter
     private ApiHandlerForCSLAutoCrypt autocryptApiHandler = null;
-    private boolean shouldSaveToDb = true;
+
     private static final Logger logger = LoggerFactory.getLogger(AutoCrypt.class);
+
     private IssuerSynchronizationService issuerSynchronizationService = null;
     private RoleSynchronizationService roleSynchronizationService = null;
     private CertificateSynchronizationService certificateSynchronizationService = null;
@@ -64,29 +64,7 @@ public class AutoCrypt {
         certificateSynchronizationService = new CertificateSynchronizationService(dbApiHandler, autocryptApiHandler);
     }
 
-    /**
-     * Synchronize Dbapi with Autocrypt : (Autocrypt is the source of trust : Autocrypt -> Dbapi only)
-     * - Issuers
-     * - Roles
-     * - Certificates
-     */
-    public void syncAll() {
-        try {
-            syncIssuers();
-            syncRoles();
-            syncCertificates();
-        } catch (SynchronizationException ignored) {
-        }
-    }
-
-    /**
-     * Changes the saving to Db
-     *
-     * @param shouldSaveToDb whether should be saved into dbapi
-     */
-    public void setSaveToDb(boolean shouldSaveToDb) {
-        this.shouldSaveToDb = shouldSaveToDb;
-    }
+    // region endpoint methods
 
     /**
      * Gets the list of issuers
@@ -110,16 +88,15 @@ public class AutoCrypt {
     /**
      * Updates the information of the given issuer in the module and the DB
      *
-     * @param name      identifier in the dbapi side
      * @param issuerRef identifier of the issuer (module side)
      * @param params    parameters of the request
      */
-    public JsonApiResponse updateIssuerInfo(String name, String description, String issuerRef, Json params, Json bodyBase, Json bodyExtra) {
+    public JsonApiResponse updateIssuerInfo(String issuerRef, Json params, Json body) {
         logger.info("Updating info from issuer {} at path {} ...", issuerRef, params.get(Common.PATH).asString());
 
         // Update issuer chez Autocrypt
         logger.debug("Updating info from issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, bodyBase, params);
+        JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
@@ -253,15 +230,15 @@ public class AutoCrypt {
      * Creates a new role
      *
      * @param name        identifier in the dbapi side
-     * @param description description in the dbapi side
      * @param params      parameters with the path
+     * @param body      body of the creation
      */
-    public JsonApiResponse createRole(String name, String description, String certificateAuthorityId, Json params, Json bodyBase, Json bodyExtra) {
+    public JsonApiResponse createRole(String name, Json params, Json body) {
         logger.info("Creating role {} at path {} ...", name, params.get(Common.PATH).asString());
 
         // Create role in autocrypt
         logger.debug("Creating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromModule = autocryptApiHandler.createRole(bodyBase, params);
+        JsonApiResponse responseFromModule = autocryptApiHandler.createRole(body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("Creating role {} at path {} in autocrypt failed", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
@@ -325,15 +302,15 @@ public class AutoCrypt {
      * Updates the information of the given role
      *
      * @param name        identifier in the module/dbapi side
-     * @param description description in the dbapi
      * @param params      parameters with the path
+     * @param body      body with the field to update
      */
-    public JsonApiResponse updateRole(String name, String description, String certificateAuthorityId, Json params, Json bodyBase, Json bodyExtra) {
+    public JsonApiResponse updateRole(String name, Json params, Json body) {
         logger.info("Updating role {} at path {} ...", name, params.get(Common.PATH).asString());
 
         // Update role in autocrypt
         logger.debug("Updating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
-        JsonApiResponse responseFromModule = autocryptApiHandler.updateRole(name, bodyBase, params);
+        JsonApiResponse responseFromModule = autocryptApiHandler.updateRole(name, body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : Updating role {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
             return responseFromModule;
@@ -375,15 +352,15 @@ public class AutoCrypt {
     /**
      * Generates a certificates at the given path and role
      *
-     * @param name   identifier in the dbapi side
      * @param params parameters with the path and role
+     * @param body body with the parameters of the certificate
      */
-    public JsonApiResponse generateCertificate(String name, String description, String vaultRoleId, Json params, Json bodyBase, Json bodyExtra) {
+    public JsonApiResponse generateCertificate(Json params, Json body) {
         logger.info("Generating certificate ...");
 
         // Generate certificate in autocrypt : 1
         logger.debug("generating certificate in Autocrypt ...");
-        JsonApiResponse responseFromModule = autocryptApiHandler.generateCertificate(bodyBase, params);
+        JsonApiResponse responseFromModule = autocryptApiHandler.generateCertificate(body, params);
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Certificate.SERIAL_NUMBER) ||
                 !responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).isString()) {
@@ -512,37 +489,32 @@ public class AutoCrypt {
     /**
      * Generate root CA
      *
-     * @param name        identifier in the dbapi side
-     * @param description description in the dbapi
      * @param params      parameters with  path
+     * @param body      body with the parameters of the CA
      */
-    public JsonApiResponse generateRootCA(String name, String description, Json params, Json bodyBase, Json bodyExtra) {
-        return generateCA(GENERATE_ROOT_CA, name, description, params, bodyBase, bodyExtra);
+    public JsonApiResponse generateRootCA(Json params, Json body) {
+        return generateCA(GENERATE_ROOT_CA, params, body);
     }
 
     /**
      * Generate intermediate CA
      *
-     * @param name        identifier in the dbapi side
-     * @param description description in the dbapi
      * @param params      parameters with  path
+     * @param body      body with the parameters of the CA
      */
-    public JsonApiResponse generateIntermediateCA(String name, String description, Json params, Json bodyBase, Json bodyExtra) {
-        return generateCA(GENERATE_INTERMEDIATE_CA, name, description, params, bodyBase, bodyExtra);
+    public JsonApiResponse generateIntermediateCA(Json params, Json body) {
+        return generateCA(GENERATE_INTERMEDIATE_CA, params, body);
     }
 
     /**
      * Generic method to generate a intermediate or root CA
      *
      * @param typeCA        either GENERATE_ROOT_CA either GENERATE_INTERMEDIATE_CA
-     * @param name          identifier of the CA (issuerName)
-     * @param description   description in the dbapi
      * @param params        parameters with  path
-     * @param bodyAutocrypt body for creating the CA in CSL-Autocrypt
-     * @param bodyDBapi     body for creating the CA in CSL-Dbapi
+     * @param body body for creating the CA in CSL-Autocrypt
      * @return if creation was successful, the body for HMI, otherwise, the error message
      */
-    private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, String name, String description, Json params, Json bodyAutocrypt, Json bodyDBapi) {
+    private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, Json params, Json body) {
         boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
         String type = isRoot ? "root" : "intermediate";
         String path = params.get(Common.PATH).asString();
@@ -552,9 +524,9 @@ public class AutoCrypt {
         logger.debug("Creating {} CA creation in Autocrypt at path {} ...", type, path);
         JsonApiResponse responseFromModule;
         if (isRoot) {
-            responseFromModule = autocryptApiHandler.generateRootCA(bodyAutocrypt, params);
+            responseFromModule = autocryptApiHandler.generateRootCA(body, params);
         } else {
-            responseFromModule = autocryptApiHandler.generateIntermediateCA(bodyAutocrypt, params);
+            responseFromModule = autocryptApiHandler.generateIntermediateCA(body, params);
         }
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Issuer.ISSUER_REF) ||
@@ -577,6 +549,25 @@ public class AutoCrypt {
         logger.info("{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
 
         return responseFromModule;
+    }
+
+    // endregion endpoint methods
+
+    // region synchronizing methods
+
+    /**
+     * Synchronize Dbapi with Autocrypt : (Autocrypt is the source of trust : Autocrypt -> Dbapi only)
+     * - Issuers
+     * - Roles
+     * - Certificates
+     */
+    public void syncAll() {
+        try {
+            syncIssuers();
+            syncRoles();
+            syncCertificates();
+        } catch (SynchronizationException ignored) {
+        }
     }
 
     /**
@@ -621,6 +612,8 @@ public class AutoCrypt {
         }
     }
 
+    // endregion synchronizing methods
+
     /**
      * Verifies if the module api is reachable
      *
@@ -629,113 +622,5 @@ public class AutoCrypt {
     public Json getStatus() {
 //        return Json.object();
         return autocryptApiHandler.getStatus();
-    }
-
-    /**
-     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
-     * returns the response from the module
-     *
-     * @param method             method to call when sending to DBApi
-     * @param responseFromModule response from the module
-     * @return new response if condition true, otherwise resend the same responseFromModule
-     */
-    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponser method, String name, JsonApiResponse responseFromModule) {
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            Json nextRequestBody = responseFromModule.getResult();
-            nextRequestBody = (nextRequestBody != null) ? nextRequestBody : Json.object();
-            return method.apply(name, nextRequestBody);
-        } else {
-            return responseFromModule;
-        }
-    }
-
-    /**
-     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
-     * returns the response from the module
-     *
-     * @param method             method to call when sending to DBApi
-     * @param responseFromModule response from the module
-     * @return new response if condition true, otherwise resend the same responseFromModule
-     */
-    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithDescription method, String name, String description, JsonApiResponse responseFromModule) {
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            Json nextRequestBody = responseFromModule.getResult();
-            nextRequestBody = (nextRequestBody != null) ? nextRequestBody : Json.object();
-            return method.apply(name, description, nextRequestBody);
-        } else {
-            return responseFromModule;
-        }
-    }
-
-    /**
-     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
-     * returns the response from the module
-     *
-     * @param method             method to call when sending to DBApi
-     * @param responseFromModule response from the module
-     * @return new response if condition true, otherwise resend the same responseFromModule
-     */
-    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithId method, int id, String name, JsonApiResponse responseFromModule) {
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            Json nextRequestBody = responseFromModule.getResult();
-            nextRequestBody = (nextRequestBody != null) ? nextRequestBody : Json.object();
-            return method.apply(id, name, nextRequestBody);
-        } else {
-            return responseFromModule;
-        }
-    }
-
-    /**
-     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
-     * returns the response from the module
-     *
-     * @param method             method to call when sending to DBApi
-     * @param responseFromModule response from the module
-     * @return new response if condition true, otherwise resend the same responseFromModule
-     */
-    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithIdWithDescription method, int id, String name, String description, JsonApiResponse responseFromModule) {
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            Json nextRequestBody = responseFromModule.getResult();
-            nextRequestBody = (nextRequestBody != null) ? nextRequestBody : Json.object();
-            return method.apply(id, name, description, nextRequestBody);
-        } else {
-            return responseFromModule;
-        }
-    }
-
-    /**
-     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
-     * returns the response from the module
-     *
-     * @param method             method to call when sending to DBApi
-     * @param responseFromModule response from the module
-     * @return new response if condition true, otherwise resend the same responseFromModule
-     */
-    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithIdStrWithDescription method, String id, String name, String description, JsonApiResponse responseFromModule) {
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            Json nextRequestBody = responseFromModule.getResult();
-            nextRequestBody = (nextRequestBody != null) ? nextRequestBody : Json.object();
-            return method.apply(id, name, description, nextRequestBody);
-        } else {
-            return responseFromModule;
-        }
-    }
-
-    /**
-     * Sends the request to the BD if shouldSaveToDb is set to true and if the responseFrom module is true, otherwise
-     * returns the response from the module
-     *
-     * @param method             method to call when sending to DBApi
-     * @param responseFromModule response from the module
-     * @return new response if condition true, otherwise resend the same responseFromModule
-     */
-    public JsonApiResponse sendToDbApiIfSaveToDb(IJsonApiResponserWithIdStrWithDescriptionWithPath method, String id, String name, String description, String path, JsonApiResponse responseFromModule) {
-        if (responseFromModule.isSuccess() && shouldSaveToDb) {
-            Json nextRequestBody = responseFromModule.getResult();
-            nextRequestBody = (nextRequestBody != null) ? nextRequestBody : Json.object();
-            return method.apply(id, name, description, path, nextRequestBody);
-        } else {
-            return responseFromModule;
-        }
     }
 }

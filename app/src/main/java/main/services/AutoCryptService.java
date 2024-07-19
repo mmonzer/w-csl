@@ -1,12 +1,7 @@
 package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
-import com.csl.autocrypt.services.CertificateSynchronizationService;
-import com.csl.autocrypt.services.IssuerSynchronizationService;
-import com.csl.autocrypt.services.RoleSynchronizationService;
 import com.csl.core.CSLContext;
-import com.csl.intercom.services.CpeItemsSynchronizationService;
-import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -24,10 +19,7 @@ import static com.csl.autocrypt.outils.JsonHelper.*;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 
 /**
- * OCSP : Online Certificate Status Protocol
- * Role :
- * Path :
- * Issuer :
+ * Autocrypt service: managing certificates
  */
 public class AutoCryptService extends Service implements IStatusProvider {
     @Getter
@@ -35,9 +27,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
     private ScheduledExecutorService synchronizationSchedule;
     private boolean isRemote = false;
     private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
-    private IssuerSynchronizationService issuerSynchronizationService = null;
-    private RoleSynchronizationService roleSynchronizationService = null;
-    private CertificateSynchronizationService certificateSynchronizationService = null;
     private int syncFrequency;
 
     /**
@@ -133,6 +122,8 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
     }
 
+    // region endpoint methods
+
     /**
      * Method that changes the ip to connect the autocrypt module
      *
@@ -215,19 +206,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        String name = getValueString(body, Issuer.ISSUER_NAME);
+        getValueString(body, Issuer.ISSUER_NAME);
         transferValueString(body, params, Common.PATH);
         drop(body, Common.VAULT_ID, Common.ID);
-        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
         String issuerRef = extractValueString(body, Issuer.ISSUER_REF);
         Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.read(body.toString());
-//        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT, Role.VAULT_ID, Common.TTL);
-//        transferValueIntegerOrNull(bodyBase, bodyExtra, Common.ID);
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.updateIssuerInfo(name, description, issuerRef, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.updateIssuerInfo(issuerRef, params, bodyBase).toJson();
     }
 
     /**
@@ -330,19 +317,15 @@ public class AutoCryptService extends Service implements IStatusProvider {
         }
 
         Json params = Json.object();
-        String name = getValueString(body, Common.NAME);
-//        body.set(Common.NAME, name.replace(" ", "-"));
-        String description = getValueStringOrNull(body, Common.DESCRIPTION);
+        getValueString(body, Common.NAME);
+        getValueString(body, Issuer.ISSUER_REF);
         transferValueString(body, params, Common.PATH);
-        String issuerRef = getValueString(body, Issuer.ISSUER_REF);
-        Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.read(body.toString());
 
-        transformKeysFromDbapiToVault(bodyBase, Common.ORGANIZATION_UNIT, Common.STATE);
+        transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.createRole(name, description, issuerRef, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.createRole(name, params, body).toJson();
     }
 
     /**
@@ -393,18 +376,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         String name = extractValueString(body, Common.NAME);
-        String description = getValueStringOrNull(body, Common.DESCRIPTION);
         transferValueString(body, params, Common.PATH);
         drop(body, Common.ID, Role.CERTIFICATE_AUTHORITY, Role.VAULT_ID, Common.CREATED_AT, Common.UPDATED_AT);
-//        drop(body, Issuer.IP_SANS, Issuer.URI_SANS, Issuer.NOT_BEFORE_DURATION, Issuer.NOT_AFTER, Role.ALLOW_TOKEN_DISPLAYNAME);
-        Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.read(body.toString());
-//        drop(bodyBase, Common.TTL_UNIT, Role.CERTIFICATE_AUTHORITY_ID);
-        transformKeysFromDbapiToVault(bodyBase, Common.ORGANIZATION_UNIT, Common.STATE);
+        transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.updateRole(name, description, null, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.updateRole(name, params, body).toJson();
     }
 
     /**
@@ -453,29 +431,17 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String name = extractValueString(body, Common.NAME);
-        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
-//        Integer vaultRoleId = extractValueInteger(body, Certificate.VAULT_ROLE_ID);
         Json params = Json.object();
-
         transferValueString(body, params, Common.PATH);
-
         String roleName = extractValueString(body, Role.VAULT_ROLE_NAME);
         body.set(Role.ROLE_NAME, roleName);
-
-        String ttl = getValueString(body, Common.TTL);
+        getValueString(body, Common.TTL);
         body.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
-        Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.read(body.toString());
-        if (body.has(Common.COMMON_NAME)) {
-            bodyExtra.set(Common.COMMON_NAME, body.get(Common.COMMON_NAME).asString());
-        }
-        bodyExtra.set(Common.TTL, ttl);
-        drop(bodyBase, Certificate.VAULT_ROLE);
+        drop(body, Certificate.VAULT_ROLE);
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.generateCertificate(name, description, roleName, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.generateCertificate(params, body).toJson();
     }
 
     /**
@@ -575,21 +541,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String name = getValueStringOrNull(body, Issuer.ISSUER_NAME);  // or COMMON _Common.NAME?
-        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
+        getValueString(body, Issuer.ISSUER_NAME);
         Json params = Json.object();
         params.at(Common.PATH, Common.PKI);
-        Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.read(body.toString());
-        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT);
-        transferValueStringOrNull(bodyBase, bodyExtra, Issuer.CA_TYPE);
-        if (body.has(Common.TTL)) {
-            bodyExtra.set(Common.TTL, body.get(Common.TTL).asString());
-        }
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.generateRootCA(name, description, params, bodyBase, bodyExtra).toJson();
+        return autocrypt.generateRootCA(params, body).toJson();
     }
 
     /**
@@ -601,31 +559,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // region -- Verify required body keys and extract key values
 
-        String description = extractValueStringOrNull(body, Common.DESCRIPTION);
         String name = getValueString(body, Issuer.ISSUER_NAME);  // or COMMON _Common.NAME?
         Json params = Json.object();
         params.at(Common.PATH, name);
-        Json bodyBase = Json.read(body.toString());
-        Json bodyExtra = Json.read(body.toString());
-//        transferValueStringOrNull(bodyBase, bodyExtra, Common.TTL_UNIT);
-//        transferValueStringOrNull(bodyBase, bodyExtra, Issuer.CA_TYPE);
-//        if (body.has(Common.TTL)) {
-//            bodyExtra.set(Common.TTL, body.get(Common.TTL).asString());
-//        }
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.generateIntermediateCA(name, description, params, bodyBase, bodyExtra).toJson();
-    }
-
-    /**
-     * Verifies if the module api is reachable
-     *
-     * @return whether it is reachable
-     */
-    @Override
-    public Json getStatus() {
-        return autocrypt.getStatus();
+        return autocrypt.generateIntermediateCA(params, body).toJson();
     }
 
     /**
@@ -636,6 +576,18 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     public Json getStatus(Json body) {
         return JsonApiResponse.result(getStatus()).toJson();
+    }
+
+    // endregion endpoint methods
+
+    /**
+     * Verifies if the module api is reachable
+     *
+     * @return whether it is reachable
+     */
+    @Override
+    public Json getStatus() {
+        return autocrypt.getStatus();
     }
 
     /**

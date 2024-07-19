@@ -1,10 +1,45 @@
 plugins{
     id 'java'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 apply from : 'build.gradle'
 
+def mainClassName = 'main.CSLIDSMainServer'
+
 application {
-    mainClass = 'main.CSLIDSMainServer' //CSLIDSMainServer
+    mainClass = mainClassName
+}
+
+jar {
+    archiveBaseName.set('cslmainserver')
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+
+    manifest {
+        attributes 'Implementation-Title': 'CSLIDS Server',
+                'Implementation-Version': version,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Main-Class': mainClassName
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('cslmainserver')
+    mergeServiceFiles()
+    configurations = [project.configurations.runtimeClasspath]  // Ensure it captures all runtime dependencies
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
 }

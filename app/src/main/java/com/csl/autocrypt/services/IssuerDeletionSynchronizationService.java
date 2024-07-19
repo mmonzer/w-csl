@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
- * Service for synchronization of Issuers
+ * Service for synchronization of deleted Issuers
  */
 public class IssuerDeletionSynchronizationService extends AutocryptTemplateSynchronizationService {
     public IssuerDeletionSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {

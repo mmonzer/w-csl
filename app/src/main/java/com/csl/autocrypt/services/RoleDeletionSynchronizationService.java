@@ -10,11 +10,11 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
- * Service for synchronization of Issuers
+ * Service for synchronization of Roles
  */
 public class RoleDeletionSynchronizationService extends AutocryptTemplateSynchronizationService {
     public RoleDeletionSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
-        super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Roles");
+        super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:RolesDel");
         logger = LoggerFactory.getLogger(RoleDeletionSynchronizationService.class);
     }
 

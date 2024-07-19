@@ -99,6 +99,8 @@ public final class AutocryptConstants {
         public static final String MIN_DATE = "1900-01-01T00:00+18:00";
         public static final String DELETED = "deleted";
         public static final String GET_DELETED = "get_deleted";
+        public static final String CREATEDAT = "createdAt";
+        public static final String UPDATEDAT = "updatedAt";
     }
 
     public static final class Issuer {
@@ -143,6 +145,8 @@ public final class AutocryptConstants {
         public static final String ISSUING_CA = "issuing_ca";
         public static final String PRIVATE_KEY = "private_key";
         public static final String PRIVATE_KEY_TYPE = "private_key_type";
+        public static final String IS_REVOKED = "is_revoked";
+        public static final String ISREVOKED = "isRevoked";
     }
 
 

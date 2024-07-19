@@ -138,6 +138,25 @@ public class JsonHelper {
     }
 
     /**
+     * Checks if a key exists in a json if its value is a String
+     *
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     */
+    public static Boolean extractValueBooleanOrNull(Json obj, String key) {
+        if (obj.has(key) && obj.get(key).isBoolean()) {
+            Boolean bool = obj.get(key).asBoolean();
+            obj.delAt(key);
+            return bool;
+        } else if (obj.has(key) && obj.get(key).isNull()) {
+            obj.delAt(key);
+            return null;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Checks if a key exists in a json and return its value if it is a String
      *
      * @param obj the json object to check

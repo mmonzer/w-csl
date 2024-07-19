@@ -72,7 +72,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      * Creates or modifies the issuers in the database
      */
     public JsonApiResponse upsertIssuers(Json issuers) {
-        // TODO: check format for input
+        if( issuers!=null && issuers.isArray() && issuers.asJsonList().isEmpty()) { return JsonApiResponse.success();}
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.ISSUER_UPSERT.endpoint(),
                 formatListOfIssuers(issuers));
@@ -195,7 +195,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      * Creates or modifies the roles in the database
      */
     public JsonApiResponse upsertRoles(Json roles) {
-        // TODO: check format for input
+        if( roles!=null && roles.isArray() && roles.asJsonList().isEmpty()) { return JsonApiResponse.success();}
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.ROLE_UPSERT.endpoint(),
                 formatListOfRoles(roles));
@@ -297,13 +297,6 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
             }
         }
         return JsonApiResponse.success();
-    }
-
-    /**
-     * Delete all the revoked certificates
-     */
-    public JsonApiResponse deleteRevokedCertificates() {
-        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     /**

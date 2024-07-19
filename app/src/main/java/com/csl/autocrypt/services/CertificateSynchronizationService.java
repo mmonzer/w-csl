@@ -11,13 +11,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
- * Service for synchronization of Issuers
+ * Service for synchronization of Certificates : revoked and not revoked
  */
 public class CertificateSynchronizationService extends AutocryptTemplateSynchronizationService {
 
     public CertificateSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
         super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Certificates");
-        logger = LoggerFactory.getLogger(IssuerSynchronizationService.class);
+        logger = LoggerFactory.getLogger(CertificateSynchronizationService.class);
     }
 
     @Override
@@ -27,7 +27,6 @@ public class CertificateSynchronizationService extends AutocryptTemplateSynchron
 
     @Override
     public void sendData(List<Json> items) throws SynchronizationException {
-//        super.sendData(dbapiHandlerForCSLAutoCrypt::revokeCertificates, dbapiHandlerForCSLAutoCrypt::upsertCertificates, items);
         super.sendData(dbapiHandlerForCSLAutoCrypt::upsertCertificates, Json.make(items));
     }
 

@@ -65,6 +65,7 @@ public class AutoCrypt {
         issuerSynchronizationService = new IssuerSynchronizationService(dbApiHandler, autocryptApiHandler);
         issuerDeletionSynchronizationService = new IssuerDeletionSynchronizationService(dbApiHandler, autocryptApiHandler);
         roleSynchronizationService = new RoleSynchronizationService(dbApiHandler, autocryptApiHandler);
+        roleDeletionSynchronizationService = new RoleDeletionSynchronizationService(dbApiHandler, autocryptApiHandler);
         certificateSynchronizationService = new CertificateSynchronizationService(dbApiHandler, autocryptApiHandler);
     }
 
@@ -75,13 +76,9 @@ public class AutoCrypt {
      * - Certificates
      */
     public void syncAll() {
-            try {
-                if (issuerSynchronizationService!= null) {issuerSynchronizationService.syncData();}
-                if (roleSynchronizationService!= null) {roleSynchronizationService.syncData();}
-            } catch (SynchronizationException e) {
-                logger.error("Could not synchronize Autocrypt Items", e);
-            }
-
+        syncIssuers();
+        syncRoles();
+        syncCertificates();
     }
 
     /**
@@ -156,7 +153,9 @@ public class AutoCrypt {
 
 
         JsonApiResponse issuerSynchronization = syncIssuers();
-        if (issuerSynchronization != null) {return issuerSynchronization;}
+        if (issuerSynchronization != null) {
+            return issuerSynchronization;
+        }
 
         logger.info("Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
@@ -193,7 +192,9 @@ public class AutoCrypt {
 
 
         JsonApiResponse issuerSynchronization = syncIssuers();
-        if (issuerSynchronization != null) {return issuerSynchronization;}
+        if (issuerSynchronization != null) {
+            return issuerSynchronization;
+        }
 
         logger.info("Deleted issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
@@ -428,7 +429,9 @@ public class AutoCrypt {
 
 
         JsonApiResponse rolesSynchronization = syncRoles();
-        if (rolesSynchronization != null) {return rolesSynchronization;}
+        if (rolesSynchronization != null) {
+            return rolesSynchronization;
+        }
 
         logger.info("Created role {} at path {}", name, params.get(Common.PATH).asString());
 
@@ -476,7 +479,9 @@ public class AutoCrypt {
 //        logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
 
         JsonApiResponse rolesSynchronization = syncRoles();
-        if (rolesSynchronization != null) {return rolesSynchronization;}
+        if (rolesSynchronization != null) {
+            return rolesSynchronization;
+        }
 
         logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
 
@@ -519,7 +524,9 @@ public class AutoCrypt {
 
 
         JsonApiResponse rolesSynchronization = syncRoles();
-        if (rolesSynchronization != null) {return rolesSynchronization;}
+        if (rolesSynchronization != null) {
+            return rolesSynchronization;
+        }
 
         logger.info("Updated role {} at path {}", name, params.get(Common.PATH).asString());
 
@@ -568,25 +575,27 @@ public class AutoCrypt {
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
 
-        // saving certificate in dbapi : 2
-        logger.debug("{} ({}/{}) : saving certificate in Dbapi ...", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2);
-        JsonApiResponse responseFromDbapi = dbApiHandler.generateCertificate(
-                serialNumber,
-                name,
-                vaultRoleId,
-                description,
-                params.get(Common.PATH).asString(),
-                mergerJson(responseFromModule.getResult(), bodyExtra));
-        if (responseFromDbapi.isSuccess()) {
-            logger.info("{} ({}/{}) : certificate ({}) saved in Dbapi", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2, serialNumber);
-        } else {
-            logger.error("{} ({}/{}) : saving certificate ({}) in Dbapi failed", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2, serialNumber);
-            return responseFromDbapi;
-        }
+//        // saving certificate in dbapi : 2
+//        logger.debug("{} ({}/{}) : saving certificate in Dbapi ...", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2);
+//        JsonApiResponse responseFromDbapi = dbApiHandler.generateCertificate(
+//                serialNumber,
+//                name,
+//                vaultRoleId,
+//                description,
+//                params.get(Common.PATH).asString(),
+//                mergerJson(responseFromModule.getResult(), bodyExtra));
+//        if (responseFromDbapi.isSuccess()) {
+//            logger.info("{} ({}/{}) : certificate ({}) saved in Dbapi", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2, serialNumber);
+//        } else {
+//            logger.error("{} ({}/{}) : saving certificate ({}) in Dbapi failed", AutoCryptEndpoints.GENERATE_CERTIFICATE, 2, 2, serialNumber);
+//            return responseFromDbapi;
+//        }
+
+        syncCertificates();
 
         logger.info("Successfully generated the certificate {}", serialNumber);
 
-        return responseFromDbapi;
+        return responseFromModule;
     }
 
     /**
@@ -680,29 +689,19 @@ public class AutoCrypt {
         }
         logger.info("{} ({}/{}) : revoked certificate {} at path {} in Autocrypt", AutoCryptEndpoints.REVOKE_CERTIFICATE, 1, 2, serialNumber, path);
 
-        // Revoke certificate at dbapi : 2
-        logger.debug("{} ({}/{}) : revoking certificate {} at path {} in Dbapi ...", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
-        JsonApiResponse responseFromDbapi = dbApiHandler.revokeCertificate(serialNumber, responseFromModule.getResult());
-        if (!responseFromDbapi.isSuccess()) {
-            logger.error("{} ({}/{}) : failed to revoked certificate {} at path {} in Dbapi", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
-        }
-        logger.info("{} ({}/{}) : revoked certificate {} at path {} in Dbapi", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
+//        // Revoke certificate at dbapi : 2
+//        logger.debug("{} ({}/{}) : revoking certificate {} at path {} in Dbapi ...", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
+//        JsonApiResponse responseFromDbapi = dbApiHandler.revokeCertificate(serialNumber, responseFromModule.getResult());
+//        if (!responseFromDbapi.isSuccess()) {
+//            logger.error("{} ({}/{}) : failed to revoked certificate {} at path {} in Dbapi", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
+//        }
+//        logger.info("{} ({}/{}) : revoked certificate {} at path {} in Dbapi", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
+
+        syncCertificates();
 
         logger.info("Revoked certificate {} at path {}", serialNumber, path);
 
-        return responseFromDbapi;
-    }
-
-    /**
-     * Delete all the revoked certificates
-     */
-    public JsonApiResponse deleteRevokedCertificates() {
-        JsonApiResponse responseFromModule = autocryptApiHandler.deleteRevokedCertificates();
-        if (responseFromModule.isSuccess()) {
-            return dbApiHandler.deleteRevokedCertificates();
-        } else {
-            return responseFromModule;
-        }
+        return responseFromModule;
     }
 
     /**
@@ -798,7 +797,9 @@ public class AutoCrypt {
 //        logger.info("{} ({}/{}) : {} CA ({}) saved in Dbapi", typeCA, 4, 4, type, issuerRef);
 
         JsonApiResponse issuerSynchronization = syncIssuers();
-        if (issuerSynchronization != null) {return issuerSynchronization;}
+        if (issuerSynchronization != null) {
+            return issuerSynchronization;
+        }
 
         logger.info("{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
 

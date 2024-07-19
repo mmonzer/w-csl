@@ -133,11 +133,10 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse getDeletedRoles(Json params) {
         return this.sendGet(
-                ApiEndpointForCSLAutocrypt.ISSUER_URI.endpoint(),
+                ApiEndpointForCSLAutocrypt.ROLE_URI.endpoint(),
                 params.set(Common.GET_DELETED, true)
         );
     }
-
 
     /**
      * Creates a new role
@@ -233,14 +232,38 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
-     * Gives the list of certificates
+     * Gives the list of certificates : revoked and not revoked
      *
      * @param params parameters with the path
      */
     public JsonApiResponse getCertificates(Json params) {
         return this.sendGet(
                 ApiEndpointForCSLAutocrypt.CERT_URI.endpoint(),
-                params
+                params.set(Common.GET_DELETED, false)
+        );
+    }
+
+    /**
+     * Gives the list of certificates not revoked
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getCertificatesNonRevoked(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.CERT_URI_NOT_REVOKED.endpoint(),
+                params.set(Common.GET_DELETED, false)
+        );
+    }
+
+    /**
+     * Gives the list of revoked certificates
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getRevokedCertificates(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.CERT_URI_REVOKED.endpoint(),
+                params.set(Common.GET_DELETED, false)
         );
     }
 

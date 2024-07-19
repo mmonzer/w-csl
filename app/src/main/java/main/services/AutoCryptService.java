@@ -128,7 +128,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GET_CERTIFICATE, this::getCertificate);
         addCmd(AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, this::downloadCertificate);
         addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE, this::revokeCertificate);
-        addCmd(AutoCryptEndpoints.DELETE_REVOKED_CERTIFICATES, this::deleteRevokedCertificates);
         // ca-controller
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
@@ -456,7 +455,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         String name = extractValueString(body, Common.NAME);
         String description = extractValueStringOrNull(body, Common.DESCRIPTION);
-        Integer vaultRoleId = extractValueInteger(body, Certificate.VAULT_ROLE_ID);
+//        Integer vaultRoleId = extractValueInteger(body, Certificate.VAULT_ROLE_ID);
         Json params = Json.object();
 
         transferValueString(body, params, Common.PATH);
@@ -465,9 +464,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         body.set(Role.ROLE_NAME, roleName);
 
         String ttl = getValueString(body, Common.TTL);
+        body.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
         Json bodyBase = Json.read(body.toString());
         Json bodyExtra = Json.read(body.toString());
-        bodyBase.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
         if (body.has(Common.COMMON_NAME)) {
             bodyExtra.set(Common.COMMON_NAME, body.get(Common.COMMON_NAME).asString());
         }
@@ -476,7 +475,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.generateCertificate(name, description, vaultRoleId.toString(), params, bodyBase, bodyExtra).toJson();
+        return autocrypt.generateCertificate(name, description, roleName, params, bodyBase, bodyExtra).toJson();
     }
 
     /**
@@ -565,15 +564,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // endregion -- Verify required body keys and extract key values
 
         return autocrypt.revokeCertificate(serialNumber, params).toJson();
-    }
-
-    /**
-     * Delete all the revoked certificates
-     *
-     * @param body unused
-     */
-    public Json deleteRevokedCertificates(Json body) throws IllegalArgumentException {
-        return autocrypt.deleteRevokedCertificates().toJson();
     }
 
     /**

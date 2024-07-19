@@ -35,16 +35,17 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             params.set(Common.AFTER_UPDATED_DATE, ScanUtils.localTimeToScan(since).toString());
         }
         getLogger().debug("{} : retrieving data from Autocrypt after {}", prefixLogger, since);
-        JsonApiResponse listIssuers = method.apply(params);
+        JsonApiResponse listOfItems = method.apply(params);
 
-        if (!listIssuers.isSuccess() || listIssuers.getResult().isNull() || !listIssuers.getResult().isArray()) {
+        if (!listOfItems.isSuccess() || listOfItems.getResult().isNull() || !listOfItems.getResult().isArray()) {
             getLogger().error("{} : Could not get retrieve data from Autocrypt.", prefixLogger);
+            System.out.println(listOfItems);
             throw new SynchronizationException("Could not get retrieve data from Autocrypt");
         }
 
         getLogger().debug("{} : retrieved data from Autocrypt after {}", prefixLogger, since);
 
-        return listIssuers.getResult().asJsonList();
+        return listOfItems.getResult().asJsonList();
     }
 
     public void sendData(IJsonToJsonApiResponse method, Json items) throws SynchronizationException {
@@ -52,6 +53,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
         JsonApiResponse response = method.apply(items);
         if (!response.isSuccess()) {
             getLogger().error("{} : Could not send data to DB-API for Autocrypt service.", prefixLogger);
+            System.out.println(response);
             throw new SynchronizationException(prefixLogger + " : Could not send data to DB-API for Autocrypt service.");
         }
         getLogger().info("{} : sent data to DB-API : {}", prefixLogger, items);

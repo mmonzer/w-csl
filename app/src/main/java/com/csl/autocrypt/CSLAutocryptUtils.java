@@ -124,8 +124,8 @@ public class CSLAutocryptUtils {
     public static Json formatListOfCertificates(Json certificates) {
         Json list = Json.array();
         for (Json certificate : certificates.asJsonList()) {
-            if (!certificate.has(Common.COMMON_NAME) || certificate.get(Common.COMMON_NAME) == null || (certificate.has(Common.COMMON_NAME) && certificate.get(Common.COMMON_NAME).isNull())) {
-                certificate.set(Common.COMMON_NAME, certificate.get(Certificate.SERIAL_NUMBER));
+            if (!certificate.has(Common.NAME) || certificate.get(Common.NAME) == null || (certificate.has(Common.NAME) && certificate.get(Common.NAME).isNull())) {
+                certificate.set(Common.NAME, certificate.get(Certificate.SERIAL_NUMBER));
             }
             list.add(formatCertificate(certificate));
         }
@@ -142,7 +142,7 @@ public class CSLAutocryptUtils {
     public static Json formatCertificate(Json certificateRaw) {
         Json certificate = Json.object();
         certificateRaw.set(Certificate.IS_REVOKED, extractValueBooleanOrNull(certificateRaw,Certificate.ISREVOKED));
-        certificateRaw.set(Common.NAME, certificateRaw.get(Common.COMMON_NAME));
+//        certificateRaw.set(Common.NAME, certificateRaw.get(Common.COMMON_NAME));
         copyValueOrNull(certificateRaw, certificate, Common.NAME, Common.DESCRIPTION, Certificate.SERIAL_NUMBER, Common.PATH, Certificate.VAULT_ROLE_ID, Certificate.IS_REVOKED);
         certificate.at(Certificate.CERTIFICATE_JSON, certificateRaw);
         return certificate;

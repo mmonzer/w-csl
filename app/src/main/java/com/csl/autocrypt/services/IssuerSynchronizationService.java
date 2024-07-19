@@ -22,12 +22,12 @@ public class IssuerSynchronizationService extends AutocryptTemplateSynchronizati
 
     @Override
     public List<Json> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
-        return super.retrieveData(apiHandlerForCSLAutoCrypt::getIssuers, since, limit, offset);
+        return super.retrieveData(apiHandlerForCSLAutoCrypt::getDeletedIssuers, apiHandlerForCSLAutoCrypt::getIssuers, since, limit, offset);
     }
 
     @Override
     public void sendData(List<Json> items) throws SynchronizationException {
-        super.sendData(dbapiHandlerForCSLAutoCrypt::upsertIssuers, Json.make(items));
+        super.sendData(dbapiHandlerForCSLAutoCrypt::deleteIssuers, dbapiHandlerForCSLAutoCrypt::upsertIssuers, items);
     }
 
     @Override

@@ -303,7 +303,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      * Creates or modifies the certificates in the database
      */
     public JsonApiResponse upsertCertificates(Json certificates) {
-        // TODO: check format for input
+        if(certificates.isArray() && certificates.asJsonList().isEmpty()) { return JsonApiResponse.success();}
         return this.sendPost(
                 DbapiEndpointForCSLAutocrypt.CERTIFICATES_UPSERT.endpoint(),
                 formatListOfCertificates(certificates));

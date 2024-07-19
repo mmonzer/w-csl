@@ -37,9 +37,7 @@ public class AutoCrypt {
     private boolean shouldSaveToDb = true;
     private static final Logger logger = LoggerFactory.getLogger(AutoCrypt.class);
     private IssuerSynchronizationService issuerSynchronizationService = null;
-    private IssuerDeletionSynchronizationService issuerDeletionSynchronizationService = null;
     private RoleSynchronizationService roleSynchronizationService = null;
-    private RoleDeletionSynchronizationService roleDeletionSynchronizationService = null;
     private CertificateSynchronizationService certificateSynchronizationService = null;
 
     public AutoCrypt(String name) {
@@ -62,9 +60,7 @@ public class AutoCrypt {
         autocryptApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
 
         issuerSynchronizationService = new IssuerSynchronizationService(dbApiHandler, autocryptApiHandler);
-        issuerDeletionSynchronizationService = new IssuerDeletionSynchronizationService(dbApiHandler, autocryptApiHandler);
         roleSynchronizationService = new RoleSynchronizationService(dbApiHandler, autocryptApiHandler);
-        roleDeletionSynchronizationService = new RoleDeletionSynchronizationService(dbApiHandler, autocryptApiHandler);
         certificateSynchronizationService = new CertificateSynchronizationService(dbApiHandler, autocryptApiHandler);
     }
 
@@ -75,9 +71,12 @@ public class AutoCrypt {
      * - Certificates
      */
     public void syncAll() {
-        syncIssuers();
-        syncRoles();
-        syncCertificates();
+        try {
+            syncIssuers();
+            syncRoles();
+            syncCertificates();
+        } catch (SynchronizationException ignored) {
+        }
     }
 
     /**
@@ -151,9 +150,10 @@ public class AutoCrypt {
 //        logger.info("Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
 
-        JsonApiResponse issuerSynchronization = syncIssuers();
-        if (issuerSynchronization != null) {
-            return issuerSynchronization;
+        try {
+            syncIssuers();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
         }
 
         logger.info("Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
@@ -190,9 +190,10 @@ public class AutoCrypt {
 //        logger.info("{} ({}/{}) : Deleting issuer {} at path {} in dbapi", AutoCryptEndpoints.DELETE_ISSUER_INFO, 2, 2, issuerRef, params.get(Common.PATH).asString());
 
 
-        JsonApiResponse issuerSynchronization = syncIssuers();
-        if (issuerSynchronization != null) {
-            return issuerSynchronization;
+        try {
+            syncIssuers();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
         }
 
         logger.info("Deleted issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
@@ -427,9 +428,10 @@ public class AutoCrypt {
 //        logger.info("{} ({}/{}) : Created role {} at path {} in dbapi", CREATE_ROLE, 2, 2, name, params.get(Common.PATH).asString());
 
 
-        JsonApiResponse rolesSynchronization = syncRoles();
-        if (rolesSynchronization != null) {
-            return rolesSynchronization;
+        try {
+            syncRoles();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
         }
 
         logger.info("Created role {} at path {}", name, params.get(Common.PATH).asString());
@@ -477,9 +479,11 @@ public class AutoCrypt {
 //
 //        logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
 
-        JsonApiResponse rolesSynchronization = syncRoles();
-        if (rolesSynchronization != null) {
-            return rolesSynchronization;
+
+        try {
+            syncRoles();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
         }
 
         logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
@@ -522,9 +526,10 @@ public class AutoCrypt {
 //        logger.info("Updated role {} at path {}", name, params.get(Common.PATH).asString());
 
 
-        JsonApiResponse rolesSynchronization = syncRoles();
-        if (rolesSynchronization != null) {
-            return rolesSynchronization;
+        try {
+            syncRoles();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
         }
 
         logger.info("Updated role {} at path {}", name, params.get(Common.PATH).asString());
@@ -590,7 +595,11 @@ public class AutoCrypt {
 //            return responseFromDbapi;
 //        }
 
-        syncCertificates();
+        try {
+            syncCertificates();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
+        }
 
         logger.info("Successfully generated the certificate {}", serialNumber);
 
@@ -696,7 +705,11 @@ public class AutoCrypt {
 //        }
 //        logger.info("{} ({}/{}) : revoked certificate {} at path {} in Dbapi", AutoCryptEndpoints.REVOKE_CERTIFICATE, 2, 2, serialNumber, path);
 
-        syncCertificates();
+        try {
+            syncCertificates();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
+        }
 
         logger.info("Revoked certificate {} at path {}", serialNumber, path);
 
@@ -795,9 +808,10 @@ public class AutoCrypt {
 //        }
 //        logger.info("{} ({}/{}) : {} CA ({}) saved in Dbapi", typeCA, 4, 4, type, issuerRef);
 
-        JsonApiResponse issuerSynchronization = syncIssuers();
-        if (issuerSynchronization != null) {
-            return issuerSynchronization;
+        try {
+            syncIssuers();
+        } catch (SynchronizationException e) {
+            return JsonApiResponse.error(e.getMessage());
         }
 
         logger.info("{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
@@ -808,61 +822,43 @@ public class AutoCrypt {
     /**
      * Synchronizes the issuers autocrypt -> dbapi
      */
-    private @Nullable JsonApiResponse syncIssuers() {
+    private void syncIssuers() throws SynchronizationException {
         try {
-            if (issuerDeletionSynchronizationService != null) {
-                issuerDeletionSynchronizationService.syncData();
-            }
             if (issuerSynchronizationService != null) {
                 issuerSynchronizationService.syncData();
             }
         } catch (NullPointerException e) {
             logger.error("Issuer synchronizer not initialized");
-            return JsonApiResponse.error("Issuer synchronizer not initialized");
-        } catch (SynchronizationException e) {
-            logger.error("Could not synchronize Autocrypt issuers", e);
-            return JsonApiResponse.error("Could not synchronize Autocrypt issuers");
+            throw new SynchronizationException("Issuer synchronizer not initialized");
         }
-        return null;
     }
 
     /**
      * Synchronizes the roles autocrypt -> dbapi
      */
-    private @Nullable JsonApiResponse syncRoles() {
+    private void syncRoles() throws SynchronizationException {
         try {
-            if (roleDeletionSynchronizationService != null) {
-                roleDeletionSynchronizationService.syncData();
-            }
             if (roleSynchronizationService != null) {
                 roleSynchronizationService.syncData();
             }
         } catch (NullPointerException e) {
             logger.error("Roles synchronizer not initialized");
-            return JsonApiResponse.error("Roles synchronizer not initialized");
-        } catch (SynchronizationException e) {
-            logger.error("Could not synchronize Autocrypt roles", e);
-            return JsonApiResponse.error("Could not synchronize Autocrypt roles");
+            throw new SynchronizationException("Roles synchronizer not initialized");
         }
-        return null;
     }
 
     /**
      * Synchronizes the certificates autocrypt -> dbapi
      */
-    private @Nullable JsonApiResponse syncCertificates() {
+    private void syncCertificates() throws SynchronizationException {
         try {
             if (certificateSynchronizationService != null) {
                 certificateSynchronizationService.syncData();
             }
         } catch (NullPointerException e) {
             logger.error("Certificates synchronizer not initialized");
-            return JsonApiResponse.error("Certificates synchronizer not initialized");
-        } catch (SynchronizationException e) {
-            logger.error("Could not synchronize Autocrypt certificates", e);
-            return JsonApiResponse.error("Could not synchronize Autocrypt certificates");
+            throw new SynchronizationException("Certificates synchronizer not initialized");
         }
-        return null;
     }
 
     /**

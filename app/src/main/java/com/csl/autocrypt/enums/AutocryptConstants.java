@@ -95,9 +95,10 @@ public final class AutocryptConstants {
         public static final String VAULT_ID = "vault_id";
 
         public static final String VALUE = "value";
-        public static final String AFTER_UPDATED_DATE = "afterUpdatedDate";
+        public static final String AFTER_UPDATED_DATE = "after_updated_date";
         public static final String MIN_DATE = "1900-01-01T00:00+18:00";
         public static final String DELETED = "deleted";
+        public static final String NON_DELETED = "non_deleted";
         public static final String GET_DELETED = "get_deleted";
         public static final String CREATEDAT = "createdAt";
         public static final String UPDATEDAT = "updatedAt";

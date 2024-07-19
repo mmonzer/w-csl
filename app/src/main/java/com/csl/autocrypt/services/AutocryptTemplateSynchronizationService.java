@@ -58,38 +58,65 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
         }
         getLogger().info("{} : sent data to DB-API : {}", prefixLogger, items);
     }
-//
-//    public void sendData(IJsonToJsonApiResponse methodDelete, IJsonToJsonApiResponse methodUpsert, List<Json> items) throws SynchronizationException {
-//        List<Json> itemsToDelete = new ArrayList<>();
-//        List<Json> itemsToUpsert = new ArrayList<>();
-//
-//        // Prepare items
-//        for (Json item : items) {
-//            if (item.has(Common.DELETED) && item.get(Common.DELETED).asBoolean()) {
-//                itemsToDelete.add(item);
-//            } else {
-//                itemsToUpsert.add(item);
-//            }
-//        }
-//
-//        // deleting items
-//        getLogger().debug("{} : deleting data to DB-API : {}", prefixLogger, items);
-//        JsonApiResponse response = methodDelete.apply(Json.make(itemsToDelete));
-//        if (!response.isSuccess()) {
-//            getLogger().error("{} : Could not delete data from DB-API for Autocrypt service.", prefixLogger);
-//            throw new SynchronizationException(prefixLogger + " : Could not delete data to DB-API for Autocrypt service.");
-//        }
-//
-//        // upserting items
-//        getLogger().debug("{} : sending data to DB-API : {}", prefixLogger, items);
-//        response = methodUpsert.apply(Json.make(itemsToUpsert));
-//        if (!response.isSuccess()) {
-//            getLogger().error("{} : Could not send data from DB-API for Autocrypt service.", prefixLogger);
-//            throw new SynchronizationException(prefixLogger + " : Could not send data to DB-API for Autocrypt service.");
-//        }
-//
-//        getLogger().info("{} : sent data to DB-API : {}", prefixLogger, items);
-//    }
+
+    public List<Json> retrieveData(IJsonToJsonApiResponse methodDelete, IJsonToJsonApiResponse methodUpsert, OffsetDateTime since, int limit, int offset) throws SynchronizationException {
+        Json params = Json.object();
+        if (since != null) {
+            params.set(Common.AFTER_UPDATED_DATE, ScanUtils.localTimeToScan(since).toString());
+        }
+        getLogger().debug("{} : retrieving data to delete from Autocrypt after {}", prefixLogger, since);
+        JsonApiResponse listOfItemsDelete = methodDelete.apply(params);
+
+        if (!listOfItemsDelete.isSuccess() || listOfItemsDelete.getResult().isNull() || !listOfItemsDelete.getResult().isArray()) {
+            getLogger().error("{} : Could not get retrieve data to delete from Autocrypt.", prefixLogger);
+            System.out.println(listOfItemsDelete);
+            throw new SynchronizationException("Could not get retrieve data to delete from Autocrypt");
+        }
+
+
+        getLogger().debug("{} : retrieving data to upsert from Autocrypt after {}", prefixLogger, since);
+        JsonApiResponse listOfItemsUpsert = methodUpsert.apply(params);
+
+        if (!listOfItemsUpsert.isSuccess() || listOfItemsUpsert.getResult().isNull() || !listOfItemsUpsert.getResult().isArray()) {
+            getLogger().error("{} : Could not get retrieve data to upsert from Autocrypt.", prefixLogger);
+            System.out.println(listOfItemsUpsert);
+            throw new SynchronizationException("Could not get retrieve data to upsert from Autocrypt");
+        }
+
+        getLogger().debug("{} : retrieved data from Autocrypt after {}", prefixLogger, since);
+
+        Json response = Json.object(Common.DELETED, listOfItemsDelete.getResult().asJsonList(), Common.NON_DELETED, listOfItemsUpsert.getResult().asJsonList());
+
+        return Json.array(response).asJsonList();
+    }
+
+    public void sendData(IJsonToJsonApiResponse methodDelete, IJsonToJsonApiResponse methodUpsert, List<Json> itemsToUpsertOrDelete) throws SynchronizationException {
+        Json items = itemsToUpsertOrDelete.get(0);
+        JsonApiResponse response;
+        if (items != null && items.has(Common.DELETED) && items.get(Common.DELETED) != null && items.get(Common.DELETED).isArray()) {
+            // deleting items
+            getLogger().debug("{} : deleting data to DB-API : {}", prefixLogger, items);
+            response = methodDelete.apply(items.get(Common.DELETED));
+            if (!response.isSuccess()) {
+                getLogger().error("{} : Could not delete data from DB-API for Autocrypt service.", prefixLogger);
+                throw new SynchronizationException(prefixLogger + " : Could not delete data to DB-API for Autocrypt service.");
+            }
+            getLogger().debug("{} : deleted data to DB-API : {}", prefixLogger, items);
+        }
+
+        if (items != null && items.has(Common.NON_DELETED) && items.get(Common.NON_DELETED) != null && items.get(Common.NON_DELETED).isArray()) {
+            // upserting items
+            getLogger().debug("{} : sending data to upsert to DB-API : {}", prefixLogger, items);
+            response = methodUpsert.apply(items.get(Common.NON_DELETED));
+            if (!response.isSuccess()) {
+                getLogger().error("{} : Could not send data to upsert from DB-API for Autocrypt service.", prefixLogger);
+                throw new SynchronizationException(prefixLogger + " : Could not send data to upsert to DB-API for Autocrypt service.");
+            }
+            getLogger().debug("{} : upserted data to DB-API : {}", prefixLogger, items);
+        }
+
+        getLogger().info("{} : sent data to DB-API : {}", prefixLogger, items);
+    }
 
     public OffsetDateTime getLastChangeDate(IVoidToJsonApiResponse method) throws SynchronizationException {
         try {
@@ -101,8 +128,8 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             }
 
             String lastUpdateDateString = Common.MIN_DATE;
-            if (response.getResult()!=null && response.getResult().has(Common.VALUE) && response.getResult().get(Common.VALUE).isString()) {
-                lastUpdateDateString = response.getResult().get(Common.VALUE).asString().replace("\"","");
+            if (response.getResult() != null && response.getResult().has(Common.VALUE) && response.getResult().get(Common.VALUE).isString()) {
+                lastUpdateDateString = response.getResult().get(Common.VALUE).asString().replace("\"", "");
             }
             getLogger().debug("{} : fetched last update time from Dbapi : {}", prefixLogger, lastUpdateDateString);
 

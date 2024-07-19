@@ -19,3 +19,4 @@ csl-dev
 app/src/main/resources/docs/sphinx/.venv
 app/src/main/resources/runconfig/CSLConfigIDS.json
 csl-dev
+src/main/resources/docs/sphinx/

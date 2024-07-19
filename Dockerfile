@@ -6,6 +6,7 @@ FROM gradle:jdk17 AS build-stage
 
 RUN #apt-get update && apt-get install ant -y
 COPY . /usr/w-csl
+#COPY build.gradle buildClient.gradle settings.gradle /usr/w-csl/
 WORKDIR /usr/w-csl
 RUN ["./gradlew","shadowJar","-b","buildClient.gradle"]
 

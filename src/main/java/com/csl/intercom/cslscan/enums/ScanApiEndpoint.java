@@ -35,6 +35,7 @@ public enum ScanApiEndpoint {
     ENTITY_HTTP_CONNECTION_UUIDS(ENTITY_HTTP_CONNECTION.endpoint() + "uuids"),
     ENTITY_HTTP_CONNECTION_DETAILS(ENTITY_HTTP_CONNECTION.endpoint() + "%s"),
     ENTITY_HTTP_CONNECTION_FETCH_STAGE(ENTITY_HTTP_CONNECTION.endpoint() + "fetchStagePage"),
+    ENTITY_HTTP_CONNECTION_GET_INSTALLED_NPM_PACKAGES(ENTITY_HTTP_CONNECTION.endpoint() + "getInstalledNpmPackages"),
     ENTITY_HTTP_CONNECTION_TEST(ENTITY_HTTP_CONNECTION.endpoint() + "test"),
     ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES(ENTITY_HTTP_CONNECTION.endpoint() + "fetchPredefinedVariables"),
     ENTITY_HTTP_CONNECTION_IMPORT_BSON(ENTITY_HTTP_CONNECTION.endpoint() + "importBson"),
@@ -56,7 +57,7 @@ public enum ScanApiEndpoint {
     EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "clear"),
     ;
 
-    private final String endpoint;
+    private String endpoint;
 
     private ScanApiEndpoint(String endpoint) {
         this.endpoint = endpoint;

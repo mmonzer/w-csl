@@ -1,6 +1,7 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.ScanUtils;
+import com.csl.intercom.cslscan.models.scans.ExternalGeneratedConnectionRelatesDevice;
 import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.ucsl.json.Json;
 
@@ -15,7 +16,10 @@ public class ExternalDiscoveredDevice {
     private OffsetDateTime updatedAt;
     private boolean isDeleted;
 
-    private ExternalDiscoveredDevice(String id, String name, String ipAddress, String connectionInfoUuid, OffsetDateTime createdAt, OffsetDateTime updatedAt, boolean isDeleted) {
+    private ExternalGeneratedConnectionRelatesDevice externalGeneratedConnectionRelatesDevice;
+
+    private ExternalDiscoveredDevice(String id, String name, String ipAddress, String connectionInfoUuid, OffsetDateTime createdAt, OffsetDateTime updatedAt, boolean isDeleted,
+                                     ExternalGeneratedConnectionRelatesDevice externalGeneratedConnectionRelatesDevice) {
         this.id = id;
         this.name = name;
         this.ipAddress = ipAddress;
@@ -23,6 +27,7 @@ public class ExternalDiscoveredDevice {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isDeleted = isDeleted;
+        this.externalGeneratedConnectionRelatesDevice = externalGeneratedConnectionRelatesDevice;
     }
 
     public static ExternalDiscoveredDevice fromScannerJson(Json json) {
@@ -37,6 +42,7 @@ public class ExternalDiscoveredDevice {
         OffsetDateTime createdAt;
         OffsetDateTime updatedAt;
         boolean isDeleted;
+        ExternalGeneratedConnectionRelatesDevice externalGeneratedConnectionRelatesDevice = null;
 
         if (json.has("uuid") && json.get("uuid").isString()) {
             id = json.get("uuid").asString();
@@ -79,8 +85,21 @@ public class ExternalDiscoveredDevice {
         } else {
             return null;
         }
+        if (json.has("generatedConnectionForDiscoveredDevice")) {
+            String username = json.get("generatedConnectionForDiscoveredDevice").get("username").getValue().toString();
+            String password = json.get("generatedConnectionForDiscoveredDevice").get("password").getValue().toString();
+            String connectionName = json.get("generatedConnectionForDiscoveredDevice").get("name").getValue().toString();
+            int connectionPortNumber = Integer.parseInt(json.get("generatedConnectionForDiscoveredDevice").get("portNumber").toString());
+            String vendor = json.get("generatedConnectionForDiscoveredDevice").get("vendor").getValue().toString();
+            externalGeneratedConnectionRelatesDevice = new ExternalGeneratedConnectionRelatesDevice();
+            externalGeneratedConnectionRelatesDevice.setName(connectionName);
+            externalGeneratedConnectionRelatesDevice.setPassword(password);
+            externalGeneratedConnectionRelatesDevice.setUsername(username);
+            externalGeneratedConnectionRelatesDevice.setPortNumber(connectionPortNumber);
+            externalGeneratedConnectionRelatesDevice.setVendor(vendor);
+        }
 
-        return new ExternalDiscoveredDevice(id, name, ipAddress, connectionInfoUuid, createdAt, updatedAt, isDeleted);
+        return new ExternalDiscoveredDevice(id, name, ipAddress, connectionInfoUuid, createdAt, updatedAt, isDeleted, externalGeneratedConnectionRelatesDevice);
     }
 
     public Json serializeForDbapi() {
@@ -89,7 +108,8 @@ public class ExternalDiscoveredDevice {
                 "name", name,
                 "ipAddress", ipAddress,
                 "connectionInfoUuid", connectionInfoUuid,
-                "deleted", isDeleted
+                "deleted", isDeleted,
+                "generatedConnectionForDiscoveredDevice", externalGeneratedConnectionRelatesDevice.serializeForDbapi()
         );
         if (createdAt != null) {
             result.set("createdAt", DbapiUtilsForCSLScan.localDateToDbapi(createdAt).toString());

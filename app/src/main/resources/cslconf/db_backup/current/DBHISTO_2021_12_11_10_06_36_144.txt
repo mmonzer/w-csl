@@ -1,7 +1,0 @@
-{"ip":"10.0.208.100","op":"set","name":"os_cpe_tracked","value":false,"user":{"name":"user1"}}
-{"ip":"10.0.208.16","op":"set","name":"os_cpe_tracked","value":false,"user":{"name":"user1"}}
-{"ip":"10.0.208.110","op":"set","name":"os_cpe_tracked","value":false,"user":{"name":"user1"}}
-{"ip":"10.0.208.16","op":"set","name":"os_cpe_tracked","value":true,"user":{"name":"user1"}}
-{"ip":"10.0.208.110","op":"set","name":"os_cpe","value":"cpe:undefined:undefined:undefined:undefined","user":{"name":"user1"}}
-{"ip":"10.0.208.110","op":"set","name":"os_cpe","value":"cpe:undefined:undefined:undefined:undefined","user":{"name":"user1"}}
-{"ip":"10.0.208.115","op":"set","name":"os_cpe","value":"cpe:undefined:undefined:undefined:undefined","user":{"name":"user1"}}

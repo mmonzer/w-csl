@@ -1,40 +1,30 @@
-# IDE
 .idea/
 .vscode/
 .run/
-
-# Deprecated?
-bin/
-out/
-idslogs/
-cslconf/taps/
-mqtt_agent_concentrator*
-downloads/
 .DS_Store
 .python-version
+.gradle/
+src/main/resources/docs/sphinx/
+CurrentIDSParams.json
+csl-dev
+
+build/
+classes/
+downloads/
+
+cacerts.jks
+
+# Deprecated?
+mqtt_agent_concentrator*
+idslogs/
+cslconf/taps/
+
+CurrentIDSParams.json
+idsdata/
 
 # IntelliJ project manager ( deprecated? )
 w_csl.iml
 w-csl.iml
 W_CSL.iml
 
-# Gradle
-build/
-classes/
-app/build
-app/.gradle/
-.gradle/
-
-# Personnal configuration
-app/src/main/resources/runconfig/CSLConfigIDS.json
-
-# CACERTS
-app/cacerts.jks
-
-# documentation
-app/src/main/resources/docs/index.html
-app/src/main/resources/docs/sphinx/.venv
-app/src/main/resources/docs/sphinx/build/doctrees
-app/src/main/resources/docs/sphinx/build/html
-app/src/main/resources/docs/javadoc/*        # has the full javadoc
 

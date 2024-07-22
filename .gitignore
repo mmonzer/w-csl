@@ -4,7 +4,8 @@
 .DS_Store
 .python-version
 .gradle/
-
+src/main/resources/docs/sphinx/
+CurrentIDSParams.json
 csl-dev
 
 build/

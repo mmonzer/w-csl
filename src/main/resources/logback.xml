@@ -11,7 +11,7 @@
     </appender>
 
     <!-- LOG everything at INFO level -->
-    <root level="info">
+    <root level="${LOG_LEVEL:-DEBUG}">
         <appender-ref ref="Console" />
     </root>
 </configuration>

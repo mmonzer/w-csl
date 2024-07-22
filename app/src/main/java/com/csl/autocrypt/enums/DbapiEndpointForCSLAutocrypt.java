@@ -16,7 +16,7 @@ public enum DbapiEndpointForCSLAutocrypt {
     CERTIFICATES(SELF+"/certificates"),
     CERTIFICATES_(CERTIFICATES+"/"),
     CERTIFICATES_UPSERT(CERTIFICATES_+"create_certificates_entities"),
-    CERTIFICATES_GET_LAST_UPDATE_DATE(CERTIFICATES_+"last_updated_date"),
+    CERTIFICATES_GET_LAST_UPDATE_DATE(CERTIFICATES_+"get_last_updated_date_for_certificates_not_related_to_ca"),
     CERTIFICATES_UPD_BY_SERIAL_NUMBER_(CERTIFICATES_+"update_by_serial_number/"),
     CERTIFICATES_DEL_BY_SERIAL_NUMBER_(CERTIFICATES_+"delete_by_serial_number/"),
     ISSUER(SELF+"/certificate_authorities"),

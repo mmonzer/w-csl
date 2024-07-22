@@ -80,6 +80,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     @Setter
     private DataSynchronizationService deletedCpeItemsSynchronizationService = null;
     private DataSynchronizationService deletedMicrosoftKbsSynchronizationService = null;
+    private DataSynchronizationService connectionInfoSynchronizationService = null;
     @Getter
     @Setter
     private CpeScanService cpeScanService = null;
@@ -136,6 +137,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(cpeScanService);
             deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
             deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
+            connectionInfoSynchronizationService = new ConnectionInfoSynchronizationService();
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
             importExportBsonService = ImportExportBsonService.getInstance();
             importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
@@ -322,6 +324,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
                         .setStatus(IJsonCmdHelp.STATUS_OK)
         );
+
         addCmd("get_entity_http_connection_full", params -> {
                     Json uuidJson = params.get("uuid");
                     String uuid;
@@ -484,7 +487,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 //                    // Fetch the password from the base connection if needed
 //                    if (baseConnectionIdJson != null && baseConnectionIdJson.isNumber()) {
 //                        try {
-//                            Connection baseConnection = dbapiHandler.fetchConnections(List.of(baseConnectionIdJson.asInteger()), protocols).get(0);
+//                            Connection baseConnection = dbapiHandler.fetchConnections(List.of(baseConnectionIdJson.asString()), protocols).get(0);
 //                            if (!connectionJson.has("read_only_connection_data")) {
 //                                connectionJson.set("read_only_connection_data", Json.object());
 //                            }
@@ -639,13 +642,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("test_http_template", params -> {
 //                region -- Get Body params from the request
                     String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);
-                    Integer connectionId = null;
+                    String connectionId = null;
                     if (params.has("connection_id")) {
                         Json connectionIdJson = params.get("connection_id");
                         if (connectionIdJson.isNumber()) {
-                            connectionId = connectionIdJson.asInteger();
+                            connectionId = String.valueOf(connectionIdJson.asInteger());
                         } else if (connectionIdJson.isString()) {
-                            connectionId = Integer.parseInt(connectionIdJson.asString());
+                            connectionId = connectionIdJson.asString();
                         }
                     }
                     String templateId = JsonUtil.getStringFromJson(params, "template_uuid", null);
@@ -703,13 +706,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     // region -- assign connections to the device
                     if (ipAddress != null && connection != null) {
-                        device = Device.fromIpAddress(ipAddress).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
+                        device = Device.fromIpAddress(ipAddress).setConnectionsIds(List.of(connectionId != null ? connectionId : "0"));
                         device.setConnections(List.of(connection));
                     } else if (deviceId != null && connection != null) {
                         try {
                             List<Device> devices = dbapiHandler.fetchDevices(List.of(deviceId));
                             if (!devices.isEmpty()) {
-                                device = devices.get(0).setConnectionsIds(List.of(connectionId != null ? connectionId : 0));
+                                device = devices.get(0).setConnectionsIds(List.of(connectionId != null ? connectionId : "0"));
                                 device.setConnections(List.of(connection));
                             }
                         } catch (Exception e) {
@@ -1006,6 +1009,34 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.START_DEVICE_SCAN
         );
 
+        addCmd(DiscoveryEndpoints.ADD_CONNECTION, params -> {
+            Json connectionJson = params.get("connection");
+            Connection connection = null;
+            try {
+                connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                logger.error("Could not fetch discovery protocols", e);
+                return JsonApiResponse.error("Could not fetch discovery protocols",
+                        Json.object("exception", e.getMessage())
+                ).toJson();
+            }
+            if (connection == null) {
+                return JsonApiResponse.error("Could not parse connection",
+                        Json.object("exception", "Could not parse connection")
+                ).toJson();
+            }
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.addConnectionInfo(connection);
+            } catch (Exception e) {
+                logger.error("Could not add connection info", e);
+                response = JsonApiResponse.error("Could not add connection info",
+                        Json.object("exception", e.getMessage())
+                );
+            }
+            return response.toJson();
+        });
+
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 
         logger.info("SNMP service operational");
@@ -1112,6 +1143,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         if (isConcentrator) {
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
+                connectionInfoSynchronizationService.syncData();
                 cpeItemSynchronizationService.syncData();
                 microsoftKbSynchronizationService.syncData();
                 deletedCpeItemsSynchronizationService.syncData();

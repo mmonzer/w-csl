@@ -21,11 +21,11 @@ public class Device implements IScannerSerializable {
     private final String name;
     private final String ipAddress;
     @Getter
-    private List<Integer> connectionsIds;
+    private List<String> connectionsIds;
     private final List<Connection> connections = new ArrayList<>();
     private final OffsetDateTime updatedDate;
 
-    protected Device(String id, String name, String ipAddress, List<Integer> connectionsIds, OffsetDateTime updatedDate) {
+    protected Device(String id, String name, String ipAddress, List<String> connectionsIds, OffsetDateTime updatedDate) {
         this.id = id;
         this.name = name;
         this.ipAddress = ipAddress;
@@ -51,9 +51,9 @@ public class Device implements IScannerSerializable {
             }
             // Parse connections
             List<Json> connectionsJson = deviceJson.get("connections").asJsonList();
-            List<Integer> connections = new ArrayList<>(connectionsJson.size());
+            List<String> connections = new ArrayList<>(connectionsJson.size());
             for (Json connectionId: connectionsJson) {
-                connections.add(connectionId.asInteger());
+                connections.add(String.valueOf(connectionId.asInteger()));
             }
             OffsetDateTime updatedDate = DbapiUtilsForCSLScan.dbapiDateToLocal(JsonUtil.getStringFromJson(deviceJson, "updated_at", null));
 
@@ -70,7 +70,7 @@ public class Device implements IScannerSerializable {
      * @return A mock device with the specified IP address.
      */
     public static Device fromIpAddress(String ipAddress) {
-        return new Device("mock_device", "Mock device", ipAddress, List.of(0), OffsetDateTime.now());
+        return new Device("mock_device", "Mock device", ipAddress, List.of("0"), OffsetDateTime.now());
     }
 
     /**
@@ -84,6 +84,7 @@ public class Device implements IScannerSerializable {
                 "uuid", this.id,
                 "name", this.name,
                 "ipAddress", this.ipAddress,
+                "connectionInfoUuids", this.connectionsIds,
                 "updatedAt", ScanUtils.localTimeToScan(this.updatedDate).toString()
         );
         Json connectionsInfo = Json.array();
@@ -105,13 +106,14 @@ public class Device implements IScannerSerializable {
         return ipAddress;
     }
 
-    public Device setConnectionsIds(List<Integer> connectionsIds) {
+    public Device setConnectionsIds(List<String> connectionsIds) {
         this.connectionsIds = connectionsIds;
         return this;
     }
 
+
     public void setConnections(List<Connection> connections) {
-        for (int id: connectionsIds) {
+        for (String id: connectionsIds) {
             Connection connection = DbapiUtilsForCSLScan.getConnectionById(connections, id);
             if (connection != null) {
                 this.connections.add(connection);

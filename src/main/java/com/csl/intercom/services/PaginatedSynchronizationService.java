@@ -3,10 +3,7 @@ package com.csl.intercom.services;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import org.slf4j.Logger;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -41,7 +38,7 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
         try {
             lastChangeDate = getLastChangeDate();
         } catch (Exception e) {
-            getLogger().warn("Could not retrieve last update date from DB-API, retrieving all discovered devices from CSL-Scan");
+            getLogger().warn("Could not retrieve last update date from DB-API, retrieving all CPE Items from CSL-Scan");
             getLogger().debug("Could not retrieve last update date from DB-API", e);
             lastChangeDate = null;
         }
@@ -53,7 +50,9 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
         int limit = getBatchMaxSize();
         List<T> items;
         do {
+            doPreReceiveActions();
             items = retrieveData(since, limit, offset);
+            doPostReceiveActions();
             if (items != null && (!items.isEmpty() || shouldSendEmptyData())) {
                 try {
                     doPreSendActions(items);
@@ -90,38 +89,58 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
         return false;
     }
 
+    protected void doPreReceiveActions() throws SynchronizationException {
+        executeActions(PreReceive.class);
+    }
+
+    protected void doPostReceiveActions() throws SynchronizationException {
+        executeActions(PostReceive.class);
+    }
+
     protected void doPreSendActions(List<T> data) throws SynchronizationException {
-        Class<?> clazz = this.getClass();
-        for (Method method : clazz.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(PreSend.class)) {
-                try {
-                    method.invoke(this, data);
-                } catch (Exception e) {
-                    getLogger().warn("Failed to execute preSend method");
-                    getLogger().debug("Failed to execute preSend method", e);
-                    throw new SynchronizationException("Failed to execute preSend method", e);
-                }
-            }
-        }
+        executeActions(PreSend.class, data);
     }
 
     protected void doPostSendActions(List<T> data) throws SynchronizationException {
+        executeActions(PostSend.class, data);
+    }
+
+    protected void executeActions(Class<? extends Annotation> annotation, Object... args) {
         Class<?> clazz = this.getClass();
         for (Method method : clazz.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(PostSend.class)) {
+            if (method.isAnnotationPresent(annotation)) {
                 try {
-                    method.invoke(this, data);
+                    method.invoke(this, args);
                 } catch (Exception e) {
-                    getLogger().warn("Failed to execute postSend method");
-                    getLogger().debug("Failed to execute postSend method", e);
-                    throw new SynchronizationException("Failed to execute postSend method", e);
+                    getLogger().warn("Failed to execute method with annotation {}", annotation);
+                    getLogger().debug("Failed to execute method with annotation {}", annotation, e);
                 }
             }
         }
     }
 
+
     /**
-     * Annotation for methods that should be executed before sending data to the DB-API.
+     * Annotation for methods that should be executed before retrieving data from the source system.
+     * Methods annotated with this annotation should not have any parameters.
+     * Note that order of execution is not guaranteed.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface PreReceive {}
+
+    /**
+     * Annotation for methods that should be executed after retrieving data from the source system.
+     * Methods annotated with this annotation should not have any parameters.
+     * Note that order of execution is not guaranteed.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface PostReceive {}
+
+    /**
+     * Annotation for methods that should be executed before sending data to the target system.
+     * Methods annotated with this annotation should have a single parameter of type List<T> where T is the type of data to synchronize.
      * Note that order of execution is not guaranteed.
      */
     @Retention(RetentionPolicy.RUNTIME)
@@ -129,7 +148,8 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
     public @interface PreSend {}
 
     /**
-     * Annotation for methods that should be executed after sending data to the DB-API.
+     * Annotation for methods that should be executed after sending data to the target system.
+     * Methods annotated with this annotation should have a single parameter of type List<T> where T is the type of data to synchronize.
      * Note that order of execution is not guaranteed.
      */
     @Retention(RetentionPolicy.RUNTIME)

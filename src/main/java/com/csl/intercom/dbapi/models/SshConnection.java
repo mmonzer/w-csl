@@ -18,7 +18,7 @@ public class SshConnection extends Connection {
     @Getter
     private final String passphrase;
 
-    protected SshConnection(int id, int port, List<String> devices, String username, String password, String privateKey, String passphrase) {
+    protected SshConnection(String id, int port, List<String> devices, String username, String password, String privateKey, String passphrase) {
         super(id, devices, StaticConnectionProtocol.SSH);
         this.port = port;
         this.username = username;
@@ -28,9 +28,9 @@ public class SshConnection extends Connection {
     }
 
     public static SshConnection fromJson(Json connectionJson) {
-        int id = 0;
+        String id = "0";
         if (connectionJson.has("id") && connectionJson.get("id").isNumber()) {
-            id = connectionJson.get("id").asInteger();
+            id = String.valueOf(connectionJson.get("id").asInteger());
         }
 
         int port = 0;
@@ -41,7 +41,7 @@ public class SshConnection extends Connection {
         }
 
         List<String> devices = null;
-        if (connectionJson.has("connected_devices") && connectionJson.get("connected_devices").isArray()){
+        if (connectionJson.has("connected_devices") && connectionJson.get("connected_devices").isArray()) {
             devices = connectionJson.get("connected_devices").asJsonList().stream()
                     .map(Json::asString)
                     .collect(Collectors.toList());
@@ -70,6 +70,42 @@ public class SshConnection extends Connection {
         }
 
         return new SshConnection(id, port, devices, username, password, privateKey, passphrase);
+    }
+
+    public static SshConnection fromScannerJson(Json connectionJson) {
+        String uuid = null;
+        if (connectionJson.has("uuid") && connectionJson.get("uuid").isString()) {
+            uuid = connectionJson.get("uuid").asString();
+        }
+
+        int port = 0;
+        if (connectionJson.has(SshConnectionField.PORT.scanName()) && connectionJson.get(SshConnectionField.PORT.scanName()).isNumber()) {
+            port = connectionJson.get(SshConnectionField.PORT.scanName()).asInteger();
+        } else {
+            port = 22;
+        }
+
+        String username = "";
+        if (connectionJson.has(SshConnectionField.USERNAME.scanName()) && connectionJson.get(SshConnectionField.USERNAME.scanName()).isString()) {
+            username = connectionJson.get(SshConnectionField.USERNAME.scanName()).asString();
+        }
+
+        String password = "";
+        if (connectionJson.has(SshConnectionField.PASSWORD.scanName()) && connectionJson.get(SshConnectionField.PASSWORD.scanName()).isString()) {
+            password = connectionJson.get(SshConnectionField.PASSWORD.scanName()).asString();
+        }
+
+        String privateKey = "";
+        if (connectionJson.has(SshConnectionField.PRIVATE_KEY.scanName()) && connectionJson.get(SshConnectionField.PRIVATE_KEY.scanName()).isString()) {
+            privateKey = connectionJson.get(SshConnectionField.PRIVATE_KEY.scanName()).asString();
+        }
+
+        String passphrase = "";
+        if (connectionJson.has(SshConnectionField.PASSPHRASE.scanName()) && connectionJson.get(SshConnectionField.PASSPHRASE.scanName()).isString()) {
+            passphrase = connectionJson.get(SshConnectionField.PASSPHRASE.scanName()).asString();
+        }
+
+        return new SshConnection(uuid, port, null, username, password, privateKey, passphrase);
     }
 
     @Override

@@ -7,6 +7,8 @@ public enum ScanApiEndpoint {
     ENTITY_LAST_DELETION(ENTITY.endpoint() + "last_deletion"),
     ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection"),
     ENTITY_TEST_EXISTING_CONNECTION(ENTITY_TEST_CONNECTION.endpoint() + "/%s"),
+    CONNECTIONS("/entity-connection-info/"),
+    CONNECTIONS_LAST_UPDATE(CONNECTIONS.endpoint() + "last-updated"),
     CPE_ITEM("/cpeItem/"),
     CPE_ITEM_DETAILS(CPE_ITEM.endpoint() + "%s"),
     CPE_ITEM_DELETE_MANY(CPE_ITEM.endpoint() + "deleteMany"),

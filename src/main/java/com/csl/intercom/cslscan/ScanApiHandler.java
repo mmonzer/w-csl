@@ -4,52 +4,26 @@ import com.csl.core.CSLContext;
 import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
-import com.csl.intercom.cslscan.models.*;
-import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.models.MicrosoftKB;
-import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.ConnectionProtocol;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.HttpConnection;
-import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
-import org.apache.http.params.CoreConnectionPNames;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.MultiPartContentProvider;
-import org.eclipse.jetty.client.util.PathContentProvider;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.ConnectException;
-import java.net.URI;
-import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -59,8 +33,6 @@ import java.util.stream.Collectors;
  */
 public class ScanApiHandler extends ApiHandler  {
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
-    private final FileStorageService fileStorageService = new FileStorageService();
-
 
     public ScanApiHandler() {
         super("CSL-Scan", ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
@@ -74,6 +46,54 @@ public class ScanApiHandler extends ApiHandler  {
      */
     public JsonApiResponse addEntity(Device device) {
         return sendPost(ScanApiEndpoint.ENTITY, device.serializeForScanner());
+    }
+
+    /**
+     * Add a connection to the scanner.
+     *
+     * @param connection The connection to add.
+     * @return The response from the scanner.
+     */
+    public JsonApiResponse addConnectionInfo(Connection connection) {
+        return sendPost(ScanApiEndpoint.CONNECTIONS, connection.serializeForScanner());
+    }
+
+    /**
+     * Get connections since a specified date.
+     * If the date is null, all connections are returned.
+     *
+     * @param date The date to start receiving notifications.
+     * @return A list of connections that have changed since the specified date.
+     */
+    public List<Connection> getConnectionsSince(OffsetDateTime date, Integer limit, Integer offset, List<ConnectionProtocol> protocols) {
+        Json params = Json.object();
+        if (date != null) {
+            params.set("since", ScanUtils.localTimeToScan(date).toString());
+        }
+        if (limit != null) {
+            params.set("limit", limit);
+        }
+        if (offset != null) {
+            params.set("skip", offset);
+        }
+        JsonApiResponse response = sendGet(ScanApiEndpoint.CONNECTIONS, params);
+        if (!response.isSuccess()) {
+            return null;
+        }
+        return response.getResult().asJsonList().stream()
+                .map(connectionJson -> Connection.fromScannerJson(connectionJson, protocols))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    public OffsetDateTime getConnectionLastUpdatedDate() {
+        JsonApiResponse response = sendGet(ScanApiEndpoint.CONNECTIONS_LAST_UPDATE, Json.object());
+        try {
+            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     /**
@@ -449,18 +469,6 @@ public class ScanApiHandler extends ApiHandler  {
         }
     }
 
-    public List<String> getAllEntityHttpConnectionsUuids() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
-                ScanApiEndpoint.ENTITY_HTTP_CONNECTION_UUIDS, Json.object());
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
-            return response.getResult().asJsonList().stream()
-                    .map(Json::asString)
-                    .collect(Collectors.toList());
-        } else {
-            return null;
-        }
-    }
-
     /**
      * Get an {@link EntityHttpConnection} object from CSL-Scan from its uuid.
      *
@@ -723,7 +731,7 @@ public class ScanApiHandler extends ApiHandler  {
         try {
             Device device = Device.fromIpAddress(ipAddress);
             Connection connection = new HttpConnection(
-                    0,
+                    "0",
                     port,
                     List.of("0"),
                     "0",
@@ -758,7 +766,7 @@ public class ScanApiHandler extends ApiHandler  {
             EntityHttpConnection entityHttpConnection,
             String deviceId,
             Device device,
-            Integer connectionId) throws Exception {
+            String connectionId) throws Exception {
         Json requestBody = Json.object();
         if (entityHttpConnectionId != null) {
             requestBody.set("entityHttpConnectionId", entityHttpConnectionId);
@@ -874,243 +882,6 @@ public class ScanApiHandler extends ApiHandler  {
         JsonApiResponse response = sendGet(ScanApiEndpoint.DISCOVERY_CANCEL, Json.object());
         if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception(response.getError().getReason());
-        }
-    }
-
-    public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates() {
-        JsonApiResponse response = sendGet( ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, Json.object());
-        if (response.isSuccess()) {
-            return response.getResult().asJsonList().stream()
-                    .map(ExternalConnectionInfoTemplate::fromScannerJson)
-                    .collect(Collectors.toList());
-        } else {
-            return null;
-        }
-    }
-
-    public List<ExternalConnectionInfo> getExternalConnectionInfos(boolean includeDeleted) {
-        JsonApiResponse response = sendGet(ScanApiEndpoint.EXTERNAL_CONNECTION_INFOS, Json.object("includeDeleted", includeDeleted));
-        if (!response.isSuccess()) {
-            return null;
-        }
-        return response.getResult().asJsonList().stream()
-                .map(ExternalConnectionInfo::fromScannerJson)
-                .collect(Collectors.toList());
-    }
-
-    public JsonApiResponse createExternalConnectionInfo(ExternalConnectionInfo externalConnectionInfo) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.EXTERNAL_CONNECTION_INFOS, externalConnectionInfo.serializeForScanner());
-        if (!response.isSuccess()) {
-            Json errorDetails = response.getError().getDetails();
-            if (errorDetails.has("content")) {
-                Json errorContents = Json.read(response.getError().getDetails().get("content").asString());
-                errorDetails.set("content", errorContents);
-                return JsonApiResponse.error(response.getError().getReason(), errorDetails);
-            }
-        }
-        return response;
-    }
-
-    public JsonApiResponse updateExternalConnectionInfo(ExternalConnectionInfo externalConnectionInfo) {
-        String connectionUuid = externalConnectionInfo.getId();
-        if (connectionUuid == null) {
-            return JsonApiResponse.error("Connection UUID is null", Json.object());
-        }
-        JsonApiResponse response = sendPost( String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionUuid), externalConnectionInfo.serializeForScanner());
-        if (!response.isSuccess()) {
-            Json errorDetails = response.getError().getDetails();
-            if (errorDetails.has("content")) {
-                Json errorContents = Json.read(response.getError().getDetails().get("content").asString());
-                errorDetails.set("content", errorContents);
-                return JsonApiResponse.error(response.getError().getReason(), errorDetails);
-            }
-        }
-        return response;
-    }
-
-    public JsonApiResponse deleteExternalConnectionInfo(String connectionInfoId, boolean hardDelete) {
-        return sendDelete( String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionInfoId), Json.object("hardDelete", hardDelete));
-    }
-
-    public JsonApiResponse clearExternalConnectionInfos() {
-        return sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_CLEAR, Json.object());
-    }
-
-    public ExternalScan startExternalDiscoveryScan(String connectionInfoId) {
-        JsonApiResponse response = sendGet( String.format(ScanApiEndpoint.EXTERNAL_DISCOVERY_START_SCAN.endpoint(), connectionInfoId), Json.object());
-        if (response.isSuccess()) {
-            return ExternalScan.fromScannerJson(response.getResult());
-        } else {
-            return null;
-        }
-    }
-
-    public List<ExternalDiscoveredDevice> getExternalDiscoveredDevices(OffsetDateTime dateTime, Integer limit, Integer offset) {
-        Json requestParams = Json.object();
-        if (dateTime != null) {
-            requestParams.set("date", ScanUtils.localTimeToScan(dateTime).toString());
-        }
-        if (limit != null) {
-            requestParams.set("limit", limit);
-        }
-        if (offset != null) {
-            requestParams.set("skip", offset);
-        }
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES, requestParams);
-        if (response.isSuccess()) {
-            return response.getResult().asJsonList().stream()
-                    .map(ExternalDiscoveredDevice::fromScannerJson)
-                    .collect(Collectors.toList());
-        } else {
-            return null;
-        }
-    }
-
-    public List<ExternalDiscoveredDevice> getExternalDiscoveredDevices(OffsetDateTime dateTime) {
-        return getExternalDiscoveredDevices(dateTime, null, null);
-    }
-
-    public JsonApiResponse clearExternalDiscoveredDevices() {
-        return sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES_CLEAR, Json.object());
-    }
-
-    public ExternalScan getScanInfo(String uuid) {
-        logger.debug("Getting scan info for {}", uuid);
-        logger.warn("NOT IMPLEMENTED YET");
-        return null;
-    }
-
-    /**
-     * Start a new import task in CSL-Scan.
-     *
-     * @param bsonFilePath The path to the bson file to import.
-     * @return The status of the import task.
-     * @throws Exception If the request failed.
-     */
-    public ImportQuery importBsonFile(Path bsonFilePath, boolean shouldDrop) throws Exception {
-        String uri = url + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
-        Request request = httpClient.newRequest(uri);
-        request.param("drop", String.valueOf(shouldDrop));
-        request.method(HttpMethod.POST);
-        MultiPartContentProvider multiPart = new MultiPartContentProvider();
-        try {
-            multiPart.addFilePart("file", bsonFilePath.getFileName().toString(), new PathContentProvider(bsonFilePath), null);
-        } catch (IOException e) {
-            logger.error("Could not add bson file to multipart content provider", e);
-            return null;
-        }
-        multiPart.close();
-        request.content(multiPart);
-        try {
-            ContentResponse contentResponse = request.send();
-            if (contentResponse.getStatus() >= 400) {
-                logger.warn("Error while sending request to CSL-Scan: {}", contentResponse.getContentAsString());
-                throw new Exception("Error while sending request to CSL-Scan: unexpected status code " + contentResponse.getStatus());
-            }
-//            return UUID.fromString(contentResponse.getContentAsString().replace("\"", ""));
-            return ImportQuery.fromScannerJson(Json.read(contentResponse.getContentAsString()));
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            logger.error("Error while sending request to CSL-Scan", e);
-            throw new Exception("Error while sending request to CSL-Scan", e);
-        } catch (IllegalArgumentException e) {
-            logger.error("Error while parsing the import id", e);
-            throw new Exception("Error while parsing the import id", e);
-        }
-    }
-
-    /**
-     * Request the export of the http templates from the scanner.
-     *
-     * @return The export query.
-     * @throws Exception If the request failed.
-     */
-    public ExportQuery requestExportHttpTemplates() throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON, Json.object());
-        if (response.isSuccess()) {
-            return ExportQuery.fromScannerJson(response.getResult());
-        } else {
-            throw new Exception("Could not request the export of the http templates");
-        }
-    }
-
-    /**
-     * Get the status of an export query.
-     *
-     * @param uuid The uuid of the export query.
-     * @return The new export query.
-     */
-    public ExportQuery getExportQueryStatus(UUID uuid) {
-        JsonApiResponse response = sendGet( String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
-        if (response.isSuccess()) {
-            return ExportQuery.fromScannerJson(response.getResult());
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Get the status of an export query.
-     *
-     * @param exportQuery The export query to get the status of.
-     * @return The new export query.
-     */
-    public ExportQuery getExportQueryStatus(ExportQuery exportQuery) {
-        return getExportQueryStatus(exportQuery.getId());
-    }
-
-    public void deleteExportFile(UUID uuid) {
-        sendDelete( String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DELETE.endpoint(), uuid.toString()), Json.object());
-    }
-
-    public void deleteExportFile(ExportQuery exportQuery) {
-        deleteExportFile(exportQuery.getId());
-    }
-
-    public Path downloadExportFile(ExportQuery exportQuery) throws ExecutionException, InterruptedException, TimeoutException {
-        URI uri = URI.create(url + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
-        Request request = httpClient.newRequest(uri);
-        InputStreamResponseListener listener = new InputStreamResponseListener();
-        request.send(listener);
-        Response response = listener.get(30, TimeUnit.SECONDS);
-        if (response.getStatus() == 200) {
-            try {
-                return fileStorageService.saveFile(listener.getInputStream(), exportQuery.getFilename());
-            } catch (IOException e) {
-                logger.error("Could not save the export file");
-                logger.debug("Could not save the export file", e);
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    public List<EntityHttpConnection> getEntityHttpConnectionsToSync() {
-        JsonApiResponse response = sendGet(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_GET_SYNC_NEEDED, Json.object());
-        if (response.isSuccess()) {
-            return response.getResult().asJsonList().stream()
-                    .map(EntityHttpConnection::fromScannerJson)
-                    .collect(Collectors.toList());
-        } else {
-            return List.of();
-        }
-    }
-
-    public void notifyEntityHttpConnectionSynchronized(List<EntityHttpConnection> entityHttpConnections) {
-        Json body = Json.array(entityHttpConnections.stream().map(EntityHttpConnection::getUuid).toArray());
-        sendPost( ScanApiEndpoint.ENTITY_HTTP_CONNECTION_SET_SYNC_NEEDED, body);
-    }
-
-    public ImportQuery importBsonFile(Path bsonFilePath) throws Exception {
-        return importBsonFile(bsonFilePath, false);
-    }
-
-    public ImportQuery getImportTaskStatus(UUID uuid) {
-        JsonApiResponse response = sendGet( String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
-        if (response.isSuccess()) {
-            return ImportQuery.fromScannerJson(response.getResult());
-        } else {
-            return null;
         }
     }
 }

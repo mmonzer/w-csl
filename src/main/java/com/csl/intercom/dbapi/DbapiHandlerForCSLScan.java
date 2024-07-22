@@ -520,11 +520,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws InterruptedException If the connection with DB-API was interrupted.
      * @throws TimeoutException     If the connection with DB-API times out.
      */
-    public List<Connection> fetchConnections(List<Integer> ids, List<ConnectionProtocol> protocols) throws ExecutionException, InterruptedException, TimeoutException {
+    public List<Connection> fetchConnections(List<String> ids, List<ConnectionProtocol> protocols) throws ExecutionException, InterruptedException, TimeoutException {
         List<Connection> connections = new ArrayList<>();
-        for (int id : ids) {
+        for (String id : ids) {
             Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS);
-            request.param("id", String.valueOf(id));
+            request.param("id", id);
             Json response = Json.read(request.send().getContentAsString());
             Connection connection;
             if (response.isArray()) {
@@ -538,6 +538,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
         return connections;
     }
+
 
     /**
      * Fetch the list discovery protocols from DB-API.
@@ -986,6 +987,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             throw new Exception("Could not push the entity " + newDevice.getId() + " to CSL-Scan.");
         }
     }
+    public void sendConnections(List<Connection> items) {
+        logger.error("Sending connections to DB-API is not implemented yet.");
+    }
 
     /**
      * Handle the changes in the devices on DB-API.
@@ -1054,11 +1058,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      */
     private List<Device> buildNewDevices(List<Device> devices, List<Connection> connections, List<ConnectionProtocol> protocols) {
         //region List the uuids we have in both list
-        List<Integer> connectionUuidsInDevices = new ArrayList<>();
+        List<String> connectionUuidsInDevices = new ArrayList<>();
         List<String> deviceUuidsInConnections = new ArrayList<>();
 
         for (Device device : devices) {
-            List<Integer> connectionsIds = device.getConnectionsIds();
+            List<String> connectionsIds = device.getConnectionsIds();
             connectionUuidsInDevices.addAll(connectionsIds);
         }
         for (Connection connection : connections) {
@@ -1067,10 +1071,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         //endregion List the uuids we have in both list
 
         //region Check for the ones missing on one side or the other
-        List<Integer> connectionsToGet = new ArrayList<>();
+        List<String> connectionsToGet = new ArrayList<>();
         List<String> devicesToGet = new ArrayList<>();
 
-        for (int connectionId : connectionUuidsInDevices) {
+        for (String connectionId : connectionUuidsInDevices) {
             if (DbapiUtilsForCSLScan.getConnectionById(connections, connectionId) == null) {
                 connectionsToGet.add(connectionId);
             }

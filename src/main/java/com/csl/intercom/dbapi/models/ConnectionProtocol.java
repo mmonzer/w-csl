@@ -3,9 +3,11 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConnectionProtocol {
     @Getter
@@ -102,4 +104,28 @@ public class ConnectionProtocol {
     public static ConnectionProtocol getProtocolById(List<ConnectionProtocol> protocols, int id) {
         return protocols.stream().filter(p -> p != null && p.id == id).findFirst().orElse(null);
     }
+    public static ConnectionProtocol getProtocolFromScanConnectionJson(List<ConnectionProtocol> protocols, Json connectionJson) {
+        StaticConnectionProtocol staticConnectionProtocol;
+        if (connectionJson.has("queryProtocol") && connectionJson.get("queryProtocol").isString()) {
+            staticConnectionProtocol = StaticConnectionProtocol.fromScanName(connectionJson.get("queryProtocol").asString());
+            if (staticConnectionProtocol == null) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+        List<ConnectionProtocol> possibleProtocols = protocols.stream()
+                .filter(p -> p.staticConnectionProtocol == staticConnectionProtocol)
+                .collect(Collectors.toList());
+        if (possibleProtocols.size() == 1) {
+            return possibleProtocols.get(0);
+        } else {
+            String connectionTemplateId = JsonUtil.getStringFromJson(connectionJson, "connectionTemplateId", null);
+            return possibleProtocols.stream()
+                    .filter(p -> p.connectionTemplateId.equals(connectionTemplateId))
+                    .findFirst()
+                    .orElse(null);
+        }
+    }
+
 }

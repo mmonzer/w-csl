@@ -45,14 +45,15 @@ public class DbapiUtilsForCSLScan {
      * @param id The id we seek.
      * @return The connection with the corresponding id if any, null otherwise.
      */
-    public static Connection getConnectionById(List<Connection> connections, int id) {
+    public static Connection getConnectionById(List<Connection> connections, String id) {
         for (Connection connection: connections) {
-            if (connection.getId() == id) {
+            if (connection.getId().equals(id)) {
                 return connection;
             }
         }
         return null;
     }
+
 
     public static Device getDeviceById(List<Device> devices, String id) {
         for (Device device: devices) {

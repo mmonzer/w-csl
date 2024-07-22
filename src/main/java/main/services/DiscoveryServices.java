@@ -639,6 +639,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         .setStatus(IJsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
+        addCmd("get_list_of_allowed_libraries_in_http_templates", params -> scanApiHandler.getInstalledNpmPackages().toJson(),
+                new JsonCmdHelp().setDesc("Get the list of installed NPM packages")
+                        .setResult("The list of installed NPM packages, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
+        );
         addCmd("test_http_template", params -> {
 //                region -- Get Body params from the request
                     String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);

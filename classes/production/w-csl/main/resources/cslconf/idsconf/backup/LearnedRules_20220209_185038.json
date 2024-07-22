@@ -1,0 +1,13 @@
+{
+"id":"ID-2022-02-09-18-50-29-835", 
+"iplist":[
+{"ip":"10.0.208.11","name":"","macs":["00:0c:29:78:0b:e9"],"likelihood":"UNDEF","severity":"UNDEF","country":"Local network"},
+{"ip":"10.0.208.115","name":"","macs":["b8:a4:4f:00:4d:ee"],"likelihood":"UNDEF","severity":"UNDEF","country":"Local network"}
+],
+"flows":[
+{"ip":"10.0.208.11","name":"","links":[
+  {"likelihood":"UNDEF","severity":"UNDEF","protocol":"TCP","app_protocol":"","port_src":5938,"ip_dst":"10.0.208.115","port_dst":-1,"size":0,"packets":1,"maxKBpersec":0,"maxpktpersec":0,"first_time":1623325833114,"last_time":1623325833114}] }
+],
+"dpi":[
+]
+}

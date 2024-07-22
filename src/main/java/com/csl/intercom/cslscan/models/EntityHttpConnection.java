@@ -5,7 +5,6 @@ import com.csl.interfaces.models.IDbapiSerializable;
 import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,17 +16,12 @@ import java.util.stream.Collectors;
 
 public class EntityHttpConnection implements IScannerSerializable, IDbapiSerializable {
     private static final Logger logger = LoggerFactory.getLogger(EntityHttpConnection.class);
-
-    @Getter
     private String uuid;
-
-    @Getter
     private String name;
     private Map<String, HttpApiVariable> variables;
-
-    @Getter
     private List<EntityHttpConnectionStage> stages;
     private List<EntityHttpConnectionInput> inputs;
+    private List<String> vendors;
 
     public Json serializeForScanner() {
         Json stagesSerialized = this.stages.stream()
@@ -42,12 +36,14 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
             this.inputs.forEach(input -> inputsSerialized.add(input.serializeForScanner()));
         }
 
+
         return Json.object(
                 EntityHttpConnectionField.UUID.scanName(), uuid,
                 EntityHttpConnectionField.NAME.scanName(), name,
                 EntityHttpConnectionField.VARIABLES.scanName(), variablesSerialized,
                 EntityHttpConnectionField.INPUTS.scanName(), inputsSerialized,
-                EntityHttpConnectionField.STAGES.scanName(), stagesSerialized
+                EntityHttpConnectionField.STAGES.scanName(), stagesSerialized,
+                "vendors", vendors // TODO: USE ENUM FOR VENDORS
         );
     }
 
@@ -69,7 +65,8 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 EntityHttpConnectionField.NAME.dbapiName(), name,
                 EntityHttpConnectionField.VARIABLES.dbapiName(), variablesSerialized,
                 EntityHttpConnectionField.INPUTS.dbapiName(), inputsSerialized,
-                EntityHttpConnectionField.STAGES.dbapiName(), stagesSerialized
+                EntityHttpConnectionField.STAGES.dbapiName(), stagesSerialized,
+                "vendors", vendors // TODO: USE ENUM FOR VENDORS
         );
     }
 
@@ -91,6 +88,11 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                         .collect(Collectors.toMap(Map.Entry::getKey, jsonEntry -> HttpApiVariable.fromDbapiJson(jsonEntry.getValue())));
             } else {
                 entityHttpConnection.variables = new HashMap<>();
+            }
+            if (json.has("vendors") && json.get("vendors").isArray()) {
+                entityHttpConnection.vendors = json.get("vendors").asJsonList().stream()
+                        .map(Json::asString)
+                        .collect(Collectors.toList());
             }
             return entityHttpConnection;
         } catch (Throwable e) {
@@ -118,6 +120,11 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
             } else {
                 entityHttpConnection.variables = new HashMap<>();
             }
+            if (json.has("vendors") && json.get("vendors").isArray()) {
+                entityHttpConnection.vendors = json.get("vendors").asJsonList().stream()
+                        .map(Json::asString)
+                        .collect(Collectors.toList());
+            }
             return entityHttpConnection;
         } catch (Throwable e) {
             logger.warn("Failed to parse EntityHttpConnection from scanner json", e);
@@ -137,6 +144,18 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         }
         this.stages.add(stage);
         return this;
+    }
+
+    public List<EntityHttpConnectionStage> getStages() {
+        return stages;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public enum Part {

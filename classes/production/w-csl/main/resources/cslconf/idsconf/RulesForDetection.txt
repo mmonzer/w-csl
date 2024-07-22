@@ -1,0 +1,67 @@
+
+#	detect				periodic:duree   init
+#
+#alert
+#	msg:
+#	facility
+#	severity
+#compute
+#	exp:"	"  block to compute in the variable table
+#schedule
+#	delay:
+# 	rule_name:
+#activate:
+#	rule_name  (the rule name are arbo  , possible to say 12.*)
+# desactivate
+#	rule_name
+##
+# protocol
+#	tcp
+#	sysstate
+#
+# options
+#	those for each command (see above) plus :
+#		init:true|false	 (default false, activate it for the first cycle
+#		periodic: 10  (in ms)
+#		cond:" "  exp to check on the var table
+#		dpi:
+#
+#
+#Examples
+#
+#	 alert tcp any -> 192.168.1.12 (cond:"x>5";msg:"ca marche";severity:1)
+#
+#
+#
+#  VARIABLES  
+#	$EXTERNAL_IP
+0000 pass 192.168.0.1 -> any (msg:"all ok to 192.168.1.1")
+000 compute evt (exp:"x<-1000")
+001 alert evt (msg:"alert suricata $msg $code $category $severity";tap:"tap0001")
+# signature : #code msg
+00 alert  $set2 any -> 192.168.1.65/24 (msg:"set2 found "; activate_on_start:true;)
+01 alert  !$set2 any -> 192.168.1.65/24 (msg:"not in set2 "; activate_on_start:true;)
+
+#03 alert  any -> 192.168.1.65/24 (msg:"warning rule 1 "; activate_on_start:false;)
+04 alert  any -> [192.168.1.65, 192.168.1.60] [502,23] (msg:"rule n°111 "; activate_on_start:false;)
+05 alert tcp any -> 192.168.1.12 (msg:"test";dpi:"modbus")
+#06 compute sysstate (exp:"x<-x+1";activate_on_start:true)
+07 compute sysstate (exp:"x<-x+1";activate_on_start:true;periodic:5000)
+08 compute sysstate (exp:"y<-y+10")
+32 schedule sysstate (schedule_mode:"once"; rule_name:"08"; delay:2000;activate_on_start:true;periodic:5000)
+
+#33 alert sysstate (cond:"(x==12)";msg:"variable x=340 (no relation with poc)"; activate_on_start:true)
+#44 alert any -> any (dpi:"modbus;fct==6;";msg:"modbus fct 6"; activate_on_start:true)
+
+#3 alert tcp $HOME_NET34  -> 205.123.1.1  (dpi:"modbus;fct == 5", possibility="5")
+#8 alert tcp $HOME_NET  -> 205.123.1.1  (dpi:"unknown; fct !=0")
+#10 alert sysstate (cond:"x!=1";activate_on_start:true;periodic:10;delay:10;rule_name:12.1;props:"essai=45;x=1";severity:GRAVE;msg:"ca marche ${x}  ${x|%.4f}")
+#11 alert tcp any [80,7] <- $HOME_NET ()
+#12 alert tcp ![192.168.1.0/24,10.1.1.0/24] any-> any 80
+#13 compute sysstate (exp:"{x<-x+1}";activate_on_start:false;)
+#14 schedule sysstate (delay:"5000";rule_name:"13";schedule_mode:"once";activate_on_start:true;periodic:10000)
+15 alert tcp any -> any (msg:"bug";severity:SEVERE;dpi:"modbus; fct in[1,5]; addr !in 10:123; value in 10";activate_on_start:true;)
+16 alert tcp any -> any (msg:"r16";dpi:"modbus; fct==5; addr in 10:123; value in 10")
+17 setrisk tcp any -> any 443 (level:"4";severity:"1")
+#18 alert sysstate (cond:"(temp_vissage<1)";activate_on_start:true;periodic:10;delay:1;rule_name:12.1;severity:SEVERE;msg:"Attaque en cours")
+28 alert tcp any -> any (msg:"Communication Modbus incorrecte (Valeurs incorrectes par rapport à la spécification)";dpi:"modbus; fct==6; addr in [0,1]; value !in [1,10]")

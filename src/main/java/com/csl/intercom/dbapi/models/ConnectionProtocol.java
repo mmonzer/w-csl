@@ -44,7 +44,9 @@ public class ConnectionProtocol {
     public boolean isDynamic() {
         return isDynamic;
     }
-
+    public int getId() {
+        return id;
+    }
     /**
      * Parse the JSON serialization received from DB-API.
      *

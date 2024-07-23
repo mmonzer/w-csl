@@ -42,6 +42,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
+
 /**
  * Manage HTTP communications with DB-API.
  * Provides an interface for retrieving the devices, connections and so on,
@@ -554,6 +556,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 .map(ConnectionProtocol::fromJson)
                 .collect(Collectors.toList());
     }
+    public ConnectionProtocol fetchDiscoveryProtocol(String protocolName) throws ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOL_DETAILS_BY_NAME);
+        request.param("name", protocolName);
+        Json response = Json.read(request.send().getContentAsString());
+        return ConnectionProtocol.fromJson(response);
+    }
 
     /**
      * Create a discovery protocol in DB-API. Used when updating an HTTP template.
@@ -990,7 +998,85 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public void sendConnections(List<Connection> items) {
         logger.error("Sending connections to DB-API is not implemented yet.");
     }
+    public int getConnectionPortNumberFromConnection(Connection connection) {
+        int port = 0;
+        if (connection.getProtocol() == SNMPv1){
+            port = ((SNMPv1Connection) connection).getPort();
+        } else if (connection.getProtocol() == SNMPv2c){
+            port = ((SNMPv2cConnection) connection).getPort();
+        }  else if (connection.getProtocol() == SNMPv3){
+            port = ((SNMPv3Connection) connection).getPort();
+        } else if (connection.getProtocol() == SSH){
+            port = ((SshConnection) connection).getPort();
+        } else if (connection.getProtocol() == RemotePowershell){
+            port = ((RemotePowershellConnection) connection).getPort();
+        }
+        return port;
+    }
+    public Json getConnectionOtherData(Connection connection) {
+        Json otherData = Json.object();
+        if (connection.getProtocol() == SNMPv1){
+            String community = ((SNMPv1Connection) connection).getCommunity();
+            otherData.set("snmp_community", community);
+            return otherData;
+        } else if (connection.getProtocol() == SNMPv2c) {
+            String community = ((SNMPv2cConnection) connection).getCommunity();
+            otherData.set("snmp_community", community);
+            return otherData;
+        } else if (connection.getProtocol() == SNMPv3) {
+            String snmpPrivacyAlgorithm = String.valueOf(((SNMPv3Connection) connection).getPrivacyAlgorithm());
+            String snmpAuthAlgorithm = String.valueOf(((SNMPv3Connection) connection).getAuthenticationAlgorithm());
+            otherData.set("snmp_privacy_algorithm", snmpPrivacyAlgorithm);
+            otherData.set("snmp_authentication_algorithm", snmpAuthAlgorithm);
+        } else if (connection.getProtocol() == SSH) {
+            // TODO: remove them --> to be saved in vault
+            String sshKey = ((SshConnection) connection).getPrivateKey();
+            String passPhrase = ((SshConnection) connection).getPassphrase();
+            otherData.set("ssh_key", sshKey);
+            otherData.set("passphrase", passPhrase);
+        }
+        else {
+            return otherData;
+        }
+        return otherData;
+    }
+    public void createConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException {
+        logger.error("Creating connections in DB-API is not implemented yet.");
+        String name = connection.getName();
+        int portNumber = getConnectionPortNumberFromConnection(connection);
+        Json requestContents = Json.object(
+                "name", name,
+                "discovery_protocol_name", connection.getProtocol().dbapiName(),
+                "port_number", portNumber,
+                "mongo_entity_id", connection.getUuid(),
+                "other_data", getConnectionOtherData(connection)
+        );
+        if (connection.getProtocol() == SNMPv3 || connection.getProtocol() == RemotePowershell || connection.getProtocol() == SSH) {
+            requestContents.set("username", ((SNMPv3Connection) connection).getUsername());
+        }
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CONNECTIONS)
+                .content(new StringContentProvider(requestContents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 201) {
+                logger.error("Could not create connection in DB-API. Got status code " + response.getStatus());
+            } else if (response.getStatus() == 201) {
+                logger.info("Connection created in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not create connection in DB-API.", e);
+        }
 
+    }
+
+    public void deleteConnection(String connectionUuid) throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {
+        Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpointForCSLScan.DELETE_CONNECTION_BY_MONGO_ID.getEndpoint())).param("mongo_entity_id", connectionUuid);
+        ContentResponse response = request.send();
+        if (response.getStatus() >= 400) {
+            throw new DbapiUnexpectedStatusCodeException("Could not delete connection.", response.getStatus());
+        }
+
+    }
     /**
      * Handle the changes in the devices on DB-API.
      *

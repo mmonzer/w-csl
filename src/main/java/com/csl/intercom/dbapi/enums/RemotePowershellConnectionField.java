@@ -3,7 +3,7 @@ package com.csl.intercom.dbapi.enums;
 public enum RemotePowershellConnectionField {
     PORT("port_number", "port"),
     USERNAME("username", "username"),
-    PASSWORD("read_only_password", "password"),
+    PASSWORD("password", "password"),
     ;
 
     private final String dbapiName;

@@ -39,6 +39,12 @@ public enum DiscoveryEndpoints implements Endpoint {
                     .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                             "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                     .setStatus(IJsonCmdHelp.STATUS_OK)),
+    DELETE_CONNECTION("delete_connection",
+            new JsonCmdHelp().setDesc("Delete a connection from CSL-Scan")
+                    .setParam("id", "The uuid of the connection to delete", IJsonCmdHelp.STR)
+                    .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                            "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                    .setStatus(IJsonCmdHelp.STATUS_OK)),
 
     GET_ALL_CPES("get_all_cpes",
             new JsonCmdHelp().setDesc("Get the CPE Items in CSL-Scan")

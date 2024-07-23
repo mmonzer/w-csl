@@ -14,6 +14,7 @@ import java.util.List;
  * Model to represent a SNMPv3 connection.
  */
 public class SNMPv3Connection extends Connection {
+    @Getter
     private final int port;
     @Getter
     private final String username;
@@ -21,12 +22,27 @@ public class SNMPv3Connection extends Connection {
     private final String password;
     @Getter
     private final String passphrase;
+    @Getter
     private final SNMPv3AuhtenticationAlgorithm authenticationAlgorithm;
+    @Getter
     private final SNMPv3PrivacyAlgorithm privacyAlgorithm;
     private final String securityLevel;
 
     protected SNMPv3Connection(String id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm, Boolean isSimulated) {
         super(id, devices, StaticConnectionProtocol.SNMPv3, isSimulated);
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.passphrase = passphrase;
+        this.authenticationAlgorithm = authenticationAlgorithm;
+        this.privacyAlgorithm = privacyAlgorithm;
+
+        String authString = this.authenticationAlgorithm == null ? "noAuth" : "auth";
+        String privString = this.privacyAlgorithm == null ? "NoPriv" : "Priv";
+        this.securityLevel = authString + privString;
+    }
+    protected SNMPv3Connection(String name, String id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm, Boolean isSimulated) {
+        super(name, id, devices, StaticConnectionProtocol.SNMPv3);
         this.port = port;
         this.username = username;
         this.password = password;
@@ -47,14 +63,19 @@ public class SNMPv3Connection extends Connection {
      */
     public static SNMPv3Connection fromJson(Json connectionJson) {
         try {
-            String id = String.valueOf(connectionJson.get("id").asInteger());
+            String uuid;
+            if (connectionJson.has("uuid")) {
+                uuid = connectionJson.get("uuid").asString();
+            } else {
+                uuid = null;
+            }
             int port = connectionJson.get(SNMPv3ConnectionField.PORT.dbapiName()).asInteger();
             String username = connectionJson.get(SNMPv3ConnectionField.USERNAME.dbapiName()).asString();
             String password = null;
             if (connectionJson.has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
                 password = connectionJson.get(SNMPv3ConnectionField.PASSWORD.dbapiName()).asString();
             }
-            Json otherData = connectionJson.get("read_only_other_data");
+            Json otherData = connectionJson.get("other_data");
             String passphrase = null;
             if (otherData.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
                 passphrase = otherData.get(SNMPv3ConnectionField.PASSPHRASE.dbapiName()).asString();
@@ -66,9 +87,14 @@ public class SNMPv3Connection extends Connection {
             for (Json device : connectionJson.get("connected_devices").asJsonList()) {
                 devices.add(device.asString());
             }
-            Boolean isSimulated = connectionJson.get("is_simulated").asBoolean();
 
-            return new SNMPv3Connection(id, port, devices, username, password, passphrase, authenticationAlgo, privacyAlgo, isSimulated);
+            Boolean isSimulated = false;
+            if (connectionJson.has("is_simulated")) {
+                isSimulated = connectionJson.get("is_simulated").asBoolean();
+            }
+
+            String name = connectionJson.get("name").asString();
+            return new SNMPv3Connection(name, uuid, port, devices, username, password, passphrase, authenticationAlgo, privacyAlgo, isSimulated);
         } catch (Throwable e) {
             return null;
         }
@@ -86,8 +112,8 @@ public class SNMPv3Connection extends Connection {
             String passphrase = connectionJson.get(SNMPv3ConnectionField.PASSPHRASE.scanName()).asString();
             SNMPv3AuhtenticationAlgorithm authenticationAlgo = SNMPv3AuhtenticationAlgorithm.fromScanName(connectionJson.get(SNMPv3ConnectionField.AUTHENTICATION_ALGORITHM.scanName()).asString());
             SNMPv3PrivacyAlgorithm privacyAlgo = SNMPv3PrivacyAlgorithm.fromScanName(connectionJson.get(SNMPv3ConnectionField.PRIVACY_ALGORITHM.scanName()).asString());
-
-            return new SNMPv3Connection(uuid, port, null, username, password, passphrase, authenticationAlgo, privacyAlgo, false);
+            String name = connectionJson.get("name").asString();
+            return new SNMPv3Connection(name, uuid, port, null, username, password, passphrase, authenticationAlgo, privacyAlgo, false);
         } catch (Throwable e) {
             return null;
         }

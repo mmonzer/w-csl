@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class SshConnection extends Connection {
+    @Getter
     private final int port;
     private final String username;
     @Getter
@@ -20,6 +21,15 @@ public class SshConnection extends Connection {
 
     protected SshConnection(String id, int port, List<String> devices, String username, String password, String privateKey, String passphrase) {
         super(id, devices, StaticConnectionProtocol.SSH);
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.privateKey = privateKey;
+        this.passphrase = passphrase;
+    }
+
+    protected SshConnection(String name, String id, int port, List<String> devices, String username, String password, String privateKey, String passphrase) {
+        super(name, id, devices, StaticConnectionProtocol.SSH);
         this.port = port;
         this.username = username;
         this.password = password;
@@ -57,7 +67,7 @@ public class SshConnection extends Connection {
             password = connectionJson.get(SshConnectionField.PASSWORD.dbapiName()).asString();
         }
 
-        Json otherData = connectionJson.get("read_only_other_data");
+        Json otherData = connectionJson.get("other_data");
 
         String privateKey = "";
         if (otherData.has(SshConnectionField.PRIVATE_KEY.dbapiName()) && otherData.get(SshConnectionField.PRIVATE_KEY.dbapiName()).isString()) {
@@ -68,8 +78,8 @@ public class SshConnection extends Connection {
         if (otherData.has(SshConnectionField.PASSPHRASE.dbapiName()) && otherData.get(SshConnectionField.PASSPHRASE.dbapiName()).isString()) {
             passphrase = otherData.get(SshConnectionField.PASSPHRASE.dbapiName()).asString();
         }
-
-        return new SshConnection(id, port, devices, username, password, privateKey, passphrase);
+        String name = connectionJson.get("name").asString();
+        return new SshConnection(name, id, port, devices, username, password, privateKey, passphrase);
     }
 
     public static SshConnection fromScannerJson(Json connectionJson) {
@@ -104,8 +114,8 @@ public class SshConnection extends Connection {
         if (connectionJson.has(SshConnectionField.PASSPHRASE.scanName()) && connectionJson.get(SshConnectionField.PASSPHRASE.scanName()).isString()) {
             passphrase = connectionJson.get(SshConnectionField.PASSPHRASE.scanName()).asString();
         }
-
-        return new SshConnection(uuid, port, null, username, password, privateKey, passphrase);
+        String name = connectionJson.get("name").asString();
+        return new SshConnection(name, uuid, port, null, username, password, privateKey, passphrase);
     }
 
     @Override

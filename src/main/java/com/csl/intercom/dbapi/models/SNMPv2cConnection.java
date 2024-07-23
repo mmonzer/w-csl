@@ -19,7 +19,14 @@ public class SNMPv2cConnection extends Connection {
         this.port = port;
         this.community = community;
     }
-
+    protected SNMPv2cConnection(String name, String id, int port, List<String> devices, String community) {
+        super(name, id, devices, StaticConnectionProtocol.SNMPv2c);
+        this.port = port;
+        this.community = community;
+    }
+    public int getPort() {
+        return port;
+    }
     /**
      * Parse the JSON serialization received from DB-API.
      *
@@ -28,15 +35,20 @@ public class SNMPv2cConnection extends Connection {
      */
     public static SNMPv2cConnection fromJson(Json connectionJson) {
         try {
-            String id = connectionJson.get("id").asString();
+            String uuid;
+            if (connectionJson.has("uuid")) {
+                uuid = connectionJson.get("uuid").asString();
+            } else {
+                uuid = null;
+            }
             int port = connectionJson.get(SNMPv2cConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices = new ArrayList<>();
             for (Json device: connectionJson.get("connected_devices").asJsonList()) {
                 devices.add(device.asString());
             }
-            String community = connectionJson.get("read_only_other_data").get(SNMPv2cConnectionField.COMMUNITY.dbapiName()).asString();
-
-            return new SNMPv2cConnection(id, port, devices, community);
+            String community = connectionJson.get("other_data").get(SNMPv2cConnectionField.COMMUNITY.dbapiName()).asString();
+            String name = connectionJson.get("name").asString();
+            return new SNMPv2cConnection(name, uuid, port, devices, community);
         } catch (NullPointerException e) {
             return null;
         }
@@ -49,8 +61,8 @@ public class SNMPv2cConnection extends Connection {
             }
             int port = connectionJson.get(SNMPv2cConnectionField.PORT.scanName()).asInteger();
             String community = connectionJson.get(SNMPv2cConnectionField.COMMUNITY.scanName()).asString();
-
-            return new SNMPv2cConnection(uuid, port, null, community);
+            String name = connectionJson.get("name").asString();
+            return new SNMPv2cConnection(name, uuid, port, null, community);
         } catch (NullPointerException e) {
             return null;
         }

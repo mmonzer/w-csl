@@ -1034,9 +1034,56 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             JsonApiResponse response;
             try {
                 response = scanApiHandler.addConnectionInfo(connection);
+                if (response.isSuccess()) {
+                    // add connection info to dbapi
+                    try {
+                        String connectionUuid = response.getResult().get("uuid").asString();
+                        connection.setUuid(connectionUuid);
+                        dbapiHandler.createConnection(connection);
+                    } catch (Exception e) {
+                        logger.error("Could not add connection info to dbapi", e);
+                        // remove connection info from scan
+                        scanApiHandler.deleteEntity(connection.getUuid());
+                        return JsonApiResponse.error("Could not add connection info to dbapi",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+
+                } else {
+                    logger.error("Could not add connection info, {}", response.getError().toString());
+                }
             } catch (Exception e) {
                 logger.error("Could not add connection info", e);
                 response = JsonApiResponse.error("Could not add connection info",
+                        Json.object("exception", e.getMessage())
+                );
+            }
+            return response.toJson();
+        });
+
+        addCmd(DiscoveryEndpoints.DELETE_CONNECTION, params -> {
+            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
+            if (connectionUuid == null) {
+                return JsonApiResponse.error("Missing required parameter connection_uuid",
+                        Json.object("exception", "Missing parameter connection_uuid")
+                ).toJson();
+            }
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.deleteConnectionInfo(connectionUuid);
+                if (response.isSuccess()) {
+                    // delete connection info from dbapi
+                    try {
+                        dbapiHandler.deleteConnection(connectionUuid);
+                    } catch (Exception e) {
+                        logger.error("Could not delete connection info from dbapi", e);
+                    }
+                } else {
+                    logger.error("Could not delete connection info, {}", response.getError().toString());
+                }
+            } catch (Exception e) {
+                logger.error("Could not delete connection info", e);
+                response = JsonApiResponse.error("Could not delete connection info",
                         Json.object("exception", e.getMessage())
                 );
             }

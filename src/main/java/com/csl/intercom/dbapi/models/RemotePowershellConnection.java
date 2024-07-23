@@ -20,18 +20,29 @@ public class RemotePowershellConnection extends Connection {
         this.username = username;
         this.password = password;
     }
+    protected RemotePowershellConnection(String name, String id, int port, List<String> devices, String username, String password) {
+        super(name, id, devices, StaticConnectionProtocol.RemotePowershell);
+        this.port = port;
+        this.username = username;
+        this.password = password;
+    }
 
     public static RemotePowershellConnection fromJson(Json connectionJson) {
         try {
-            String id = String.valueOf(connectionJson.get("id").asInteger());
+            String uuid;
+            if (connectionJson.has("uuid")) {
+                uuid = connectionJson.get("uuid").asString();
+            } else {
+                uuid = null;
+            }
             int port = connectionJson.get(RemotePowershellConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices = connectionJson.get("connected_devices").asJsonList().stream()
                     .map(Json::asString)
                     .collect(Collectors.toList());
             String username = connectionJson.get(RemotePowershellConnectionField.USERNAME.dbapiName()).asString();
             String password = connectionJson.get(RemotePowershellConnectionField.PASSWORD.dbapiName()).asString();
-
-            return new RemotePowershellConnection(id, port, devices, username, password);
+            String name = connectionJson.get("name").asString();
+            return new RemotePowershellConnection(uuid, port, devices, username, password);
         } catch (NullPointerException | UnsupportedOperationException e) {
             return null;
         }
@@ -39,7 +50,12 @@ public class RemotePowershellConnection extends Connection {
 
     public static RemotePowershellConnection fromHMIJson(Json connectionJson) {
         try {
-            String uuid = connectionJson.get("uuid").asString();
+            String uuid;
+            if (connectionJson.has("uuid")) {
+                uuid = connectionJson.get("uuid").asString();
+            } else {
+                uuid = null;
+            }
             int port = connectionJson.get(RemotePowershellConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices;
             if (connectionJson.has("connected_devices") && connectionJson.get("connected_devices").isArray()) {
@@ -51,8 +67,8 @@ public class RemotePowershellConnection extends Connection {
             }
             String username = connectionJson.get(RemotePowershellConnectionField.USERNAME.dbapiName()).asString();
             String password = connectionJson.get(RemotePowershellConnectionField.PASSWORD.dbapiName()).asString();
-
-            return new RemotePowershellConnection(uuid, port, devices, username, password);
+            String name = connectionJson.get("name").asString();
+            return new RemotePowershellConnection(name, uuid, port, devices, username, password);
         } catch (NullPointerException | UnsupportedOperationException e) {
             return null;
         }
@@ -66,8 +82,8 @@ public class RemotePowershellConnection extends Connection {
             }
             int port = connectionJson.get(RemotePowershellConnectionField.PORT.scanName()).asInteger();
             String username = connectionJson.get(RemotePowershellConnectionField.USERNAME.scanName()).asString();
-
-            return new RemotePowershellConnection(uuid, port, null, username, null);
+            String name = connectionJson.get("name").asString();
+            return new RemotePowershellConnection(name, uuid, port, null, username, null);
         } catch (NullPointerException e) {
             return null;
         }

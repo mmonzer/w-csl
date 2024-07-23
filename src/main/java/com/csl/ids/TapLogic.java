@@ -740,7 +740,7 @@ public class TapLogic {
      */
     public TapLogic(String name, String description, String configFileSectionName) {
         //super(name, description, configFileSectionName);
-        apiHandler = new ApiHandler("CSL-Tap","http://localhost:8888");
+        apiHandler = new ApiHandler("CSL-Tap","localhost",8888, false);
     }
 
     public String getTapName(Json j) {

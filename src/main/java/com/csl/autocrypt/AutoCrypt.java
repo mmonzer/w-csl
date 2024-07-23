@@ -55,7 +55,7 @@ public class AutoCrypt {
      * Reinit the handler point
      */
     public void reinitApiHandlers() {
-        autocryptApiHandler = new ApiHandlerForCSLAutoCrypt(name, "http://" + moduleIp + ":" + modulePort);
+        autocryptApiHandler = new ApiHandlerForCSLAutoCrypt(name, moduleIp,  modulePort, false);
         dbApiHandler = new DbapiHandlerForCSLAutoCrypt();
         autocryptApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
 

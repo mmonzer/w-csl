@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan;
 
 import com.csl.autocrypt.ICleaner;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -13,6 +14,7 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,19 +34,35 @@ import java.util.concurrent.TimeoutException;
 public class ApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ApiHandler.class);
     private final String moduleName;
-    protected final String url;
     protected final HashMap<HttpHeader, String> headers = new HashMap<>();
     protected HttpClient httpClient;
     private ICleaner outputCleaner = (e) -> e;
+    private boolean useSSL = false;
+    private int port = 80;
+    private String ip = "localhost";
+    private String uriSuffix = "";
 
-    /**
-     * Constructor with no module name
-     *
-     * @param url url of the service api
-     */
-    public ApiHandler(String url) {
-        this("", url);
-    }
+//    /**
+//     * General constructor
+//     *
+//     * @param nameModule nameof the module
+//     * @param url        url of the service api
+//     */
+//    public ApiHandler(String nameModule, String url, boolean useSSL) {
+//        this.moduleName = nameModule;
+//        this.url = url;
+//        headers.put(HttpHeader.CONTENT_TYPE, "application/json");
+//        httpClient = initClient();
+//        this.useSSL = useSSL;
+//
+//        try {
+//            logger.info("Connecting with {} ...", moduleName);
+//            httpClient.start();
+//            logger.info("Connection successful with {}", moduleName);
+//        } catch (Exception e) {
+//            logger.error("Could not start the http client for {} API.", nameModule, e);
+//        }
+//    }
 
     /**
      * General constructor
@@ -53,13 +71,23 @@ public class ApiHandler implements AutoCloseable {
      * @param url        url of the service api
      */
     public ApiHandler(String nameModule, String url) {
+        this(nameModule, url, false);
+    }
+
+    /**
+     * General constructor
+     */
+    public ApiHandler(String nameModule, String ip, int port, boolean useSSL) {
+//        this(nameModule, createUrl(ip, port, useSSL));
         this.moduleName = nameModule;
-        this.url = url;
+        this.ip = ip;
+        this.port = port;
+        this.useSSL = useSSL;
         headers.put(HttpHeader.CONTENT_TYPE, "application/json");
         httpClient = initClient();
 
         try {
-            logger.info("Connecting with {} ...", moduleName);
+            logger.debug("Connecting with {} ...", moduleName);
             httpClient.start();
             logger.info("Connection successful with {}", moduleName);
         } catch (Exception e) {
@@ -68,11 +96,58 @@ public class ApiHandler implements AutoCloseable {
     }
 
     /**
+     * General constructor
+     */
+    public ApiHandler(String nameModule, String ip, boolean useSSL) {
+        this(nameModule, ip, useSSL?443:80, useSSL);
+    }
+
+    private static String createBaseUrl(String ip, int port, boolean useSSL) {
+        if (useSSL && port==443) {
+            return "https://"+ ip;
+        }
+        if (!useSSL && port==80) {
+            return "http://"+ ip;
+        }
+        return (useSSL ? "https://" : "http://") + ip + ":" + port;
+    }
+
+    /**
      * Initialize the httpClient
      * @return the new client
      */
     protected HttpClient initClient() {
+        if (useSSL) {
+            return initSSLApiHandler();
+        }
+        logger.info("Initialized HTTP client for {}", moduleName);
         return new HttpClient();
+    }
+
+    /**
+     * Ensures the connexion with SSL with the Dbapi.
+     * Return the new client well configured
+     */
+    private HttpClient initSSLApiHandler(){
+        // Retrieve system properties
+        String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
+        String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
+
+        // Ensure the properties are set
+        if (trustStorePath == null || trustStorePassword == null) {
+            logger.info("Initialized CA-signed HTTPS client for {}", moduleName);
+            return new HttpClient();
+//            throw new IllegalStateException("Trust store properties are not set.");
+        }
+
+        // Configure SslContextFactory with the retrieved properties
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setTrustStorePath(trustStorePath);
+        sslContextFactory.setTrustStorePassword(trustStorePassword);
+        sslContextFactory.setTrustAll(true);
+
+        logger.info("Initialized self-signed HTTPS client for {}", moduleName);
+        return new HttpClient(sslContextFactory);
     }
 
     @Override
@@ -94,6 +169,15 @@ public class ApiHandler implements AutoCloseable {
      */
     public void addHeader(HttpHeader header, String newValue) {
         headers.put(header, newValue);
+    }
+
+    /**
+     * Adds a suffix to a api url : for dbapi /api
+     *
+     * @param suffix url suffix
+     */
+    public void addUriSuffix(String suffix) {
+        this.uriSuffix = suffix;
     }
 
     /**
@@ -150,16 +234,17 @@ public class ApiHandler implements AutoCloseable {
     }
 
     protected ContentResponse sendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
-        logger.debug("Creating request {} to {} : params : {} body : {}", method, createUrlFrom(endpoint), params, body);
-        Request request = createRequest(method, createUrlFrom(endpoint), params, body);
-        logger.debug("Sending request {} to {}", method, createUrlFrom(endpoint));
+        String uri = createUriFrom(endpoint);
+        logger.trace("Creating request {} to {} : params : {} body : {}", method, uri, params, body);
+        Request request = createRequest(method, uri, params, body);
+        logger.trace("Sending request {} to {}", method, uri);
         ContentResponse response = request.send();
-        logger.debug("Sent request {} to {}", method, createUrlFrom(endpoint));
+        logger.trace("Sent request {} to {}", method, uri);
         return response;
     }
 
-    private String createUrlFrom(String endpoint) {
-        return url + endpoint.replace(" ", "%20").replace(":", "%3A");
+    public String createUriFrom(String endpoint) {
+        return createBaseUrl(ip, port, useSSL) + uriSuffix + endpoint.replace(" ", "%20").replace(":", "%3A");
     }
 
     /**
@@ -215,7 +300,7 @@ public class ApiHandler implements AutoCloseable {
      * @param endpoint endpoint of the request
      */
     protected Request initRequestWithHeaders(String method, String endpoint) {
-        Request request = initRequest(method, createUrlFrom(endpoint), httpClient);
+        Request request = initRequest(method, createUriFrom(endpoint), httpClient);
         addHeadersToRequest(headers, request);
         return request;
     }
@@ -339,24 +424,24 @@ public class ApiHandler implements AutoCloseable {
         }
         if (response.getContent().length > 0) {
             if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
-                logger.debug("Successful request : parsing json response : {}", response.getContent());
+                logger.trace("Successful request : parsing json response : {}", response.getContent());
                 parsedResponse = JsonApiResponse.result(
                         Json.read(response.getContentAsString()),
                         Json.object("status_code", response.getStatus())
                 );
             } else {
-                logger.debug("Successful request : parsing plain text response : {}", response.getContent());
+                logger.trace("Successful request : parsing plain text response : {}", response.getContent());
                 parsedResponse = JsonApiResponse.result(Json.object("value", response.getContentAsString()),
                         Json.object("status_code", response.getStatus())
                 );
             }
         } else {
-            logger.debug("Successful request : parsing empty response : {}", response.getStatus());
+            logger.trace("Successful request : parsing empty response : {}", response.getStatus());
             parsedResponse = JsonApiResponse.result(null,
                     Json.object("status_code", response.getStatus())
             );
         }
-        logger.debug("Successful request : successfully parsed response : {}", parsedResponse.getResult());
+        logger.trace("Successful request : successfully parsed response : {}", parsedResponse.getResult());
         return parsedResponse;
     }
 

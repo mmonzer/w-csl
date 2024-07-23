@@ -63,7 +63,11 @@ public class ScanApiHandler extends ApiHandler  {
 
 
     public ScanApiHandler() {
-        super("CSL-Scan", ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
+//        super("CSL-Scan", ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
+        super("CSL-Scan", JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_ip", "localhost"),
+                JsonUtil.getIntFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_port", 8010),
+                false);
+        addUriSuffix("/api");
     }
 
     /**
@@ -988,7 +992,8 @@ public class ScanApiHandler extends ApiHandler  {
      * @throws Exception If the request failed.
      */
     public ImportQuery importBsonFile(Path bsonFilePath, boolean shouldDrop) throws Exception {
-        String uri = url + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
+//        String uri = url + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
+        String uri = createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint());
         Request request = httpClient.newRequest(uri);
         request.param("drop", String.valueOf(shouldDrop));
         request.method(HttpMethod.POST);
@@ -1067,7 +1072,8 @@ public class ScanApiHandler extends ApiHandler  {
     }
 
     public Path downloadExportFile(ExportQuery exportQuery) throws ExecutionException, InterruptedException, TimeoutException {
-        URI uri = URI.create(url + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
+//        URI uri = URI.create(url + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
+        URI uri = URI.create(createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint())+exportQuery.getId().toString());
         Request request = httpClient.newRequest(uri);
         InputStreamResponseListener listener = new InputStreamResponseListener();
         request.send(listener);

@@ -5,14 +5,15 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.http.HttpMethod;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public class Tap {
     private String name;
     private int id;
-    private String ip;
-    private int port;
+    private String ip = "localhost";
+    private int port = 8888;
     private List<Json> includes;
     private ApiHandler apiHandler;
 
@@ -29,7 +30,7 @@ public class Tap {
         this.ip=ip;
         this.port=port;
         this.includes=includes;
-        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
+        updateApiHandler();
     }
     public Tap(String name, int id, String ip, int port, List<Json> includes) {
         this.name=name;
@@ -37,7 +38,7 @@ public class Tap {
         this.ip=ip;
         this.port=port;
         this.includes=includes;
-        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
+        updateApiHandler();
     }
 
     /**
@@ -125,7 +126,7 @@ public class Tap {
      */
     public void setIp(String ip) {
         this.ip=ip;
-        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
+        updateApiHandler();
     }
 
     /**
@@ -142,7 +143,11 @@ public class Tap {
      */
     public void setPort(int port) {
         this.port=port;
-        apiHandler = new ApiHandler("CSL-Tap","http://"+ip+":"+port);
+        updateApiHandler();
+    }
+
+    private void updateApiHandler() {
+        apiHandler = new ApiHandler("CSL-Tap", ip, port, false);
     }
 
     /**

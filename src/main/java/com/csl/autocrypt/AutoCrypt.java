@@ -57,7 +57,7 @@ public class AutoCrypt {
     public void reinitApiHandlers() {
         autocryptApiHandler = new ApiHandlerForCSLAutoCrypt(name, moduleIp,  modulePort, false);
         dbApiHandler = new DbapiHandlerForCSLAutoCrypt();
-        autocryptApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
+        autocryptApiHandler.addOutputReformer(CSLAutocryptUtils::cleanApiResponse);
 
         issuerSynchronizationService = new IssuerSynchronizationService(dbApiHandler, autocryptApiHandler);
         roleSynchronizationService = new RoleSynchronizationService(dbApiHandler, autocryptApiHandler);

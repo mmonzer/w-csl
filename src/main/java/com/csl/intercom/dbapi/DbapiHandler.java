@@ -35,7 +35,7 @@ public class DbapiHandler extends ApiHandler {
         super("DB-API::"+moduleName,
                 JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost"),
                 JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true));
-        addUriSuffix("/api");
+        addUriCommonPath("/api");
         setApiKey(JsonUtil.getStringFromJson(config.get("global"), "api_key", ""));
     }
 

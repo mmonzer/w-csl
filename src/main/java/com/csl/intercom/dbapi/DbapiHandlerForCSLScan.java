@@ -12,12 +12,10 @@ import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
-import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -27,7 +25,6 @@ import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,93 +45,21 @@ import java.util.stream.Collectors;
  * and to send information to it (CPE Items, a Scan's status, ...).
  */
 public class DbapiHandlerForCSLScan extends DbapiHandler {
-    private String dbapiUrl;
-    private String apiKey;
-    private HttpClient dbapiHttpClient = new HttpClient();
     private final int maxPageSize = 1000;
     private static final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
     private final FileStorageService fileStorageService = new FileStorageService();
-
-//    public DbapiHandlerForCSLScan() {
-//        this(CSLContext.instance.getConfig());
-//    }
-//
-//    public DbapiHandlerForCSLScan(Json config) {
-//        ensureSSLDbApiHandlerInitialization();
-//        Json globalConfig = config.get("global");
-//        dbapiUrl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "https://" : "http://";
-////        dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
-//        dbapiUrl += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
-//        dbapiUrl += "/api";
-//        apiKey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
-//        try {
-//            dbapiHttpClient.start();
-//        } catch (Exception e) {
-//            logger.error("Could not start the DB-API HTTP client.", e);
-//        }
-//    }
-//
-//    private void ensureSSLDbApiHandlerInitialization(){
-//        // Retrieve system properties
-//        String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
-//        String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
-//
-//        // Ensure the properties are set
-//        if (trustStorePath == null || trustStorePassword == null) {
-//            throw new IllegalStateException("Trust store properties are not set.");
-//        }
-//
-//        // Configure SslContextFactory with the retrieved properties
-//        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-//        sslContextFactory.setTrustStorePath(trustStorePath);
-//        sslContextFactory.setTrustStorePassword(trustStorePassword);
-//        //sslContextFactory.setTrustAll(true);
-//
-//        dbapiHttpClient = new HttpClient(sslContextFactory);
-//    }
-//
-//    public void close() {
-//        try {
-//            dbapiHttpClient.stop();
-//        } catch (Exception e) {
-//            logger.error("Could not stop the DB-API HTTP client.", e);
-//        }
-//    }
-
 
     public DbapiHandlerForCSLScan() {
         this("CSLScan", CSLContext.instance.getConfig());
     }
 
     public DbapiHandlerForCSLScan(String moduleName, Json config) {
-        super(moduleName, CSLContext.instance.getConfig());
+        super(moduleName, config);
     }
 
     public DbapiHandlerForCSLScan(Json config) {
-        this("CSLScan", CSLContext.instance.getConfig());
+        this("CSLScan", config);
     }
-
-
-    /**
-     * Insert a new alert into DB
-     *
-     * @param alert alert to insert
-     * @return the content of the response
-     */
-    public String insertAlert(IAlertDescriptor alert) {
-        String res = null;
-        Request request = createDbapiRequest(HttpMethod.POST, "/alerts")
-                .header(HttpHeader.CONTENT_TYPE, "application/json")
-                .content(new StringContentProvider(alert.toJson().toString()));
-        try {
-            ContentResponse response = request.send();
-            res = new String(response.getContent());
-        } catch (Exception e) {
-            logger.error("Could not delete the CPE Items from DB-API.", e);
-        }
-        return res;
-    }
-
 
     /**
      * Remove a list of CPE Items from DB-API.
@@ -288,7 +213,6 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
     }
 
-
     /**
      * Fetch the last updated date of CPE Items in DB-API.
      *
@@ -355,7 +279,6 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return devices;
     }
 
-
     /**
      * Get the connections from DB-API that were changed since an optional date.
      *
@@ -375,7 +298,6 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Get the deleted devices from DB-API that were changed since an optional date.
@@ -1245,7 +1167,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * Update the status of an export query in DB-API.
      *
      * @param exportQuery The export query to update.
-     * @throws Exception  If the request failed.
+     * @throws Exception If the request failed.
      */
     public void notifyExportFinished(int id, ExportQuery exportQuery) throws Exception {
         Json contents;

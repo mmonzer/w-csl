@@ -1,12 +1,13 @@
 package com.csl.autocrypt;
 
+import com.csl.autocrypt.enums.AutocryptConstants;
 import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import com.csl.autocrypt.enums.ApiEndpointForCSLAutocrypt;
 
-import static com.csl.autocrypt.enums.AutocryptConstants.IS_HTTP_API_KEY_REACHABLE;
-import static com.csl.autocrypt.enums.AutocryptConstants.PEM_BUNDLE;
+import static com.csl.autocrypt.enums.AutocryptConstants.Issuer;
+import static com.csl.autocrypt.enums.AutocryptConstants.Common;
 
 /**
  * Extension of the Api Handler for implementing the specific methods that contact the module AutoCrypt
@@ -40,7 +41,19 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse getIssuers(Json params) {
         return this.sendGet(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI.endpoint(),
-                params
+                params.set(Common.GET_DELETED, false)
+        );
+    }
+
+    /**
+     * Gets the list of issuers
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getDeletedIssuers(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.ISSUER_URI.endpoint(),
+                params.set(Common.GET_DELETED, true)
         );
     }
 
@@ -93,7 +106,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse importIssuer(Json params, String file) {
         Json newBody = Json.object();
-        newBody.set(PEM_BUNDLE, file.replace("\r",""));
+        newBody.set(Issuer.PEM_BUNDLE, file.replace("\r",""));
         return this.sendPost(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI_IMPORT.endpoint(),
                 params,
@@ -109,7 +122,19 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse getRoles(Json params) {
         return this.sendGet(
                 ApiEndpointForCSLAutocrypt.ROLE_URI.endpoint(),
-                params
+                params.set(Common.GET_DELETED, false)
+        );
+    }
+
+    /**
+     * Gets the list of deleted roles
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getDeletedRoles(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.ROLE_URI.endpoint(),
+                params.set(Common.GET_DELETED, true)
         );
     }
 
@@ -207,14 +232,38 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
-     * Gives the list of certificates
+     * Gives the list of certificates : revoked and not revoked
      *
      * @param params parameters with the path
      */
     public JsonApiResponse getCertificates(Json params) {
         return this.sendGet(
                 ApiEndpointForCSLAutocrypt.CERT_URI.endpoint(),
-                params
+                params.set(Common.GET_DELETED, false)
+        );
+    }
+
+    /**
+     * Gives the list of certificates not revoked
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getCertificatesNonRevoked(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.CERT_URI_NOT_REVOKED.endpoint(),
+                params.set(Common.GET_DELETED, false)
+        );
+    }
+
+    /**
+     * Gives the list of revoked certificates
+     *
+     * @param params parameters with the path
+     */
+    public JsonApiResponse getRevokedCertificates(Json params) {
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.CERT_URI_REVOKED.endpoint(),
+                params.set(Common.GET_DELETED, false)
         );
     }
 
@@ -327,7 +376,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      * @return whether it is reachable
      */
     public Json getStatus() {
-        return Json.object(IS_HTTP_API_KEY_REACHABLE, this.sendGet(
+        return Json.object(Common.IS_HTTP_API_KEY_REACHABLE, this.sendGet(
                 ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object()).isSuccess());
     }
 }

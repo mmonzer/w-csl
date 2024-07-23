@@ -9,6 +9,7 @@ CurrentIDSParams.json
 csl-dev
 
 build/
+classes/
 downloads/
 
 cacerts.jks

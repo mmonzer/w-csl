@@ -75,14 +75,14 @@ public class CSLAlertManager implements IAlertManager {
 	private int durationOfAlert=5000;
 	private boolean doNotResendSameAlert=false;
 	private String subdir_backup_alerts="alerts";
-	private DbapiHandlerForCSLScan dbapiHandler;
+	private DbapiHandlerForAlerts dbapiHandler;
 
 
 
 	public CSLAlertManager(IIDSMainProcessor x, Json jConfig) { 
 		this.idsMainProcessor=x;
 		this.idsMainProcessor.setAlertFactory( alertFactory);
-		dbapiHandler = new DbapiHandlerForCSLScan();
+		dbapiHandler = new DbapiHandlerForAlerts();
 		init(jConfig);
 	}
 

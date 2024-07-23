@@ -31,6 +31,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -1161,7 +1162,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE);
         MultiPartContentProvider multiPart = new MultiPartContentProvider();
         try {
-            multiPart.addFilePart("file", exportQuery.getFilename(), new PathContentProvider(fileStorageService.getFilePath(exportQuery.getFilename())), null);
+            Path filePath = fileStorageService.getFilePath(exportQuery.getFilename());
+            logger.info("Preparing to upload file: {}, Path: {}, Size: {} bytes",
+                    exportQuery.getFilename(), filePath, java.nio.file.Files.size(filePath));
+
+            multiPart.addFilePart("file", exportQuery.getFilename(), new PathContentProvider(filePath), null);
         } catch (IOException e) {
             logger.error("Error adding file to request", e);
             return;

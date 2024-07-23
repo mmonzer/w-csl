@@ -93,7 +93,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse deleteIssuer(String issuerRef, Json body, Json params) {
         return this.sendDelete(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI_ + issuerRef,
-                params,
+                params.set(Common.DELETE, true).set(AutocryptConstants.Certificate.REVOKE, true),
                 body
         );
     }

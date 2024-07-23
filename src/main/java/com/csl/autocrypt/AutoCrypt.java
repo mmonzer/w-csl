@@ -99,7 +99,7 @@ public class AutoCrypt {
         JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
-            return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
+            return JsonApiResponse.error("Error updating issuer : " + responseFromModule.getError().toJson());
         }
         logger.info("Updating info from issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 
@@ -130,7 +130,7 @@ public class AutoCrypt {
         JsonApiResponse responseFromModule = autocryptApiHandler.deleteIssuer(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("Deleting issuer {} at path {} in autocrypt failed", issuerRef, params.get(Common.PATH).asString());
-            return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
+            return JsonApiResponse.error("Error deleting issuer : " + responseFromModule.getError().toJson());
         }
         logger.info("Deleting issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 

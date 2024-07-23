@@ -434,7 +434,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String roleName = extractValueString(body, Role.VAULT_ROLE_NAME);
         body.set(Role.ROLE_NAME, roleName);
         getValueString(body, Common.TTL);
-        body.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
+//        body.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
 
         // endregion -- Verify required body keys and extract key values
 

@@ -59,7 +59,9 @@ public class ApiHandler implements AutoCloseable {
         httpClient = initClient();
 
         try {
+            logger.info("Connecting with {} ...", moduleName);
             httpClient.start();
+            logger.info("Connection successful with {}", moduleName);
         } catch (Exception e) {
             logger.error("Could not start the http client for {} API.", nameModule, e);
         }
@@ -76,8 +78,10 @@ public class ApiHandler implements AutoCloseable {
     @Override
     public void close() throws Exception {
         try {
-            this.httpClient.stop();}
-        catch (Exception e) {
+            logger.debug("Disconnecting from {} ...", moduleName);
+            this.httpClient.stop();
+            logger.info("Disconnected successfully from {} ...", moduleName);
+        } catch (Exception e) {
             logger.error("Could not stop the {} HTTP client.", moduleName, e);
         }
     }
@@ -136,19 +140,26 @@ public class ApiHandler implements AutoCloseable {
             if (!quiet) {
                 logger.error("Error while sending request to " + moduleName);
             }
+            res = JsonApiResponse.error("exception when sending request to "+moduleName+" : " + e.getMessage());
             if (e.getCause() instanceof ConnectException) {
                 res = JsonApiResponse.error("Connection error with " + moduleName);
             }
-            res = JsonApiResponse.error("exception : " + e.getMessage());
         }
 
         return outputCleaner.clean(res);
     }
 
     protected ContentResponse sendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
-        Request request = createRequest(method, endpoint, params, body);
+        logger.debug("Creating request {} to {} : params : {} body : {}", method, createUrlFrom(endpoint), params, body);
+        Request request = createRequest(method, createUrlFrom(endpoint), params, body);
+        logger.debug("Sending request {} to {}", method, createUrlFrom(endpoint));
         ContentResponse response = request.send();
+        logger.debug("Sent request {} to {}", method, createUrlFrom(endpoint));
         return response;
+    }
+
+    private String createUrlFrom(String endpoint) {
+        return url + endpoint.replace(" ", "%20").replace(":", "%3A");
     }
 
     /**
@@ -161,23 +172,20 @@ public class ApiHandler implements AutoCloseable {
      * @return the request created
      */
     private Request createRequest(HttpMethod method, String endpoint, Json params, Json body) {
-        endpoint = endpoint.replace(" ", "%20").replace(":", "%3A");
-        Request request = initRequest(method, url + endpoint, httpClient);
-        return fillRequest(request, params, body);
+        return createRequest(method.toString(), endpoint, params, body);
     }
 
     /**
      * Creates the request with the custom parameters
      *
      * @param method   http method to use : GET POST PUT DELETE
-     * @param endpoint endpoint to send the request
+     * @param uri      uri to send the request
      * @param params   parameters of the request
      * @param body     body of the request
      * @return the request created
      */
-    public Request createRequest(String method, String endpoint, Json params, Json body) {
-        endpoint = endpoint.replace(" ", "%20").replace(":", "%3A");
-        Request request = initRequest(method, url + endpoint, httpClient);
+    public Request createRequest(String method, String uri, Json params, Json body) {
+        Request request = initRequest(method, uri, httpClient);
         return fillRequest(request, params, body);
     }
 
@@ -207,7 +215,7 @@ public class ApiHandler implements AutoCloseable {
      * @param endpoint endpoint of the request
      */
     protected Request initRequestWithHeaders(String method, String endpoint) {
-        Request request = initRequest(method, url+endpoint, httpClient);
+        Request request = initRequest(method, createUrlFrom(endpoint), httpClient);
         addHeadersToRequest(headers, request);
         return request;
     }
@@ -326,24 +334,29 @@ public class ApiHandler implements AutoCloseable {
     private static JsonApiResponse parseResponse(ContentResponse response, String moduleName) {
         JsonApiResponse parsedResponse;
         if (response.getStatus() >= 400) {
+            logger.error("Error while sending request to {} : status_code : {} content: {}", moduleName, response.getStatus(), response.getContentAsString());
             return JsonApiResponse.error("Error while sending request to " + moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
         }
         if (response.getContent().length > 0) {
             if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
+                logger.debug("Successful request : parsing json response : {}", response.getContent());
                 parsedResponse = JsonApiResponse.result(
                         Json.read(response.getContentAsString()),
                         Json.object("status_code", response.getStatus())
                 );
             } else {
+                logger.debug("Successful request : parsing plain text response : {}", response.getContent());
                 parsedResponse = JsonApiResponse.result(Json.object("value", response.getContentAsString()),
                         Json.object("status_code", response.getStatus())
                 );
             }
         } else {
+            logger.debug("Successful request : parsing empty response : {}", response.getStatus());
             parsedResponse = JsonApiResponse.result(null,
                     Json.object("status_code", response.getStatus())
             );
         }
+        logger.debug("Successful request : successfully parsed response : {}", parsedResponse.getResult());
         return parsedResponse;
     }
 
@@ -581,70 +594,7 @@ public class ApiHandler implements AutoCloseable {
      */
     public JsonApiResponse sendRequestToApiQuiet(HttpMethod method, String endpoint, Json params) {
         // TODO : change
-        return sendRequestToApi(method, endpoint, params, true);
-    }
-
-    /**
-     * Send an HTTP request to the scanner.
-     *
-     * @param method   The HTTP method to use (GET, POST, PUT, ...)
-     * @param endpoint The endpoint on the API to use.
-     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
-     * @return The response to the request.
-     */
-    public JsonApiResponse sendRequestToApi(HttpMethod method, String endpoint, Json params, boolean quiet) {
-        // TODO : remove
-        JsonApiResponse res = JsonApiResponse.error(null);
-        Request request;
-        String URI = url + endpoint.replace(" ", "%20");
-
-        request = httpClient.newRequest(URI);
-        request.method(method);
-        try {
-            switch (method) {
-                case POST:
-                case PUT:
-                    request.content(new StringContentProvider(params.toString()), "application/json");
-                    break;
-                case GET:
-                case DELETE:
-                    addParamsToRequest(params, request);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());
-            }
-            ContentResponse response = request.send();
-            if (response.getStatus() >= 400) {
-                return JsonApiResponse.error("Error while sending request to " + moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
-            }
-            if (response.getContent().length > 0) {
-                if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
-                    res = JsonApiResponse.result(
-                            Json.read(response.getContentAsString()),
-                            Json.object("status_code", response.getStatus())
-                    );
-                } else {
-                    res = JsonApiResponse.result(Json.object("value", response.getContentAsString()),
-                            Json.object("status_code", response.getStatus())
-                    );
-                }
-            } else {
-                res = JsonApiResponse.result(null,
-                        Json.object("status_code", response.getStatus())
-                );
-            }
-        } catch (UnsupportedOperationException e) {
-            logger.error("Malformed json", e);
-            res = JsonApiResponse.error(e.getMessage());
-        } catch (Exception e) {
-            if (!quiet) {
-                logger.error("Error while sending request to " + moduleName);
-            }
-            if (e.getCause() instanceof ConnectException) {
-                res = JsonApiResponse.error("Connection error with " + moduleName);
-            }
-        }
-        return res;
+        return sendRequestToApi(method.toString(), endpoint, params, null, true);
     }
 
     /**

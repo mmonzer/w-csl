@@ -99,6 +99,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             response = methodDelete.apply(items.get(Common.DELETED));
             if (!response.isSuccess()) {
                 getLogger().error("{} : Could not delete data from DB-API for Autocrypt service.", prefixLogger);
+                System.out.println(response.getError());
                 throw new SynchronizationException(prefixLogger + " : Could not delete data to DB-API for Autocrypt service.");
             }
             getLogger().debug("{} : deleted data to DB-API : {}", prefixLogger, items);
@@ -110,6 +111,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             response = methodUpsert.apply(items.get(Common.NON_DELETED));
             if (!response.isSuccess()) {
                 getLogger().error("{} : Could not send data to upsert from DB-API for Autocrypt service.", prefixLogger);
+                System.out.println(response.getError());
                 throw new SynchronizationException(prefixLogger + " : Could not send data to upsert to DB-API for Autocrypt service.");
             }
             getLogger().debug("{} : upserted data to DB-API : {}", prefixLogger, items);

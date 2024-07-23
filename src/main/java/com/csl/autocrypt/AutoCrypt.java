@@ -137,6 +137,7 @@ public class AutoCrypt {
         // Sync issuers
         try {
             syncIssuers();
+            syncCertificates();
         } catch (SynchronizationException e) {
             return JsonApiResponse.error(e.getMessage());
         }

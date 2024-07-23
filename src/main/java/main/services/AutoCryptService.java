@@ -540,7 +540,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         getValueString(body, Issuer.ISSUER_NAME);
         Json params = Json.object();
-        params.at(Common.PATH, Common.PKI);
+        // params.at(Common.PATH, Common.PKI);
 
         // endregion -- Verify required body keys and extract key values
 
@@ -558,7 +558,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         String name = getValueString(body, Issuer.ISSUER_NAME);  // or COMMON _Common.NAME?
         Json params = Json.object();
-        params.at(Common.PATH, name);
+        // params.at(Common.PATH, name);
 
         // endregion -- Verify required body keys and extract key values
 

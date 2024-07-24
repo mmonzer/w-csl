@@ -1,5 +1,6 @@
 package com.csl.autocrypt;
 
+import com.csl.autocrypt.enums.AutocryptConstants;
 import com.csl.autocrypt.services.*;
 import com.csl.core.CSLContext;
 import com.csl.intercom.services.exceptions.SynchronizationException;
@@ -55,9 +56,9 @@ public class AutoCrypt {
      * Reinit the handler point
      */
     public void reinitApiHandlers() {
-        autocryptApiHandler = new ApiHandlerForCSLAutoCrypt(name, "http://" + moduleIp + ":" + modulePort);
+        autocryptApiHandler = new ApiHandlerForCSLAutoCrypt(name, moduleIp,  modulePort, false);
         dbApiHandler = new DbapiHandlerForCSLAutoCrypt();
-        autocryptApiHandler.addCleaner(CSLAutocryptUtils::cleanApiResponse);
+        autocryptApiHandler.addOutputReformer(CSLAutocryptUtils::cleanApiResponse);
 
         issuerSynchronizationService = new IssuerSynchronizationService(dbApiHandler, autocryptApiHandler);
         roleSynchronizationService = new RoleSynchronizationService(dbApiHandler, autocryptApiHandler);
@@ -99,7 +100,7 @@ public class AutoCrypt {
         JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
-            return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
+            return JsonApiResponse.error("Error updating issuer : " + responseFromModule.getError().toJson());
         }
         logger.info("Updating info from issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 
@@ -130,13 +131,14 @@ public class AutoCrypt {
         JsonApiResponse responseFromModule = autocryptApiHandler.deleteIssuer(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("Deleting issuer {} at path {} in autocrypt failed", issuerRef, params.get(Common.PATH).asString());
-            return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
+            return JsonApiResponse.error("Error deleting issuer : " + responseFromModule.getError().toJson());
         }
         logger.info("Deleting issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 
         // Sync issuers
         try {
             syncIssuers();
+            syncCertificates();
         } catch (SynchronizationException e) {
             return JsonApiResponse.error(e.getMessage());
         }
@@ -517,11 +519,10 @@ public class AutoCrypt {
     private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, Json params, Json body) {
         boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
         String type = isRoot ? "root" : "intermediate";
-        String path = params.get(Common.PATH).asString();
         logger.info("Generating {} CA ...", type);
 
         // Creating CA in Autocrypt
-        logger.debug("Creating {} CA creation in Autocrypt at path {} ...", type, path);
+        logger.debug("Creating {} CA creation in Autocrypt ...", type);
         JsonApiResponse responseFromModule;
         if (isRoot) {
             responseFromModule = autocryptApiHandler.generateRootCA(body, params);
@@ -531,10 +532,11 @@ public class AutoCrypt {
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Issuer.ISSUER_REF) ||
                 !responseFromModule.getResult().get(Issuer.ISSUER_REF).isString()) {
-            logger.error("{} ({}/{}) : {} CA creation at path {} in Autocrypt failed", typeCA, 1, 4, type, path);
+            logger.error("{} : {} CA creation in Autocrypt failed", typeCA, type);
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
         String issuerRef = responseFromModule.getResult().get(Issuer.ISSUER_REF).asString();
+        String path = responseFromModule.getResult().get(AutocryptConstants.Common.PATH).asString();
         logger.info("{} CA ({}) created in Autocrypt at path {}", type, issuerRef, path);
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();

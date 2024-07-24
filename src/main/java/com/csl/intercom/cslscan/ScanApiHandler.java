@@ -6,12 +6,10 @@ import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.models.MicrosoftKB;
-import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.dbapi.models.Connection;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.HttpConnection;
@@ -20,26 +18,22 @@ import com.csl.util.Pair;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.MultiPartContentProvider;
 import org.eclipse.jetty.client.util.PathContentProvider;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -51,29 +45,17 @@ import java.util.stream.Collectors;
 /**
  * Class to handle communication with CSL-Scan's HTTP API.
  */
-public class ScanApiHandler implements AutoCloseable {
+public class ScanApiHandler extends ApiHandler  {
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
-    private String scanManagerUrl;
-    private HttpClient httpClient = new HttpClient();
     private final FileStorageService fileStorageService = new FileStorageService();
 
+
     public ScanApiHandler() {
-        this(ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
-    }
-
-    public ScanApiHandler(String scanManagerUrl) {
-        this.scanManagerUrl = scanManagerUrl;
-
-        try {
-            httpClient.start();
-        } catch (Exception e) {
-            logger.error("Could not start the http client for CSL-Scan API.", e);
-        }
-    }
-
-    @Override
-    public void close() throws Exception {
-        this.httpClient.stop();
+//        super("CSL-Scan", ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
+        super("CSL-Scan", JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_ip", "localhost"),
+                JsonUtil.getIntFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_port", 8010),
+                false);
+        addUriCommonPath("/api");
     }
 
     /**
@@ -83,7 +65,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} containing the newly created device, as handed by the scanner
      */
     public JsonApiResponse addEntity(Device device) {
-        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY, device.serializeForScanner());
+        return sendPost(ScanApiEndpoint.ENTITY, device.serializeForScanner());
     }
 
     /**
@@ -92,7 +74,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} array containing the all the configured entities in the scanner.
      */
     public JsonApiResponse listEntities() {
-        return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY, Json.object());
+        return sendGet(ScanApiEndpoint.ENTITY, Json.object());
     }
 
     /**
@@ -102,7 +84,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} containing the specified entity.
      */
     public JsonApiResponse getEntity(String id) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+        JsonApiResponse response = sendGet(
                 String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id), Json.object());
         int statusCode;
         try {
@@ -169,7 +151,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return An empty object on success, an error message on failure.
      */
     public JsonApiResponse deleteEntity(String id) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE,
+        JsonApiResponse response = sendDelete(
                 String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id), Json.object());
         boolean success = response.isSuccess();
         Json result = response.getResult();
@@ -190,8 +172,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link Json} array containing all the SNMP objects discovered so far by the scanner on this entity.
      */
     public JsonApiResponse getEntityCpes(String id) {
-        return sendRequestToScanManager(HttpMethod.GET,
-                String.format(ScanApiEndpoint.ENTITY_CPE_ITEMS.endpoint(), id), Json.object());
+        return sendGet(String.format(ScanApiEndpoint.ENTITY_CPE_ITEMS.endpoint(), id), Json.object());
     }
 
     /**
@@ -201,8 +182,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The status of the scan.
      */
     public JsonApiResponse getScanStatus(String id) {
-        return sendRequestToScanManager(HttpMethod.GET,
-                String.format(ScanApiEndpoint.DISCOVERY_STATUS_DETAILS.endpoint(), id), Json.object());
+        return sendGet(String.format(ScanApiEndpoint.DISCOVERY_STATUS_DETAILS.endpoint(), id), Json.object());
     }
 
     /**
@@ -212,8 +192,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The status of the scan.
      */
     public JsonApiResponse getEntityScanStatus(String id) {
-        return sendRequestToScanManager(HttpMethod.GET,
-                String.format(ScanApiEndpoint.ENTITY_SCAN_STATUS.endpoint(), id), Json.object());
+        return sendGet(String.format(ScanApiEndpoint.ENTITY_SCAN_STATUS.endpoint(), id), Json.object());
     }
 
     /**
@@ -222,7 +201,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link JsonApiResponse} with CSL-Scan's status as it was received, or with an error in the 'error' field.
      */
     public JsonApiResponse getStatus() {
-        return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_STATUS, Json.object());
+        return sendGet(ScanApiEndpoint.DISCOVERY_STATUS, Json.object());
     }
 
     /**
@@ -233,8 +212,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link JsonApiResponse} with CSL-Scan's response.
      */
     public JsonApiResponse testConnection(String deviceUuid, String connectionUuid) {
-        return sendRequestToScanManager(HttpMethod.GET,
-                String.format(ScanApiEndpoint.ENTITY_TEST_EXISTING_CONNECTION.endpoint(), deviceUuid),
+        return sendGet(String.format(ScanApiEndpoint.ENTITY_TEST_EXISTING_CONNECTION.endpoint(), deviceUuid),
                 Json.object("connection_uuid", connectionUuid));
     }
 
@@ -246,7 +224,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link JsonApiResponse} with CSL-Scan's response.
      */
     public JsonApiResponse testConnection(Device device) {
-        return sendRequestToScanManager(HttpMethod.POST,
+        return sendPost(
                 ScanApiEndpoint.ENTITY_TEST_CONNECTION,
                 device.serializeForScanner());
     }
@@ -257,7 +235,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @param id The uuid of the CPE Item to delete.
      */
     public void deleteCpeItemFromScan(String id) {
-        sendRequestToScanManager(HttpMethod.DELETE,
+        sendDelete(
                 String.format(ScanApiEndpoint.CPE_ITEM_DETAILS.endpoint(), id), Json.object());
     }
 
@@ -282,7 +260,7 @@ public class ScanApiHandler implements AutoCloseable {
                 .forEach(deletedCpeItemsIdsArray::add);
 
         ScanApiEndpoint endpoint = hardDelete ? ScanApiEndpoint.CPE_ITEM_DELETE_MANY_HARD : ScanApiEndpoint.CPE_ITEM_DELETE_MANY;
-        sendRequestToScanManager(HttpMethod.POST, endpoint, deletedCpeItemsIdsArray);
+        sendPost(endpoint, deletedCpeItemsIdsArray);
 
         if (!deletedCpes.isEmpty()) {
             try {
@@ -294,7 +272,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public void deleteCpeItemsBeforeDate(OffsetDateTime date, boolean deleteAll) {
-        sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.CPE_ITEM_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
+        sendDelete(ScanApiEndpoint.CPE_ITEM_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
     }
 
     /**
@@ -303,7 +281,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @param id The uuid of the {@link MicrosoftKB} to delete.
      */
     public void deleteMicrosoftKBFromScan(String id) {
-        sendRequestToScanManager(HttpMethod.DELETE,
+        sendDelete(
                 String.format(ScanApiEndpoint.MICROSOFT_KB_DETAILS.endpoint(), id), Json.object());
     }
 
@@ -328,7 +306,7 @@ public class ScanApiHandler implements AutoCloseable {
                 .forEach(deletedCpeItemsIdsArray::add);
 
         ScanApiEndpoint endpoint = hardDelete ? ScanApiEndpoint.MICROSOFT_KB_DELETE_MANY_HARD : ScanApiEndpoint.MICROSOFT_KB_DELETE_MANY;
-        sendRequestToScanManager(HttpMethod.POST, endpoint, deletedCpeItemsIdsArray);
+        sendPost(endpoint, deletedCpeItemsIdsArray);
 
         if (!deletedMicrosoftKBs.isEmpty()) {
             try {
@@ -340,7 +318,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public void deleteMicrosoftKBsBeforeDate(OffsetDateTime date, boolean deleteAll) {
-        sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.MICROSOFT_KB_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
+        sendDelete(ScanApiEndpoint.MICROSOFT_KB_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
     }
 
     /**
@@ -353,9 +331,9 @@ public class ScanApiHandler implements AutoCloseable {
         JsonApiResponse response;
         Json cpeItems = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.CPE_ITEM, Json.object("limit", limit, "skip", offset));
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             cpeItems = response.getResult();
@@ -384,9 +362,9 @@ public class ScanApiHandler implements AutoCloseable {
         JsonApiResponse response;
         Json microsoftKbs = Json.array();
         if (date == null) {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.MICROSOFT_KB, Json.object("limit", limit, "skip", offset));
         } else {
-            response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
         }
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             microsoftKbs = response.getResult();
@@ -451,7 +429,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return A {@link List<EntityHttpConnection>} containing all the EntityHttpConnection objects from CSL-Scan.
      */
     public List<EntityHttpConnection> getAllEntityHttpConnections(boolean visibleOnly) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+        JsonApiResponse response = sendGet(
                 ScanApiEndpoint.ENTITY_HTTP_CONNECTION, Json.object("visibleOnly", visibleOnly));
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             return response.getResult().asJsonList().stream()
@@ -482,8 +460,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The {@link EntityHttpConnection} object from CSL-Scan with the specified uuid.
      */
     public EntityHttpConnection getEntityHttpConnection(String uuid, boolean visibleOnly) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
-                String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object("visibleOnly", visibleOnly));
+        JsonApiResponse response = sendGet(String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object("visibleOnly", visibleOnly));
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             return EntityHttpConnection.fromScannerJson(response.getResult());
         } else {
@@ -499,12 +476,12 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The {@link JsonApiResponse} from CSL-Scan.
      */
     public JsonApiResponse deleteEntityHttpConnection(String uuid) {
-        return sendRequestToScanManager(HttpMethod.DELETE,
+        return sendDelete(
                 String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object());
     }
 
     public JsonApiResponse createEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION, entityHttpConnection.serializeForScanner());
+        JsonApiResponse response = sendPost(ScanApiEndpoint.ENTITY_HTTP_CONNECTION, entityHttpConnection.serializeForScanner());
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
             if (createdEntityHttpConnection != null) {
@@ -521,7 +498,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public JsonApiResponse updateEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT,
+        JsonApiResponse response = sendPut(
                 String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), entityHttpConnection.getUuid()),
                 entityHttpConnection.serializeForScanner());
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
@@ -539,6 +516,22 @@ public class ScanApiHandler implements AutoCloseable {
         }
     }
 
+    private JsonApiResponse sendPut(ScanApiEndpoint endpoint, Json body) {
+        return sendPut(endpoint.endpoint(), body);
+    }
+
+    private JsonApiResponse sendGet(ScanApiEndpoint endpoint, Json params) {
+        return sendGet(endpoint.endpoint(), params);
+    }
+
+    private JsonApiResponse sendPost(ScanApiEndpoint endpoint, Json body) {
+        return sendPost(endpoint.endpoint(), body);
+    }
+
+    private JsonApiResponse sendDelete(ScanApiEndpoint endpoint, Json params) {
+        return sendDelete(endpoint.endpoint(), params);
+    }
+
     /**
      * Send an HTTP request to the scanner.
      *
@@ -547,68 +540,19 @@ public class ScanApiHandler implements AutoCloseable {
      * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
      * @return The response to the request.
      */
-    private JsonApiResponse sendRequestToScanManager(HttpMethod method, String endpoint, Json params) {
-        JsonApiResponse res = JsonApiResponse.error(null);
-        Request request;
-        String URI = scanManagerUrl + endpoint.replace(" ", "%20");
-
-        request = httpClient.newRequest(URI);
-        request.method(method);
-        try {
-            switch (method) {
-                case GET:
-                case DELETE:
-                    for (Map.Entry<String, Json> param : params.asJsonMap().entrySet()) {
-                        if (param.getValue().isString()) {
-                            request.param(param.getKey(), param.getValue().asString());
-                        } else {
-                            request.param(param.getKey(), param.getValue().toString());
-                        }
-                    }
-                    break;
-
-                case POST:
-                case PUT:
-                    request.content(new StringContentProvider(params.toString()), "application/json");
-                    break;
-
-                default:
-                    throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());
-            }
-            ContentResponse response = request.send();
-            if (response.getStatus() >= 400) {
-                return JsonApiResponse.error("Error while sending request to CSL-Scan", Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
-            }
-            if (response.getContent().length > 0) {
-                if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
-                    res = JsonApiResponse.result(
-                            Json.read(response.getContentAsString()),
-                            Json.object("status_code", response.getStatus())
-                    );
-                } else {
-                    res = JsonApiResponse.result(Json.object("value", response.getContentAsString()),
-                            Json.object("status_code", response.getStatus())
-                    );
-                }
-            } else {
-                res = JsonApiResponse.result(null,
-                        Json.object("status_code", response.getStatus())
-                );
-            }
-        } catch (UnsupportedOperationException e) {
-            logger.error("Malformed json", e);
-            res = JsonApiResponse.error(e.getMessage());
-        } catch (Exception e) {
-            logger.error("Error while sending request to CSL-Scan", e);
-            if (e.getCause() instanceof ConnectException) {
-                res = JsonApiResponse.error("Connection error with CSL-Scan");
-            }
-        }
-        return res;
-    }
-
     private JsonApiResponse sendRequestToScanManager(HttpMethod method, ScanApiEndpoint endpoint, Json params) {
-        return sendRequestToScanManager(method, endpoint.endpoint(), params);
+        switch (method) {
+            case GET:
+                return sendGet(endpoint.endpoint(), params);
+            case PUT:
+                return sendPut(endpoint.endpoint(), params);
+            case POST:
+                return sendPost(endpoint.endpoint(), params);
+            case DELETE:
+                return sendDelete(endpoint.endpoint(), params);
+            default:
+                throw new UnsupportedOperationException("Unsupported HTTP method: " + method.asString());
+        }
     }
 
     /**
@@ -617,7 +561,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The date of the last entities update in CSL-Scan.
      */
     public OffsetDateTime getLastLastEntityUpdateDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+        JsonApiResponse response = sendGet(
                 ScanApiEndpoint.ENTITY_LAST_UPDATE, Json.object());
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
@@ -633,7 +577,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The date of the last entities update in CSL-Scan.
      */
     public OffsetDateTime getLastMicrosoftKbsUpdateDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+        JsonApiResponse response = sendGet(
                 ScanApiEndpoint.MICROSOFT_KB_LAST_UPDATE, Json.object());
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
@@ -650,7 +594,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The date of the last CPE items deletion in CSL-Scan.
      */
     public OffsetDateTime getLastCpeItemsDeletionDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+        JsonApiResponse response = sendGet(
                 ScanApiEndpoint.CPE_ITEM_LAST_DELETION, Json.object());
 
         // If the response's status code is not 200, return null
@@ -673,7 +617,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The date of the last entities deletion in CSL-Scan.
      */
     public OffsetDateTime getLastEntitiesDeletionDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+        JsonApiResponse response = sendGet(
                 ScanApiEndpoint.ENTITY_LAST_DELETION, Json.object());
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
@@ -690,7 +634,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The date of the last Microsoft KBs deletion in CSL-Scan.
      */
     public OffsetDateTime getLastMicrosoftKbsDeletionDate() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
+        JsonApiResponse response = sendGet(
                 ScanApiEndpoint.MICROSOFT_KB_LAST_DELETION, Json.object());
         try {
             String dateString = response.getResult().get("value").asString().replace("\"", "");
@@ -708,8 +652,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @throws Exception If the request failed (ie status code != 200).
      */
     public void setLastCpeItemsDeletionDate(OffsetDateTime date) throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(
-                HttpMethod.POST, ScanApiEndpoint.CPE_ITEM_LAST_DELETION,
+        JsonApiResponse response = sendPost( ScanApiEndpoint.CPE_ITEM_LAST_DELETION,
                 Json.object("cpeItemsLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
         if (response.getExtra().get("status_code").asInteger() != 200) {
@@ -724,8 +667,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @throws Exception If the request failed (ie status code != 200).
      */
     public void setLastEntitiesDeletionDate(OffsetDateTime date) throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(
-                HttpMethod.POST, ScanApiEndpoint.ENTITY_LAST_DELETION,
+        JsonApiResponse response = sendPost( ScanApiEndpoint.ENTITY_LAST_DELETION,
                 Json.object("entitiesLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
         if (response.getExtra().get("status_code").asInteger() != 200) {
@@ -740,8 +682,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @throws Exception If the request failed (ie status code != 200).
      */
     public void setLastMicrosoftKbsDeletionDate(OffsetDateTime date) throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(
-                HttpMethod.POST, ScanApiEndpoint.MICROSOFT_KB_LAST_DELETION,
+        JsonApiResponse response = sendPost( ScanApiEndpoint.MICROSOFT_KB_LAST_DELETION,
                 Json.object("microsoftKbsLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
         if (response.getExtra().get("status_code").asInteger() != 200) {
@@ -753,7 +694,7 @@ public class ScanApiHandler implements AutoCloseable {
      * Drop a collection in CSL-Scan.
      */
     public void dropCollection(ScanCollection collection) throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.DELETE,
+        JsonApiResponse response = sendDelete(
                 String.format(ScanApiEndpoint.DROP_COLLECTION.endpoint(), collection.getName()), Json.object());
         if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception("Could not drop collection " + collection.getName() + " in CSL-Scan");
@@ -797,7 +738,7 @@ public class ScanApiHandler implements AutoCloseable {
                     "entity", device.serializeForScanner(),
                     "stageIndex", stageIndex
             );
-            response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_STAGE, body);
+            response = sendPost(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_STAGE, body);
         } catch (Exception e) {
             logger.error("Could not fetch stage page", e);
         }
@@ -826,7 +767,7 @@ public class ScanApiHandler implements AutoCloseable {
         if (connectionId != null) {
             requestBody.set("connectionInfoId", String.valueOf(connectionId));
         }
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_TEST, requestBody);
+        JsonApiResponse response = sendPost(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_TEST, requestBody);
         if (!response.isSuccess()) {
             throw new Exception("Could not test the entity http connection: " + response.getError().getDetails());
         } else {
@@ -835,7 +776,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public JsonApiResponse getPredefinedHttpVariables() {
-        return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
+        return sendGet(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
     }
 
     public JsonApiResponse getInstalledNpmPackages() {
@@ -843,11 +784,10 @@ public class ScanApiHandler implements AutoCloseable {
     }
     /**
      * Get the current cron expression for the periodic discovery task.
-     *
      * @return The cron expression for the periodic discovery task.
      */
     public Json getDiscoveryCron() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
+        JsonApiResponse response = sendGet(ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             Json result = response.getResult();
             String cron = null;
@@ -869,7 +809,6 @@ public class ScanApiHandler implements AutoCloseable {
 
     /**
      * Set the cron expression for the periodic discovery task.
-     *
      * @param cron The new cron expression for the periodic discovery task.
      * @throws Exception If the request failed (ie status code != 200).
      */
@@ -878,7 +817,7 @@ public class ScanApiHandler implements AutoCloseable {
         if (frequencyOption != null) {
             endpoint += "&frequencyOption=" + frequencyOption.name();
         }
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, endpoint, Json.object());
+        JsonApiResponse response = sendPut( endpoint, Json.object());
         if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception("Could not set the discovery cron: " + response.getError().getReason());
         }
@@ -891,7 +830,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @throws Exception If the request failed (ie status code != 200).
      */
     public boolean isDiscoveryCronActive() throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_IS_CRON_ACTIVE, Json.object());
+        JsonApiResponse response = sendGet(ScanApiEndpoint.DISCOVERY_IS_CRON_ACTIVE, Json.object());
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             Json result = response.getResult();
             if (result.has("value")) {
@@ -917,7 +856,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @throws Exception If the request failed (ie status code != 200).
      */
     public void setDiscoveryCronActive(boolean active) throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.PUT, ScanApiEndpoint.DISCOVERY_SET_CRON_ACTIVE.endpoint() + "?isActive=" + active, Json.object());
+        JsonApiResponse response = sendPut( ScanApiEndpoint.DISCOVERY_SET_CRON_ACTIVE.endpoint() + "?isActive=" + active, Json.object());
         if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception("Could not set the discovery cron status: " + response.getError().getReason());
         }
@@ -927,14 +866,14 @@ public class ScanApiHandler implements AutoCloseable {
      * Cancel the current scan (if any).
      */
     public void cancelScan() throws Exception {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_CANCEL, Json.object());
+        JsonApiResponse response = sendGet(ScanApiEndpoint.DISCOVERY_CANCEL, Json.object());
         if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
             throw new Exception(response.getError().getReason());
         }
     }
 
     public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, Json.object());
+        JsonApiResponse response = sendGet( ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, Json.object());
         if (response.isSuccess()) {
             return response.getResult().asJsonList().stream()
                     .map(ExternalConnectionInfoTemplate::fromScannerJson)
@@ -945,7 +884,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public List<ExternalConnectionInfo> getExternalConnectionInfos(boolean includeDeleted) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_CONNECTION_INFOS, Json.object("includeDeleted", includeDeleted));
+        JsonApiResponse response = sendGet(ScanApiEndpoint.EXTERNAL_CONNECTION_INFOS, Json.object("includeDeleted", includeDeleted));
         if (!response.isSuccess()) {
             return null;
         }
@@ -972,7 +911,7 @@ public class ScanApiHandler implements AutoCloseable {
         if (connectionUuid == null) {
             return JsonApiResponse.error("Connection UUID is null", Json.object());
         }
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.POST, String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionUuid), externalConnectionInfo.serializeForScanner());
+        JsonApiResponse response = sendPost( String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionUuid), externalConnectionInfo.serializeForScanner());
         if (!response.isSuccess()) {
             Json errorDetails = response.getError().getDetails();
             if (errorDetails.has("content")) {
@@ -985,7 +924,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public JsonApiResponse deleteExternalConnectionInfo(String connectionInfoId, boolean hardDelete) {
-        return sendRequestToScanManager(HttpMethod.DELETE, String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionInfoId), Json.object("hardDelete", hardDelete));
+        return sendDelete( String.format(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_DETAILS.endpoint(), connectionInfoId), Json.object("hardDelete", hardDelete));
     }
 
     public JsonApiResponse clearExternalConnectionInfos() {
@@ -993,7 +932,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public ExternalScan startExternalDiscoveryScan(String connectionInfoId) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.EXTERNAL_DISCOVERY_START_SCAN.endpoint(), connectionInfoId), Json.object());
+        JsonApiResponse response = sendGet( String.format(ScanApiEndpoint.EXTERNAL_DISCOVERY_START_SCAN.endpoint(), connectionInfoId), Json.object());
         if (response.isSuccess()) {
             return ExternalScan.fromScannerJson(response.getResult());
         } else {
@@ -1044,7 +983,8 @@ public class ScanApiHandler implements AutoCloseable {
      * @throws Exception If the request failed.
      */
     public ImportQuery importBsonFile(Path bsonFilePath, boolean shouldDrop) throws Exception {
-        String uri = scanManagerUrl + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
+//        String uri = url + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
+        String uri = createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint());
         Request request = httpClient.newRequest(uri);
         request.param("drop", String.valueOf(shouldDrop));
         request.method(HttpMethod.POST);
@@ -1096,7 +1036,7 @@ public class ScanApiHandler implements AutoCloseable {
      * @return The new export query.
      */
     public ExportQuery getExportQueryStatus(UUID uuid) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
+        JsonApiResponse response = sendGet( String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
         if (response.isSuccess()) {
             return ExportQuery.fromScannerJson(response.getResult());
         } else {
@@ -1115,7 +1055,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public void deleteExportFile(UUID uuid) {
-        sendRequestToScanManager(HttpMethod.DELETE, String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DELETE.endpoint(), uuid.toString()), Json.object());
+        sendDelete( String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DELETE.endpoint(), uuid.toString()), Json.object());
     }
 
     public void deleteExportFile(ExportQuery exportQuery) {
@@ -1123,7 +1063,8 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public Path downloadExportFile(ExportQuery exportQuery) throws ExecutionException, InterruptedException, TimeoutException {
-        URI uri = URI.create(scanManagerUrl + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
+//        URI uri = URI.create(url + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
+        URI uri = URI.create(createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint())+exportQuery.getId().toString());
         Request request = httpClient.newRequest(uri);
         InputStreamResponseListener listener = new InputStreamResponseListener();
         request.send(listener);
@@ -1142,7 +1083,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public List<EntityHttpConnection> getEntityHttpConnectionsToSync() {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_GET_SYNC_NEEDED, Json.object());
+        JsonApiResponse response = sendGet(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_GET_SYNC_NEEDED, Json.object());
         if (response.isSuccess()) {
             return response.getResult().asJsonList().stream()
                     .map(EntityHttpConnection::fromScannerJson)
@@ -1154,7 +1095,7 @@ public class ScanApiHandler implements AutoCloseable {
 
     public void notifyEntityHttpConnectionSynchronized(List<EntityHttpConnection> entityHttpConnections) {
         Json body = Json.array(entityHttpConnections.stream().map(EntityHttpConnection::getUuid).toArray());
-        sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_SET_SYNC_NEEDED, body);
+        sendPost( ScanApiEndpoint.ENTITY_HTTP_CONNECTION_SET_SYNC_NEEDED, body);
     }
 
     public ImportQuery importBsonFile(Path bsonFilePath) throws Exception {
@@ -1162,7 +1103,7 @@ public class ScanApiHandler implements AutoCloseable {
     }
 
     public ImportQuery getImportTaskStatus(UUID uuid) {
-        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
+        JsonApiResponse response = sendGet( String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON_STATUS.endpoint(), uuid.toString()), Json.object());
         if (response.isSuccess()) {
             return ImportQuery.fromScannerJson(response.getResult());
         } else {

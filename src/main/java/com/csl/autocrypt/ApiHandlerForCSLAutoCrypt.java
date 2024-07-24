@@ -15,22 +15,16 @@ import static com.csl.autocrypt.enums.AutocryptConstants.Common;
 public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
 
     /**
-     * Constructor with no module name
-     *
-     * @param url url of the service api
-     */
-    public ApiHandlerForCSLAutoCrypt(String url) {
-        this("", url);
-    }
-
-    /**
      * General constructor
      *
-     * @param nameModule nameof the module
-     * @param url        url of the service api
+     * @param nameModule name of the module
+     * @param ip ip of the module
+     * @param port port of the module
+     * @param useSSL use SSL for connecting the module
+     *
      */
-    public ApiHandlerForCSLAutoCrypt(String nameModule, String url) {
-        super(nameModule, url);
+    public ApiHandlerForCSLAutoCrypt(String nameModule, String ip, int port, boolean useSSL) {
+        super(nameModule, ip, port, useSSL);
     }
 
     /**
@@ -93,7 +87,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse deleteIssuer(String issuerRef, Json body, Json params) {
         return this.sendDelete(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI_ + issuerRef,
-                params,
+                params.set(Common.DELETE, true).set(AutocryptConstants.Certificate.REVOKE, true),
                 body
         );
     }

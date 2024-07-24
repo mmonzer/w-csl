@@ -1,5 +1,6 @@
 package com.csl.autocrypt;
 
+import com.csl.autocrypt.enums.AutocryptConstants;
 import com.csl.autocrypt.services.*;
 import com.csl.core.CSLContext;
 import com.csl.intercom.services.exceptions.SynchronizationException;
@@ -518,11 +519,10 @@ public class AutoCrypt {
     private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, Json params, Json body) {
         boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
         String type = isRoot ? "root" : "intermediate";
-        String path = params.get(Common.PATH).asString();
         logger.info("Generating {} CA ...", type);
 
         // Creating CA in Autocrypt
-        logger.debug("Creating {} CA creation in Autocrypt at path {} ...", type, path);
+        logger.debug("Creating {} CA creation in Autocrypt ...", type);
         JsonApiResponse responseFromModule;
         if (isRoot) {
             responseFromModule = autocryptApiHandler.generateRootCA(body, params);
@@ -532,10 +532,11 @@ public class AutoCrypt {
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Issuer.ISSUER_REF) ||
                 !responseFromModule.getResult().get(Issuer.ISSUER_REF).isString()) {
-            logger.error("{} ({}/{}) : {} CA creation at path {} in Autocrypt failed", typeCA, 1, 4, type, path);
+            logger.error("{} : {} CA creation in Autocrypt failed", typeCA, type);
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
         String issuerRef = responseFromModule.getResult().get(Issuer.ISSUER_REF).asString();
+        String path = responseFromModule.getResult().get(AutocryptConstants.Common.PATH).asString();
         logger.info("{} CA ({}) created in Autocrypt at path {}", type, issuerRef, path);
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();

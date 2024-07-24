@@ -179,6 +179,14 @@ public class ApiHandler implements AutoCloseable {
     }
 
     /**
+     * Get the url
+     * @return the url
+     */
+    public String getUrl() {
+        return createBaseUrl(ip, port,useSSL)+ uriCommonPath;
+    }
+
+    /**
      * Create the custom uri for the request
      * @param endpoint endpoint for the request
      * @return the full uri of the request

@@ -1,0 +1,61 @@
+
+#					periodic:duree   init
+#
+#alert
+#	msg:
+#	facility
+#	severity
+#compute
+#	exp:"	"  block to compute in the variable table
+#schedule
+#	delay:
+# 	rule_name:
+#activate:
+#	rule_name  (the rule name are arbo  , possible to say 12.*)
+# desactivate
+#	rule_name
+##
+# protocol
+#	tcp
+#	sysstate
+#
+# options
+#	those for each command (see above) plus :
+#		init:true|false	 (default false, activate it for the first cycle
+#		periodic: 10  (in ms)
+#		cond:" "  exp to check on the var table
+#		dpi:
+#
+#
+#Examples
+#
+#	 alert tcp any -> 192.168.1.12 (cond:"x>5";msg:"ca marche";severity:1)
+#
+#
+#
+#  VARIABLES  
+#	$EXTERNAL_IP
+00 alert  $set2 any -> 192.168.1.65/24 (msg:"set2 found "; activate_on_start:true;)
+01 alert  !$set2 any -> 192.168.1.65/24 (msg:"not in set2"; activate_on_start:true;)
+
+#1 alert  any -> 192.168.1.65/24 (msg:"warning rule 1 "; activate_on_start:true;)
+111 alert  any -> [192.168.1.65, 192.168.1.60] [502,23] (msg:"rule n°111 "; activate_on_start:true;)
+2 alert tcp any -> 192.168.1.12 (msg:"test";dpi:"modbus")
+#3 compute sysstate (exp:"x<-x+1";activate_on_start:true)
+3 compute sysstate (exp:"x<-x+1";activate_on_start:true;periodic:5000)
+31 compute sysstate (exp:"y<-y+10")
+32 schedule sysstate (schedule_mode:"once"; rule_name:"31"; delay:2000;activate_on_start:true;periodic:5000)
+
+33 alert sysstate (cond:"(x==12)";msg:"x=340"; activate_on_start:true)
+#44 alert any -> any (dpi:"fct==6;";msg:"modbus fct 6"; activate_on_start:true)
+
+#3 alert tcp $HOME_NET34  -> 205.123.1.1  (dpi:"modbus;fct == 5", possibility="5")
+#8 alert tcp $HOME_NET  -> 205.123.1.1  (dpi:"unknown; fct !=0")
+#10 alert sysstate (cond:"x!=1";activate_on_start:true;periodic:10;delay:10;rule_name:12.1;props:"essai=45;x=1";severity:GRAVE;msg:"ca marche ${x}  ${x|%.4f}")
+#11 alert tcp any [80,7] <- $HOME_NET ()
+#12 alert tcp ![192.168.1.0/24,10.1.1.0/24] any-> any 80
+#13 compute sysstate (exp:"{x<-x+1}";activate_on_start:false;)
+#14 schedule sysstate (delay:"5000";rule_name:"13";schedule_mode:"once";activate_on_start:true;periodic:10000)
+15 alert tcp any -> any (msg:"bug";severity:SEVERE;dpi:"modbus; fct in[1,5]; addr !in 10:123; value in 10";activate_on_start:true;)
+16 alert tcp any -> any (msg:"r16";dpi:"modbus; fct==5; addr in 10:123; value in 10")
+17 setrisk tcp any -> any 443 (level:"4";severity:"1")

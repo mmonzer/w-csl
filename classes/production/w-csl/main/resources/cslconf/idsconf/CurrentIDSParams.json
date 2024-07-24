@@ -1,0 +1,8 @@
+{
+  "currentDataSetNameForDetectionOffLine":"",
+  "currentDataSetNameForRecording":"",
+  "currentDataSetNameForLearning":"apprentissageSet",
+  "sendToBrowser":true,
+  "sendToConsole":true,
+  "idsMode":"IDLE"
+}

@@ -779,6 +779,9 @@ public class ScanApiHandler extends ApiHandler  {
         return sendGet(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_FETCH_PREDEFINED_VARIABLES, Json.object());
     }
 
+    public JsonApiResponse getInstalledNpmPackages() {
+        return sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.ENTITY_HTTP_CONNECTION_GET_INSTALLED_NPM_PACKAGES, Json.object());
+    }
     /**
      * Get the current cron expression for the periodic discovery task.
      * @return The cron expression for the periodic discovery task.
@@ -1060,8 +1063,7 @@ public class ScanApiHandler extends ApiHandler  {
     }
 
     public Path downloadExportFile(ExportQuery exportQuery) throws ExecutionException, InterruptedException, TimeoutException {
-//        URI uri = URI.create(url + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
-        URI uri = URI.create(createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint())+exportQuery.getId().toString());
+        URI uri = URI.create(getUrl() + String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_EXPORT_BSON_DOWNLOAD.endpoint(), exportQuery.getId().toString()));
         Request request = httpClient.newRequest(uri);
         InputStreamResponseListener listener = new InputStreamResponseListener();
         request.send(listener);

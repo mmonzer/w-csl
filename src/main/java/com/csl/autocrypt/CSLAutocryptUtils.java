@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromVaultToDbapi;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.*;
 
@@ -75,6 +76,7 @@ public class CSLAutocryptUtils {
     public static Json formatIssuer(Json issuerRaw) {
         Json issuer = Json.object();
         drop(issuerRaw, Common.CREATEDAT, Common.UPDATEDAT);
+        transformKeysFromVaultToDbapi(issuerRaw, Common.OU, Common.PROVINCE);
         copyValueOrNull(issuerRaw, issuer, Common.COMMON_NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Common.PATH, Certificate.SERIAL_NUMBER);
         Json certificate = Json.object();
         copyValueOrNull(issuerRaw, certificate, Certificate.CA_CHAIN, Certificate.CERTIFICATE, Certificate.EXPIRATION, Certificate.ISSUING_CA, Certificate.PRIVATE_KEY, Certificate.PRIVATE_KEY_TYPE, Certificate.SERIAL_NUMBER);
@@ -109,6 +111,7 @@ public class CSLAutocryptUtils {
     public static Json formatRole(Json roleRaw) {
         Json role = Json.object();
         drop(roleRaw, Common.CREATEDAT, Common.UPDATEDAT);
+        transformKeysFromVaultToDbapi(roleRaw, Common.OU, Common.PROVINCE);
         copyValueOrNull(roleRaw, role, Common.NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Common.PATH);
         role.set(Role.ROLE_JSON, roleRaw);
         return role;

@@ -13,6 +13,7 @@ import main.services.endpoints.AutoCryptEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 import static main.services.endpoints.AutoCryptEndpoints.*;
@@ -237,6 +238,7 @@ public class AutoCrypt {
      */
     public JsonApiResponse createRole(String name, Json params, Json body) {
         logger.info("Creating role {} at path {} ...", name, params.get(Common.PATH).asString());
+        transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Create role in autocrypt
         logger.debug("Creating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
@@ -309,6 +311,7 @@ public class AutoCrypt {
      */
     public JsonApiResponse updateRole(String name, Json params, Json body) {
         logger.info("Updating role {} at path {} ...", name, params.get(Common.PATH).asString());
+        transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Update role in autocrypt
         logger.debug("Updating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
@@ -520,6 +523,7 @@ public class AutoCrypt {
         boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
         String type = isRoot ? "root" : "intermediate";
         logger.info("Generating {} CA ...", type);
+        transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Creating CA in Autocrypt
         logger.debug("Creating {} CA creation in Autocrypt ...", type);

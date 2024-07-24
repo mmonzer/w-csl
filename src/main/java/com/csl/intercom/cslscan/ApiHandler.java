@@ -160,14 +160,22 @@ public class ApiHandler implements AutoCloseable {
      * @param useSSL whether the connexion uses SSL
      * @return the url
      */
-    private static String createBaseUrl(String ip, int port, boolean useSSL) {
+    private String createBaseUrl(String ip, int port, boolean useSSL) {
         if (useSSL && port==443) {
             return "https://"+ ip;
         }
         if (!useSSL && port==80) {
             return "http://"+ ip;
         }
-        return (useSSL ? "https://" : "http://") + ip + ":" + port;
+        return (useSSL ? "https://" : "http://") + ip + ":" + port + uriCommonPath;
+    }
+
+    /**
+     * Get the url
+     * @return the url
+     */
+    public String getUrl() {
+        return createBaseUrl(ip, port,useSSL)+ uriCommonPath;
     }
 
     /**
@@ -176,7 +184,7 @@ public class ApiHandler implements AutoCloseable {
      * @return the full uri of the request
      */
     public String createUriFrom(String endpoint) {
-        return createBaseUrl(ip, port, useSSL) + uriCommonPath + endpoint.replace(" ", "%20").replace(":", "%3A");
+        return getUrl() + endpoint.replace(" ", "%20").replace(":", "%3A");
     }
 
     // endregion create uri

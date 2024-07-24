@@ -1051,8 +1051,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 "mongo_entity_id", connection.getUuid(),
                 "other_data", getConnectionOtherData(connection)
         );
-        if (connection.getProtocol() == SNMPv3 || connection.getProtocol() == RemotePowershell || connection.getProtocol() == SSH) {
+        if (connection.getProtocol() == SNMPv3) {
             requestContents.set("username", ((SNMPv3Connection) connection).getUsername());
+        } else if (connection.getProtocol() == RemotePowershell) {
+            requestContents.set("username", ((RemotePowershellConnection) connection).getUsername());
         }
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CONNECTIONS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
@@ -1075,7 +1077,43 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         if (response.getStatus() >= 400) {
             throw new DbapiUnexpectedStatusCodeException("Could not delete connection.", response.getStatus());
         }
-
+    }
+    public int getDbApiConnectionId(String connectionMongoEntityId) {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS_DETAILS_BY_MONGO_ID);
+        request.param("mongo_entity_id", connectionMongoEntityId);
+        try {
+            ContentResponse response = request.send();
+            Json responseContents = Json.read(response.getContentAsString());
+            return JsonUtil.getIntFromJson(responseContents, "id", 0);
+        } catch (Exception e) {
+            logger.error("Could not get connection id from DB-API.", e);
+            return 0;
+        }
+    }
+    public void updateConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException {
+        String connectionUuid = connection.getUuid();
+        String connectionDbApiId = String.valueOf(getDbApiConnectionId(connectionUuid));
+        Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), connectionDbApiId));
+        Json requestContents = Json.object(
+                "name", connection.getName(),
+                "discovery_protocol_name", connection.getProtocol().dbapiName(),
+                "port_number", getConnectionPortNumberFromConnection(connection),
+                "mongo_entity_id", connectionUuid,
+                "other_data", getConnectionOtherData(connection)
+        );
+        if (connection.getProtocol() == SNMPv3) {
+            requestContents.set("username", ((SNMPv3Connection) connection).getUsername());
+        } else if (connection.getProtocol() == RemotePowershell) {
+            requestContents.set("username", ((RemotePowershellConnection) connection).getUsername());
+        }
+        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            logger.error("Could not update connection in DB-API. Got status code " + response.getStatus());
+        } else if (response.getStatus() == 200) {
+            logger.info("Connection updated in DB-API.");
+        }
+        logger.error("Updating connections in DB-API is not implemented yet.");
     }
     /**
      * Handle the changes in the devices on DB-API.

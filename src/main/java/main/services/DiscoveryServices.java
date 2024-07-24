@@ -1090,6 +1090,47 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             return response.toJson();
         });
 
+        addCmd(DiscoveryEndpoints.UPDATE_CONNECTION, params -> {
+            Json connectionJson = params.get("connection");
+            Connection connection = null;
+            try {
+                connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
+            } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                logger.error("Could not fetch discovery protocols", e);
+                return JsonApiResponse.error("Could not fetch discovery protocols",
+                        Json.object("exception", e.getMessage())
+                ).toJson();
+            }
+            if (connection == null) {
+                return JsonApiResponse.error("Could not parse connection",
+                        Json.object("exception", "Could not parse connection")
+                ).toJson();
+            }
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.updateConnectionInfo(connection);
+                if (response.isSuccess()) {
+                    // update connection info in dbapi
+                    try {
+                        dbapiHandler.updateConnection(connection);
+                    } catch (Exception e) {
+                        logger.error("Could not update connection info in dbapi", e);
+                        return JsonApiResponse.error("Could not update connection info in dbapi",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                } else {
+                    logger.error("Could not update connection info, {}", response.getError().toString());
+                }
+            } catch (Exception e) {
+                logger.error("Could not update connection info", e);
+                response = JsonApiResponse.error("Could not update connection info",
+                        Json.object("exception", e.getMessage())
+                );
+            }
+            return response.toJson();
+        });
+
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 
         logger.info("SNMP service operational");

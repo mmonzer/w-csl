@@ -79,6 +79,9 @@ public class ScanApiHandler extends ApiHandler  {
     public JsonApiResponse deleteConnectionInfo(String connectionUuid) {
         return sendDelete(String.format(ScanApiEndpoint.CONNECTIONS_DETAILS.endpoint(), connectionUuid), Json.object());
     }
+    public JsonApiResponse updateConnectionInfo(Connection connection) {
+        return sendPost(String.format(ScanApiEndpoint.CONNECTIONS_DETAILS.endpoint(), connection.getUuid()), connection.serializeForScanner());
+    }
     /**
      * Get connections since a specified date.
      * If the date is null, all connections are returned.

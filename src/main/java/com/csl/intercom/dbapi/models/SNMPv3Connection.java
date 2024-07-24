@@ -67,7 +67,10 @@ public class SNMPv3Connection extends Connection {
             if (connectionJson.has("uuid")) {
                 uuid = connectionJson.get("uuid").asString();
             } else {
-                uuid = null;
+                if(connectionJson.has("mongo_entity_id"))
+                    uuid = connectionJson.get("mongo_entity_id").asString();
+                else
+                    uuid = null;
             }
             int port = connectionJson.get(SNMPv3ConnectionField.PORT.dbapiName()).asInteger();
             String username = connectionJson.get(SNMPv3ConnectionField.USERNAME.dbapiName()).asString();

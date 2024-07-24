@@ -41,8 +41,12 @@ public class SNMPv1Connection extends Connection {
             if (connectionJson.has("uuid")) {
                 uuid = connectionJson.get("uuid").asString();
             } else {
-                uuid = null;
+                if(connectionJson.has("mongo_entity_id"))
+                    uuid = connectionJson.get("mongo_entity_id").asString();
+                else
+                    uuid = null;
             }
+
             int port = connectionJson.get(SNMPv2cConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices = new ArrayList<>();
             for (Json device: connectionJson.get("connected_devices").asJsonList()) {

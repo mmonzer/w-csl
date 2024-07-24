@@ -41,8 +41,10 @@ public class SshConnection extends Connection {
         String id = "0";
         if (connectionJson.has("id") && connectionJson.get("id").isNumber()) {
             id = String.valueOf(connectionJson.get("id").asInteger());
+        } else {
+            if(connectionJson.has("mongo_entity_id"))
+                id = connectionJson.get("mongo_entity_id").asString();
         }
-
         int port = 0;
         if (connectionJson.has(SshConnectionField.PORT.dbapiName()) && connectionJson.get(SshConnectionField.PORT.dbapiName()).isNumber()) {
             port = connectionJson.get(SshConnectionField.PORT.dbapiName()).asInteger();

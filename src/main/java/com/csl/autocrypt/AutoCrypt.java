@@ -99,7 +99,7 @@ public class AutoCrypt {
         logger.debug("Updating info from issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, 2, 3, issuerRef, params.get(Common.PATH).asString());
+            logger.error("{} : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, issuerRef, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error updating issuer : " + responseFromModule.getError().toJson());
         }
         logger.info("Updating info from issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
@@ -283,7 +283,7 @@ public class AutoCrypt {
         logger.debug("Deleting role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.deleteRole(name, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : Deleting role {} at path {} in autocrypt failed", AutoCryptEndpoints.DELETE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+            logger.error("{} : Deleting role {} at path {} in autocrypt failed", AutoCryptEndpoints.DELETE_ROLE, name, params.get(Common.PATH).asString());
             return responseFromModule;
         }
         logger.info("Deleted role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
@@ -314,7 +314,7 @@ public class AutoCrypt {
         logger.debug("Updating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.updateRole(name, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : Updating role {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ROLE, 1, 2, name, params.get(Common.PATH).asString());
+            logger.error("{} : Updating role {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ROLE, name, params.get(Common.PATH).asString());
             return responseFromModule;
         }
         logger.info("Updated role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
@@ -404,9 +404,9 @@ public class AutoCrypt {
         JsonApiResponse response = autocryptApiHandler.getCertificateInfo(serialNumber, params);
 
         if (response.isSuccess()) {
-            logger.info("{} ({}/{}) : information of certificate ({}) fetched", AutoCryptEndpoints.GET_CERTIFICATE_INFO, 1, 1, serialNumber);
+            logger.info("{} : information of certificate ({}) fetched", AutoCryptEndpoints.GET_CERTIFICATE_INFO, serialNumber);
         } else {
-            logger.error("{} ({}/{}) : fetching information of certificate ({}) failed", AutoCryptEndpoints.GET_CERTIFICATE_INFO, 1, 1, serialNumber);
+            logger.error("{} : fetching information of certificate ({}) failed", AutoCryptEndpoints.GET_CERTIFICATE_INFO, serialNumber);
         }
         return response;
     }
@@ -471,7 +471,7 @@ public class AutoCrypt {
         logger.debug("revoking certificate {} at path {} in Autocrypt ...", serialNumber, path);
         JsonApiResponse responseFromModule = autocryptApiHandler.revokeCertificate(serialNumber, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} ({}/{}) : failed to revoked certificate {} at path {} in Autocrypt", AutoCryptEndpoints.REVOKE_CERTIFICATE, 1, 2, serialNumber, path);
+            logger.error("{} : failed to revoked certificate {} at path {} in Autocrypt", AutoCryptEndpoints.REVOKE_CERTIFICATE, serialNumber, path);
             return responseFromModule;
         }
         logger.info("revoked certificate {} at path {} in Autocrypt", serialNumber, path);

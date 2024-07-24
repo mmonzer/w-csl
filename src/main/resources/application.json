@@ -169,7 +169,8 @@
   },
   "autocrypt": {
     "ip": "host.docker.internal",
-    "port": 8002
+    "port": 8002,
+    "sync_frequency": 300
   }
 
 }

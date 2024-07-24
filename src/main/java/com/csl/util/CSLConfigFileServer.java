@@ -177,10 +177,6 @@ public class CSLConfigFileServer {
 			return dirOfLocalFiles;
 		}
 
-		public void setDirOfLocalFiles(String dirOfLocalFiles) {
-			this.dirOfLocalFiles = dirOfLocalFiles;
-		}
-
 		public void addLocalFileTransferableViaHttp(String fileName) {
 			listOfLocalFiles.add(fileName);
 		}

@@ -20,11 +20,7 @@ public class DbapiHandler extends ApiHandler {
     }
 
     public DbapiHandler(Json config) {
-        super("DB-API",
-                (JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true) ? "https://" : "http://")+
-                        JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost")+
-                        "/api");
-        setApiKey(JsonUtil.getStringFromJson(config.get("global"), "api_key", ""));
+        this("DB-API", config);
     }
 
     public DbapiHandler(String moduleName) {
@@ -32,10 +28,14 @@ public class DbapiHandler extends ApiHandler {
     }
 
     public DbapiHandler(String moduleName, Json config) {
+//        super("DB-API::"+moduleName,
+//                (JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true) ? "https://" : "http://")+
+//                        JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost")+
+//                        "/api");
         super("DB-API::"+moduleName,
-                (JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true) ? "https://" : "http://")+
-                        JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost")+
-                        "/api");
+                JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost"),
+                JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true));
+        addUriCommonPath("/api");
         setApiKey(JsonUtil.getStringFromJson(config.get("global"), "api_key", ""));
     }
 

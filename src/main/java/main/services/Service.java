@@ -3,6 +3,7 @@ package main.services;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
+import lombok.Getter;
 import main.services.endpoints.Endpoint;
 
 /**
@@ -12,6 +13,7 @@ public abstract class Service implements ICSLService {
     /**
      * Name of service
      */
+    @Getter
     protected String name;
     /**
      * Name of service description
@@ -20,6 +22,7 @@ public abstract class Service implements ICSLService {
     /**
      * Name of service configuration file
      */
+    @Getter
     protected String configFileSectionName;
     /**
      * apiCommand for the current Service
@@ -106,24 +109,6 @@ public abstract class Service implements ICSLService {
      */
     public String addCmd(Endpoint endpoint, IJsonCmd cmd) {
         return addCmd(endpoint.cmd(), cmd, endpoint.help());
-    }
-
-    /**
-     * Gives the name of the service
-     *
-     * @return the name of the service in format {@link String}
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Gives the name of the configuration file
-     *
-     * @return the name of the file in format {@link String}
-     */
-    public String getConfigFileSectionName() {
-        return configFileSectionName;
     }
 
     /**

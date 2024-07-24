@@ -17,9 +17,6 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
-    // Local libraries
-    implementation files('lib/jar/xminiserver.jar')
-
     // Test dependencies
     testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
     testImplementation 'org.mockito:mockito-core:5.12.0'
@@ -122,7 +119,6 @@ jacocoTestReport {
         html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
 }
-
 
 task printEnvVariables {
     doLast {

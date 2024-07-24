@@ -37,15 +37,7 @@ import java.util.Set;
 public class CpeSearch {
 	Tree dictionnary;
 	Json test = Json.object();
-    /**
-     * -- GETTER --
-     *  Fonction de debug permettant d'obtenir une hashmap contenant le nombre d'element par niveau du graph
-     *  Pour qu'elle soit remplie, décommenter le code entre balise \/\* \*\/ de la fonction addToTree
-     *
-     * @return une hashmap contenant les infos
-     */
-    @Getter
-    HashMap<Integer,Integer> infos = new HashMap<Integer,Integer>();
+	HashMap<Integer,Integer> infos = new HashMap<Integer,Integer>();
 	public CpeSearch() {
 		dictionnary = new Tree();
 	}

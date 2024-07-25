@@ -16,6 +16,7 @@ import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -838,6 +839,15 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return initRequestWithHeaders(method.toString(), endpoint);
     }
 
+    private Request createDbApiRequestWithCustomHeaders(String method, String endpoint, String contentType) {
+        setCustomHeaders(contentType);
+        Request request =  initRequest(method, createUriFrom(endpoint), httpClient);
+        for (Map.Entry<HttpHeader, String> entry : headers.entrySet()) {
+            request.header(entry.getKey(), entry.getValue());
+        }
+        return request;
+    }
+
     /**
      * Create a DB-API request. Most notably, adds the API key to the request header.
      *
@@ -1063,7 +1073,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public Path downloadHttpTemplatesBsonFile(HttpTemplateImportNotification query) throws ExecutionException, InterruptedException, TimeoutException {
         Json contents = Json.object("file_action_status_id", query.getId());
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DOWNLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint());
-        request.content(new StringContentProvider(contents.toString()), "application/json");
+        // create contentProvider with the json contents
+
+        StringContentProvider contentProvider = new StringContentProvider(contents.toString());
+        request.content(contentProvider);
+        request.header(HttpHeader.CONTENT_TYPE, "application/json");
+
         InputStreamResponseListener listener = new InputStreamResponseListener();
         request.send(listener);
         Response response = listener.get(30, TimeUnit.SECONDS);
@@ -1081,7 +1096,6 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public void uploadHttpTemplatesBsonFile(ExportQuery exportQuery) {
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE);
         MultiPartContentProvider multiPart = new MultiPartContentProvider();
         try {
             Path filePath = fileStorageService.getFilePath(exportQuery.getFilename());
@@ -1094,6 +1108,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return;
         }
         multiPart.close();
+        Request request = createDbApiRequestWithCustomHeaders("POST", DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint(), multiPart.getContentType());
         request.content(multiPart);
         try {
             ContentResponse response = request.send();

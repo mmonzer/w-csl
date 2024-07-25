@@ -28,42 +28,10 @@ public class DbapiHandler extends ApiHandler {
     }
 
     public DbapiHandler(String moduleName, Json config) {
-//        super("DB-API::"+moduleName,
-//                (JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true) ? "https://" : "http://")+
-//                        JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost")+
-//                        "/api");
         super("DB-API::"+moduleName,
                 JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost"),
                 JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true));
         addUriCommonPath("/api");
         setApiKey(JsonUtil.getStringFromJson(config.get("global"), "api_key", ""));
-    }
-
-    @Override
-    protected HttpClient initClient() {
-       return initSSLDbApiHandler();
-    }
-
-    /**
-     * Ensures the connexion with SSL with the Dbapi.
-     * Return the new client well configured
-     */
-    private static HttpClient initSSLDbApiHandler(){
-        // Retrieve system properties
-        String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
-        String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
-
-        // Ensure the properties are set
-        if (trustStorePath == null || trustStorePassword == null) {
-            throw new IllegalStateException("Trust store properties are not set.");
-        }
-
-        // Configure SslContextFactory with the retrieved properties
-        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-        sslContextFactory.setTrustStorePath(trustStorePath);
-        sslContextFactory.setTrustStorePassword(trustStorePassword);
-        sslContextFactory.setTrustAll(true);
-
-        return new HttpClient(sslContextFactory);
     }
 }

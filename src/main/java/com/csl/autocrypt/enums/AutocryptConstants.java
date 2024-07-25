@@ -110,6 +110,7 @@ public final class AutocryptConstants {
         public static final String CA_TYPE = "ca_type";
         public static final String IMPORTED_ISSUERS = "imported_issuers";
         public static final String ROOT = "root";
+        public static final String IS_ROOT = "is_root";
         public static final String INTERMEDIATE = "intermediate";
         public static final String INTERNAL = "internal";
         public static final String IP_SANS = "ip_sans";

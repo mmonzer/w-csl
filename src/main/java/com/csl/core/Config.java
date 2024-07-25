@@ -14,6 +14,7 @@ import java.util.Map;
 
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +110,7 @@ public class Config {
 
     @Getter
     public static class CSLGlobal {
+        // region define variables
         String ipServerRemote;
         Integer portServerRemote;
         String serverRemoteUrlPrefix;
@@ -117,6 +119,7 @@ public class Config {
         Boolean useSsl;
         Boolean launchWebApiServer;
         Integer webApiServerPort;
+        // endregion define variables
 
         public CSLGlobal(Json globalConfig) {
             ipServerRemote = JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
@@ -132,10 +135,12 @@ public class Config {
 
     @Getter
     public static class CSLScan {
+        // region define variables
         String managerIp;
         Integer managerPort;
         String managerProtocol;
         String managerTimezone;
+        // endregion define variables
 
         public CSLScan(Json globalConfig) {
             managerIp = JsonUtil.getStringFromJson(globalConfig, "manager_ip", "localhost");
@@ -147,10 +152,10 @@ public class Config {
 
     @Getter
     public static class CSLStatus {
+        // region define variables
         Boolean sendNotifications;
         Integer notificationsPeriod;
-        String managerProtocol;
-        String managerTimezone;
+        // endregion define variables
 
         public CSLStatus(Json globalConfig) {
             sendNotifications = JsonUtil.getBooleanFromJson(globalConfig, "send_notifications", false);
@@ -160,10 +165,12 @@ public class Config {
 
     @Getter
     public static class CSLNmapService {
+        // region define variables
         Boolean debugMode;
         String debugDir;
         Boolean logMode;
         String logDir;
+        // endregion define variables
 
         public CSLNmapService(Json globalConfig) {
             debugMode = JsonUtil.getBooleanFromJson(globalConfig, "debug_mode", true);
@@ -175,7 +182,9 @@ public class Config {
 
     @Getter
     public static class CSLCpeService {
+        // region define variables
         String dictionaryPath;
+        // endregion define variables
 
         public CSLCpeService(Json globalConfig) {
             dictionaryPath = JsonUtil.getStringFromJson(globalConfig, "dictionaryPath", "src/main/resources/cslconf/cpe/CpeTree.json");
@@ -184,9 +193,11 @@ public class Config {
 
     @Getter
     public static class CSLSshService {
+        // region define variables
         String localIpAddress;
         Integer localPort;
         String knowHostFilePath;
+        // endregion define variables
 
         public CSLSshService(Json globalConfig) {
             localIpAddress = JsonUtil.getStringFromJson(globalConfig, "localIpAddr", "localhost");
@@ -197,8 +208,11 @@ public class Config {
 
     @Getter
     public static class CSLDatabaseServerConf {
+        // region define variables
         String datafileSubdir;
+        @Setter
         Boolean on;
+        // endregion define variables
 
         public CSLDatabaseServerConf(Json globalConfig) {
             datafileSubdir = JsonUtil.getStringFromJson(globalConfig, "datafile_subdir", "datafile");
@@ -208,9 +222,11 @@ public class Config {
 
     @Getter
     public static class CSLServiceLoader {
+        // region define variables
         Boolean traceServiceExecution;
         Boolean traceLibrarySearch;
         List<String> services;
+        // endregion define variables
 
         public CSLServiceLoader(Json globalConfig) {
             traceServiceExecution = JsonUtil.getBooleanFromJson(globalConfig, "trace_service_execution", true);
@@ -221,6 +237,8 @@ public class Config {
 
     @Getter
     public static class CSLWebServerConf {
+        // region define variables
+        @Setter
         Boolean on;
         Boolean verbose;
         Boolean debug;
@@ -244,6 +262,7 @@ public class Config {
         String logPrefixFilename;
         Integer maxSizeOfLogFiles;
         Integer websocketTimeout;
+        // endregion define variables
 
         public CSLWebServerConf(Json globalConfig) {
             on = JsonUtil.getBooleanFromJson(globalConfig, "on", true);
@@ -274,6 +293,8 @@ public class Config {
 
     @Getter
     public static class CSLUdpServerConf {
+        // region define variables
+        @Setter
         Boolean on;
         Boolean verbose;
         Boolean traceAllMessages;
@@ -281,9 +302,10 @@ public class Config {
         Integer port;
         Integer maxInputQueues;
         Integer maxSizeOfInputQueues;
+        // endregion define variables
 
         public CSLUdpServerConf(Json globalConfig) {
-            on = JsonUtil.getBooleanFromJson(globalConfig, "on", true);
+            on = JsonUtil.getBooleanFromJson(globalConfig, "on", false);
             verbose = JsonUtil.getBooleanFromJson(globalConfig, "verbose", true);
             traceAllMessages = JsonUtil.getBooleanFromJson(globalConfig, "trace_all_messages", false);
             ip = JsonUtil.getStringFromJson(globalConfig, "ip", "0.0.0.0");
@@ -295,14 +317,16 @@ public class Config {
 
     @Getter
     public static class CSLModuleExec {
-        Integer sampling_time;
+        // region define variables
+        Integer samplingTime;
         String modulesPackageName;
         Integer numberOfExecLoops;
         Boolean autostart;
+        // endregion define variables
 
         public CSLModuleExec(Json globalConfig) {
             modulesPackageName = JsonUtil.getStringFromJson(globalConfig, "modules_package_name", "main.modules");
-            sampling_time = JsonUtil.getIntFromJson(globalConfig, "sampling_time", 1000);
+            samplingTime = JsonUtil.getIntFromJson(globalConfig, "sampling_time", 1000);
             numberOfExecLoops = JsonUtil.getIntFromJson(globalConfig, "number_of_exec_loops", 2);
             autostart = JsonUtil.getBooleanFromJson(globalConfig, "autostart", true);
         }
@@ -310,9 +334,11 @@ public class Config {
 
     @Getter
     public static class CSLModule {
+        // region define variables
         String name;
         String type;
         CSLModuleConfig config;
+        // endregion define variables
 
         public CSLModule(Json globalConfig) {
             name = JsonUtil.getStringFromJson(globalConfig, "name", "module_ids");
@@ -336,110 +362,113 @@ public class Config {
         @Getter
         public static class CSLModuleConfig {
             Boolean autostart;
-            Integer exec_loop_number;
-            Integer input_priority;
-            Integer step_priority;
-            Integer output_priority;
+            Integer execLoopNumber;
+            Integer inputPriority;
+            Integer stepPriority;
+            Integer outputPriority;
 
             public CSLModuleConfig(Json globalConfig) {
                 autostart = JsonUtil.getBooleanFromJson(globalConfig, "autostart", true);
-                exec_loop_number = JsonUtil.getIntFromJson(globalConfig, "exec_loop_number", 1);
-                input_priority = JsonUtil.getIntFromJson(globalConfig, "input_priority", 90);
-                step_priority = JsonUtil.getIntFromJson(globalConfig, "step_priority", 99);
-                output_priority = JsonUtil.getIntFromJson(globalConfig, "output_priority", 98);
+                execLoopNumber = JsonUtil.getIntFromJson(globalConfig, "exec_loop_number", 1);
+                inputPriority = JsonUtil.getIntFromJson(globalConfig, "input_priority", 90);
+                stepPriority = JsonUtil.getIntFromJson(globalConfig, "step_priority", 99);
+                outputPriority = JsonUtil.getIntFromJson(globalConfig, "output_priority", 98);
             }
         }
     }
 
     @Getter
     public static class CSLIdsConf {
+        // region define variables
         Boolean on;
         Integer mode;
-        String help_mode;
-        Boolean relative_to_CSLConfig_dir;
-        String idsconf_dir;
-        Boolean idsconf_dir_relative_to_data_dir;
-        String packets_dir_for_detection_offline;
-        String packets_dir_for_detection_offline_info;
-        String packets_dir_for_recording;
-        String packets_dir_for_recording_info;
-        String packets_dir_for_learning;
-        String packets_dir_for_learning_info;
-        Boolean validation_after_learning;
-        Boolean log_to_file;
-        String variables_prefix_filename;
-        String packets_prefix_filename;
-        String network_prefix_filename;
-        Integer max_size_of_log_files;
-        String subdir_learn;
-        String help_subdir_learn;
-        String subdir_offline_detect;
-        String help_subdir_detect;
-        String rules_for_detection;
-        String rules_for_learning;
-        String rules_for_suricata_base;
-        String rules_for_suricata_learned;
-        String learned_model;
-        String new_learned_model;
-        String system_configuration;
-        String current_idsparams_file;
-        List<String> idstrace_flags;
+        String helpMode;
+        Boolean relativeToCSLConfigDir;
+        String idsconfDir;
+        Boolean idsconfDirRelativeToDataDir;
+        String packetsDirForDetectionOffline;
+        String packetsDirForDetectionOfflineInfo;
+        String packetsDirForRecording;
+        String packetsDirForRecordingInfo;
+        String packetsDirForLearning;
+        String packetsDirForLearningInfo;
+        Boolean validationAfterLearning;
+        Boolean logToFile;
+        String variablesPrefixFilename;
+        String packetsPrefixFilename;
+        String networkPrefixFilename;
+        Integer maxSizeOfLogFiles;
+        String subdirLearn;
+        String helpSubdirLearn;
+        String subdirOfflineDetect;
+        String helpSubdirDetect;
+        String rulesForDetection;
+        String rulesForLearning;
+        String rulesForSuricataBase;
+        String rulesForSuricataLearned;
+        String learnedModel;
+        String newLearnedModel;
+        String systemConfiguration;
+        String currentIdsParamsFile;
+        List<String> idstraceFlags;
         String general;
-        String idstrace_dir;
-        Boolean idstrace_on;
-        Boolean send_to_console;
-        Boolean send_to_browser;
-        Boolean show_ticks;
-        Boolean kill_previous_instance;
-        String taps_dir;
-        Integer history_length;
+        String idstraceDir;
+        Boolean idstraceOn;
+        Boolean sendToConsole;
+        Boolean sendToBrowser;
+        Boolean showTicks;
+        Boolean killPreviousInstance;
+        String tapsDir;
+        Integer historyLength;
+        // endregion define variables
 
         public CSLIdsConf(Json globalConfig) {
             on = JsonUtil.getBooleanFromJson(globalConfig, "on", true);
             mode = JsonUtil.getIntFromJson(globalConfig, "mode", 1);
-            help_mode = JsonUtil.getStringFromJson(globalConfig, "help_mode", "0:idle, 1:record only, 2: detect online 3: learning 4: detect offline");
-            relative_to_CSLConfig_dir = JsonUtil.getBooleanFromJson(globalConfig, "relative_to_CSLConfig_dir", false);
-            idsconf_dir = JsonUtil.getStringFromJson(globalConfig, "idsconf_dir", "idsconf");
-            idsconf_dir_relative_to_data_dir = JsonUtil.getBooleanFromJson(globalConfig, "idsconf_dir_relative_to_data_dir", false);
-            packets_dir_for_detection_offline = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_detection_offline", "../zzidsdir/data/test/");
-            packets_dir_for_detection_offline_info = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_detection_offline_info", "used for detection off line (mode 4) and mode 3 if validation after lerarning");
-            packets_dir_for_recording = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_recording", "../zzidsdir/data/test");
-            packets_dir_for_recording_info = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_recording_info", "used for mode record and detect on line with log (mode 1 and 2)");
-            packets_dir_for_learning = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_learning", "../zzidsdir/data/test");
-            packets_dir_for_learning_info = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_learning_info", "used for learning  (mode 3)");
-            validation_after_learning = JsonUtil.getBooleanFromJson(globalConfig, "validation_after_learning", false);
-            log_to_file = JsonUtil.getBooleanFromJson(globalConfig, "log_to_file", true);
-            variables_prefix_filename = JsonUtil.getStringFromJson(globalConfig, "variables_prefix_filename", "VARIABLES");
-            packets_prefix_filename = JsonUtil.getStringFromJson(globalConfig, "packets_prefix_filename", "PACKETS");
-            network_prefix_filename = JsonUtil.getStringFromJson(globalConfig, "network_prefix_filename", "NETWORK");
-            max_size_of_log_files = JsonUtil.getIntFromJson(globalConfig, "max_size_of_log_files", 100000000);
-            network_prefix_filename = JsonUtil.getStringFromJson(globalConfig, "network_prefix_filename", "NETWORK");
-            subdir_learn = JsonUtil.getStringFromJson(globalConfig, "subdir_learn", "");
-            help_subdir_learn = JsonUtil.getStringFromJson(globalConfig, "help_subdir_learn", "The data for learning are in a subdir of working_dir");
-            subdir_offline_detect = JsonUtil.getStringFromJson(globalConfig, "subdir_offline_detect", "test");
-            help_subdir_detect = JsonUtil.getStringFromJson(globalConfig, "help_subdir_detect", "The data for off line detect are in a subdir of working_dir");
-            rules_for_detection = JsonUtil.getStringFromJson(globalConfig, "rules_for_detection", "RulesForDetection.txt");
-            rules_for_learning = JsonUtil.getStringFromJson(globalConfig, "rules_for_learning", "RulesForLearning.txt");
-            rules_for_suricata_base = JsonUtil.getStringFromJson(globalConfig, "rules_for_suricata_base", "RulesForSuricata.txt");
-            rules_for_suricata_learned = JsonUtil.getStringFromJson(globalConfig, "rules_for_suricata_learned", "RulesForSuricataLearned.txt");
-            learned_model = JsonUtil.getStringFromJson(globalConfig, "learned_model", "LearnedRules.json");
-            new_learned_model = JsonUtil.getStringFromJson(globalConfig, "new_learned_model", "NewLearnedRules.json");
-            system_configuration = JsonUtil.getStringFromJson(globalConfig, "system_configuration", "SystemConfiguration.json");
-            current_idsparams_file = JsonUtil.getStringFromJson(globalConfig, "current_idsparams_file", "CurrentIDSParams.json");
-            idstrace_flags = JsonUtil.getListStrFromJson(globalConfig, "idstrace_flags", Arrays.asList("general:1", "alert:0", "dpi:false", "syslearn:0", "setrisk:0", "XTERNAL_COMMANDS:1", "TEST_PKT_IDS:0"));
-            idstrace_dir = JsonUtil.getStringFromJson(globalConfig, "idstrace_dir", "./idslogs/trace");
-            idstrace_on = JsonUtil.getBooleanFromJson(globalConfig, "idstrace_on", true);
-            send_to_console = JsonUtil.getBooleanFromJson(globalConfig, "send_to_console", false);
-            send_to_browser = JsonUtil.getBooleanFromJson(globalConfig, "send_to_browser", true);
-            show_ticks = JsonUtil.getBooleanFromJson(globalConfig, "show_ticks", false);
-            kill_previous_instance = JsonUtil.getBooleanFromJson(globalConfig, "kill_previous_instance", true);
-            taps_dir = JsonUtil.getStringFromJson(globalConfig, "taps_dir", "taps");
-            history_length = JsonUtil.getIntFromJson(globalConfig, "history_length", 60);
+            helpMode = JsonUtil.getStringFromJson(globalConfig, "help_mode", "0:idle, 1:record only, 2: detect online 3: learning 4: detect offline");
+            relativeToCSLConfigDir = JsonUtil.getBooleanFromJson(globalConfig, "relative_to_CSLConfig_dir", false);
+            idsconfDir = JsonUtil.getStringFromJson(globalConfig, "idsconf_dir", "idsconf");
+            idsconfDirRelativeToDataDir = JsonUtil.getBooleanFromJson(globalConfig, "idsconf_dir_relative_to_data_dir", false);
+            packetsDirForDetectionOffline = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_detection_offline", "../zzidsdir/data/test/");
+            packetsDirForDetectionOfflineInfo = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_detection_offline_info", "used for detection off line (mode 4) and mode 3 if validation after lerarning");
+            packetsDirForRecording = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_recording", "../zzidsdir/data/test");
+            packetsDirForRecordingInfo = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_recording_info", "used for mode record and detect on line with log (mode 1 and 2)");
+            packetsDirForLearning = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_learning", "../zzidsdir/data/test");
+            packetsDirForLearningInfo = JsonUtil.getStringFromJson(globalConfig, "packets_dir_for_learning_info", "used for learning  (mode 3)");
+            validationAfterLearning = JsonUtil.getBooleanFromJson(globalConfig, "validation_after_learning", false);
+            logToFile = JsonUtil.getBooleanFromJson(globalConfig, "log_to_file", true);
+            variablesPrefixFilename = JsonUtil.getStringFromJson(globalConfig, "variables_prefix_filename", "VARIABLES");
+            packetsPrefixFilename = JsonUtil.getStringFromJson(globalConfig, "packets_prefix_filename", "PACKETS");
+            networkPrefixFilename = JsonUtil.getStringFromJson(globalConfig, "network_prefix_filename", "NETWORK");
+            maxSizeOfLogFiles = JsonUtil.getIntFromJson(globalConfig, "max_size_of_log_files", 100000000);
+            networkPrefixFilename = JsonUtil.getStringFromJson(globalConfig, "network_prefix_filename", "NETWORK");
+            subdirLearn = JsonUtil.getStringFromJson(globalConfig, "subdir_learn", "");
+            helpSubdirLearn = JsonUtil.getStringFromJson(globalConfig, "help_subdir_learn", "The data for learning are in a subdir of working_dir");
+            subdirOfflineDetect = JsonUtil.getStringFromJson(globalConfig, "subdir_offline_detect", "test");
+            helpSubdirDetect = JsonUtil.getStringFromJson(globalConfig, "help_subdir_detect", "The data for off line detect are in a subdir of working_dir");
+            rulesForDetection = JsonUtil.getStringFromJson(globalConfig, "rules_for_detection", "RulesForDetection.txt");
+            rulesForLearning = JsonUtil.getStringFromJson(globalConfig, "rules_for_learning", "RulesForLearning.txt");
+            rulesForSuricataBase = JsonUtil.getStringFromJson(globalConfig, "rules_for_suricata_base", "RulesForSuricata.txt");
+            rulesForSuricataLearned = JsonUtil.getStringFromJson(globalConfig, "rules_for_suricata_learned", "RulesForSuricataLearned.txt");
+            learnedModel = JsonUtil.getStringFromJson(globalConfig, "learned_model", "LearnedRules.json");
+            newLearnedModel = JsonUtil.getStringFromJson(globalConfig, "new_learned_model", "NewLearnedRules.json");
+            systemConfiguration = JsonUtil.getStringFromJson(globalConfig, "system_configuration", "SystemConfiguration.json");
+            currentIdsParamsFile = JsonUtil.getStringFromJson(globalConfig, "current_idsparams_file", "CurrentIDSParams.json");
+            idstraceFlags = JsonUtil.getListStrFromJson(globalConfig, "idstrace_flags", Arrays.asList("general:1", "alert:0", "dpi:false", "syslearn:0", "setrisk:0", "XTERNAL_COMMANDS:1", "TEST_PKT_IDS:0"));
+            idstraceDir = JsonUtil.getStringFromJson(globalConfig, "idstrace_dir", "./idslogs/trace");
+            idstraceOn = JsonUtil.getBooleanFromJson(globalConfig, "idstrace_on", true);
+            sendToConsole = JsonUtil.getBooleanFromJson(globalConfig, "send_to_console", false);
+            sendToBrowser = JsonUtil.getBooleanFromJson(globalConfig, "send_to_browser", true);
+            showTicks = JsonUtil.getBooleanFromJson(globalConfig, "show_ticks", false);
+            killPreviousInstance = JsonUtil.getBooleanFromJson(globalConfig, "kill_previous_instance", true);
+            tapsDir = JsonUtil.getStringFromJson(globalConfig, "taps_dir", "taps");
+            historyLength = JsonUtil.getIntFromJson(globalConfig, "history_length", 60);
         }
     }
 
     @Getter
     public static class CSLAlertViewer {
+        // region define variables
         String ip;
         Integer port;
         String name;
@@ -452,6 +481,7 @@ public class Config {
         Boolean alertToUdp;
         Boolean doNotResentSameAlert;
         Integer alertDuration;
+        // endregion define variables
 
         public CSLAlertViewer(Json globalConfig) {
             ip = JsonUtil.getStringFromJson(globalConfig, "ip", "localhost");
@@ -471,14 +501,16 @@ public class Config {
 
     @Getter
     public static class CSLAutocrypt {
+        // region define variables
         String ip;
         Integer port;
-        Integer sync_frequency;
+        Integer syncFrequency;
+        // endregion define variables
 
         public CSLAutocrypt(Json globalConfig) {
             ip = JsonUtil.getStringFromJson(globalConfig, "ip", "localhost");
             port = JsonUtil.getIntFromJson(globalConfig, "port", 8002);
-            sync_frequency = JsonUtil.getIntFromJson(globalConfig, "sync_frequency", 300);
+            syncFrequency = JsonUtil.getIntFromJson(globalConfig, "sync_frequency", 300);
         }
     }
 }

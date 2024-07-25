@@ -2,6 +2,7 @@ package main;
 
 import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.core.NoLogging;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.dbapi.DbapiHandler;
@@ -208,24 +209,29 @@ public class CSLIDSMainClient {
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
         Json configObj = CSLContext.instance.getConfig();
+        Config config = Config.instance;
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
 
         CSLContext.instance.setDebug(true);
 
         // region -- read configuration
         // This is the client, override configuration is needed not to launch servers
-        configObj.get("database_server_conf").set("on", false);
-        configObj.get("web_server_conf").set("on", false);
-        configObj.get("udp_server_conf").set("on", true);
+//        configObj.get("database_server_conf").set("on", false);
+//        configObj.get("web_server_conf").set("on", false);
+//        configObj.get("udp_server_conf").set("on", true);
+        config.DatabaseServerConf.setOn(false);
+        config.WebServerConf.setOn(false);
+        config.UdpServerConf.setOn(true);
 
         // The proxy server to connect
-        SERVER_IP = JsonUtil.getStringFromJson(configObj, "global/ip_server_remote", "127.0.0.1");
-        SERVER_URL_PREFIX = JsonUtil.getStringFromJson(configObj, "global/server_remote_url_prefix", "");
+        SERVER_IP = config.Global.getIpServerRemote();
+        SERVER_URL_PREFIX = config.Global.getServerRemoteUrlPrefix();
         if (SERVER_URL_PREFIX == null) {
             SERVER_URL_PREFIX = "";
         }
 
-        Boolean force_host_name_resolution = JsonUtil.getBooleanFromJson(configObj, "global/force_host_name_resolution", false);
+//        Boolean force_host_name_resolution = JsonUtil.getBooleanFromJson(configObj, "global/force_host_name_resolution", false);
+        Boolean force_host_name_resolution = config.Global.getForceHostNameResolution();
         // Try to resolve host name (mainly for Docker hostnames)
         if (force_host_name_resolution) {
             try {
@@ -234,9 +240,12 @@ public class CSLIDSMainClient {
                 logger.error("Error while resolving host name: {}", e.getMessage(), e);
             }
         }
-        SERVER_PORT = JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
-        USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
-        API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
+//        SERVER_PORT = JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
+//        USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
+//        API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
+        SERVER_PORT = config.Global.getPortServerRemote();
+        USE_SSL = config.Global.getUseSsl();
+        API_KEY = config.Global.getApiKey();
         logger.trace("API KEY is: " + API_KEY);
         // endregion -- read configuration
 

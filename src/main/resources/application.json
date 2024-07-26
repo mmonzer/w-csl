@@ -10,7 +10,7 @@
     "launch_web_api_server": false,
     "web_api_server_port": 9900
   },
-  "discovery": {
+  "discovery_service": {
     "manager_ip": "host.docker.internal",
     "manager_port": 8081,
     "manager_protocol": "http",

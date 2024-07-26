@@ -33,7 +33,6 @@ public class Config {
     public final Tap TapService;
     public final Config.DatabaseServerConf DatabaseServerConf;
     public final Config.WebServerConf WebServerConf;
-//    public final Config.ServiceLoader ServiceLoader;
     public final Config.UdpServerConf UdpServerConf;
     public final Config.ModuleExec ModuleExec;
     public final List<Module> Modules;
@@ -50,19 +49,18 @@ public class Config {
         jConfig = readConfig(configFile);
 
         Global = new Global(jConfig.get("global"));
-        Scan = new Scan(jConfig.get("discovery"));
         Status = new Status(jConfig.get("status"));
-        NmapService = new NmapService(jConfig.get("nmap_service"));
-        CpeService = new CpeService(jConfig.get("cpe_service"));
-        TapService = new Tap(jConfig.get("cve_service"));
-        DatabaseServerConf = new DatabaseServerConf(jConfig.get("tap_service"));
+        DatabaseServerConf = new DatabaseServerConf(jConfig.get("database_server_conf"));
         WebServerConf = new WebServerConf(jConfig.get("web_server_conf"));
-//        ServiceLoader = new ServiceLoader(jConfig.get("service_loader"));
         UdpServerConf = new UdpServerConf(jConfig.get("udp_server_conf"));
         ModuleExec = new ModuleExec(jConfig.get("module_exec"));
         Modules = Module.makeList(jConfig.get("modules"));
         IdsConf = new IdsConf(jConfig.get("ids_conf"));
         AlertViewer = new AlertViewer(jConfig.get("alert_viewer"));
+        Scan = new Scan(jConfig.get("discovery_service"));
+        NmapService = new NmapService(jConfig.get("nmap_service"));
+        CpeService = new CpeService(jConfig.get("cpe_service"));
+        TapService = new Tap(jConfig.get("tap_service"));
         Autocrypt = new Autocrypt(jConfig.get("autocrypt_service"));
     }
 

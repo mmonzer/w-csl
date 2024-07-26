@@ -14,7 +14,8 @@
     "manager_ip": "host.docker.internal",
     "manager_port": 8081,
     "manager_protocol": "http",
-    "manager_timezone": "UTC"
+    "manager_timezone": "UTC",
+    "use_ssl": false
   },
   "status": {
     "send_notifications": true,
@@ -33,7 +34,7 @@
   },
   "ssh_service": {
     "localIpAddr": "16.0.0.1",
-    "localPort": "8001",
+    "localPort": 8001,
     "knowHostFilePath": "~/.ssh/known_hosts"
   },
   "database_server_conf": {

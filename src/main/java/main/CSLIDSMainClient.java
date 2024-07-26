@@ -208,8 +208,9 @@ public class CSLIDSMainClient {
     public static void main(String[] args) {
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
-        Json configObj = CSLContext.instance.getConfig();
+//        Json configObj = CSLContext.instance.getConfig();
         Config config = Config.instance;
+
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
 
         CSLContext.instance.setDebug(true);
@@ -253,17 +254,17 @@ public class CSLIDSMainClient {
 
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
-        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
-        JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
-        JServiceLoader.registerService(new AlertsService(), configObj, true);
-        JServiceLoader.registerService(new MonitorService(), configObj, true);
-        JServiceLoader.registerService(new TapsServices(), configObj, true);
-        JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
-        JServiceLoader.registerService(new DiscoveryServices(), configObj, true);
-        JServiceLoader.registerService(new StatusService(), configObj, true);
-        JServiceLoader.registerService(new AutoCryptService(), configObj, true);
-
-        JServiceLoader.registerService(new NmapServices(), configObj, true);
+//        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
+        JServiceLoader.registerService(new CSLServiceDemo(), Json.object(), true);
+        JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
+        JServiceLoader.registerService(new AlertsService(), Json.object(), true);
+        JServiceLoader.registerService(new MonitorService(), Json.object(), true);
+        JServiceLoader.registerService(new TapsServices(), Json.object(), true);
+        JServiceLoader.registerService(new CSLServiceJsonDataBase(), Json.object(), true);
+        JServiceLoader.registerService(new DiscoveryServices(), Json.object(), true);
+        JServiceLoader.registerService(new StatusService(), Json.object(), true);
+        JServiceLoader.registerService(new AutoCryptService(), Json.object(), true);
+        JServiceLoader.registerService(new NmapServices(), Json.object(), true);
 
 
         iniServices();
@@ -284,8 +285,10 @@ public class CSLIDSMainClient {
             logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);
         }
 
-        if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
-            int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);
+//        if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
+        if (Config.instance.Global.getLaunchWebApiServer()) {
+//            int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);
+            int port = Config.instance.Global.getWebApiServerPort();
             ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
                     new InetSocketAddress(port),
                     JServiceLoader.getApiCommandsList(),

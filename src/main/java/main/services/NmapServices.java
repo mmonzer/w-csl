@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
@@ -37,24 +38,44 @@ public class NmapServices extends Service {
 	public NmapServices(String name, String description, String configFileSectionName) {
 		super(name,description,configFileSectionName);
 	}
-	
+
 	static public void lauchNmap(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
 
 		Json resultat = Json.object();
 		ScanActif sa = new ScanActif(false, true,params.at("list").asJsonList().get(0).asString(), debugMode, logMode, debugPath, logPath);
-		
+
 		Json result = sa.getIp(params);
 		result = result.at("result");
-		ArrayList<Json> cur = (ArrayList<Json>) result.asJsonList();				
+		ArrayList<Json> cur = (ArrayList<Json>) result.asJsonList();
 		Json machines = Json.object();
 		machines.at("list",cur.get(0).at("machines"));
 		System.out.println(machines);
 		System.out.println(jConfig);
 
-		machines.at("tap",params.at("list").asJsonList().get(0)); 
+		machines.at("tap",params.at("list").asJsonList().get(0));
 		scanDevice(machines, jConfig);
+
+	}
+
+	static public void lauchNmap(Json params, Config.CSLNmapService config) {
+//		System.out.println("launchNmap:"+params);
+//		System.out.println("launchNmap:"+config);
+
+		Json resultat = Json.object();
+		ScanActif sa = new ScanActif(false, true,params.at("list").asJsonList().get(0).asString(), debugMode, logMode, debugPath, logPath);
+
+		Json result = sa.getIp(params);
+		result = result.at("result");
+		ArrayList<Json> cur = (ArrayList<Json>) result.asJsonList();
+		Json machines = Json.object();
+		machines.at("list",cur.get(0).at("machines"));
+		System.out.println(machines);
+//		System.out.println(jConfig);
+
+		machines.at("tap",params.at("list").asJsonList().get(0));
+		scanDevice(machines, config);
 
 	}
 
@@ -76,7 +97,7 @@ public class NmapServices extends Service {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
 
-		
+
 		ScanActif sa = new ScanActif(false, true, params.at("tap").asString(), debugMode, logMode, debugPath, logPath);
 		Json result = sa.getIpInfo (params, new ArrayList<Json>());
 
@@ -84,11 +105,11 @@ public class NmapServices extends Service {
 		// Insertion dans la base de données
 		ArrayList<Json> resultList = (ArrayList<Json>) result.at("devices").asJsonList();
 		for(Json j : resultList) {
-			
+
 			String ip = j.at("ip").asString();
 			j.delAt("ip");
 			Json mac = j.at("mac");
-			j.delAt("mac");			
+			j.delAt("mac");
 			System.out.println("insertion de "+ ip);
 			System.out.println(j);
 			j.at("related_tap" , params.at("tap"));
@@ -98,7 +119,37 @@ public class NmapServices extends Service {
 			j.at("lastScan",System.currentTimeMillis());
 			Utils.setDeviceProp(ip, "props" , j);
 
-		}	
+		}
+		return result;
+	}
+
+	static public Json scanDevice(Json params, Config.CSLNmapService config) {
+		System.out.println("launchNmap:"+params);
+//		System.out.println("launchNmap:"+jConfig);
+
+
+		ScanActif sa = new ScanActif(false, true, params.at("tap").asString(), debugMode, logMode, debugPath, logPath);
+		Json result = sa.getIpInfo (params, new ArrayList<Json>());
+
+
+		// Insertion dans la base de données
+		ArrayList<Json> resultList = (ArrayList<Json>) result.at("devices").asJsonList();
+		for(Json j : resultList) {
+
+			String ip = j.at("ip").asString();
+			j.delAt("ip");
+			Json mac = j.at("mac");
+			j.delAt("mac");
+			System.out.println("insertion de "+ ip);
+			System.out.println(j);
+			j.at("related_tap" , params.at("tap"));
+			Utils.addDevice(ip, j);
+			Utils.setDeviceProp(ip, "macs" , mac);
+
+			j.at("lastScan",System.currentTimeMillis());
+			Utils.setDeviceProp(ip, "props" , j);
+
+		}
 		return result;
 	}
 
@@ -110,12 +161,17 @@ public class NmapServices extends Service {
 	 */
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
+		Config.CSLNmapService config = Config.instance.NmapService;
 		System.out.println("--- Initialisation des services Nmap ---");
-		NmapServices.debugMode = jConfig.at("debug_mode").asBoolean();
-		NmapServices.logMode = jConfig.at("log_mode").asBoolean();
-		NmapServices.logPath = jConfig.at("log_dir").asString();
-		NmapServices.debugPath = jConfig.at("debug_dir").asString(); 
-		
+//		NmapServices.debugMode = jConfig.at("debug_mode").asBoolean();
+		NmapServices.debugMode = config.getDebugMode();
+//		NmapServices.logMode = jConfig.at("log_mode").asBoolean();
+		NmapServices.logMode = config.getLogMode();
+//		NmapServices.logPath = jConfig.at("log_dir").asString();
+		NmapServices.logPath = config.getLogDir();
+//		NmapServices.debugPath = jConfig.at("debug_dir").asString();
+		NmapServices.debugPath = config.getDebugDir();
+
 		// Fonction mise ici en attendant d'avoir une vrai fonction backend permettant de faire la meme chose (compter le nombre de liens en tout)
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		addCmd("getLinksNumber", new IJsonCmd() {
@@ -149,7 +205,8 @@ public class NmapServices extends Service {
 			
 			@Override
 			public Json exec(Json params) {
-				lauchNmap(params,jConfig);
+//				lauchNmap(params,jConfig);
+				lauchNmap(params,config);
 				return Json.object();
 			}
 		});

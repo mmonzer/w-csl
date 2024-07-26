@@ -14,7 +14,8 @@ public class ModuleContext implements IModuleContext {
 	private  IModule module;
 	private  Class<IModule> clazz;
 
-	private  Json config;
+	private  Json mConfig;
+	private Config.CSLModule.CSLModuleConfig config;
 	
 	int inputPriority=0;
 	int outputPriority=0;

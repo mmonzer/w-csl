@@ -1,6 +1,7 @@
 package com.csl.modules;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.interfaces.ICSLContext;
 import com.csl.interfaces.IModule;
 import com.csl.interfaces.IModuleContext;
@@ -99,18 +100,24 @@ public class ModuleIDS implements IModule {
 	}
 	
 	public void openLogFiles() {
-		
-		Json j=context.getConfig();
-		
-		String datadir=JsonUtil.getStringFromJson(j, "ids_conf/packets_dir_for_recording", "./recorded_packets");
 
-		this.variablesFilename=JsonUtil.getStringFromJson(j,"ids_conf/variables_prefix_filename", "vars");
-		this.packetsFilename=JsonUtil.getStringFromJson(j, "ids_conf/packets_prefix_filename", "pkt");
-		this.networkFilename=JsonUtil.getStringFromJson(j, "ids_conf/network_prefix_filename", "net");
-			
-		
+//		Json j=context.getConfig();
+		Config.CSLIdsConf config=context.getConfig().IdsConf;
 
-		this.max_size=JsonUtil.getLongFromJson(j, "ids_conf/max_size_of_log_files", 10000000);
+//		String datadir=JsonUtil.getStringFromJson(j, "ids_conf/packets_dir_for_recording", "./recorded_packets");
+		String datadir=config.getPacketsDirForRecording();
+
+//		this.variablesFilename=JsonUtil.getStringFromJson(j,"ids_conf/variables_prefix_filename", "vars");
+		this.variablesFilename=config.getVariablesPrefixFilename();
+//		this.packetsFilename=JsonUtil.getStringFromJson(j, "ids_conf/packets_prefix_filename", "pkt");
+		this.packetsFilename=config.getPacketsPrefixFilename();
+//		this.networkFilename=JsonUtil.getStringFromJson(j, "ids_conf/network_prefix_filename", "net");
+		this.networkFilename=config.getNetworkPrefixFilename();
+
+
+
+//		this.max_size=JsonUtil.getLongFromJson(j, "ids_conf/max_size_of_log_files", 10000000);
+		this.max_size=config.getMaxSizeOfLogFiles();
 		packetsLog= new FileLog(datadir, packetsFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 		variablesLog= new FileLog(datadir, variablesFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 		networkLog= new FileLog(datadir, networkFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
@@ -131,16 +138,19 @@ public class ModuleIDS implements IModule {
 	public IResult init(ICSLContext context,IModuleContext mcontext) {
 		// TODO Auto-generated method stub
 		this.context=context;
-		Json config=context.getConfig();
-		
-		
-		
-		
-		boolean showTicks=JsonUtil.getBooleanFromJson(config, "ids_conf/show_ticks", true);
+//		Json config=context.getConfig();
+		Config.CSLIdsConf config = Config.instance.IdsConf;
+
+
+
+
+//		boolean showTicks=JsonUtil.getBooleanFromJson(config, "ids_conf/show_ticks", true);
+		boolean showTicks=config.getShowTicks();
 
 		activityMonitor.setShowTicks(showTicks);
 
-		int maxHistSize = JsonUtil.getIntFromJson(config, "ids_conf/history_length", 60);
+//		int maxHistSize = JsonUtil.getIntFromJson(config, "ids_conf/history_length", 60);
+		int maxHistSize = config.getHistoryLength();
 		activityMonitor.setMaxHistorySize(maxHistSize);
 		
 		activityMonitor.startTicTask();
@@ -157,7 +167,7 @@ public class ModuleIDS implements IModule {
 		this.sendToConsole=CSLContext.instance.getIdsParams().isSendToConsole();
 
 
-		boolean on =JsonUtil.getBooleanFromJson(context.getConfig(), "ids_conf/on",false);
+		boolean on =config.getOn();
 		running=on;
 			
 		int n_input=1;

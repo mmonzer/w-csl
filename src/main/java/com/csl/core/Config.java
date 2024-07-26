@@ -149,6 +149,7 @@ public class Config {
         Integer managerPort;
         String managerProtocol;
         String managerTimezone;
+        Boolean useSSL;
         // endregion define variables
 
         public CSLScan(Json globalConfig) {
@@ -156,6 +157,7 @@ public class Config {
             managerPort = JsonUtil.getIntFromJson(globalConfig, "manager_port", 8010);
             managerProtocol = JsonUtil.getStringFromJson(globalConfig, "manager_protocol", "http");
             managerTimezone = JsonUtil.getStringFromJson(globalConfig, "manager_timezone", "UTC");
+            useSSL = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", false);
         }
     }
 
@@ -482,7 +484,7 @@ public class Config {
             idstraceOn = JsonUtil.getBooleanFromJson(globalConfig, "idstrace_on", true);
             sendToConsole = JsonUtil.getBooleanFromJson(globalConfig, "send_to_console", false);
             sendToBrowser = JsonUtil.getBooleanFromJson(globalConfig, "send_to_browser", true);
-            showTicks = JsonUtil.getBooleanFromJson(globalConfig, "show_ticks", false);
+            showTicks = JsonUtil.getBooleanFromJson(globalConfig, "show_ticks", true);
             killPreviousInstance = JsonUtil.getBooleanFromJson(globalConfig, "kill_previous_instance", true);
             tapsDir = JsonUtil.getStringFromJson(globalConfig, "taps_dir", "taps");
             historyLength = JsonUtil.getIntFromJson(globalConfig, "history_length", 60);

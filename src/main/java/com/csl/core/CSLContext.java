@@ -366,11 +366,11 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 //    }
 
     public Config getConfig() {
-        if (config == null) return Config.instance;
         if (Config.instance.WebServerConf == null) {
             System.out.println("Invalid config file, update to new format");
             System.exit(0);
         }
+        return Config.instance;
     }
 
     private Config setConfigFileName(String configFileName) {
@@ -624,7 +624,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     }
 
-        private void initModules() {
+    private void initModules() {
 
         boolean notfound = true;
 
@@ -641,21 +641,25 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         if (isVerbose()) System.out.println("Running " + numberOfExecLoops + " execution loops");
 
-        Json j = getConfig().get("modules");
+//        Json j = getConfig().get("modules");
+        List<Config.CSLModule> modulesConfig = Config.instance.Modules;
 
-        Iterator<Json> itr = j.iterator();
+//        Iterator<Json> itr = j.iterator();
+        Iterator<Config.CSLModule> itr = modulesConfig.iterator();
 
         while (itr.hasNext()) {
-            Json moduleDescriptor = itr.next();
+//            Json moduleDescriptor = itr.next();
+            Config.CSLModule moduleDescriptor = itr.next();
             CSLContext.instance.logInfo(moduleDescriptor + " ");
 
-            String mname = moduleDescriptor.get("name").asString();
+//            String mname = moduleDescriptor.get("name").asString();
+            String mname = moduleDescriptor.getName();
 
             if (modules.get(mname) != null) {
                 logger.error("A module with this name <" + mname + "> has already been declared");
                 //existe dejae
             } else {
-                String type = moduleDescriptor.get("type").asString();
+                String type = moduleDescriptor.getType();
                 Class clazz = getModuleClass(type);
 
                 if (clazz == null) {
@@ -668,7 +672,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
                         mc.setClazz(clazz);
                         mc.setModule(m);
                         mc.setName(mname);
-                        Json mconfig = moduleDescriptor.get("config");
+//                        Json mconfig = moduleDescriptor.get("config");
+                        Config.CSLModule.CSLModuleConfig mconfig = moduleDescriptor.getConfig();
+//                        mc.setMConfig(mconfig);
                         mc.setConfig(mconfig);
 
                         modules.put(mname, mc);
@@ -687,28 +693,63 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         // do init
 
+//        for (com.csl.core.ModuleContext m : modules.values()) {
+//
+//            if (m.getConfig().get("input_priority") != null) {
+//                int n = m.getConfig().get("input_priority").asInteger();
+//                m.setInputPriority(n);
+//            } else
+//                logger.warn("input priority undefined for module {}", m.getName());
+//
+//            if (m.getConfig().get("step_priority") != null) {
+//                int n = m.getConfig().get("step_priority").asInteger();
+//                m.setStepPriority(n);
+//            } else
+//                logger.warn("step priority undefined for module {}", m.getName());
+//
+//            if (m.getConfig().get("output_priority") != null) {
+//                int n = m.getConfig().get("output_priority").asInteger();
+//                m.setOutputPriority(n);
+//            } else
+//                logger.warn("output priority undefined for module {}", m.getName());
+//
+//            if (m.getConfig().get("exec_loop_number") != null) {
+//                int n = m.getConfig().get("exec_loop_number").asInteger();
+//                if (n < 0) n = 0;
+//                if (n > numberOfExecLoops - 1) n = numberOfExecLoops - 1;
+//                m.setLoopNumber(n);
+//            }
+//
+//
+//            // do the module init
+//            m.getModule().init(this, m);
+//
+//            inputExecList.add(m);
+//            outputExecList.add(m);
+//            stepExecList.add(m);
+//        }
         for (com.csl.core.ModuleContext m : modules.values()) {
 
-            if (m.getConfig().get("input_priority") != null) {
-                int n = m.getConfig().get("input_priority").asInteger();
+            if (m.getConfig().getInputPriority() != null) {
+                int n = m.getConfig().getInputPriority();
                 m.setInputPriority(n);
             } else
                 logger.warn("input priority undefined for module {}", m.getName());
 
-            if (m.getConfig().get("step_priority") != null) {
-                int n = m.getConfig().get("step_priority").asInteger();
+            if (m.getConfig().getStepPriority() != null) {
+                int n = m.getConfig().getStepPriority();
                 m.setStepPriority(n);
             } else
                 logger.warn("step priority undefined for module {}", m.getName());
 
-            if (m.getConfig().get("output_priority") != null) {
-                int n = m.getConfig().get("output_priority").asInteger();
+            if (m.getConfig().getOutputPriority() != null) {
+                int n = m.getConfig().getOutputPriority();
                 m.setOutputPriority(n);
             } else
                 logger.warn("output priority undefined for module {}", m.getName());
 
-            if (m.getConfig().get("exec_loop_number") != null) {
-                int n = m.getConfig().get("exec_loop_number").asInteger();
+            if (m.getConfig().getExecLoopNumber() != null) {
+                int n = m.getConfig().getExecLoopNumber();
                 if (n < 0) n = 0;
                 if (n > numberOfExecLoops - 1) n = numberOfExecLoops - 1;
                 m.setLoopNumber(n);

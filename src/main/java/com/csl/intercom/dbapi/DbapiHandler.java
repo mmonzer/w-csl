@@ -1,6 +1,7 @@
 package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -33,5 +34,17 @@ public class DbapiHandler extends ApiHandler {
                 JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true));
         addUriCommonPath("/api");
         setApiKey(JsonUtil.getStringFromJson(config.get("global"), "api_key", ""));
+    }
+
+    public DbapiHandler(Config config) {
+        this("DB-API", config);
+    }
+
+    public DbapiHandler(String moduleName, Config config) {
+        super("DB-API::"+moduleName,
+                config.Global.getIpServerRemote(),
+                config.Global.getUseSsl());
+        addUriCommonPath("/api");
+        setApiKey(config.Global.getApiKey());
     }
 }

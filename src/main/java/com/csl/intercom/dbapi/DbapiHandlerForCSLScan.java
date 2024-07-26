@@ -1,6 +1,7 @@
 package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
@@ -59,7 +60,15 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         super(moduleName, config);
     }
 
+    public DbapiHandlerForCSLScan(String moduleName, Config config) {
+        super(moduleName, config);
+    }
+
     public DbapiHandlerForCSLScan(Json config) {
+        this("CSLScan", config);
+    }
+
+    public DbapiHandlerForCSLScan(Config config) {
         this("CSLScan", config);
     }
 

@@ -1,6 +1,7 @@
 package com.csl.alert;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.json.Json;
@@ -22,6 +23,10 @@ public class DbapiHandlerForAlerts extends DbapiHandler {
     }
 
     public DbapiHandlerForAlerts(String moduleName, Json config) {
+        super(moduleName, config);
+    }
+
+    public DbapiHandlerForAlerts(String moduleName, Config config) {
         super(moduleName, config);
     }
 

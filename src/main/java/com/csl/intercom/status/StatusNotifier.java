@@ -1,6 +1,7 @@
 package com.csl.intercom.status;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -52,7 +53,8 @@ public class StatusNotifier implements AutoCloseable {
      * @param sendNotifications true if we should send notifications periodically, false if we shouldn't.
      */
     public StatusNotifier(boolean sendNotifications) {
-        this(sendNotifications, JsonUtil.getIntFromJson(CSLContext.instance.getConfig().get("status"), "notifications_period", 1));
+//        this(sendNotifications, JsonUtil.getIntFromJson(CSLContext.instance.getConfig().get("status"), "notifications_period", 1));
+        this(sendNotifications, Config.instance.Status.getNotificationsPeriod());
     }
 
     /**

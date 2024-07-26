@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
@@ -122,13 +123,14 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public boolean init(Json jConfig, String cslDir) {
         logger.info("Initializing SNMP service ..");
 
-        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
+//        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
+        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(Config.instance.Scan);
 
         dbapiHandler = new DbapiHandlerForCSLScan();
         scanApiHandler = new ScanApiHandler();
         fileStorageService = new FileStorageService();
 
-        Json globalConfig = CSLContext.instance.getConfig().get("global");
+//        Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         if (isConcentrator) {
             cpeScanService = new CpeScanService();

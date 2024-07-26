@@ -3,6 +3,7 @@ package com.csl.autocrypt;
 import com.csl.autocrypt.enums.AutocryptConstants;
 import com.csl.autocrypt.services.*;
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -44,10 +45,12 @@ public class AutoCrypt {
 
     public AutoCrypt(String name) {
         this.name = name;
-        Json config = CSLContext.instance.getConfig();
-        Json localConfig = config.get("autocrypt");
-        moduleIp = JsonUtil.getStringFromJson(localConfig, "ip", "host.docker.internal");
-        modulePort = JsonUtil.getIntFromJson(localConfig, "port", 8002);
+//        Json config = CSLContext.instance.getConfig();
+//        Json localConfig = config.get("autocrypt");
+//        moduleIp = JsonUtil.getStringFromJson(localConfig, "ip", "host.docker.internal");
+//        modulePort = JsonUtil.getIntFromJson(localConfig, "port", 8002);
+        moduleIp = Config.instance.Autocrypt.getIp();
+        modulePort = Config.instance.Autocrypt.getPort();
 //        Json globalConfig = config.get("global");
 //        dbIp = JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "host.docker.internal");
 //        dbApikey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");

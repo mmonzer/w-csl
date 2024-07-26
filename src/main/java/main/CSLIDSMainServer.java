@@ -24,7 +24,7 @@ public class CSLIDSMainServer {
 
         System.out.println("Starting CSL IDS version  " + CSLContext.VERSION);
 //        Json configObj = CSLContext.instance.getConfig();
-        Config config = CSLContext.instance.getConfig();
+        Config config = Config.instance;
 
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
 
@@ -34,18 +34,29 @@ public class CSLIDSMainServer {
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
 
-        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
-        JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
-        JServiceLoader.registerService(new AlertsService(), configObj, true);
-        JServiceLoader.registerService(new MonitorService(), configObj, true);
-        JServiceLoader.registerService(new TapsServices(), configObj, true);
-        JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
+//        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
+//        JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
+//        JServiceLoader.registerService(new AlertsService(), configObj, true);
+//        JServiceLoader.registerService(new MonitorService(), configObj, true);
+//        JServiceLoader.registerService(new TapsServices(), configObj, true);
+//        JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
+//        JServiceLoader.registerService(new CpeServices(), configObj, true);
+//        JServiceLoader.registerService(new CveServices(), configObj, true);
+//        JServiceLoader.registerService(new DiscoveryServices(false), configObj, true);
+//        JServiceLoader.registerService(new StatusService(), configObj, true);
+//        JServiceLoader.registerService(new AutoCryptService(true), configObj, true);
 
-        JServiceLoader.registerService(new CpeServices(), configObj, true);
-        JServiceLoader.registerService(new CveServices(), configObj, true);
-        JServiceLoader.registerService(new DiscoveryServices(false), configObj, true);
-        JServiceLoader.registerService(new StatusService(), configObj, true);
-        JServiceLoader.registerService(new AutoCryptService(true), configObj, true);
+        JServiceLoader.registerService(new CSLServiceDemo(), Json.object(), true);
+        JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
+        JServiceLoader.registerService(new AlertsService(), Json.object(), true);
+        JServiceLoader.registerService(new MonitorService(), Json.object(), true);
+        JServiceLoader.registerService(new TapsServices(), Json.object(), true);
+        JServiceLoader.registerService(new CSLServiceJsonDataBase(), Json.object(), true);
+        JServiceLoader.registerService(new CpeServices(), Json.object(), true);
+        JServiceLoader.registerService(new CveServices(), Json.object(), true);
+        JServiceLoader.registerService(new DiscoveryServices(false), Json.object(), true);
+        JServiceLoader.registerService(new StatusService(), Json.object(), true);
+        JServiceLoader.registerService(new AutoCryptService(true), Json.object(), true);
 
         // set services as remote services (to be called through socket)
         CSLContext.instance.setApiRemote("ids");

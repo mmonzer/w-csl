@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan;
 
 import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -196,7 +197,8 @@ public class ApiHandler implements AutoCloseable {
          * Add the api key to the headers
          * @param contentType content type of the request
          */
-        String apiKey = JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "api_key", "");
+//        String apiKey = JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "api_key", "");
+        String apiKey = Config.instance.Global.getApiKey();
         HashMap<HttpHeader, String> customHeaders = new HashMap<>();
         customHeaders.put(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
         customHeaders.put(HttpHeader.CONTENT_TYPE, contentType);

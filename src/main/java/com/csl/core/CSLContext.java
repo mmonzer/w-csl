@@ -390,17 +390,18 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         // userdir
         // take the dir from config file if defined and no command line
+
         if (!cslRunningArgs.isUserDirDefault()) {
             setUserDir(cslRunningArgs.getUserDir());
         } else {
-            String s = JsonUtil.getStringFromJson(jConfig, "csl/cslconf", "");
+//            String s = JsonUtil.getStringFromJson(jConfig, "csl/cslconf", "");
+            String s = "";
             if (!s.isEmpty())
                 setUserDir(s);
             else {
                 setUserDir(cslRunningArgs.getUserDir());  // set default
             }
         }
-
 
         // datadir (set in IDSRunner)
         if (cslRunningArgs.hasDataDir()) {
@@ -409,35 +410,42 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         // dirs data
         if (cslRunningArgs.hasDirForRecording()) {
-            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_RECORDING,
-                    cslRunningArgs.getDirForRecording());
+//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_RECORDING,
+//                    cslRunningArgs.getDirForRecording());
+            Config.instance.IdsConf.setPacketsDirForRecording(cslRunningArgs.getDirForRecording());
         }
         if (cslRunningArgs.hasDirForLearning()) {
-            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_LEARNING,
-                    cslRunningArgs.getDirForLearning());
+//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_LEARNING,
+//                    cslRunningArgs.getDirForLearning());
+            Config.instance.IdsConf.setPacketsDirForLearning(cslRunningArgs.getDirForLearning());
         }
         if (cslRunningArgs.hasDirForDetectionOffLine()) {
-            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_DETECTION_OFFLINE,
-                    cslRunningArgs.getDirForDetectionOffline());
+//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_DETECTION_OFFLINE,
+//                    cslRunningArgs.getDirForDetectionOffline());
+            Config.instance.IdsConf.setPacketsDirForDetectionOffline(cslRunningArgs.getDirForDetectionOffline());
         }
         if (cslRunningArgs.hasIdsMode()) {
-            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.MODE,
-                    cslRunningArgs.getIdsMode());
+//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.MODE,
+//                    cslRunningArgs.getIdsMode());
+            Config.instance.IdsConf.setMode(cslRunningArgs.getIdsMode());
         }
 
         // logdir
         if (cslRunningArgs.hasLogDir()) {
-            safeGet(getConfig(), "ids_conf").set("idstrace_dir", cslRunningArgs.getLogDir());
+//            safeGet(getConfig(), "ids_conf").set("idstrace_dir", cslRunningArgs.getLogDir());
+            Config.instance.IdsConf.setIdstraceDir(cslRunningArgs.getLogDir());
             // jcmd logs
-            safeGet(getConfig(), "web_server_conf").set("log_dir", cslRunningArgs.getLogDir());
+//            safeGet(getConfig(), "web_server_conf").set("log_dir", cslRunningArgs.getLogDir());
+            Config.instance.WebServerConf.setLogDir(cslRunningArgs.getLogDir());
             // alerts
-            safeGet(getConfig(), "alert_viewer").set("log_dir", cslRunningArgs.getLogDir());
+//            safeGet(getConfig(), "alert_viewer").set("log_dir", cslRunningArgs.getLogDir());
+            Config.instance.AlertViewer.setLogDir(cslRunningArgs.getLogDir());
         }
 
         // databasedir
         if (cslRunningArgs.hasDatabaseDir()) {
-
-            safeGet(getConfig(), "database_server_conf").set("datafile_subdir", cslRunningArgs.getDatabasedir());
+//            safeGet(getConfig(), "database_server_conf").set("datafile_subdir", cslRunningArgs.getDatabasedir());
+            Config.instance.DatabaseServerConf.setDatafileSubdir(cslRunningArgs.getDatabasedir());
         }
     }
 
@@ -455,8 +463,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         updateConfigFromCSLRunningArgs(cslRunningArgs);
 
-        String cslConf = JsonUtil.getStringFromJson(getConfig(), "csl/cslconf", "cslconf");
-        this.cslConfDir = buildFullPathInUserDir(cslConf);
+//        String cslConf = JsonUtil.getStringFromJson(getConfig(), "csl/cslconf", "cslconf");
+        this.cslConfDir = buildFullPathInUserDir("cslconf");
 
         setVerbose(cslRunningArgs.isVerbose());
         setDebug(cslRunningArgs.isDebug());
@@ -466,8 +474,12 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         org.eclipse.jetty.util.log.Log.setLog(new com.csl.core.NoLogging());
 
 
+//        this.idsMainProcessor = IDSMainProcessorFactory.instance.createIDSMainProcessor(
+//                getConfig().get("ids_conf"),
+//                getCslConfDir(),
+//                this);
         this.idsMainProcessor = IDSMainProcessorFactory.instance.createIDSMainProcessor(
-                getConfig().get("ids_conf"),
+                Config.instance.IdsConf,
                 getCslConfDir(),
                 this);
 
@@ -526,18 +538,23 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         this.server = server;
         this.client = client;
 
-        if (client)
-            getDatabaseServer().init(getConfig().get("database_server_conf"));
+        if (client) {
+//            getDatabaseServer().init(getConfig().get("database_server_conf"));
+            getDatabaseServer().init(Config.instance.DatabaseServerConf);
+        }
 
-        if (server)
-            getCslHttpServer().initServer(getConfig().get("web_server_conf"));
-
-        if (client)
-            getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));
-
+        if (server) {
+//            getCslHttpServer().initServer(getConfig().get("web_server_conf"));
+            getCslHttpServer().initServer(Config.instance.WebServerConf);
+        }
+        if (client) {
+//            getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));
+            getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
+        }
         // The server should not send status notifications
-        if (server)
+        if (server) {
             getStatusNotifier().setSendNotifications(false);
+        }
 
         if (client) {
 
@@ -574,7 +591,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     private void initTime() {
         initialTime = getSystemCurrentTimeMillis(); //  System.currentTimeMillis();
-        samplingTime = JsonUtil.getIntFromJson(getConfig(), "module_exec/sampling_time", 100);
+//        samplingTime = JsonUtil.getIntFromJson(getConfig(), "module_exec/sampling_time", 100);
+        samplingTime = Config.instance.ModuleExec.getSamplingTime();
     }
 
     public com.csl.core.ModuleContext getModuleContext(String name) {
@@ -587,36 +605,20 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     }
 
-    public Json getConfigAsJsonOfModule(String nameOfModule) {
-
-        Json j = getConfig().get("modules");
-
-
-        Iterator<Json> itr = j.iterator();
-
-        while (itr.hasNext()) {
-            Json jj = itr.next();
-
-            String name = JsonUtil.getStringFromJson(jj, "name", "???");
-            if (nameOfModule.compareTo(name) == 0) return jj;
-        }
-
-        return null;
-    }
-
-    private void initModules() {
+        private void initModules() {
 
         boolean notfound = true;
 
-        String modulesPackageName =
-                JsonUtil.getStringFromJson(getConfig(), "module_exec/modules_package_name", "modules");
+        String modulesPackageName = Config.instance.ModuleExec.getModulesPackageName();
+//        String modulesPackageName = JsonUtil.getStringFromJson(getConfig(), "module_exec/modules_package_name", "modules");
 
         //test if csl.jar ?
 
         if (isVerbose()) System.out.println("Loading modules");
         initInternalModules();
 
-        numberOfExecLoops = JsonUtil.getIntFromJson(getConfig(), "module_exec/number_of_exec_loops", 1);
+//        numberOfExecLoops = JsonUtil.getIntFromJson(getConfig(), "module_exec/number_of_exec_loops", 1);
+        numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
 
         if (isVerbose()) System.out.println("Running " + numberOfExecLoops + " execution loops");
 
@@ -721,7 +723,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             }
         });
 
-        autostart = JsonUtil.getBooleanFromJson(getConfig(), "module_exec/autostart", true);
+//        autostart = JsonUtil.getBooleanFromJson(getConfig(), "module_exec/autostart", true);
+        autostart = Config.instance.ModuleExec.getAutostart();
     }
 
 
@@ -987,8 +990,9 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     public ZoneId getZoneId() {
         if (zoneId == null) {
-            Json globalConfig = getConfig().get("global");
-            String timeZoneString = JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris");
+//            Json globalConfig = getConfig().get("global");
+//            String timeZoneString = JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris");
+            String timeZoneString = Config.instance.Global.getTimezone();
             zoneId = ZoneId.of(timeZoneString);
         }
         return zoneId;

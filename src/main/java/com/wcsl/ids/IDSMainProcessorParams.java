@@ -1,5 +1,6 @@
 package com.wcsl.ids;
 
+import com.csl.core.Config;
 import com.ucsl.interfaces.IFileStoreService;
 import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.interfaces.IIDSMainProcessorParams;
@@ -32,7 +33,14 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 	String rulesForSuricataBaseFileName="";
 
 	public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Json config) {
-	
+
+		this.idsMainProcessor = idsMainProcessor;
+		fileUtils=idsMainProcessor.getFileStoreServices();
+		initFromJson(config);
+	}
+
+	public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Config.CSLIdsConf config) {
+
 		this.idsMainProcessor = idsMainProcessor;
 		fileUtils=idsMainProcessor.getFileStoreServices();
 		initFromJson(config);
@@ -54,21 +62,44 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 	public List<String> getTapsIDs() {
 		return listTapIds;
 	}
-	
-	
+
+
 	public void initFromJson(Json j) {
 		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
 		Json listIDs=JsonUtil.getJson(j,  IDS_CONF_SEP+TAPS_ID);
-		
+
 		if (listIDs!=null) {
 			if (listIDs.isArray()) {
-			for (Json e:listIDs.asJsonList()) {
-				if (e.isString())
-					this.listTapIds.add(e.asString());
+				for (Json e:listIDs.asJsonList()) {
+					if (e.isString())
+						this.listTapIds.add(e.asString());
 				}
 			}
 		}
 		tapsDir=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+TAPS_DIR,"taps");
+//		System.out.println(this);
+	}
+
+
+	public void initFromJson(Config.CSLIdsConf config) {
+//		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
+		rulesForSuricataBaseFileName=config.getRulesForSuricataBase();
+
+		// Since this propName does nto exists, getJson returns null always
+//		Json listIDs=JsonUtil.getJson(j,  IDS_CONF_SEP+TAPS_ID);
+//
+//		if (listIDs!=null) {
+//			if (listIDs.isArray()) {
+//				for (Json e:listIDs.asJsonList()) {
+//					if (e.isString())
+//						this.listTapIds.add(e.asString());
+//				}
+//			}
+//		}
+
+
+//		tapsDir=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+TAPS_DIR,"taps");
+		rulesForSuricataBaseFileName=config.getTapsDir();
 //		System.out.println(this);
 	}
 

@@ -108,6 +108,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLGlobal {
         // region define variables
@@ -119,6 +120,7 @@ public class Config {
         Boolean useSsl;
         Boolean launchWebApiServer;
         Integer webApiServerPort;
+        String timezone;
         // endregion define variables
 
         public CSLGlobal(Json globalConfig) {
@@ -130,9 +132,11 @@ public class Config {
             useSsl = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true);
             launchWebApiServer = JsonUtil.getBooleanFromJson(globalConfig, "launch_web_api_server", false);
             webApiServerPort = JsonUtil.getIntFromJson(globalConfig, "web_api_server_port", 9900);
+            timezone = JsonUtil.getStringFromJson(globalConfig, "timezone", "Europe/Paris");
         }
     }
 
+    @Setter
     @Getter
     public static class CSLScan {
         // region define variables
@@ -150,6 +154,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLStatus {
         // region define variables
@@ -163,6 +168,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLNmapService {
         // region define variables
@@ -180,6 +186,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLCpeService {
         // region define variables
@@ -191,6 +198,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLSshService {
         // region define variables
@@ -206,6 +214,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLDatabaseServerConf {
         // region define variables
@@ -220,6 +229,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLServiceLoader {
         // region define variables
@@ -235,6 +245,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLWebServerConf {
         // region define variables
@@ -252,6 +263,7 @@ public class Config {
         Boolean modbusCommands;
         Boolean externalCommands;
         Boolean jsonCommands;
+        Boolean jcmdCommands;
         Boolean databaseCommands;
         Boolean configFileCommands;
         Boolean mxCommands;
@@ -278,6 +290,7 @@ public class Config {
             modbusCommands = JsonUtil.getBooleanFromJson(globalConfig, "modbus_commands", true);
             externalCommands = JsonUtil.getBooleanFromJson(globalConfig, "external_commands", true);
             jsonCommands = JsonUtil.getBooleanFromJson(globalConfig, "json_commands", true);
+            jcmdCommands = JsonUtil.getBooleanFromJson(globalConfig, "jcmd_commands", true);
             databaseCommands = JsonUtil.getBooleanFromJson(globalConfig, "database_commands", true);
             configFileCommands = JsonUtil.getBooleanFromJson(globalConfig, "config_file_commands", true);
             mxCommands = JsonUtil.getBooleanFromJson(globalConfig, "mx_commands", true);
@@ -291,6 +304,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLUdpServerConf {
         // region define variables
@@ -315,6 +329,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLModuleExec {
         // region define variables
@@ -326,12 +341,13 @@ public class Config {
 
         public CSLModuleExec(Json globalConfig) {
             modulesPackageName = JsonUtil.getStringFromJson(globalConfig, "modules_package_name", "main.modules");
-            samplingTime = JsonUtil.getIntFromJson(globalConfig, "sampling_time", 1000);
+            samplingTime = JsonUtil.getIntFromJson(globalConfig, "sampling_time", 100);
             numberOfExecLoops = JsonUtil.getIntFromJson(globalConfig, "number_of_exec_loops", 2);
             autostart = JsonUtil.getBooleanFromJson(globalConfig, "autostart", true);
         }
     }
 
+    @Setter
     @Getter
     public static class CSLModule {
         // region define variables
@@ -359,6 +375,7 @@ public class Config {
             return moduleList;
         }
 
+        @Setter
         @Getter
         public static class CSLModuleConfig {
             Boolean autostart;
@@ -377,6 +394,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLIdsConf {
         // region define variables
@@ -466,6 +484,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLAlertViewer {
         // region define variables
@@ -499,6 +518,7 @@ public class Config {
         }
     }
 
+    @Setter
     @Getter
     public static class CSLAutocrypt {
         // region define variables

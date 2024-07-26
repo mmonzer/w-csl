@@ -1,6 +1,7 @@
 package main;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -23,6 +24,7 @@ public class CSLIDSMainServer {
 
         System.out.println("Starting CSL IDS version  " + CSLContext.VERSION);
         Json configObj = CSLContext.instance.getConfig();
+
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
 
         CSLContext.instance.setDebug(true);

@@ -1,6 +1,7 @@
 package com.csl.web.database;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
@@ -26,11 +27,33 @@ public class DataBaseServer {
 	public  void init(Json j) {
 		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
 		if (!on) return;
-		
+
 		String datafilesubdir="datafile";
 
 		if (j!=null)
 			datafilesubdir=JsonUtil.getStringFromJson(j, "datafile_subdir","datafile");
+
+
+		datafiledir = CSLContext.instance.buildFullPathInUserDir(datafilesubdir);
+		JServiceLoader.displayInfo(datafiledir);
+
+		File f=new File(datafiledir);
+		f.mkdirs();
+
+	}
+
+
+	public  void init(Config.CSLDatabaseServerConf config) {
+//		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
+		boolean on=config.getOn();
+		if (!on) return;
+
+		String datafilesubdir="datafile";
+
+		if (config!=null) {
+			datafilesubdir = config.getDatafileSubdir();
+//			datafilesubdir = JsonUtil.getStringFromJson(j, "datafile_subdir", "datafile");
+		}
 
 
 		datafiledir = CSLContext.instance.buildFullPathInUserDir(datafilesubdir);

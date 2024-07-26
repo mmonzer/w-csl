@@ -58,14 +58,6 @@ public class ModuleIDS implements IModule {
 
 	private long max_size=10000000;
 
-	public boolean isSendToBrowser() {
-		return sendToBrowser;
-	}
-
-    public boolean isSendToConsole() {
-		return sendToConsole;
-	}
-
     public String runningState( ) {
 		
 		return "Running:"+running+" detect:"+idsDetectOn+" record:"+loggingOn+" sendToConsole:"+sendToConsole+" sendToBrowser:"+sendToBrowser;
@@ -245,19 +237,6 @@ public class ModuleIDS implements IModule {
 		return IResult.OK;
 	}
 
-	private List<String> getListOfString(Json config, String name) {
-		Json params=config.get(name);
-
-		List<String> l= new ArrayList<String>();
-		if (params==null) return l;
-		Iterator<Json> itr=params.iterator();
-		while(itr.hasNext()) {
-			Json jv = itr.next();
-			l.add(jv.asString());
-		}
-		return l;
-	}
-
 	@Override
 	public IResult start(ICSLContext context,IModuleContext mcontext) {
 		// TODO Auto-generated method stub
@@ -310,7 +289,7 @@ public class ModuleIDS implements IModule {
 	}
 
 	static {
-		CSLContext.instance.registerModuleClass("ModuleIDS",ModuleIDS.class);
+		CSLContext.instance.registerModuleClass("ModuleIDS", ModuleIDS.class);
 	}
 
 }

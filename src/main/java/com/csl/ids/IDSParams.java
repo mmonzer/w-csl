@@ -1,6 +1,7 @@
 package com.csl.ids;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.ucsl.interfaces.IConsole;
 import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.json.Json;
@@ -247,7 +248,7 @@ public class IDSParams {
 		on=JsonUtil.getBooleanFromJson(j, "ids_conf/on",false);
 		this.doNotUseCurrentIDSParamsFileName=doNotUseCurrentIDSParamsFileName;
 
-		if (!dataDir.isEmpty()) 
+		if (!dataDir.isEmpty())
 			setDataDir(dataDir);
 		else {
 			dataDir=defaultDataDir;
@@ -255,7 +256,7 @@ public class IDSParams {
 
 		datasetManager = new IDSDataSetManager(this);
 
-		this.logToFile= 
+		this.logToFile=
 				JsonUtil.getBooleanFromJson(j,  "ids_conf/log_to_file", true) ; // if not read only in the table
 
 		this.sendToBrowser=JsonUtil.getBooleanFromJson(j,  "ids_conf/send_to_browser", false) ;
@@ -273,6 +274,54 @@ public class IDSParams {
 		currentIDSParamsFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"current_idsparams_file","CurrentIDSParams.json");
 
 		subdir_learn=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"subdir_learn","");
+
+		loadCurrentVariables();
+
+		validDirectories();
+
+//		System.out.println(this);
+	}
+	public void initFromJson(Config config, String dataDir, boolean testParam, boolean doNotUseCurrentIDSParamsFileName ) {
+
+		setTestParam(testParam);
+//		on=JsonUtil.getBooleanFromJson(j, "ids_conf/on",false);
+		on=config.IdsConf.getOn();
+		this.doNotUseCurrentIDSParamsFileName=doNotUseCurrentIDSParamsFileName;
+
+		if (!dataDir.isEmpty())
+			setDataDir(dataDir);
+		else {
+			dataDir=defaultDataDir;
+		}
+
+		datasetManager = new IDSDataSetManager(this);
+
+//		this.logToFile= JsonUtil.getBooleanFromJson(j,  "ids_conf/log_to_file", true) ; // if not read only in the table
+		this.logToFile= config.IdsConf.getLogToFile() ; // if not read only in the table
+
+//		this.sendToBrowser=JsonUtil.getBooleanFromJson(j,  "ids_conf/send_to_browser", false) ;
+		this.sendToBrowser=config.IdsConf.getSendToBrowser() ;
+//		this.sendToConsole=JsonUtil.getBooleanFromJson(j,  "ids_conf/send_to_console", false) ;
+		this.sendToConsole=config.IdsConf.getSendToConsole() ;
+
+//		packets_dir_for_recording=buildFullPathInDataDir(
+//				JsonUtil.getStringFromJson(j, IDS_CONF_SEP+PACKETS_DIR_FOR_RECORDING, "./recorded_packets"));
+		packets_dir_for_recording=buildFullPathInDataDir(config.IdsConf.getPacketsDirForRecording());
+//		packets_dir_for_detection_offline=buildFullPathInDataDir(
+//				JsonUtil.getStringFromJson(j, IDS_CONF_SEP+PACKETS_DIR_FOR_DETECTION_OFFLINE, "./recorded_packets"));
+		packets_dir_for_detection_offline=buildFullPathInDataDir(config.IdsConf.getPacketsDirForDetectionOffline());
+//		packets_dir_for_learning=buildFullPathInDataDir(
+//				JsonUtil.getStringFromJson(j, IDS_CONF_SEP+PACKETS_DIR_FOR_LEARNING, "./recorded_packets"));
+		packets_dir_for_learning=buildFullPathInDataDir(config.IdsConf.getPacketsDirForLearning());
+
+//		setIdsMode(JsonUtil.getIntFromJson(j, IDS_CONF_SEP+MODE,0));
+		setIdsMode(config.IdsConf.getMode());
+
+//		currentIDSParamsFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"current_idsparams_file","CurrentIDSParams.json");
+		currentIDSParamsFileName=config.IdsConf.getCurrentIdsParamsFile();
+
+//		subdir_learn=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"subdir_learn","");
+		subdir_learn=config.IdsConf.getSubdirLearn();
 
 		loadCurrentVariables();
 

@@ -41,6 +41,11 @@ public class Config {
     public final CSLAlertViewer AlertViewer;
     public final CSLAutocrypt Autocrypt;
 
+    public static Config reload(String configFile) {
+        instance = new Config(configFile);
+        return instance;
+    }
+
     private Config(String configFile) {
         jConfig = readConfig(configFile);
 
@@ -61,7 +66,7 @@ public class Config {
         Autocrypt = new CSLAutocrypt(jConfig.get("autocrypt"));
     }
 
-    Json readConfig(String f) {
+    private Json readConfig(String f) {
 
         String content = "{}";
         try {
@@ -498,23 +503,31 @@ public class Config {
         Boolean alertToWeb;
         String alertJsonTag;
         Boolean alertToUdp;
+        Boolean alertToDb;
+        Boolean showAlerts;
         Boolean doNotResentSameAlert;
         Integer alertDuration;
+        String filenameCurrentAlerts;
+        String subdirBackupAlerts;
         // endregion define variables
 
         public CSLAlertViewer(Json globalConfig) {
             ip = JsonUtil.getStringFromJson(globalConfig, "ip", "localhost");
             port = JsonUtil.getIntFromJson(globalConfig, "port", 4445);
             name = JsonUtil.getStringFromJson(globalConfig, "name", "My Alerts");
-            logToFile = JsonUtil.getBooleanFromJson(globalConfig, "logToFile", true);
-            logDir = JsonUtil.getStringFromJson(globalConfig, "log_dir", "./idslogs/alerts");
-            prefixFilename = JsonUtil.getStringFromJson(globalConfig, "prefix_filename", "AL");
+            logToFile = JsonUtil.getBooleanFromJson(globalConfig, "log_to_file", true);
+            logDir = JsonUtil.getStringFromJson(globalConfig, "log_dir", "./idslogs/alerts/logs");
+            prefixFilename = JsonUtil.getStringFromJson(globalConfig, "prefix_filename", "alert");
             maxSizeOfLogFiles = JsonUtil.getIntFromJson(globalConfig, "max_size_of_log_files", 10000);
             alertToWeb = JsonUtil.getBooleanFromJson(globalConfig, "alert_to_web", true);
             alertJsonTag = JsonUtil.getStringFromJson(globalConfig, "alert_json_tag", "alert");
             alertToUdp = JsonUtil.getBooleanFromJson(globalConfig, "alert_to_udp", true);
-            doNotResentSameAlert = JsonUtil.getBooleanFromJson(globalConfig, "do_not_resent_same_alert", true);
-            alertDuration = JsonUtil.getIntFromJson(globalConfig, "alert_duration", 10000);
+            alertToDb = JsonUtil.getBooleanFromJson(globalConfig, "alert_to_db", true);
+            showAlerts = JsonUtil.getBooleanFromJson(globalConfig, "show_alerts", true);
+            doNotResentSameAlert = JsonUtil.getBooleanFromJson(globalConfig, "do_not_resent_same_alert", false);
+            alertDuration = JsonUtil.getIntFromJson(globalConfig, "alert_duration", 500);
+            filenameCurrentAlerts = JsonUtil.getStringFromJson(globalConfig, "filename_current_alerts", "current_alerts");
+            subdirBackupAlerts = JsonUtil.getStringFromJson(globalConfig, "subdir_backup_alerts", "alerts");
         }
     }
 

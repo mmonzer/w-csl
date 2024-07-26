@@ -119,6 +119,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
     int numberOfExecLoops = 1;
     Json jConfig = null;
+    Config config = null;
 
 
     Map<String, com.csl.core.ModuleContext> modules = new HashMap<String, com.csl.core.ModuleContext>();
@@ -354,17 +355,25 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         }
     }
 
-    public Json getConfig() {
+//    public Json getConfig() {
+//
+//        if (jConfig == null) readConfig(configFileName);
+//        if (jConfig.get("web_server_conf") == null) {
+//            System.out.println("Invalid config file, update to new format");
+//            System.exit(0);
+//        }
+//        return jConfig;
+//    }
 
-        if (jConfig == null) readConfig(configFileName);
-        if (jConfig.get("web_server_conf") == null) {
+    public Config getConfig() {
+        if (config == null) return Config.instance;
+        if (Config.instance.WebServerConf == null) {
             System.out.println("Invalid config file, update to new format");
             System.exit(0);
         }
-        return jConfig;
     }
 
-    private Json setConfigFileName(String configFileName) {
+    private Config setConfigFileName(String configFileName) {
 
         if (isVerbose()) System.out.println("Reading configuration from " + configFileName);
         this.configFileName = configFileName;
@@ -372,6 +381,15 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return getConfig();
 
     }
+
+//    private Json setConfigFileName(String configFileName) {
+//
+//        if (isVerbose()) System.out.println("Reading configuration from " + configFileName);
+//        this.configFileName = configFileName;
+//
+//        return getConfig();
+//
+//    }
 
     private void setUserDir(String dir) {
 
@@ -489,7 +507,8 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         idsMainProcessor.setFileStoreServices(fileUtils);
 
 
-        cslAlertManager = new CSLAlertManager(idsMainProcessor, getConfig().get("alert_viewer"));
+//        cslAlertManager = new CSLAlertManager(idsMainProcessor, getConfig().get("alert_viewer"));
+        cslAlertManager = new CSLAlertManager(idsMainProcessor, getConfig().AlertViewer);
         idsMainProcessor.setAlertManager(cslAlertManager);
 
         idsMainProcessor.setAlertFactory(new CSLAlertFactory());

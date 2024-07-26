@@ -23,7 +23,8 @@ public class CSLIDSMainServer {
     public static void main(String[] args) {
 
         System.out.println("Starting CSL IDS version  " + CSLContext.VERSION);
-        Json configObj = CSLContext.instance.getConfig();
+//        Json configObj = CSLContext.instance.getConfig();
+        Config config = CSLContext.instance.getConfig();
 
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
 

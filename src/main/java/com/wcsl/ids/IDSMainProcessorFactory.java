@@ -21,7 +21,7 @@ public class IDSMainProcessorFactory implements IIDSMainProcessorFactory {
 
 	}
 
-	public IIDSMainProcessor createIDSMainProcessor(Config.CSLIdsConf config, String cslConfDir, ICSLLogger logger) {
+	public IIDSMainProcessor createIDSMainProcessor(Config.IdsConf config, String cslConfDir, ICSLLogger logger) {
 		IDSMainProcessor idsMainProcessor = new IDSMainProcessor(config, cslConfDir);
 
 		idsMainProcessor.setLogger(logger);

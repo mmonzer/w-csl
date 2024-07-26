@@ -59,7 +59,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 
         this.alertFactory = new CSLAlertFactory();
     }
-    public IDSMainProcessor(Config.CSLIdsConf config, String cslConfDir) {
+    public IDSMainProcessor(Config.IdsConf config, String cslConfDir) {
 
         this.fileStoreServices = new FileStoreService(cslConfDir);
 

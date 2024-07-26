@@ -19,7 +19,6 @@ import com.csl.web.CSLUDPServer;
 import com.csl.web.database.DataBaseServer;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import com.wcsl.ids.IDSMainProcessorFactory;
 import lombok.Getter;
 import main.util.CSLRunningArgs;
@@ -642,14 +641,14 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         if (isVerbose()) System.out.println("Running " + numberOfExecLoops + " execution loops");
 
 //        Json j = getConfig().get("modules");
-        List<Config.CSLModule> modulesConfig = Config.instance.Modules;
+        List<Config.Module> modulesConfig = Config.instance.Modules;
 
 //        Iterator<Json> itr = j.iterator();
-        Iterator<Config.CSLModule> itr = modulesConfig.iterator();
+        Iterator<Config.Module> itr = modulesConfig.iterator();
 
         while (itr.hasNext()) {
 //            Json moduleDescriptor = itr.next();
-            Config.CSLModule moduleDescriptor = itr.next();
+            Config.Module moduleDescriptor = itr.next();
             CSLContext.instance.logInfo(moduleDescriptor + " ");
 
 //            String mname = moduleDescriptor.get("name").asString();
@@ -673,7 +672,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
                         mc.setModule(m);
                         mc.setName(mname);
 //                        Json mconfig = moduleDescriptor.get("config");
-                        Config.CSLModule.CSLModuleConfig mconfig = moduleDescriptor.getConfig();
+                        Config.Module.CSLModuleConfig mconfig = moduleDescriptor.getConfig();
 //                        mc.setMConfig(mconfig);
                         mc.setConfig(mconfig);
 

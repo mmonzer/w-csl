@@ -102,7 +102,7 @@ public class ModuleIDS implements IModule {
 	public void openLogFiles() {
 
 //		Json j=context.getConfig();
-		Config.CSLIdsConf config=context.getConfig().IdsConf;
+		Config.IdsConf config=context.getConfig().IdsConf;
 
 //		String datadir=JsonUtil.getStringFromJson(j, "ids_conf/packets_dir_for_recording", "./recorded_packets");
 		String datadir=config.getPacketsDirForRecording();
@@ -139,7 +139,7 @@ public class ModuleIDS implements IModule {
 		// TODO Auto-generated method stub
 		this.context=context;
 //		Json config=context.getConfig();
-		Config.CSLIdsConf config = Config.instance.IdsConf;
+		Config.IdsConf config = Config.instance.IdsConf;
 
 
 

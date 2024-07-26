@@ -73,7 +73,7 @@ public class CSLHttpServerJetty {
     /**
      * Initialize the server
      */
-    public void initServer(Config.CSLWebServerConf config){
+    public void initServer(Config.WebServerConf config){
         boolean on = config.getOn();
         if(!on) return;
         ServerConfig sc = new ServerConfig(config);

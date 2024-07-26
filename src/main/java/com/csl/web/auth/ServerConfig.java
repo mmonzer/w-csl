@@ -96,7 +96,7 @@ public class ServerConfig {
 
 	}
 
-	public ServerConfig(Config.CSLWebServerConf config) {
+	public ServerConfig(Config.WebServerConf config) {
 
 		userDir = JServiceLoader.getUserDir();
 

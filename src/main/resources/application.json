@@ -41,9 +41,6 @@
     "on": true,
     "datafile_subdir": "datafile"
   },
-  "my_service": {
-    "xs": "hello"
-  },
   "service_loader": {
     "trace_service_execution": true,
     "trace_library_search": true,

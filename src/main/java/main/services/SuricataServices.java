@@ -271,7 +271,7 @@ public class SuricataServices extends Service {
 	 */
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
-		Config.CSLSshService config = Config.instance.SshService;
+		Config.Tap config = Config.instance.TapService;
 		System.out.println("Initializing SSH suricata commands ..");
 		try {
 			Json conf = readJsonFile("./datafile/configuredSuricata.json");

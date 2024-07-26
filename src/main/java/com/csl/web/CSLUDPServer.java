@@ -101,7 +101,7 @@ public class CSLUDPServer {
 	}
 
 
-	public void initUDPServer(Config.CSLUdpServerConf config) { //String rootdir, int port, boolean verbose) {
+	public void initUDPServer(Config.UdpServerConf config) { //String rootdir, int port, boolean verbose) {
 
 
 		if (config==null) return;

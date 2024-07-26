@@ -46,7 +46,7 @@ public class TapsServices extends Service {
     static HashMap<String, Tap> activeTaps = new HashMap<>();
     static String localIP;
     static Integer localPort;
-    static String knownHostFilePath;
+//    static String knownHostFilePath;
 
     private final ApiHandler apiHandler;
 
@@ -931,7 +931,7 @@ public class TapsServices extends Service {
      */
     @Override
     public boolean init(Json jConfig, String cslDir) {
-        Config.CSLSshService config = Config.instance.SshService;
+        Config.Tap config = Config.instance.TapService;
         idsconf = CSLContext.instance.getCslConfDir();
         Json conf;
         Tap tap;
@@ -960,7 +960,6 @@ public class TapsServices extends Service {
             e.printStackTrace();
         }
 //        knownHostFilePath = jConfig.at("knowHostFilePath").asString();
-        knownHostFilePath = config.getKnowHostFilePath();
 //        localIP = jConfig.at("localIpAddr").asString(););
         localIP = config.getLocalIpAddress();
 //        localPort = jConfig.at("localPort").asString();

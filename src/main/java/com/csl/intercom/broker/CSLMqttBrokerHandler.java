@@ -87,7 +87,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      */
     public CSLMqttBrokerHandler(Config config) {
 //        Json globalConfig = config.get("global");
-        Config.CSLGlobal globalConfig = config.Global;
+        Config.Global globalConfig = config.Global;
 //        brokerUri = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "wss://" : "ws://";
         brokerUri = globalConfig.getUseSsl() ? "wss://" : "ws://";
 //        brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");

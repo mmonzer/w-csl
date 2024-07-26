@@ -42,8 +42,7 @@ public class DataBaseServer {
 
 	}
 
-
-	public  void init(Config.CSLDatabaseServerConf config) {
+	public  void init(Config.DatabaseServerConf config) {
 //		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
 		boolean on=config.getOn();
 		if (!on) return;
@@ -82,7 +81,6 @@ public class DataBaseServer {
 		if (!ext.isEmpty()) filename=filename+'.'+ext;
 		return filename;
 	}
-
 
 	private  String writeDataFile(String path, String content) {
 
@@ -166,7 +164,6 @@ public class DataBaseServer {
 
 		return j;
 	}
-
 
 	public  void main(String[] args) {
 

@@ -3,7 +3,6 @@ package com.csl.alert;
 import com.csl.core.CSLContext;
 import com.csl.core.CSLUtil;
 import com.csl.core.Config;
-import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLog;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
@@ -17,7 +16,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.rmi.ConnectIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +70,7 @@ public class CSLAlertManager implements IAlertManager {
 	private boolean alertToDb = true;
 	private String filename_current_alerts="";
 	private Json jConfig=null;
-	private Config.CSLAlertViewer config=null;
+	private Config.AlertViewer config=null;
 	List<IAlertDescriptor> listOfCurrentAlerts= new ArrayList<>();
 	// if >0 , after this duration, the alert is cleared
 	private int durationOfAlert=5000;
@@ -88,7 +86,7 @@ public class CSLAlertManager implements IAlertManager {
 		dbapiHandler = new DbapiHandlerForAlerts();
 		init(jConfig);
 	}
-	public CSLAlertManager(IIDSMainProcessor x, Config.CSLAlertViewer config) {
+	public CSLAlertManager(IIDSMainProcessor x, Config.AlertViewer config) {
 		this.idsMainProcessor=x;
 		this.idsMainProcessor.setAlertFactory( alertFactory);
 		dbapiHandler = new DbapiHandlerForAlerts();
@@ -143,7 +141,7 @@ public class CSLAlertManager implements IAlertManager {
 
 	}
 
-	private void init(Config.CSLAlertViewer config) {
+	private void init(Config.AlertViewer config) {
 
 //		this.jConfig=jConfig;
 		this.config = config;

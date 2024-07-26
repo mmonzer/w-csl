@@ -77,7 +77,7 @@ public class ScanUtils {
         return  websocketProtocol + "://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
     }
 
-    public static String generateScanDiscoveryUrlFromConfig(Config.CSLScan config) {
+    public static String generateScanDiscoveryUrlFromConfig(Config.Scan config) {
 //        String scanManagerProtocol = JsonUtil.getStringFromJson(discoveryConfig, "manager_protocol", "http");
         String scanManagerProtocol = config.getManagerProtocol();
 //        String scanManagerIp = JsonUtil.getStringFromJson(discoveryConfig, "manager_ip", "localhost");

@@ -39,7 +39,7 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 		initFromJson(config);
 	}
 
-	public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Config.CSLIdsConf config) {
+	public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Config.IdsConf config) {
 
 		this.idsMainProcessor = idsMainProcessor;
 		fileUtils=idsMainProcessor.getFileStoreServices();
@@ -81,7 +81,7 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 	}
 
 
-	public void initFromJson(Config.CSLIdsConf config) {
+	public void initFromJson(Config.IdsConf config) {
 //		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
 		rulesForSuricataBaseFileName=config.getRulesForSuricataBase();
 

@@ -59,7 +59,7 @@ public class NmapServices extends Service {
 
 	}
 
-	static public void lauchNmap(Json params, Config.CSLNmapService config) {
+	static public void lauchNmap(Json params, Config.NmapService config) {
 //		System.out.println("launchNmap:"+params);
 //		System.out.println("launchNmap:"+config);
 
@@ -123,7 +123,7 @@ public class NmapServices extends Service {
 		return result;
 	}
 
-	static public Json scanDevice(Json params, Config.CSLNmapService config) {
+	static public Json scanDevice(Json params, Config.NmapService config) {
 		System.out.println("launchNmap:"+params);
 //		System.out.println("launchNmap:"+jConfig);
 
@@ -161,7 +161,7 @@ public class NmapServices extends Service {
 	 */
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
-		Config.CSLNmapService config = Config.instance.NmapService;
+		Config.NmapService config = Config.instance.NmapService;
 		System.out.println("--- Initialisation des services Nmap ---");
 //		NmapServices.debugMode = jConfig.at("debug_mode").asBoolean();
 		NmapServices.debugMode = config.getDebugMode();

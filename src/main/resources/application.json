@@ -32,7 +32,7 @@
   },
   "cve_service": {
   },
-  "ssh_service": {
+  "tap_service": {
     "localIpAddr": "16.0.0.1",
     "localPort": 8001,
     "knowHostFilePath": "~/.ssh/known_hosts"
@@ -169,7 +169,7 @@
     "subdir_backup_alerts": "alerts",
     "alert_duration": 10000
   },
-  "autocrypt": {
+  "autocrypt_service": {
     "ip": "host.docker.internal",
     "port": 8002,
     "sync_frequency": 300

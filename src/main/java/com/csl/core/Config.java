@@ -55,7 +55,7 @@ public class Config {
         NmapService = new NmapService(jConfig.get("nmap_service"));
         CpeService = new CpeService(jConfig.get("cpe_service"));
         TapService = new Tap(jConfig.get("cve_service"));
-        DatabaseServerConf = new DatabaseServerConf(jConfig.get("ssh_service"));
+        DatabaseServerConf = new DatabaseServerConf(jConfig.get("tap_service"));
         WebServerConf = new WebServerConf(jConfig.get("web_server_conf"));
 //        ServiceLoader = new ServiceLoader(jConfig.get("service_loader"));
         UdpServerConf = new UdpServerConf(jConfig.get("udp_server_conf"));
@@ -63,7 +63,7 @@ public class Config {
         Modules = Module.makeList(jConfig.get("modules"));
         IdsConf = new IdsConf(jConfig.get("ids_conf"));
         AlertViewer = new AlertViewer(jConfig.get("alert_viewer"));
-        Autocrypt = new Autocrypt(jConfig.get("autocrypt"));
+        Autocrypt = new Autocrypt(jConfig.get("autocrypt_service"));
     }
 
     private Json readConfig(String f) {

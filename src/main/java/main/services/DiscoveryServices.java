@@ -134,10 +134,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         if (isConcentrator) {
             cpeScanService = new CpeScanService();
-            cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
-            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(cpeScanService);
-            deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
-            deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
+            cpeItemSynchronizationService = new CpeItemsSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
+            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
+            deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService(scanApiHandler, dbapiHandler);
+            deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService(scanApiHandler, dbapiHandler);
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
             importExportBsonService = ImportExportBsonService.getInstance();
             importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);

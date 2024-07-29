@@ -5,11 +5,9 @@ import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.core.NoLogging;
 import com.csl.intercom.broker.MosquittoConfig;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.web.database.CSLServiceJsonDataBase;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
@@ -24,8 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -220,7 +216,6 @@ public class CSLIDSMainClient {
 //        configObj.get("database_server_conf").set("on", false);
 //        configObj.get("web_server_conf").set("on", false);
 //        configObj.get("udp_server_conf").set("on", true);
-        config.DatabaseServerConf.setOn(false);
         config.WebServerConf.setOn(false);
         config.UdpServerConf.setOn(true);
 
@@ -255,12 +250,10 @@ public class CSLIDSMainClient {
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
 //        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
-        JServiceLoader.registerService(new CSLServiceDemo(), Json.object(), true);
         JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
         JServiceLoader.registerService(new AlertsService(), Json.object(), true);
         JServiceLoader.registerService(new MonitorService(), Json.object(), true);
         JServiceLoader.registerService(new TapsServices(), Json.object(), true);
-        JServiceLoader.registerService(new CSLServiceJsonDataBase(), Json.object(), true);
         JServiceLoader.registerService(new DiscoveryServices(), Json.object(), true);
         JServiceLoader.registerService(new StatusService(), Json.object(), true);
         JServiceLoader.registerService(new AutoCryptService(), Json.object(), true);

@@ -5,7 +5,6 @@ import com.csl.core.Config;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.web.database.CSLServiceJsonDataBase;
 import com.ucsl.json.Json;
 import com.xcsl.miniserver.ApiHttpServer;
 import main.services.*;
@@ -34,7 +33,6 @@ public class CSLIDSMainServer {
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
 
-//        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
 //        JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
 //        JServiceLoader.registerService(new AlertsService(), configObj, true);
 //        JServiceLoader.registerService(new MonitorService(), configObj, true);
@@ -46,12 +44,10 @@ public class CSLIDSMainServer {
 //        JServiceLoader.registerService(new StatusService(), configObj, true);
 //        JServiceLoader.registerService(new AutoCryptService(true), configObj, true);
 
-        JServiceLoader.registerService(new CSLServiceDemo(), Json.object(), true);
         JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
         JServiceLoader.registerService(new AlertsService(), Json.object(), true);
         JServiceLoader.registerService(new MonitorService(), Json.object(), true);
         JServiceLoader.registerService(new TapsServices(), Json.object(), true);
-        JServiceLoader.registerService(new CSLServiceJsonDataBase(), Json.object(), true);
         JServiceLoader.registerService(new CpeServices(), Json.object(), true);
         JServiceLoader.registerService(new CveServices(), Json.object(), true);
         JServiceLoader.registerService(new DiscoveryServices(false), Json.object(), true);

@@ -31,7 +31,6 @@ public class Config {
     public final Config.NmapService NmapService;
     public final Config.CpeService CpeService;
     public final Tap TapService;
-    public final Config.DatabaseServerConf DatabaseServerConf;
     public final Config.WebServerConf WebServerConf;
     public final Config.UdpServerConf UdpServerConf;
     public final Config.ModuleExec ModuleExec;
@@ -50,7 +49,6 @@ public class Config {
 
         Global = new Global(jConfig.get("global"));
         Status = new Status(jConfig.get("status"));
-        DatabaseServerConf = new DatabaseServerConf(jConfig.get("database_server_conf"));
         WebServerConf = new WebServerConf(jConfig.get("web_server_conf"));
         UdpServerConf = new UdpServerConf(jConfig.get("udp_server_conf"));
         ModuleExec = new ModuleExec(jConfig.get("module_exec"));
@@ -216,37 +214,6 @@ public class Config {
             localIpAddress = JsonUtil.getStringFromJson(config, "localIpAddr", "localhost");
             localPort = JsonUtil.getIntFromJson(config, "localPort", 8001);
             knowHostFilePath = JsonUtil.getStringFromJson(config, "knowHostFilePath", "~/.ssh/known_hosts");
-        }
-    }
-
-    @Setter
-    @Getter
-    public static class DatabaseServerConf {
-        // region define variables
-        String datafileSubdir;
-        @Setter
-        Boolean on;
-        // endregion define variables
-
-        public DatabaseServerConf(Json config) {
-            datafileSubdir = JsonUtil.getStringFromJson(config, "datafile_subdir", "datafile");
-            on = JsonUtil.getBooleanFromJson(config, "on", true);
-        }
-    }
-
-    @Setter
-    @Getter
-    public static class ServiceLoader {
-        // region define variables
-        Boolean traceServiceExecution;
-        Boolean traceLibrarySearch;
-        List<String> services;
-        // endregion define variables
-
-        public ServiceLoader(Json config) {
-            traceServiceExecution = JsonUtil.getBooleanFromJson(config, "trace_service_execution", true);
-            traceLibrarySearch = JsonUtil.getBooleanFromJson(config, "trace_library_search", true);
-            services = JsonUtil.getListStrFromJson(config, "services", List.of("./service1.jar"));
         }
     }
 

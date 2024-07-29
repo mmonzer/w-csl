@@ -326,12 +326,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 //            safeGet(getConfig(), "alert_viewer").set("log_dir", cslRunningArgs.getLogDir());
             Config.instance.AlertViewer.setLogDir(cslRunningArgs.getLogDir());
         }
-
-        // databasedir
-        if (cslRunningArgs.hasDatabaseDir()) {
-//            safeGet(getConfig(), "database_server_conf").set("datafile_subdir", cslRunningArgs.getDatabasedir());
-            Config.instance.DatabaseServerConf.setDatafileSubdir(cslRunningArgs.getDatabasedir());
-        }
     }
 
     public void init(CSLRunningArgs cslRunningArgs) {

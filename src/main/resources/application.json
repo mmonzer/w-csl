@@ -30,8 +30,6 @@
   "cpe_service": {
     "dictionaryPath": "src/main/resources/cslconf/cpe/CpeTree.json"
   },
-  "cve_service": {
-  },
   "tap_service": {
     "localIpAddr": "16.0.0.1",
     "localPort": 8001,
@@ -52,6 +50,7 @@
     "modbus_commands": true,
     "external_commands": true,
     "json_commands": true,
+    "jcmd_commands": true,
     "database_commands": true,
     "config_file_commands": true,
     "mx_commands": true,

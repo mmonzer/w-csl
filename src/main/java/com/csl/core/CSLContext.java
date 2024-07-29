@@ -249,7 +249,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     }
 
     public Config getConfig() {
-        if (Config.instance.WebServerConf == null) {
+        if (Config.instance.Server == null) {
             System.out.println("Invalid config file, update to new format");
             System.exit(0);
         }
@@ -321,7 +321,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
             Config.instance.IdsConf.setIdstraceDir(cslRunningArgs.getLogDir());
             // jcmd logs
 //            safeGet(getConfig(), "web_server_conf").set("log_dir", cslRunningArgs.getLogDir());
-            Config.instance.WebServerConf.setLogDir(cslRunningArgs.getLogDir());
+            Config.instance.Server.setLogDir(cslRunningArgs.getLogDir());
             // alerts
 //            safeGet(getConfig(), "alert_viewer").set("log_dir", cslRunningArgs.getLogDir());
             Config.instance.AlertViewer.setLogDir(cslRunningArgs.getLogDir());
@@ -412,7 +412,7 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         if (server) {
 //            getCslHttpServer().initServer(getConfig().get("web_server_conf"));
-            getCslHttpServer().initServer(Config.instance.WebServerConf);
+            getCslHttpServer().initServer(Config.instance.Server);
         }
         if (client) {
 //            getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));

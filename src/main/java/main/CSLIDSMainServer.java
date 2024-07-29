@@ -44,17 +44,17 @@ public class CSLIDSMainServer {
 //        JServiceLoader.registerService(new StatusService(), configObj, true);
 //        JServiceLoader.registerService(new AutoCryptService(true), configObj, true);
 
+        JServiceLoader.registerService(new CpeServices(), Json.object(), true);
+        JServiceLoader.registerService(new CveServices(), Json.object(), true);
         JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
         JServiceLoader.registerService(new AlertsService(), Json.object(), true);
         JServiceLoader.registerService(new MonitorService(), Json.object(), true);
         JServiceLoader.registerService(new TapsServices(), Json.object(), true);
-        JServiceLoader.registerService(new CpeServices(), Json.object(), true);
-        JServiceLoader.registerService(new CveServices(), Json.object(), true);
         JServiceLoader.registerService(new DiscoveryServices(false), Json.object(), true);
         JServiceLoader.registerService(new StatusService(), Json.object(), true);
         JServiceLoader.registerService(new AutoCryptService(true), Json.object(), true);
 
-        // set services as remote services (to be called through socket)
+        // set services as remote services (to be forward to socket), otherwise run on remote
         CSLContext.instance.setApiRemote("ids");
         CSLContext.instance.setApiRemote("alerts");
         CSLContext.instance.setApiRemote("monitor");

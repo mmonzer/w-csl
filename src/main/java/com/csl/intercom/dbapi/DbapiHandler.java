@@ -5,8 +5,6 @@ import com.csl.core.Config;
 import com.csl.intercom.cslscan.ApiHandler;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +40,9 @@ public class DbapiHandler extends ApiHandler {
 
     public DbapiHandler(String moduleName, Config config) {
         super("DB-API::"+moduleName,
-                config.Global.getIpServerRemote(),
-                config.Global.getUseSsl());
+                config.Client.getIpServerRemote(),
+                config.Client.getUseSsl());
         addUriCommonPath("/api");
-        setApiKey(config.Global.getApiKey());
+        setApiKey(config.Client.getApiKey());
     }
 }

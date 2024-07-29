@@ -216,18 +216,18 @@ public class CSLIDSMainClient {
 //        configObj.get("database_server_conf").set("on", false);
 //        configObj.get("web_server_conf").set("on", false);
 //        configObj.get("udp_server_conf").set("on", true);
-        config.WebServerConf.setOn(false);
+        config.Server.setOn(false);
         config.UdpServerConf.setOn(true);
 
         // The proxy server to connect
-        SERVER_IP = config.Global.getIpServerRemote();
-        SERVER_URL_PREFIX = config.Global.getServerRemoteUrlPrefix();
+        SERVER_IP = config.Client.getIpServerRemote();
+        SERVER_URL_PREFIX = config.Client.getServerRemoteUrlPrefix();
         if (SERVER_URL_PREFIX == null) {
             SERVER_URL_PREFIX = "";
         }
 
 //        Boolean force_host_name_resolution = JsonUtil.getBooleanFromJson(configObj, "global/force_host_name_resolution", false);
-        Boolean force_host_name_resolution = config.Global.getForceHostNameResolution();
+        Boolean force_host_name_resolution = config.Client.getForceHostNameResolution();
         // Try to resolve host name (mainly for Docker hostnames)
         if (force_host_name_resolution) {
             try {
@@ -239,9 +239,9 @@ public class CSLIDSMainClient {
 //        SERVER_PORT = JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
 //        USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
 //        API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
-        SERVER_PORT = config.Global.getPortServerRemote();
-        USE_SSL = config.Global.getUseSsl();
-        API_KEY = config.Global.getApiKey();
+        SERVER_PORT = config.Client.getPortServerRemote();
+        USE_SSL = config.Client.getUseSsl();
+        API_KEY = config.Client.getApiKey();
         logger.trace("API KEY is: " + API_KEY);
         // endregion -- read configuration
 
@@ -279,9 +279,9 @@ public class CSLIDSMainClient {
         }
 
 //        if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
-        if (Config.instance.Global.getLaunchWebApiServer()) {
+        if (Config.instance.Client.getLaunchWebApiServer()) {
 //            int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);
-            int port = Config.instance.Global.getWebApiServerPort();
+            int port = Config.instance.Client.getWebApiServerPort();
             ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
                     new InetSocketAddress(port),
                     JServiceLoader.getApiCommandsList(),

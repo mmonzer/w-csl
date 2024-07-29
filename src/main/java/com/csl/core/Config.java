@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.ucsl.json.JsonException;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,13 +26,13 @@ public class Config {
     String separator = "__";
     public static Config instance = new Config(configFileName);
 
-    public final Config.Global Global;
+    public final Client Client;
     public final Config.Scan Scan;
     public final Config.Status Status;
     public final Config.NmapService NmapService;
     public final Config.CpeService CpeService;
     public final Tap TapService;
-    public final Config.WebServerConf WebServerConf;
+    public final Server Server;
     public final Config.UdpServerConf UdpServerConf;
     public final Config.ModuleExec ModuleExec;
     public final List<Module> Modules;
@@ -47,9 +48,9 @@ public class Config {
     private Config(String configFile) {
         jConfig = readConfig(configFile);
 
-        Global = new Global(jConfig.get("global"));
+        Server = new Server(jConfig.get("server"));
+        Client = new Client(jConfig.get("client"));
         Status = new Status(jConfig.get("status"));
-        WebServerConf = new WebServerConf(jConfig.get("web_server_conf"));
         UdpServerConf = new UdpServerConf(jConfig.get("udp_server_conf"));
         ModuleExec = new ModuleExec(jConfig.get("module_exec"));
         Modules = Module.makeList(jConfig.get("modules"));
@@ -111,7 +112,7 @@ public class Config {
 
     @Setter
     @Getter
-    public static class Global {
+    public static class Client {
         // region define variables
         String ipServerRemote;
         Integer portServerRemote;
@@ -124,7 +125,8 @@ public class Config {
         String timezone;
         // endregion define variables
 
-        public Global(Json config) {
+        public Client(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             ipServerRemote = JsonUtil.getStringFromJson(config, "ip_server_remote", "localhost");
             portServerRemote = JsonUtil.getIntFromJson(config, "port_server_remote", 8000);
             serverRemoteUrlPrefix = JsonUtil.getStringFromJson(config, "server_remote_url_prefix", "");
@@ -149,6 +151,7 @@ public class Config {
         // endregion define variables
 
         public Scan(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             managerIp = JsonUtil.getStringFromJson(config, "manager_ip", "localhost");
             managerPort = JsonUtil.getIntFromJson(config, "manager_port", 8010);
             managerProtocol = JsonUtil.getStringFromJson(config, "manager_protocol", "http");
@@ -166,6 +169,7 @@ public class Config {
         // endregion define variables
 
         public Status(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             sendNotifications = JsonUtil.getBooleanFromJson(config, "send_notifications", false);
             notificationsPeriod = JsonUtil.getIntFromJson(config, "notifications_period", 1);
         }
@@ -182,6 +186,7 @@ public class Config {
         // endregion define variables
 
         public NmapService(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             debugMode = JsonUtil.getBooleanFromJson(config, "debug_mode", true);
             debugDir = JsonUtil.getStringFromJson(config, "debug_dir", "./");
             logMode = JsonUtil.getBooleanFromJson(config, "log_mode", false);
@@ -197,6 +202,7 @@ public class Config {
         // endregion define variables
 
         public CpeService(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             dictionaryPath = JsonUtil.getStringFromJson(config, "dictionaryPath", "src/main/resources/cslconf/cpe/CpeTree.json");
         }
     }
@@ -211,6 +217,7 @@ public class Config {
         // endregion define variables
 
         public Tap(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             localIpAddress = JsonUtil.getStringFromJson(config, "localIpAddr", "localhost");
             localPort = JsonUtil.getIntFromJson(config, "localPort", 8001);
             knowHostFilePath = JsonUtil.getStringFromJson(config, "knowHostFilePath", "~/.ssh/known_hosts");
@@ -219,7 +226,7 @@ public class Config {
 
     @Setter
     @Getter
-    public static class WebServerConf {
+    public static class Server {
         // region define variables
         @Setter
         Boolean on;
@@ -248,7 +255,8 @@ public class Config {
         Integer websocketTimeout;
         // endregion define variables
 
-        public WebServerConf(Json config) {
+        public Server(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             on = JsonUtil.getBooleanFromJson(config, "on", true);
             verbose = JsonUtil.getBooleanFromJson(config, "verbose", false);
             debug = JsonUtil.getBooleanFromJson(config, "debug", false);
@@ -291,6 +299,7 @@ public class Config {
         // endregion define variables
 
         public UdpServerConf(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             on = JsonUtil.getBooleanFromJson(config, "on", false);
             verbose = JsonUtil.getBooleanFromJson(config, "verbose", true);
             traceAllMessages = JsonUtil.getBooleanFromJson(config, "trace_all_messages", false);
@@ -312,6 +321,7 @@ public class Config {
         // endregion define variables
 
         public ModuleExec(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             modulesPackageName = JsonUtil.getStringFromJson(config, "modules_package_name", "main.modules");
             samplingTime = JsonUtil.getIntFromJson(config, "sampling_time", 100);
             numberOfExecLoops = JsonUtil.getIntFromJson(config, "number_of_exec_loops", 2);
@@ -329,6 +339,7 @@ public class Config {
         // endregion define variables
 
         public Module(Json moduleConfig) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             name = JsonUtil.getStringFromJson(moduleConfig, "name", "module_ids");
             type = JsonUtil.getStringFromJson(moduleConfig, "type", "ModuleIDS");
             config = new CSLModuleConfig(moduleConfig.get("config"));
@@ -357,6 +368,7 @@ public class Config {
             Integer outputPriority;
 
             public CSLModuleConfig(Json config) {
+                if (config ==null) { throw new RuntimeException("Wrong configuration"); }
                 autostart = JsonUtil.getBooleanFromJson(config, "autostart", true);
                 execLoopNumber = JsonUtil.getIntFromJson(config, "exec_loop_number", 1);
                 inputPriority = JsonUtil.getIntFromJson(config, "input_priority", 90);
@@ -413,6 +425,7 @@ public class Config {
         // endregion define variables
 
         public IdsConf(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             on = JsonUtil.getBooleanFromJson(config, "on", true);
             mode = JsonUtil.getIntFromJson(config, "mode", 1);
             helpMode = JsonUtil.getStringFromJson(config, "help_mode", "0:idle, 1:record only, 2: detect online 3: learning 4: detect offline");
@@ -479,6 +492,7 @@ public class Config {
         // endregion define variables
 
         public AlertViewer(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             ip = JsonUtil.getStringFromJson(config, "ip", "localhost");
             port = JsonUtil.getIntFromJson(config, "port", 4445);
             name = JsonUtil.getStringFromJson(config, "name", "My Alerts");
@@ -508,6 +522,7 @@ public class Config {
         // endregion define variables
 
         public Autocrypt(Json config) {
+            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
             ip = JsonUtil.getStringFromJson(config, "ip", "localhost");
             port = JsonUtil.getIntFromJson(config, "port", 8002);
             syncFrequency = JsonUtil.getIntFromJson(config, "sync_frequency", 300);

@@ -573,7 +573,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @return whether it is reachable
      */
     public Json getStatus(Json body) {
-        return JsonApiResponse.result(getStatus()).toJson();
+        return JsonApiResponse.result(autocrypt.getStatus()).toJson();
     }
 
     // endregion endpoint methods
@@ -585,7 +585,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     @Override
     public Json getStatus() {
-        return autocrypt.getStatus();
+        return autocrypt.getStatusQuiet();
     }
 
     /**

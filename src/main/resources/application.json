@@ -28,7 +28,7 @@
   },
   "client":{
     "ip_server_remote": "127.0.0.1",
-    "port_server_remote": 8000,
+    "port_server_remote": 443,
     "server_remote_url_prefix": "",
     "force_host_name_resolution": false,
     "api_key": "",

@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan;
 
 import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
 import com.csl.core.Config;
+import com.ucsl.interfaces.IVoidToJsonApiResponse;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
@@ -92,6 +93,17 @@ public class ApiHandler implements AutoCloseable {
             logger.info("Connection successful with {}", moduleName);
         } catch (Exception e) {
             logger.error("Could not start the http client for {} API.", nameModule, e);
+        }
+    }
+
+    /**
+     * General constructor
+     */
+    public void testConnexion(IVoidToJsonApiResponse testMethod) {
+        if (testMethod.apply().isSuccess()) {
+            logger.info("Connection successfully established with {} : server is running", moduleName);
+        } else {
+            logger.warn("Connection could not be established with {} : server is probably not started", moduleName);
         }
     }
 
@@ -398,6 +410,17 @@ public class ApiHandler implements AutoCloseable {
      */
     public JsonApiResponse sendGet(String endpoint, Json params) {
         return sendRequestToApi(HttpMethod.GET, endpoint, params, null, false);
+    }
+
+    /**
+     * Send a HTTP GET request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendGet(String endpoint, Json params, boolean quiet) {
+        return sendRequestToApi(HttpMethod.GET, endpoint, params, null, quiet);
     }
 
     /**

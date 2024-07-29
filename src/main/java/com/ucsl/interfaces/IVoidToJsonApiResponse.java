@@ -1,9 +1,7 @@
-package com.csl.autocrypt.services;
+package com.ucsl.interfaces;
 
-import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 
-@FunctionalInterface
 public interface IVoidToJsonApiResponse {
     JsonApiResponse apply();
 }

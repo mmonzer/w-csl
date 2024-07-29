@@ -25,6 +25,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public ApiHandlerForCSLAutoCrypt(String nameModule, String ip, int port, boolean useSSL) {
         super(nameModule, ip, port, useSSL);
+        testConnexion(()->this.sendGet(ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object(), true));
     }
 
     /**
@@ -372,6 +373,16 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public Json getStatus() {
         return Json.object(Common.IS_HTTP_API_KEY_REACHABLE, this.sendGet(
                 ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object()).isSuccess());
+    }
+
+    /**
+     * Verifies if the module api is reachable
+     *
+     * @return whether it is reachable
+     */
+    public Json getStatusQuiet() {
+        return Json.object(Common.IS_HTTP_API_KEY_REACHABLE, this.sendGet(
+                ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object(), true).isSuccess());
     }
 }
 

@@ -339,7 +339,7 @@ public class Config {
         // endregion define variables
 
         public Module(Json moduleConfig) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (moduleConfig ==null) { throw new RuntimeException("Wrong configuration"); }
             name = JsonUtil.getStringFromJson(moduleConfig, "name", "module_ids");
             type = JsonUtil.getStringFromJson(moduleConfig, "type", "ModuleIDS");
             config = new CSLModuleConfig(moduleConfig.get("config"));

@@ -633,4 +633,14 @@ public class AutoCrypt {
 //        return Json.object();
         return autocryptApiHandler.getStatus();
     }
+
+    /**
+     * Verifies if the module api is reachable
+     *
+     * @return whether it is reachable
+     */
+    public Json getStatusQuiet() {
+//        return Json.object();
+        return autocryptApiHandler.getStatusQuiet();
+    }
 }

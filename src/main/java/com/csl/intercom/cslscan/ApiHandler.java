@@ -361,7 +361,7 @@ public class ApiHandler implements AutoCloseable {
             res = JsonApiResponse.error("Malformed json : " + e.getMessage());
         } catch (Exception e) {
             if (!quiet) {
-                logger.error("Error while sending request to " + moduleName);
+                logger.error("Error while sending request to {}  at {} with params : {}", moduleName, endpoint, params);
             }
             res = JsonApiResponse.error("exception when sending request to "+moduleName+" : " + e.getMessage());
             if (e.getCause() instanceof ConnectException) {

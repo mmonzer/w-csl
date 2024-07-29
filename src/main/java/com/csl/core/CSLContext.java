@@ -16,7 +16,6 @@ import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
-import com.csl.web.database.DataBaseServer;
 import com.ucsl.interfaces.*;
 import com.wcsl.ids.IDSMainProcessorFactory;
 import lombok.Getter;
@@ -72,12 +71,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     private IDSParams idsParams = null;
     private CSLMqttBrokerHandler mqttBroker = null;
     private StatusNotifier statusNotifier = null;
-
-
-    /**
-     * Instance of the database server
-     */
-    DataBaseServer databaseServer = null;
 
     /**
      * Instance of the http server
@@ -200,16 +193,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     public IIDSRunner getIdsRunner() {
         if (idsRunner == null) System.err.println("Warning, no idsRunner registered");
         return idsRunner;
-    }
-
-    public DataBaseServer getDatabaseServer() {
-        if (idsRunner == null) System.err.println("Warning, no Database server registered");
-
-        return databaseServer;
-    }
-
-    private void setDatabaseServer(DataBaseServer databaseServer) {
-        this.databaseServer = databaseServer;
     }
 
     public CSLHttpServerJetty getCslHttpServer() {
@@ -418,8 +401,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
 
         idsMainProcessor.setConsole(idsParams.getConsole());
 
-        setDatabaseServer(new DataBaseServer());
-
         setCslHttpServer(new CSLHttpServerJetty());
         setCslUDPServer(new CSLUDPServer());
     }
@@ -434,11 +415,6 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     public void postInit(boolean server, boolean client) {
         this.server = server;
         this.client = client;
-
-        if (client) {
-//            getDatabaseServer().init(getConfig().get("database_server_conf"));
-            getDatabaseServer().init(Config.instance.DatabaseServerConf);
-        }
 
         if (server) {
 //            getCslHttpServer().initServer(getConfig().get("web_server_conf"));

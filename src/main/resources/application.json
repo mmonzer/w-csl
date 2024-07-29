@@ -37,17 +37,6 @@
     "localPort": 8001,
     "knowHostFilePath": "~/.ssh/known_hosts"
   },
-  "database_server_conf": {
-    "on": true,
-    "datafile_subdir": "datafile"
-  },
-  "service_loader": {
-    "trace_service_execution": true,
-    "trace_library_search": true,
-    "services": [
-      "./service1.jar"
-    ]
-  },
   "web_server_conf": {
     "on": true,
     "verbose": true,

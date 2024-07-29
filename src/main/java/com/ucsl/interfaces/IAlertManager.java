@@ -18,8 +18,6 @@ public interface IAlertManager extends IAlertSender {
 
 	public Json resetListOfCurrentAlerts();
 
-	public Json saveListOfCurrentAlerts();
-
 	public Json getAlertStats();
 	
 }

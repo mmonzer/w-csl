@@ -555,21 +555,9 @@ public class CSLAlertManager implements IAlertManager {
 		return jAlertInfo;
 	}
 
-	public Json saveListOfCurrentAlerts( ) {
-		Json jlist=Json.array();
-		for (IAlertDescriptor a:listOfCurrentAlerts) {
-			jlist.add(a.toJson());
-		}
-
-		CSLContext.instance.getDatabaseServer().saveJsonAsDataFile(this.filename_current_alerts,
-				Json.object().set("contents",jlist),true);
-
-		return jlist;
-	}
-
 	public Json resetListOfCurrentAlerts( /*IDSParams idsParams*/) {
 		listOfCurrentAlerts.clear();
-		saveListOfCurrentAlerts();
+		//saveListOfCurrentAlerts();
 
 		return Json.array();
 	}
@@ -789,6 +777,6 @@ public class CSLAlertManager implements IAlertManager {
 		a.setProp("p1", "34");
 		sendAlert(a);
 
-		saveListOfCurrentAlerts();
+		//saveListOfCurrentAlerts();
 	}
 }

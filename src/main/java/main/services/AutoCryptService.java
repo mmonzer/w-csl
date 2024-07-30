@@ -585,7 +585,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     @Override
     public Json getStatus() {
-        return autocrypt.getStatusQuiet();
+        return autocrypt.getStatus();
     }
 
     /**

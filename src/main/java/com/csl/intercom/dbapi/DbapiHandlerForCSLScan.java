@@ -55,16 +55,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         this("CSLScan", CSLContext.instance.getConfig());
     }
 
-    public DbapiHandlerForCSLScan(String moduleName, Json config) {
-        super(moduleName, config);
-    }
-
     public DbapiHandlerForCSLScan(String moduleName, Config config) {
         super(moduleName, config);
-    }
-
-    public DbapiHandlerForCSLScan(Json config) {
-        this("CSLScan", config);
     }
 
     public DbapiHandlerForCSLScan(Config config) {

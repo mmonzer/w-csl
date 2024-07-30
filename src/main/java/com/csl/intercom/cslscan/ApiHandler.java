@@ -46,38 +46,6 @@ public class ApiHandler implements AutoCloseable {
     private String uriCommonPath = "";
     private boolean connected = false;
 
-//    /**
-//     * General constructor
-//     *
-//     * @param nameModule nameof the module
-//     * @param url        url of the service api
-//     */
-//    public ApiHandler(String nameModule, String url, boolean useSSL) {
-//        this.moduleName = nameModule;
-//        this.url = url;
-//        headers.put(HttpHeader.CONTENT_TYPE, "application/json");
-//        httpClient = initClient();
-//        this.useSSL = useSSL;
-//
-//        try {
-//            logger.info("Connecting with {} ...", moduleName);
-//            httpClient.start();
-//            logger.info("Connection successful with {}", moduleName);
-//        } catch (Exception e) {
-//            logger.error("Could not start the http client for {} API.", nameModule, e);
-//        }
-//    }
-
-    /**
-     * General constructor
-     *
-     * @param nameModule nameof the module
-     * @param url        url of the service api
-     */
-    public ApiHandler(String nameModule, String url) {
-        this(nameModule, url, false);
-    }
-
     /**
      * General constructor
      */
@@ -100,6 +68,15 @@ public class ApiHandler implements AutoCloseable {
     }
 
     /**
+     * Only ip constructor
+     */
+    public ApiHandler(String nameModule, String ip, boolean useSSL) {
+        this(nameModule, ip, useSSL ? 443 : 80, useSSL);
+    }
+
+    // region initialize client
+
+    /**
      * General constructor
      */
     public void testConnexion(IVoidToJsonApiResponse testMethod) {
@@ -109,15 +86,6 @@ public class ApiHandler implements AutoCloseable {
             logger.warn("Connection could not be established with {} : server is probably not started", moduleName);
         }
     }
-
-    /**
-     * General constructor
-     */
-    public ApiHandler(String nameModule, String ip, boolean useSSL) {
-        this(nameModule, ip, useSSL ? 443 : 80, useSSL);
-    }
-
-    // region initialize client
 
     /**
      * Initialize the httpClient

@@ -22,10 +22,6 @@ public class DbapiHandlerForAlerts extends DbapiHandler {
         this("CSLAlerts", CSLContext.instance.getConfig());
     }
 
-    public DbapiHandlerForAlerts(String moduleName, Json config) {
-        super(moduleName, config);
-    }
-
     public DbapiHandlerForAlerts(String moduleName, Config config) {
         super(moduleName, config);
     }

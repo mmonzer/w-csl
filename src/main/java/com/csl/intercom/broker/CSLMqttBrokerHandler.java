@@ -58,33 +58,6 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      *
      * @param config The configuration of the project. Can be retrieved with <code>CSLContext.instance.getConfig()</code>.
      */
-    public CSLMqttBrokerHandler(Json config) {
-        Json globalConfig = config.get("global");
-        brokerUri = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "wss://" : "ws://";
-        brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
-        brokerUri += "/mqtt";
-        // The API key to include in each message
-        String apiKey = globalConfig.get("api_key").asString();
-
-        // Get the organization name, or "None" if it doesn't exist.
-        try (DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan(config)) {
-            this.organization = dbapiHandler.getMqttTopicPrefix();
-        } catch (Exception e) {
-            this.organization = "None";
-        }
-        mqttConnectionAttempts = Executors.newScheduledThreadPool(1);
-        mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 10, TimeUnit.SECONDS);
-        mqttConnectOptions = new MqttConnectOptions();
-        mqttConnectOptions.setCleanSession(true);
-        mqttConnectOptions.setUserName(apiKey);
-        mqttConnectOptions.setPassword("not_used".toCharArray());
-    }
-
-    /**
-     * Create a new {@link CSLMqttBrokerHandler} from the project's configuration.
-     *
-     * @param config The configuration of the project. Can be retrieved with <code>CSLContext.instance.getConfig()</code>.
-     */
     public CSLMqttBrokerHandler(Config config) {
 //        Json globalConfig = config.get("global");
         Config.Client clientConfig = config.Client;

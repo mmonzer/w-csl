@@ -18,20 +18,8 @@ public class DbapiHandler extends ApiHandler {
         this(CSLContext.instance.getConfig());
     }
 
-    public DbapiHandler(Json config) {
-        this("DB-API", config);
-    }
-
     public DbapiHandler(String moduleName) {
         this(moduleName, CSLContext.instance.getConfig());
-    }
-
-    public DbapiHandler(String moduleName, Json config) {
-        super("DB-API::"+moduleName,
-                JsonUtil.getStringFromJson(config.get("global"), "ip_server_remote", "localhost"),
-                JsonUtil.getBooleanFromJson(config.get("global"), "use_ssl", true));
-        addUriCommonPath("/api");
-        setApiKey(JsonUtil.getStringFromJson(config.get("global"), "api_key", ""));
     }
 
     public DbapiHandler(Config config) {

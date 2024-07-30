@@ -1,7 +1,11 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
+import com.csl.core.CSLContext;
 import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
+import lombok.Getter;
+import lombok.Setter;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -30,7 +34,8 @@ import java.util.concurrent.TimeUnit;
 public class ApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ApiHandler.class);
     private final String moduleName;
-    protected final HashMap<HttpHeader, String> headers = new HashMap<>();
+    @Getter @Setter
+    protected HashMap<HttpHeader, String> headers = new HashMap<>();
     protected HttpClient httpClient;
     private IJsonApeResponseToJsonApiResponse outputReformer = (e) -> e;
     private boolean useSSL = false;
@@ -169,7 +174,6 @@ public class ApiHandler implements AutoCloseable {
         }
         return (useSSL ? "https://" : "http://") + ip + ":" + port;
     }
-
     /**
      * Get the url
      * @return the url
@@ -187,6 +191,17 @@ public class ApiHandler implements AutoCloseable {
         return getUrl() + endpoint.replace(" ", "%20").replace(":", "%3A");
     }
 
+    public void setCustomHeaders(String contentType) {
+        /**
+         * Add the api key to the headers
+         * @param contentType content type of the request
+         */
+        String apiKey = JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "api_key", "");
+        HashMap<HttpHeader, String> customHeaders = new HashMap<>();
+        customHeaders.put(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
+        customHeaders.put(HttpHeader.CONTENT_TYPE, contentType);
+        setHeaders(customHeaders);
+    }
     // endregion create uri
 
     /**

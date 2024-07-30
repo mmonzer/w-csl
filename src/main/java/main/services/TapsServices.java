@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.ids.Tap;
 import com.csl.intercom.cslscan.ApiHandler;
 import com.jcraft.jsch.JSchException;
@@ -44,8 +45,8 @@ public class TapsServices extends Service {
     static ArrayList<Json> configuredTaps;
     static HashMap<String, Tap> activeTaps = new HashMap<>();
     static String localIP;
-    static String localPort;
-    static String knownHostFilePath;
+    static Integer localPort;
+//    static String knownHostFilePath;
 
     private final ApiHandler apiHandler;
 
@@ -924,12 +925,13 @@ public class TapsServices extends Service {
     /**
      * Initialization of the TAPs commands
      *
-     * @param config the configuration section of the configuration file
+     * @param jConfig the configuration section of the configuration file
      * @param cslDir the CSL directory
      * @return true if the initialization happened with no problems, false otherwise.
      */
     @Override
-    public boolean init(Json config, String cslDir) {
+    public boolean init(Json jConfig, String cslDir) {
+        Config.Tap config = Config.instance.TapService;
         idsconf = CSLContext.instance.getCslConfDir();
         Json conf;
         Tap tap;
@@ -957,9 +959,11 @@ public class TapsServices extends Service {
             configuredTaps = new ArrayList<Json>();
             e.printStackTrace();
         }
-        knownHostFilePath = config.at("knowHostFilePath").asString();
-        localIP = config.at("localIpAddr").asString();
-        localPort = config.at("localPort").asString();
+//        knownHostFilePath = jConfig.at("knowHostFilePath").asString();
+//        localIP = jConfig.at("localIpAddr").asString(););
+        localIP = config.getLocalIpAddress();
+//        localPort = jConfig.at("localPort").asString();
+        localPort = config.getLocalPort();
 
         addCmd(TapsEndpoints.NEW_TAP, this::newTap);
 

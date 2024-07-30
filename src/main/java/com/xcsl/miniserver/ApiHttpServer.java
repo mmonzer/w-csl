@@ -9,6 +9,7 @@ import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.IApiGetHelp;
 import com.ucsl.json.Json;
 import org.eclipse.jetty.server.Request;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.MultipartConfigElement;
 import java.io.*;
@@ -71,7 +72,7 @@ public class ApiHttpServer {
             this.server.start();
         }
 
-        System.out.println("Miniserver started");
+        LoggerFactory.getLogger(ApiHttpServer.class).info("API server started : listening at {} ", server.getAddress());
     }
 
     /**

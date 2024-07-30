@@ -1,5 +1,6 @@
 package main.services;
 
+import com.csl.core.Config;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import main.extensions.CpeSearch;
@@ -33,10 +34,12 @@ public class CpeServices extends Service {
 	 */
 	@Override
 	public boolean init(Json jConfig, String cslDir) {
-		System.out.println("Initialising CPE functions .."+jConfig);
+//		System.out.println("Initialising CPE functions .."+jConfig);
+		System.out.println("Initialising CPE functions ..");
 		CpeSearch c = new CpeSearch();
 		try {
-			String path = jConfig.get("dictionaryPath").asString();
+//			String path = jConfig.get("dictionaryPath").asString();
+			String path = Config.instance.CpeService.getDictionaryPath();
 			
 			String[] splited = path.split("\\.");
  			switch(splited[1]) {

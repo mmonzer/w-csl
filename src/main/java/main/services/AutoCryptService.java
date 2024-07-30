@@ -2,6 +2,7 @@ package main.services;
 
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.status.IStatusProvider;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -50,7 +51,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         super(name, description, configFileSectionName);
         this.isRemote = isRemote;
         autocrypt = new AutoCrypt(name);
-        syncFrequency = JsonUtil.getIntFromJson(CSLContext.instance.getConfig(),"autocrypt/sync_frequency", 300);
+        syncFrequency = Config.instance.Autocrypt.getSyncFrequency();
     }
 
     /**
@@ -572,7 +573,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @return whether it is reachable
      */
     public Json getStatus(Json body) {
-        return JsonApiResponse.result(getStatus()).toJson();
+        return JsonApiResponse.result(autocrypt.getStatus()).toJson();
     }
 
     // endregion endpoint methods

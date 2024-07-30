@@ -1,10 +1,14 @@
+package services;
+
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.core.NoLogging;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.services.CpeItemsSynchronizationService;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.DataSynchronizationService;
@@ -26,7 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class DiscoveryServicesTest {
-    Json jConfig = CSLContext.instance.getConfig();
+    Config jConfig = CSLContext.instance.getConfig();
 
     private DiscoveryServices discoveryServices;
 
@@ -42,12 +46,12 @@ class DiscoveryServicesTest {
     @Mock
     private DataSynchronizationService microsoftKbSynchronizationService;
 
-    private DbapiHandler dbapiHandler;
+    private DbapiHandlerForCSLScan dbapiHandler;
 
 
     @BeforeEach
     void setUp() {
-        jConfig.at("discovery").set("manager_ip", "localhost");
+        jConfig.Scan.setManagerIp("localhost");
 
         MockitoAnnotations.openMocks(this);
         when(scanWebSocketHandler.requestScan(any())).thenReturn(JsonApiResponse.success());
@@ -55,7 +59,7 @@ class DiscoveryServicesTest {
         discoveryServices = new DiscoveryServices();
         scanApiHandler = new ScanApiHandler();
         cpeScanService = new CpeScanService();
-        dbapiHandler = new DbapiHandler();
+        dbapiHandler = new DbapiHandlerForCSLScan();
         //Throw exception beacause of the syncAll method
         cpeScanService.init(cpeItemsSynchronizationService, microsoftKbSynchronizationService);
 
@@ -83,7 +87,7 @@ class DiscoveryServicesTest {
         statusExpected.set("is_websocket_connected", requests_ws_status && notifications_ws_status);
 
         //When
-        boolean reussie = discoveryServices.init(jConfig, cslDir);
+        boolean reussie = discoveryServices.init(Json.object(), cslDir);
         Json status = discoveryServices.getStatus();
         //Then
         assert(reussie);

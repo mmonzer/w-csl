@@ -8,6 +8,7 @@ import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.csl.intercom.services.PaginatedSynchronizationService;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.ucsl.interfaces.IVoidToJsonApiResponse;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;

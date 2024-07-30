@@ -1,6 +1,8 @@
 package com.csl.intercom.dbapi;
 
+import com.csl.autocrypt.enums.AutocryptConstants.Common;
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
@@ -16,7 +18,6 @@ import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
-import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -29,7 +30,6 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
@@ -55,11 +55,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         this("CSLScan", CSLContext.instance.getConfig());
     }
 
-    public DbapiHandlerForCSLScan(String moduleName, Json config) {
+    public DbapiHandlerForCSLScan(String moduleName, Config config) {
         super(moduleName, config);
     }
 
-    public DbapiHandlerForCSLScan(Json config) {
+    public DbapiHandlerForCSLScan(Config config) {
         this("CSLScan", config);
     }
 
@@ -222,8 +222,19 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
      */
     public OffsetDateTime getCpeItemsLastUpdateDate() throws Exception {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CPE_ITEMS_LAST_DATE);
+        return getLastUpdateDateAt(DbapiEndpointForCSLScan.CPE_ITEMS_LAST_DATE);
+    }
+
+    /**
+     * Fetch the last updated date at given endpoint in DB-API.
+     *
+     * @return The last update in DB-API.
+     * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
+     */
+    private OffsetDateTime getLastUpdateDateAt(DbapiEndpointForCSLScan endpoint) throws ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.GET, endpoint);
         ContentResponse response = request.send();
+        if (response.getContentAsString().isEmpty()) { return DbapiUtilsForCSLScan.dbapiDateToLocal(Common.MIN_DATE);}
         Json responseContents = Json.read(response.getContentAsString());
         String lastUpdatedDateString;
         if (responseContents.isString()) {
@@ -245,18 +256,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws TimeoutException     If the connection with DB-API times out.
      */
     public OffsetDateTime getMicrosoftKbsLastUpdateDate() throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.MICROSOFT_KB_LAST_DATE);
-        ContentResponse response = request.send();
-        Json responseContents = Json.read(response.getContentAsString());
-        String lastUpdatedDateString;
-        if (responseContents.isString()) {
-            lastUpdatedDateString = responseContents.asString();
-        } else if (responseContents.isObject()) {
-            lastUpdatedDateString = responseContents.get("updatedAt").asString();
-        } else {
-            lastUpdatedDateString = responseContents.toString();
-        }
-        return DbapiUtilsForCSLScan.dbapiDateToLocal(lastUpdatedDateString);
+        return getLastUpdateDateAt(DbapiEndpointForCSLScan.MICROSOFT_KB_LAST_DATE);
     }
 
     /**
@@ -620,11 +620,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public OffsetDateTime getExternalDiscoveredDevicesLastUpdateDate() throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_LAST_UPDATED_DATE);
-        ContentResponse response = request.send();
-        Json responseContents = Json.read(response.getContentAsString());
-
-        return null;
+        return getLastUpdateDateAt(DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_LAST_UPDATED_DATE);
     }
 
     public int createExternalDeviceScanEvent(ExternalScan scan) throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {

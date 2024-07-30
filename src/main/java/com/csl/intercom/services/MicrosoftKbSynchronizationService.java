@@ -13,12 +13,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MicrosoftKbSynchronizationService extends PaginatedSynchronizationService<MicrosoftKB> {
-    private DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
+    private DbapiHandlerForCSLScan dbapiHandler;
+    private ScanApiHandler scanApiHandler;
     private CpeScanService cpeScanService;
     private final Logger logger = LoggerFactory.getLogger(MicrosoftKbSynchronizationService.class);
 
-    public MicrosoftKbSynchronizationService(CpeScanService cpeScanService) {
+    public MicrosoftKbSynchronizationService(ScanApiHandler scanApiHandler, DbapiHandlerForCSLScan dbapiHandler, CpeScanService cpeScanService) {
+        this.dbapiHandler = dbapiHandler;
+        this.scanApiHandler = scanApiHandler;
         this.cpeScanService = cpeScanService;
     }
 

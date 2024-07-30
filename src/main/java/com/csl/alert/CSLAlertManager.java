@@ -2,7 +2,7 @@ package com.csl.alert;
 
 import com.csl.core.CSLContext;
 import com.csl.core.CSLUtil;
-import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.core.Config;
 import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLog;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
@@ -70,6 +70,7 @@ public class CSLAlertManager implements IAlertManager {
 	private boolean alertToDb = true;
 	private String filename_current_alerts="";
 	private Json jConfig=null;
+	private Config.AlertViewer config=null;
 	List<IAlertDescriptor> listOfCurrentAlerts= new ArrayList<>();
 	// if >0 , after this duration, the alert is cleared
 	private int durationOfAlert=5000;
@@ -79,11 +80,17 @@ public class CSLAlertManager implements IAlertManager {
 
 
 
-	public CSLAlertManager(IIDSMainProcessor x, Json jConfig) { 
+	public CSLAlertManager(IIDSMainProcessor x, Json jConfig) {
 		this.idsMainProcessor=x;
 		this.idsMainProcessor.setAlertFactory( alertFactory);
 		dbapiHandler = new DbapiHandlerForAlerts();
 		init(jConfig);
+	}
+	public CSLAlertManager(IIDSMainProcessor x, Config.AlertViewer config) {
+		this.idsMainProcessor=x;
+		this.idsMainProcessor.setAlertFactory( alertFactory);
+		dbapiHandler = new DbapiHandlerForAlerts();
+		init(config);
 	}
 
 	public CSLAlertManager setname(String loggerName) { 
@@ -129,17 +136,72 @@ public class CSLAlertManager implements IAlertManager {
 			initFileLog();
 		}
 
-		this.durationOfAlert=CSLUtil.getConfigIntegerValue(jConfig,  "alert_duration",5000); 
-		this.doNotResendSameAlert=CSLUtil.getConfigBooleanValue(jConfig,  "do_not_resent_same_alert",false); 
+		this.durationOfAlert=CSLUtil.getConfigIntegerValue(jConfig,  "alert_duration",5000);
+		this.doNotResendSameAlert=CSLUtil.getConfigBooleanValue(jConfig,  "do_not_resent_same_alert",false);
+
+	}
+
+	private void init(Config.AlertViewer config) {
+
+//		this.jConfig=jConfig;
+		this.config = config;
+
+//		this.port= CSLUtil.getConfigIntegerValue(jConfig,  "port",8001);
+		this.port= config.getPort();
+//		String ip=CSLUtil.getConfigStringValue(jConfig,  "ip","127.0.0.1" ); //. j.get("ip").asString();
+		String ip=config.getIp();
+
+		try {
+			InetAddress iNetAddress=InetAddress.getByName(ip);
+			this.iNetAddress=iNetAddress;
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+//		this.alert_to_web= CSLUtil.getConfigBooleanValue(jConfig,  "alert_to_web",false);
+		this.alert_to_web= config.getAlertToWeb();
+//		this.alert_json_tag= CSLUtil.getConfigStringValue(jConfig, "alert_json_tag","alert");
+		this.alert_json_tag= config.getAlertJsonTag();
+//		this.alert_to_udp= CSLUtil.getConfigBooleanValue(jConfig,  "alert_to_udp",true);
+		this.alert_to_udp= config.getAlertToUdp();
+//		this.alertToDb= CSLUtil.getConfigBooleanValue(jConfig,  "alertToDb",true);
+		this.alertToDb= config.getAlertToDb();
+//		this.showAlert= CSLUtil.getConfigBooleanValue(jConfig,  "showAlerts",true);
+		this.showAlert= config.getShowAlerts();
+
+//		this.loggerName=CSLUtil.getConfigStringValue(jConfig,  "name",  "Alerts") ; //j.get("name")
+		this.loggerName= config.getName();
+
+
+//		this.filename_current_alerts=CSLUtil.getConfigStringValue(jConfig,  "filename_current_alerts",  "current_alerts") ; //j.get("name")
+		this.filename_current_alerts=config.getFilenameCurrentAlerts(); //j.get("name")
+//		this.subdir_backup_alerts=CSLUtil.getConfigStringValue(jConfig,  "subdir_backup_alerts",  "alerts") ; //j.get("name")
+		this.subdir_backup_alerts=config.getSubdirBackupAlerts();
+
+
+//		this.logToFile=CSLUtil.getConfigBooleanValue(jConfig, "logToFile", false);
+		this.logToFile=config.getLogToFile();
+		if (logToFile) {
+			initFileLog();
+		}
+
+//		this.durationOfAlert=CSLUtil.getConfigIntegerValue(jConfig,  "alert_duration",5000);
+		this.durationOfAlert=config.getAlertDuration();
+//		this.doNotResendSameAlert=CSLUtil.getConfigBooleanValue(jConfig,  "do_not_resent_same_alert",false);
+		this.doNotResendSameAlert= config.getDoNotResentSameAlert();
 
 	}
 
 	private void initFileLog() {
-		if (jConfig!=null) {
-			this.datadir=
-					CSLContext.instance.buildFullPathInUserDir(CSLUtil.getConfigStringValue(jConfig,"log_dir", "./logs"));
-			this.filename=CSLUtil.getConfigStringValue(jConfig,"prefix_filename", "alert");
-			this.max_size=CSLUtil.getConfigLongValue(jConfig,"max_size_of_log_files",100000);
+		if (config!=null) {
+//			this.datadir=
+//					CSLContext.instance.buildFullPathInUserDir(CSLUtil.getConfigStringValue(jConfig,"log_dir", "./logs"));
+			this.datadir=					CSLContext.instance.buildFullPathInUserDir(config.getLogDir());
+//			this.filename=CSLUtil.getConfigStringValue(jConfig,"prefix_filename", "alert");
+			this.filename=config.getPrefixFilename();
+//			this.max_size=CSLUtil.getConfigLongValue(jConfig,"max_size_of_log_files",100000);
+			this.max_size= config.getMaxSizeOfLogFiles();
 			this.fileLog= new FileLog(datadir, filename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 
 		}
@@ -493,21 +555,9 @@ public class CSLAlertManager implements IAlertManager {
 		return jAlertInfo;
 	}
 
-	public Json saveListOfCurrentAlerts( ) {
-		Json jlist=Json.array();
-		for (IAlertDescriptor a:listOfCurrentAlerts) {
-			jlist.add(a.toJson());
-		}
-
-		CSLContext.instance.getDatabaseServer().saveJsonAsDataFile(this.filename_current_alerts,
-				Json.object().set("contents",jlist),true);
-
-		return jlist;
-	}
-
 	public Json resetListOfCurrentAlerts( /*IDSParams idsParams*/) {
 		listOfCurrentAlerts.clear();
-		saveListOfCurrentAlerts();
+		//saveListOfCurrentAlerts();
 
 		return Json.array();
 	}
@@ -727,6 +777,6 @@ public class CSLAlertManager implements IAlertManager {
 		a.setProp("p1", "34");
 		sendAlert(a);
 
-		saveListOfCurrentAlerts();
+		//saveListOfCurrentAlerts();
 	}
 }

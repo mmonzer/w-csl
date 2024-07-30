@@ -25,6 +25,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public ApiHandlerForCSLAutoCrypt(String nameModule, String ip, int port, boolean useSSL) {
         super(nameModule, ip, port, useSSL);
+        testConnexion(()->this.sendGet(ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object(), true));
     }
 
     /**

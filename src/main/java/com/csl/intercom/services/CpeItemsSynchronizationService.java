@@ -13,12 +13,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CpeItemsSynchronizationService extends PaginatedSynchronizationService<CpeItem> {
-    private final DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
-    private final ScanApiHandler scanApiHandler = new ScanApiHandler();
+    private final DbapiHandlerForCSLScan dbapiHandler;
+    private final ScanApiHandler scanApiHandler;
     private final CpeScanService cpeScanService;
     private final Logger logger = LoggerFactory.getLogger(CpeItemsSynchronizationService.class);
 
-    public CpeItemsSynchronizationService(CpeScanService cpeScanService) {
+    public CpeItemsSynchronizationService(ScanApiHandler scanApiHandler, DbapiHandlerForCSLScan dbapiHandler,CpeScanService cpeScanService) {
+        this.scanApiHandler = scanApiHandler;
+        this.dbapiHandler = dbapiHandler;
         this.cpeScanService = cpeScanService;
     }
 

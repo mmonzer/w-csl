@@ -1,9 +1,9 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
-import com.csl.core.CSLContext;
+import com.csl.core.Config;
+import com.ucsl.interfaces.IVoidToJsonApiResponse;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.JsonApiResponse;
@@ -20,6 +20,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
@@ -34,7 +35,8 @@ import java.util.concurrent.TimeUnit;
 public class ApiHandler implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ApiHandler.class);
     private final String moduleName;
-    @Getter @Setter
+    @Getter
+    @Setter
     protected HashMap<HttpHeader, String> headers = new HashMap<>();
     protected HttpClient httpClient;
     private IJsonApeResponseToJsonApiResponse outputReformer = (e) -> e;
@@ -42,38 +44,7 @@ public class ApiHandler implements AutoCloseable {
     private int port = 80;
     private String ip = "localhost";
     private String uriCommonPath = "";
-
-//    /**
-//     * General constructor
-//     *
-//     * @param nameModule nameof the module
-//     * @param url        url of the service api
-//     */
-//    public ApiHandler(String nameModule, String url, boolean useSSL) {
-//        this.moduleName = nameModule;
-//        this.url = url;
-//        headers.put(HttpHeader.CONTENT_TYPE, "application/json");
-//        httpClient = initClient();
-//        this.useSSL = useSSL;
-//
-//        try {
-//            logger.info("Connecting with {} ...", moduleName);
-//            httpClient.start();
-//            logger.info("Connection successful with {}", moduleName);
-//        } catch (Exception e) {
-//            logger.error("Could not start the http client for {} API.", nameModule, e);
-//        }
-//    }
-
-    /**
-     * General constructor
-     *
-     * @param nameModule nameof the module
-     * @param url        url of the service api
-     */
-    public ApiHandler(String nameModule, String url) {
-        this(nameModule, url, false);
-    }
+    private boolean connected = false;
 
     /**
      * General constructor
@@ -97,16 +68,28 @@ public class ApiHandler implements AutoCloseable {
     }
 
     /**
-     * General constructor
+     * Only ip constructor
      */
     public ApiHandler(String nameModule, String ip, boolean useSSL) {
-        this(nameModule, ip, useSSL?443:80, useSSL);
+        this(nameModule, ip, useSSL ? 443 : 80, useSSL);
     }
 
     // region initialize client
 
     /**
+     * General constructor
+     */
+    public void testConnexion(IVoidToJsonApiResponse testMethod) {
+        if (testMethod.apply().isSuccess()) {
+            logger.info("Connection successfully established with {} : server is running", moduleName);
+        } else {
+            logger.warn("Connection could not be established with {} : server is probably not started", moduleName);
+        }
+    }
+
+    /**
      * Initialize the httpClient
+     *
      * @return the new client
      */
     protected HttpClient initClient() {
@@ -121,7 +104,7 @@ public class ApiHandler implements AutoCloseable {
      * Ensures the connexion with SSL with the Dbapi.
      * Return the new client well configured
      */
-    private HttpClient initSSLApiHandler(){
+    private HttpClient initSSLApiHandler() {
         // Retrieve system properties
         String trustStorePath = System.getProperty("javax.net.ssl.trustStore");
         String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
@@ -160,30 +143,34 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Creates a http/https client's url from the ip, port and whether we use ssl or not
-     * @param ip ip of the http server
-     * @param port port of the http server
+     *
+     * @param ip     ip of the http server
+     * @param port   port of the http server
      * @param useSSL whether the connexion uses SSL
      * @return the url
      */
     private static String createBaseUrl(String ip, int port, boolean useSSL) {
-        if (useSSL && port==443) {
-            return "https://"+ ip;
+        if (useSSL && port == 443) {
+            return "https://" + ip;
         }
-        if (!useSSL && port==80) {
-            return "http://"+ ip;
+        if (!useSSL && port == 80) {
+            return "http://" + ip;
         }
         return (useSSL ? "https://" : "http://") + ip + ":" + port;
     }
+
     /**
      * Get the url
+     *
      * @return the url
      */
     public String getUrl() {
-        return createBaseUrl(ip, port,useSSL)+ uriCommonPath;
+        return createBaseUrl(ip, port, useSSL) + uriCommonPath;
     }
 
     /**
      * Create the custom uri for the request
+     *
      * @param endpoint endpoint for the request
      * @return the full uri of the request
      */
@@ -196,7 +183,8 @@ public class ApiHandler implements AutoCloseable {
          * Add the api key to the headers
          * @param contentType content type of the request
          */
-        String apiKey = JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "api_key", "");
+//        String apiKey = JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "api_key", "");
+        String apiKey = Config.instance.Client.getApiKey();
         HashMap<HttpHeader, String> customHeaders = new HashMap<>();
         customHeaders.put(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
         customHeaders.put(HttpHeader.CONTENT_TYPE, contentType);
@@ -254,10 +242,10 @@ public class ApiHandler implements AutoCloseable {
     /**
      * Creates the request with the custom parameters
      *
-     * @param method   http method to use : GET POST PUT DELETE
-     * @param uri      uri to send the request
-     * @param params   parameters of the request
-     * @param body     body of the request
+     * @param method http method to use : GET POST PUT DELETE
+     * @param uri    uri to send the request
+     * @param params parameters of the request
+     * @param body   body of the request
      * @return the request created
      */
     public Request createRequest(String method, String uri, Json params, Json body) {
@@ -271,7 +259,7 @@ public class ApiHandler implements AutoCloseable {
     /**
      * Initialize a request with the headers
      *
-     * @param method method of the request
+     * @param method   method of the request
      * @param endpoint endpoint of the request
      */
     protected Request initRequestWithHeaders(String method, String endpoint) {
@@ -283,9 +271,9 @@ public class ApiHandler implements AutoCloseable {
     /**
      * Fills the request with the custom information
      *
-     * @param request   request to fill
-     * @param params   parameters of the request
-     * @param body     body of the request
+     * @param request request to fill
+     * @param params  parameters of the request
+     * @param body    body of the request
      * @return the request created
      */
     private Request fillRequest(Request request, Json params, Json body) {
@@ -343,18 +331,26 @@ public class ApiHandler implements AutoCloseable {
 
         try {
             ContentResponse response = createRequest(method, createUriFrom(endpoint), params, body).send();
+            if (!connected) {
+                logger.info("Connection recovered with {} at {}", moduleName, getUrl());
+                connected = true;
+            }
             res = parseResponse(response, moduleName);
         } catch (UnsupportedOperationException e) {
             logger.error("Malformed json", e);
             res = JsonApiResponse.error("Malformed json : " + e.getMessage());
         } catch (Exception e) {
-            if (!quiet) {
-                logger.error("Error while sending request to " + moduleName);
+            res = JsonApiResponse.error("exception when sending request to " + moduleName + " : " + e.getMessage());
+            if (e.getCause() instanceof ConnectException || e.getCause() instanceof EOFException) {
+                if (connected) {
+                    logger.error("Connection lost with {} at {}", moduleName, getUrl());
+                    connected = false;
+                }
+                res = JsonApiResponse.error("Connection lost with " + moduleName);
+            } else if (!quiet) {
+                logger.error("Error while sending request to {} at {} with params : {}", moduleName, endpoint, params);
             }
-            res = JsonApiResponse.error("exception when sending request to "+moduleName+" : " + e.getMessage());
-            if (e.getCause() instanceof ConnectException) {
-                res = JsonApiResponse.error("Connection error with " + moduleName);
-            }
+            return res;
         }
 
         return outputReformer.apply(res);
@@ -375,7 +371,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendDelete(String endpoint, Json params) {
-        return sendDelete( endpoint, params, null);
+        return sendDelete(endpoint, params, null);
     }
 
     /**
@@ -398,6 +394,17 @@ public class ApiHandler implements AutoCloseable {
      */
     public JsonApiResponse sendGet(String endpoint, Json params) {
         return sendRequestToApi(HttpMethod.GET, endpoint, params, null, false);
+    }
+
+    /**
+     * Send a HTTP GET request to the scanner.
+     *
+     * @param endpoint The endpoint on the API to use.
+     * @param params   The parameters to send, if any (if not, should be an empty {@link Json} object, not null).
+     * @return The response to the request.
+     */
+    public JsonApiResponse sendGet(String endpoint, Json params, boolean quiet) {
+        return sendRequestToApi(HttpMethod.GET, endpoint, params, null, quiet);
     }
 
     /**
@@ -433,7 +440,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendPost(String endpoint, Json body) {
-        return sendPost( endpoint, null, body);
+        return sendPost(endpoint, null, body);
     }
 
     /**
@@ -479,7 +486,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendPatch(String endpoint, Json body) {
-        return sendPatch( endpoint, null, body);
+        return sendPatch(endpoint, null, body);
     }
 
     // endregion handlers for  GET, POST, PUT, DELETE, PATCH
@@ -495,9 +502,9 @@ public class ApiHandler implements AutoCloseable {
      * @return new request
      */
     protected static Request initRequest(String method, String uri, HttpClient client) {
-        List<String> allowedMethods = List.of("GET","POST","PUT", "DELETE","PATCH");
+        List<String> allowedMethods = List.of("GET", "POST", "PUT", "DELETE", "PATCH");
         if (!allowedMethods.contains(method)) {
-            throw new UnsupportedOperationException("Wrong http method : "+method);
+            throw new UnsupportedOperationException("Wrong http method : " + method);
         }
         Request request = client.newRequest(uri);
         request.method(method);
@@ -721,7 +728,6 @@ public class ApiHandler implements AutoCloseable {
     // endregion post, get file, octect-stream/multipart, http stream, ...
 
 ////////////////////////////////////////////////////////////////////////////////
-
 
     /**
      * Add callback for cleaning output

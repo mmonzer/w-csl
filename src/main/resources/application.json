@@ -1,56 +1,5 @@
 {
-  "global": {
-    "remote": true,
-    "ip_server_remote": "127.0.0.1",
-    "port_server_remote": 8000,
-    "server_remote_url_prefix": "",
-    "force_host_name_resolution": false,
-    "api_key": "",
-    "use_ssl": true,
-    "launch_web_api_server": false,
-    "web_api_server_port": 9900
-  },
-  "discovery": {
-    "manager_ip": "host.docker.internal",
-    "manager_port": 8081,
-    "manager_protocol": "http",
-    "manager_timezone": "UTC"
-  },
-  "status": {
-    "send_notifications": true,
-    "notifications_period": 1
-  },
-  "nmap_service": {
-    "debug_mode": true,
-    "debug_dir": "/home/anto/Documents/nmaplog/",
-    "log_mode": false,
-    "log_dir": "/home/anto/Documents/nmaplog/"
-  },
-  "cpe_service": {
-    "dictionaryPath": "src/main/resources/cslconf/cpe/CpeTree.json"
-  },
-  "cve_service": {
-  },
-  "ssh_service": {
-    "localIpAddr": "16.0.0.1",
-    "localPort": "8001",
-    "knowHostFilePath": "~/.ssh/known_hosts"
-  },
-  "database_server_conf": {
-    "on": true,
-    "datafile_subdir": "datafile"
-  },
-  "my_service": {
-    "xs": "hello"
-  },
-  "service_loader": {
-    "trace_service_execution": true,
-    "trace_library_search": true,
-    "services": [
-      "./service1.jar"
-    ]
-  },
-  "web_server_conf": {
+  "server":{
     "on": true,
     "verbose": true,
     "debug": true,
@@ -65,6 +14,7 @@
     "modbus_commands": true,
     "external_commands": true,
     "json_commands": true,
+    "jcmd_commands": true,
     "database_commands": true,
     "config_file_commands": true,
     "mx_commands": true,
@@ -75,6 +25,41 @@
     "log_prefix_filename": "JCMD",
     "max_size_of_log_files": 10000,
     "websocket_timeout": 10000
+  },
+  "client":{
+    "ip_server_remote": "127.0.0.1",
+    "port_server_remote": 443,
+    "server_remote_url_prefix": "",
+    "force_host_name_resolution": false,
+    "api_key": "",
+    "use_ssl": true,
+    "launch_web_api_server": false,
+    "web_api_server_port": 9900
+  },
+  "discovery_service": {
+    "manager_ip": "host.docker.internal",
+    "manager_port": 8081,
+    "manager_protocol": "http",
+    "manager_timezone": "UTC",
+    "use_ssl": false
+  },
+  "status": {
+    "send_notifications": true,
+    "notifications_period": 1
+  },
+  "nmap_service": {
+    "debug_mode": true,
+    "debug_dir": "/home/anto/Documents/nmaplog/",
+    "log_mode": false,
+    "log_dir": "/home/anto/Documents/nmaplog/"
+  },
+  "cpe_service": {
+    "dictionaryPath": "src/main/resources/cslconf/cpe/CpeTree.json"
+  },
+  "tap_service": {
+    "localIpAddr": "16.0.0.1",
+    "localPort": 8001,
+    "knowHostFilePath": "~/.ssh/known_hosts"
   },
   "udp_server_conf": {
     "on": true,
@@ -157,17 +142,21 @@
     "ip": "127.0.0.1",
     "port": 4445,
     "name": "My Alerts",
-    "logToFile": true,
+    "log_to_file": true,
     "log_dir": "./idslogs/alerts",
     "prefix_filename": "AL",
     "max_size_of_log_files": 10000,
     "alert_to_web": true,
     "alert_json_tag": "alert",
     "alert_to_udp": true,
+    "alert_to_db": true,
+    "show_alerts": true,
     "do_not_resent_same_alert": true,
+    "filename_current_alerts": "current_alerts",
+    "subdir_backup_alerts": "alerts",
     "alert_duration": 10000
   },
-  "autocrypt": {
+  "autocrypt_service": {
     "ip": "host.docker.internal",
     "port": 8002,
     "sync_frequency": 300

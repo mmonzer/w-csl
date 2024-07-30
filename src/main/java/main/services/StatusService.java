@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.status.StatusNotifier;
 import com.ucsl.interfaces.IJsonCmdHelp;
@@ -45,7 +46,8 @@ public class StatusService extends Service {
     public boolean init(Json jConfig, String cslDir) {
         System.out.println("Initializing status service ...");
         notifier = CSLContext.instance.getStatusNotifier();
-        notifier.setSendNotifications(JsonUtil.getBooleanFromJson(jConfig, "send_notifications", false));
+//        notifier.setSendNotifications(JsonUtil.getBooleanFromJson(jConfig, "send_notifications", false));
+        notifier.setSendNotifications(Config.instance.Status.getSendNotifications());
 
         addCmd("get_status", params -> notifier.getNotification(),
                 new JsonCmdHelp().setDesc("Get a status notification, created for the occasion")

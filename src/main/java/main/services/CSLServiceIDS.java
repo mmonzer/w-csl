@@ -102,26 +102,26 @@ public class CSLServiceIDS extends Service {
 				.setResult("{percent_flowrate:  }", JsonCmdHelp.JSON)
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
-		addCmd("test_alert", new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
-				Json j=Json.object();
-				j.set("result", "ok");
-				j.set("value",1);
-
-				String ext=" #"+System.currentTimeMillis();
-			
-				
-				IAlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().createAlertDescriptor(3, "ALERT 3 ["+ext+"]", System.currentTimeMillis());
-				
-				CSLContext.instance.getCSLAlertManager().sendAlert(a3);
-				return CSLContext.instance.getConfig();
-			}
-		});
+//		addCmd("test_alert", new IJsonCmd() {
+//
+//			@Override
+//			public Json exec(Json params) {
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
+//				Json j=Json.object();
+//				j.set("result", "ok");
+//				j.set("value",1);
+//
+//				String ext=" #"+System.currentTimeMillis();
+//
+//
+//				IAlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().createAlertDescriptor(3, "ALERT 3 ["+ext+"]", System.currentTimeMillis());
+//
+//				CSLContext.instance.getCSLAlertManager().sendAlert(a3);
+//				return CSLContext.instance.getConfig();
+//			}
+//		});
 
 		addCmd("set_param_boolean", new IJsonCmd() {
 
@@ -405,19 +405,19 @@ public class CSLServiceIDS extends Service {
 			}
 		});
 
-		addCmd("get_ids_config", new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
-				Json j=Json.object();
-				j.set("result", "ok");
-				j.set("value",1);
-				return CSLContext.instance.getConfig();
-			}
-		});
+//		addCmd("get_ids_config", new IJsonCmd() {
+//
+//			@Override
+//			public Json exec(Json params) {
+//				System.out.println("start exec ");
+//				System.out.println("Exec JCmd test_cmd :"+params);
+//				System.out.println("Fin exec");
+//				Json j=Json.object();
+//				j.set("result", "ok");
+//				j.set("value",1);
+//				return CSLContext.instance.getConfig();
+//			}
+//		});
 
 		addCmd("get_sys_config", new IJsonCmd() {
 

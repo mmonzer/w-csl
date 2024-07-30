@@ -4,13 +4,11 @@ import com.csl.intercom.cslscan.models.ExportQuery;
 import com.csl.intercom.cslscan.models.ImportQuery;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.cslscan.services.ImportExportBsonService;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import lombok.Setter;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;
@@ -31,11 +29,11 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
+import java.net.ConnectException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
-
 
 /**
  * Handle the WebSocket connections with CSL-Scan.
@@ -52,16 +50,14 @@ public class ScanWebSocketHandler {
     private final Queue<List<String>> scanRequestsQueue = new ConcurrentLinkedQueue<>();
     private String scanManagerDiscoveryUrl;
     private ScheduledExecutorService webSocketsConnectionAttempts;
+    private ExternalScansService externalScansService;
+    private CpeScanService cpeScanService;
     private StompSession stompRequestsSession = null;
     private StompSession stompNotificationSession = null;
     private StompSession stompExternalScanSession = null;
-    private static final DbapiHandler dbapiHandler = new DbapiHandler();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private ExternalScansService externalScansService;
-    private CpeScanService cpeScanService;
     private StompSession stompImportNotificationSession = null;
     private StompSession stompExportNotificationSession = null;
-
+    private boolean moduleConnected = false;
 
     /**
      * Create a new manager with the correct URL.
@@ -132,7 +128,9 @@ public class ScanWebSocketHandler {
      */
     public JsonApiResponse requestScan(List<String> entities) {
         // Check if ws to csl-scan is already connected
-        if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
+
+        connectStompSessionsIfNecessary();
+        if ((stompRequestsSession == null || !stompRequestsSession.isConnected())) {
             // not connected to csl-scan --> add this request to the queue
             scanRequestsQueue.add(entities);
             return JsonApiResponse.error("Scan service unavailable, added scan request to queue");
@@ -167,10 +165,13 @@ public class ScanWebSocketHandler {
             try {
                 new_notification_connection = true;
                 stompNotificationSession = subscribeToNotifications();
+                isReconnected(stompNotificationSession, "notifications");
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
-                logger.warn("Error while connecting to notifications websocket, retrying");
-                logger.debug("Error while connecting to notifications websocket, retrying", e);
-                stompNotificationSession = null;
+                if (isStillConnected(e, "notifications")) {
+                        logger.warn("Error while connecting to notifications websocket, retrying");
+                        logger.debug("Error while connecting to notifications websocket, retrying", e);
+                    }
+                    stompNotificationSession = null;
                 new_notification_connection = false;
             } catch (Throwable e) {
                 logger.error("Error while connecting to notifications websocket, retrying");
@@ -186,19 +187,26 @@ public class ScanWebSocketHandler {
                 new_request_connection = true;
                 logger.debug("Connecting to requests websocket");
                 stompRequestsSession = connectToRequestsWebSocket();
+                isReconnected(stompRequestsSession, "request");
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                stompRequestsSession = null;
-                new_request_connection = false;
+                if (isStillConnected(e, "request")) {
+                    stompRequestsSession = null;
+                    new_request_connection = false;
+                }
             }
         }
 
         if (stompImportNotificationSession == null || !stompImportNotificationSession.isConnected()) {
             try {
                 stompImportNotificationSession = subscribeToImportNotifications();
+                isReconnected(stompImportNotificationSession,"import notifications");
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
-                logger.warn("Error while connecting to import notifications websocket, retrying");
-                logger.debug("Error while connecting to import notifications websocket, retrying", e);
-                stompImportNotificationSession = null;
+                if (isStillConnected(e, "import notifications")) {
+                        logger.warn("Error while connecting to import notifications websocket, retrying");
+                        logger.debug("Error while connecting to import notifications websocket, retrying", e);
+                    }
+                    stompImportNotificationSession = null;
+
             } catch (Throwable e) {
                 logger.error("Error while connecting to import notifications websocket", e);
                 stompImportNotificationSession = null;
@@ -208,10 +216,14 @@ public class ScanWebSocketHandler {
         if (stompExportNotificationSession == null || !stompExportNotificationSession.isConnected()) {
             try {
                 stompExportNotificationSession = subscribeToExportNotifications();
+                isReconnected(stompExportNotificationSession,"export notifications");
             } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
-                logger.warn("Error while connecting to export notifications websocket, retrying");
-                logger.debug("Error while connecting to export notifications websocket, retrying", e);
-                stompExportNotificationSession = null;
+                if (isStillConnected(e, "export notifications"))  {
+                        logger.warn("Error while connecting to export notifications websocket, retrying");
+                        logger.debug("Error while connecting to export notifications websocket, retrying", e);
+                    }
+                    stompExportNotificationSession = null;
+
             } catch (Throwable e) {
                 logger.error("Error while connecting to export notifications websocket", e);
                 stompExportNotificationSession = null;
@@ -224,15 +236,42 @@ public class ScanWebSocketHandler {
                 new_external_scan_connection = true;
                 logger.debug("Connecting to external scans notifications websocket");
                 stompExternalScanSession = connectToExternalScansNotificationsWebSocket();
+                isReconnected(stompExternalScanSession,"external scans");
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                stompExternalScanSession = null;
+                isStillConnected(e, "external scans");
                 new_external_scan_connection = false;
+                stompExternalScanSession = null;
             }
         }
 
         if (new_notification_connection || new_request_connection || new_external_scan_connection) {
             externalScansService.handleConnectionEstablishedWithScanner();
         }
+    }
+
+    /**
+     * Verify if the client is reconnected, logs if true and modifies the global variable
+     * @param session stomp session, verify that is not null
+     * @param msg the channel to customize the logs
+     */
+    private void isReconnected(StompSession  session, String msg) {
+        if (!moduleConnected && session!=null && session.isConnected()) {
+            logger.info("Connection recovered with CSLScan for STOMP - {}", msg);
+            moduleConnected = true;
+        }
+    }
+
+    /**
+     * Verify from the exception if the client is disconnected, logs if true and modifies the global variable
+     * @param exception exception from the initialisation
+     * @param msg the channel to customize the logs
+     */
+    private boolean isStillConnected(Exception exception, String msg) {
+        if (moduleConnected && exception.getCause() != null && exception.getCause().getCause() != null && exception.getCause().getCause() instanceof ConnectException) {
+            logger.warn("Connection lost with CSLScan for STOMP - {}", msg);
+            moduleConnected = false;
+        }
+        return moduleConnected;
     }
 
     /**
@@ -318,7 +357,6 @@ public class ScanWebSocketHandler {
                 logger.warn("Transport Error", exception);
                 super.handleTransportError(session, exception);
             }
-
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 
@@ -470,7 +508,7 @@ public class ScanWebSocketHandler {
      */
     private void purgeScanRequestsQueue() {
         List<String> scanRequest;
-        while ((scanRequest = scanRequestsQueue.poll()) != null) {
+        while (moduleConnected && (scanRequest = scanRequestsQueue.poll()) != null) {
             if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
                 scanRequestsQueue.add(scanRequest);
                 break;

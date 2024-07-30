@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
@@ -122,20 +123,21 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public boolean init(Json jConfig, String cslDir) {
         logger.info("Initializing SNMP service ..");
 
-        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
+//        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
+        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(Config.instance.Scan);
 
         dbapiHandler = new DbapiHandlerForCSLScan();
         scanApiHandler = new ScanApiHandler();
         fileStorageService = new FileStorageService();
 
-        Json globalConfig = CSLContext.instance.getConfig().get("global");
+//        Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         if (isConcentrator) {
             cpeScanService = new CpeScanService();
-            cpeItemSynchronizationService = new CpeItemsSynchronizationService(cpeScanService);
-            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(cpeScanService);
-            deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService();
-            deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService();
+            cpeItemSynchronizationService = new CpeItemsSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
+            microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
+            deletedCpeItemsSynchronizationService = new DeletedCpeItemsSynchronizationService(scanApiHandler, dbapiHandler);
+            deletedMicrosoftKbsSynchronizationService = new DeletedMicrosoftKbsSynchronizationService(scanApiHandler, dbapiHandler);
             cpeScanService.init(cpeItemSynchronizationService, microsoftKbSynchronizationService);
             importExportBsonService = ImportExportBsonService.getInstance();
             importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);

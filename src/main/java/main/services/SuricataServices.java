@@ -1,5 +1,6 @@
 package main.services;
 
+import com.csl.core.Config;
 import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
@@ -9,9 +10,9 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class SuricataServices extends Service {
-	static ArrayList<Json> configuredSuricata;  
-	static String localIP;	
-	static String localPort;
+	static ArrayList<Json> configuredSuricata;
+	static String localIP;
+	static Integer localPort;
 	static String knownHostFilePath;
 
 	private static final String SURICATA_CONF_DIR = "~/csl/configSuricata";
@@ -23,38 +24,43 @@ public class SuricataServices extends Service {
 				"sudo suricata -D -c "+SURICATA_CONF_DIR+"/suricata/suricata.yaml -i enp0s3 --pidfile "+SURICATA_CONF_DIR+"/suricataPID";
 	}
 
+	private static String startSuricataCommand(String ip, Integer port) {
+		return "cd "+SURICATA_CONF_DIR+" && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
+				"sudo suricata -D -c "+SURICATA_CONF_DIR+"/suricata/suricata.yaml -i enp0s3 --pidfile "+SURICATA_CONF_DIR+"/suricataPID";
+	}
+
 	private static Json readJsonFile(String fileName) throws IOException {
 		String jsonRaw = "";
 		File fichierRegles = new File(fileName);
-	    InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-	    InputStreamReader ipsr =new InputStreamReader(lecteur);
-        BufferedReader br = new BufferedReader(ipsr);
-        String ligne;
-        while ((ligne=br.readLine())!=null){
-           jsonRaw+=ligne+"\n";
-        }
-        br.close(); 
-        return Json.read(jsonRaw);
+		InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
+		InputStreamReader ipsr =new InputStreamReader(lecteur);
+		BufferedReader br = new BufferedReader(ipsr);
+		String ligne;
+		while ((ligne=br.readLine())!=null){
+			jsonRaw+=ligne+"\n";
+		}
+		br.close();
+		return Json.read(jsonRaw);
 	}
-	
+
 	private static String readFile(String fileName) throws IOException {
 		String jsonRaw = "";
 		File fichierRegles = new File(fileName);
-	    InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-	    InputStreamReader ipsr =new InputStreamReader(lecteur);
-        BufferedReader br = new BufferedReader(ipsr);
-        String ligne;
-        while ((ligne=br.readLine())!=null){
-           jsonRaw+=ligne+"\n";
-        }
-        br.close(); 
-        return jsonRaw;
+		InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
+		InputStreamReader ipsr =new InputStreamReader(lecteur);
+		BufferedReader br = new BufferedReader(ipsr);
+		String ligne;
+		while ((ligne=br.readLine())!=null){
+			jsonRaw+=ligne+"\n";
+		}
+		br.close();
+		return jsonRaw;
 	}
-	
+
 	private static void writeToFile(String s, String path) throws IOException {
-	      FileWriter myWriter = new FileWriter(path);
-	      myWriter.write(s);
-	      myWriter.close();
+		FileWriter myWriter = new FileWriter(path);
+		myWriter.write(s);
+		myWriter.close();
 	}
 
 	// Not used anymore, its TapsServices.java's counterpart is
@@ -83,7 +89,7 @@ public class SuricataServices extends Service {
 		out.at("result", output);
 		return out;
 	}
-	
+
 	public static Json stopSuricata(String id, String password, String name) {
 		String ip = null;
 		int port = 22;
@@ -134,7 +140,7 @@ public class SuricataServices extends Service {
 		out.at("result", output);
 		return out;
 	}
-	
+
 	public static void sendRules(String name, String username, String password) {
 		for(Json j : configuredSuricata) {
 			if(j.at("id").asString().contentEquals(name)) {
@@ -154,7 +160,7 @@ public class SuricataServices extends Service {
 			}
 		}
 	}
-	
+
 	public static Json getRules(String name, String username, String password) {
 		String resultat = "";
 		for(Json j : configuredSuricata) {
@@ -180,7 +186,7 @@ public class SuricataServices extends Service {
 		result.at("result",resultat);
 		return result;
 	}
-	
+
 	public static void newSuricata(String name) {
 		Json j = Json.object();
 		j.at("id",name);
@@ -194,7 +200,7 @@ public class SuricataServices extends Service {
 		}
 
 	}
-	
+
 	public static void deleteSuricata(String name) {
 		ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
 		for(Json j : configuredSuricata) {
@@ -204,7 +210,7 @@ public class SuricataServices extends Service {
 		}
 		configuredSuricata = suricataClone;
 	}
-	
+
 	public static void setIp(String name, String ip) {
 		ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
 		for(Json j : configuredSuricata) {
@@ -217,7 +223,7 @@ public class SuricataServices extends Service {
 		configuredSuricata = suricataClone;
 
 	}
-	
+
 	public static void renameSuricata(String name, String newName) {
 		ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
 		for(Json j : configuredSuricata) {
@@ -235,7 +241,7 @@ public class SuricataServices extends Service {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				
+
 			}
 		}
 		configuredSuricata = suricataClone;
@@ -259,31 +265,35 @@ public class SuricataServices extends Service {
 
 	/**
 	 * Initialization of the Suricata commands
-	 * @param config the configuration section of the configuration file
+	 * @param jConfig the configuration section of the configuration file
 	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
 	@Override
-	public boolean init(Json config, String cslDir) {
+	public boolean init(Json jConfig, String cslDir) {
+		Config.Tap config = Config.instance.TapService;
 		System.out.println("Initializing SSH suricata commands ..");
 		try {
 			Json conf = readJsonFile("./datafile/configuredSuricata.json");
 			if(conf.isArray())
 				configuredSuricata = (ArrayList<Json>) conf.asJsonList();
-			else 
+			else
 				configuredSuricata =  new ArrayList<Json>();
 
-			
+
 		} catch (IOException e1) {
 			System.err.println("No tap config found");
 			configuredSuricata =  new ArrayList<Json>();
 		}
-		knownHostFilePath = config.at("knowHostFilePath").asString();
-		localIP = config.at("localIpAddr").asString();
-		localPort = config.at("localPort").asString();
+//		knownHostFilePath = jConfig.at("knowHostFilePath").asString();
+		knownHostFilePath = config.getKnowHostFilePath();
+//		localIP = jConfig.at("localIpAddr").asString();
+		localIP = config.getLocalIpAddress();
+//		localPort = jConfig.at("localPort").asString();
+		localPort = config.getLocalPort();
 
-		
-		
+
+
 		addCmd("newSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -301,7 +311,7 @@ public class SuricataServices extends Service {
 				return Json.object();
 			}
 		});
-		
+
 		addCmd("renameSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -315,8 +325,8 @@ public class SuricataServices extends Service {
 				}
 				return Json.object();
 			}
-		});		
-		
+		});
+
 		addCmd("deleteSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -330,8 +340,8 @@ public class SuricataServices extends Service {
 				}
 				return Json.object();
 			}
-		});	
-		
+		});
+
 		addCmd("setSuricataIp", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -345,8 +355,8 @@ public class SuricataServices extends Service {
 				}
 				return Json.object();
 			}
-		});		
-		
+		});
+
 		addCmd("getSuricataRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -360,8 +370,8 @@ public class SuricataServices extends Service {
 				}
 				return result;
 			}
-		});	
-		
+		});
+
 		addCmd("sendSuricataRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -375,8 +385,8 @@ public class SuricataServices extends Service {
 				}
 				return Json.object();
 			}
-		});		
-		
+		});
+
 		addCmd("getConfiguredSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -387,8 +397,8 @@ public class SuricataServices extends Service {
 				}
 				return Json.object();
 			}
-		});		
-		
+		});
+
 		addCmd("getSuricataState", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
@@ -396,30 +406,30 @@ public class SuricataServices extends Service {
 				j.at("state","IDLE");
 				return j;
 			}
-		});	
-		
+		});
 
-		
+
+
 		addCmd("startSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return startSuricata(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
 			}
-		});		
-		
+		});
+
 		addCmd("stopSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return stopSuricata(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
 			}
-		});		
-		
+		});
+
 		addCmd("reloadRules", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
 				return reloadRules(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
 			}
-		});	
+		});
 		System.out.println("SSH commands operationnal");
 		return true;
 	}

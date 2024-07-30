@@ -9,11 +9,18 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class DeletedMicrosoftKbsSynchronizationService extends PaginatedSynchronizationService<Pair<String, OffsetDateTime>> {
-    private DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
     private Logger logger = LoggerFactory.getLogger(DeletedMicrosoftKbsSynchronizationService.class);
+    private DbapiHandlerForCSLScan dbapiHandler;
+    private ScanApiHandler scanApiHandler;
+
+    public DeletedMicrosoftKbsSynchronizationService(ScanApiHandler scanApiHandler, DbapiHandlerForCSLScan dbapiHandler) {
+        this.scanApiHandler = scanApiHandler;
+        this.dbapiHandler = dbapiHandler;
+    }
 
     @Override
     public List<Pair<String, OffsetDateTime>> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {

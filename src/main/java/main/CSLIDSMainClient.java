@@ -2,13 +2,14 @@ package main;
 
 import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.core.NoLogging;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.web.database.CSLServiceJsonDataBase;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
@@ -23,8 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -207,25 +206,30 @@ public class CSLIDSMainClient {
     public static void main(String[] args) {
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
-        Json configObj = CSLContext.instance.getConfig();
+//        Json configObj = CSLContext.instance.getConfig();
+        Config config = Config.instance;
+
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
 
         CSLContext.instance.setDebug(true);
 
         // region -- read configuration
         // This is the client, override configuration is needed not to launch servers
-        configObj.get("database_server_conf").set("on", false);
-        configObj.get("web_server_conf").set("on", false);
-        configObj.get("udp_server_conf").set("on", true);
+//        configObj.get("database_server_conf").set("on", false);
+//        configObj.get("web_server_conf").set("on", false);
+//        configObj.get("udp_server_conf").set("on", true);
+        config.Server.setOn(false);
+        config.UdpServerConf.setOn(true);
 
         // The proxy server to connect
-        SERVER_IP = JsonUtil.getStringFromJson(configObj, "global/ip_server_remote", "127.0.0.1");
-        SERVER_URL_PREFIX = JsonUtil.getStringFromJson(configObj, "global/server_remote_url_prefix", "");
+        SERVER_IP = config.Client.getIpServerRemote();
+        SERVER_URL_PREFIX = config.Client.getServerRemoteUrlPrefix();
         if (SERVER_URL_PREFIX == null) {
             SERVER_URL_PREFIX = "";
         }
 
-        Boolean force_host_name_resolution = JsonUtil.getBooleanFromJson(configObj, "global/force_host_name_resolution", false);
+//        Boolean force_host_name_resolution = JsonUtil.getBooleanFromJson(configObj, "global/force_host_name_resolution", false);
+        Boolean force_host_name_resolution = config.Client.getForceHostNameResolution();
         // Try to resolve host name (mainly for Docker hostnames)
         if (force_host_name_resolution) {
             try {
@@ -234,9 +238,12 @@ public class CSLIDSMainClient {
                 logger.error("Error while resolving host name: {}", e.getMessage(), e);
             }
         }
-        SERVER_PORT = JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
-        USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
-        API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
+//        SERVER_PORT = JsonUtil.getIntFromJson(configObj, "global/port_server_remote", 0);
+//        USE_SSL = JsonUtil.getBooleanFromJson(configObj, "global/use_ssl", false);
+//        API_KEY = JsonUtil.getStringFromJson(configObj, "global/api_key", "");
+        SERVER_PORT = config.Client.getPortServerRemote();
+        USE_SSL = config.Client.getUseSsl();
+        API_KEY = config.Client.getApiKey();
         logger.trace("API KEY is: " + API_KEY);
         // endregion -- read configuration
 
@@ -244,17 +251,15 @@ public class CSLIDSMainClient {
 
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
-        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
-        JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
-        JServiceLoader.registerService(new AlertsService(), configObj, true);
-        JServiceLoader.registerService(new MonitorService(), configObj, true);
-        JServiceLoader.registerService(new TapsServices(), configObj, true);
-        JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
-        JServiceLoader.registerService(new DiscoveryServices(), configObj, true);
-        JServiceLoader.registerService(new StatusService(), configObj, true);
-        JServiceLoader.registerService(new AutoCryptService(), configObj, true);
-
-        JServiceLoader.registerService(new NmapServices(), configObj, true);
+//        JServiceLoader.registerService(new CSLServiceDemo(), configObj, true);
+        JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
+        JServiceLoader.registerService(new AlertsService(), Json.object(), true);
+        JServiceLoader.registerService(new MonitorService(), Json.object(), true);
+        JServiceLoader.registerService(new TapsServices(), Json.object(), true);
+        JServiceLoader.registerService(new DiscoveryServices(), Json.object(), true);
+        JServiceLoader.registerService(new StatusService(), Json.object(), true);
+        JServiceLoader.registerService(new AutoCryptService(), Json.object(), true);
+        JServiceLoader.registerService(new NmapServices(), Json.object(), true);
 
 
         iniServices();
@@ -269,14 +274,16 @@ public class CSLIDSMainClient {
         ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
 
         // Send API commands with specific privileges to the server
-        try (DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan()) {
+        try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
             dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
         } catch (Exception e) {
             logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);
         }
 
-        if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
-            int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);
+//        if (JsonUtil.getBooleanFromJson(configObj, "global/launch_web_api_server", false)) {
+        if (Config.instance.Client.getLaunchWebApiServer()) {
+//            int port = JsonUtil.getIntFromJson(configObj, "global/web_api_server_port", 9900);
+            int port = Config.instance.Client.getWebApiServerPort();
             ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
                     new InetSocketAddress(port),
                     JServiceLoader.getApiCommandsList(),

@@ -1,6 +1,7 @@
 package com.csl.web;
 
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.core.Config;
 import com.csl.web.auth.ServerConfig;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
@@ -66,6 +67,16 @@ public class CSLHttpServerJetty {
         boolean on = JsonUtil.getBooleanFromJson(j, "on", true);
         if(!on) return;
         ServerConfig sc = new ServerConfig(j);
+        initServer(sc);
+    }
+
+    /**
+     * Initialize the server
+     */
+    public void initServer(Config.Server config){
+        boolean on = config.getOn();
+        if(!on) return;
+        ServerConfig sc = new ServerConfig(config);
         initServer(sc);
     }
 
@@ -233,6 +244,7 @@ public class CSLHttpServerJetty {
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                // convert http get to websocket get
                 if("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))){
                     context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/"+api.getName());
                 }
@@ -264,6 +276,7 @@ public class CSLHttpServerJetty {
         };
         return httpServlet;
     }
+
     /**
      * Create a servlet handling post requests
      * @param api : api containing commands that needs to be handled

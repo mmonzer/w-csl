@@ -1,6 +1,7 @@
 package com.csl.intercom.cslscan;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
 import com.csl.intercom.cslscan.enums.ScanCollection;
@@ -52,9 +53,10 @@ public class ScanApiHandler extends ApiHandler  {
 
     public ScanApiHandler() {
 //        super("CSL-Scan", ScanUtils.generateScanApiUrlFromConfig(CSLContext.instance.getConfig().get("discovery")));
-        super("CSL-Scan", JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_ip", "localhost"),
-                JsonUtil.getIntFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_port", 8010),
-                false);
+//        super("CSL-Scan", JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_ip", "localhost"),
+//                JsonUtil.getIntFromJson(CSLContext.instance.getConfig().get("discovery"), "manager_port", 8010),
+//                false);
+        super("CSL-Scan", Config.instance.Scan.getManagerIp(),Config.instance.Scan.getManagerPort(),Config.instance.Scan.getUseSSL());
         addUriCommonPath("/api");
     }
 

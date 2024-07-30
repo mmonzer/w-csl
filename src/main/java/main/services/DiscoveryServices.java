@@ -1039,6 +1039,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     try {
                         String connectionUuid = response.getResult().get("uuid").asString();
                         connection.setUuid(connectionUuid);
+//                        // replace devicesIds with connected_devices if devicesIds in connection
+//                        if (connectionJson.has("devicesIds")) { // to match dbapi
+//                            connectionJson.set("connected_devices", connectionJson.get("devicesIds"));
+//                            connectionJson.remove("devicesIds");
+//                        }
                         dbapiHandler.createConnection(connection);
                     } catch (Exception e) {
                         logger.error("Could not add connection info to dbapi", e);

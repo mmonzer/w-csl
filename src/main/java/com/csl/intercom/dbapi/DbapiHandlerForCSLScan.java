@@ -1049,7 +1049,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 "discovery_protocol_name", connection.getProtocol().dbapiName(),
                 "port_number", portNumber,
                 "mongo_entity_id", connection.getUuid(),
-                "other_data", getConnectionOtherData(connection)
+                "other_data", getConnectionOtherData(connection),
+                "connected_devices", connection.getDevicesIds()
         );
         if (connection.getProtocol() == SNMPv3) {
             requestContents.set("username", ((SNMPv3Connection) connection).getUsername());
@@ -1093,13 +1094,14 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public void updateConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException {
         String connectionUuid = connection.getUuid();
         String connectionDbApiId = String.valueOf(getDbApiConnectionId(connectionUuid));
-        Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), connectionDbApiId));
+        Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), connectionDbApiId));
         Json requestContents = Json.object(
                 "name", connection.getName(),
                 "discovery_protocol_name", connection.getProtocol().dbapiName(),
                 "port_number", getConnectionPortNumberFromConnection(connection),
                 "mongo_entity_id", connectionUuid,
-                "other_data", getConnectionOtherData(connection)
+                "other_data", getConnectionOtherData(connection),
+                "connected_devices", connection.getDevicesIds()
         );
         if (connection.getProtocol() == SNMPv3) {
             requestContents.set("username", ((SNMPv3Connection) connection).getUsername());

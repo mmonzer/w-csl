@@ -5,6 +5,8 @@ import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.core.NoLogging;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.dbapi.DbapiHandler;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -272,7 +274,7 @@ public class CSLIDSMainClient {
         ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
 
         // Send API commands with specific privileges to the server
-        try (DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan()) {
+        try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
             dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
         } catch (Exception e) {
             logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);

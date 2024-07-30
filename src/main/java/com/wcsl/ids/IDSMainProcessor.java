@@ -65,17 +65,13 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 
         this.fileLogFactory = new FileLogFactory();
 
-        this.alertManager = getDefaultAlertManager();
-
         this.idsMainProcessorParams = new IDSMainProcessorParams(this, config);
 
         this.alertFactory = new CSLAlertFactory();
     }
 
     public IAlertManager getDefaultAlertManager() {
-
-        Json j = Json.object();
-        return new CSLAlertManager(this, j);
+        return CSLContext.instance.getCSLAlertManager();
     }
 
     @Override

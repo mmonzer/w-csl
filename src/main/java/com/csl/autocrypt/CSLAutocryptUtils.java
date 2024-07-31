@@ -77,7 +77,7 @@ public class CSLAutocryptUtils {
         Json issuer = Json.object();
         drop(issuerRaw, Common.CREATEDAT, Common.UPDATEDAT);
         transformKeysFromVaultToDbapi(issuerRaw, Common.OU, Common.PROVINCE);
-        copyValueOrNull(issuerRaw, issuer, Common.COMMON_NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Issuer.IS_ROOT, Common.PATH, Certificate.SERIAL_NUMBER);
+        copyValueOrNull(issuerRaw, issuer, Common.COMMON_NAME, Common.NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Issuer.ISSUER_ID, Issuer.IS_ROOT, Common.PATH, Certificate.SERIAL_NUMBER);
         Json certificate = Json.object();
         copyValueOrNull(issuerRaw, certificate, Certificate.CA_CHAIN, Certificate.CERTIFICATE, Certificate.EXPIRATION, Certificate.ISSUING_CA, Certificate.PRIVATE_KEY, Certificate.PRIVATE_KEY_TYPE, Certificate.SERIAL_NUMBER);
         certificate.set(Common.PATH, Common.PKI);
@@ -112,7 +112,7 @@ public class CSLAutocryptUtils {
         Json role = Json.object();
         drop(roleRaw, Common.CREATEDAT, Common.UPDATEDAT);
         transformKeysFromVaultToDbapi(roleRaw, Common.OU, Common.PROVINCE);
-        copyValueOrNull(roleRaw, role, Common.NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Common.PATH);
+        copyValueOrNull(roleRaw, role, Common.NAME, Common.DESCRIPTION, Issuer.ISSUER_REF, Issuer.ISSUER_ID, Common.PATH);
         role.set(Role.ROLE_JSON, roleRaw);
         return role;
     }

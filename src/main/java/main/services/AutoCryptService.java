@@ -559,16 +559,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with commonName, ttl, and optionally path
      */
     public Json generateRootCA(Json body) throws IllegalArgumentException {
-
-        // region -- Verify required body keys and extract key values
-
-        getValueString(body, Issuer.ISSUER_NAME);
-        Json params = Json.object();
-        // params.at(Common.PATH, Common.PKI);
-
-        // endregion -- Verify required body keys and extract key values
-
-        return autocrypt.generateRootCA(params, body).toJson();
+        return autocrypt.generateRootCA(null, body).toJson();
     }
 
     /**
@@ -577,16 +568,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with commonName, ttl, and optionally path
      */
     public Json generateIntermediateCA(Json body) throws IllegalArgumentException {
-
-        // region -- Verify required body keys and extract key values
-
-        String name = getValueString(body, Issuer.ISSUER_NAME);  // or COMMON _Common.NAME?
-        Json params = Json.object();
-        // params.at(Common.PATH, name);
-
-        // endregion -- Verify required body keys and extract key values
-
-        return autocrypt.generateIntermediateCA(params, body).toJson();
+        return autocrypt.generateIntermediateCA(null, body).toJson();
     }
 
     /**

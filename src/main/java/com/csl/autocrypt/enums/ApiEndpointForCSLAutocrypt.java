@@ -26,6 +26,7 @@ public enum ApiEndpointForCSLAutocrypt {
     CERT_URI_GET_WITH_PK_(CERT_URI_+"raw-with-private-key/"),
     CERT_URI_ISSUE(CERT_URI_+"issue"),
     CERT_URI_REVOKE_(CERT_URI_+"revoke/"),
+    CERT_URI_DEPLOY_CERTIFICATE(CERT_URI_+"deploy-certificate"),
 
     CA_URI("/api/ca"),
     CA_URI_GENERATE_INTER(CA_URI+"/generate-intermediate"),

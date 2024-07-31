@@ -477,7 +477,7 @@ public class AutoCrypt {
         logger.debug("revoking certificate {} at path {} in Autocrypt ...", serialNumber, path);
         JsonApiResponse responseFromModule = autocryptApiHandler.revokeCertificate(serialNumber, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} : failed to revoked certificate {} at path {} in Autocrypt", AutoCryptEndpoints.REVOKE_CERTIFICATE, serialNumber, path);
+            logger.error("failed to revoked certificate {} at path {} in Autocrypt", serialNumber, path);
             return responseFromModule;
         }
         logger.info("revoked certificate {} at path {} in Autocrypt", serialNumber, path);
@@ -490,6 +490,28 @@ public class AutoCrypt {
         }
 
         logger.info("Revoked certificate {} at path {}", serialNumber, path);
+
+        return responseFromModule;
+    }
+
+    /**
+     * Revokes the given certificate
+     *
+     * @param body body of the request : with certificate_serial_number, ip, username, password and vendor
+     * @param params       parameters with the path
+     */
+    public JsonApiResponse deployCertificate(Json body, Json params) {
+        String path = params.get("path").asString();
+        logger.info("deploying certificate {} ({}) at device {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+
+        // deploying certificate
+        logger.debug("deploying certificate {} ({}) at device {} with username {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP), body.get(Device.USERNAME));
+        JsonApiResponse responseFromModule = autocryptApiHandler.deployCertificate(body, params);
+        if (!responseFromModule.isSuccess()) {
+            logger.error("failed to deploy certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            return responseFromModule;
+        }
+        logger.info("successfully deployed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
 
         return responseFromModule;
     }

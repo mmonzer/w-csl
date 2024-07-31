@@ -332,6 +332,20 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Revokes the given certificate
+     *
+     * @param body         body of the request
+     * @param params       parameters with the path
+     */
+    public JsonApiResponse deployCertificate(Json body, Json params) {
+        return this.sendPost(
+                ApiEndpointForCSLAutocrypt.CERT_URI_DEPLOY_CERTIFICATE.toString(),
+                body,
+                params
+        );
+    }
+
+    /**
      * Delete all the revoked certificates
      */
     public JsonApiResponse deleteRevokedCertificates() {

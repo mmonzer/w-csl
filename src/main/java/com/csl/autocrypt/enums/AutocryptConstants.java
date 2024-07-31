@@ -153,6 +153,15 @@ public final class AutocryptConstants {
         public static final String REVOKE = "revoke";
     }
 
+    public static final class Device {
+        public static final String CERTIFICATE_SERIAL_NUMBER = "certificate_serial_number";
+        public static final String CERTIFICATE_PATH = "certificate_path";
+        public static final String VENDOR = "vendor";
+        public static final String IP = "ip";
+        public static final String USERNAME = "username";
+        public static final String PASSWORD = "password";
+    }
+
 
 
     /**

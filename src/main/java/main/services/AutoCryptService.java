@@ -118,6 +118,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GET_CERTIFICATE, this::getCertificate);
         addCmd(AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, this::downloadCertificate);
         addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE, this::revokeCertificate);
+        addCmd(AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE, this::deployCertificate);
         // ca-controller
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
         addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
@@ -528,6 +529,28 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // endregion -- Verify required body keys and extract key values
 
         return autocrypt.revokeCertificate(serialNumber, params).toJson();
+    }
+
+    /**
+     * Deploys the given certificate to the given device
+     *
+     * @param body parameters with the path
+     */
+    public Json deployCertificate(Json body) throws IllegalArgumentException {
+
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        params.set(Common.PATH, extractValueString(body, Device.CERTIFICATE_PATH));
+        getValueString(body, Device.VENDOR);
+        getValueString(body, Device.CERTIFICATE_SERIAL_NUMBER);
+        getValueString(body, Device.IP);
+        getValueString(body, Device.USERNAME);
+        getValueString(body, Device.PASSWORD);
+
+        // endregion -- Verify required body keys and extract key values
+
+        return autocrypt.deployCertificate(body, params).toJson();
     }
 
     /**

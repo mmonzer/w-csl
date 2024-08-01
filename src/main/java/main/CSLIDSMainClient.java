@@ -49,7 +49,7 @@ public class CSLIDSMainClient {
                 public void broadcastMessageString(String socketName, String s) {
                     // TODO Auto-generated method stub
 
-                    logger.trace("Send string over ws:{}", s);
+                    logger.info("Send string over wss:{}", s);
                     if (clientEndPoint != null) {
                         if (!clientEndPoint.isOpen()) return;
                         clientEndPoint.sendMessage("wss:" + socketName + ":" + s);
@@ -59,6 +59,7 @@ public class CSLIDSMainClient {
                 @Override
                 public void broadcastMessageJson(String socketName, Json j) {
 
+                    logger.info("Send string over wsj:{}",j);
                     if (clientEndPoint != null) {
                         if (!clientEndPoint.isOpen()) return;
                         clientEndPoint.sendMessage("wsj:" + socketName + ":" + j);
@@ -188,6 +189,7 @@ public class CSLIDSMainClient {
         ScheduledExecutorService executorService;
         executorService = Executors.newSingleThreadScheduledExecutor();
 
+        // reconnect
         executorService.scheduleAtFixedRate(
                 new Runnable() {
                     public void run() {
@@ -200,6 +202,17 @@ public class CSLIDSMainClient {
                     }
                 },
                 0, 1, TimeUnit.SECONDS);
+
+        // keep alive the websocket
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+                new Runnable() {
+                    public void run() {
+                        if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                            clientEndPoint.sendMessage("keep alive");
+                        }
+                    }
+                },
+                1, Config.instance.Server.getWebsocketTimeout()-1, TimeUnit.SECONDS);
 
     }
 

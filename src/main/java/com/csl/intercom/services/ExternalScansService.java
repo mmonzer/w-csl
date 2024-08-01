@@ -77,14 +77,14 @@ public class ExternalScansService {
     }
 
     public void handleConnectionEstablishedWithScanner() {
-        // region Send ExternalConnectionInfoTemplates to DB-API
         List<ExternalConnectionInfoTemplate> externalConnectionInfoTemplates = scanApiHandler.getExternalConnectionInfoTemplates();
         try {
             dbapiHandler.createOrUpdateExternalConnectionInfoTemplates(externalConnectionInfoTemplates);
         } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
             logger.error("Error while handling external connection info templates", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error when handling established connection", e);
         }
-        // endregion Send ExternalConnectionInfoTemplates to DB-API
     }
 
     public void handleScanNotification(ExternalScan scan) {

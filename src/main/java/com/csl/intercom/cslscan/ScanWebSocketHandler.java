@@ -16,10 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.AbstractMessageConverter;
-import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.simp.stomp.*;
 import org.springframework.scheduling.concurrent.DefaultManagedTaskScheduler;
 import org.springframework.util.MimeType;
 import org.springframework.web.client.ResourceAccessException;
@@ -128,7 +125,6 @@ public class ScanWebSocketHandler {
      */
     public JsonApiResponse requestScan(List<String> entities) {
         // Check if ws to csl-scan is already connected
-
         connectStompSessionsIfNecessary();
         if ((stompRequestsSession == null || !stompRequestsSession.isConnected())) {
             // not connected to csl-scan --> add this request to the queue
@@ -161,52 +157,58 @@ public class ScanWebSocketHandler {
      */
     private void connectStompSessionsIfNecessary() {
         boolean new_notification_connection = false;
+        logger.trace("connectStompSessionsIfNecessary : {}", stompNotificationSession);
         if (stompNotificationSession == null || !stompNotificationSession.isConnected()) {
             try {
-                new_notification_connection = true;
+                logger.trace("Connecting to notifications websocket ...");
                 stompNotificationSession = subscribeToNotifications();
+                logger.trace("stompNotificationSession connected : {}", stompNotificationSession);
+                new_notification_connection = true;
                 isReconnected(stompNotificationSession, "notifications");
-            } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
+            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
                 if (isStillConnected(e, "notifications")) {
-                        logger.warn("Error while connecting to notifications websocket, retrying");
-                        logger.debug("Error while connecting to notifications websocket, retrying", e);
-                    }
-                    stompNotificationSession = null;
-                new_notification_connection = false;
+                    logger.warn("Error while connecting to notifications websocket, retrying");
+                    logger.trace("Error while connecting to notifications websocket, retrying", e);
+                }
+                stompNotificationSession = null;
             } catch (Throwable e) {
                 logger.error("Error while connecting to notifications websocket, retrying");
-                logger.debug("Error while connecting to notifications websocket, retrying", e);
+                logger.trace("Error while connecting to notifications websocket, retrying", e);
                 stompNotificationSession = null;
-                new_notification_connection = false;
             }
         }
 
         boolean new_request_connection = false;
         if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
             try {
-                new_request_connection = true;
-                logger.debug("Connecting to requests websocket");
+                logger.trace("Connecting to requests websocket ...");
                 stompRequestsSession = connectToRequestsWebSocket();
+                logger.trace("stompRequestsSession connected : {}", stompRequestsSession);
+                new_request_connection = true;
                 isReconnected(stompRequestsSession, "request");
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
                 if (isStillConnected(e, "request")) {
                     stompRequestsSession = null;
-                    new_request_connection = false;
                 }
+            } catch (Throwable e) {
+                logger.error("Error while connecting to requests websocket, retrying");
+                logger.trace("Error while connecting to requests websocket, retrying", e);
+                stompRequestsSession = null;
             }
         }
 
         if (stompImportNotificationSession == null || !stompImportNotificationSession.isConnected()) {
             try {
+                logger.trace("stompImportNotificationSession connecting ...");
                 stompImportNotificationSession = subscribeToImportNotifications();
-                isReconnected(stompImportNotificationSession,"import notifications");
-            } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
+                logger.trace("stompImportNotificationSession connected : {}", stompImportNotificationSession);
+                isReconnected(stompImportNotificationSession, "import notifications");
+            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
                 if (isStillConnected(e, "import notifications")) {
-                        logger.warn("Error while connecting to import notifications websocket, retrying");
-                        logger.debug("Error while connecting to import notifications websocket, retrying", e);
-                    }
-                    stompImportNotificationSession = null;
-
+                    logger.warn("Error while connecting to import notifications websocket, retrying");
+                    logger.trace("Error while connecting to import notifications websocket, retrying", e);
+                }
+                stompImportNotificationSession = null;
             } catch (Throwable e) {
                 logger.error("Error while connecting to import notifications websocket", e);
                 stompImportNotificationSession = null;
@@ -215,15 +217,16 @@ public class ScanWebSocketHandler {
 
         if (stompExportNotificationSession == null || !stompExportNotificationSession.isConnected()) {
             try {
+                logger.trace("stompExportNotificationSession connecting ...");
                 stompExportNotificationSession = subscribeToExportNotifications();
-                isReconnected(stompExportNotificationSession,"export notifications");
-            } catch (InterruptedException | ExecutionException | ResourceAccessException e) {
-                if (isStillConnected(e, "export notifications"))  {
-                        logger.warn("Error while connecting to export notifications websocket, retrying");
-                        logger.debug("Error while connecting to export notifications websocket, retrying", e);
-                    }
-                    stompExportNotificationSession = null;
-
+                logger.trace("stompExportNotificationSession connected : {}", stompExportNotificationSession);
+                isReconnected(stompExportNotificationSession, "export notifications");
+            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
+                if (isStillConnected(e, "export notifications")) {
+                    logger.warn("Error while connecting to export notifications websocket, retrying");
+                    logger.trace("Error while connecting to export notifications websocket, retrying", e);
+                }
+                stompExportNotificationSession = null;
             } catch (Throwable e) {
                 logger.error("Error while connecting to export notifications websocket", e);
                 stompExportNotificationSession = null;
@@ -233,13 +236,16 @@ public class ScanWebSocketHandler {
         boolean new_external_scan_connection = false;
         if (stompExternalScanSession == null || !stompExternalScanSession.isConnected()) {
             try {
-                new_external_scan_connection = true;
-                logger.debug("Connecting to external scans notifications websocket");
+                logger.trace("Connecting to external scans notifications websocket");
                 stompExternalScanSession = connectToExternalScansNotificationsWebSocket();
-                isReconnected(stompExternalScanSession,"external scans");
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                new_external_scan_connection = true;
+                logger.trace("stompExternalScanSession connected : {}", stompExternalScanSession);
+                isReconnected(stompExternalScanSession, "external scans");
+            } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
                 isStillConnected(e, "external scans");
-                new_external_scan_connection = false;
+                stompExternalScanSession = null;
+            } catch (Throwable e) {
+                isStillConnected(new Exception(e), "external scans");
                 stompExternalScanSession = null;
             }
         }
@@ -251,20 +257,25 @@ public class ScanWebSocketHandler {
 
     /**
      * Verify if the client is reconnected, logs if true and modifies the global variable
+     *
      * @param session stomp session, verify that is not null
-     * @param msg the channel to customize the logs
+     * @param msg     the channel to customize the logs
      */
-    private void isReconnected(StompSession  session, String msg) {
-        if (!moduleConnected && session!=null && session.isConnected()) {
+    private void isReconnected(StompSession session, String msg) {
+        if (!moduleConnected && session != null && session.isConnected()) {
             logger.info("Connection recovered with CSLScan for STOMP - {}", msg);
             moduleConnected = true;
+        } else {
+            moduleConnected = false;
+
         }
     }
 
     /**
      * Verify from the exception if the client is disconnected, logs if true and modifies the global variable
+     *
      * @param exception exception from the initialisation
-     * @param msg the channel to customize the logs
+     * @param msg       the channel to customize the logs
      */
     private boolean isStillConnected(Exception exception, String msg) {
         if (moduleConnected && exception.getCause() != null && exception.getCause().getCause() != null && exception.getCause().getCause() instanceof ConnectException) {
@@ -294,9 +305,9 @@ public class ScanWebSocketHandler {
 
                 //region Log the notification
                 if (payload != null) {
-                    logger.debug("[STOMP] " + payload.toString());
+                    logger.trace("[STOMP] " + payload.toString());
                 } else {
-                    logger.debug("[STOMP] null");
+                    logger.trace("[STOMP] null");
                 }
                 //endregion Log the notification
 
@@ -357,6 +368,7 @@ public class ScanWebSocketHandler {
                 logger.warn("Transport Error", exception);
                 super.handleTransportError(session, exception);
             }
+
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 
@@ -370,18 +382,18 @@ public class ScanWebSocketHandler {
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
-                    logger.debug("[STOMP] " + payload.toString());
+                    logger.trace("[STOMP] " + payload.toString());
                 } else {
-                    logger.debug("[STOMP] null");
+                    logger.trace("[STOMP] null");
                     return;
                 }
 
                 ImportQuery importQuery = ImportQuery.fromScannerJson(payload);
                 if (importQuery != null) {
-                    logger.debug("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getStatus());
+                    logger.trace("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getStatus());
                     importExportBsonService.updateImportQueryStatus(importQuery.getId(), importQuery.getStatus());
                 } else {
-                    logger.debug("Received import notification from CSL-Scan that could not be parsed: {}", payload.toString());
+                    logger.trace("Received import notification from CSL-Scan that could not be parsed: {}", payload.toString());
                 }
             }
 
@@ -404,18 +416,18 @@ public class ScanWebSocketHandler {
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
-                    logger.debug("[STOMP] " + payload.toString());
+                    logger.trace("[STOMP] " + payload.toString());
                 } else {
-                    logger.debug("[STOMP] null");
+                    logger.trace("[STOMP] null");
                     return;
                 }
 
                 ExportQuery exportQuery = ExportQuery.fromScannerJson(payload);
                 if (exportQuery != null) {
-                    logger.debug("Received export notification from CSL-Scan: {} [{}]", exportQuery.getId(), exportQuery.getStatus());
+                    logger.trace("Received export notification from CSL-Scan: {} [{}]", exportQuery.getId(), exportQuery.getStatus());
                     importExportBsonService.updateExportQueryStatus(exportQuery.getId(), exportQuery.getStatus());
                 } else {
-                    logger.debug("Received export notification from CSL-Scan that could not be parsed: {}", payload.toString());
+                    logger.trace("Received export notification from CSL-Scan that could not be parsed: {}", payload.toString());
                 }
             }
 

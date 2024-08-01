@@ -49,7 +49,6 @@ public class CSLIDSMainClient {
                 public void broadcastMessageString(String socketName, String s) {
                     // TODO Auto-generated method stub
 
-                    logger.info("Send string over wss:{}", s);
                     if (clientEndPoint != null) {
                         if (!clientEndPoint.isOpen()) return;
                         clientEndPoint.sendMessage("wss:" + socketName + ":" + s);
@@ -59,7 +58,6 @@ public class CSLIDSMainClient {
                 @Override
                 public void broadcastMessageJson(String socketName, Json j) {
 
-                    logger.info("Send string over wsj:{}",j);
                     if (clientEndPoint != null) {
                         if (!clientEndPoint.isOpen()) return;
                         clientEndPoint.sendMessage("wsj:" + socketName + ":" + j);
@@ -208,11 +206,12 @@ public class CSLIDSMainClient {
                 new Runnable() {
                     public void run() {
                         if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                            logger.debug("WS keeping alive");
                             clientEndPoint.sendMessage("keep alive");
                         }
                     }
                 },
-                1, Config.instance.Server.getWebsocketTimeout()-1, TimeUnit.SECONDS);
+                1, 5, TimeUnit.SECONDS);
 
     }
 
@@ -228,9 +227,6 @@ public class CSLIDSMainClient {
 
         // region -- read configuration
         // This is the client, override configuration is needed not to launch servers
-//        configObj.get("database_server_conf").set("on", false);
-//        configObj.get("web_server_conf").set("on", false);
-//        configObj.get("udp_server_conf").set("on", true);
         config.Server.setOn(false);
         config.UdpServerConf.setOn(true);
 

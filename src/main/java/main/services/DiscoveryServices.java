@@ -1103,8 +1103,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         }
         if (isConcentrator) {
             Json websocketStatus = scanWebSocketHandler.getStatus();
+            logger.info("Scan websocket check status : {}", websocketStatus);
             boolean requests_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
             boolean notifications_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
+            logger.info("Scan websocket check status : {}", websocketStatus);
             status.set("is_websocket_connected", requests_ws_status && notifications_ws_status);
         }
 

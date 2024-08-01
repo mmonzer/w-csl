@@ -172,8 +172,8 @@ public class ScanWebSocketHandler {
                 }
                 stompNotificationSession = null;
             } catch (Throwable e) {
-                logger.error("Error while connecting to notifications websocket, retrying");
-                logger.trace("Error while connecting to notifications websocket, retrying", e);
+                isStillConnected(new Exception(e), "request");
+                logger.error ("Unexpected exception at stompNotificationSession", new Exception(e));
                 stompNotificationSession = null;
             }
         }
@@ -191,8 +191,8 @@ public class ScanWebSocketHandler {
                     stompRequestsSession = null;
                 }
             } catch (Throwable e) {
-                logger.error("Error while connecting to requests websocket, retrying");
-                logger.trace("Error while connecting to requests websocket, retrying", e);
+                isStillConnected(new Exception(e), "request");
+                logger.error ("Unexpected exception at stompRequestsSession", new Exception(e));
                 stompRequestsSession = null;
             }
         }
@@ -210,7 +210,8 @@ public class ScanWebSocketHandler {
                 }
                 stompImportNotificationSession = null;
             } catch (Throwable e) {
-                logger.error("Error while connecting to import notifications websocket", e);
+                isStillConnected(new Exception(e), "import notifications");
+                logger.error ("Unexpected exception at stompImportNotificationSession", new Exception(e));
                 stompImportNotificationSession = null;
             }
         }
@@ -228,7 +229,8 @@ public class ScanWebSocketHandler {
                 }
                 stompExportNotificationSession = null;
             } catch (Throwable e) {
-                logger.error("Error while connecting to export notifications websocket", e);
+                isStillConnected(new Exception(e), "export notifications");
+                logger.error ("Unexpected exception at stompExportNotificationSession", new Exception(e));
                 stompExportNotificationSession = null;
             }
         }
@@ -246,6 +248,7 @@ public class ScanWebSocketHandler {
                 stompExternalScanSession = null;
             } catch (Throwable e) {
                 isStillConnected(new Exception(e), "external scans");
+                logger.error ("Unexpected exception at stompExternalScanSession", new Exception(e));
                 stompExternalScanSession = null;
             }
         }
@@ -278,7 +281,7 @@ public class ScanWebSocketHandler {
      * @param msg       the channel to customize the logs
      */
     private boolean isStillConnected(Exception exception, String msg) {
-        if (moduleConnected && exception.getCause() != null && exception.getCause().getCause() != null && exception.getCause().getCause() instanceof ConnectException) {
+        if (moduleConnected ){
             logger.warn("Connection lost with CSLScan for STOMP - {}", msg);
             moduleConnected = false;
         }
@@ -359,14 +362,14 @@ public class ScanWebSocketHandler {
 
             @Override
             public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                logger.warn("Transport Error", exception);
-                super.handleException(session, command, headers, payload, exception);
+                //logger.warn("Transport Error", exception);
+//                super.handleException(session, command, headers, payload, exception);
             }
 
             @Override
             public void handleTransportError(StompSession session, Throwable exception) {
-                logger.warn("Transport Error", exception);
-                super.handleTransportError(session, exception);
+                //logger.warn("Transport Error", exception);
+//                super.handleTransportError(session, exception);
             }
 
         }).get(1000, TimeUnit.MILLISECONDS);
@@ -505,6 +508,10 @@ public class ScanWebSocketHandler {
      * @return a {@link WebSocketStompClient} suitable for our needs.
      */
     private WebSocketStompClient createStompClient() {
+        if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
+            throw new ConnectionLostException("CSL-Scan disconnected");
+        }
+
         WebSocketClient client = new StandardWebSocketClient();
         SockJsClient sockJsClient = new SockJsClient(List.of(new WebSocketTransport(client)));
 

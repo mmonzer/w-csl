@@ -14,6 +14,7 @@ public class ConnectionProtocol {
     private final String name;
     @Getter
     private final String description;
+    @Getter
     private final int defaultPort;
     @Getter
     private final String connectionTemplateId;
@@ -35,15 +36,8 @@ public class ConnectionProtocol {
         }
     }
 
-    public int getDefaultPort() {
-        return defaultPort;
-    }
-
     public boolean isDynamic() {
         return isDynamic;
-    }
-    public int getId() {
-        return id;
     }
     /**
      * Parse the JSON serialization received from DB-API.

@@ -340,8 +340,8 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse deployCertificate(Json body, Json params) {
         return this.sendPost(
                 ApiEndpointForCSLAutocrypt.CERT_URI_DEPLOY_CERTIFICATE.toString(),
-                body,
-                params
+                params,
+                body
         );
     }
 

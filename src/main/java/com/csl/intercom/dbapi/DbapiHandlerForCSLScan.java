@@ -1094,7 +1094,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public void updateConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException {
         String connectionUuid = connection.getUuid();
         String connectionDbApiId = String.valueOf(getDbApiConnectionId(connectionUuid));
-        Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), connectionDbApiId));
+        int connectionId = Integer.parseInt(connectionDbApiId);
+        String endpoint = String.format(DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), connectionId) + '/' + connectionId;
+        Request request = createDbapiRequest(HttpMethod.PUT, endpoint);
         Json requestContents = Json.object(
                 "name", connection.getName(),
                 "discovery_protocol_name", connection.getProtocol().dbapiName(),

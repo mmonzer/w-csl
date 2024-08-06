@@ -71,7 +71,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         createEndpoints();
 
-        launchAutoSync();
+        //launchAutoSync();
 
         logger.info("Service autocrypt initialized.");
         return true;

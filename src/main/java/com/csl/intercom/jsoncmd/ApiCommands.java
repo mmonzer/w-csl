@@ -171,7 +171,7 @@ public class ApiCommands implements IApiCommands {
             params = Json.object();
         }
 
-        if (debug) logger.trace("Exec {} {}", cmd, params);
+        if (debug) {logger.trace("Exec {} {}", cmd, params);}
 
         try {
             return exec(cmd.asString(), params);

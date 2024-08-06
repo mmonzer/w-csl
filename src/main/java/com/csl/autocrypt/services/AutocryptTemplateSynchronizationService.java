@@ -59,7 +59,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             getLogger().error("{} : Could not send data to DB-API for Autocrypt service.", prefixLogger);
             throw new SynchronizationException(prefixLogger + " : Could not send data to DB-API for Autocrypt service.");
         }
-        getLogger().debug("{} : sent data to DB-API : {}", prefixLogger, items);
+        getLogger().debug("{} : successfully sent data to DB-API : {}", prefixLogger, items);
     }
 
     public List<Json> retrieveData(IJsonToJsonApiResponse methodDelete, IJsonToJsonApiResponse methodUpsert, OffsetDateTime since, int limit, int offset) throws SynchronizationException {

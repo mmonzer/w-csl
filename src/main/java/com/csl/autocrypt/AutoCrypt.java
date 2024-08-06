@@ -258,6 +258,7 @@ public class AutoCrypt {
         try {
             syncRoles();
         } catch (SynchronizationException e) {
+            logger.error("Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -299,6 +300,7 @@ public class AutoCrypt {
         try {
             syncRoles();
         } catch (SynchronizationException e) {
+            logger.error("Failed to delete role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -331,6 +333,7 @@ public class AutoCrypt {
         try {
             syncRoles();
         } catch (SynchronizationException e) {
+            logger.error("Failed to update role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -384,6 +387,7 @@ public class AutoCrypt {
         try {
             syncCertificates();
         } catch (SynchronizationException e) {
+            logger.error("Failed to generate the certificate {} at path {}", serialNumber, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -458,9 +462,9 @@ public class AutoCrypt {
         JsonApiResponse responseFromModule = autocryptApiHandler.downloadCertificate(serialNumber, params);
         if (!responseFromModule.isSuccess()) {
             logger.error("{} : Failed to download certificate {} at path {} in Autocrypt", AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, serialNumber, params.get("path").asString());
+        } else {
+            logger.info("Downloaded certificate {} at path {}.", serialNumber, params.get("path").asString());
         }
-        logger.info("Downloaded certificate {} at path {}.", serialNumber, params.get("path").asString());
-
         return responseFromModule;
     }
 
@@ -488,6 +492,7 @@ public class AutoCrypt {
         try {
             syncCertificates();
         } catch (SynchronizationException e) {
+            logger.error("Failed to revoke certificate {} at path {}", serialNumber, path);
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -580,7 +585,7 @@ public class AutoCrypt {
             syncIssuers();
             syncCertificates();
         } catch (SynchronizationException e) {
-
+            logger.error("Failed to generate {} CA with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
             return JsonApiResponse.error(e.getMessage());
         }
 

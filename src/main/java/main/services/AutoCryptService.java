@@ -208,7 +208,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         // region -- Verify required body keys and extract key values
 
         Json params = Json.object();
-        getValueString(body, Issuer.ISSUER_NAME);
         transferValueString(body, params, Common.PATH);
         String issuerRef = extractValueString(body, Issuer.ISSUER_REF);
         Json bodyBase = Json.read(body.toString());

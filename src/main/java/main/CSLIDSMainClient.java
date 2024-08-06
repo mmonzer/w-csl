@@ -206,7 +206,6 @@ public class CSLIDSMainClient {
                 new Runnable() {
                     public void run() {
                         if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                            logger.debug("WS keeping alive");
                             clientEndPoint.sendMessage("keep alive");
                         }
                     }

@@ -572,13 +572,10 @@ public class AutoCrypt {
         }
         String issuerRef = responseFromModule.getResult().get(Issuer.ISSUER_REF).asString();
         String path = responseFromModule.getResult().get(AutocryptConstants.Common.PATH).asString();
-        logger.debug("{} CA ({}) created in Autocrypt at path {}", type, issuerRef, path);
-
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
-        logger.trace("{} CA ({}) created in Autocrypt at path {} and certificate with number {}", type, issuerRef, path, serialNumber);
 
         // Sync issuers
-        logger.debug("{} CA ({}) created in Autocrypt at path {}, synchronizing with Dbapi...", type, issuerRef, path);
+        logger.debug("{} CA ({}) created in Autocrypt at path {} and certificate with number {}, synchronizing ...", type, issuerRef, path, serialNumber);
         try {
             syncIssuers();
             syncCertificates();
@@ -607,7 +604,7 @@ public class AutoCrypt {
             syncIssuers();
             syncRoles();
             syncCertificates();
-            logger.info("CSL-Autocrypt synchronized with CSL-Dbapi");
+            logger.info("CSL-Autocrypt synchronized with CSL-Dbapi at schedule");
         } catch (SynchronizationException ignored) {
         }
     }

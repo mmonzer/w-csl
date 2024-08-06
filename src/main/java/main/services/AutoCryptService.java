@@ -73,7 +73,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         launchAutoSync();
 
-        logger.info("Service autocrypt initilialized.");
+        logger.info("Service autocrypt initialized.");
         return true;
     }
 
@@ -590,7 +590,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     private void launchAutoSync() {
         ScheduledExecutorService synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        synchronizationSchedule.scheduleAtFixedRate(autocrypt::syncAll, 0, syncFrequency, TimeUnit.SECONDS);
+        synchronizationSchedule.scheduleAtFixedRate(autocrypt::syncAll, syncFrequency, syncFrequency, TimeUnit.SECONDS);
     }
 
 }

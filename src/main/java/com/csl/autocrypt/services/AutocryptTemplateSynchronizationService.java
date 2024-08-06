@@ -38,13 +38,12 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
         if (since != null) {
             params.set(Common.AFTER_UPDATED_DATE, ScanUtils.localTimeToScan(since).toString());
         }
-        getLogger().debug("{} : retrieving data from Autocrypt after {}", prefixLogger, since);
+        getLogger().trace("{} : retrieving data from Autocrypt after {}", prefixLogger, since);
         JsonApiResponse listOfItems = method.apply(params);
         getLogger().trace("{} : retrieved data from Autocrypt after {} : {}", prefixLogger, since, listOfItems);
 
         if (!listOfItems.isSuccess() || listOfItems.getResult().isNull() || !listOfItems.getResult().isArray()) {
             getLogger().error("{} : Could not get retrieve data from Autocrypt.", prefixLogger);
-            System.out.println(listOfItems);
             throw new SynchronizationException("Could not get retrieve data from Autocrypt");
         }
 
@@ -70,18 +69,16 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
         if (since != null) {
             params.set(Common.AFTER_UPDATED_DATE, ScanUtils.localTimeToScan(since).toString());
         }
-        getLogger().debug("{} : retrieving data to delete from Autocrypt after {}", prefixLogger, since);
+        getLogger().trace("{} : retrieving data to delete from Autocrypt after {}", prefixLogger, since);
         JsonApiResponse listOfItemsDelete = methodDelete.apply(params);
         getLogger().trace("{} : retrieved data to delete from Autocrypt after {} : {}", prefixLogger, since, listOfItemsDelete);
 
         if (!listOfItemsDelete.isSuccess() || listOfItemsDelete.getResult().isNull() || !listOfItemsDelete.getResult().isArray()) {
             getLogger().error("{} : Could not get retrieve data to delete from Autocrypt.", prefixLogger);
-            System.out.println(listOfItemsDelete);
             throw new SynchronizationException("Could not get retrieve data to delete from Autocrypt");
         }
 
-
-        getLogger().debug("{} : retrieving data to upsert from Autocrypt after {}", prefixLogger, since);
+        getLogger().trace("{} : retrieving data to upsert from Autocrypt after {}", prefixLogger, since);
         JsonApiResponse listOfItemsUpsert = methodUpsert.apply(params);
         getLogger().trace("{} : retrieved data to upsert from Autocrypt after {} : {}", prefixLogger, since, listOfItemsUpsert);
 
@@ -110,7 +107,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
                 getLogger().error("{} : Could not delete data from DB-API for Autocrypt service : {}", prefixLogger, response.getError());
                 throw new SynchronizationException(prefixLogger + " : Could not delete data to DB-API for Autocrypt service.");
             }
-            getLogger().debug("{} : deleted data to DB-API : {}", prefixLogger, items);
+            getLogger().debug("{} : deleted data to DB-API : {}", prefixLogger, items.get(Common.DELETED));
         }
 
         if (items != null && items.has(Common.NON_DELETED) && items.get(Common.NON_DELETED) != null && items.get(Common.NON_DELETED).isArray()) {
@@ -121,14 +118,14 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
                 getLogger().error("{} : Could not send data to upsert from DB-API for Autocrypt service : {}", prefixLogger, response.getError());
                 throw new SynchronizationException(prefixLogger + " : Could not send data to upsert to DB-API for Autocrypt service.");
             }
-            getLogger().debug("{} : upserted data to DB-API : {}", prefixLogger, items);
+            getLogger().debug("{} : upserted data to DB-API : {}", prefixLogger, items.get(Common.NON_DELETED));
         }
     }
 
     public OffsetDateTime getLastChangeDate(IVoidToJsonApiResponse method) throws SynchronizationException {
         getLogger().trace("{} : fetching last update time from Dbapi with method {}", prefixLogger, method.toString());
         try {
-            getLogger().debug("{} : fetching last update time from Dbapi", prefixLogger);
+            getLogger().trace("{} : fetching last update time from Dbapi", prefixLogger);
             JsonApiResponse response = method.apply();
             getLogger().trace("{} : fetched last update time from Dbapi : {}", prefixLogger, response);
 

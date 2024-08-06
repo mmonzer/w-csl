@@ -387,7 +387,7 @@ public class AutoCrypt {
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Successfully generated the certificate {}", serialNumber);
+        logger.info("Successfully generated the certificate {} at path {}", serialNumber, params.get(Common.PATH).asString());
 
         return responseFromModule;
     }
@@ -607,7 +607,7 @@ public class AutoCrypt {
             syncIssuers();
             syncRoles();
             syncCertificates();
-            logger.info("CSL-Autocrypt synchronized with CSl-Dbapi");
+            logger.info("CSL-Autocrypt synchronized with CSL-Dbapi");
         } catch (SynchronizationException ignored) {
         }
     }

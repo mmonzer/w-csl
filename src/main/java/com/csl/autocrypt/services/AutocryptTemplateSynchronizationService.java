@@ -159,7 +159,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
     public void syncData() throws SynchronizationException {
         getLogger().debug("{} : synchronizing ...", prefixLogger);
         super.syncData();
-        getLogger().info("{} : Synchronization was successful", prefixLogger);
+        getLogger().debug("{} : Synchronization was successful", prefixLogger);
     }
 
     @Override

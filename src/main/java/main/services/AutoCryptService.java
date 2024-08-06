@@ -25,10 +25,9 @@ import static com.csl.autocrypt.enums.AutocryptConstants.*;
 public class AutoCryptService extends Service implements IStatusProvider {
     @Getter
     private final AutoCrypt autocrypt;
-    private ScheduledExecutorService synchronizationSchedule;
     private boolean isRemote = false;
     private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
-    private int syncFrequency;
+    private final int syncFrequency;
 
     /**
      * Default constructor of the AutoCrypt service (not remote)
@@ -72,12 +71,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         createEndpoints();
 
-        // Launch initial sync to dbapi
-//        synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        //  TODO : change initial to continuous sync. Attention with certificates from ca, that are different that created/updated by the user
-//        synchronizationSchedule.scheduleAtFixedRate(() -> {
-//            autocrypt.initialSynchronizeDb("pki");
-//        }, 0, 300, TimeUnit.SECONDS);
+        launchAutoSync();
 
         logger.info("Service autocrypt initilialized.");
         return true;
@@ -87,7 +81,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Creates the endpoints of this service
      */
     private void createEndpoints() {
-        // TODO: needs to add persistence of changes
         // Connexion
         addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
         addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
@@ -596,7 +589,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Synchronize Dbapi with Autocrypt automatically every 300s by default
      */
     private void launchAutoSync() {
-        synchronizationSchedule = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService synchronizationSchedule = Executors.newScheduledThreadPool(1);
         synchronizationSchedule.scheduleAtFixedRate(autocrypt::syncAll, 0, syncFrequency, TimeUnit.SECONDS);
     }
 

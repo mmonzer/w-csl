@@ -127,12 +127,12 @@ public class CSLIDSMainClient {
 
             // add listener
             clientEndPoint.addMessageHandler(messageString -> {
-                logger.debug("MESSAGE:" + messageString);
+                logger.trace("MESSAGE:" + messageString);
                 messageString = messageString.trim();
                 if (messageString.startsWith("{") && messageString.endsWith("}")) {
 
                     Json messageJson = Json.read(messageString);
-                    logger.debug("received:" + messageJson);
+                    logger.trace("received:" + messageJson);
 
                     String apiname = JsonUtil.getStringFromJson(messageJson, "api", "");
 
@@ -154,7 +154,7 @@ public class CSLIDSMainClient {
                         Json resultMessageJson = Json.object();
                         resultMessageJson.set("uuid", messageJson.get("uuid"));
                         resultMessageJson.set("result", result);
-                        logger.debug("****RESULT:" + resultMessageJson);
+                        logger.trace("****RESULT:" + resultMessageJson);
                         clientEndPoint.sendMessage("res:" + resultMessageJson);
 
                     };

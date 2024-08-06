@@ -545,19 +545,22 @@ public class AutoCrypt {
      * @return if creation was successful, the body for HMI, otherwise, the error message
      */
     private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, Json params, Json body) {
+        logger.trace("Generating {} CA with params {} and body {}", typeCA, params, body);
+
         boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
         String type = isRoot ? "root" : "intermediate";
-        logger.info("Generating {} CA ...", type);
+        logger.debug("Generating {} CA ...", type);
         transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Creating CA in Autocrypt
-        logger.debug("Creating {} CA creation in Autocrypt ...", type);
+        logger.trace("Creating {} CA creation in Autocrypt with params {} and body {} ...", type, params, body);
         JsonApiResponse responseFromModule;
         if (isRoot) {
             responseFromModule = autocryptApiHandler.generateRootCA(body, params);
         } else {
             responseFromModule = autocryptApiHandler.generateIntermediateCA(body, params);
         }
+        logger.trace("Created {} CA creation in Autocrypt with response {}", type, responseFromModule);
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Issuer.ISSUER_REF) ||
                 !responseFromModule.getResult().get(Issuer.ISSUER_REF).isString()) {
@@ -565,16 +568,21 @@ public class AutoCrypt {
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
         String issuerRef = responseFromModule.getResult().get(Issuer.ISSUER_REF).asString();
-        String path = responseFromModule.getResult().get(AutocryptConstants.Common.PATH).asString();
-        logger.info("{} CA ({}) created in Autocrypt at path {}", type, issuerRef, path);
+        String path = responseFromModule.getResult().get(AutocryptConstants.Common.PATH).asString();git s
+        logger.debug("{} CA ({}) created in Autocrypt at path {}", type, issuerRef, path);
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
+        logger.trace("{} CA ({}) created in Autocrypt at path {} and certificate with number {}", type, issuerRef, path, serialNumber);
 
         // Sync issuers
+        logger.debug("{} CA ({}) created in Autocrypt at path {}, synchronizing with Dbapi...", type, issuerRef, path);
         try {
             syncIssuers();
+            logger.trace("{} CA ({}) created in Autocrypt at path {}, synchronization of issuers/CAs with Dbapi successful", type, issuerRef, path);
             syncCertificates();
+            logger.trace("{} CA ({}) created in Autocrypt at path {}, synchronization of certificates with Dbapi successful", type, issuerRef, path);
         } catch (SynchronizationException e) {
+
             return JsonApiResponse.error(e.getMessage());
         }
 

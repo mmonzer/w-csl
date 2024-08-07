@@ -27,6 +27,9 @@ public class SNMPv3Connection extends Connection {
     @Getter
     private final SNMPv3PrivacyAlgorithm privacyAlgorithm;
     private final String securityLevel;
+    private Boolean isKeepPassword;
+    private Boolean isKeepSnmpPrivacyKey;
+
 
     protected SNMPv3Connection(String id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm, Boolean isSimulated) {
         super(id, devices, StaticConnectionProtocol.SNMPv3, isSimulated);
@@ -54,6 +57,22 @@ public class SNMPv3Connection extends Connection {
         String privString = this.privacyAlgorithm == null ? "NoPriv" : "Priv";
         this.securityLevel = authString + privString;
     }
+    protected SNMPv3Connection(String name, String id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm, Boolean isSimulated, Boolean isKeepPassword, Boolean isKeepSnmpPrivacyKey) {
+        super(name, id, devices, StaticConnectionProtocol.SNMPv3);
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.passphrase = passphrase;
+        this.authenticationAlgorithm = authenticationAlgorithm;
+        this.privacyAlgorithm = privacyAlgorithm;
+
+        String authString = this.authenticationAlgorithm == null ? "noAuth" : "auth";
+        String privString = this.privacyAlgorithm == null ? "NoPriv" : "Priv";
+        this.securityLevel = authString + privString;
+
+        this.isKeepPassword = isKeepPassword;
+        this.isKeepSnmpPrivacyKey = isKeepSnmpPrivacyKey;
+    }
 
     /**
      * Parse the JSON serialization received from DB-API.
@@ -79,13 +98,29 @@ public class SNMPv3Connection extends Connection {
                 password = connectionJson.get(SNMPv3ConnectionField.PASSWORD.dbapiName()).asString();
             }
             Json otherData = connectionJson.get("other_data");
-            String passphrase = null;
-            if (otherData.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
-                passphrase = otherData.get(SNMPv3ConnectionField.PASSPHRASE.dbapiName()).asString();
-            }
-            SNMPv3AuhtenticationAlgorithm authenticationAlgo = SNMPv3AuhtenticationAlgorithm.fromDbapiName(otherData.get(SNMPv3ConnectionField.AUTHENTICATION_ALGORITHM.dbapiName()).asString());
-            SNMPv3PrivacyAlgorithm privacyAlgo = SNMPv3PrivacyAlgorithm.fromDbapiName(otherData.get(SNMPv3ConnectionField.PRIVACY_ALGORITHM.dbapiName()).asString());
+            Json readOnlyOtherData = connectionJson.get("read_only_other_data");
 
+            String passphrase = null;
+            SNMPv3AuhtenticationAlgorithm authenticationAlgo = null;
+            SNMPv3PrivacyAlgorithm privacyAlgo = null;
+
+            if (otherData != null && otherData.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
+                passphrase = otherData.get(SNMPv3ConnectionField.PASSPHRASE.dbapiName()).asString();
+            } else if (readOnlyOtherData != null && readOnlyOtherData.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
+                passphrase = readOnlyOtherData.get(SNMPv3ConnectionField.PASSPHRASE.dbapiName()).asString();
+            }
+
+            if (otherData != null && otherData.has(SNMPv3ConnectionField.AUTHENTICATION_ALGORITHM.dbapiName())) {
+                authenticationAlgo = SNMPv3AuhtenticationAlgorithm.fromDbapiName(otherData.get(SNMPv3ConnectionField.AUTHENTICATION_ALGORITHM.dbapiName()).asString());
+            } else if (readOnlyOtherData != null && readOnlyOtherData.has(SNMPv3ConnectionField.AUTHENTICATION_ALGORITHM.dbapiName())) {
+                authenticationAlgo = SNMPv3AuhtenticationAlgorithm.fromDbapiName(readOnlyOtherData.get(SNMPv3ConnectionField.AUTHENTICATION_ALGORITHM.dbapiName()).asString());
+            }
+
+            if (otherData != null && otherData.has(SNMPv3ConnectionField.PRIVACY_ALGORITHM.dbapiName())) {
+                privacyAlgo = SNMPv3PrivacyAlgorithm.fromDbapiName(otherData.get(SNMPv3ConnectionField.PRIVACY_ALGORITHM.dbapiName()).asString());
+            } else if (readOnlyOtherData != null && readOnlyOtherData.has(SNMPv3ConnectionField.PRIVACY_ALGORITHM.dbapiName())) {
+                privacyAlgo = SNMPv3PrivacyAlgorithm.fromDbapiName(readOnlyOtherData.get(SNMPv3ConnectionField.PRIVACY_ALGORITHM.dbapiName()).asString());
+            }
             List<String> devices = new ArrayList<>();
             for (Json device : connectionJson.get("connected_devices").asJsonList()) {
                 devices.add(device.asString());
@@ -97,7 +132,10 @@ public class SNMPv3Connection extends Connection {
             }
 
             String name = connectionJson.get("name").asString();
-            return new SNMPv3Connection(name, uuid, port, devices, username, password, passphrase, authenticationAlgo, privacyAlgo, isSimulated);
+            Boolean isKeepPassword = (Boolean) connectionJson.get("is_keep_password").getValue() != null && (Boolean) connectionJson.get("is_keep_password").getValue();
+            Boolean isKeepSnmpPrivacyKey = (Boolean) connectionJson.get("is_keep_snmp_privacy_key").getValue() != null && (Boolean) connectionJson.get("is_keep_snmp_privacy_key").getValue();
+
+            return new SNMPv3Connection(name, uuid, port, devices, username, password, passphrase, authenticationAlgo, privacyAlgo, isSimulated, isKeepPassword, isKeepSnmpPrivacyKey);
         } catch (Throwable e) {
             return null;
         }
@@ -132,6 +170,8 @@ public class SNMPv3Connection extends Connection {
         result.set("authProtocolName", this.authenticationAlgorithm.scanName());
         result.set("privProtocolName", this.privacyAlgorithm.scanName());
         result.set("port", this.port);
+        result.set("isKeepPassword", this.isKeepPassword);
+        result.set("isKeepSnmpPrivacyKey", this.isKeepSnmpPrivacyKey);
 
         return result;
     }

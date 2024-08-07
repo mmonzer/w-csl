@@ -6,6 +6,9 @@ public enum SshConnectionField {
     PASSWORD("password", "password"),
     PRIVATE_KEY("ssh_key", "privateKey"),
     PASSPHRASE("passphrase", "passphrase"),
+    IS_KEEP_PASSWORD("is_keep_password", "isKeepPassword"),
+    IS_KEEP_SSH_KEY("is_keep_ssh_key", "isKeepSshKey"),
+    IS_KEEP_PASSPHRASE("is_keep_passphrase", "isKeepPassphrase")
     ;
 
     private final String dbapiName;

@@ -13,6 +13,15 @@ public class RemotePowershellConnection extends Connection {
     private final int port;
     private final String username;
     private final String password;
+    private Boolean isKeepPassword;
+
+    protected RemotePowershellConnection(String name, String id, int port, List<String> devices, String username, String password, Boolean isKeepPassword) {
+        super(name, id, devices, StaticConnectionProtocol.RemotePowershell);
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.isKeepPassword = isKeepPassword;
+    }
 
     protected RemotePowershellConnection(String id, int port, List<String> devices, String username, String password) {
         super(id, devices, StaticConnectionProtocol.RemotePowershell);
@@ -26,7 +35,6 @@ public class RemotePowershellConnection extends Connection {
         this.username = username;
         this.password = password;
     }
-
     public static RemotePowershellConnection fromJson(Json connectionJson) {
         try {
             String uuid;
@@ -57,7 +65,10 @@ public class RemotePowershellConnection extends Connection {
             if (connectionJson.has("uuid")) {
                 uuid = connectionJson.get("uuid").asString();
             } else {
-                uuid = null;
+                if(connectionJson.has("mongo_entity_id"))
+                    uuid = connectionJson.get("mongo_entity_id").asString();
+                else
+                    uuid = null;
             }
             int port = connectionJson.get(RemotePowershellConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices;
@@ -68,10 +79,17 @@ public class RemotePowershellConnection extends Connection {
             } else {
                 devices = null;
             }
-            String username = connectionJson.get(RemotePowershellConnectionField.USERNAME.dbapiName()).asString();
-            String password = connectionJson.get(RemotePowershellConnectionField.PASSWORD.dbapiName()).asString();
             String name = connectionJson.get("name").asString();
-            return new RemotePowershellConnection(name, uuid, port, devices, username, password);
+            String username = connectionJson.get(RemotePowershellConnectionField.USERNAME.dbapiName()).asString();
+            // check if password is present in the json
+            if (connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
+                String password = connectionJson.get(RemotePowershellConnectionField.PASSWORD.dbapiName()).asString();
+                return new RemotePowershellConnection(name, uuid, port, devices, username, password);
+            } else {
+                return new RemotePowershellConnection(name, uuid, port, devices, username, null, true);
+            }
+
+            //return new RemotePowershellConnection(name, uuid, port, devices, username, password);
         } catch (NullPointerException | UnsupportedOperationException e) {
             return null;
         }
@@ -98,6 +116,7 @@ public class RemotePowershellConnection extends Connection {
         result.set(RemotePowershellConnectionField.PORT.scanName(), this.port);
         result.set(RemotePowershellConnectionField.USERNAME.scanName(), this.username);
         result.set(RemotePowershellConnectionField.PASSWORD.scanName(), this.password);
+        result.set(RemotePowershellConnectionField.IS_KEEP_PASSWORD.scanName(), this.isKeepPassword);
         return result;
     }
 

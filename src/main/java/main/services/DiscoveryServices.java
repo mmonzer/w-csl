@@ -445,6 +445,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("test_connection", params -> {
                     String deviceUuid = JsonUtil.getStringFromJson(params, "device_uuid", null);
                     String connectionId;
+                    String connectionUuid;
+                    Json connectionUuidJson = params.get("connection_uuid");
                     Json connectionIdJson = params.get("connection_id");
                     if (connectionIdJson != null && connectionIdJson.isString()) {
                         connectionId = connectionIdJson.asString();
@@ -457,9 +459,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         return JsonApiResponse.error("Missing required parameter device_uuid or connection_id",
                                 Json.object("exception", "Missing parameter device_uuid or connection_uuid, of type string")
                         ).toJson();
-                    } else {
-                        return scanApiHandler.testConnection(deviceUuid, connectionId).toJson();
                     }
+                    if (connectionUuidJson != null && connectionUuidJson.isString()) {
+                        connectionUuid = connectionUuidJson.asString();
+                    } else {
+                        connectionUuid = null;
+                    }
+                    return scanApiHandler.testConnection(deviceUuid, connectionUuid).toJson();
                 },
                 new JsonCmdHelp().setDesc("Test if an existing connection is valid")
                         .setParam("device_uuid", "The uuid of the device to test the connection on", IJsonCmdHelp.STR)

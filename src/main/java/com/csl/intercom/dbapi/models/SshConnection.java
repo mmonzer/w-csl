@@ -19,6 +19,11 @@ public class SshConnection extends Connection {
     @Getter
     private final String passphrase;
 
+    private Boolean isKeepPassword;
+    private Boolean isKeepSshKey;
+    private Boolean isKeepPassPhrase;
+
+
     protected SshConnection(String id, int port, List<String> devices, String username, String password, String privateKey, String passphrase) {
         super(id, devices, StaticConnectionProtocol.SSH);
         this.port = port;
@@ -36,52 +41,76 @@ public class SshConnection extends Connection {
         this.privateKey = privateKey;
         this.passphrase = passphrase;
     }
+    protected SshConnection(String name, String id, int port, List<String> devices, String username, String password, String privateKey, String passphrase, Boolean isKeepPassword, Boolean isKeepSshKey, Boolean isKeepPassPhrase) {
+        super(name, id, devices, StaticConnectionProtocol.SSH);
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.privateKey = privateKey;
+        this.passphrase = passphrase;
+        this.isKeepPassword = isKeepPassword;
+        this.isKeepSshKey = isKeepSshKey;
+        this.isKeepPassPhrase = isKeepPassPhrase;
+    }
 
     public static SshConnection fromJson(Json connectionJson) {
-        String id = "0";
-        if (connectionJson.has("id") && connectionJson.get("id").isNumber()) {
-            id = String.valueOf(connectionJson.get("id").asInteger());
-        } else {
-            if(connectionJson.has("mongo_entity_id"))
-                id = connectionJson.get("mongo_entity_id").asString();
-        }
-        int port = 0;
-        if (connectionJson.has(SshConnectionField.PORT.dbapiName()) && connectionJson.get(SshConnectionField.PORT.dbapiName()).isNumber()) {
-            port = connectionJson.get(SshConnectionField.PORT.dbapiName()).asInteger();
-        } else {
-            port = 22;
-        }
+        try {
+            String uuid = null;
+            if (connectionJson.has("uuid") && connectionJson.get("uuid").isNumber()) {
+                uuid = String.valueOf(connectionJson.get("uuid").asInteger());
+            } else {
+                if(connectionJson.has("mongo_entity_id"))
+                    uuid = connectionJson.get("mongo_entity_id").asString();
+            }
+            int port = 0;
+            if (connectionJson.has(SshConnectionField.PORT.dbapiName()) && connectionJson.get(SshConnectionField.PORT.dbapiName()).isNumber()) {
+                port = connectionJson.get(SshConnectionField.PORT.dbapiName()).asInteger();
+            } else {
+                port = 22;
+            }
 
-        List<String> devices = null;
-        if (connectionJson.has("connected_devices") && connectionJson.get("connected_devices").isArray()) {
-            devices = connectionJson.get("connected_devices").asJsonList().stream()
-                    .map(Json::asString)
-                    .collect(Collectors.toList());
-        }
+            List<String> devices = null;
+            if (connectionJson.has("connected_devices") && connectionJson.get("connected_devices").isArray()) {
+                devices = connectionJson.get("connected_devices").asJsonList().stream()
+                        .map(Json::asString)
+                        .collect(Collectors.toList());
+            }
 
-        String username = null;
-        if (connectionJson.has(SshConnectionField.USERNAME.dbapiName()) && connectionJson.get(SshConnectionField.USERNAME.dbapiName()).isString()) {
-            username = connectionJson.get(SshConnectionField.USERNAME.dbapiName()).asString();
-        }
+            String username = null;
+            if (connectionJson.has(SshConnectionField.USERNAME.dbapiName()) && connectionJson.get(SshConnectionField.USERNAME.dbapiName()).isString()) {
+                username = connectionJson.get(SshConnectionField.USERNAME.dbapiName()).asString();
+            }
 
-        String password = null;
-        if (connectionJson.has(SshConnectionField.PASSWORD.dbapiName()) && connectionJson.get(SshConnectionField.PASSWORD.dbapiName()).isString()) {
-            password = connectionJson.get(SshConnectionField.PASSWORD.dbapiName()).asString();
-        }
+            String password = null;
+            if (connectionJson.has(SshConnectionField.PASSWORD.dbapiName()) && connectionJson.get(SshConnectionField.PASSWORD.dbapiName()).isString()) {
+                password = connectionJson.get(SshConnectionField.PASSWORD.dbapiName()).asString();
+            }
+            Json otherData = connectionJson.get("other_data");
+            Json readOnlyOtherData = connectionJson.get("read_only_other_data");
 
-        Json otherData = connectionJson.get("other_data");
+            String privateKey = "";
+            if (otherData != null && otherData.has(SshConnectionField.PRIVATE_KEY.dbapiName()) && otherData.get(SshConnectionField.PRIVATE_KEY.dbapiName()).isString()) {
+                privateKey = otherData.get(SshConnectionField.PRIVATE_KEY.dbapiName()).asString();
+            } else if (readOnlyOtherData != null && readOnlyOtherData.has(SshConnectionField.PRIVATE_KEY.dbapiName()) && readOnlyOtherData.get(SshConnectionField.PRIVATE_KEY.dbapiName()).isString()) {
+                privateKey = readOnlyOtherData.get(SshConnectionField.PRIVATE_KEY.dbapiName()).asString();
+            }
 
-        String privateKey = "";
-        if (otherData.has(SshConnectionField.PRIVATE_KEY.dbapiName()) && otherData.get(SshConnectionField.PRIVATE_KEY.dbapiName()).isString()) {
-            privateKey = otherData.get(SshConnectionField.PRIVATE_KEY.dbapiName()).asString();
-        }
+            String passphrase = null;
+            if (otherData != null && otherData.has(SshConnectionField.PASSPHRASE.dbapiName()) && otherData.get(SshConnectionField.PASSPHRASE.dbapiName()).isString()) {
+                passphrase = otherData.get(SshConnectionField.PASSPHRASE.dbapiName()).asString();
+            } else if (readOnlyOtherData != null && readOnlyOtherData.has(SshConnectionField.PASSPHRASE.dbapiName()) && readOnlyOtherData.get(SshConnectionField.PASSPHRASE.dbapiName()).isString()) {
+                passphrase = readOnlyOtherData.get(SshConnectionField.PASSPHRASE.dbapiName()).asString();
+            }
+            String name = connectionJson.get("name").asString();
+            Boolean isKeepPassword = (Boolean) connectionJson.get("is_keep_password").getValue() != null && (Boolean) connectionJson.get("is_keep_password").getValue();
 
-        String passphrase = null;
-        if (otherData.has(SshConnectionField.PASSPHRASE.dbapiName()) && otherData.get(SshConnectionField.PASSPHRASE.dbapiName()).isString()) {
-            passphrase = otherData.get(SshConnectionField.PASSPHRASE.dbapiName()).asString();
+            Boolean isKeepSshKey = (Boolean) connectionJson.get("is_keep_ssh_key").getValue() != null && (Boolean) connectionJson.get("is_keep_ssh_key").getValue();
+            Boolean isKeepPassPhrase = (Boolean) connectionJson.get("is_keep_passphrase").getValue() != null && (Boolean) connectionJson.get("is_keep_passphrase").getValue();
+
+            return new SshConnection(name, uuid, port, devices, username, password, privateKey, passphrase, isKeepPassword, isKeepSshKey, isKeepPassPhrase);
+        } catch (NullPointerException e) {
+            return null;
         }
-        String name = connectionJson.get("name").asString();
-        return new SshConnection(name, id, port, devices, username, password, privateKey, passphrase);
     }
 
     public static SshConnection fromScannerJson(Json connectionJson) {
@@ -117,6 +146,7 @@ public class SshConnection extends Connection {
             passphrase = connectionJson.get(SshConnectionField.PASSPHRASE.scanName()).asString();
         }
         String name = connectionJson.get("name").asString();
+
         return new SshConnection(name, uuid, port, null, username, password, privateKey, passphrase);
     }
 
@@ -128,6 +158,9 @@ public class SshConnection extends Connection {
         connectionJson.set(SshConnectionField.PASSWORD.scanName(), password);
         connectionJson.set(SshConnectionField.PRIVATE_KEY.scanName(), privateKey);
         connectionJson.set(SshConnectionField.PASSPHRASE.scanName(), passphrase);
+        connectionJson.set(SshConnectionField.IS_KEEP_PASSWORD.scanName(), isKeepPassword);
+        connectionJson.set(SshConnectionField.IS_KEEP_SSH_KEY.scanName(), isKeepSshKey);
+        connectionJson.set(SshConnectionField.IS_KEEP_PASSPHRASE.scanName(), isKeepPassPhrase);
         return connectionJson;
     }
 

@@ -22,6 +22,9 @@ public class Device implements IScannerSerializable {
     private final String ipAddress;
     @Getter
     private List<String> connectionsIds;
+    @Getter
+    private List<String> connectionsMongoUuids;
+
     private final List<Connection> connections = new ArrayList<>();
     private final OffsetDateTime updatedDate;
 
@@ -30,6 +33,14 @@ public class Device implements IScannerSerializable {
         this.name = name;
         this.ipAddress = ipAddress;
         this.connectionsIds = connectionsIds;
+        this.updatedDate = updatedDate;
+    }
+    protected Device(String id, String name, String ipAddress, List<String> connectionsIds, List<String> connectionsMongoUuids ,OffsetDateTime updatedDate) {
+        this.id = id;
+        this.name = name;
+        this.ipAddress = ipAddress;
+        this.connectionsIds = connectionsIds;
+        this.connectionsMongoUuids = connectionsMongoUuids;
         this.updatedDate = updatedDate;
     }
 
@@ -55,9 +66,15 @@ public class Device implements IScannerSerializable {
             for (Json connectionId: connectionsJson) {
                 connections.add(String.valueOf(connectionId.asInteger()));
             }
+            // parse connection mongo entity ids
+            List<Json> connectionsMongoUuidsJson = deviceJson.get("connections_mongo_entity_ids").asJsonList();
+            List<String> connectionsMongoUuids = new ArrayList<>(connectionsMongoUuidsJson.size());
+            for (Json connectionMongoUuid: connectionsMongoUuidsJson) {
+                connectionsMongoUuids.add(connectionMongoUuid.asString());
+            }
             OffsetDateTime updatedDate = DbapiUtilsForCSLScan.dbapiDateToLocal(JsonUtil.getStringFromJson(deviceJson, "updated_at", null));
 
-            return new Device(id, name, ipAddress, connections, updatedDate);
+            return new Device(id, name, ipAddress, connections, connectionsMongoUuids, updatedDate);
         } catch (NullPointerException | UnsupportedOperationException e) {
             return null;
         }
@@ -84,7 +101,7 @@ public class Device implements IScannerSerializable {
                 "uuid", this.id,
                 "name", this.name,
                 "ipAddress", this.ipAddress,
-                "connectionInfoUuids", this.connectionsIds,
+                "connectionInfoUuids", this.connectionsMongoUuids,
                 "updatedAt", ScanUtils.localTimeToScan(this.updatedDate).toString()
         );
         Json connectionsInfo = Json.array();
@@ -108,6 +125,10 @@ public class Device implements IScannerSerializable {
 
     public Device setConnectionsIds(List<String> connectionsIds) {
         this.connectionsIds = connectionsIds;
+        return this;
+    }
+    public Device setConnectionsMongoUuids(List<String> connectionsMongoUuids) {
+        this.connectionsMongoUuids = connectionsMongoUuids;
         return this;
     }
 

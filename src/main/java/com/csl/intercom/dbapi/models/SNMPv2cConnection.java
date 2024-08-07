@@ -49,7 +49,14 @@ public class SNMPv2cConnection extends Connection {
             for (Json device: connectionJson.get("connected_devices").asJsonList()) {
                 devices.add(device.asString());
             }
-            String community = connectionJson.get("other_data").get(SNMPv2cConnectionField.COMMUNITY.dbapiName()).asString();
+            Json otherData = connectionJson.get("other_data");
+            Json readOnlyOtherData = connectionJson.get("read_only_other_data");
+            String community = null;
+            if (otherData != null) {
+                community = String.valueOf(otherData.get(SNMPv2cConnectionField.COMMUNITY.dbapiName()));
+            } else if (readOnlyOtherData != null) {
+                community = String.valueOf(readOnlyOtherData.get(SNMPv2cConnectionField.COMMUNITY.dbapiName()));
+            }
             String name = connectionJson.get("name").asString();
             return new SNMPv2cConnection(name, uuid, port, devices, community);
         } catch (NullPointerException e) {

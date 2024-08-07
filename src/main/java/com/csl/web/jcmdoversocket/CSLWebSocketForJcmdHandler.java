@@ -9,29 +9,34 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Web socket to connect the CSL-Client
+ */
 @WebSocket
 public class CSLWebSocketForJcmdHandler {
-
-    private String sender, msg;
+	private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmdHandler.class);
      
     @OnWebSocketConnect
-    public void onConnect(Session user) throws Exception {
-    
-    	System.out.println("Connect Jcmd module :"+user);
+    public void onConnect(Session session) throws Exception {
+		logger.info("Connected to CSL-Client websocket");
     }
 
     @OnWebSocketClose
-    public void onClose(Session user, int statusCode, String reason) {
-        CSLWebSocketForJcmd.removeUser(user);
-    }
+    public void onClose(Session session, int statusCode, String reason) {
+		logger.info("Disconnected from CSL-Client websocket ({}) : {}", statusCode, reason);
+			CSLWebSocketForJcmd.removeUser(session);
+
+		}
 
     @OnWebSocketMessage
-    public void onMessage(Session user, String message) {
+    public void onMessage(Session session, String message) {
     	message=message.trim();
     	if (message.startsWith("api:")) {
     		String apiName=message.substring(4);
-    		CSLWebSocketForJcmd.addApi(apiName,user);
+    		CSLWebSocketForJcmd.addApi(apiName,session);
     	}
     	else if (message.startsWith("res:{")&&message.endsWith("}")) {
     		message=message.substring(4);
@@ -61,6 +66,7 @@ public class CSLWebSocketForJcmdHandler {
     			String tag= message.substring(0, n);
     			String msg= message.substring(n+1, message.length());
     		Json j= Json.read(msg);
+
     		CSLWebSocket.broadcastMessageJson(tag,j);
     		}
     		
@@ -72,6 +78,7 @@ public class CSLWebSocketForJcmdHandler {
     		System.err.println("FORWARD ALERT FROM CLIENT TO UDP="+j);
     		((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).sendAlertToViewerUDP(j);
     	}
+		else if (message.startsWith("keep alive")) {}
     	else {
     		System.err.println("Jcmd module Invalid message:"+message);
     	}

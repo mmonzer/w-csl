@@ -77,8 +77,6 @@ public class CSLWebSocket {
     }
 
     static public void registerAll() {
-
-
         VIA_BROKER = JServiceLoader.getCSLInterModuleCommunicationManager().isUseBroker();
 
         register(WEB_SOCKET_ALERT, "alert");

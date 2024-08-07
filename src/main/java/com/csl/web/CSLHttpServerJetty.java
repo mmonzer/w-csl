@@ -123,13 +123,14 @@ public class CSLHttpServerJetty {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_CONSOLE);
         }
-        if(sc.isVars_commands())
+        if(sc.isVars_commands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_VARIABLES, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_VARIABLES);
-        if(sc.isDatabase_commands())
+        }
+        if(sc.isDatabase_commands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_DATABASE);
-
+        }
         if (sc.isJcmd_commands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class)),
                     CSLWebSocketForJcmd.WEB_SOCKET_CMD);
@@ -319,7 +320,7 @@ public class CSLHttpServerJetty {
             if (serverConfig.isJcmd_commands())
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD); //CSLWebSocketForDatabase.refresh();
         };
-        scheduler.scheduleAtFixedRate(r, n, n, TimeUnit.SECONDS);
+//        scheduler.scheduleAtFixedRate(r, n, n, TimeUnit.SECONDS);
     }
 
     /**

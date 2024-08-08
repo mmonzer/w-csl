@@ -73,6 +73,7 @@ public class CpeScanService {
             this.modifiedScans.add(id);
         }
 
+        logger.info("createOrUpdate");  // TODO :remove
         scheduleScanHandlingIfNecessary();
     }
 
@@ -91,6 +92,7 @@ public class CpeScanService {
      * @return The scan entity if found, null otherwise.
      */
     public ScanEntity getScanByScanId(String scanId) {
+        logger.info("getScanByScanId");  // TODO :remove
         return scanEntities.getOrDefault(scanId, null);
     }
 
@@ -158,6 +160,7 @@ public class CpeScanService {
                 try {
                     dbapiHandler.notifyScanFinished(scan);
                     scanEntities.remove(scan.getScanId());
+                    logger.info("Notified DB-API that a scan finished");
                 } catch (Exception e) {
                     logger.error("Could not notify DB-API a scan finished", e);
                 }
@@ -224,6 +227,7 @@ public class CpeScanService {
      * Loop over modifiedScans to handle the scans in there.
      */
     private void handleScans() {
+
         while (!modifiedScans.isEmpty()) {
             handleScan(this.modifiedScans.poll());
         }

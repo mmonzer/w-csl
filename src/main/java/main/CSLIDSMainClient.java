@@ -10,6 +10,7 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
@@ -22,6 +23,7 @@ import main.services.*;
 import main.util.CSLRunningArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.net.*;
 import java.util.HashMap;
@@ -29,6 +31,9 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static com.csl.autocrypt.outils.JsonHelper.getValueStringOrNull;
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 public class CSLIDSMainClient {
 
@@ -63,7 +68,6 @@ public class CSLIDSMainClient {
                         if (!clientEndPoint.isOpen()) return;
                         clientEndPoint.sendMessage("wsj:" + socketName + ":" + j);
                     }
-
                 }
             };
 
@@ -71,15 +75,13 @@ public class CSLIDSMainClient {
 
         @Override
         public void sendAlert(Json alert) {
-           logger.debug("********Forward alert:\n" + alert + "\n*************");
+            logger.debug("********Forward alert:\n" + alert + "\n*************");
             if (clientEndPoint != null) {
                 if (!clientEndPoint.isOpen()) return;
                 clientEndPoint.sendMessage("alert:" + alert);
             }
-
         }
     };
-
 
     /***
      * Adds the < serviceName, service > to the apiMap hashmap from the JServiceLoader's commandsList (listOfAPIToRegister)
@@ -128,16 +130,17 @@ public class CSLIDSMainClient {
 
             // add listener
             clientEndPoint.addMessageHandler(messageString -> {
-                logger.trace("MESSAGE:" + messageString);
-                messageString = messageString.trim();
-                if (messageString.startsWith("{") && messageString.endsWith("}")) {
+                new Thread(() -> {
+                    try {
+                        Json messageJson = Json.read(messageString.trim());
+                        String uuid = getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
+                        String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
+                        MDC.put(X_CORRELATION_ID, xCorrelationId);
+                        logger.trace("MESSAGE:" + messageString);
 
-                    Json messageJson = Json.read(messageString);
-                    logger.trace("received:" + messageJson);
+                        String apiname = JsonUtil.getStringFromJson(messageJson, "api", "");
 
-                    String apiname = JsonUtil.getStringFromJson(messageJson, "api", "");
-
-                    Runnable r = () -> {
+                        logger.trace("received:" + messageJson);
                         Json result = Json.object().set("error", "api not found ");
 
                         if (apiname.isEmpty()) {
@@ -146,39 +149,43 @@ public class CSLIDSMainClient {
 
                             IApiCommands api = apiMap.get(apiname);
                             Json jcmd = messageJson.get("jcmd");
-                            if (jcmd == null) result.set("error", "jcmd not found");
 
-                            if ((api != null) && (jcmd != null)) result = api.execJcmd(jcmd);
+                            if (api == null) {
+                                result.set("error", "api endpoint not found");
+                            } else if (jcmd == null) {
+                                result.set("error", "jcmd not found");
+                            } else {
+                                if (jcmd.get("params") == null) {
+                                    jcmd.set("params", Json.object("x-correlation-id", xCorrelationId));
+                                } else {
+                                    jcmd.get("params").set("x-correlation-id", xCorrelationId);
+                                }
+                                result = api.execJcmd(jcmd);
+                            }
                         }
 
-
                         Json resultMessageJson = Json.object();
-                        resultMessageJson.set("uuid", messageJson.get("uuid"));
+                        resultMessageJson.set(CSLWebSocketForJcmd.ID, uuid);
+                        resultMessageJson.set(X_CORRELATION_ID, xCorrelationId);
                         resultMessageJson.set("result", result);
                         logger.trace("****RESULT:" + resultMessageJson);
                         clientEndPoint.sendMessage("res:" + resultMessageJson);
-
-                    };
-
-                    Thread t = new Thread(r);
-                    t.start();
-
-                }
+                    } catch (Exception e) {
+                        MDC.remove("X_CORRELATION_ID");
+                    }
+                }).start();
             });
 
 
             for (String sx : apiMap.keySet()) {
                 clientEndPoint.sendMessage("api:" + sx);
-
             }
             Thread.sleep(100);
-
         } catch (InterruptedException ex) {
             logger.error("InterruptedException exception: {}", ex.getMessage(), ex);
         } catch (URISyntaxException ex) {
             logger.error("URISyntaxException exception: {}", ex.getMessage(), ex);
         }
-
     }
 
     /***
@@ -212,7 +219,6 @@ public class CSLIDSMainClient {
                     }
                 },
                 1, 5, TimeUnit.SECONDS);
-
     }
 
     public static void main(String[] args) {

@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+
 /**
  * Service in charge of the SNMP manager microservice.
  * It should expose an API to request a scan and fetch the database.

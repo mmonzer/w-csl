@@ -7,10 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,6 +18,8 @@ public class CSLWebSocketForJcmd {
     private static final Logger log = LoggerFactory.getLogger(CSLWebSocketForJcmd.class);
     public static long uuidctr = 0;
     private static final String RESPONSE = "response";
+    public static final String ID = "uuid";
+    public static final String X_CORRELATION_ID = "X-Correlation-ID";
     public static long TIME_OUT = 60000;
 
     public static String WEB_SOCKET_CMD = "/cmd";
@@ -122,14 +121,15 @@ public class CSLWebSocketForJcmd {
         //to del keys
     }
 
-    public static Json execJCmd(String apiName, Json jCmd) {
+    public static Json execJCmd(String apiName, Json jCmd, String xCorrelationId) {
         startTimeOutDetector();
 
         Json fullMsg = Json.object();
 
-        String key = "" + getUuid();
+        String id = UUID.randomUUID().toString();
 
-        fullMsg.set("uuid", key);
+        fullMsg.set(ID, id);
+        fullMsg.set(X_CORRELATION_ID, xCorrelationId);
         fullMsg.set("api", apiName);
         fullMsg.set("jcmd", jCmd);
 
@@ -137,7 +137,7 @@ public class CSLWebSocketForJcmd {
 
         fullMsg.set("start_time", System.currentTimeMillis());
 
-        pendingMessages.put(key, fullMsg);
+        pendingMessages.put(id, fullMsg);
 
 
         while (true) {
@@ -152,7 +152,7 @@ public class CSLWebSocketForJcmd {
 
             if (fullMsg.has(RESPONSE)) {
                 if (isDebug()) System.out.println("*** " + fullMsg);
-                pendingMessages.remove(key);
+                pendingMessages.remove(id);
                 Json rep = fullMsg.get(RESPONSE);
                 if (rep.has("result")) return rep.get("result");
                 return Json.object().set("error", "timeout");
@@ -171,7 +171,7 @@ public class CSLWebSocketForJcmd {
 
             String key = "";
 
-            if (j.has("uuid")) key = j.get("uuid").asString();
+            if (j.has(ID)) key = j.get(ID).asString();
 
             if (!key.isEmpty()) {
                 Json jo = pendingMessages.get(key);

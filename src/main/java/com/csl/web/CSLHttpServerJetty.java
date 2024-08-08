@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 import static java.lang.System.exit;
 
 /*
@@ -256,7 +257,9 @@ public class CSLHttpServerJetty {
                     bodyReq.append(line);
                 }
                 logger.debug("\n<" + bodyReq + ">");
-                System.out.println("path:" + req.getRequestURI());
+
+                // X-Correlation-ID
+                String xCorrelationId = req.getHeader(X_CORRELATION_ID);
 
                 Json data = Json.read(bodyReq.toString());
                 Json cmd = data.get("cmd");
@@ -268,10 +271,10 @@ public class CSLHttpServerJetty {
                 String bodyResp = "";
 
                 if (listOfRemoteApi.contains(api.getName())) {
-                    bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
+                    bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data, xCorrelationId).toString();
                     logger.debug("REMOTE SERVER RESPONSE:" + bodyResp);
                 } else {
-                    bodyResp = api.exec(cmd.asString(), params).toString();
+                    bodyResp = api.exec(cmd.asString(), params.set(X_CORRELATION_ID, xCorrelationId)).toString();
                     logger.debug("SERVER RESPONSE:" + bodyResp);
                 }
                 resp.getWriter().write(bodyResp);

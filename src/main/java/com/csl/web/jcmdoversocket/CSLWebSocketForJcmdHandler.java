@@ -27,7 +27,7 @@ public class CSLWebSocketForJcmdHandler {
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
 		logger.info("Disconnected from CSL-Client websocket ({}) : {}", statusCode, reason);
-			CSLWebSocketForJcmd.removeUser(session);
+		CSLWebSocketForJcmd.removeUser(session);
 
 		}
 

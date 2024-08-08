@@ -1046,7 +1046,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if (connectionJson.get("discovery_protocol_name") != null && connectionJson.get("discovery_protocol_name").getValue() != null) {
                             discoveryProtocolName = (String) connectionJson.get("discovery_protocol_name").getValue();
                         }
-                        dbapiHandler.createConnection(connection, discoveryProtocolName);
+                        dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
                     } catch (Exception e) {
                         logger.error("Could not add connection info to dbapi", e);
                         // remove connection info from scan
@@ -1119,7 +1119,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 if (response.isSuccess()) {
                     // update connection info in dbapi
                     try {
-                        dbapiHandler.updateConnection(connection);
+                        dbapiHandler.updateConnection(connection, connectionJson);
                     } catch (Exception e) {
                         logger.error("Could not update connection info in dbapi", e);
                         return JsonApiResponse.error("Could not update connection info in dbapi",

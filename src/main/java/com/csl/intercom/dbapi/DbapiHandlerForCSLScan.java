@@ -1017,7 +1017,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
         return port;
     }
-    public Json getConnectionOtherData(Connection connection) throws JsonProcessingException {
+    public Json getConnectionOtherData(Connection connection, Json connectionJson) throws JsonProcessingException {
         Json otherData = Json.object();
         if (connection.getProtocol() == SNMPv1){
             String community = ((SNMPv1Connection) connection).getCommunity();
@@ -1041,9 +1041,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             //            otherData.set("passphrase", passPhrase);
         }
         else if (connection.getProtocol() == HTTP) {
-            otherData.set("inputs", ((HttpConnection) connection).getInputs());
+//            otherData.set("inputs", ((HttpConnection) connection).getInputs());
             ObjectMapper objectMapper = new ObjectMapper();
-            String stageConfigJson = objectMapper.writeValueAsString(((HttpConnection) connection).getStagesConfig());
+            Json stageConfigJson = connectionJson.get("other_data").get("stagesConfig");
 
             otherData.set("stagesConfig", stageConfigJson);
             otherData.set("headers", Json.object());
@@ -1054,7 +1054,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
         return otherData;
     }
-    public void createConnection(Connection connection, String discoveryProtocolName) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
+    public void createConnection(Connection connection, String discoveryProtocolName, Json connectionJson) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
         String name = connection.getName();
         int portNumber = getConnectionPortNumberFromConnection(connection);
         Json requestContents = Json.object(
@@ -1062,7 +1062,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 "discovery_protocol_name", connection.getProtocol().dbapiName(),
                 "port_number", portNumber,
                 "mongo_entity_id", connection.getUuid(),
-                "other_data", getConnectionOtherData(connection),
+                "other_data", getConnectionOtherData(connection, connectionJson),
                 "connected_devices", connection.getDevicesIds()
         );
         if(connection.getProtocol() == HTTP) {
@@ -1109,7 +1109,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return 0;
         }
     }
-    public void updateConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
+    public void updateConnection(Connection connection, Json connectionJson) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
         String connectionUuid = connection.getUuid();
         String connectionDbApiId = String.valueOf(getDbApiConnectionId(connectionUuid));
         int connectionId = Integer.parseInt(connectionDbApiId);
@@ -1120,7 +1120,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 "discovery_protocol_name", connection.getProtocol().dbapiName(),
                 "port_number", getConnectionPortNumberFromConnection(connection),
                 "mongo_entity_id", connectionUuid,
-                "other_data", getConnectionOtherData(connection),
+                "other_data", getConnectionOtherData(connection, connectionJson),
                 "connected_devices", connection.getDevicesIds()
         );
         if (connection.getProtocol() == SNMPv3) {

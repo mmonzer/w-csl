@@ -114,7 +114,12 @@ public class HttpConnection extends Connection {
             }
 
             Json otherData = jsonConnection.get("other_data");
+            Json readOnlyOtherData = jsonConnection.get("read_only_other_data");
+            if(otherData == null && readOnlyOtherData != null) {
+                otherData = readOnlyOtherData;
+            }
             EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = null;
+            assert otherData != null;
             if (otherData.has(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName())) {
                 authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(otherData.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());
             }
@@ -135,8 +140,11 @@ public class HttpConnection extends Connection {
             Map<String, String> inputs = new HashMap<>();
             // otherData.has("inputs") is like this forexample : {"cameraUsername":{"value":"service","is_secret":false},"camerPassword":{"value":"agd-fb3-M13-aqh","is_secret":true}}
             // so we need to parse it as a map and get the value of the key then put it in the inputs map
-            for (String key : otherData.get("inputs").asJsonMap().keySet()) {
-                inputs.put(key, otherData.get("inputs").get(key).get("value").asString());
+            // check if otherData has inputs key
+            if (otherData.has("inputs")) {
+                for (String key : otherData.get("inputs").asJsonMap().keySet()) {
+                    inputs.put(key, otherData.get("inputs").get(key).get("value").asString());
+                }
             }
 
             String name = jsonConnection.get("name").asString();

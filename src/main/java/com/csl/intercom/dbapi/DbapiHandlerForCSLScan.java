@@ -12,6 +12,8 @@ import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
@@ -1010,10 +1012,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             port = ((SshConnection) connection).getPort();
         } else if (connection.getProtocol() == RemotePowershell){
             port = ((RemotePowershellConnection) connection).getPort();
+        } else if (connection.getProtocol() == HTTP){
+            port = Integer.parseInt(((HttpConnection) connection).getPort());
         }
         return port;
     }
-    public Json getConnectionOtherData(Connection connection) {
+    public Json getConnectionOtherData(Connection connection) throws JsonProcessingException {
         Json otherData = Json.object();
         if (connection.getProtocol() == SNMPv1){
             String community = ((SNMPv1Connection) connection).getCommunity();
@@ -1028,20 +1032,29 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             String snmpAuthAlgorithm = String.valueOf(((SNMPv3Connection) connection).getAuthenticationAlgorithm());
             otherData.set("snmp_privacy_algorithm", snmpPrivacyAlgorithm);
             otherData.set("snmp_authentication_algorithm", snmpAuthAlgorithm);
-        } else if (connection.getProtocol() == SSH) {
+        }
+        else if (connection.getProtocol() == SSH) {
             // TODO: remove them --> to be saved in vault
-            String sshKey = ((SshConnection) connection).getPrivateKey();
-            String passPhrase = ((SshConnection) connection).getPassphrase();
-            otherData.set("ssh_key", sshKey);
-            otherData.set("passphrase", passPhrase);
+            //            String sshKey = ((SshConnection) connection).getPrivateKey();
+            //            String passPhrase = ((SshConnection) connection).getPassphrase();
+            //            otherData.set("ssh_key", sshKey);
+            //            otherData.set("passphrase", passPhrase);
+        }
+        else if (connection.getProtocol() == HTTP) {
+            otherData.set("inputs", ((HttpConnection) connection).getInputs());
+            ObjectMapper objectMapper = new ObjectMapper();
+            String stageConfigJson = objectMapper.writeValueAsString(((HttpConnection) connection).getStagesConfig());
+
+            otherData.set("stagesConfig", stageConfigJson);
+            otherData.set("headers", Json.object());
+            otherData.set("queryParams", Json.object());
         }
         else {
             return otherData;
         }
         return otherData;
     }
-    public void createConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException {
-        logger.error("Creating connections in DB-API is not implemented yet.");
+    public void createConnection(Connection connection, String discoveryProtocolName) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
         String name = connection.getName();
         int portNumber = getConnectionPortNumberFromConnection(connection);
         Json requestContents = Json.object(
@@ -1052,10 +1065,15 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 "other_data", getConnectionOtherData(connection),
                 "connected_devices", connection.getDevicesIds()
         );
+        if(connection.getProtocol() == HTTP) {
+            requestContents.set("discovery_protocol_name", discoveryProtocolName);
+        }
         if (connection.getProtocol() == SNMPv3) {
             requestContents.set("username", ((SNMPv3Connection) connection).getUsername());
         } else if (connection.getProtocol() == RemotePowershell) {
             requestContents.set("username", ((RemotePowershellConnection) connection).getUsername());
+        } else if(connection.getProtocol() == SSH) {
+            requestContents.set("username", ((SshConnection) connection).getUsername());
         }
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CONNECTIONS)
                 .content(new StringContentProvider(requestContents.toString()), "application/json");
@@ -1091,7 +1109,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return 0;
         }
     }
-    public void updateConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException {
+    public void updateConnection(Connection connection) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
         String connectionUuid = connection.getUuid();
         String connectionDbApiId = String.valueOf(getDbApiConnectionId(connectionUuid));
         int connectionId = Integer.parseInt(connectionDbApiId);

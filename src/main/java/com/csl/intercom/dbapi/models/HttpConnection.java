@@ -52,6 +52,29 @@ public class HttpConnection extends Connection {
         this.inputs = inputs;
         this.stagesConfig = stagesConfig;
     }
+    public HttpConnection(String name, String id,
+                          String port,
+                          List<String> devices,
+                          String entityHttpConnectionUuid,
+                          EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod,
+                          String username,
+                          String password,
+                          String realm,
+                          String token,
+                          Map<Integer, StageConfig> stagesConfig,
+                          Boolean isSimulated,
+                          Map<String, String> inputs) {
+        super(name, id, devices, StaticConnectionProtocol.HTTP, isSimulated);
+        this.entityHttpConnectionUuid = entityHttpConnectionUuid;
+        this.port = port;
+        this.authenticationMethod = authenticationMethod;
+        this.username = username;
+        this.password = password;
+        this.realm = realm;
+        this.token = token;
+        this.inputs = inputs;
+        this.stagesConfig = stagesConfig;
+    }
 
     /**
      * Parse the JSON serialization received from DB-API. This method requires the connection protocol to find the right template.
@@ -62,7 +85,15 @@ public class HttpConnection extends Connection {
      */
     public static HttpConnection fromJson(Json jsonConnection, ConnectionProtocol protocol) {
         try {
-            String id = String.valueOf(jsonConnection.get("id").asInteger());
+            String uuid;
+            if (jsonConnection.has("uuid")) {
+                uuid = jsonConnection.get("uuid").asString();
+            } else {
+                if(jsonConnection.has("mongo_entity_id"))
+                    uuid = jsonConnection.get("mongo_entity_id").asString();
+                else
+                    uuid = null;
+            }
             String port;
             if (jsonConnection.has(HttpConnectionField.PORT.dbapiName()) && jsonConnection.get(HttpConnectionField.PORT.dbapiName()).isString()) {
                 port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asString();
@@ -82,7 +113,7 @@ public class HttpConnection extends Connection {
             } catch (UnsupportedOperationException ignored) {
             }
 
-            Json otherData = jsonConnection.get("read_only_other_data");
+            Json otherData = jsonConnection.get("other_data");
             EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = null;
             if (otherData.has(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName())) {
                 authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(otherData.get(HttpConnectionField.AUTHENTICATION_METHOD.dbapiName()).asString());
@@ -90,8 +121,10 @@ public class HttpConnection extends Connection {
             String entityHttpConnectionUuid = protocol.getConnectionTemplateId();
             String token = JsonUtil.getStringFromJson(otherData, HttpConnectionField.TOKEN.dbapiName(), null);
             String realm = JsonUtil.getStringFromJson(otherData, HttpConnectionField.REALM.dbapiName(), null);
-            Boolean isSimulated = jsonConnection.get("is_simulated").asBoolean();
-
+            boolean isSimulated = false;
+            if (jsonConnection.has("is_simulated") && !jsonConnection.get("is_simulated").isNull()) {
+                isSimulated = jsonConnection.get("is_simulated").asBoolean();
+            }
             Map<Integer, StageConfig> stagesConfig = new HashMap<>();
             otherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), StageConfig.fromJson(value)));
 
@@ -100,11 +133,15 @@ public class HttpConnection extends Connection {
                     .collect(java.util.stream.Collectors.toList());
 
             Map<String, String> inputs = new HashMap<>();
-            if (otherData.has("inputs")) {
-                otherData.get("inputs").asJsonMap().forEach((key, value) -> inputs.put(key, value.asString()));
+            // otherData.has("inputs") is like this forexample : {"cameraUsername":{"value":"service","is_secret":false},"camerPassword":{"value":"agd-fb3-M13-aqh","is_secret":true}}
+            // so we need to parse it as a map and get the value of the key then put it in the inputs map
+            for (String key : otherData.get("inputs").asJsonMap().keySet()) {
+                inputs.put(key, otherData.get("inputs").get(key).get("value").asString());
             }
 
-            return new HttpConnection(id, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, stagesConfig, isSimulated, inputs);
+            String name = jsonConnection.get("name").asString();
+
+            return new HttpConnection(name, uuid, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, stagesConfig, isSimulated, inputs);
         } catch (Throwable e) {
             e.printStackTrace(System.err);
             return null;

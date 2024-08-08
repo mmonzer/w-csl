@@ -41,6 +41,15 @@ public abstract class Connection implements IScannerSerializable {
         this.protocol = protocol;
         this.isSimulated = isSimulated;
     }
+
+    public Connection(String name, String id, List<String> devices, StaticConnectionProtocol staticConnectionProtocol, Boolean isSimulated) {
+        this.name = name;
+        this.uuid = id;
+        this.devicesIds = devices;
+        this.protocol = staticConnectionProtocol;
+        this.isSimulated = isSimulated;
+    }
+
     /**
      * Parse the JSON serialization received from DB-API.
      *

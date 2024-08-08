@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class SshConnection extends Connection {
     @Getter
     private final int port;
+    @Getter
     private final String username;
     @Getter
     private final String password;
@@ -102,10 +103,21 @@ public class SshConnection extends Connection {
                 passphrase = readOnlyOtherData.get(SshConnectionField.PASSPHRASE.dbapiName()).asString();
             }
             String name = connectionJson.get("name").asString();
-            Boolean isKeepPassword = (Boolean) connectionJson.get("is_keep_password").getValue() != null && (Boolean) connectionJson.get("is_keep_password").getValue();
-
-            Boolean isKeepSshKey = (Boolean) connectionJson.get("is_keep_ssh_key").getValue() != null && (Boolean) connectionJson.get("is_keep_ssh_key").getValue();
-            Boolean isKeepPassPhrase = (Boolean) connectionJson.get("is_keep_passphrase").getValue() != null && (Boolean) connectionJson.get("is_keep_passphrase").getValue();
+            boolean isKeepPassword = false;
+            boolean isKeepSshKey = false;
+            boolean isKeepPassPhrase = false;
+            // check if is_keep_password is present in the json
+            if (connectionJson.has(SshConnectionField.IS_KEEP_PASSWORD.dbapiName()) && connectionJson.get(SshConnectionField.IS_KEEP_PASSWORD.dbapiName()).isBoolean()) {
+                isKeepPassword = connectionJson.get(SshConnectionField.IS_KEEP_PASSWORD.dbapiName()).asBoolean();
+            }
+            // check if is_keep_ssh_key is present in the json
+            if (connectionJson.has(SshConnectionField.IS_KEEP_SSH_KEY.dbapiName()) && connectionJson.get(SshConnectionField.IS_KEEP_SSH_KEY.dbapiName()).isBoolean()) {
+                isKeepSshKey = connectionJson.get(SshConnectionField.IS_KEEP_SSH_KEY.dbapiName()).asBoolean();
+            }
+            // check if is_keep_passphrase is present in the json
+            if (connectionJson.has(SshConnectionField.IS_KEEP_PASSPHRASE.dbapiName()) && connectionJson.get(SshConnectionField.IS_KEEP_PASSPHRASE.dbapiName()).isBoolean()) {
+                isKeepPassPhrase = connectionJson.get(SshConnectionField.IS_KEEP_PASSPHRASE.dbapiName()).asBoolean();
+            }
 
             return new SshConnection(name, uuid, port, devices, username, password, privateKey, passphrase, isKeepPassword, isKeepSshKey, isKeepPassPhrase);
         } catch (NullPointerException e) {

@@ -132,9 +132,15 @@ public class SNMPv3Connection extends Connection {
             }
 
             String name = connectionJson.get("name").asString();
-            Boolean isKeepPassword = (Boolean) connectionJson.get("is_keep_password").getValue() != null && (Boolean) connectionJson.get("is_keep_password").getValue();
-            Boolean isKeepSnmpPrivacyKey = (Boolean) connectionJson.get("is_keep_snmp_privacy_key").getValue() != null && (Boolean) connectionJson.get("is_keep_snmp_privacy_key").getValue();
-
+            boolean isKeepPassword = false;
+            boolean isKeepSnmpPrivacyKey = false;
+            // check if is_keep_password is present in the json
+            if (connectionJson.has(SNMPv3ConnectionField.IS_KEEP_PASSWORD.dbapiName()) && connectionJson.get(SNMPv3ConnectionField.IS_KEEP_PASSWORD.dbapiName()).isBoolean()) {
+                isKeepPassword = connectionJson.get(SNMPv3ConnectionField.IS_KEEP_PASSWORD.dbapiName()).asBoolean();
+            }
+            if (connectionJson.has(SNMPv3ConnectionField.IS_KEEP_SNMP_PRIVACY_KEY.dbapiName()) && connectionJson.get(SNMPv3ConnectionField.IS_KEEP_SNMP_PRIVACY_KEY.dbapiName()).isBoolean()) {
+                isKeepSnmpPrivacyKey = connectionJson.get(SNMPv3ConnectionField.IS_KEEP_SNMP_PRIVACY_KEY.dbapiName()).asBoolean();
+            }
             return new SNMPv3Connection(name, uuid, port, devices, username, password, passphrase, authenticationAlgo, privacyAlgo, isSimulated, isKeepPassword, isKeepSnmpPrivacyKey);
         } catch (Throwable e) {
             return null;

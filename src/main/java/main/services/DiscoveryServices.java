@@ -8,6 +8,7 @@ import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.intercom.dbapi.enums.*;
 import com.csl.intercom.services.ExternalConnectionInfoTemplatesSynchronizationService;
 import com.csl.intercom.services.ExternalConnectionInfoSynchronizationService;
 import com.csl.intercom.services.ExternalScansService;
@@ -17,10 +18,6 @@ import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.DbapiHandler;
-import com.csl.intercom.dbapi.enums.HttpConnectionField;
-import com.csl.intercom.dbapi.enums.RemotePowershellConnectionField;
-import com.csl.intercom.dbapi.enums.SNMPv3ConnectionField;
-import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
@@ -1045,12 +1042,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     try {
                         String connectionUuid = response.getResult().get("uuid").asString();
                         connection.setUuid(connectionUuid);
-//                        // replace devicesIds with connected_devices if devicesIds in connection
-//                        if (connectionJson.has("devicesIds")) { // to match dbapi
-//                            connectionJson.set("connected_devices", connectionJson.get("devicesIds"));
-//                            connectionJson.remove("devicesIds");
-//                        }
-                        dbapiHandler.createConnection(connection);
+                        String discoveryProtocolName = null;
+                        if (connectionJson.get("discovery_protocol_name") != null && connectionJson.get("discovery_protocol_name").getValue() != null) {
+                            discoveryProtocolName = (String) connectionJson.get("discovery_protocol_name").getValue();
+                        }
+                        dbapiHandler.createConnection(connection, discoveryProtocolName);
                     } catch (Exception e) {
                         logger.error("Could not add connection info to dbapi", e);
                         // remove connection info from scan

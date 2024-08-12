@@ -256,14 +256,14 @@ public class CSLIDSMainClient {
 
         JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
 
-        JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
-        JServiceLoader.registerService(new AlertsService(), Json.object(), true);
-        JServiceLoader.registerService(new MonitorService(), Json.object(), true);
-        JServiceLoader.registerService(new TapsServices(), Json.object(), true);
-        JServiceLoader.registerService(new DiscoveryServices(), Json.object(), true);
-        JServiceLoader.registerService(new StatusService(), Json.object(), true);
-        JServiceLoader.registerService(new AutoCryptService(), Json.object(), true);
-        JServiceLoader.registerService(new NmapServices(), Json.object(), true);
+        JServiceLoader.registerService(new CSLServiceIDS(), Json.object());
+        JServiceLoader.registerService(new AlertsService(), Json.object());
+        JServiceLoader.registerService(new MonitorService(), Json.object());
+        JServiceLoader.registerService(new TapsServices(), Json.object());
+        JServiceLoader.registerService(new DiscoveryServices(), Json.object());
+        JServiceLoader.registerService(new StatusService(), Json.object());
+        JServiceLoader.registerService(new AutoCryptService(), Json.object());
+        JServiceLoader.registerService(new NmapServices(), Json.object());
 
 
         iniServices();

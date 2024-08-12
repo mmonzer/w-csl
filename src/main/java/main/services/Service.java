@@ -71,11 +71,9 @@ public abstract class Service implements ICSLService {
     /**
      * Generic function where one will add the custom commands
      *
-     * @param jConfig the configuration section of the configuration file
-     * @param cslDir  the CSL directory
      * @return true if the initialization happened with no problems, false otherwise.
      */
-    public abstract boolean init(Json jConfig, String cslDir);
+    public abstract boolean init();
 
     /**
      * Register an API command.

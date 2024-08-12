@@ -39,12 +39,10 @@ public class MonitorService extends Service {
 
 	/**
 	 * Initialization of the Monitor commands
-	 * @param jConfig the configuration section of the configuration file
-	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
 	@Override
-	public boolean init(Json jConfig, String cslDir) {
+	public boolean init() {
 		// TODO : duplicated with TapService
 		idsconf = CSLContext.instance.getCslConfDir();
 		Json conf;
@@ -196,6 +194,5 @@ public class MonitorService extends Service {
 			return activeTaps.get(name).sendCmd("/monitoring",
 					Json.read("{\"cmd\":\"monitorSetInterfaces\",\"params\":{\"interfaces\":"+interfaces+"}}")).toJson().get("result");
 		}
-
 	}
 }

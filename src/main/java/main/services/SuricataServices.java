@@ -5,11 +5,14 @@ import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import main.extensions.SshUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
 
 public class SuricataServices extends Service {
+	private static final Logger logger = LoggerFactory.getLogger(SuricataServices.class);
 	static ArrayList<Json> configuredSuricata;
 	static String localIP;
 	static Integer localPort;
@@ -73,7 +76,7 @@ public class SuricataServices extends Service {
 				try {
 					port = j.at("port").asInteger();
 				} catch (NullPointerException e) {
-					System.out.println("Using default SSH port (22)");
+					logger.debug("Using default SSH port (22)");
 				}
 			}
 		}
@@ -99,7 +102,7 @@ public class SuricataServices extends Service {
 				try {
 					port = j.at("port").asInteger();
 				} catch (NullPointerException e) {
-					System.out.println("Using default SSH port (22)");
+					logger.debug("Using default SSH port (22)");
 				}
 			}
 		}
@@ -124,7 +127,7 @@ public class SuricataServices extends Service {
 				try {
 					port = j.at("port").asInteger();
 				} catch (NullPointerException e) {
-					System.out.println("Using default SSH port (22)");
+					logger.debug("Using default SSH port (22)");
 				}
 			}
 		}
@@ -149,7 +152,7 @@ public class SuricataServices extends Service {
 				try {
 					port = j.at("port").asInteger();
 				} catch (NullPointerException e) {
-					System.out.println("Using default SSH port (22)");
+					logger.debug("Using default SSH port (22)");
 				}
 				SshUtils ssh = new SshUtils(username,password,ip,port);
 				try {
@@ -170,7 +173,7 @@ public class SuricataServices extends Service {
 				try {
 					port = j.at("port").asInteger();
 				} catch (NullPointerException e) {
-					System.out.println("Using default SSH port (22)");
+					logger.debug("Using default SSH port (22)");
 				}
 				SshUtils ssh = new SshUtils(username,password,ip,port);
 				try {
@@ -263,16 +266,19 @@ public class SuricataServices extends Service {
 		super(name, description, configFileSectionName);
 	}
 
+	@Override
+	public boolean init() {
+		defineServiceEndpoints();
+		return true;
+	}
+
 	/**
 	 * Initialization of the Suricata commands
-	 * @param jConfig the configuration section of the configuration file
-	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-	@Override
-	public boolean init(Json jConfig, String cslDir) {
+	public void defineServiceEndpoints() {
 		Config.Tap config = Config.instance.TapService;
-		System.out.println("Initializing SSH suricata commands ..");
+		logger.debug("Initializing SSH suricata commands ..");
 		try {
 			Json conf = readJsonFile("./datafile/configuredSuricata.json");
 			if(conf.isArray())
@@ -297,8 +303,8 @@ public class SuricataServices extends Service {
 		addCmd("newSuricata", new IJsonCmd() {
 			@Override
 			public Json exec(Json params) {
-				System.out.println("paramètres de newSuricata :"+params.toString());
-				System.out.println("nom utilisé :"+params.at("name").asString());
+				logger.debug("paramètres de newSuricata :"+params.toString());
+				logger.debug("nom utilisé :"+params.at("name").asString());
 
 				newSuricata(params.at("name").asString());
 				Json write = Json.object();
@@ -430,7 +436,6 @@ public class SuricataServices extends Service {
 				return reloadRules(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
 			}
 		});
-		System.out.println("SSH commands operationnal");
-		return true;
+		logger.debug("SSH commands operationnal");
 	}
 }

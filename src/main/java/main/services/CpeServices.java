@@ -26,14 +26,18 @@ public class CpeServices extends Service {
 		super(name, description,configFileSectionName);
 	}
 
+	@Override
+	public boolean init() {
+		defineServiceEndpoints();
+		return true;
+	}
+
 	/**
 	 * Initialization of the CPE service commands
-	 * @param jConfig the configuration section of the configuration file
-	 * @param cslDir the CSL directory
+	 *
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-	@Override
-	public boolean init(Json jConfig, String cslDir) {
+	public boolean defineServiceEndpoints() {
 //		System.out.println("Initialising CPE functions .."+jConfig);
 		System.out.println("Initialising CPE functions ..");
 		CpeSearch c = new CpeSearch();

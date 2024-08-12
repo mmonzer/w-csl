@@ -9,12 +9,13 @@ import com.csl.modules.ModuleIDS;
 import com.csl.monitor.ActivityMonitor;
 import com.csl.util.RulesUtil;
 import com.csl.web.websockets.CSLWebSocket;
-import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.interfaces.IIDSOperationManager;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.wcsl.ids.IDSOperationManagerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,7 +23,7 @@ import java.nio.file.Paths;
 
 public class CSLServiceIDS extends Service {
 
-
+	private static final Logger logger = LoggerFactory.getLogger(CSLServiceIDS.class);
 	//private IIDSRunner idsRunner=null;
 
 	/*public void setIDSRunner(IDSRunner idsRunner) {
@@ -45,19 +46,24 @@ public class CSLServiceIDS extends Service {
 		super(name, description,configFileSectionName);
 	}
 
+	@Override
+	public boolean init() {
+		defineServiceEndpoints();
+		return true;
+	}
+
+
 	/**
 	 * Initialization of the IDS commands
-	 * @param jConfig the configuration section of the configuration file
-	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-	public boolean init(Json jConfig, String cslDir) {
+	private void defineServiceEndpoints() {
 		
 		addCmd("test_console", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("test console");
+				logger.debug("test console");
 				Json j=Json.object();
 				j.set("result", "test console:ok");
 				
@@ -88,9 +94,9 @@ public class CSLServiceIDS extends Service {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec ");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+				logger.debug("start exec ");
+				logger.debug("Exec JCmd test_cmd :"+params);
+				logger.debug("Fin exec");
 				Json j=Json.object();
 				j.set("percent_flowrate", 20+(int)(Math.random()*50));
 				
@@ -106,9 +112,9 @@ public class CSLServiceIDS extends Service {
 //
 //			@Override
 //			public Json exec(Json params) {
-//				System.out.println("start exec ");
-//				System.out.println("Exec JCmd test_cmd :"+params);
-//				System.out.println("Fin exec");
+//				logger.debug();("start exec ");
+//				logger.debug();("Exec JCmd test_cmd :"+params);
+//				logger.debug();("Fin exec");
 //				Json j=Json.object();
 //				j.set("result", "ok");
 //				j.set("value",1);
@@ -230,7 +236,7 @@ public class CSLServiceIDS extends Service {
 				// TODO Auto-generated method stub
 
 				boolean b=JsonUtil.getBooleanFromJson(params, "value", true);
-				System.out.println("Set send to browser:"+b);
+				logger.debug("Set send to browser:"+b);
 				CSLContext.instance.getIdsRunner().setIdsSendToBrowser(b);
 				Json j= Json.object();
 				j.set("value", b);
@@ -301,20 +307,20 @@ public class CSLServiceIDS extends Service {
 				// TODO Auto-generated method stub
 				Json j=CSLContext.instance.getIDSMainProcessor().getLearnedRules();
 
-				System.out.println(j);
+				logger.debug(String.valueOf(j));
 
 				return j;
 			}
 		});
 		IIDSOperationManager opManager= IDSOperationManagerFactory.instance.createIDSOperationManagerFactory(CSLContext.instance.getIDSMainProcessor());
-		
+
 		addCmd("op_model_ids", new IJsonCmd() {
 
 			@Override
 			public Json exec(Json params) {
 				Json j=opManager.exec(params);
 
-				System.out.println(j);
+				logger.debug(String.valueOf(j));
 
 				return j;
 			}
@@ -331,7 +337,7 @@ public class CSLServiceIDS extends Service {
 			public Json exec(Json params) {
 				// TODO Auto-generated method stub
 
-				System.out.println("set mode "+params);
+				logger.debug("set mode "+params);
 				int n=JsonUtil.getIntFromJson(params, "mode", 0);
 				CSLContext.instance.getIdsRunner().setIDSMode(n);
 				Json j= Json.object();
@@ -345,15 +351,15 @@ public class CSLServiceIDS extends Service {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec");
-				System.out.println("Exec JCmd test_cmd2 :"+params);
-				System.out.println("Fin exec");
+				logger.debug("start exec");
+				logger.debug("Exec JCmd test_cmd2 :"+params);
+				logger.debug("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);
 
 				if (params.get("mode")==null) {
-					System.out.println("Invalid mode");
+					logger.debug("Invalid mode");
 				}
 				else {
 					int mode=params.get("mode").asInteger();
@@ -369,12 +375,12 @@ public class CSLServiceIDS extends Service {
 			public Json exec(Json params) {
 
 				ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-				System.out.println(ids.runningState());
+				logger.debug(ids.runningState());
 
 
 
 				if (params.get("mode")==null) {
-					System.out.println("Invalid mode");
+					logger.debug("Invalid mode");
 				}
 				else {
 					int mode=params.get("mode").asInteger();
@@ -395,7 +401,7 @@ public class CSLServiceIDS extends Service {
 			public Json exec(Json params) {
 
 				ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-				System.out.println(ids.runningState());
+				logger.debug(ids.runningState());
 
 				Json j=Json.object();
 				j.set("idsmode",CSLContext.instance.getIdsRunner().getIDSMode());
@@ -409,9 +415,9 @@ public class CSLServiceIDS extends Service {
 //
 //			@Override
 //			public Json exec(Json params) {
-//				System.out.println("start exec ");
-//				System.out.println("Exec JCmd test_cmd :"+params);
-//				System.out.println("Fin exec");
+//				logger.debug();("start exec ");
+//				logger.debug();("Exec JCmd test_cmd :"+params);
+//				logger.debug();("Fin exec");
 //				Json j=Json.object();
 //				j.set("result", "ok");
 //				j.set("value",1);
@@ -423,9 +429,9 @@ public class CSLServiceIDS extends Service {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec");
-				System.out.println("Exec JCmd test_cmd :"+params);
-				System.out.println("Fin exec");
+				logger.debug("start exec");
+				logger.debug("Exec JCmd test_cmd :"+params);
+				logger.debug("Fin exec");
 				Json j=Json.object();
 				j.set("result", "ok");
 				j.set("value",1);
@@ -439,7 +445,7 @@ public class CSLServiceIDS extends Service {
 
 			@Override
 			public Json exec(Json params) {
-				System.out.println("start exec get_learned_rules");
+				logger.debug("start exec get_learned_rules");
 
 				Json jresult =CSLContext.instance.getIDSMainProcessor().getLearnedRules();
 
@@ -454,7 +460,7 @@ public class CSLServiceIDS extends Service {
 				int  category= JsonUtil.getIntFromJson(params, "category", 1);
 				category= Math.max(1,  Math.min(category, 3));
 
-				System.out.println("get List of dataset :"+category);
+				logger.debug("get List of dataset :"+category);
 
 
 				Json j=CSLContext.instance.getIdsRunner().getIdsParams().getDatasetManager().getListOfDataSetAsJson(category);
@@ -469,7 +475,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC dataSetOperation:"+params);
+				logger.debug("EXEC dataSetOperation:"+params);
 				int  category= JsonUtil.getIntFromJson(params, "category", 1);
 				category= Math.max(1,  Math.min(category, 3));
 				String name =JsonUtil.getStringFromJson(params,"name","" );
@@ -479,14 +485,14 @@ public class CSLServiceIDS extends Service {
 				int targetCategory=JsonUtil.getIntFromJson(params, "target_category", 0);
 				boolean overwrite=JsonUtil.getBooleanFromJson(params, "overwrite", false);
 
-				System.out.println("start dataset operation "+operation+" name="+name+" category="+category+" target_category="+targetCategory+" overwrite="+overwrite);
+				logger.debug("start dataset operation "+operation+" name="+name+" category="+category+" target_category="+targetCategory+" overwrite="+overwrite);
 
 
 				Json result=
 						CSLContext.instance.getIdsRunner().getIdsParams().getDatasetManager().
 						exec(operation, category, name,targetCategory, targetName, overwrite);
 
-				System.out.println("RESULT:"+result);
+				logger.debug("RESULT:"+result);
 
 				return result;
 			}
@@ -520,7 +526,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC tapOperation:"+params);
+				logger.debug("EXEC tapOperation:"+params);
 
 				String operation= JsonUtil.getStringFromJson(params,"operation","" ).toLowerCase();
 				String idname =JsonUtil.getStringFromJson(params,"idname","" );
@@ -537,7 +543,7 @@ public class CSLServiceIDS extends Service {
 
 				int type =JsonUtil.getIntFromJson(params,"type",0 );
 
-				System.out.println("start tap operation "+operation+" name="+idname+
+				logger.debug("start tap operation "+operation+" name="+idname+
 						" ip:"+ip+" username:"+username+" password:"+password
 						+" text:"+text2);
 
@@ -552,7 +558,7 @@ public class CSLServiceIDS extends Service {
 				IDSTapManager t=	new IDSTapManager(CSLContext.instance.getIDSMainProcessor().getIdsMainProcessorParams());
 				Json result= t.exec(operation,idname, desc,text);
 
-				System.out.println("RESULT:"+result);
+				logger.debug("RESULT:"+result);
 
 				return result;
 			}
@@ -582,7 +588,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC start Learning:"+params);
+				logger.debug("EXEC start Learning:"+params);
 
 				CSLContext.instance.getIdsRunner().switchModeToIdle();
 				CSLContext.instance.getIDSMainProcessor().resetLearnedModel();
@@ -597,7 +603,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC add_to_dbdevices:"+params);
+				logger.debug("EXEC add_to_dbdevices:"+params);
 
 				Json result =DevicesUtil.getLearnedModelTableAsJson(CSLContext.instance.getIDSMainProcessor());
 
@@ -617,7 +623,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC start Learning:"+params);
+				logger.debug("EXEC start Learning:"+params);
 				
 				CSLContext.instance.getIDSMainProcessor().backupLearnedModel();
 
@@ -634,7 +640,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC cancel Learning:"+params);
+				logger.debug("EXEC cancel Learning:"+params);
 
 				CSLContext.instance.getIdsRunner().switchModeToIdle();
 				
@@ -668,7 +674,7 @@ public class CSLServiceIDS extends Service {
 				j.add(Json.object().set("name", "Data directory")
 						.set("value", 				
 								CSLContext.instance.getIdsRunner().getIdsParams().getDatasetManager().getDirOfCategory(IDSDataSetManager.LEARNING)));
-				System.out.println(j);
+				logger.debug(String.valueOf(j));
 
 				return j;
 			}
@@ -679,8 +685,8 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC start detection offline:"+params);
-				System.out.println(CSLContext.instance.getIdsRunner().getIdsParams().getIDSModeAsString());
+				logger.debug("EXEC start detection offline:"+params);
+				logger.debug(CSLContext.instance.getIdsRunner().getIdsParams().getIDSModeAsString());
 				
 				CSLContext.instance.getIdsRunner().switchModeToDetectOffline();
 
@@ -695,7 +701,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC stop detection offline:"+params);
+				logger.debug("EXEC stop detection offline:"+params);
 				
 				CSLContext.instance.getIdsRunner().switchModeToIdle();
 				Json result=Json.object();
@@ -724,7 +730,7 @@ public class CSLServiceIDS extends Service {
 				j.add(Json.object().set("name", "Data directory")
 						.set("value", 				
 								CSLContext.instance.getIdsRunner().getIdsParams().getDatasetManager().getDirOfCategory(IDSDataSetManager.DETECTION_OFFLINE)));
-				System.out.println(j);
+				logger.debug(String.valueOf(j));
 
 				return j;
 			}
@@ -735,7 +741,7 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC start detection :"+params);
+				logger.debug("EXEC start detection :"+params);
 				CSLContext.instance.getIdsRunner().switchModeToDetectOnline();
 
 				Json result=Json.object();
@@ -749,13 +755,13 @@ public class CSLServiceIDS extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				System.out.println("EXEC start recording only:"+params);
+				logger.debug("EXEC start recording only:"+params);
 
 				CSLContext.instance.getIdsRunner().switchModeToRecording();
 				
-				System.out.println("IDSMODE:"+CSLContext.instance.getIdsRunner().getIdsParams().getIDSModeAsString());
-				System.out.println("Console log:"+CSLContext.instance.getIdsRunner().getIdsParams().isSendToConsole());
-				System.out.println("Browser log:"+CSLContext.instance.getIdsRunner().getIdsParams().isSendToBrowser());
+				logger.debug("IDSMODE:"+CSLContext.instance.getIdsRunner().getIdsParams().getIDSModeAsString());
+				logger.debug("Console log:"+CSLContext.instance.getIdsRunner().getIdsParams().isSendToConsole());
+				logger.debug("Browser log:"+CSLContext.instance.getIdsRunner().getIdsParams().isSendToBrowser());
 
 
 				Json result=Json.object();
@@ -774,11 +780,11 @@ public class CSLServiceIDS extends Service {
 				System.err.println(ids.runningState());
 
 
-				System.out.println("EXEC set idle mode:"+params);
+				logger.debug("EXEC set idle mode:"+params);
 			
 				CSLContext.instance.getIdsRunner().switchModeToIdle();
 
-				System.out.println("mode="+CSLContext.instance.getIdsRunner().getIdsParams().getIDSModeAsString());
+				logger.debug("mode="+CSLContext.instance.getIdsRunner().getIdsParams().getIDSModeAsString());
 				Json result=Json.object();
 				return result;
 			}
@@ -813,7 +819,7 @@ public class CSLServiceIDS extends Service {
 				j.add(Json.object().set("name", "Data directory")
 						.set("value", 				
 								CSLContext.instance.getIdsRunner().getIdsParams().getDatasetManager().getDirOfCategory(IDSDataSetManager.RECORDING)));
-				System.out.println(j);
+				logger.debug(String.valueOf(j));
 
 				return j;
 			}
@@ -852,7 +858,6 @@ public class CSLServiceIDS extends Service {
 			}
 		});
 
-		return true;  // ok to start
 	}
 	static private  String readAnyFile(String path) {
 		String content = "";
@@ -899,4 +904,5 @@ public class CSLServiceIDS extends Service {
 		if (s.length()<=MAX) return s;
 		else return s.substring(0,MAX-1)+"...";
 	}
+
 }

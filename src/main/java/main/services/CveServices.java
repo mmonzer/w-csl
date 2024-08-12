@@ -30,17 +30,21 @@ public class CveServices extends Service {
 		super(name, description,configFileSectionName);
 	}
 
+	@Override
+	public boolean init() {
+		defineServiceEndpoints();
+		return true;
+	}
+
 	/**
 	 * Initialization of the CveServices commands.
 	 * It can be request the list of CVE depending on the parameter:
 	 *  - "any" : sends all the CVE of every machine
 	 *  - <uuid> : sends the CVE related to the given machine
-	 * @param jConfig the configuration section of the configuration file
-	 * @param cslDir the CSL directory
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-	@Override
-	public boolean init(Json jConfig, String cslDir) {
+
+	public void defineServiceEndpoints() {
 		addCmd("getCve", new IJsonCmd() {
 			
 			@Override
@@ -190,6 +194,5 @@ public class CveServices extends Service {
 				return Utils.writeObjectToDatabase(params.get("name").asString(),params.get("contents"),"0" );
 			}
 		});
-		return true;
 	}
 }

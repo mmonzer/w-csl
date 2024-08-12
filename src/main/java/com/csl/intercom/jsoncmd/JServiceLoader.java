@@ -136,7 +136,7 @@ public class JServiceLoader {
 
 
                         if (o instanceof ICSLService)
-                            registerService((ICSLService) o, jConfig, trace_service_execution);
+                            registerService((ICSLService) o, jConfig);
 
                     }
 
@@ -222,32 +222,25 @@ public class JServiceLoader {
      * 	- Adds the service commands
      * 	- Registers the api in the CSLInterModuleCommunicationManager
      * @param cslService implements ICSLService
-     * @param j the configuration as json
-     * @param trace whether to print debugging logs
+     * @param config the configuration as json
      * @return
      */
-    static public boolean registerService(ICSLService cslService, Json j, boolean trace) {
+    static public boolean registerService(ICSLService cslService, Json config) {
         String name = cslService.getApiCommands().getName();
         listOfServiceNames.add(name);
 
-        Json jc = j.get(cslService.getConfigFileSectionName());
-
-        if (jc == null) jc = Json.object();
-        boolean ok = cslService.init(jc, getUserDir());
-
         logger.info("Initializing service " + name);
+        boolean isServiceInitializedCorrectly = cslService.init();
 
-        if (!ok) {
-            logger.warn("cannot initialize {}", name);
-        }
-
-        if (ok) {
+        if (isServiceInitializedCorrectly) {
             logger.trace("Starting service {}", name);
             addApiCommands(cslService.getApiCommands());
             getCSLInterModuleCommunicationManager().registerAPI(cslService.getApiCommands());
+        } else {
+            logger.warn("cannot initialize {}", name);
         }
 
-        return ok;
+        return isServiceInitializedCorrectly;
     }
 
 

@@ -39,6 +39,12 @@ public class NmapServices extends Service {
 		super(name,description,configFileSectionName);
 	}
 
+	@Override
+	public boolean init() {
+		defineServiceEndpoints();
+		return true;
+	}
+
 	static public void lauchNmap(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
@@ -155,21 +161,15 @@ public class NmapServices extends Service {
 
 	/**
 	 * Initialization of the Nmap commands
-	 * @param jConfig the configuration section of the configuration file
-	 * @param cslDir the CSL directory
+	 *
 	 * @return true if the initialization happened with no problems, false otherwise.
 	 */
-	@Override
-	public boolean init(Json jConfig, String cslDir) {
+	public void defineServiceEndpoints() {
 		Config.NmapService config = Config.instance.NmapService;
 		System.out.println("--- Initialisation des services Nmap ---");
-//		NmapServices.debugMode = jConfig.at("debug_mode").asBoolean();
 		NmapServices.debugMode = config.getDebugMode();
-//		NmapServices.logMode = jConfig.at("log_mode").asBoolean();
 		NmapServices.logMode = config.getLogMode();
-//		NmapServices.logPath = jConfig.at("log_dir").asString();
 		NmapServices.logPath = config.getLogDir();
-//		NmapServices.debugPath = jConfig.at("debug_dir").asString();
 		NmapServices.debugPath = config.getDebugDir();
 
 		// Fonction mise ici en attendant d'avoir une vrai fonction backend permettant de faire la meme chose (compter le nombre de liens en tout)
@@ -205,7 +205,6 @@ public class NmapServices extends Service {
 			
 			@Override
 			public Json exec(Json params) {
-//				lauchNmap(params,jConfig);
 				lauchNmap(params,config);
 				return Json.object();
 			}
@@ -279,10 +278,9 @@ public class NmapServices extends Service {
 				param.at("tap", tapName);
 				System.out.println("Scanning device");
 				System.out.println(param);
-				return	scanDevice(param,jConfig);
+				return	scanDevice(param, config);
 
 			}
 		});
-		return true;
 	}
 }

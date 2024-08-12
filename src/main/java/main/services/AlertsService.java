@@ -21,11 +21,12 @@ public class AlertsService implements ICSLService {
 	}
 
 	public AlertsService(String name, String configFileSectionName) {
-		this.name=name;
+        this.name=name;
 		this.configFileSectionName=configFileSectionName;
 	}
 
-    public boolean init(Json jConfig, String cslDir) {
+
+	private void defineServiceEndpoints() {
 		addCmd("get_list_active_alerts", new IJsonCmd() {
 
 			@Override
@@ -322,9 +323,6 @@ public class AlertsService implements ICSLService {
 				new JsonCmdHelp().setDesc("Operations on alerts").hide()
 				);
 
-
-
-		return true;  // ok to start
 	}
 
 	public String addCmd(String name, IJsonCmd j) {
@@ -333,6 +331,12 @@ public class AlertsService implements ICSLService {
 
 	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
+	}
+
+	@Override
+	public boolean init() {
+		defineServiceEndpoints();
+		return true;
 	}
 
 	@Override

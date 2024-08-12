@@ -16,7 +16,7 @@ public class CSLIDSMainServer {
 
     static boolean START_MOSQUITTO = false;
 
-    // JDK 11
+    // JDK 17
 
 
     public static void main(String[] args) {
@@ -44,15 +44,15 @@ public class CSLIDSMainServer {
 //        JServiceLoader.registerService(new StatusService(), configObj, true);
 //        JServiceLoader.registerService(new AutoCryptService(true), configObj, true);
 
-        JServiceLoader.registerService(new CpeServices(), Json.object(), true);
-        JServiceLoader.registerService(new CveServices(), Json.object(), true);
-        JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
-        JServiceLoader.registerService(new AlertsService(), Json.object(), true);
-        JServiceLoader.registerService(new MonitorService(), Json.object(), true);
-        JServiceLoader.registerService(new TapsServices(), Json.object(), true);
-        JServiceLoader.registerService(new DiscoveryServices(false), Json.object(), true);
-        JServiceLoader.registerService(new StatusService(), Json.object(), true);
-        JServiceLoader.registerService(new AutoCryptService(true), Json.object(), true);
+//        JServiceLoader.registerService(new CpeServices(), Json.object(), true);
+//        JServiceLoader.registerService(new CveServices(), Json.object(), true);
+        JServiceLoader.registerService(new CSLServiceIDS(), Json.object());
+        JServiceLoader.registerService(new AlertsService(), Json.object());
+        JServiceLoader.registerService(new MonitorService(), Json.object());
+        JServiceLoader.registerService(new TapsServices(), Json.object());
+        JServiceLoader.registerService(new DiscoveryServices(false), Json.object());
+        JServiceLoader.registerService(new StatusService(), Json.object());
+        JServiceLoader.registerService(new AutoCryptService(true), Json.object());
 
         // set services as remote services (to be forward to socket), otherwise run on remote
         CSLContext.instance.setApiRemote("ids");

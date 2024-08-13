@@ -55,16 +55,16 @@ public class CSLIDSMainClient {
         public void broadcastMessageString(String socketName, String message) {
             if (clientEndPoint != null && clientEndPoint.isOpen()) {
                 clientEndPoint.sendMessage("wss:" + socketName + ":" + message);
-                    }
-                }
+            }
+        }
 
                 @Override
         public void broadcastMessageJson(String socketName, Json jsonMessage) {
             if (clientEndPoint != null && clientEndPoint.isOpen()) {
                 clientEndPoint.sendMessage("wsj:" + socketName + ":" + jsonMessage);
-                    }
-                }
-            };
+            }
+        }
+    };
 
     // Alert forwarder for handling alerts
     private static final IAlertForwarder alertForwarder = new IAlertForwarder() {

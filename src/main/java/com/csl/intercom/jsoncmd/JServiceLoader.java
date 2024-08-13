@@ -20,54 +20,78 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 /**
- * Class used to load the services offered by CSL-Client.
+ * JServiceLoader is responsible for loading services offered by CSL-Client.
  * Services offer an API, in the form of a set of commands that can be called by other services and through a web API.
  */
 public class JServiceLoader {
-    private static final Logger logger = LoggerFactory.getLogger(JServiceLoader.class);
-    public static CSLInterModuleCommunicationManager cslInterModuleCommunicationManager = null;
-    static String moduleName = "XXX";
 
+    private static final Logger logger = LoggerFactory.getLogger(JServiceLoader.class);
+
+    public static CSLInterModuleCommunicationManager cslInterModuleCommunicationManager = null;
+    
     @Getter
     static MosquittoConfig mosquittoConfig = new MosquittoConfig();
 
     @Getter
-    static String userDir = System.getProperty("user.dir");
-    static List<IApiCommands> listOfAPIToRegister = new ArrayList<IApiCommands>();
-    static List<XApiCommands> listOfXAPIToRegister = new ArrayList<XApiCommands>();
+    static String userDir = System.getProperty("user.dir");  // Global user directory path
 
+    static String moduleName = "XXX";  // Global module name
 
+    static List<IApiCommands> listOfAPIToRegister = new ArrayList<>();
     private static final List<String> listOfServiceNames = new ArrayList<>();
 
-
-    static public String setUserDir(String s) {
-        userDir = s;
+    /**
+     * Sets the user directory.
+     *
+     * @param dir The directory to set as the user directory.
+     * @return The updated user directory path.
+     */
+    public static String setUserDir(String dir) {
+        userDir = dir;
         return userDir;
     }
 
-
+    /**
+     * Sets the Mosquitto configuration.
+     *
+     * @param mosquittoConfig The Mosquitto configuration to set.
+     */
     public static void setMosquittoConfig(MosquittoConfig mosquittoConfig) {
         JServiceLoader.mosquittoConfig = mosquittoConfig;
     }
 
-    static public boolean displayInfo(String d) {
-        System.out.println("[********]" + d);
+    /**
+     * Displays information as a log message.
+     *
+     * @param message The message to display.
+     * @return true if the message was displayed.
+     */
+    public static boolean displayInfo(String message) {
+        logger.info("[********] " + message);
         return true;
     }
 
-    static public long getSystemCurrentTimeMillis() {
-
+    /**
+     * Gets the current system time in milliseconds.
+     *
+     * @return The current system time in milliseconds.
+     */
+    public static long getSystemCurrentTimeMillis() {
         return System.currentTimeMillis();
     }
 
+    /**
+     * Builds the full path within the user directory.
+     *
+     * @param dir The directory to build the path for.
+     * @return The full path as a string.
+     */
     public static String buildFullPathInUserDir(String dir) {
-
         if (dir == null) dir = "";
 
         if (dir.startsWith(getUserDir())) return dir;
 
         dir = dir.replace('\\', '/');
-
         dir = clean(dir);
 
         if (dir.startsWith(".")) dir = dir.substring(1);
@@ -76,70 +100,67 @@ public class JServiceLoader {
         return getUserDir() + File.separator + dir;
     }
 
-    private static String clean(String s) {
-        String z = "../";
-        while (s.contains(z)) {
-            int n = s.indexOf(z);
-            String s1 = s.substring(0, n);
-            String s2 = s.substring(n + z.length());
-            s = s1 + s2;
+    /**
+     * Cleans the directory path by removing unnecessary references.
+     *
+     * @param path The path to clean.
+     * @return The cleaned path.
+     */
+    private static String clean(String path) {
+        String parentDir = "../";
+        while (path.contains(parentDir)) {
+            int index = path.indexOf(parentDir);
+            String beforeParent = path.substring(0, index);
+            String afterParent = path.substring(index + parentDir.length());
+            path = beforeParent + afterParent;
         }
-        return s;
+        return path;
     }
 
+    /**
+     * Finds classes within a JAR file that implement specific services.
+     *
+     * @param config   The configuration as JSON.
+     * @param jarPath  The path to the JAR file.
+     * @return A list of classes found in the JAR file.
+     */
+    public static List<Class> findClasses(Json config, String jarPath) {
+        List<Class> classes = new ArrayList<>();
+        File file = new File(jarPath);
 
-    static public List<Class> findClasses(Json jConfig, String pathToJar) {
-        List<Class> classes = new ArrayList<Class>();
-
-        File file = new File(pathToJar);
-        URL jarfile;
-
-        boolean trace_library_search = JsonUtil.getBooleanFromJson(jConfig, "service_loader/trace_library_search", false);
-
-        boolean trace_service_execution = JsonUtil.getBooleanFromJson(jConfig, "service_loader/trace_service_execution", false);
-
-
-        ArrayList classes2 = new ArrayList();
-        boolean debug = true;
+        boolean traceLibrarySearch = JsonUtil.getBooleanFromJson(config, "service_loader/trace_library_search", false);
 
         try {
+            URL jarfile = new URL("jar", "", "file:" + file.getAbsolutePath() + "!/");
+            URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{jarfile});
 
-            jarfile = new URL("jar", "", "file:" + file.getAbsolutePath() + "!/");
-            URLClassLoader cl = URLClassLoader.newInstance(new URL[]{jarfile});
-
-            JarInputStream jarFile = new JarInputStream(new FileInputStream(pathToJar));
+            try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jarPath))) {
             JarEntry jarEntry;
-
-            while (true) {
-                jarEntry = jarFile.getNextJarEntry();
-                if (jarEntry == null) {
-                    break;
-                }
-                if (jarEntry.getName().endsWith(".class")) {
-                    String sn = jarEntry.getName();
-                    if (sn.contains("services")) {
-                        if (trace_library_search)
+                while ((jarEntry = jarStream.getNextJarEntry()) != null) {
+                    if (jarEntry.getName().endsWith(".class")) {
+                        String className = jarEntry.getName();
+                        if (traceLibrarySearch) {
                             logger.trace("Found {}", jarEntry.getName().replaceAll("/", "\\."));
                     }
 
-                    if (!sn.contains("$") && sn.contains("main/services")) {
-                        if (trace_library_search) logger.trace("Loading {}", sn);
-                        String className = jarEntry.getName().replaceAll("/", "\\.");
+                        if (!className.contains("$") && className.contains("main/services")) {
+                            if (traceLibrarySearch) {
+                                logger.trace("Loading {}", className);
+                            }
 
-                        classes2.add(jarEntry.getName().replaceAll("/", "\\."));
+                            className = className.replaceAll("/", "\\.");
+                            className = className.substring(0, className.length() - 6); // remove .class
 
-                        className = className.substring(0, className.length() - 6);
-
-                        Class loadedClass = cl.loadClass(className);
+                            Class<?> loadedClass = classLoader.loadClass(className);
                         classes.add(loadedClass);
-                        Object o = loadedClass.newInstance();
 
+                            Object instance = loadedClass.getDeclaredConstructor().newInstance();
 
-                        if (o instanceof ICSLService)
-                            registerService((ICSLService) o, jConfig);
-
+                            if (instance instanceof ICSLService) {
+                                registerService((ICSLService) instance, config);
+                            }
+                        }
                     }
-
                 }
             }
         } catch (Exception e) {
@@ -149,72 +170,75 @@ public class JServiceLoader {
         return classes;
     }
 
-    static public void loadAllModules(Json jConfig) {
-        boolean trace_library_search = JsonUtil.getBooleanFromJson(jConfig, "service_loader/trace_library_search", false);
+    /**
+     * Loads all modules specified in the configuration.
+     *
+     * @param config The configuration as JSON.
+     */
+    public static void loadAllModules(Json config) {
+        boolean traceLibrarySearch = JsonUtil.getBooleanFromJson(config, "service_loader/trace_library_search", false);
 
-        Json j = jConfig.get("service_loader");
-        if (j == null) j = Json.object();
-        Json jarray = j.get("services");
-        String sep = System.getProperty("path.separator");
+        Json serviceLoaderConfig = config.get("service_loader");
+        if (serviceLoaderConfig == null) serviceLoaderConfig = Json.object();
 
-        String s = "";
-        if (jarray != null) {
-            for (Json je : jarray.asJsonList()) {
-                String name = je.asString();
+        Json servicesArray = serviceLoaderConfig.get("services");
+        String separator = System.getProperty("path.separator");
 
-                if (trace_library_search) logger.trace("Adding jar : {}", name);
-                if (!s.isEmpty()) s = s + sep;
-                s = s + name;
+        String classpathExtensions = "";
+        if (servicesArray != null) {
+            for (Json servicePath : servicesArray.asJsonList()) {
+                String path = servicePath.asString();
+                if (traceLibrarySearch) logger.trace("Adding jar: {}", path);
+                if (!classpathExtensions.isEmpty()) classpathExtensions += separator;
+                classpathExtensions += path;
             }
         }
 
         String classPath = System.getProperty("java.class.path");
+        classPath = classPath + separator + classpathExtensions;
 
-        classPath = classPath + sep + s;
+        String[] classPathEntries = classPath.split(separator);
 
-        String[] listpath = classPath.split(sep);
-
-        for (String sl : listpath) {
-            if (trace_library_search) logger.trace("Find library : {}", sl);
-            if ( (sl.endsWith(".jar"))) {
-                findClasses(jConfig, sl);
+        for (String path : classPathEntries) {
+            if (traceLibrarySearch) logger.trace("Find library: {}", path);
+            if (path.endsWith(".jar")) {
+                findClasses(config, path);
             }
         }
     }
 
-
-    static public void addApiCommands(IApiCommands api) {
-        logger.debug("Register api for http:" + api);
+    /**
+     * Adds an API command to the list of commands to be registered.
+     *
+     * @param api The API command to add.
+     */
+    public static void addApiCommands(IApiCommands api) {
+        logger.debug("Registering API for HTTP: {}", api);
         listOfAPIToRegister.add(api);
     }
 
-    static public List<IApiCommands> getApiCommandsList() {
+    /**
+     * Returns the list of registered API commands.
+     *
+     * @return The list of API commands.
+     */
+    public static List<IApiCommands> getApiCommandsList() {
         return listOfAPIToRegister;
     }
 
-
-    static public void addXApiCommands(XApiCommands api) {
-        logger.debug("Register api for http:" + api);
-        listOfXAPIToRegister.add(api);
-    }
-
-    static public String getApiHelpPage(Json params) {
+    /**
+     * Generates a help page for the APIs based on the parameters provided.
+     *
+     * @param params Parameters used to generate the help page.
+     * @return The help page content as a string.
+     */
+    public static String getApiHelpPage(Json params) {
         return new ApiGetHelp().getHelp(listOfServiceNames, listOfServiceNames, params);
     }
 
-
-
-	/*ajouter 
-	registerExternalService
-
-	utiliser ca pour le hhtpserveur et le help
-
-
-	faire une lib avec les fcts csl pour l'intercomme te les service
-
-	(à exporter ds zcsl sec)*/
-
     /***
+     * * Registers a service by adding its API commands to the list and initializing the service.
+     * 
      * Create an api for the registered service with a set of commands
      * to do so: it do the following:
      * 	- Adds the service name to the list of services
@@ -225,11 +249,11 @@ public class JServiceLoader {
      * @param config the configuration as json
      * @return
      */
-    static public boolean registerService(ICSLService cslService, Json config) {
+    public static boolean registerService(ICSLService cslService, Json config) {
         String name = cslService.getApiCommands().getName();
         listOfServiceNames.add(name);
 
-        logger.info("Initializing service " + name);
+        logger.info("Initializing service {}", name);
         boolean isServiceInitializedCorrectly = cslService.init();
 
         if (isServiceInitializedCorrectly) {
@@ -237,33 +261,33 @@ public class JServiceLoader {
             addApiCommands(cslService.getApiCommands());
             getCSLInterModuleCommunicationManager().registerAPI(cslService.getApiCommands());
         } else {
-            logger.warn("cannot initialize {}", name);
+            logger.warn("Cannot initialize {}", name);
         }
 
         return isServiceInitializedCorrectly;
     }
 
-
-    static public boolean registeExternalService(XApiCommands xapi, boolean trace) {
-        String name = xapi.getName();
-
-        logger.trace("Registering external service " + name);
-        addXApiCommands(xapi);
-        getCSLInterModuleCommunicationManager().registerExternalAPI(xapi);
-
-        return true;
-    }
-
-    public static void setModuleName(String string, MosquittoConfig config) {
-        moduleName = string;
+    /**
+     * Sets the module name and configuration, and initializes the communication manager with these settings.
+     *
+     * @param moduleName The name of the module.
+     * @param config     The Mosquitto configuration to set.
+     */
+    public static void setModuleName(String moduleName, MosquittoConfig config) {
+        JServiceLoader.moduleName = moduleName;
         setMosquittoConfig(config);
         getCSLInterModuleCommunicationManager().setModuleName(moduleName);
     }
 
+    /**
+     * Gets the CSLInterModuleCommunicationManager instance, initializing it if necessary.
+     *
+     * @return The CSLInterModuleCommunicationManager instance.
+     */
     public static CSLInterModuleCommunicationManager getCSLInterModuleCommunicationManager() {
-
-        if (cslInterModuleCommunicationManager == null)
+        if (cslInterModuleCommunicationManager == null) {
             cslInterModuleCommunicationManager = new CSLInterModuleCommunicationManager(moduleName, getMosquittoConfig());
+        }
         return cslInterModuleCommunicationManager;
     }
 }

@@ -9,16 +9,19 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @WebSocket
 public class CSLWebSocketForJcmdHandler {
+	private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmdHandler.class);
 
     private String sender, msg;
      
     @OnWebSocketConnect
     public void onConnect(Session user) throws Exception {
-    
-    	System.out.println("Connect Jcmd module :"+user);
+		logger.info("A new user has connected to the CSLWebSocketForJcmdHandler websocket");
+		logger.trace("Connection :"+user);
     }
 
     @OnWebSocketClose
@@ -72,6 +75,9 @@ public class CSLWebSocketForJcmdHandler {
     		System.err.println("FORWARD ALERT FROM CLIENT TO UDP="+j);
     		((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).sendAlertToViewerUDP(j);
     	}
+		else if (message.compareToIgnoreCase("keep alive") == 0)  {
+			// do nothing
+		}
     	else {
     		System.err.println("Jcmd module Invalid message:"+message);
     	}

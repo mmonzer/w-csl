@@ -38,118 +38,292 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.exit;
 
-/*
-    HttpServer using Jetty replacing the spark version
+/**
+ * CSLHttpServerJetty is an HTTP server implementation using Jetty.
+ * This class handles the initialization, configuration, and management of the Jetty server,
+ * including WebSocket support and API command handling.
  */
 public class CSLHttpServerJetty {
-    Server jettyServer=null;
-    ServletContextHandler context=null;
-    ServerConfig serverConfig=null;
 
-    private boolean initialized =false;
+    private Server jettyServer = null;
+    private ServletContextHandler context = null;
+    private ServerConfig serverConfig = null;
+
+    private boolean initialized = false;
     private boolean started = false;
 
     private static final Logger logger = LoggerFactory.getLogger(CSLHttpServerJetty.class);
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    static public int REFRESH_SOCKET_PERIOD=280;
 
-    static boolean ADD_GET_ROUTE=false;
+    // Global configuration constants
+    static public int REFRESH_SOCKET_PERIOD = 280;
+    static boolean ADD_GET_ROUTE = false;
 
-    private final List<String> listOfRemoteApi = new ArrayList<String>();
-    private final List<String> listOfWebsocketPath= new ArrayList<String>();
-
-    /**
-     * Initialize the server
-     * @param j : Json object with the configuration
-     */
-    public void initServer(Json j){
-        boolean on = JsonUtil.getBooleanFromJson(j, "on", true);
-        if(!on) return;
-        ServerConfig sc = new ServerConfig(j);
-        initServer(sc);
-    }
+    private final List<String> listOfRemoteApi = new ArrayList<>();
+    private final List<String> listOfWebsocketPath = new ArrayList<>();
 
     /**
-     * Initialize the server
+     * Initializes the server with the provided configuration.
+     *
+     * @param config The configuration as a JSON object.
      */
-    public void initServer(Config.Server config){
-        boolean on = config.getOn();
-        if(!on) return;
+    public void initServer(Json config) {
+        boolean isEnabled = JsonUtil.getBooleanFromJson(config, "on", true);
+        if (!isEnabled) return;
+
         ServerConfig sc = new ServerConfig(config);
         initServer(sc);
     }
 
     /**
-     * Initialize the server
-     * @param sc : ServerConfig object with the configuration
+     * Initializes the server with the provided configuration.
+     *
+     * @param config The server configuration object.
      */
-    public void initServer(ServerConfig sc){
-        if(initialized){
-            logger.error("Already inititalized");
+    public void initServer(Config.Server config) {
+        boolean isEnabled = config.getOn();
+        if (!isEnabled) return;
+
+        ServerConfig sc = new ServerConfig(config);
+        initServer(sc);
+    }
+
+    /**
+     * Initializes the server with the provided server configuration.
+     *
+     * @param sc The server configuration object.
+     */
+    public void initServer(ServerConfig sc) {
+        if (initialized) {
+            logger.error("Server already initialized");
             exit(0);
         }
 
         serverConfig = sc;
         jettyServer = new Server(serverConfig.getPort());
-        context= new ServletContextHandler();
+        context = new ServletContextHandler();
         initialized = true;
 
         if (!sc.isRunning()) return;
 
         jettyServer.setErrorHandler(new JettyServerErrorHandler());
 
+        setupContext();
+        setupWebSocketPolicy();
+        registerWebSockets();
+        addApiHelpPageServlet();
+        addCorsOptionsServlet();
+        registerApiCommands();
 
-        //TODO : add location for staticfiles
+        jettyServer.setHandler(context);
+    }
 
-        //Context initialization
+    /**
+     * Starts the server and initializes the WebSocket refresh task.
+     */
+    public void start() {
+        try {
+            if (!initialized) {
+                logger.error("CSL Web server not initialized, cannot start");
+                exit(0);
+            }
+            logger.debug("Current user dir = {}", serverConfig.getUserDir());
+            started = true;
+            jettyServer.start();
+            jettyServer.join();
+            startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
+            
+            logger.debug("Web server started on port {} ", serverConfig.getPort());
+            } catch (Exception e) {
+            logger.error("Error starting server", e);
+            exit(0);
+        }
+    }
+
+    /**
+     * Stops the server and shuts down the scheduler.
+     */
+    public void stop() {
+        try {
+            jettyServer.stop();
+            scheduler.shutdownNow();
+            started = false;
+        } catch (Exception e) {
+            logger.error("Error stopping server", e);
+            exit(0);
+        }
+    }
+
+    /**
+     * Creates a servlet to handle GET requests for the given API.
+     *
+     * @param api The API commands that need to be handled.
+     * @return HttpServlet that handles GET requests to the API.
+     */
+    public HttpServlet createGetServlet(IApiCommands api) {
+        return new HttpServlet() {
+            @Override
+            public void init() {
+                logger.debug("Adding GET path for API: {}", api.getName());
+            }
+
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                handleWebSocketUpgrade(req, api);
+
+                Set<String> paramKeys = req.getParameterMap().keySet();
+                String cmd = extractCommandFromRequest(req);
+                Json params = extractParamsFromRequest(req);
+
+                logger.debug("Executing command: {} with parameters: {}", cmd, params);
+                resp.getWriter().write(api.exec(cmd, params).toString());
+            }
+        };
+    }
+
+    /**
+     * Creates a servlet to handle POST requests for the given API.
+     *
+     * @param api The API commands that need to be handled.
+     * @return HttpServlet that handles POST requests to the API.
+     */
+    public HttpServlet createPostServlet(IApiCommands api) {
+        return new HttpServlet() {
+            @Override
+            public void init() {
+                logger.debug("Adding POST path for API: {}", api.getName());
+            }
+
+            @Override
+            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                handleWebSocketUpgrade(req, api);
+
+                String bodyReq = readRequestBody(req);
+                logger.debug("Request Body: {}", bodyReq);
+
+                Json data = Json.read(bodyReq.toString());
+                Json cmd = data.get("cmd");
+                Json params = data.get("params");
+
+                if (cmd == null) {
+                    logger.warn("Invalid command: {}", cmd);
+                }
+
+                String bodyResp = executeApiCommand(api, data, cmd, params);
+                resp.getWriter().write(bodyResp);
+            }
+        };
+    }
+
+    /**
+     * Creates a WebSocket servlet for the given path and handler.
+     *
+     * @param path    The WebSocket path.
+     * @param handler The handler for the WebSocket.
+     * @return ServletHolder that handles WebSocket requests at the given path.
+     */
+    public JettyWebSocketServlet addWebSocket(String path, Class<?> handler) {
+        if (!path.startsWith("/")) path = "/" + path;
+
+        if (!listOfWebsocketPath.contains(path)) {
+            listOfWebsocketPath.add(path);
+        } else {
+            logger.warn("WebSocket path already in use: {}", path);
+        }
+
+        return new JettyWebSocketServlet(handler);
+    }
+
+    /**
+     * Starts a task to refresh WebSocket connections at a regular interval.
+     *
+     * @param interval The interval (in seconds) to refresh the WebSockets.
+     */
+    public void startRefreshWebSocketTask(int interval) {
+        if (interval <= 0) return;
+
+        Runnable refreshTask = () -> {
+            if (serverConfig.isSend_alerts())
+                // Refresh the CSLWebSocketForAlert
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT); 
+            if (serverConfig.isSend_console_output())
+                // Refresh the CSLWebSocketForConsole
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE);
+            if (serverConfig.isVars_commands())
+                // Refresh the CSLWebSocketForVariables
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES);
+            if (serverConfig.isDatabase_commands())
+                // Refresh the CSLWebSocketForDatabase
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE);
+            if (serverConfig.isJcmd_commands())
+                // Refresh the CSLWebSocketForJcmd
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD);
+        };
+        scheduler.scheduleAtFixedRate(refreshTask, interval, interval, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Adds a remote API to the list of APIs that will be handled as remote.
+     *
+     * @param apiname The name of the remote API.
+     */
+    public void addRemoteApi(String apiname) {
+        listOfRemoteApi.add(apiname.toLowerCase());
+    }
+
+    // Private Helper Methods
+
+    /**
+     * Configures the server context and sets up basic filters.
+     */
+    private void setupContext() {
         context.setContextPath("/");
-        context.addFilter(JettyFilterServlet.class, "/*", EnumSet.of(DispatcherType.REQUEST)); //Filter for the console log
+        // Add a common header to all the requests on all the paths
+        context.addFilter(JettyFilterServlet.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+    }
 
-
-
-
-
-
-        //Policy for websockets
+    /**
+     * Sets up the WebSocket policy.
+     */
+    private void setupWebSocketPolicy() {
         WebSocketPolicy policy = new WebSocketPolicy(WebSocketBehavior.SERVER);
         policy.setMaxTextMessageSize(1024 * 1024);
+    }
 
-
-        //WebSockets initalization
+    /**
+     * Registers the WebSocket servlets based on the server configuration.
+     */
+    private void registerWebSockets() {
         CSLWebSocket.registerAll();
-        if(sc.isSend_alerts())
+        if (serverConfig.isSend_alerts())
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_ALERT, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_ALERT);
-        if(sc.isSend_console_output())
+        if (serverConfig.isSend_console_output())
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_CONSOLE);
-        if(sc.isVars_commands())
+        if (serverConfig.isVars_commands())
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_VARIABLES, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_VARIABLES);
-        if(sc.isDatabase_commands())
+        if (serverConfig.isDatabase_commands())
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class)),
-                CSLWebSocket.WEB_SOCKET_DATABASE);
-        if(sc.isJcmd_commands())
+                    CSLWebSocket.WEB_SOCKET_DATABASE);
+        if (serverConfig.isJcmd_commands())
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class)),
                     CSLWebSocketForJcmd.WEB_SOCKET_CMD);
+    }
 
-        //add the servlet for the api help page
+    /**
+     * Adds a servlet for the API help page.
+     */
+    private void addApiHelpPageServlet() {
         context.addServlet(new ServletHolder(new HttpServlet() {
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                Json cmd = Json.object();
-                Set<String> paramKeys = req.getParameterMap().keySet();
-                List<String> varNames = new ArrayList<String>(paramKeys);
-
-                for(String name : varNames){
-                    String[] values = req.getParameterValues(name);
-                    if(values!=null) cmd.set(name, values[0]);
-                }
-
+                Json cmd = extractParamsFromRequest(req);
                 cmd.set("url", req.getRequestURL().toString());
                 String fullUrl = req.getRequestURL().toString();
-                if(req.getQueryString()!=null) fullUrl += "?" + req.getQueryString();
+                if (req.getQueryString() != null) fullUrl += "?" + req.getQueryString();
                 cmd.set("fullUrl", fullUrl);
 
                 String cmdBody = JServiceLoader.getApiHelpPage(cmd);
@@ -157,221 +331,129 @@ public class CSLHttpServerJetty {
                 resp.getWriter().write(cmdBody);
             }
         }), "/apihelp");
+    }
 
-        //TODO : add header for static files
-
-        //Options for CORS
+    /**
+     * Adds a servlet to handle CORS options requests.
+     */
+    private void addCorsOptionsServlet() {
         context.addServlet(new ServletHolder(new HttpServlet() {
             @Override
             protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-                String accessControlRequestHeaders = req.getHeader("Access-Control-Request-Headers");
-                if (accessControlRequestHeaders != null) {
-                    resp.setHeader("Access-Control-Allow-Headers", accessControlRequestHeaders);
-                }
-
-                String accessControlRequestMethod = req.getHeader("Access-Control-Request-Method");
-                if (accessControlRequestMethod != null) {
-                    resp.setHeader("Access-Control-Allow-Methods", accessControlRequestMethod);
-                }
-
-                resp.setStatus(HttpServletResponse.SC_OK);
-        }
+                handleCorsOptions(req, resp);
+            }
         }), "/*");
+    }
 
-        //Add the servlets for the commands for the server API
-        for(IApiCommands api : JServiceLoader.getApiCommandsList()){
+    /**
+     * Registers API commands by adding their respective servlets.
+     */
+    private void registerApiCommands() {
+        for (IApiCommands api : JServiceLoader.getApiCommandsList()) {
             String path = api.getName();
-            System.out.println("REGISTER API  : <" + path+">");
-            if(ADD_GET_ROUTE)
-                context.addServlet(new ServletHolder(createGetServlet(api)), "/"+api.getName()+"/*");
-            context.addServlet(new ServletHolder(createPostServlet(api)), "/"+api.getPathFilter());
-        }
-        jettyServer.setHandler(context);
-    }
-
-    /**
-     * Start the server
-     */
-    public void start() {
-        try{
-            if(!initialized){
-                logger.error("CSL Web server not initialized, cannot start");
-                exit(0);
-            }
-            logger.debug("current user dir = "+serverConfig.getUserDir());
-            started = true;
-            jettyServer.start();
-            jettyServer.join();
-            startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
-
-            if(serverConfig.isVerbose()){
-                logger.info("Starting");
-                logger.info("Web server started on {} ", serverConfig.getPort());
-            }
-        } catch (Exception e){
-            logger.error("Error starting server", e);
-            exit(0);
+            logger.info("Registering API: <{}>", path);
+            if (ADD_GET_ROUTE)
+                context.addServlet(new ServletHolder(createGetServlet(api)), "/" + api.getName() + "/*");
+            context.addServlet(new ServletHolder(createPostServlet(api)), "/" + api.getPathFilter());
         }
     }
 
     /**
-     * Stop the server
+     * Handles WebSocket upgrades for the given request and API.
+     *
+     * @param req The HTTP request.
+     * @param api The API commands associated with the request.
      */
-    public void stop() {
-        try{
-            jettyServer.stop();
-            scheduler.shutdownNow();
+    private void handleWebSocketUpgrade(HttpServletRequest req, IApiCommands api) {
+        if ("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
+            context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/" + api.getName());
+        }
+    }
 
-            started=false;
-        }catch (Exception e){
-            logger.error("Error stopping server", e);
-            exit(0);
+    /**
+     * Extracts the command from the request URI.
+     *
+     * @param req The HTTP request.
+     * @return The extracted command.
+     */
+    private String extractCommandFromRequest(HttpServletRequest req) {
+        String apiURI = req.getRequestURI();
+        return (apiURI.length() > 1) ? apiURI.substring(1) : "???";
+    }
+
+    /**
+     * Extracts parameters from the request as a JSON object.
+     *
+     * @param req The HTTP request.
+     * @return The parameters as a JSON object.
+     */
+    private Json extractParamsFromRequest(HttpServletRequest req) {
+        Set<String> paramKeys = req.getParameterMap().keySet();
+        Json params = Json.object();
+
+        for (String paramName : paramKeys) {
+            String value = req.getParameter(paramName);
+            params.set(paramName, value);
+        }
+        return params;
+    }
+
+    /**
+     * Reads the request body and returns it as a string.
+     *
+     * @param req The HTTP request.
+     * @return The request body as a string.
+     * @throws IOException If an input or output exception occurred.
+     */
+    private String readRequestBody(HttpServletRequest req) throws IOException {
+        StringBuilder bodyReq = new StringBuilder();
+        BufferedReader reader = req.getReader();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            bodyReq.append(line);
+        }
+        return bodyReq.toString();
+    }
+
+    /**
+     * Executes the API command and returns the response as a string.
+     *
+     * @param api    The API commands to execute.
+     * @param data   The JSON data containing the command and parameters.
+     * @param cmd    The command to execute.
+     * @param params The parameters for the command.
+     * @return The response from executing the command.
+     */
+    private String executeApiCommand(IApiCommands api, Json data, Json cmd, Json params) {
+        String bodyResp;
+        if (listOfRemoteApi.contains(api.getName().toLowerCase())) {
+            bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
+            logger.debug("Remote server response: {}", bodyResp);
+        } else {
+            bodyResp = api.exec(cmd.asString(), params).toString();
+            logger.debug("Server response: {}", bodyResp);
+        }
+        return bodyResp;
+    }
+
+    /**
+     * Handles CORS options requests.
+     *
+     * @param req  The HTTP request.
+     * @param resp The HTTP response.
+     * @throws IOException If an input or output exception occurred.
+     */
+    private void handleCorsOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String accessControlRequestHeaders = req.getHeader("Access-Control-Request-Headers");
+        if (accessControlRequestHeaders != null) {
+            resp.setHeader("Access-Control-Allow-Headers", accessControlRequestHeaders);
         }
 
-    }
-
-    /**
-     * Create a servlet handling get requests
-     * @param api : api containing commands that needs to be handled
-     * @return HttpServlet handling get requests to the api
-     */
-    public HttpServlet createGetServlet(IApiCommands api){
-        HttpServlet httpServlet = new HttpServlet() {
-            @Override
-            public void init(){
-                System.err.println(" adding get path "+api.getName());
-            }
-
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-                // convert http get to websocket get
-                if("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))){
-                    context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/"+api.getName());
-                }
-
-                Set<String> paramKeys = req.getParameterMap().keySet();
-
-                String apiURI = req.getRequestURI();
-                if(apiURI.length()>1)
-                    apiURI = apiURI.substring(1);
-                String cmd = "???";
-
-                List<String> paramNames = new ArrayList<String>(paramKeys);
-
-                Json params = Json.object();
-                for(String paramName : paramNames){
-                    String value = req.getParameter(paramName);
-                    if(paramName.equals("cmd")||paramName.equals("exec_jsoncmd")) {
-                        cmd = value;
-                    }else{
-                        params.set(paramName, value);
-                    };
-
-                }
-
-                logger.debug("Exec "+cmd+" "+params);
-
-                resp.getWriter().write(api.exec(cmd, params).toString());
-            }
-        };
-        return httpServlet;
-    }
-
-    /**
-     * Create a servlet handling post requests
-     * @param api : api containing commands that needs to be handled
-     * @return HttpServlet handling post requests to the api
-     */
-    public HttpServlet createPostServlet(IApiCommands api){
-        HttpServlet httpServlet = new HttpServlet() {
-            @Override
-            public void init(){
-                System.err.println(" adding post path "+api.getName());
-            }
-            @Override
-            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-                if("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))){
-                    context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/"+api.getName());
-                }
-                StringBuilder bodyReq = new StringBuilder();
-                BufferedReader reader = req.getReader();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    bodyReq.append(line);
-                }
-                logger.debug("\n<" + bodyReq+">");
-                System.out.println("path:" + req.getRequestURI());
-
-                Json data = Json.read(bodyReq.toString());
-                Json cmd = data.get("cmd");
-                Json params = data.get("params");
-
-                if(cmd==null) logger.warn("Invalid jcmd"+cmd);
-                if(params==null) params = Json.object();
-
-                String bodyResp = "";
-
-                if(listOfRemoteApi.contains(api.getName())){
-                    bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
-                    logger.debug("REMOTE SERVER RESPONSE:"+bodyResp);
-                }
-                else{
-                    bodyResp = api.exec(cmd.asString(), params).toString();
-                    logger.debug("SERVER RESPONSE:"+bodyResp);
-                }
-                resp.getWriter().write(bodyResp);
-            }
-        };
-        return httpServlet;
-    }
-
-    /**
-     * Create a websocket servlet
-     * @param path : path to the websocket
-     * @param handler : handler for the websocket
-     * @return ServletHolder handling websocket request at the given path
-     */
-    public JettyWebSocketServlet addWebSocket(String path, Class<?> handler){
-        if (!path.startsWith("/")) path = "/" + path;
-
-        if (listOfWebsocketPath.indexOf(path) < 0)
-            listOfWebsocketPath.add(path);
-        else {
-            System.err.println("websocket in use:" + path);
+        String accessControlRequestMethod = req.getHeader("Access-Control-Request-Method");
+        if (accessControlRequestMethod != null) {
+            resp.setHeader("Access-Control-Allow-Methods", accessControlRequestMethod);
         }
 
-        return new JettyWebSocketServlet(handler);
+        resp.setStatus(HttpServletResponse.SC_OK);
     }
-
-    /**
-     * Start a task to refresh the websockets
-     * @param n : interval to refresh the websockets
-     */
-    public void startRefreshWebSocketTask(int n){
-        //TODO : implementation
-        if (n <= 0) return;
-
-        Runnable r = () -> {
-            if (serverConfig.isSend_alerts())
-                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT); //CSLWebSocketForAlert.refresh();
-            if (serverConfig.isSend_console_output())
-                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE); //CSLWebSocketForConsole.refresh();
-            if (serverConfig.isVars_commands())
-                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES); //CSLWebSocketForVariables.refresh();
-            if (serverConfig.isDatabase_commands())
-                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE); //CSLWebSocketForDatabase.refresh();
-            if (serverConfig.isJcmd_commands())
-                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD); //CSLWebSocketForDatabase.refresh();
-        };
-        scheduler.scheduleAtFixedRate(r, n, n, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Add a remote api
-     * @param apiname : name of the remote api
-     */
-    public void addRemoteApi(String apiname) {
-        listOfRemoteApi.add(apiname.toLowerCase());
-    }
-
 }

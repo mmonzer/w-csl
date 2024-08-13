@@ -271,6 +271,6 @@ public class CSLWebSocketForJcmd {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             logger.error("Interrupted while waiting for reconnection", e);
-							}
+        }
 	}
 }

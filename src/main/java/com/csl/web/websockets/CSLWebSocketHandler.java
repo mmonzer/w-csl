@@ -16,10 +16,9 @@ public class CSLWebSocketHandler {
 
     @OnWebSocketConnect
     public void onConnect(Session user) throws Exception {
-        logger.info("Connection :"+user);
-       
+        logger.info("A new user has connected to the CSLWebSocketHandler websocket");
+        logger.trace("Connection :"+user);
 
-    	System.out.println("Connect :"+user);
     	CSLWebSocket.addUser(user);
        
         

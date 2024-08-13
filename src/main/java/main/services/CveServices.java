@@ -155,7 +155,7 @@ public class CveServices extends Service {
 				System.out.println("Fin exec");
 				Json j=Json.object();
 				j.set("isUpToDate", true);
-				long t=CSLContext.instance.getTimeSystemCurrent()-1000*60*60;
+				long t=CSLContext.instance.getSystemCurrentTimeMillis()-1000*60*60;
 				j.set("lastUpdateTime",t);
 				
 				

@@ -13,13 +13,5 @@ public interface ICSLContext {
 	public long getSystemCurrentTimeMillis();
 	
 	Config getConfig();
-	public void logError(String msg);
-	public void logInfo(String msg);
-	
-	
-	
-	
-		
-	
 
 }

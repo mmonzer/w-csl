@@ -37,12 +37,7 @@ public class MonitorService extends Service {
 		super(name,description,configFileSectionName);
 	}
 
-	/**
-	 * Initialization of the Monitor commands
-	 * @return true if the initialization happened with no problems, false otherwise.
-	 */
-	@Override
-	public boolean init() {
+	private void defineServiceEndpoints() {
 		// TODO : duplicated with TapService
 		idsconf = CSLContext.instance.getCslConfDir();
 		Json conf;
@@ -70,7 +65,7 @@ public class MonitorService extends Service {
 			System.err.println("Unable to parse conf or No tap config found in " + idsconf + "/taps/TapsConfiguration.json");
 			configuredTaps = new ArrayList<Json>();
 		}
-		
+
 		addCmd(MonitorEndpoints.STATS_DEVICES, new IJsonCmd() {
 
 			@Override
@@ -86,22 +81,32 @@ public class MonitorService extends Service {
 
 		addCmd(MonitorEndpoints.STATS_TAPS, new IJsonCmd() {
 
-					@Override
-					public Json exec(Json params) {
-						Json j=Json.object();
-						j.set("all", 5);
-						j.set("running",4);
+			@Override
+			public Json exec(Json params) {
+				Json j=Json.object();
+				j.set("all", 5);
+				j.set("running",4);
 
-						return j;
-					}
-				}		);
+				return j;
+			}
+		}		);
 
 		addCmd(MonitorEndpoints.SET_INTERFACES_MONITOR_TAP, this::setInterfaces		);
 
 		addCmd(MonitorEndpoints.GET_INTERFACES_MONITOR_TAP,this::getInterfaces		);
 
+	}
+
+	/**
+	 * Initialization of the Monitor commands
+	 * @return true if the initialization happened with no problems, false otherwise.
+	 */
+	@Override
+	public boolean init() {
+		defineServiceEndpoints();
 		return true;  // ok to start
 	}
+
 	static private  String readAnyFile(String path) {
 		String content = "";
 

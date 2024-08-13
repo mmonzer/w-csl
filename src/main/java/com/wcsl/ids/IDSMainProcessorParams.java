@@ -64,9 +64,9 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 	}
 
 
-	public void initFromJson(Json j) {
-		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
-		Json listIDs=JsonUtil.getJson(j,  IDS_CONF_SEP+TAPS_ID);
+	public void initFromJson(Json config) {
+		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(config, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
+		Json listIDs=JsonUtil.getJson(config,  IDS_CONF_SEP+TAPS_ID);
 
 		if (listIDs!=null) {
 			if (listIDs.isArray()) {
@@ -76,8 +76,7 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 				}
 			}
 		}
-		tapsDir=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+TAPS_DIR,"taps");
-//		System.out.println(this);
+		tapsDir=JsonUtil.getStringFromJson(config, IDS_CONF_SEP+TAPS_DIR,"taps");
 	}
 
 

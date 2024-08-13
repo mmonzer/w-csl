@@ -23,7 +23,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
 
     private IIDSMainProcessorParams idsMainProcessorParams;
 
-    private Json config;
+    private Config.IdsConf config;
 
     private IFileLogFactory fileLogFactory;
 
@@ -45,22 +45,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
     }
 
     //=======================================================================================================================
-    public IDSMainProcessor(Json jConfig, String cslConfDir) {
-
-        this.fileStoreServices = new FileStoreService(cslConfDir);
-
-        this.config = jConfig;
-
-        this.fileLogFactory = new FileLogFactory();
-
-        this.alertManager = getDefaultAlertManager();
-
-        this.idsMainProcessorParams = new IDSMainProcessorParams(this, jConfig);
-
-        this.alertFactory = new CSLAlertFactory();
-    }
     public IDSMainProcessor(Config.IdsConf config, String cslConfDir) {
-
         this.fileStoreServices = new FileStoreService(cslConfDir);
 
         this.fileLogFactory = new FileLogFactory();

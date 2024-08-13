@@ -3,9 +3,8 @@ package com.csl.udp;
 import com.csl.core.CSLContext;
 import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.json.Json;
-import com.csl.udp.CSLUDPDataProcessor;
-import com.csl.udp.CSLUdpUnicastClient;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -14,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CSLFlowManager {
+    private static final Logger logger = LoggerFactory.getLogger(CSLFlowManager.class);
 
     int maxflows = 10;
     int maxsize = 1000;
@@ -43,14 +43,14 @@ public class CSLFlowManager {
 
     public void addListener(int n, ICSLFlowListener l) {
         if ((n < 0) | (n >= maxflows)) {
-            CSLContext.instance.logError("Invalid flow number " + n + " (max=" + maxflows + ")");
+            logger.error("Invalid flow number " + n + " (max=" + maxflows + ")");
         }
         listeners.get(n).add(l);
     }
 
     public boolean isFlowEmpty(int n) {
         if ((n < 0) | (n >= maxflows)) {
-            CSLContext.instance.logError("Invalid flow number " + n + " (max=" + maxflows + ")");
+            logger.error("Invalid flow number " + n + " (max=" + maxflows + ")");
             return true;
         }
         return inputflows.get(n).isEmpty();
@@ -63,7 +63,7 @@ public class CSLFlowManager {
 
     public Json takeFromFlow(int n) {
         if ((n < 0) | (n >= maxflows)) {
-            CSLContext.instance.logError("Invalid flow number " + n + " (max=" + maxflows + ")");
+            logger.error("Invalid flow number " + n + " (max=" + maxflows + ")");
             return null;
         }
         if (inputflows.get(n).isEmpty()) return null;
@@ -86,7 +86,7 @@ public class CSLFlowManager {
     public boolean addToFlow(int flowNumber, Json alertData) {
 
         if ((flowNumber < 0) | (flowNumber >= maxflows)) {
-            CSLContext.instance.logError("Invalid flow number " + flowNumber + " (max=" + maxflows + ")");
+            logger.error("Invalid flow number " + flowNumber + " (max=" + maxflows + ")");
             return false;
         }
 
@@ -120,7 +120,7 @@ public class CSLFlowManager {
         if (traceAllMessages) System.out.println(" Queue size:" + getFlowSize(flowNumber));
 
         if (!ok) {
-            CSLContext.instance.logError("flow number " + flowNumber + " is full, lost of data: " + alertData);
+            logger.error("flow number " + flowNumber + " is full, lost of data: " + alertData);
             //if (traceAllMessages)
             System.err.println("flow number " + flowNumber + " is full, lost of data: " + alertData);
         }

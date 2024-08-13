@@ -241,7 +241,7 @@ public class CSLAlertManager implements IAlertManager {
 		
 		if (NO_ALERT_FILTERING ) return null;
 		
-		long t=CSLContext.instance.getTimeSystemCurrent();
+		long t=CSLContext.instance.getSystemCurrentTimeMillis();
 
 		for (IAlertDescriptor a:listOfCurrentAlerts) {
 			if (a.alertEqualTo(alert)) {
@@ -256,7 +256,7 @@ public class CSLAlertManager implements IAlertManager {
 
 	private void clearAlerts() {
 
-		long t=CSLContext.instance.getTimeSystemCurrent();
+		long t=CSLContext.instance.getSystemCurrentTimeMillis();
 
 		List<IAlertDescriptor> toRemove = new ArrayList<IAlertDescriptor>();
 

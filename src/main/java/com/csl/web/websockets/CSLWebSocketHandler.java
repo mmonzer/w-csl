@@ -6,15 +6,17 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @WebSocket
 public class CSLWebSocketHandler {
-
+    private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketHandler.class);
     private String sender, msg;
 
     @OnWebSocketConnect
     public void onConnect(Session user) throws Exception {
-    	CSLContext.instance.logInfo("Connection :"+user);
+        logger.info("Connection :"+user);
        
 
     	System.out.println("Connect :"+user);

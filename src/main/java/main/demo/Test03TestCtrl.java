@@ -15,7 +15,6 @@ public class Test03TestCtrl {
 
 	
 	static public void sendEncapsulatedMsg(String host, int port, String msg) {
-		CSLContext.instance.logInfo("   sending to "+host+':'+port+" >>>> msg:"+msg);
 		try {
 
 			byte[] message = msg.getBytes();

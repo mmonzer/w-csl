@@ -1,6 +1,7 @@
 package com.csl.ids;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.interfaces.IIDSRunner;
 import com.csl.modules.ModuleIDS;
 import com.csl.web.websockets.CSLWebSocket;
@@ -8,6 +9,8 @@ import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -46,13 +49,12 @@ public class IDSRunner implements IIDSRunner {
 		}
 	};
 
-	private final ICSLLogger logger;
+	private final Logger logger =  LoggerFactory.getLogger(IDSRunner.class);
 
-	public IDSRunner(IDSParams idsParams, ModuleIDS ids, ICSLLogger logger) {
+	public IDSRunner(IDSParams idsParams, ModuleIDS ids) {
 		this.idsParams=idsParams;
 		
 		this.ids=ids;
-		this.logger=logger;
 		if (DEBUG) {
 			scheduler
 			= Executors.newSingleThreadScheduledExecutor();
@@ -217,7 +219,7 @@ public class IDSRunner implements IIDSRunner {
 		if (!okrules) {
 			println(LEARN_TAG,"Rules errors");
 			for (String e : logAnalyzer.getPacketPreprocessingRulesErrors()) {
-				logger.printError(e);
+				logger.error(e);
 			}
 			idsParams.setIDSMode(IDSParams.MODE_IDLE);
 			return;

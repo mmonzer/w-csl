@@ -565,24 +565,24 @@ public class CSLContext implements ICSLContext {
 
             try {
                 for (int nloop = 0; nloop < numberOfExecLoops; nloop++) {
-                logger.info("Exec loop #{}", nloop);
+                logger.trace("Exec loop #{}", nloop);
                     for (com.csl.core.ModuleContext m : inputExecList) {
                         if (m.getLoopNumber() == nloop) {
-                        logger.info("  input for {}", m.getName());
+                            logger.trace("  input for {}", m.getName());
                             IResult r = m.getModule().execInputPart(instance, m);
                             logResult(r);
                         }
                     }
                     for (com.csl.core.ModuleContext m : stepExecList) {
                         if (m.getLoopNumber() == nloop) {
-                            logger.info("  exec for {}", m.getName());
+                            logger.trace("  exec for {}", m.getName());
                             IResult r = m.getModule().execStepPart(instance, m);
                             logResult(r);
                         }
                     }
                     for (com.csl.core.ModuleContext m : outputExecList) {
                         if (m.getLoopNumber() == nloop) {
-                            logger.info("  output for {}", m.getName());
+                            logger.trace("  output for {}", m.getName());
                             IResult r = m.getModule().execOutputPart(instance, m);
                             logResult(r);
                         }

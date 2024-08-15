@@ -2,7 +2,6 @@ package main;
 
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
-import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.json.Json;
@@ -33,7 +32,6 @@ public class CSLIDSMainServer {
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
         System.out.println("Starting CSL IDS version " + CSLContext.VERSION);
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
-        JServiceLoader.init("IDS", new MosquittoConfig());
     }
 
     /**
@@ -55,13 +53,10 @@ public class CSLIDSMainServer {
      * Sets the registered services as remote services, which will be forwarded to a socket.
      */
     private static void setRemoteServices() {
-        CSLContext.instance.setApiRemote("ids");
-        CSLContext.instance.setApiRemote("alerts");
-        CSLContext.instance.setApiRemote("monitor");
-        CSLContext.instance.setApiRemote("taps");
-        CSLContext.instance.setApiRemote("discovery");
-        CSLContext.instance.setApiRemote("status");
-        CSLContext.instance.setApiRemote("autocrypt");
+        String [] endpoints = {"ids", "alerts", "monitor", "taps", "discovery", "status", "autocrypt"};
+        for (String endpoint : endpoints) {
+            CSLContext.instance.registerHttpEndpoint(endpoint);
+        }
     }
 
     /**
@@ -70,6 +65,7 @@ public class CSLIDSMainServer {
         private static void startServers() {
         System.out.println(CSLContext.instance);
         CSLContext.instance.postInit(true, false);
+        // Start the HTTP server and the Mqtt broker if enabled (Mqtt broker is not enabled by default)
         CSLContext.instance.startServers();
         startApiHttpServer();
     }

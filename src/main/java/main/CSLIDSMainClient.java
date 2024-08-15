@@ -4,7 +4,6 @@ import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.core.NoLogging;
-import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -179,7 +178,7 @@ public class CSLIDSMainClient {
     /**
      * Starts tasks for maintaining the connection to the WebSocket server and keeping the connection alive.
      */
-    public static void startRemoteConnectTask() {
+    public static void openWsConnectionWithCSLServer() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
         // Reconnect task
@@ -209,7 +208,6 @@ public class CSLIDSMainClient {
 
         Config config = Config.instance;
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
-        JServiceLoader.init("IDS", new MosquittoConfig());
         configureClientSettings(config);
 
         // Provide the callback method for the
@@ -223,7 +221,7 @@ public class CSLIDSMainClient {
         initServices();
 
         // Connect to the server using WebSocket and keep the connection alive
-        startRemoteConnectTask();
+        openWsConnectionWithCSLServer();
         // Start the servers and services of the csl_client
         startServers();
 
@@ -240,6 +238,7 @@ public class CSLIDSMainClient {
     private static void startServers() {
         // Start the servers
         CSLContext.instance.postInit(false, true);
+        // Start the UDP Server (To receive IDS Alerts) and the task executor
         CSLContext.instance.startServers();
         CSLContext.instance.getIdsRunner().start();
     }

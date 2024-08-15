@@ -50,7 +50,6 @@ public class CSLHttpServerJetty {
     private ServerConfig serverConfig = null;
 
     private boolean initialized = false;
-    private boolean started = false;
 
     private static final Logger logger = LoggerFactory.getLogger(CSLHttpServerJetty.class);
 
@@ -60,7 +59,7 @@ public class CSLHttpServerJetty {
     static public int REFRESH_SOCKET_PERIOD = 280;
     static boolean ADD_GET_ROUTE = false;
 
-    private final List<String> listOfRemoteApi = new ArrayList<>();
+    private final List<String> httpEndpointList = new ArrayList<>();
     private final List<String> listOfWebsocketPath = new ArrayList<>();
 
     /**
@@ -129,7 +128,6 @@ public class CSLHttpServerJetty {
                 exit(0);
             }
             logger.debug("Current user dir = {}", serverConfig.getUserDir());
-            started = true;
             jettyServer.start();
             jettyServer.join();
 
@@ -150,7 +148,6 @@ public class CSLHttpServerJetty {
         try {
             jettyServer.stop();
             scheduler.shutdownNow();
-            started = false;
         } catch (Exception e) {
             logger.error("Error stopping server", e);
             exit(0);
@@ -268,10 +265,10 @@ public class CSLHttpServerJetty {
     /**
      * Adds a remote API to the list of APIs that will be handled as remote.
      *
-     * @param apiname The name of the remote API.
+     * @param endpointPath The name of the endpoint API.
      */
-    public void addRemoteApi(String apiname) {
-        listOfRemoteApi.add(apiname.toLowerCase());
+    public void registerHttpEndpoint(String endpointPath) {
+        httpEndpointList.add(endpointPath.toLowerCase());
     }
 
     // Private Helper Methods
@@ -428,7 +425,7 @@ public class CSLHttpServerJetty {
      */
     private String executeApiCommand(IApiCommands api, Json data, Json cmd, Json params) {
         String bodyResp;
-        if (listOfRemoteApi.contains(api.getName().toLowerCase())) {
+        if (httpEndpointList.contains(api.getName().toLowerCase())) {
             bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
             logger.debug("Remote server response: {}", bodyResp);
         } else {

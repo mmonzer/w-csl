@@ -395,9 +395,9 @@ public class CSLContext implements ICSLContext {
      *
      * @param apiname The name of the API.
      */
-    public void setApiRemote(String apiname) {
+    public void registerHttpEndpoint(String apiname) {
         if (getCslHttpServer() == null) return;
-        getCslHttpServer().addRemoteApi(apiname);
+        getCslHttpServer().registerHttpEndpoint(apiname);
     }
 
     /**

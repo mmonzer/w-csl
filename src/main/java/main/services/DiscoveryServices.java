@@ -563,7 +563,6 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     } else {
                         JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionId);
                         logger.trace("Tested HTTP connection (deviceUuid={}  connectionId={}) : {}", deviceUuid, connectionIdJson, response);
-                        logger.info("Successfully tested HTTP connection (deviceUuid={}  connectionId={}) {}", deviceUuid, connectionIdJson, response.isSuccess() ? "successfully" : "failed");
                         return response.toJson();
                     }
                 },

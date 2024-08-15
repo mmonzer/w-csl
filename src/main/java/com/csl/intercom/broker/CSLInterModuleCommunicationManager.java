@@ -1,7 +1,5 @@
 package com.csl.intercom.broker;
 
-import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.intercom.jsoncmd.XApiCommands;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import lombok.Getter;
@@ -12,17 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-
-/*
- * /usr/local/sbin/mosquitto -c /usr/local/etc/mosquitto/mosquitto.conf
- * 
- */
-
-/*
- * String receiverId = UUID.randomUUID().toString();
-
-IMqttClient receiver = new MqttClient(
-                "tcp://" + properties.getProperty("host") + ":" + properties.getProperty("port"), receiverId, new MqttDefaultFilePersistence("/tmp"));
+/**
+ * CSLInterModuleCommunicationManager allows to execute the JCMD externally
  */
 public class CSLInterModuleCommunicationManager {
 	private static final Logger logger = LoggerFactory.getLogger(CSLInterModuleCommunicationManager.class);
@@ -61,7 +50,7 @@ public class CSLInterModuleCommunicationManager {
 
         String mosquittoCmd = config.getMosquittoCmd();
         String mosquittoDir = config.getMosquittoDir();
-		
+
 		BROKER_TCP_LOCALHOST_1883=config.getBrokerURL();
 		
 		useBroker=config.isUseBroker();
@@ -69,7 +58,7 @@ public class CSLInterModuleCommunicationManager {
 	}
 
     public void registerAPI(IApiCommands api) {
-		if (isShowInfo()) logger.info("REGISTER API FOR BROKER :"+api.getName());
+		logger.trace("REGISTERING API FOR BROKER :"+api.getName());
 		listOfRegisteredAPI.put(api.getName(), api);
 	}
 	

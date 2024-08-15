@@ -1,45 +1,17 @@
 package com.csl.intercom.dbapi;
 
-import com.csl.autocrypt.enums.AutocryptConstants.Common;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
-import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.intercom.cslscan.models.*;
-import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.DbapiEndpointForCSLScan;
-import com.csl.intercom.dbapi.enums.FileActionStatus;
-import com.csl.intercom.dbapi.enums.FinishedScanStatus;
-import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
-import com.csl.intercom.dbapi.models.*;
-import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.MultiPartContentProvider;
-import org.eclipse.jetty.client.util.PathContentProvider;
-import org.eclipse.jetty.client.util.StringContentProvider;
-import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.time.OffsetDateTime;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
+import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Manage HTTP communications with DB-API.

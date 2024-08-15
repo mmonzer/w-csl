@@ -1,6 +1,7 @@
 package main;
 
 import com.csl.core.CSLContext;
+import com.csl.core.NoLogging;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -28,11 +29,11 @@ public class CSLIDSMainServer {
      * @param args Command-line arguments passed to the application.
      */
     private static void initializeContext(String[] args) {
+        // Disable Jetty logging
+        org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
         System.out.println("Starting CSL IDS version " + CSLContext.VERSION);
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
-
-        boolean useBroker = false;
-        JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(useBroker));
+        JServiceLoader.init("IDS", new MosquittoConfig());
     }
 
     /**
@@ -66,7 +67,7 @@ public class CSLIDSMainServer {
     /**
      * Initializes databases, HTTP server, UDP server, and other necessary components, and starts them.
      */
-    private static void startServers() {
+        private static void startServers() {
         System.out.println(CSLContext.instance);
         CSLContext.instance.postInit(true, false);
         CSLContext.instance.startServers();

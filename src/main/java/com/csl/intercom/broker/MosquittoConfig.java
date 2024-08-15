@@ -13,7 +13,7 @@ public class MosquittoConfig {
 	
 	private String ip="localhost";
 	
-	boolean useBroker=true;
+	boolean useBroker=false;
 
 	
 	public String getBrokerURL() {

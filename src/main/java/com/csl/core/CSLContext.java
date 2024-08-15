@@ -16,7 +16,6 @@ import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.ucsl.interfaces.*;
-import com.ucsl.json.Json;
 import com.wcsl.ids.IDSMainProcessorFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -413,17 +412,12 @@ public class CSLContext implements ICSLContext {
 
         if (server) {
             getCslHttpServer().initServer(Config.instance.Server);
+            getStatusNotifier().setSendNotifications(false);
         }
         if (client) {
             getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
-        }
 
-        if (server) {
-            getStatusNotifier().setSendNotifications(false);
-        }
-
-        if (client) {
-            initModules();
+            initDynamicModules();
             initTime();
 
             ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
@@ -487,7 +481,7 @@ public class CSLContext implements ICSLContext {
     /**
      * Initializes the modules based on the configuration.
      */
-    private void initModules() {
+    private void initDynamicModules() {
         String modulesPackageName = Config.instance.ModuleExec.getModulesPackageName();
         logger.debug("Loading modules");
         
@@ -555,7 +549,7 @@ public class CSLContext implements ICSLContext {
      * Task that executes the modules in the defined order.
      */
     private final Runnable task = () -> {
-        logger.debug("Sampling time: {}", getTimeFromStartingTime());
+        logger.trace("Sampling time: {}", getTimeFromStartingTime());
 
         if (showProgression && nExecSteps > 80) {
             nExecSteps = 0;

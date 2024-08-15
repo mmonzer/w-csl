@@ -25,7 +25,7 @@ IMqttClient receiver = new MqttClient(
                 "tcp://" + properties.getProperty("host") + ":" + properties.getProperty("port"), receiverId, new MqttDefaultFilePersistence("/tmp"));
  */
 public class CSLInterModuleCommunicationManager {
-	private static final Logger logger = LoggerFactory.getLogger(JServiceLoader.class);
+	private static final Logger logger = LoggerFactory.getLogger(CSLInterModuleCommunicationManager.class);
 	int idebug=1;
 
     @Getter
@@ -39,7 +39,6 @@ public class CSLInterModuleCommunicationManager {
     private String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
 
 	Map<String,IApiCommands> listOfRegisteredAPI= new HashMap<String, IApiCommands>();
-	Map<String,XApiCommands> listOfRegisteredExternalAPI= new HashMap<String, XApiCommands>();
 	Map<String,ApiMessageReceiver> listOfReceivers= new HashMap<>();
 	Map<String,ApiMessageSender> listOfSenders= new HashMap<>();
 	
@@ -72,11 +71,6 @@ public class CSLInterModuleCommunicationManager {
     public void registerAPI(IApiCommands api) {
 		if (isShowInfo()) logger.info("REGISTER API FOR BROKER :"+api.getName());
 		listOfRegisteredAPI.put(api.getName(), api);
-	}
-	
-	public void registerExternalAPI(XApiCommands api) {
-		if (isShowInfo()) logger.info("REGISTER X API FOR BROKER :"+api.getCleanApiName());
-		listOfRegisteredExternalAPI.put(api.getCleanApiName(), api);
 	}
 	
 	// start the MQTT listener

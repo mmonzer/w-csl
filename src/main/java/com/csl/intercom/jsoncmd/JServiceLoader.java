@@ -273,7 +273,7 @@ public class JServiceLoader {
      * @param moduleName The name of the module.
      * @param config     The Mosquitto configuration to set.
      */
-    public static void setModuleName(String moduleName, MosquittoConfig config) {
+    public static void init(String moduleName, MosquittoConfig config) {
         JServiceLoader.moduleName = moduleName;
         setMosquittoConfig(config);
         getCSLInterModuleCommunicationManager().setModuleName(moduleName);

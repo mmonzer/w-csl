@@ -132,6 +132,8 @@ public class CSLHttpServerJetty {
             started = true;
             jettyServer.start();
             jettyServer.join();
+
+            // keep the web sockets alive
             startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
             
             logger.debug("Web server started on port {} ", serverConfig.getPort());

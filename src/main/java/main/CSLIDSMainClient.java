@@ -187,7 +187,7 @@ public class CSLIDSMainClient {
             boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
             if (reconnect) {
                 connectToServer();
-                    }
+            }
         }, 0, 1, TimeUnit.SECONDS);
 
         // Keep-alive task
@@ -198,32 +198,50 @@ public class CSLIDSMainClient {
         }, 1, 5, TimeUnit.SECONDS);
     }
 
-    public static void main(String[] args) {
+    /**
+     * Initializes the CSLContext with the provided arguments and sets debug mode.
+     *
+     * @param args Command-line arguments passed to the application.
+     */
+    private static void initializeContext(String[] args) {
+        // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
         Config config = Config.instance;
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
-
+        JServiceLoader.init("IDS", new MosquittoConfig());
         configureClientSettings(config);
 
-        boolean useBroker = false;
-        JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(useBroker));
-
-        registerServices();
-
-        initServices();
-        startRemoteConnectTask();
+        // Provide the callback method for the
         CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
-
-        CSLContext.instance.postInit(false, true);
-        CSLContext.instance.startServers();
-
-        CSLContext.instance.getIdsRunner().start();
         ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
+    }
 
+    public static void main(String[] args) {
+        initializeContext(args);
+        registerServices();
+        initServices();
+
+        // Connect to the server using WebSocket and keep the connection alive
+        startRemoteConnectTask();
+        // Start the servers and services of the csl_client
+        startServers();
+
+        // Sends the list of supported API commands to the csl-server
         sendApiCommandsToServer();
 
-        launchWebApiServerIfRequired(config);
+        // Launch the Web API server if required by the configuration (for testing purposes)
+        launchWebApiServerIfRequired(Config.instance);
+    }
+
+    /**
+     * Initializes databases, HTTP server, UDP server, and other necessary components, and starts them.
+     */
+    private static void startServers() {
+        // Start the servers
+        CSLContext.instance.postInit(false, true);
+        CSLContext.instance.startServers();
+        CSLContext.instance.getIdsRunner().start();
     }
 
     /**

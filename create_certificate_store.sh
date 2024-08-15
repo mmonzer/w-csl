@@ -1,7 +1,8 @@
 #!/bin/bash
 
 CERT_FILE=../../csl-installer/config/nginx/certs/csl_hmi.crt
-CACERTS_PATH=app/cacerts.jks
+#CERT_FILE=../csl-docker/config/nginx/certs/csl_hmi.crt
+CACERTS_PATH=cacerts.jks
 PASS=changeit
 CERT_ALIAS=CSL_HMI
 

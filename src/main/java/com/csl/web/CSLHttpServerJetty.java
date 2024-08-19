@@ -22,12 +22,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -61,6 +67,78 @@ public class CSLHttpServerJetty {
 
     private final List<String> httpEndpointList = new ArrayList<>();
     private final List<String> listOfWebsocketPath = new ArrayList<>();
+
+    /**
+     * Creates a servlet to handle json and multi-part POST requests for the API.
+     *
+     * @param api The API commands that need to be handled.
+     * @return HttpServlet that handles POST requests to the API.
+     */
+    public HttpServlet createPostServlet(IApiCommands api) {
+        return new HttpServlet() {
+
+            @Override
+            public void init() {
+                logger.debug("Adding Multi-part POST path for API: {}", api.getName());
+            }
+
+            @Override
+            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+                handleWebSocketUpgrade(req, api);
+
+                //String bodyReq = readRequestBody(req);
+                //logger.debug("Request Body: {}", bodyReq);
+
+                Json data = Json.object();
+                if (req.getContentType().contains("json")) {
+                    data = handlerJsonRequest(req);
+                } else
+                if (req.getContentType().contains("multipart")) {
+                    req.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
+                            1024*1024*100, 1024*1024*100,1024*1024*100));
+                    req.getParts();
+                    data = handlerMultipartRequest(req);
+                }
+
+                Json cmd = data.get("cmd");
+                Json params = data.get("params");
+
+                if (cmd == null) {
+                    logger.warn("Invalid command: {}", cmd);
+                }
+
+                String bodyResp = executeApiCommand(api, data, cmd, params);
+                resp.getWriter().write(bodyResp);
+            }
+        };
+    }
+
+    protected Json handlerJsonRequest(HttpServletRequest request) throws IOException {
+        return Json.read(readRequestBody(request));
+    }
+
+    protected Json handlerMultipartRequest(HttpServletRequest req) throws IOException, ServletException {
+        // Enable multi-part configuration
+        req.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
+                1024*1024*100, 1024*1024*100,1024*1024*100));
+
+        // Process the uploaded parts
+        Json body = Json.object();
+        Json files = Json.array();
+        for (Part part : req.getParts()) {
+            // Read the content of the file and print it to the console
+            if (part.getContentType() != null) {  // It's a file part
+                String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString(); // MSIE fix.
+                try (InputStream inputStream = part.getInputStream()) {
+                    String fileContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    files.add(Json.object("filename", fileName, "content", fileContent));
+                }
+            } else {  // It's a form field part
+                body.set(part.getName(), new String(part.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+            }
+        }
+        return body.set("files", files);
+    }
 
     /**
      * Initializes the server with the provided configuration.
@@ -133,9 +211,9 @@ public class CSLHttpServerJetty {
 
             // keep the web sockets alive
             startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
-            
+
             logger.debug("Web server started on port {} ", serverConfig.getPort());
-            } catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Error starting server", e);
             exit(0);
         }
@@ -182,40 +260,6 @@ public class CSLHttpServerJetty {
     }
 
     /**
-     * Creates a servlet to handle POST requests for the given API.
-     *
-     * @param api The API commands that need to be handled.
-     * @return HttpServlet that handles POST requests to the API.
-     */
-    public HttpServlet createPostServlet(IApiCommands api) {
-        return new HttpServlet() {
-            @Override
-            public void init() {
-                logger.debug("Adding POST path for API: {}", api.getName());
-            }
-
-            @Override
-            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-                handleWebSocketUpgrade(req, api);
-
-                String bodyReq = readRequestBody(req);
-                logger.debug("Request Body: {}", bodyReq);
-
-                Json data = Json.read(bodyReq.toString());
-                Json cmd = data.get("cmd");
-                Json params = data.get("params");
-
-                if (cmd == null) {
-                    logger.warn("Invalid command: {}", cmd);
-                }
-
-                String bodyResp = executeApiCommand(api, data, cmd, params);
-                resp.getWriter().write(bodyResp);
-            }
-        };
-    }
-
-    /**
      * Creates a WebSocket servlet for the given path and handler.
      *
      * @param path    The WebSocket path.
@@ -245,7 +289,7 @@ public class CSLHttpServerJetty {
         Runnable refreshTask = () -> {
             if (serverConfig.isSend_alerts())
                 // Refresh the CSLWebSocketForAlert
-                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT); 
+                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT);
             if (serverConfig.isSend_console_output())
                 // Refresh the CSLWebSocketForConsole
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE);
@@ -353,6 +397,7 @@ public class CSLHttpServerJetty {
             logger.info("Registering API: <{}>", path);
             if (ADD_GET_ROUTE)
                 context.addServlet(new ServletHolder(createGetServlet(api)), "/" + api.getName() + "/*");
+//            context.addServlet(new ServletHolder(createPostServlet(api)), "/" + api.getPathFilter());
             context.addServlet(new ServletHolder(createPostServlet(api)), "/" + api.getPathFilter());
         }
     }

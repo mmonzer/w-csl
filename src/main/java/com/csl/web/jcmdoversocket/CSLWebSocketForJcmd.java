@@ -144,10 +144,10 @@ public class CSLWebSocketForJcmd {
      * Executes a Jcmd command, sending the command to the appropriate API and waiting for the response.
      * 
      * @param apiName The API name to send the command to.
-     * @param jCmd    The JSON command to execute.
+     * @param jsonCmd    The JSON command to execute.
      * @return The JSON response from the API.
      */
-	public static Json execJCmd(String apiName, Json jCmd) {
+	public static Json execJCmd(String apiName, Json jsonCmd) {
 		startTimeOutDetector();
 
         Json fullMessage = Json.object();
@@ -155,7 +155,7 @@ public class CSLWebSocketForJcmd {
 
         fullMessage.set("uuid", uuid);
         fullMessage.set("api", apiName);
-        fullMessage.set("jcmd", jCmd);
+        fullMessage.set("jsonCommand", jsonCmd);
 
         broadcastMessageJson(apiName, fullMessage);
         fullMessage.set("start_time", System.currentTimeMillis());

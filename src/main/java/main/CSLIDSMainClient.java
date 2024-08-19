@@ -154,12 +154,12 @@ public class CSLIDSMainClient {
 
                 if (!apiName.isEmpty()) {
                     IApiCommands api = apiMap.get(apiName);
-                    Json jcmd = messageJson.get("jcmd");
+                    Json jsonCommand = messageJson.get("jsonCommand");
 
-                    if (jcmd != null && api != null) {
-                        result = api.execJcmd(jcmd);
-                    } else if (jcmd == null) {
-                        result.set("error", "jcmd not found");
+                    if (jsonCommand != null && api != null) {
+                        result = api.execJcmd(jsonCommand);
+                    } else if (jsonCommand == null) {
+                        result.set("error", "jsonCommand not found");
                     }
                 }
 

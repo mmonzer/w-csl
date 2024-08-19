@@ -48,14 +48,9 @@ public class CSLContext implements ICSLContext {
     public static CSLContext instance = new CSLContext();
 
     /**
-     * Indicates if the context is running as a client. Initialized during postInit.
+     * Indicates if the context is running as a server (true), client (false), or uninitialized (null).
      */
-    private boolean client = false;
-
-    /**
-     * Indicates if the context is running as a server. Initialized during postInit.
-     */
-    private boolean server = false;
+    private Boolean isServer = null;
 
     /**
      * Instance of the alert manager.
@@ -401,22 +396,23 @@ public class CSLContext implements ICSLContext {
     }
 
     /**
-     * Performs post-initialization tasks, setting up the server and client configurations.
+     * Performs post-initialization tasks, setting up the server and/or client configurations.
      *
-     * @param server Indicates if the context should operate as a server.
-     * @param client Indicates if the context should operate as a client.
+     * @param isServer Indicates if the context should operate as a server (true), client (false), or uninitialized (null).
      */
-    public void postInit(boolean server, boolean client) {
-        this.server = server;
-        this.client = client;
+    public void postInit(Boolean isServer) {
+        this.isServer = isServer;
 
-        if (server) {
+        if (isServer == null) {
+            logger.error("CSLContext not initialized as server or client");
+            return;
+        }
+
+        if (isServer) {
             getCslHttpServer().initServer(Config.instance.Server);
             getStatusNotifier().setSendNotifications(false);
-        }
-        if (client) {
+        } else {
             getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
-
             initDynamicModules();
             initTime();
 
@@ -429,8 +425,14 @@ public class CSLContext implements ICSLContext {
      * Starts the HTTP and UDP servers.
      */
     public void startServers() {
-        if (server) getCslHttpServer().start();
-        if (client) {
+        if (isServer == null) {
+            logger.error("CSLContext not initialized as server or client, cannot start servers");
+            return;
+        }
+
+        if (isServer) {
+            getCslHttpServer().start();
+        } else {
             getCslUDPServer().start();
             startExec();
         }

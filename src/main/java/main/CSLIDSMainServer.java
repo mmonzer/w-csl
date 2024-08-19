@@ -2,14 +2,11 @@ package main;
 
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
-import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.json.Json;
-import com.xcsl.miniserver.ApiHttpServer;
 import main.services.*;
 import main.util.CSLRunningArgs;
 
-import java.net.InetSocketAddress;
 
 // JDK 17
 
@@ -64,20 +61,10 @@ public class CSLIDSMainServer {
      */
         private static void startServers() {
         System.out.println(CSLContext.instance);
-        CSLContext.instance.postInit(true, false);
+        CSLContext.instance.postInit(true);
         // Start the HTTP server and the Mqtt broker if enabled (Mqtt broker is not enabled by default)
         CSLContext.instance.startServers();
-        startApiHttpServer();
     }
 
-    /**
-     * Starts the API HTTP server on port 9000.
-     */
-    private static void startApiHttpServer() {
-        new ApiHttpServer().createServer(
-                new InetSocketAddress(9000),
-                JServiceLoader.getApiCommandsList(),
-                new ApiGetHelp());
-    }
 }
 

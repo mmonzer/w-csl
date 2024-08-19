@@ -237,7 +237,7 @@ public class CSLIDSMainClient {
      */
     private static void startServers() {
         // Start the servers
-        CSLContext.instance.postInit(false, true);
+        CSLContext.instance.postInit(false);
         // Start the UDP Server (To receive IDS Alerts) and the task executor
         CSLContext.instance.startServers();
         CSLContext.instance.getIdsRunner().start();

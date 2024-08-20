@@ -3,6 +3,7 @@ package com.csl.intercom.jsoncmd;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
+import com.ucsl.interfaces.IJsonCmdWithFiles;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -16,12 +17,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class ApiCommands implements IApiCommands {
+public class ApiCommands {
+//    public class ApiCommands implements IApiCommands {
 
     static private final Logger logger = LoggerFactory.getLogger(ApiCommands.class);
     static boolean debug = true;
 
     HashMap<String, IJsonCmd> listOfCommands = new HashMap<String, IJsonCmd>();
+    HashMap<String, IJsonCmdWithFiles> listOfCommandsWithFiles = new HashMap<String, IJsonCmdWithFiles>();
     HashMap<String, IJsonCmdHelp> listOfCommandHelps = new HashMap<String, IJsonCmdHelp>();
     List<String> listOfCommandNames = new ArrayList<String>();
     Map<String, JsonCmdPrivilegeFamily> listOfCommandPrivileges = new HashMap<>();
@@ -37,43 +40,68 @@ public class ApiCommands implements IApiCommands {
 
     }
 
-    public Json exec(String name, Json params) {
-        IJsonCmd j = listOfCommands.get(name);
-
-        if (j == null) {
+    public Json exec(String name, Json params, Json files) {
+        if (listOfCommands.get(name) == null && listOfCommandsWithFiles.get(name)== null) {
             if (name.compareToIgnoreCase("help") == 0) {
 
                 return getHelp(params);
             }
 
-            Json jresult = Json.object();
-            jresult.set("error", "Command <" + name + "> not found");
-            return jresult;
+            Json jsonresult = Json.object();
+            jsonresult.set("error", "Command <" + name + "> not found");
+            return jsonresult;
         }
-
-        return wrapperForAPIRequest(j,params);
+        if (listOfCommands.get(name) != null) {
+            return wrapperForAPIRequest(listOfCommands.get(name), params);
+        } else {
+            return wrapperForAPIRequest(listOfCommandsWithFiles.get(name), params, files);
+        }
     }
 
-    @Override
+//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand) {
         return registerCmd(name, jsonCommand, null, null);
     }
 
-    @Override
+//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand, IJsonCmdHelp jsonCommandHelp) {
         return registerCmd(name, jsonCommand, jsonCommandHelp, null);
     }
 
-    @Override
+//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand, JsonCmdPrivilegeFamily privilegeFamily) {
         return registerCmd(name, jsonCommand, null, privilegeFamily);
     }
 
-    @Override
+//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand, IJsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
         if (listOfCommands.get(name) != null)
             return "Command with this name already registered :" + name;
         listOfCommands.put(name, jsonCommand);
+        listOfCommandNames.add(name);
+        if (jsonCommandHelp != null) {listOfCommandHelps.put(name, jsonCommandHelp.setName(name));}
+        if (privilegeFamily!=null) {
+            listOfCommandPrivileges.put(name, privilegeFamily);
+        }
+        return "ok";
+    }
+
+    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand) {
+        return registerCmd(name, jsonCommand, null, null);
+    }
+
+    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, IJsonCmdHelp jsonCommandHelp) {
+        return registerCmd(name, jsonCommand, jsonCommandHelp, null);
+    }
+
+    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, JsonCmdPrivilegeFamily privilegeFamily) {
+        return registerCmd(name, jsonCommand, null, privilegeFamily);
+    }
+
+    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, IJsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
+        if (listOfCommands.get(name) != null)
+            return "Command with this name already registered :" + name;
+        listOfCommandsWithFiles.put(name, jsonCommand);
         listOfCommandNames.add(name);
         if (jsonCommandHelp != null) {listOfCommandHelps.put(name, jsonCommandHelp.setName(name));}
         if (privilegeFamily!=null) {
@@ -117,7 +145,7 @@ public class ApiCommands implements IApiCommands {
      * path : /test (for example)
      */
 
-    @Override
+//    @Override
     public String getName() {
         return getCleanApiName();
     }
@@ -126,17 +154,17 @@ public class ApiCommands implements IApiCommands {
      * Gives the description of the API service
      * @return the description of the service
      */
-    @Override
+//    @Override
     public String getDescription() {
         return description;
     }
 
-    @Override
+//    @Override
     public void setDescription(String description) {
         this.description = description;
     }
 
-    @Override
+//    @Override
     public void setName(String name) {
         this.path = name;
     }
@@ -149,11 +177,12 @@ public class ApiCommands implements IApiCommands {
         return listOfCommands.get(name);
     }
 
-    @Override
+//    @Override
     public Json execJcmd(Json jCmd) {
         Json data = jCmd;
         Json cmd = data.get("cmd");
         Json params = data.get("params");
+        Json files = data.get("files");
 
         if (cmd == null) {
             logger.warn("Invalid jcmd: null");
@@ -165,7 +194,7 @@ public class ApiCommands implements IApiCommands {
         if (debug) {logger.trace("Exec {} {}", cmd, params);}
 
         try {
-            return exec(cmd.asString(), params);
+            return exec(cmd.asString(), params, files);
         } catch (IllegalArgumentException e) {
             return JsonApiResponse.error(e.getMessage()+ " is missing from body").toJson();
         }
@@ -276,6 +305,19 @@ public class ApiCommands implements IApiCommands {
     public static Json wrapperForAPIRequest(IJsonCmd cmd, Json params) {
         try {
             return cmd.exec(params);
+        } catch (IllegalArgumentException e) {
+            return JsonApiResponse.error(e.getMessage() + " is missing from body").toJson();
+        }
+    }
+    /**
+     * Wrapper to catch the exceptions and format a correct answer
+     * @param cmd generic cmd to execute
+     * @param params params to execute the cmd
+     * @return the response of the cmd
+     */
+    public static Json wrapperForAPIRequest(IJsonCmdWithFiles cmd, Json params, Json files) {
+        try {
+            return cmd.exec(params, files);
         } catch (IllegalArgumentException e) {
             return JsonApiResponse.error(e.getMessage() + " is missing from body").toJson();
         }

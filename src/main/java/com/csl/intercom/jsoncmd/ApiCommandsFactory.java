@@ -6,7 +6,7 @@ import com.ucsl.interfaces.IApiCommandsFactory;
 public class ApiCommandsFactory implements IApiCommandsFactory {
 
 	@Override
-	public IApiCommands createApiCommands(String name) {
+	public ApiCommands createApiCommands(String name) {
 		// TODO Auto-generated method stub
 		
 		ApiCommands api= new ApiCommands();

@@ -46,7 +46,7 @@ public class JServiceLoader {
     // The endpoints to register
     private static final List<String> listOfServiceNames = new ArrayList<>();
     // The list of APIs for the endpoints to register
-    private static List<IApiCommands> listOfAPIToRegister = new ArrayList<>();
+    private static List<ApiCommands> listOfAPIToRegister = new ArrayList<>();
 
     /**
      * Sets the user directory.
@@ -121,7 +121,7 @@ public class JServiceLoader {
      *
      * @param api The API command to add.
      */
-    public static void addApiCommands(IApiCommands api) {
+    public static void addApiCommands(ApiCommands api) {
         logger.trace("Registering API for HTTP: {}", api);
         listOfAPIToRegister.add(api);
     }
@@ -131,7 +131,7 @@ public class JServiceLoader {
      *
      * @return The list of API commands.
      */
-    public static List<IApiCommands> getApiCommandsList() {
+    public static List<ApiCommands> getApiCommandsList() {
         return listOfAPIToRegister;
     }
 

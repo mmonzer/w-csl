@@ -1,5 +1,6 @@
 package com.ucsl.interfaces;
 
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.ucsl.json.Json;
 
 /**
@@ -23,7 +24,7 @@ public interface ICSLService {
 	 *
 	 * @return the list of commands of the service
 	 */
-	public IApiCommands getApiCommands();
+	public ApiCommands getApiCommands();
 
 	public boolean terminate() ;
 	

@@ -1,6 +1,6 @@
 package com.csl.intercom.broker;
 
-import com.ucsl.interfaces.IApiCommands;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +27,7 @@ public class CSLInterModuleCommunicationManager {
 
     private String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
 
-	Map<String,IApiCommands> listOfRegisteredAPI= new HashMap<String, IApiCommands>();
+	Map<String,ApiCommands> listOfRegisteredAPI= new HashMap<String, ApiCommands>();
 	Map<String,ApiMessageReceiver> listOfReceivers= new HashMap<>();
 	Map<String,ApiMessageSender> listOfSenders= new HashMap<>();
 	
@@ -57,7 +57,7 @@ public class CSLInterModuleCommunicationManager {
 		
 	}
 
-    public void registerAPI(IApiCommands api) {
+    public void registerAPI(ApiCommands api) {
 		logger.trace("REGISTERING API FOR BROKER :"+api.getName());
 		listOfRegisteredAPI.put(api.getName(), api);
 	}
@@ -65,9 +65,9 @@ public class CSLInterModuleCommunicationManager {
 	// start the MQTT listener
 	public void start() {
 		if (isUseBroker()) {
-			for (Map.Entry<String,IApiCommands> entry : listOfRegisteredAPI.entrySet()) {
+			for (Map.Entry<String,ApiCommands> entry : listOfRegisteredAPI.entrySet()) {
 
-				IApiCommands api=entry.getValue();
+				ApiCommands api=entry.getValue();
 
 				ApiMessageReceiver receiver = new ApiMessageReceiver(moduleName,api.getName(),api,
 						BROKER_TCP_LOCALHOST_1883,
@@ -79,7 +79,7 @@ public class CSLInterModuleCommunicationManager {
 	
 	public void stop() {
 		if (isUseBroker()) {
-			for (Map.Entry<String,IApiCommands> entry : listOfRegisteredAPI.entrySet()) {
+			for (Map.Entry<String,ApiCommands> entry : listOfRegisteredAPI.entrySet()) {
 				ApiMessageReceiver receiver=listOfReceivers.get(entry.getKey());
 				if (receiver!=null) receiver.close();
 
@@ -106,7 +106,7 @@ public class CSLInterModuleCommunicationManager {
 
 	public Json executeCommand(String apiName, Json jCmd) {
 		// local command
-		IApiCommands api = listOfRegisteredAPI.get(apiName);
+		ApiCommands api = listOfRegisteredAPI.get(apiName);
 		
 		if (api!=null) {
 			Json r=api.execJcmd(jCmd);

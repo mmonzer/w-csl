@@ -1,5 +1,6 @@
 package main.services;
 
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
@@ -27,7 +28,7 @@ public abstract class Service implements ICSLService {
     /**
      * apiCommand for the current Service
      */
-    protected IApiCommands apiCommands;
+    protected ApiCommands apiCommands;
 
     /**
      * Constructor of the generic Service with a name, a description and a configuration filename
@@ -82,6 +83,18 @@ public abstract class Service implements ICSLService {
      * @param cmd  The callback to be executed when the command is invoked.
      * @return A {@link String}
      */
+    public String addCmd(String name, IJsonCmdWithFiles cmd) {
+        return apiCommands.registerCmd(name, cmd);
+    }
+
+
+    /**
+     * Register an API command.
+     *
+     * @param name The name of the command.
+     * @param cmd  The callback to be executed when the command is invoked.
+     * @return A {@link String}
+     */
     public String addCmd(String name, IJsonCmd cmd) {
         return addCmd(name, cmd, null);
     }
@@ -115,7 +128,7 @@ public abstract class Service implements ICSLService {
      * @return the api command object with the name, description and commands of the service
      */
     @Override
-    public IApiCommands getApiCommands() {
+    public ApiCommands getApiCommands() {
         return apiCommands;
     }
 

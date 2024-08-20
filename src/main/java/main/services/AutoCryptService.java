@@ -79,6 +79,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Creates the endpoints of this service
      */
     private void createEndpoints() {
+        addCmd("upload_file", this::testUploadFiles);
         // Connexion
         addCmd(AutoCryptEndpoints.GET_IP, this::getIp);
         addCmd(AutoCryptEndpoints.SET_IP, this::changeIp);
@@ -135,6 +136,11 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the ip
      */
     public Json getIp(Json body) {
+        Json response = Json.object();
+        response.at(Common.IP, autocrypt.getModuleIp());
+        return JsonApiResponse.result(response).toJson();
+    }
+    public Json testUploadFiles(Json body, Json files) {
         Json response = Json.object();
         response.at(Common.IP, autocrypt.getModuleIp());
         return JsonApiResponse.result(response).toJson();

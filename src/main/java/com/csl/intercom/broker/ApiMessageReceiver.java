@@ -1,6 +1,6 @@
 package com.csl.intercom.broker;
 
-import com.ucsl.interfaces.IApiCommands;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.paho.client.mqttv3.*;
@@ -21,13 +21,13 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 	public String api="";
 
-	private final IApiCommands apiCommands;
+	private final ApiCommands apiCommands;
 	MqttClient clientToListen=null;
 	boolean subscribed=false;
 	
 	MqttClient clientToSend=null;
 	
-	public ApiMessageReceiver(String moduleName,String apiName,IApiCommands apiCommands,String brokerUrl, int debugLevel) {
+	public ApiMessageReceiver(String moduleName,String apiName,ApiCommands apiCommands,String brokerUrl, int debugLevel) {
 		if (!brokerUrl.isEmpty()) BROKER_TCP_LOCALHOST_1883=brokerUrl;
 		
 		this.moduleName=moduleName;

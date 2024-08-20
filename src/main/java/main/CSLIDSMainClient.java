@@ -5,6 +5,7 @@ import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.core.NoLogging;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
@@ -45,7 +46,7 @@ public class CSLIDSMainClient {
     private static WebsocketClientEndpoint clientEndPoint = null;
 
     // API Command map
-    private static final HashMap<String, IApiCommands> apiMap = new HashMap<>();
+    private static final HashMap<String, ApiCommands> apiMap = new HashMap<>();
 
     // Message broadcaster for WebSocket communication
     private static final IMessageBroadcaster messageBroadcaster = new IMessageBroadcaster() {
@@ -81,7 +82,7 @@ public class CSLIDSMainClient {
      * Initializes services and registers them to the API command map.
      */
     public static void initServices() {
-        for (IApiCommands api : JServiceLoader.getApiCommandsList()) {
+        for (ApiCommands api : JServiceLoader.getApiCommandsList()) {
             String path = api.getName().toLowerCase();
             logger.info("Registering API: <{}>", path);
             apiMap.put(path, api);
@@ -153,7 +154,7 @@ public class CSLIDSMainClient {
                 Json result = Json.object().set("error", "api not found");
 
                 if (!apiName.isEmpty()) {
-                    IApiCommands api = apiMap.get(apiName);
+                    ApiCommands api = apiMap.get(apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
 
                     if (jsonCommand != null && api != null) {

@@ -1,5 +1,6 @@
 package com.csl.web;
 
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.core.Config;
 import com.csl.web.auth.ServerConfig;
@@ -74,7 +75,7 @@ public class CSLHttpServerJetty {
      * @param api The API commands that need to be handled.
      * @return HttpServlet that handles POST requests to the API.
      */
-    public HttpServlet createPostServlet(IApiCommands api) {
+    public HttpServlet createPostServlet(ApiCommands api) {
         return new HttpServlet() {
 
             @Override
@@ -238,7 +239,7 @@ public class CSLHttpServerJetty {
      * @param api The API commands that need to be handled.
      * @return HttpServlet that handles GET requests to the API.
      */
-    public HttpServlet createGetServlet(IApiCommands api) {
+    public HttpServlet createGetServlet(ApiCommands api) {
         return new HttpServlet() {
             @Override
             public void init() {
@@ -254,7 +255,7 @@ public class CSLHttpServerJetty {
                 Json params = extractParamsFromRequest(req);
 
                 logger.debug("Executing command: {} with parameters: {}", cmd, params);
-                resp.getWriter().write(api.exec(cmd, params).toString());
+                resp.getWriter().write(api.exec(cmd, params, null).toString());
             }
         };
     }
@@ -392,7 +393,7 @@ public class CSLHttpServerJetty {
      * Registers API commands by adding their respective servlets.
      */
     private void registerApiCommands() {
-        for (IApiCommands api : JServiceLoader.getApiCommandsList()) {
+        for (ApiCommands api : JServiceLoader.getApiCommandsList()) {
             String path = api.getName();
             logger.info("Registering API: <{}>", path);
             if (ADD_GET_ROUTE)
@@ -408,7 +409,7 @@ public class CSLHttpServerJetty {
      * @param req The HTTP request.
      * @param api The API commands associated with the request.
      */
-    private void handleWebSocketUpgrade(HttpServletRequest req, IApiCommands api) {
+    private void handleWebSocketUpgrade(HttpServletRequest req, ApiCommands api) {
         if ("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
             context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/" + api.getName());
         }
@@ -468,13 +469,13 @@ public class CSLHttpServerJetty {
      * @param params The parameters for the command.
      * @return The response from executing the command.
      */
-    private String executeApiCommand(IApiCommands api, Json data, Json cmd, Json params) {
+    private String executeApiCommand(ApiCommands api, Json data, Json cmd, Json params) {
         String bodyResp;
         if (httpEndpointList.contains(api.getName().toLowerCase())) {
             bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
             logger.debug("Remote server response: {}", bodyResp);
         } else {
-            bodyResp = api.exec(cmd.asString(), params).toString();
+            bodyResp = api.exec(cmd.asString(), params, data.get("files")).toString();
             logger.debug("Server response: {}", bodyResp);
         }
         return bodyResp;

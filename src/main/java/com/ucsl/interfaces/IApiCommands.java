@@ -11,9 +11,7 @@ public interface IApiCommands {
 	void setDescription(String description);
 
 	String registerCmd(String name, IJsonCmd j);
-
 	String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh);
-
 	String registerCmd(String name, IJsonCmd j, JsonCmdPrivilegeFamily privilegeFamily);
 	String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh, JsonCmdPrivilegeFamily privilegeFamily);
 

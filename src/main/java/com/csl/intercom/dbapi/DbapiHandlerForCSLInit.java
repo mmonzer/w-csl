@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.dbapi.enums.DbapiEndpointForCSLScan;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.util.Pair;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
@@ -29,7 +30,7 @@ public class DbapiHandlerForCSLInit extends DbapiHandler {
         super(moduleName, config);
     }
 
-    public void sendCommandsList(List<IApiCommands> apiCommandsList) throws Exception {
+    public void sendCommandsList(List<ApiCommands> apiCommandsList) throws Exception {
         Json requestContents = Json.object();
         apiCommandsList.stream()
                 .map(apiCommands -> new Pair<>(apiCommands.getName(), apiCommands.getListOfCommandPrivileges()))

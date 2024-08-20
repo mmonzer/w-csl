@@ -3,6 +3,7 @@ package main.demo;
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.ISocketMsgListener;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
@@ -15,7 +16,7 @@ import com.ucsl.json.Json;
  */
 public class Test06InterProcessCommunicationSocketListener {
 
-	IApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
+	ApiCommands api= new ApiCommandsFactory().createApiCommands("essai");
 	CSLInterModuleCommunicationManager imcm = new CSLInterModuleCommunicationManager("DB", new MosquittoConfig());
 	
 	public void init() {

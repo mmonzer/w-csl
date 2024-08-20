@@ -1,6 +1,7 @@
 package main.services;
 
 import com.csl.core.CSLContext;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.*;
@@ -11,7 +12,7 @@ public class AlertsService implements ICSLService {
 	@Getter
     String name="alerts";
 	@Getter
-	IApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
+	ApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
 	@Getter
     String configFileSectionName="config_"+name;
 

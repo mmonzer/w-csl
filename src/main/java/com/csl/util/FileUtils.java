@@ -490,7 +490,31 @@ public class FileUtils {
     public static Json lineCSVToJson(String[] headers, String[] values) {
         Json tmp = Json.object();
         for (int i = 0; i < headers.length; i++) {
-            tmp.set(headers[i], (values.length>i)?values[i]:"");
+            // nto enough values (splits method trims the last empty spaces
+            if (values.length <= i) {
+                tmp.set(headers[i], "");
+                continue;
+            }
+            // check if integer
+            try {
+                tmp.set(headers[i], Integer.parseInt(values[i]));
+                continue;
+            } catch (NumberFormatException ignored) {
+            }
+            // check if double
+            try {
+                tmp.set(headers[i], Double.parseDouble(values[i]));
+                continue;
+            } catch (NumberFormatException ignored) {
+            }
+            // check if boolean
+            if (values[i]=="true" || values[i]=="false") {
+                tmp.set(headers[i], Boolean.parseBoolean(values[i]));
+                continue;
+            }
+
+            // otherwise string
+            tmp.set(headers[i], values[i]);
         }
         return tmp;
     }
@@ -504,7 +528,7 @@ public class FileUtils {
             // Parse the Excel file
             Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelData));
             // Iterate through sheets
-//                for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+//          for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
             for (int i = 0; i < 1; i++) {
                 Sheet sheet = workbook.getSheetAt(i);
                 System.out.println("Sheet: " + sheet.getSheetName());
@@ -525,30 +549,28 @@ public class FileUtils {
     }
 
     /**
-     * From a list of values it makes a json object
+     * From a row of values in Excel it makes a json object
      *
      * @param headers key values of the json object
      * @param row     values of the json object
      * @return json object
      */
     public static Json lineXLSToJson(Row headers, Row row) {
+        Json tmp = Json.object();
         // Iterate through cells
-        for (Cell cell : row) {
+        for (int i = 0; i < headers.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
             switch (cell.getCellType()) {
                 case STRING:
-                    System.out.print(cell.getStringCellValue() + "\t");
+                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getStringCellValue());
                     break;
                 case NUMERIC:
-                    System.out.print(cell.getNumericCellValue() + "\t");
+                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getNumericCellValue());
                     break;
                 case BOOLEAN:
-                    System.out.print(cell.getBooleanCellValue() + "\t");
-                    break;
-                case FORMULA:
-                    System.out.print(cell.getCellFormula() + "\t");
+                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getBooleanCellValue());
                     break;
                 default:
-                    System.out.print("UNKNOWN\t");
                     break;
             }
         }

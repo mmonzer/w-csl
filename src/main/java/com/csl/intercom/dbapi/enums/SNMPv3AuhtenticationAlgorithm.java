@@ -34,4 +34,13 @@ public enum SNMPv3AuhtenticationAlgorithm {
         }
         return null;
     }
+    public static SNMPv3AuhtenticationAlgorithm fromScanName(String scanName) {
+        for (SNMPv3AuhtenticationAlgorithm algorithm: SNMPv3AuhtenticationAlgorithm.values()) {
+            if (algorithm.scanName.equals(scanName)) {
+                return algorithm;
+            }
+        }
+        return null;
+    }
+
 }

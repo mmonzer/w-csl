@@ -31,4 +31,13 @@ public enum SNMPv3PrivacyAlgorithm {
         }
         return null;
     }
+    public static SNMPv3PrivacyAlgorithm fromScanName(String scanName) {
+        for (SNMPv3PrivacyAlgorithm algorithm: SNMPv3PrivacyAlgorithm.values()) {
+            if (algorithm.scanName.equals(scanName)) {
+                return algorithm;
+            }
+        }
+        return null;
+    }
+
 }

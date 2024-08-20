@@ -33,4 +33,13 @@ public enum StaticConnectionProtocol {
         }
         return null;
     }
+    public static StaticConnectionProtocol fromScanName(String scanName) {
+        for (StaticConnectionProtocol protocol: StaticConnectionProtocol.values()) {
+            if (protocol.scanName.equals(scanName)) {
+                return protocol;
+            }
+        }
+        return null;
+    }
+
 }

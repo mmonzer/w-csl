@@ -11,6 +11,7 @@ import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.models.MicrosoftKB;
 import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.ConnectionProtocol;
 import com.csl.intercom.dbapi.models.Device;
 import com.csl.intercom.dbapi.models.HttpConnection;
 import com.csl.util.FileStorageService;
@@ -34,6 +35,8 @@ import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +66,59 @@ public class ScanApiHandler extends ApiHandler  {
      */
     public JsonApiResponse addEntity(Device device) {
         return sendPost(ScanApiEndpoint.ENTITY, device.serializeForScanner());
+   }
+    /**
+     * Add a connection to the scanner.
+     *
+     * @param connection The connection to add.
+     * @return The response from the scanner.
+     */
+    public JsonApiResponse addConnectionInfo(Connection connection) {
+        return sendPost(ScanApiEndpoint.CONNECTIONS, connection.serializeForScanner());
+    }
+
+    public JsonApiResponse deleteConnectionInfo(String connectionUuid) {
+        return sendDelete(String.format(ScanApiEndpoint.CONNECTIONS_DETAILS.endpoint(), connectionUuid), Json.object());
+    }
+    public JsonApiResponse updateConnectionInfo(Connection connection) {
+        return sendPost(String.format(ScanApiEndpoint.CONNECTIONS_DETAILS.endpoint(), connection.getUuid()), connection.serializeForScanner());
+    }
+    /**
+     * Get connections since a specified date.
+     * If the date is null, all connections are returned.
+     *
+     * @param date The date to start receiving notifications.
+     * @return A list of connections that have changed since the specified date.
+     */
+    public List<Connection> getConnectionsSince(OffsetDateTime date, Integer limit, Integer offset, List<ConnectionProtocol> protocols) {
+        Json params = Json.object();
+        if (date != null) {
+            params.set("since", ScanUtils.localTimeToScan(date).toString());
+        }
+        if (limit != null) {
+            params.set("limit", limit);
+        }
+        if (offset != null) {
+            params.set("skip", offset);
+        }
+        JsonApiResponse response = sendGet(ScanApiEndpoint.CONNECTIONS, params);
+        if (!response.isSuccess()) {
+            return null;
+        }
+        return response.getResult().asJsonList().stream()
+                .map(connectionJson -> Connection.fromScannerJson(connectionJson, protocols))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    public OffsetDateTime getConnectionLastUpdatedDate() {
+        JsonApiResponse response = sendGet(ScanApiEndpoint.CONNECTIONS_LAST_UPDATE, Json.object());
+        try {
+            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     /**
@@ -162,6 +218,7 @@ public class ScanApiHandler extends ApiHandler  {
         }
     }
 
+
     /**
      * Get all the SNMP objects discovered on a particular entity.
      *
@@ -181,7 +238,6 @@ public class ScanApiHandler extends ApiHandler  {
     public JsonApiResponse getScanStatus(String id) {
         return sendGet(String.format(ScanApiEndpoint.DISCOVERY_STATUS_DETAILS.endpoint(), id), Json.object());
     }
-
     /**
      * Get the status of an entity's scan
      *
@@ -192,6 +248,7 @@ public class ScanApiHandler extends ApiHandler  {
         return sendGet(String.format(ScanApiEndpoint.ENTITY_SCAN_STATUS.endpoint(), id), Json.object());
     }
 
+
     /**
      * Fetch CSL-Scan's status.
      *
@@ -200,6 +257,7 @@ public class ScanApiHandler extends ApiHandler  {
     public JsonApiResponse getStatus() {
         return sendGet(ScanApiEndpoint.DISCOVERY_STATUS, Json.object());
     }
+
 
     /**
      * Test if an existing connection is valid.
@@ -213,6 +271,7 @@ public class ScanApiHandler extends ApiHandler  {
                 Json.object("connection_uuid", connectionUuid));
     }
 
+
     /**
      * Test if a connection is valid.
      * The connection does not need to exist in CSL-Scan.
@@ -225,7 +284,6 @@ public class ScanApiHandler extends ApiHandler  {
                 ScanApiEndpoint.ENTITY_TEST_CONNECTION,
                 device.serializeForScanner());
     }
-
     /**
      * Request the deletion of a CPE Item to CSL-Scan.
      *
@@ -235,7 +293,6 @@ public class ScanApiHandler extends ApiHandler  {
         sendDelete(
                 String.format(ScanApiEndpoint.CPE_ITEM_DETAILS.endpoint(), id), Json.object());
     }
-
     /**
      * Request multiple deletions of CPE Items to CSL-Scan.
      *
@@ -267,11 +324,9 @@ public class ScanApiHandler extends ApiHandler  {
             }
         }
     }
-
     public void deleteCpeItemsBeforeDate(OffsetDateTime date, boolean deleteAll) {
         sendDelete(ScanApiEndpoint.CPE_ITEM_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
     }
-
     /**
      * Request the deletion of a {@link MicrosoftKB} to CSL-Scan.
      *
@@ -437,7 +492,6 @@ public class ScanApiHandler extends ApiHandler  {
             return null;
         }
     }
-
     public List<String> getAllEntityHttpConnectionsUuids() {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
                 ScanApiEndpoint.ENTITY_HTTP_CONNECTION_UUIDS, Json.object());
@@ -712,7 +766,7 @@ public class ScanApiHandler extends ApiHandler  {
         try {
             Device device = Device.fromIpAddress(ipAddress);
             Connection connection = new HttpConnection(
-                    0,
+                    "0",
                     port,
                     List.of("0"),
                     "0",
@@ -747,7 +801,7 @@ public class ScanApiHandler extends ApiHandler  {
             EntityHttpConnection entityHttpConnection,
             String deviceId,
             Device device,
-            Integer connectionId) throws Exception {
+            String connectionId) throws Exception {
         Json requestBody = Json.object();
         if (entityHttpConnectionId != null) {
             requestBody.set("entityHttpConnectionId", entityHttpConnectionId);
@@ -784,7 +838,7 @@ public class ScanApiHandler extends ApiHandler  {
      * @return The cron expression for the periodic discovery task.
      */
     public Json getDiscoveryCron() {
-        JsonApiResponse response = sendGet(ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             Json result = response.getResult();
             String cron = null;

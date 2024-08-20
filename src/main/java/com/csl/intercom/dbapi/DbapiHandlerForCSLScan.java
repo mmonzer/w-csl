@@ -14,6 +14,9 @@ import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -40,6 +43,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
 
 /**
  * Manage HTTP communications with DB-API.
@@ -444,11 +449,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws InterruptedException If the connection with DB-API was interrupted.
      * @throws TimeoutException     If the connection with DB-API times out.
      */
-    public List<Connection> fetchConnections(List<Integer> ids, List<ConnectionProtocol> protocols) throws ExecutionException, InterruptedException, TimeoutException {
+    public List<Connection> fetchConnections(List<String> ids, List<ConnectionProtocol> protocols) throws ExecutionException, InterruptedException, TimeoutException {
         List<Connection> connections = new ArrayList<>();
-        for (int id : ids) {
+        for (String id : ids) {
             Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS);
-            request.param("id", String.valueOf(id));
+            request.param("id", id);
             Json response = Json.read(request.send().getContentAsString());
             Connection connection;
             if (response.isArray()) {
@@ -463,6 +468,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return connections;
     }
 
+
     /**
      * Fetch the list discovery protocols from DB-API.
      *
@@ -476,6 +482,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return Json.read(request.send().getContentAsString()).asJsonList().stream()
                 .map(ConnectionProtocol::fromJson)
                 .collect(Collectors.toList());
+    }
+    public ConnectionProtocol fetchDiscoveryProtocol(String protocolName) throws ExecutionException, InterruptedException, TimeoutException {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOL_DETAILS_BY_NAME);
+        request.param("name", protocolName);
+        Json response = Json.read(request.send().getContentAsString());
+        return ConnectionProtocol.fromJson(response);
     }
 
     /**
@@ -915,7 +927,146 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             throw new Exception("Could not push the entity " + newDevice.getId() + " to CSL-Scan.");
         }
     }
+    public void sendConnections(List<Connection> items) {
+        logger.error("Sending connections to DB-API is not implemented yet.");
+    }
+    public int getConnectionPortNumberFromConnection(Connection connection) {
+        int port = 0;
+        if (connection.getProtocol() == SNMPv1){
+            port = ((SNMPv1Connection) connection).getPort();
+        } else if (connection.getProtocol() == SNMPv2c){
+            port = ((SNMPv2cConnection) connection).getPort();
+        }  else if (connection.getProtocol() == SNMPv3){
+            port = ((SNMPv3Connection) connection).getPort();
+        } else if (connection.getProtocol() == SSH){
+            port = ((SshConnection) connection).getPort();
+        } else if (connection.getProtocol() == RemotePowershell){
+            port = ((RemotePowershellConnection) connection).getPort();
+        } else if (connection.getProtocol() == HTTP){
+            port = Integer.parseInt(((HttpConnection) connection).getPort());
+        }
+        return port;
+    }
+    public Json getConnectionOtherData(Connection connection, Json connectionJson) throws JsonProcessingException {
+        Json otherData = Json.object();
+        if (connection.getProtocol() == SNMPv1){
+            String community = ((SNMPv1Connection) connection).getCommunity();
+            otherData.set("snmp_community", community);
+            return otherData;
+        } else if (connection.getProtocol() == SNMPv2c) {
+            String community = ((SNMPv2cConnection) connection).getCommunity();
+            otherData.set("snmp_community", community);
+            return otherData;
+        } else if (connection.getProtocol() == SNMPv3) {
+            String snmpPrivacyAlgorithm = String.valueOf(((SNMPv3Connection) connection).getPrivacyAlgorithm());
+            String snmpAuthAlgorithm = String.valueOf(((SNMPv3Connection) connection).getAuthenticationAlgorithm());
+            otherData.set("snmp_privacy_algorithm", snmpPrivacyAlgorithm);
+            otherData.set("snmp_authentication_algorithm", snmpAuthAlgorithm);
+        }
+        else if (connection.getProtocol() == SSH) {
+            // TODO: remove them --> to be saved in vault
+            //            String sshKey = ((SshConnection) connection).getPrivateKey();
+            //            String passPhrase = ((SshConnection) connection).getPassphrase();
+            //            otherData.set("ssh_key", sshKey);
+            //            otherData.set("passphrase", passPhrase);
+        }
+        else if (connection.getProtocol() == HTTP) {
+//            otherData.set("inputs", ((HttpConnection) connection).getInputs());
+            ObjectMapper objectMapper = new ObjectMapper();
+            Json stageConfigJson = connectionJson.get("other_data").get("stagesConfig");
 
+            otherData.set("stagesConfig", stageConfigJson);
+            otherData.set("headers", Json.object());
+            otherData.set("queryParams", Json.object());
+        }
+        else {
+            return otherData;
+        }
+        return otherData;
+    }
+    public void createConnection(Connection connection, String discoveryProtocolName, Json connectionJson) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
+        String name = connection.getName();
+        int portNumber = getConnectionPortNumberFromConnection(connection);
+        Json requestContents = Json.object(
+                "name", name,
+                "discovery_protocol_name", connection.getProtocol().dbapiName(),
+                "port_number", portNumber,
+                "mongo_entity_id", connection.getUuid(),
+                "other_data", getConnectionOtherData(connection, connectionJson),
+                "connected_devices", connection.getDevicesIds()
+        );
+        if(connection.getProtocol() == HTTP) {
+            requestContents.set("discovery_protocol_name", discoveryProtocolName);
+        }
+        if (connection.getProtocol() == SNMPv3) {
+            requestContents.set("username", ((SNMPv3Connection) connection).getUsername());
+        } else if (connection.getProtocol() == RemotePowershell) {
+            requestContents.set("username", ((RemotePowershellConnection) connection).getUsername());
+        } else if(connection.getProtocol() == SSH) {
+            requestContents.set("username", ((SshConnection) connection).getUsername());
+        }
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CONNECTIONS)
+                .content(new StringContentProvider(requestContents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 201) {
+                logger.error("Could not create connection in DB-API. Got status code " + response.getStatus());
+            } else if (response.getStatus() == 201) {
+                logger.info("Connection created in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not create connection in DB-API.", e);
+        }
+
+    }
+
+    public void deleteConnection(String connectionUuid) throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {
+        Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpointForCSLScan.DELETE_CONNECTION_BY_MONGO_ID.getEndpoint())).param("mongo_entity_id", connectionUuid);
+        ContentResponse response = request.send();
+        if (response.getStatus() >= 400) {
+            throw new DbapiUnexpectedStatusCodeException("Could not delete connection.", response.getStatus());
+        }
+    }
+    public int getDbApiConnectionId(String connectionMongoEntityId) {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS_DETAILS_BY_MONGO_ID);
+        request.param("mongo_entity_id", connectionMongoEntityId);
+        try {
+            ContentResponse response = request.send();
+            Json responseContents = Json.read(response.getContentAsString());
+            return JsonUtil.getIntFromJson(responseContents, "id", 0);
+        } catch (Exception e) {
+            logger.error("Could not get connection id from DB-API.", e);
+            return 0;
+        }
+    }
+    public void updateConnection(Connection connection, Json connectionJson) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
+        String connectionUuid = connection.getUuid();
+        String connectionDbApiId = String.valueOf(getDbApiConnectionId(connectionUuid));
+        int connectionId = Integer.parseInt(connectionDbApiId);
+        String endpoint = String.format(DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), connectionId) + '/' + connectionId;
+        Request request = createDbapiRequest(HttpMethod.PUT, endpoint);
+        Json requestContents = Json.object(
+                "name", connection.getName(),
+                "discovery_protocol_name", connection.getProtocol().dbapiName(),
+                "port_number", getConnectionPortNumberFromConnection(connection),
+                "mongo_entity_id", connectionUuid,
+                "other_data", getConnectionOtherData(connection, connectionJson),
+                "connected_devices", connection.getDevicesIds()
+        );
+        if (connection.getProtocol() == SNMPv3) {
+            requestContents.set("username", ((SNMPv3Connection) connection).getUsername());
+        } else if (connection.getProtocol() == RemotePowershell) {
+            requestContents.set("username", ((RemotePowershellConnection) connection).getUsername());
+        }
+        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+        ContentResponse response = request.send();
+        if (response.getStatus() != 200) {
+            logger.error("Could not update connection in DB-API. Got status code " + response.getStatus());
+        } else if (response.getStatus() == 200) {
+            logger.info("Connection updated in DB-API.");
+        }
+        logger.error("Updating connections in DB-API is not implemented yet.");
+    }
     /**
      * Handle the changes in the devices on DB-API.
      *
@@ -983,11 +1134,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      */
     private List<Device> buildNewDevices(List<Device> devices, List<Connection> connections, List<ConnectionProtocol> protocols) {
         //region List the uuids we have in both list
-        List<Integer> connectionUuidsInDevices = new ArrayList<>();
+        List<String> connectionUuidsInDevices = new ArrayList<>();
         List<String> deviceUuidsInConnections = new ArrayList<>();
 
         for (Device device : devices) {
-            List<Integer> connectionsIds = device.getConnectionsIds();
+            List<String> connectionsIds = device.getConnectionsIds();
             connectionUuidsInDevices.addAll(connectionsIds);
         }
         for (Connection connection : connections) {
@@ -996,10 +1147,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         //endregion List the uuids we have in both list
 
         //region Check for the ones missing on one side or the other
-        List<Integer> connectionsToGet = new ArrayList<>();
+        List<String> connectionsToGet = new ArrayList<>();
         List<String> devicesToGet = new ArrayList<>();
 
-        for (int connectionId : connectionUuidsInDevices) {
+        for (String connectionId : connectionUuidsInDevices) {
             if (DbapiUtilsForCSLScan.getConnectionById(connections, connectionId) == null) {
                 connectionsToGet.add(connectionId);
             }
@@ -1092,6 +1243,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public void uploadHttpTemplatesBsonFile(ExportQuery exportQuery) {
+        // Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE);
         MultiPartContentProvider multiPart = new MultiPartContentProvider();
         try {
             Path filePath = fileStorageService.getFilePath(exportQuery.getFilename());

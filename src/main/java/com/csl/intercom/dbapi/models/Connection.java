@@ -4,6 +4,7 @@ import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.csl.interfaces.models.IScannerSerializable;
 import com.ucsl.json.Json;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -12,25 +13,40 @@ import java.util.List;
  * Abstract class, concrete children are tied to the actual protocols of a connection.
  */
 public abstract class Connection implements IScannerSerializable {
+    @Getter @Setter
+    private String name;
+    @Getter @Setter
+    private String uuid;
+    private List<String> devicesIds;
+    private StaticConnectionProtocol protocol;
     @Getter
-    private final int id;
-    @Getter
-    private final List<String> devicesIds;
-    @Getter
-    private final StaticConnectionProtocol protocol;
-    private final Boolean isSimulated;
+    private Boolean isSimulated;
+    protected Connection(String name, String uuid, List<String> devicesIds, StaticConnectionProtocol protocol) {
+        this.name  = name;
+        this.uuid = uuid;
+        this.devicesIds = devicesIds;
+        this.protocol = protocol;
+    }
 
-    protected Connection(int id, List<String> devicesIds, StaticConnectionProtocol protocol) {
-        this.id = id;
+    protected Connection(String uuid, List<String> devicesIds, StaticConnectionProtocol protocol) {
+        this.uuid = uuid;
         this.devicesIds = devicesIds;
         this.protocol = protocol;
         this.isSimulated = false;
     }
 
-    protected Connection(int id, List<String> devicesIds, StaticConnectionProtocol protocol, boolean isSimulated) {
-        this.id = id;
+    protected Connection(String uuid, List<String> devicesIds, StaticConnectionProtocol protocol, boolean isSimulated) {
+        this.uuid = uuid;
         this.devicesIds = devicesIds;
         this.protocol = protocol;
+        this.isSimulated = isSimulated;
+    }
+
+    public Connection(String name, String id, List<String> devices, StaticConnectionProtocol staticConnectionProtocol, Boolean isSimulated) {
+        this.name = name;
+        this.uuid = id;
+        this.devicesIds = devices;
+        this.protocol = staticConnectionProtocol;
         this.isSimulated = isSimulated;
     }
 
@@ -77,6 +93,72 @@ public abstract class Connection implements IScannerSerializable {
         }
     }
 
+    public static Connection fromHMIJson(Json connectionJson, List<ConnectionProtocol> protocols) {
+        ConnectionProtocol connectionProtocol;
+        StaticConnectionProtocol protocol;
+        try {
+            int protocolId = connectionJson.get("discovery_protocol").asInteger();
+            connectionProtocol = ConnectionProtocol.getProtocolById(protocols, protocolId);
+            protocol = connectionProtocol.getStaticConnectionProtocol();
+        } catch (UnsupportedOperationException | NullPointerException e) {
+            return null;
+        }
+
+        if (protocol == null) {
+            return null;
+        }
+        switch (protocol) {
+            case SNMPv1:
+                return SNMPv1Connection.fromJson(connectionJson);
+            case SNMPv2c:
+                return SNMPv2cConnection.fromJson(connectionJson);
+
+            case SNMPv3:
+                return SNMPv3Connection.fromJson(connectionJson);
+
+            case RemotePowershell:
+                return RemotePowershellConnection.fromHMIJson(connectionJson);
+
+            case HTTP:
+                return HttpConnection.fromJson(connectionJson, connectionProtocol);
+
+            case SSH:
+                return SshConnection.fromJson(connectionJson);
+
+            default:
+                return null;
+        }
+    }
+
+    public static Connection fromScannerJson(Json connectionJson, List<ConnectionProtocol> protocols) {
+        ConnectionProtocol connectionProtocol;
+        ConnectionProtocol protocol = ConnectionProtocol.getProtocolFromScanConnectionJson(protocols, connectionJson);
+        if (protocol == null) {
+            return null;
+        }
+        switch (protocol.getStaticConnectionProtocol()) {
+            case SNMPv1:
+                return SNMPv1Connection.fromScannerJson(connectionJson);
+            case SNMPv2c:
+                return SNMPv2cConnection.fromScannerJson(connectionJson);
+
+            case SNMPv3:
+                return SNMPv3Connection.fromScannerJson(connectionJson);
+
+            case RemotePowershell:
+                return RemotePowershellConnection.fromScannerJson(connectionJson);
+
+            case HTTP:
+                return HttpConnection.fromScannerJson(connectionJson);
+
+            case SSH:
+                return SshConnection.fromScannerJson(connectionJson);
+
+            default:
+                return null;
+        }
+    }
+
     /**
      * Serialize the connection information in a format suitable to be sent to CSL-Scan (in the ConnectionInfos field).
      * Should be overriden by children.
@@ -84,10 +166,31 @@ public abstract class Connection implements IScannerSerializable {
      * @return The serialized version of the connection ready to be included in a CSL-Scan's entity.
      */
     public Json serializeForScanner() {
-        return Json.object(
-                "queryProtocol", this.protocol.scanName(),
-                "uuid", this.id
+        Json result = Json.object(
+                "queryProtocol", this.protocol.scanName()
         );
+        if (this.uuid != null) {
+            result.set("uuid", this.uuid);
+        }
+        if (this.devicesIds != null) {
+            result.set("connected_devices", this.devicesIds);
+        }
+        if (this.name != null) {
+            result.set("name", this.name);
+        }
+        return result;
+    }
+
+    public String getId() {
+        return uuid;
+    }
+
+    public StaticConnectionProtocol getProtocol() {
+        return protocol;
+    }
+
+    public List<String> getDevicesIds() {
+        return devicesIds;
     }
 
     public Boolean isSimulated() {

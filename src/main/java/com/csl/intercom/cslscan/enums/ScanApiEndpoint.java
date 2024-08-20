@@ -7,6 +7,14 @@ public enum ScanApiEndpoint {
     ENTITY_LAST_DELETION(ENTITY.endpoint() + "last_deletion"),
     ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection"),
     ENTITY_TEST_EXISTING_CONNECTION(ENTITY_TEST_CONNECTION.endpoint() + "/%s"),
+    CONNECTIONS("/entity-connection-info/"),
+    CREATE_CONNECTIONS(CONNECTIONS.endpoint() + "create_list_of_connections"),
+    CONNECTIONS_DETAILS(CONNECTIONS.endpoint() + "%s"),
+    CONNECTIONS_LAST_UPDATE(CONNECTIONS.endpoint() + "last-updated"),
+    CONNECTIONS_DRAFT("/entity-connection-info-draft/"),
+    CONNECTIONS_DRAFT_DETAILS(CONNECTIONS_DRAFT.endpoint() + "%s"),
+    CREATE_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "create_list_of_connections_draft"),
+    CONNECTIONS_DRAFT_LAST_UPDATE(CONNECTIONS_DRAFT.endpoint() + "last-updated"),
     CPE_ITEM("/cpeItem/"),
     CPE_ITEM_DETAILS(CPE_ITEM.endpoint() + "%s"),
     CPE_ITEM_DELETE_MANY(CPE_ITEM.endpoint() + "deleteMany"),
@@ -55,8 +63,6 @@ public enum ScanApiEndpoint {
     EXTERNAL_DISCOVERY_START_SCAN(EXTERNAL_DISCOVERY.endpoint() + "/startDiscovery/%s"),
     EXTERNAL_DISCOVERED_DEVICES("/externalDiscoveredDevices/"),
     EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "clear"),
-    CONNECTIONS_DRAFT("/entity-connection-info-draft/"),
-    CREATE_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "create_list_of_connections_draft"),
     ;
 
     private String endpoint;

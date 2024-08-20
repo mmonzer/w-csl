@@ -3,9 +3,12 @@ package com.csl.intercom.dbapi.enums;
 public enum SshConnectionField {
     PORT("port", "port"),
     USERNAME("username", "username"),
-    PASSWORD("read_only_password", "password"),
+    PASSWORD("password", "password"),
     PRIVATE_KEY("ssh_key", "privateKey"),
     PASSPHRASE("passphrase", "passphrase"),
+    IS_KEEP_PASSWORD("is_keep_password", "isKeepPassword"),
+    IS_KEEP_SSH_KEY("is_keep_ssh_key", "isKeepSshKey"),
+    IS_KEEP_PASSPHRASE("is_keep_passphrase", "isKeepPassphrase")
     ;
 
     private final String dbapiName;

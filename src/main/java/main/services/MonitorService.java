@@ -51,7 +51,7 @@ public class MonitorService extends Service {
 			}
 			for (Json j : configuredTaps) {
 				tap = new Tap(j.at("idname").asString(),
-						j.at("id").asString(),
+						j.at("tap_id").asString(),
 						j.at("ip").asString(),
 						j.at("port").asInteger(),
 						j.at("includes").asJsonList()

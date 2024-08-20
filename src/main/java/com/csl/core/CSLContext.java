@@ -480,7 +480,7 @@ public class CSLContext implements ICSLContext {
      * @param name The name of the module.
      * @return The module context.
      */
-    public com.csl.core.ModuleContext getModuleContext(String name) {
+    public ModuleContext getModuleContext(String name) {
         return modules.get(name);
     }
 

@@ -125,17 +125,15 @@ public class CSLHttpServerJetty {
     public void start() {
         try {
             if (!initialized) {
-                logger.error("CSL Web server not initialized, cannot start");
+                logger.error("API server not initialized, cannot start");
                 exit(0);
             }
-            if (isRemote) logger.debug("Current user dir = {}", serverConfig.getUserDir());
             jettyServer.start();
+            logger.debug("API server started : {} ", jettyServer.getConnectors()[0]);
             jettyServer.join();
 
             // keep the web sockets alive
             if (isRemote) startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
-
-            if (isRemote) logger.debug("Web server started on port {} ", serverConfig.getPort());
         } catch (Exception e) {
             logger.error("Error starting server", e);
             exit(0);

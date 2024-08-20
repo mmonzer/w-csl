@@ -1,9 +1,12 @@
 package com.csl.util;
 
-import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
-import com.csl.intercom.dbapi.models.Connection;
 import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -467,9 +470,9 @@ public class FileUtils {
         // Parse into connexion
         String[] lines = fileContent.split(DELIMITER_LINE);
         String[] headers = lines[0].split(DELIMITER_COLUMN);
-        for (int i=1; i<lines.length; i++) {
+        for (int i = 1; i < lines.length; i++) {
             Json tmp = lineCSVToJson(headers, lines[i].split(DELIMITER_COLUMN));
-            if (tmp!=null) {
+            if (tmp != null) {
                 connections.add(tmp);
             }
         }
@@ -479,18 +482,77 @@ public class FileUtils {
 
     /**
      * From a list of values it makes a json object
+     *
      * @param headers key values of the json object
-     * @param values values of the json object
+     * @param values  values of the json object
      * @return json object
      */
-    public static Json lineCSVToJson(String[] headers, String[] values)  {
-        if (headers.length!= values.length) {
-            return null;
-        }
+    public static Json lineCSVToJson(String[] headers, String[] values) {
         Json tmp = Json.object();
-        for (int i=0; i< headers.length; i++) {
-            tmp.set(headers[i], values[i]);
+        for (int i = 0; i < headers.length; i++) {
+            tmp.set(headers[i], (values.length>i)?values[i]:"");
         }
         return tmp;
     }
+
+    public static List<Json> parseConnexionsFromExcelFile(String fileContent) {
+        List<Json> connections = new ArrayList<>();
+        try {
+            // Decode the Base64 encoded string
+            byte[] excelData = Base64.getDecoder().decode(fileContent);
+
+            // Parse the Excel file
+            Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelData));
+            // Iterate through sheets
+//                for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+            for (int i = 0; i < 1; i++) {
+                Sheet sheet = workbook.getSheetAt(i);
+                System.out.println("Sheet: " + sheet.getSheetName());
+
+                // Iterate through rows
+                Row headers = sheet.getRow(0);
+                for (int j = 1; j < sheet.getLastRowNum(); j++) {
+                    Json tmp = lineXLSToJson(headers, sheet.getRow(j));
+                    if (tmp != null) {
+                        connections.add(tmp);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return connections;
+    }
+
+    /**
+     * From a list of values it makes a json object
+     *
+     * @param headers key values of the json object
+     * @param row     values of the json object
+     * @return json object
+     */
+    public static Json lineXLSToJson(Row headers, Row row) {
+        // Iterate through cells
+        for (Cell cell : row) {
+            switch (cell.getCellType()) {
+                case STRING:
+                    System.out.print(cell.getStringCellValue() + "\t");
+                    break;
+                case NUMERIC:
+                    System.out.print(cell.getNumericCellValue() + "\t");
+                    break;
+                case BOOLEAN:
+                    System.out.print(cell.getBooleanCellValue() + "\t");
+                    break;
+                case FORMULA:
+                    System.out.print(cell.getCellFormula() + "\t");
+                    break;
+                default:
+                    System.out.print("UNKNOWN\t");
+                    break;
+            }
+        }
+        return Json.object();
+    }
 }
+

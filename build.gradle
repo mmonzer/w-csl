@@ -78,6 +78,13 @@ dependencies {
 
     // Use javax.websocket-api
     //implementation 'javax.websocket:javax.websocket-api:1.1'
+
+    // excel reading/parsing
+    implementation 'org.apache.poi:poi:5.2.3' // For .xls files (HSSF)
+    implementation 'org.apache.poi:poi-ooxml:5.2.3' // For .xlsx files (XSSF)
+    implementation 'org.apache.poi:poi-ooxml-schemas:4.1.2'
+    implementation 'org.apache.poi:poi-scratchpad:5.2.3' // For additional formats (optional)
+    implementation 'org.apache.commons:commons-collections4:4.4' // For some additional features
 }
 sourceSets{
     main{

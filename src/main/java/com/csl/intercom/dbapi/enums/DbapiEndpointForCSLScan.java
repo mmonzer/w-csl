@@ -26,6 +26,7 @@ public enum DbapiEndpointForCSLScan {
     DEVICES("/devices"),
     DELETED_DEVICES(DELETED_OBJECTS.getEndpoint() + "/get_deleted_devices"),
     CONNECTIONS("/connections"),
+    CREATE_CONNECTIONS(CONNECTIONS.getEndpoint() + "create_list_of_connections"),
     DISCOVERY_PROTOCOLS("/cpe_discovery_api"),
     DISCOVERY_PROTOCOLS_DETAILS(DISCOVERY_PROTOCOLS.getEndpoint() + "/%d"),
     DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID(DISCOVERY_PROTOCOLS.getEndpoint() + "/get_dynamic_discovery_protocol"),

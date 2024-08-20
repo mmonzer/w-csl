@@ -1,5 +1,7 @@
 package com.csl.util;
 
+import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
+import com.csl.intercom.dbapi.models.Connection;
 import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
 
@@ -453,5 +455,42 @@ public class FileUtils {
             if (br != null) br.close();
             if (fr != null) fr.close();
         }
+    }
+
+    public static List<Json> parseConnexionsFromCSV(String fileContent) {
+        // CSV file delimiter
+        String DELIMITER_COLUMN = ",";
+        String DELIMITER_LINE = "\n";
+
+        List<Json> connections = new ArrayList<>();
+
+        // Parse into connexion
+        String[] lines = fileContent.split(DELIMITER_LINE);
+        String[] headers = lines[0].split(DELIMITER_COLUMN);
+        for (int i=1; i<lines.length; i++) {
+            Json tmp = lineCSVToJson(headers, lines[i].split(DELIMITER_COLUMN));
+            if (tmp!=null) {
+                connections.add(tmp);
+            }
+        }
+
+        return connections;
+    }
+
+    /**
+     * From a list of values it makes a json object
+     * @param headers key values of the json object
+     * @param values values of the json object
+     * @return json object
+     */
+    public static Json lineCSVToJson(String[] headers, String[] values)  {
+        if (headers.length!= values.length) {
+            return null;
+        }
+        Json tmp = Json.object();
+        for (int i=0; i< headers.length; i++) {
+            tmp.set(headers[i], values[i]);
+        }
+        return tmp;
     }
 }

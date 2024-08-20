@@ -6,24 +6,22 @@ import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
+import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
-import com.csl.intercom.services.ExternalConnectionInfoTemplatesSynchronizationService;
-import com.csl.intercom.services.ExternalConnectionInfoSynchronizationService;
-import com.csl.intercom.services.ExternalScansService;
-import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
-import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.cslscan.models.EntityHttpConnection;
-import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.services.ImportExportBsonService;
-import com.csl.intercom.dbapi.models.*;
+import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.ConnectionProtocol;
+import com.csl.intercom.dbapi.models.Device;
+import com.csl.intercom.dbapi.models.HttpTemplateImportNotification;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.util.FileStorageService;
+import com.csl.util.FileUtils;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmdWithFiles;
@@ -37,7 +35,11 @@ import org.slf4j.LoggerFactory;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static com.csl.intercom.cslscan.enums.ScanApiEndpoint.CREATE_CONNECTIONS_DRAFT;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -543,53 +545,16 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("upload_entity_http_connection_file", (params, files) -> {
-                    logger.trace("Adding entity to HTTP connection : params={}", params);
-                    Json entityHttpConnectionJson = params.get("entity_http_connection");
-                    EntityHttpConnection entityHttpConnection = EntityHttpConnection.fromDbapiJson(entityHttpConnectionJson);
-                    logger.debug("Adding entity to HTTP connection : entityHttpConnection={}", entityHttpConnection);
-                    if (entityHttpConnection == null) {
-                        logger.error("Failed to add entity to HTTP connection : could not parse entity_http_connection : {}", entityHttpConnectionJson);
-                        return JsonApiResponse.error("Could not parse entity_http_connection",
-                                Json.object("exception", "Could not parse entity_http_connection")
-                        ).toJson();
+                    List<Json> listOfConnections = new ArrayList<>();
+                    for (Json file : files) {
+                        listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content").asString()));
                     }
-                    JsonApiResponse response;
-                    if (entityHttpConnection.getUuid() == null) {
-                        response = scanApiHandler.createEntityHttpConnection(entityHttpConnection);
-                        logger.debug("HTTP connection not found, created entity HTTP connection in CSL-Scan: success={}", response.isSuccess());
-                        if (response.isSuccess()) {
-                            EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromDbapiJson(response.getResult());
-                            logger.trace("Parsed entity HTTP connection to DBapi format: createdEntityHttpConnection={}", createdEntityHttpConnection);
-                            try {
-                                if (createdEntityHttpConnection == null) {
-                                    throw new Exception("Could not parse the created entity_http_connection");
-                                }
-                                dbapiHandler.createDiscoveryProtocol(createdEntityHttpConnection);
-                                logger.info("Created discovery protocol for entity HTTP connection in CSL-Dbapi : entityHttpConnection={}", entityHttpConnection);
-                            } catch (Exception e) {
-                                scanApiHandler.deleteEntityHttpConnection(createdEntityHttpConnection.getUuid());
-                                logger.warn("Could not create discovery protocol in CSL-Dbapi (entityHttpConnection={}), compensated in CSL-Scan", entityHttpConnection, e);
-                                response = JsonApiResponse.error("Could not create discovery protocol",
-                                        Json.object("exception", e.getMessage())
-                                );
-                            }
-                        }
-                    } else {
-                        EntityHttpConnection previousEntityHttpConnection = scanApiHandler.getEntityHttpConnection(entityHttpConnection.getUuid(), false);
-                        logger.trace("HTTP connection found,fetching entity HTTP connection information in CSL-Scan: previousEntityHttpConnection={}", previousEntityHttpConnection);
-                        response = scanApiHandler.updateEntityHttpConnection(entityHttpConnection);
-                        logger.debug("HTTP connection found, updating entity HTTP connection in CSL-Scan: success={}", response.isSuccess());
-                        try {
-                            dbapiHandler.updateDiscoveryProtocol(entityHttpConnection);
-                            logger.info("Updated entity HTTP connection in CSL-Dbapi : entityHttpConnection={}", entityHttpConnection);
-                        } catch (Exception e) {
-                            scanApiHandler.updateEntityHttpConnection(previousEntityHttpConnection);
-                            logger.warn("Could not update discovery protocol in CSL-Dbapi (entityHttpConnection={}), compensated in CSL-Scan", entityHttpConnection, e);
-                            response = JsonApiResponse.error("Could not update discovery protocol",
-                                    Json.object("exception", e.getMessage())
-                            );
-                        }
+
+                    JsonApiResponse response = scanApiHandler.sendPost(CREATE_CONNECTIONS_DRAFT.endpoint(), Json.read(listOfConnections.toString()));
+                    if (response.isSuccess()) {
+                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
                     }
+
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")

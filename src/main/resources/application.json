@@ -4,9 +4,9 @@
     "verbose": true,
     "debug": true,
     "webserver_port": 8000,
-    "web_rootdir": "./public",
-    "web_rootdir2": "./public3",
-    "web_rootdir3": "./public3",
+    "web_rootdir": "./files/server/public",
+    "web_rootdir2": "./files/server/public3",
+    "web_rootdir3": "./files/server/public3",
     "datafile_subdir": "datafile",
     "__//datafile_subdir": "used by data server to store json objects",
     "core_commands": true,
@@ -21,7 +21,7 @@
     "send_alerts": true,
     "send_console_output": true,
     "logJsonCommandsToFile": true,
-    "log_dir": "./idslogs/jcmds",
+    "log_dir": "./files/server/idslogs/jcmds",
     "log_prefix_filename": "JCMD",
     "max_size_of_log_files": 10000,
     "websocket_timeout": 10000
@@ -34,7 +34,8 @@
     "api_key": "",
     "use_ssl": true,
     "launch_web_api_server": false,
-    "web_api_server_port": 9900
+    "web_api_server_port": 9900,
+    "timezone": "Europe/Paris"
   },
   "discovery_service": {
     "manager_ip": "host.docker.internal",
@@ -49,9 +50,9 @@
   },
   "nmap_service": {
     "debug_mode": true,
-    "debug_dir": "/home/anto/Documents/nmaplog/",
+    "debug_dir": "./file/nmap",
     "log_mode": false,
-    "log_dir": "/home/anto/Documents/nmaplog/"
+    "log_dir": "./file/nmap"
   },
   "cpe_service": {
     "dictionaryPath": "src/main/resources/cslconf/cpe/CpeTree.json"
@@ -74,7 +75,8 @@
     "sampling_time": 1000,
     "modules_package_name": "main.modules",
     "number_of_exec_loops": 2,
-    "autostart": true
+    "autostart": true,
+    "sampling_time": 100
   },
   "modules": [
     {
@@ -96,12 +98,12 @@
     "relative_to_CSLConfig_dir": false,
     "idsconf_dir": "idsconf",
     "idsconf_dir_relative_to_data_dir": false,
-    "packets_dir_for_detection_offline": "../zzidsdir/data/test/",
+    "packets_dir_for_detection_offline": "./files/ids/zzidsdir/data/test/",
     "packets_dir_for_detection_offline_info": "used for detection off line (mode 4) and mode 3 if validation after lerarning ",
-    "packets_dir_for_recording": "../zzidsdir/data/test",
+    "packets_dir_for_recording": "./files/ids/zzidsdir/data/test",
     "packets_dir_for_recording_info": "used for mode record and detect on line with log (mode 1 and 2)",
-    "packets_dir_for_learning": "../zzidsdir/data/test",
-    "packets_dir_for_learning_info": "used for leraning  (mode 3)",
+    "packets_dir_for_learning": "./files/ids/zzidsdir/data/test",
+    "packets_dir_for_learning_info": "used for learning  (mode 3)",
     "validation_after_learning": false,
     "log_to_file": true,
     "variables_prefix_filename": "VARIABLES",
@@ -129,13 +131,13 @@
       "XTERNAL_COMMANDS:1",
       "TEST_PKT_IDS:0"
     ],
-    "idstrace_dir": "./idslogs/trace",
+    "idstrace_dir": "./files/ids/idslogs/trace",
     "idstrace_on": true,
     "send_to_console": false,
     "send_to_browser": true,
     "show_ticks": false,
     "kill_previous_instance": true,
-    "taps_dir": "taps",
+    "taps_dir": "./files/ids/taps",
     "history_length": 60
   },
   "alert_viewer": {
@@ -143,7 +145,7 @@
     "port": 4445,
     "name": "My Alerts",
     "log_to_file": true,
-    "log_dir": "./idslogs/alerts",
+    "log_dir": "./files/alerts/idslogs/alerts",
     "prefix_filename": "AL",
     "max_size_of_log_files": 10000,
     "alert_to_web": true,

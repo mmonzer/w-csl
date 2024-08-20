@@ -140,6 +140,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
         response.at(Common.IP, autocrypt.getModuleIp());
         return JsonApiResponse.result(response).toJson();
     }
+
+    /**
+     * Dummy file upload commands
+     * @param body body of the requests with params
+     * @param files uploaded files
+     * @return
+     */
     public Json testUploadFiles(Json body, Json files) {
         Json response = Json.object();
         response.at(Common.IP, autocrypt.getModuleIp());

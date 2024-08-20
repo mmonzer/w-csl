@@ -144,19 +144,6 @@ public class CSLHttpServerJetty {
     /**
      * Initializes the server with the provided configuration.
      *
-     * @param config The configuration as a JSON object.
-     */
-    public void initServer(Json config) {
-        boolean isEnabled = JsonUtil.getBooleanFromJson(config, "on", true);
-        if (!isEnabled) return;
-
-        ServerConfig sc = new ServerConfig(config);
-        initServer(sc);
-    }
-
-    /**
-     * Initializes the server with the provided configuration.
-     *
      * @param config The server configuration object.
      */
     public void initServer(Config.Server config) {
@@ -340,21 +327,29 @@ public class CSLHttpServerJetty {
      */
     private void registerWebSockets() {
         CSLWebSocket.registerAll();
-        if (serverConfig.isSend_alerts())
+
+        // CSLWebSocketHandler is the WS to the HMI (alerts deprecated?, console used, variables deprecated?, database deprecated?)
+        // CSLWebSocketForJcmd is the WS with CSL-Client
+        if (serverConfig.isSend_alerts()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_ALERT, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_ALERT);
-        if (serverConfig.isSend_console_output())
+        }
+        if (serverConfig.isSend_console_output()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_CONSOLE);
-        if (serverConfig.isVars_commands())
+        }
+        if (serverConfig.isVars_commands()){
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_VARIABLES, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_VARIABLES);
-        if (serverConfig.isDatabase_commands())
+        }
+        if (serverConfig.isDatabase_commands()){
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_DATABASE);
-        if (serverConfig.isJcmd_commands())
+        }
+        if (serverConfig.isJcmd_commands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class)),
                     CSLWebSocketForJcmd.WEB_SOCKET_CMD);
+        }
     }
 
     /**
@@ -398,7 +393,6 @@ public class CSLHttpServerJetty {
             logger.info("Registering API: <{}>", path);
             if (ADD_GET_ROUTE)
                 context.addServlet(new ServletHolder(createGetServlet(api)), "/" + api.getName() + "/*");
-//            context.addServlet(new ServletHolder(createPostServlet(api)), "/" + api.getPathFilter());
             context.addServlet(new ServletHolder(createPostServlet(api)), "/" + api.getPathFilter());
         }
     }

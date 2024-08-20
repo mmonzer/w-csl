@@ -1,5 +1,6 @@
 package com.xcsl.miniserver;
 
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -54,7 +55,7 @@ public class ApiHttpServer {
         Iterator apiIterator = apis.iterator();
 
         while (apiIterator.hasNext()) {
-            IApiCommands api = (IApiCommands) apiIterator.next();
+            ApiCommands api = (ApiCommands) apiIterator.next();
             this.server.createContext("/" + api.getName(), new CustomHandlerApi(api));
             this.apiNames.add(api.getName());
             this.apiDescriptions.add(api.getDescription());
@@ -105,11 +106,11 @@ public class ApiHttpServer {
      * Handler for the api
      */
     class CustomHandlerApi extends CustomHttpHandler {
-        private IApiCommands api;
+        private ApiCommands api;
 
         private final MultipartConfigElement MULTI_PART_CONFIG = new MultipartConfigElement("./tmp");
 
-        public CustomHandlerApi(IApiCommands api) {
+        public CustomHandlerApi(ApiCommands api) {
             super();
             this.api = api;
         }
@@ -121,10 +122,12 @@ public class ApiHttpServer {
          * @param body body to post
          * @return the result of the execution of the given function
          */
-        private Json execPostCommand(IApiCommands api, String body) {
+        private Json execPostCommand(ApiCommands api, String body) {
             Json data = Json.read(body);
             Json cmd = data.get("cmd");
             Json params = data.get("params");
+            Json files = data.get("files");
+
             if (cmd == null) {
                 System.out.println("Invalid jcmd:" + cmd);
                 return Json.object();
@@ -134,7 +137,7 @@ public class ApiHttpServer {
                 params = Json.object();
             }
 
-            return api.exec(cmd.asString(), params);
+            return api.exec(cmd.asString(), params, files);
         }
 
         /**

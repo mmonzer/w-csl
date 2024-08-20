@@ -62,7 +62,7 @@ public class CSLHttpServerJetty {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     // Global configuration constants
-    static public int REFRESH_SOCKET_PERIOD = 280;
+    public static int REFRESH_SOCKET_PERIOD = 280;
     static boolean ADD_GET_ROUTE = false;
 
     private final List<String> httpEndpointList = new ArrayList<>();

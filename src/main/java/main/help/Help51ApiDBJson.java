@@ -34,7 +34,7 @@ public class Help51ApiDBJson {
 		this.apiName=apiname;
 	}
 
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 

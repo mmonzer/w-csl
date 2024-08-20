@@ -17,7 +17,7 @@ import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.json.Json;
 
 public class Utils {
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 	private static Json execCmd(String api,String cmd, Json jparams) {
@@ -39,7 +39,7 @@ public class Utils {
 	 * @param uuid l'UUID a utiliser pour l'écriture
 	 * @return un Json vide
 	 */
-	static public Json writeObjectToDatabase(String filename, Json contents, String uuid) {
+	public static Json writeObjectToDatabase(String filename, Json contents, String uuid) {
 		Json p= Json.object();
 		p.set("name", filename);
 		p.set("contents", contents);
@@ -55,7 +55,7 @@ public class Utils {
 	 * @param name Le chemin vers le fichier à lire
 	 * @return le contenu du fichier
 	 */
-	static public Json readObjectFromDatabase(String name) {
+	public static Json readObjectFromDatabase(String name) {
 		Json p= Json.object();
 		p.set("name", name);
 	
@@ -65,7 +65,7 @@ public class Utils {
 		return j;
 	}
 	
-	static public Json execCmd(String cmd, Json jparams) {
+	public static Json execCmd(String cmd, Json jparams) {
 
 
 		Json j= Json.object();
@@ -103,7 +103,7 @@ public class Utils {
 
 		return Json.object();
 	}
-	static public void setDeviceProp(String ip,String path, Json value) {
+	public static void setDeviceProp(String ip,String path, Json value) {
 		
 		System.out.println("SET_DEVICE_PROP");
 		
@@ -120,7 +120,7 @@ public class Utils {
 		System.out.println("Result ="+result);
 
 	}
-	static public void addDevice(String ip, Json params) {
+	public static void addDevice(String ip, Json params) {
 		
 		System.out.println("ADD_DEVICE");
 		Json jparams= Json.object();
@@ -132,7 +132,7 @@ public class Utils {
 		System.out.println("Result ="+result);
 		
 	}
-	static public Json listDevices() {
+	public static Json listDevices() {
 		
 		
 		System.out.println("TEST EXEC_CMD");
@@ -146,7 +146,7 @@ public class Utils {
 	 * Génère un identifiant unique lors de l'appel et le renvoie sous forme de String.
 	 * @return Une string contenant l'UUID
 	 */
-	static public String generateUUID() {
+	public static String generateUUID() {
 		UUID uuid = UUID.randomUUID();
 		return uuid.toString();
 	}
@@ -154,7 +154,7 @@ public class Utils {
 	/**
 	 * Met a jour le contenu de graph.json en fonction des informations contenues dans devices.json
 	 */
-	static public void updateGraphFromDevices() {
+	public static void updateGraphFromDevices() {
 		Json graph = Utils.readObjectFromDatabase("graph");
 		Json devices = Utils.readObjectFromDatabase("devices");
 		ArrayList<Json> nodes = (ArrayList<Json>) graph.get("nodes").asJsonList();
@@ -176,7 +176,7 @@ public class Utils {
 	/**
 	 * Met à jour le contenu de devices.json en fonction des informations contenues dans graph.json
 	 */
-	static public void updateDevicesFromGraph() {
+	public static void updateDevicesFromGraph() {
 		Json graph = Utils.readObjectFromDatabase("graph");
 		ArrayList<Json> nodes = (ArrayList<Json>) graph.get("nodes").asJsonList();
 		Json result = Json.object();

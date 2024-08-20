@@ -40,7 +40,7 @@ public class IDSMainProcessor implements IIDSMainProcessor {
     @Getter
     static private ICSLLogger logger = new DefaultLogger();
 
-    static public ICSLLogger cslLogger() {
+    public static ICSLLogger cslLogger() {
         return logger;
     }
 

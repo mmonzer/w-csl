@@ -148,7 +148,7 @@ public class LineCounter {
 	
 	
 
-	static public void dump(Json j) {
+	public static void dump(Json j) {
 		
 		List<String> strlist=FileUtils.jsonToStringList("", j, new ArrayList<String>(), "");
 		

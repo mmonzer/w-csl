@@ -20,10 +20,10 @@ import java.util.List;
 
 public class ProcessUtil {
 
-	static public boolean DEBUG=false;
+	public static boolean DEBUG=false;
 
 
-	static public void listJavaProcesses()  {
+	public static void listJavaProcesses()  {
 
 		Process process;
 		try {
@@ -44,11 +44,11 @@ public class ProcessUtil {
 
 	}
 	
-	static public boolean isProcessRunning(String filter ) {
+	public static boolean isProcessRunning(String filter ) {
 		return findProcess(filter).size()>0;
 	}
 
-	static public List<String> findProcess(String filter) {
+	public static List<String> findProcess(String filter) {
 
 		List<String>content = new 	ArrayList<String>();
 
@@ -86,7 +86,7 @@ public class ProcessUtil {
 
 
 
-	static public List<String> readAllLines(BufferedReader reader,String filter) throws IOException {
+	public static List<String> readAllLines(BufferedReader reader,String filter) throws IOException {
 		List<String>content = new 	ArrayList<String>();
 		String line;
 
@@ -119,7 +119,7 @@ public class ProcessUtil {
 	}
 
 
-	static public void killProcess(String filter)  {
+	public static void killProcess(String filter)  {
 
 		if (filter.isEmpty()) return;
 		try {
@@ -159,7 +159,7 @@ public class ProcessUtil {
 
 
 
-	static public void kill(String id) {
+	public static void kill(String id) {
 
 		if (id.compareTo(""+getPID())==0) return ;
 
@@ -173,7 +173,7 @@ public class ProcessUtil {
 
 	}
 
-	static public String startJarIfNotRunning(String dir, String jarFile, boolean showOuput, boolean send_output_to_hmi) {
+	public static String startJarIfNotRunning(String dir, String jarFile, boolean showOuput, boolean send_output_to_hmi) {
 
 		List<String> z = findProcess(jarFile);
 		if (z.isEmpty()) 
@@ -185,7 +185,7 @@ public class ProcessUtil {
 
 
 
-	static public String startJar(String dir, String jarFile, boolean showOuput, boolean send_output_to_hmi) {
+	public static String startJar(String dir, String jarFile, boolean showOuput, boolean send_output_to_hmi) {
 		ProcessBuilder pb = new ProcessBuilder("java", "-jar", jarFile);
 		pb.directory(new File(dir));
 		try {
@@ -224,11 +224,11 @@ public class ProcessUtil {
 		}
 	}
 
-	//static public String startScript2(String dir, String scriptName, String filter,boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
+	//public static String startScript2(String dir, String scriptName, String filter,boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
 
 
 
-	static public String startScript(String dir, String scriptName, String			filter,boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
+	public static String startScript(String dir, String scriptName, String			filter,boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
 		//					if (!filter.isEmpty()) {
 		//			            killProcess(filter);
 		//			        }			        
@@ -334,7 +334,7 @@ public class ProcessUtil {
 
 
 
-	static public String startScript2(String dir, String scriptName, String filter,boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
+	public static String startScript2(String dir, String scriptName, String filter,boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
 
 		//		if (!filter.isEmpty()) {
 		//			killProcess(filter);
@@ -411,7 +411,7 @@ public class ProcessUtil {
 
 
 	
-	static public String execCmdInShell(String dir, String cmd,  boolean showOuput) {
+	public static String execCmdInShell(String dir, String cmd,  boolean showOuput) {
 		//					if (!filter.isEmpty()) {
 		//			            killProcess(filter);
 		//			        }			        
@@ -530,7 +530,7 @@ public class ProcessUtil {
 		flausj  ALL=(ALL) NOPASSWD: /Users/flausj/git/z_csl/Z_CSL/stop_modbuspal.sh
 	 */
 
-	static public String exec(Json j) {
+	public static String exec(Json j) {
 
 		String name=JsonUtil.getStringFromJson(j,"name","");
 
@@ -636,7 +636,7 @@ public class ProcessUtil {
 
 	public static String WEB_SOCKET_CONSOLE="console";
 
-	static public void listenRemote(String url) {
+	public static void listenRemote(String url) {
 		//String s= "ws://" + "127.0.0.1" + ":" + "8000" + "/database";
 
 
@@ -684,7 +684,7 @@ public class ProcessUtil {
 	}
 
 
-	static public String execRemote(String url,String cmd) {
+	public static String execRemote(String url,String cmd) {
 
 
 		listenRemote(url);

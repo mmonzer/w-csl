@@ -9,7 +9,7 @@ import java.util.List;
 
 public class CSLLogger {
 
-	static public CSLLogger instance= new CSLLogger();
+	public static CSLLogger instance= new CSLLogger();
 
     public int levelToLog=2;
 	
@@ -23,7 +23,7 @@ public class CSLLogger {
 	static private final String[] labels= {"FATAL","LOG1","","ERROR","WARN ","INFO ","LOG6","LOG7","DEBUG"};
 			
 	
-	static public String label(int l) {
+	public static String label(int l) {
 		if (l<0) return "??log??";
 		if (l>8) return "???log??";
 		return '['+labels[l]+']';

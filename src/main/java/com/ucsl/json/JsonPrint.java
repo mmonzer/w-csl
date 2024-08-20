@@ -9,7 +9,7 @@ public class JsonPrint {
 
 	static StringWriter s= new StringWriter();
 	
-	static public void write(Json j,String indent,String sep ) {
+	public static void write(Json j,String indent,String sep ) {
 		if (j.isObject()) {
 			s.write(indent+"{\n");
 			Map<String, Json> elements = j.asJsonMap();
@@ -39,7 +39,7 @@ public class JsonPrint {
 		
 	}
 	
-	  static public String toString(Json j) {
+	  public static String toString(Json j) {
 		  write(j, "","");
 		  return s.toString();
 	     

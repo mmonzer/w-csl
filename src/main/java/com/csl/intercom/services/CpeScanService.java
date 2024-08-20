@@ -26,7 +26,7 @@ import java.util.function.Function;
  * Should not be created, but accessed through the static instance.
  */
 public class CpeScanService {
-    static public CpeScanService instance = new CpeScanService();
+    public static CpeScanService instance = new CpeScanService();
     static private final Logger logger = LoggerFactory.getLogger(CpeScanService.class);
     // The list of scans, indexed by their id (this list contains all the running scans).
     private final Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();

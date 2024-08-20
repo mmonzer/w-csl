@@ -313,7 +313,7 @@ public class Test01NVD {
 	}
 	
 	
-	static public String writeFile(String filename, String content) {
+	public static String writeFile(String filename, String content) {
 
 		try {
 

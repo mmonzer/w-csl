@@ -6,7 +6,7 @@ import com.ucsl.interfaces.IIDSOperationManagerFactory;
 
 public class IDSOperationManagerFactory implements IIDSOperationManagerFactory {
 
-	static public IDSOperationManagerFactory instance= new IDSOperationManagerFactory();
+	public static IDSOperationManagerFactory instance= new IDSOperationManagerFactory();
 	
 	@Override
 	public IIDSOperationManager createIDSOperationManagerFactory(IIDSMainProcessor idsMainProcessor) {

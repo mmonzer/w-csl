@@ -9,13 +9,13 @@ import java.util.Map;
 public class JsonUtil {
 
 
-	static public  String replaceSingleQuote(String s) {
+	public static  String replaceSingleQuote(String s) {
 
 		return s.replaceAll("'", "\"");
 	}
 
 
-	static public boolean setJsonField(Json j,List<JsonSelectorElement> selector,String value) {
+	public static boolean setJsonField(Json j,List<JsonSelectorElement> selector,String value) {
 
 
 
@@ -23,7 +23,7 @@ public class JsonUtil {
 	}
 
 
-	static public Json getJsonField(Json j,List<JsonSelectorElement> selector) {
+	public static Json getJsonField(Json j,List<JsonSelectorElement> selector) {
 		for (JsonSelectorElement sel:selector) {
 			if (sel.isIndex())
 				j=j.at(sel.getIndex());
@@ -130,7 +130,7 @@ public class JsonUtil {
 
 	}
 
-	static public Json getElement(Json j, String s) throws JsonException {
+	public static Json getElement(Json j, String s) throws JsonException {
 		JsonSelector js= new JsonSelector().parse(s);
 
 		if (js.size()==0) throw new JsonException("Invalid selector:"+s);
@@ -140,7 +140,7 @@ public class JsonUtil {
 
 	}
 
-	static public Json getElement(Json j, JsonSelectorElement jse) throws JsonException {
+	public static Json getElement(Json j, JsonSelectorElement jse) throws JsonException {
 
 		//System.out.println("j="+j);
 
@@ -182,7 +182,7 @@ public class JsonUtil {
 	}
 
 
-	static public String getAsString(Json j, String pname) {
+	public static String getAsString(Json j, String pname) {
 
 		Json x = j.get(pname);
 		if (x==null) return null;
@@ -191,14 +191,14 @@ public class JsonUtil {
 
 	}
 
-	static public  String getStringFromJson(Json j, String propName,String defaultValue) {
+	public static  String getStringFromJson(Json j, String propName,String defaultValue) {
 		//Json v=j.get(propName);
 		Json v=findChild(j,propName);
 		if (v==null) return defaultValue;
 		return v.asString();
 	}
 
-	static public  List<String> getListStrFromJson(Json j, String propName, List<String> defaultValue) {
+	public static  List<String> getListStrFromJson(Json j, String propName, List<String> defaultValue) {
 		Json v=findChild(j,propName);
 		if (v==null) return defaultValue;
 		List<String> list = new ArrayList<>();
@@ -209,7 +209,7 @@ public class JsonUtil {
 	}
 
 
-	static public  Boolean getBooleanFromJson(Json j, String propName, Boolean defaultValue) {
+	public static  Boolean getBooleanFromJson(Json j, String propName, Boolean defaultValue) {
 		//Json v=j.get(propName);
 		Json v=findChild(j,propName);
 		if (v==null) return defaultValue;
@@ -305,11 +305,11 @@ public class JsonUtil {
 //	}
 
 
-	static public String prettyPrint(Json j) {
+	public static String prettyPrint(Json j) {
 		return prettyPrint2(j);
 	}
 	
-	static public String prettyPrint1(Json j) {
+	public static String prettyPrint1(Json j) {
 		ScriptEngineManager factory = new ScriptEngineManager();
 		// create JavaScript engine
 		ScriptEngine engine = factory.getEngineByName("JavaScript");
@@ -354,19 +354,19 @@ public class JsonUtil {
 	}
 	
 	
-	static public String prettyPrint2(Json j) {
+	public static String prettyPrint2(Json j) {
 		return object2str(j,"", "", false);
 	}
 	
 	
-	static public boolean compare(Json j1, Json j2) {
+	public static boolean compare(Json j1, Json j2) {
 		String s1= object2str(j1,"", "", false);
 		String s2= object2str(j2,"", "", false);
 		
 		return s1.compareTo(s2)==0;
 	}
 	
-	static public String object2str(Json j, String decal, String name, boolean addComma) {
+	public static String object2str(Json j, String decal, String name, boolean addComma) {
 		
 		String result="";
 		String quote="\"";

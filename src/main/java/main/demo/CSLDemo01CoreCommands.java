@@ -17,12 +17,12 @@ import com.ucsl.json.Json;
 public class CSLDemo01CoreCommands {
 
 
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
 
-	static public String doGet(String cmd) {
+	public static String doGet(String cmd) {
 
 
 
@@ -57,7 +57,7 @@ public class CSLDemo01CoreCommands {
 	}
 
 
-	static public String doSave(String filename, String fileContents) {
+	public static String doSave(String filename, String fileContents) {
 
 
 		Json j= Json.object();
@@ -97,7 +97,7 @@ public class CSLDemo01CoreCommands {
 		
 	}
 	
-	static public void testCore1() {
+	public static void testCore1() {
 		
 		System.out.println("TEST GET TIME");
 		

@@ -26,6 +26,7 @@ import com.csl.intercom.status.IStatusProvider;
 import com.csl.util.FileStorageService;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
+import com.ucsl.interfaces.IJsonCmdWithFiles;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -485,6 +486,63 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("add_entity_http_connection", params -> {
+                    logger.trace("Adding entity to HTTP connection : params={}", params);
+                    Json entityHttpConnectionJson = params.get("entity_http_connection");
+                    EntityHttpConnection entityHttpConnection = EntityHttpConnection.fromDbapiJson(entityHttpConnectionJson);
+                    logger.debug("Adding entity to HTTP connection : entityHttpConnection={}", entityHttpConnection);
+                    if (entityHttpConnection == null) {
+                        logger.error("Failed to add entity to HTTP connection : could not parse entity_http_connection : {}", entityHttpConnectionJson);
+                        return JsonApiResponse.error("Could not parse entity_http_connection",
+                                Json.object("exception", "Could not parse entity_http_connection")
+                        ).toJson();
+                    }
+                    JsonApiResponse response;
+                    if (entityHttpConnection.getUuid() == null) {
+                        response = scanApiHandler.createEntityHttpConnection(entityHttpConnection);
+                        logger.debug("HTTP connection not found, created entity HTTP connection in CSL-Scan: success={}", response.isSuccess());
+                        if (response.isSuccess()) {
+                            EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromDbapiJson(response.getResult());
+                            logger.trace("Parsed entity HTTP connection to DBapi format: createdEntityHttpConnection={}", createdEntityHttpConnection);
+                            try {
+                                if (createdEntityHttpConnection == null) {
+                                    throw new Exception("Could not parse the created entity_http_connection");
+                                }
+                                dbapiHandler.createDiscoveryProtocol(createdEntityHttpConnection);
+                                logger.info("Created discovery protocol for entity HTTP connection in CSL-Dbapi : entityHttpConnection={}", entityHttpConnection);
+                            } catch (Exception e) {
+                                scanApiHandler.deleteEntityHttpConnection(createdEntityHttpConnection.getUuid());
+                                logger.warn("Could not create discovery protocol in CSL-Dbapi (entityHttpConnection={}), compensated in CSL-Scan", entityHttpConnection, e);
+                                response = JsonApiResponse.error("Could not create discovery protocol",
+                                        Json.object("exception", e.getMessage())
+                                );
+                            }
+                        }
+                    } else {
+                        EntityHttpConnection previousEntityHttpConnection = scanApiHandler.getEntityHttpConnection(entityHttpConnection.getUuid(), false);
+                        logger.trace("HTTP connection found,fetching entity HTTP connection information in CSL-Scan: previousEntityHttpConnection={}", previousEntityHttpConnection);
+                        response = scanApiHandler.updateEntityHttpConnection(entityHttpConnection);
+                        logger.debug("HTTP connection found, updating entity HTTP connection in CSL-Scan: success={}", response.isSuccess());
+                        try {
+                            dbapiHandler.updateDiscoveryProtocol(entityHttpConnection);
+                            logger.info("Updated entity HTTP connection in CSL-Dbapi : entityHttpConnection={}", entityHttpConnection);
+                        } catch (Exception e) {
+                            scanApiHandler.updateEntityHttpConnection(previousEntityHttpConnection);
+                            logger.warn("Could not update discovery protocol in CSL-Dbapi (entityHttpConnection={}), compensated in CSL-Scan", entityHttpConnection, e);
+                            response = JsonApiResponse.error("Could not update discovery protocol",
+                                    Json.object("exception", e.getMessage())
+                            );
+                        }
+                    }
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
+                        .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)
+                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
+        );
+        addCmd("upload_entity_http_connection_file", (params, files) -> {
                     logger.trace("Adding entity to HTTP connection : params={}", params);
                     Json entityHttpConnectionJson = params.get("entity_http_connection");
                     EntityHttpConnection entityHttpConnection = EntityHttpConnection.fromDbapiJson(entityHttpConnectionJson);
@@ -1234,6 +1292,31 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * @return A {@link String}
      */
     public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
+        return apiCommands.registerCmd(name, cmd, help, privilegeFamily);
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name            The name of the command.
+     * @param cmd             The callback to be executed when the command is invoked.
+     * @param privilegeFamily The privilege family of the command.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmdWithFiles cmd, JsonCmdPrivilegeFamily privilegeFamily) {
+        return apiCommands.registerCmd(name, cmd, privilegeFamily);
+    }
+
+    /**
+     * Register an API command.
+     *
+     * @param name            The name of the command.
+     * @param cmd             The callback to be executed when the command is invoked.
+     * @param help            The helper to display in the '/apihelp' page.
+     * @param privilegeFamily The privilege family of the command.
+     * @return A {@link String}
+     */
+    public String addCmd(String name, IJsonCmdWithFiles cmd, IJsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
         return apiCommands.registerCmd(name, cmd, help, privilegeFamily);
     }
 

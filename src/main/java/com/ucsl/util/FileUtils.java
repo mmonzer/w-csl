@@ -131,7 +131,7 @@ public class FileUtils  {
 
 
 	public static final String EOL = System.getProperty("line.separator");
-	static public String readFile(String filename) throws IOException {
+	public static String readFile(String filename) throws IOException {
 		BufferedReader br = null;
 		FileReader fr = null;
 
@@ -154,7 +154,7 @@ public class FileUtils  {
 	}
 
 	
-	static public List<String> readFileAsStringList(String filename) throws IOException {
+	public static List<String> readFileAsStringList(String filename) throws IOException {
 		BufferedReader br = null;
 		FileReader fr = null;
 
@@ -175,7 +175,7 @@ public class FileUtils  {
 	}
 
 
-	static public String writeFile(String filename, String content) {
+	public static String writeFile(String filename, String content) {
 
 		File file = new File(filename);
 		String dir = file.getAbsoluteFile().getParent();
@@ -197,7 +197,7 @@ public class FileUtils  {
 
 	}
 
-	static public Json readFileInAJsonText(String filename) {
+	public static Json readFileInAJsonText(String filename) {
 		Json result=Json.object();
 		result.set("text", "");
 		result.set("error", "");
@@ -213,7 +213,7 @@ public class FileUtils  {
 		return result;
 	}
 
-	static public Json writeFileFromText(String filename,String content) {
+	public static Json writeFileFromText(String filename,String content) {
 		Json result=Json.object();
 
 		result.set("error", "");
@@ -475,7 +475,7 @@ public class FileUtils  {
 
 
 
-	static public String reverseToLastBackupFile(String filePath) {
+	public static String reverseToLastBackupFile(String filePath) {
 		File[] files=getListOfFilesWithTimeStamp(filePath,"");
 		File f=null;
 

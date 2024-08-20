@@ -20,11 +20,11 @@ import com.ucsl.json.Json;
 
 public class CSLDemo03CmdServer {
 	
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-	static public Json execCmd(String cmd, Json jparams) {
+	public static Json execCmd(String cmd, Json jparams) {
 		Json j= Json.object();
 	
 		j.set("cmd", cmd);
@@ -62,7 +62,7 @@ public class CSLDemo03CmdServer {
 	}
 
 	
-	static public void testCmd() {
+	public static void testCmd() {
 		System.out.println("TEST EXEC_CMD");
 		Json jparams= Json.object();
 		jparams.set("x",1);

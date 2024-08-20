@@ -448,7 +448,7 @@ public class ScanActif {
         return jsonRaw;
 	}
 	
-	static public void writeFile(String filename, String content) {
+	public static void writeFile(String filename, String content) {
 	    try {
 	        FileWriter myWriter = new FileWriter(filename);
 	        myWriter.write(content);

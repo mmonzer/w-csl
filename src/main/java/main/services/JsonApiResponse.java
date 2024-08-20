@@ -91,15 +91,15 @@ public class JsonApiResponse {
      * @param result The result of the message.
      * @return The newly created response.
      */
-    static public JsonApiResponse result(Json result, Json extra) {
+    public static JsonApiResponse result(Json result, Json extra) {
         return new JsonApiResponse(result, extra, null);
     }
 
-    static public JsonApiResponse result(Json result) {
+    public static JsonApiResponse result(Json result) {
         return JsonApiResponse.result(result, null);
     }
 
-    static public JsonApiResponse success() {
+    public static JsonApiResponse success() {
         return JsonApiResponse.result(null, null);
     }
 
@@ -110,7 +110,7 @@ public class JsonApiResponse {
      * @param details The details that caused the error.
      * @return The newly created error message.
      */
-    static public JsonApiResponse error(String reason, Json details) {
+    public static JsonApiResponse error(String reason, Json details) {
         return new JsonApiResponse(null, null, new Error(reason, details));
     }
 
@@ -120,7 +120,7 @@ public class JsonApiResponse {
      * @param reason The reason of the error.
      * @return The newly created error message.
      */
-    static public JsonApiResponse error(String reason) {
+    public static JsonApiResponse error(String reason) {
         return error(reason, null);
     }
     @Override

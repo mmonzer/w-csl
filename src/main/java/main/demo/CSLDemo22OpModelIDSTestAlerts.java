@@ -16,7 +16,7 @@ import com.ucsl.json.Json;
 
 public class CSLDemo22OpModelIDSTestAlerts {
 
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 

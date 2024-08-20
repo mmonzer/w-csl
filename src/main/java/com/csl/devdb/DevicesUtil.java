@@ -8,7 +8,7 @@ import com.ucsl.json.JsonUtil;
 
 public class DevicesUtil {
 
-	static public Json getLearnedModelTableAsJson(IIDSMainProcessor idsMainProcessor) {
+	public static Json getLearnedModelTableAsJson(IIDSMainProcessor idsMainProcessor) {
 
 		IIDSLearnedRules idsLearnedRules = idsMainProcessor.getLearnedModelFromFile();
 
@@ -21,7 +21,7 @@ public class DevicesUtil {
 
 	}
 
-	static public Json getLearnedModelTableAsJsonDpi(IIDSMainProcessor idsMainProcessor) {
+	public static Json getLearnedModelTableAsJsonDpi(IIDSMainProcessor idsMainProcessor) {
 
 		IIDSLearnedRules idsLearnedRules = idsMainProcessor.getLearnedModelFromFile();
 

@@ -45,7 +45,7 @@ public class NmapServices extends Service {
 		return true;
 	}
 
-	static public void lauchNmap(Json params, Json jConfig) {
+	public static void lauchNmap(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
 
@@ -65,7 +65,7 @@ public class NmapServices extends Service {
 
 	}
 
-	static public void lauchNmap(Json params, Config.NmapService config) {
+	public static void lauchNmap(Json params, Config.NmapService config) {
 //		System.out.println("launchNmap:"+params);
 //		System.out.println("launchNmap:"+config);
 
@@ -99,7 +99,7 @@ public class NmapServices extends Service {
         return Json.read(jsonRaw);
 	}
 
-	static public Json scanDevice(Json params, Json jConfig) {
+	public static Json scanDevice(Json params, Json jConfig) {
 		System.out.println("launchNmap:"+params);
 		System.out.println("launchNmap:"+jConfig);
 
@@ -129,7 +129,7 @@ public class NmapServices extends Service {
 		return result;
 	}
 
-	static public Json scanDevice(Json params, Config.NmapService config) {
+	public static Json scanDevice(Json params, Config.NmapService config) {
 		System.out.println("launchNmap:"+params);
 //		System.out.println("launchNmap:"+jConfig);
 

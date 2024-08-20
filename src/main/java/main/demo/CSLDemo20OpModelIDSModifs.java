@@ -21,7 +21,7 @@ import com.ucsl.json.JsonUtil;
 
 public class CSLDemo20OpModelIDSModifs {
 
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 

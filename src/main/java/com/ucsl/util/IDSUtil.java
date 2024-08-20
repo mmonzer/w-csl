@@ -40,7 +40,7 @@ public class IDSUtil {
 		return str2int(name, -1);
 	}
 	
-	static public String getProtocoleName(Json j) {
+	public static String getProtocoleName(Json j) {
 		Json g=j.get("prot");
 		if (g!=null) {
 			int n=g.asInteger();

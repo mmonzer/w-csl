@@ -16,11 +16,11 @@ import com.ucsl.json.Json;
 
 public class CSLdemo04ConfigFileManager {
 
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-	static public String doGet(String cmd) {
+	public static String doGet(String cmd) {
 
 		HttpGet get = new HttpGet(getServerURL()+cmd);
 		HttpClient  client    = HttpClientBuilder.create().build();
@@ -51,7 +51,7 @@ public class CSLdemo04ConfigFileManager {
 	}
 
 
-	static public String doSave(String filename, String fileContents) {
+	public static String doSave(String filename, String fileContents) {
 
 
 		Json j = Json.object();
@@ -89,7 +89,7 @@ public class CSLdemo04ConfigFileManager {
 		}
 	}
 
-	static public void testLoadConfigFile() {
+	public static void testLoadConfigFile() {
 		
 		System.out.println("TEST LOAD");
 		
@@ -97,7 +97,7 @@ public class CSLdemo04ConfigFileManager {
 		System.out.println("\n");
 	}
 	
-	static public void testReverseConfigFile() {
+	public static void testReverseConfigFile() {
 		
 		System.out.println("TEST REVERSE");
 		
@@ -105,7 +105,7 @@ public class CSLdemo04ConfigFileManager {
 		
 	}
 	
-	static public void testSaveConfigFile() {
+	public static void testSaveConfigFile() {
 		
 		System.out.println("TEST SAVE");
 		
@@ -119,7 +119,7 @@ public class CSLdemo04ConfigFileManager {
 		System.out.println(" result="+result);
 	}
 	
-	static public void testSaveConfigFile2() {
+	public static void testSaveConfigFile2() {
 		
 		System.out.println("TEST SAVE2");
 		

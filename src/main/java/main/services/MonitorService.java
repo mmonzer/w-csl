@@ -147,7 +147,7 @@ public class MonitorService extends Service {
 		return j;
 	}
 
-	static public String startOf(String s) {
+	public static String startOf(String s) {
 		int MAX=50;
 		if (s.length()<=MAX) return s;
 		else return s.substring(0,MAX-1)+"...";

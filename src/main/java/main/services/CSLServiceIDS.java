@@ -509,10 +509,10 @@ public class CSLServiceIDS extends Service {
 		 * save
 		 * 
 		 * 	type : 
-		 * 		static public int SURICATA_RULES_BASE=3;
-		 *		static public int SURICATA_RULES_LEARNED=4;
-		 *		static public int SURICATA_CONFIG=5;
-		 *		static public int TAP_CONFIG=6;
+		 * 		public static int SURICATA_RULES_BASE=3;
+		 *		public static int SURICATA_RULES_LEARNED=4;
+		 *		public static int SURICATA_CONFIG=5;
+		 *		public static int TAP_CONFIG=6;
 		 *
 		 * 
 		 *  “id”:””,                  // ID du tap 
@@ -899,7 +899,7 @@ public class CSLServiceIDS extends Service {
 		return j;
 	}
 
-	static public String startOf(String s) {
+	public static String startOf(String s) {
 		int MAX=50;
 		if (s.length()<=MAX) return s;
 		else return s.substring(0,MAX-1)+"...";

@@ -15,11 +15,11 @@ import com.ucsl.json.Json;
 
 public class CSLDemo08TapsManager {
 	
-	static public String getServerURL() {
+	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
 
-	static public Json execCmd(String operation,String idname, Json jparams) {
+	public static Json execCmd(String operation,String idname, Json jparams) {
 
 
 		Json j= Json.object();

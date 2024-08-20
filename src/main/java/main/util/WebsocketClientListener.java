@@ -34,7 +34,7 @@ public class WebsocketClientListener {
 	private MessageHandler messageHandler;
 	String uriName="";
 
-	static public WebsocketClientListener get(String s) {
+	public static WebsocketClientListener get(String s) {
 
 		for (WebsocketClientListener w:list) {
 			if (w.uriName.compareTo(s)==0) {

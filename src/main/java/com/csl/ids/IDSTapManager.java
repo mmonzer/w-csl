@@ -24,10 +24,10 @@ public class IDSTapManager {
 	String suricataConfigFileName="suricata.yaml";
 	String tapConfigFileName="config.ini";
 
-	static public int SURICATA_RULES_BASE=3;
-	static public int SURICATA_RULES_LEARNED=4;
-	static public int SURICATA_CONFIG=5;
-	static public int TAP_CONFIG=6;
+	public static int SURICATA_RULES_BASE=3;
+	public static int SURICATA_RULES_LEARNED=4;
+	public static int SURICATA_CONFIG=5;
+	public static int TAP_CONFIG=6;
 
     private String rulesForSuricataBaseFileName="RulesForSuricata.txt";
     private String rulesForSuricataLearnedFileName="RulesForSuricataLearned.txt";

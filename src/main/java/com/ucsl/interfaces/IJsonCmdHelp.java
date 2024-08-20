@@ -4,33 +4,32 @@ import com.ucsl.json.Json;
 
 public interface IJsonCmdHelp {
 
-	static public String INT="int";
-	static public String LONG="long";
-	static public String STR="string";
-	static public String JSON="json";
-	static public String BOOL="boolean";
-	
-	static public String STATUS_TODO="TODO";
-	static public String STATUS_OK="OK";
-	
-	IJsonCmdHelp setName(String s);
+    String INT = "int";
+    String LONG = "long";
+    String STR = "string";
+    String JSON = "json";
+    String BOOL = "boolean";
 
-	IJsonCmdHelp setDesc(String s);
+    String STATUS_TODO = "TODO";
+    String STATUS_OK = "OK";
 
-	IJsonCmdHelp setParam(String name, String desc, String type);
+    IJsonCmdHelp setName(String s);
 
-	IJsonCmdHelp setResult(String s, String type);
+    IJsonCmdHelp setDesc(String s);
 
-	boolean isHidden();
+    IJsonCmdHelp setParam(String name, String desc, String type);
 
-	void setHidden(boolean hidden);
+    IJsonCmdHelp setResult(String s, String type);
 
-	Json toJson(Json mode);
+    boolean isHidden();
 
-	IJsonCmdHelp hide();
+    void setHidden(boolean hidden);
 
-	IJsonCmdHelp setStatus(String s);
-	IJsonCmdHelp  setHelpProvider(ICmdHelpProvider h);
+    Json toJson(Json mode);
 
+    IJsonCmdHelp hide();
 
+    IJsonCmdHelp setStatus(String s);
+
+    IJsonCmdHelp setHelpProvider(ICmdHelpProvider h);
 }

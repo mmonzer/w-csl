@@ -55,40 +55,31 @@ public class ApiCommands implements IApiCommands {
     }
 
     @Override
-    public String registerCmd(String name, IJsonCmd j) {
+    public String registerCmd(String name, IJsonCmd jsonCommand) {
+        return registerCmd(name, jsonCommand, null, null);
+    }
+
+    @Override
+    public String registerCmd(String name, IJsonCmd jsonCommand, IJsonCmdHelp jsonCommandHelp) {
+        return registerCmd(name, jsonCommand, jsonCommandHelp, null);
+    }
+
+    @Override
+    public String registerCmd(String name, IJsonCmd jsonCommand, JsonCmdPrivilegeFamily privilegeFamily) {
+        return registerCmd(name, jsonCommand, null, privilegeFamily);
+    }
+
+    @Override
+    public String registerCmd(String name, IJsonCmd jsonCommand, IJsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
         if (listOfCommands.get(name) != null)
             return "Command with this name already registered :" + name;
-        listOfCommands.put(name, j);
+        listOfCommands.put(name, jsonCommand);
         listOfCommandNames.add(name);
-        return "ok";
-    }
-
-    @Override
-    public String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
-        if (listOfCommands.get(name) != null)
-            return "Command with this name already registered :" + name;
-        listOfCommands.put(name, j);
-        listOfCommandNames.add(name);
-        if (jh != null) {listOfCommandHelps.put(name, jh.setName(name));}
-        return "ok";
-    }
-
-    @Override
-    public String registerCmd(String name, IJsonCmd j, JsonCmdPrivilegeFamily privilegeFamily) {
-        String result = registerCmd(name, j);
-        if ("ok".equals(result)) {
+        if (jsonCommandHelp != null) {listOfCommandHelps.put(name, jsonCommandHelp.setName(name));}
+        if (privilegeFamily!=null) {
             listOfCommandPrivileges.put(name, privilegeFamily);
         }
-        return result;
-    }
-
-    @Override
-    public String registerCmd(String name, IJsonCmd j, IJsonCmdHelp jh, JsonCmdPrivilegeFamily privilegeFamily) {
-        String result = registerCmd(name, j, jh);
-        if ("ok".equals(result)) {
-            listOfCommandPrivileges.put(name, privilegeFamily);
-        }
-        return result;
+        return "ok";
     }
 
     private String formatPath(String proxyPath) {

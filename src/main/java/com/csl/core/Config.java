@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.ucsl.json.JsonException;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -127,15 +126,15 @@ public class Config {
 
         public Client(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            ipServerRemote = JsonUtil.getStringFromJson(config, "ip_server_remote", "localhost");
-            portServerRemote = JsonUtil.getIntFromJson(config, "port_server_remote", 8000);
-            serverRemoteUrlPrefix = JsonUtil.getStringFromJson(config, "server_remote_url_prefix", "");
-            forceHostNameResolution = JsonUtil.getBooleanFromJson(config, "force_host_name_resolution", false);
-            apiKey = JsonUtil.getStringFromJson(config, "api_key", "");
-            useSsl = JsonUtil.getBooleanFromJson(config, "use_ssl", true);
-            launchWebApiServer = JsonUtil.getBooleanFromJson(config, "launch_web_api_server", false);
-            webApiServerPort = JsonUtil.getIntFromJson(config, "web_api_server_port", 9900);
-            timezone = JsonUtil.getStringFromJson(config, "timezone", "Europe/Paris");
+            ipServerRemote = config.get("ip_server_remote").asString();
+            portServerRemote = config.get("port_server_remote").asInteger();
+            serverRemoteUrlPrefix = config.get("server_remote_url_prefix").asString();
+            forceHostNameResolution = config.get( "force_host_name_resolution").asBoolean();
+            apiKey = config.get("api_key").asString();
+            useSsl = config.get( "use_ssl").asBoolean();
+            launchWebApiServer = config.get( "launch_web_api_server").asBoolean();
+            webApiServerPort = config.get("web_api_server_port").asInteger();
+            timezone = config.get("timezone").asString();
         }
     }
 
@@ -152,11 +151,11 @@ public class Config {
 
         public Scan(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            managerIp = JsonUtil.getStringFromJson(config, "manager_ip", "localhost");
-            managerPort = JsonUtil.getIntFromJson(config, "manager_port", 8010);
-            managerProtocol = JsonUtil.getStringFromJson(config, "manager_protocol", "http");
-            managerTimezone = JsonUtil.getStringFromJson(config, "manager_timezone", "UTC");
-            useSSL = JsonUtil.getBooleanFromJson(config, "use_ssl", false);
+            managerIp = config.get("manager_ip").asString();
+            managerPort = config.get("manager_port").asInteger();
+            managerProtocol = config.get("manager_protocol").asString();
+            managerTimezone = config.get("manager_timezone").asString();
+            useSSL = config.get( "use_ssl").asBoolean();
         }
     }
 
@@ -170,8 +169,8 @@ public class Config {
 
         public Status(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            sendNotifications = JsonUtil.getBooleanFromJson(config, "send_notifications", false);
-            notificationsPeriod = JsonUtil.getIntFromJson(config, "notifications_period", 1);
+            sendNotifications = config.get( "send_notifications").asBoolean();
+            notificationsPeriod = config.get("notifications_period").asInteger();
         }
     }
 
@@ -187,10 +186,10 @@ public class Config {
 
         public NmapService(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            debugMode = JsonUtil.getBooleanFromJson(config, "debug_mode", true);
-            debugDir = JsonUtil.getStringFromJson(config, "debug_dir", "./");
-            logMode = JsonUtil.getBooleanFromJson(config, "log_mode", false);
-            logDir = JsonUtil.getStringFromJson(config, "log_dir", "./");
+            debugMode = config.get( "debug_mode").asBoolean();
+            debugDir = config.get("debug_dir").asString();
+            logMode = config.get( "log_mode").asBoolean();
+            logDir = config.get("log_dir").asString();
         }
     }
 
@@ -203,7 +202,7 @@ public class Config {
 
         public CpeService(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            dictionaryPath = JsonUtil.getStringFromJson(config, "dictionaryPath", "src/main/resources/cslconf/cpe/CpeTree.json");
+            dictionaryPath = config.get("dictionaryPath").asString();
         }
     }
 
@@ -218,9 +217,9 @@ public class Config {
 
         public Tap(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            localIpAddress = JsonUtil.getStringFromJson(config, "localIpAddr", "localhost");
-            localPort = JsonUtil.getIntFromJson(config, "localPort", 8001);
-            knowHostFilePath = JsonUtil.getStringFromJson(config, "knowHostFilePath", "~/.ssh/known_hosts");
+            localIpAddress = config.get("localIpAddr").asString();
+            localPort = config.get("localPort").asInteger();
+            knowHostFilePath = config.get("knowHostFilePath").asString();
         }
     }
 
@@ -257,30 +256,30 @@ public class Config {
 
         public Server(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            on = JsonUtil.getBooleanFromJson(config, "on", true);
-            verbose = JsonUtil.getBooleanFromJson(config, "verbose", false);
-            debug = JsonUtil.getBooleanFromJson(config, "debug", false);
-            webserverPort = JsonUtil.getIntFromJson(config, "webserver_port", 8000);
-            webRootdir = JsonUtil.getStringFromJson(config, "web_rootdir", "");
-            webRootdir2 = JsonUtil.getStringFromJson(config, "web_rootdir2", "./public3");
-            webRootdir3 = JsonUtil.getStringFromJson(config, "web_rootdir3", "./public3");
-            datafileSubdir = JsonUtil.getStringFromJson(config, "datafile_subdir", "datafile");
-            coreCommands = JsonUtil.getBooleanFromJson(config, "core_commands", true);
-            varsCommands = JsonUtil.getBooleanFromJson(config, "vars_commands", true);
-            modbusCommands = JsonUtil.getBooleanFromJson(config, "modbus_commands", true);
-            externalCommands = JsonUtil.getBooleanFromJson(config, "external_commands", true);
-            jsonCommands = JsonUtil.getBooleanFromJson(config, "json_commands", true);
-            jcmdCommands = JsonUtil.getBooleanFromJson(config, "jcmd_commands", true);
-            databaseCommands = JsonUtil.getBooleanFromJson(config, "database_commands", true);
-            configFileCommands = JsonUtil.getBooleanFromJson(config, "config_file_commands", true);
-            mxCommands = JsonUtil.getBooleanFromJson(config, "mx_commands", true);
-            sendAlerts = JsonUtil.getBooleanFromJson(config, "send_alerts", true);
-            sendConsoleOutput = JsonUtil.getBooleanFromJson(config, "send_console_output", true);
-            logJsonCommandsToFile = JsonUtil.getBooleanFromJson(config, "logJsonCommandsToFile", true);
-            logDir = JsonUtil.getStringFromJson(config, "log_dir", "./idslogs/jcmds");
-            logPrefixFilename = JsonUtil.getStringFromJson(config, "log_prefix_filename", "JCMD");
-            maxSizeOfLogFiles = JsonUtil.getIntFromJson(config, "max_size_of_log_files", 10000);
-            websocketTimeout = JsonUtil.getIntFromJson(config, "websocket_timeout", 10000);
+            on = config.get( "on").asBoolean();
+            verbose = config.get( "verbose").asBoolean();
+            debug = config.get( "debug").asBoolean();
+            webserverPort = config.get("webserver_port").asInteger();
+            webRootdir = config.get("web_rootdir").asString();
+            webRootdir2 = config.get("web_rootdir2").asString();
+            webRootdir3 = config.get("web_rootdir3").asString();
+            datafileSubdir = config.get("datafile_subdir").asString();
+            coreCommands = config.get( "core_commands").asBoolean();
+            varsCommands = config.get( "vars_commands").asBoolean();
+            modbusCommands = config.get( "modbus_commands").asBoolean();
+            externalCommands = config.get( "external_commands").asBoolean();
+            jsonCommands = config.get( "json_commands").asBoolean();
+            jcmdCommands = config.get( "jcmd_commands").asBoolean();
+            databaseCommands = config.get( "database_commands").asBoolean();
+            configFileCommands = config.get( "config_file_commands").asBoolean();
+            mxCommands = config.get( "mx_commands").asBoolean();
+            sendAlerts = config.get( "send_alerts").asBoolean();
+            sendConsoleOutput = config.get( "send_console_output").asBoolean();
+            logJsonCommandsToFile = config.get( "logJsonCommandsToFile").asBoolean();
+            logDir = config.get("log_dir").asString();
+            logPrefixFilename = config.get("log_prefix_filename").asString();
+            maxSizeOfLogFiles = config.get("max_size_of_log_files").asInteger();
+            websocketTimeout = config.get("websocket_timeout").asInteger();
         }
     }
 
@@ -300,13 +299,13 @@ public class Config {
 
         public UdpServerConf(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            on = JsonUtil.getBooleanFromJson(config, "on", false);
-            verbose = JsonUtil.getBooleanFromJson(config, "verbose", true);
-            traceAllMessages = JsonUtil.getBooleanFromJson(config, "trace_all_messages", false);
-            ip = JsonUtil.getStringFromJson(config, "ip", "0.0.0.0");
-            port = JsonUtil.getIntFromJson(config, "port", 8001);
-            maxInputQueues = JsonUtil.getIntFromJson(config, "max_input_queues", 10);
-            maxSizeOfInputQueues = JsonUtil.getIntFromJson(config, "max_size_of_input_queues", 100);
+            on = config.get( "on").asBoolean();
+            verbose = config.get( "verbose").asBoolean();
+            traceAllMessages = config.get( "trace_all_messages").asBoolean();
+            ip = config.get("ip").asString();
+            port = config.get("port").asInteger();
+            maxInputQueues = config.get("max_input_queues").asInteger();
+            maxSizeOfInputQueues = config.get("max_size_of_input_queues").asInteger();
         }
     }
 
@@ -322,10 +321,10 @@ public class Config {
 
         public ModuleExec(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            modulesPackageName = JsonUtil.getStringFromJson(config, "modules_package_name", "main.modules");
-            samplingTime = JsonUtil.getIntFromJson(config, "sampling_time", 100);
-            numberOfExecLoops = JsonUtil.getIntFromJson(config, "number_of_exec_loops", 2);
-            autostart = JsonUtil.getBooleanFromJson(config, "autostart", true);
+            modulesPackageName = config.get("modules_package_name").asString();
+            samplingTime = config.get("sampling_time").asInteger();
+            numberOfExecLoops = config.get("number_of_exec_loops").asInteger();
+            autostart = config.get( "autostart").asBoolean();
         }
     }
 
@@ -340,8 +339,8 @@ public class Config {
 
         public Module(Json moduleConfig) {
             if (moduleConfig ==null) { throw new RuntimeException("Wrong configuration"); }
-            name = JsonUtil.getStringFromJson(moduleConfig, "name", "module_ids");
-            type = JsonUtil.getStringFromJson(moduleConfig, "type", "ModuleIDS");
+            name = moduleConfig.get("name").asString();
+            type = moduleConfig.get("type").asString();
             config = new CSLModuleConfig(moduleConfig.get("config"));
         }
 
@@ -369,11 +368,11 @@ public class Config {
 
             public CSLModuleConfig(Json config) {
                 if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-                autostart = JsonUtil.getBooleanFromJson(config, "autostart", true);
-                execLoopNumber = JsonUtil.getIntFromJson(config, "exec_loop_number", 1);
-                inputPriority = JsonUtil.getIntFromJson(config, "input_priority", 90);
-                stepPriority = JsonUtil.getIntFromJson(config, "step_priority", 99);
-                outputPriority = JsonUtil.getIntFromJson(config, "output_priority", 98);
+                autostart = config.get( "autostart").asBoolean();
+                execLoopNumber = config.get("exec_loop_number").asInteger();
+                inputPriority = config.get("input_priority").asInteger();
+                stepPriority = config.get("step_priority").asInteger();
+                outputPriority = config.get("output_priority").asInteger();
             }
         }
     }
@@ -426,46 +425,45 @@ public class Config {
 
         public IdsConf(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            on = JsonUtil.getBooleanFromJson(config, "on", true);
-            mode = JsonUtil.getIntFromJson(config, "mode", 1);
-            helpMode = JsonUtil.getStringFromJson(config, "help_mode", "0:idle, 1:record only, 2: detect online 3: learning 4: detect offline");
-            relativeToCSLConfigDir = JsonUtil.getBooleanFromJson(config, "relative_to_CSLConfig_dir", false);
-            idsconfDir = JsonUtil.getStringFromJson(config, "idsconf_dir", "idsconf");
-            idsconfDirRelativeToDataDir = JsonUtil.getBooleanFromJson(config, "idsconf_dir_relative_to_data_dir", false);
-            packetsDirForDetectionOffline = JsonUtil.getStringFromJson(config, "packets_dir_for_detection_offline", "../zzidsdir/data/test/");
-            packetsDirForDetectionOfflineInfo = JsonUtil.getStringFromJson(config, "packets_dir_for_detection_offline_info", "used for detection off line (mode 4) and mode 3 if validation after lerarning");
-            packetsDirForRecording = JsonUtil.getStringFromJson(config, "packets_dir_for_recording", "../zzidsdir/data/test");
-            packetsDirForRecordingInfo = JsonUtil.getStringFromJson(config, "packets_dir_for_recording_info", "used for mode record and detect on line with log (mode 1 and 2)");
-            packetsDirForLearning = JsonUtil.getStringFromJson(config, "packets_dir_for_learning", "../zzidsdir/data/test");
-            packetsDirForLearningInfo = JsonUtil.getStringFromJson(config, "packets_dir_for_learning_info", "used for learning  (mode 3)");
-            validationAfterLearning = JsonUtil.getBooleanFromJson(config, "validation_after_learning", false);
-            logToFile = JsonUtil.getBooleanFromJson(config, "log_to_file", true);
-            variablesPrefixFilename = JsonUtil.getStringFromJson(config, "variables_prefix_filename", "VARIABLES");
-            packetsPrefixFilename = JsonUtil.getStringFromJson(config, "packets_prefix_filename", "PACKETS");
-            networkPrefixFilename = JsonUtil.getStringFromJson(config, "network_prefix_filename", "NETWORK");
-            maxSizeOfLogFiles = JsonUtil.getIntFromJson(config, "max_size_of_log_files", 100000000);
-            networkPrefixFilename = JsonUtil.getStringFromJson(config, "network_prefix_filename", "NETWORK");
-            subdirLearn = JsonUtil.getStringFromJson(config, "subdir_learn", "");
-            helpSubdirLearn = JsonUtil.getStringFromJson(config, "help_subdir_learn", "The data for learning are in a subdir of working_dir");
-            subdirOfflineDetect = JsonUtil.getStringFromJson(config, "subdir_offline_detect", "test");
-            helpSubdirDetect = JsonUtil.getStringFromJson(config, "help_subdir_detect", "The data for off line detect are in a subdir of working_dir");
-            rulesForDetection = JsonUtil.getStringFromJson(config, "rules_for_detection", "RulesForDetection.txt");
-            rulesForLearning = JsonUtil.getStringFromJson(config, "rules_for_learning", "RulesForLearning.txt");
-            rulesForSuricataBase = JsonUtil.getStringFromJson(config, "rules_for_suricata_base", "RulesForSuricata.txt");
-            rulesForSuricataLearned = JsonUtil.getStringFromJson(config, "rules_for_suricata_learned", "RulesForSuricataLearned.txt");
-            learnedModel = JsonUtil.getStringFromJson(config, "learned_model", "LearnedRules.json");
-            newLearnedModel = JsonUtil.getStringFromJson(config, "new_learned_model", "NewLearnedRules.json");
-            systemConfiguration = JsonUtil.getStringFromJson(config, "system_configuration", "SystemConfiguration.json");
-            currentIdsParamsFile = JsonUtil.getStringFromJson(config, "current_idsparams_file", "CurrentIDSParams.json");
-            idstraceFlags = JsonUtil.getListStrFromJson(config, "idstrace_flags", Arrays.asList("general:1", "alert:0", "dpi:false", "syslearn:0", "setrisk:0", "XTERNAL_COMMANDS:1", "TEST_PKT_IDS:0"));
-            idstraceDir = JsonUtil.getStringFromJson(config, "idstrace_dir", "./idslogs/trace");
-            idstraceOn = JsonUtil.getBooleanFromJson(config, "idstrace_on", true);
-            sendToConsole = JsonUtil.getBooleanFromJson(config, "send_to_console", false);
-            sendToBrowser = JsonUtil.getBooleanFromJson(config, "send_to_browser", true);
-            showTicks = JsonUtil.getBooleanFromJson(config, "show_ticks", true);
-            killPreviousInstance = JsonUtil.getBooleanFromJson(config, "kill_previous_instance", true);
-            tapsDir = JsonUtil.getStringFromJson(config, "taps_dir", "taps");
-            historyLength = JsonUtil.getIntFromJson(config, "history_length", 60);
+            on = config.get( "on").asBoolean();
+            mode = config.get("mode").asInteger();
+            helpMode = config.get("help_mode").asString();
+            relativeToCSLConfigDir = config.get( "relative_to_CSLConfig_dir").asBoolean();
+            idsconfDir = config.get("idsconf_dir").asString();
+            idsconfDirRelativeToDataDir = config.get( "idsconf_dir_relative_to_data_dir").asBoolean();
+            packetsDirForDetectionOffline = config.get("packets_dir_for_detection_offline").asString();
+            packetsDirForDetectionOfflineInfo = config.get("packets_dir_for_detection_offline_info").asString();
+            packetsDirForRecording = config.get("packets_dir_for_recording").asString();
+            packetsDirForRecordingInfo = config.get("packets_dir_for_recording_info").asString();
+            packetsDirForLearning = config.get("packets_dir_for_learning").asString();
+            packetsDirForLearningInfo = config.get("packets_dir_for_learning_info").asString();
+            validationAfterLearning = config.get( "validation_after_learning").asBoolean();
+            logToFile = config.get( "log_to_file").asBoolean();
+            variablesPrefixFilename = config.get("variables_prefix_filename").asString();
+            packetsPrefixFilename = config.get("packets_prefix_filename").asString();
+            networkPrefixFilename = config.get("network_prefix_filename").asString();
+            maxSizeOfLogFiles = config.get("max_size_of_log_files").asInteger();
+            subdirLearn = config.get("subdir_learn").asString();
+            helpSubdirLearn = config.get("help_subdir_learn").asString();
+            subdirOfflineDetect = config.get("subdir_offline_detect").asString();
+            helpSubdirDetect = config.get("help_subdir_detect").asString();
+            rulesForDetection = config.get("rules_for_detection").asString();
+            rulesForLearning = config.get("rules_for_learning").asString();
+            rulesForSuricataBase = config.get("rules_for_suricata_base").asString();
+            rulesForSuricataLearned = config.get("rules_for_suricata_learned").asString();
+            learnedModel = config.get("learned_model").asString();
+            newLearnedModel = config.get("new_learned_model").asString();
+            systemConfiguration = config.get("system_configuration").asString();
+            currentIdsParamsFile = config.get("current_idsparams_file").asString();
+            idstraceFlags = config.get("idstrace_flags").asJsonList().stream().map(e->e.asString()).toList();
+            idstraceDir = config.get("idstrace_dir").asString();
+            idstraceOn = config.get( "idstrace_on").asBoolean();
+            sendToConsole = config.get( "send_to_console").asBoolean();
+            sendToBrowser = config.get( "send_to_browser").asBoolean();
+            showTicks = config.get( "show_ticks").asBoolean();
+            killPreviousInstance = config.get( "kill_previous_instance").asBoolean();
+            tapsDir = config.get("taps_dir").asString();
+            historyLength = config.get("history_length").asInteger();
         }
     }
 
@@ -493,22 +491,22 @@ public class Config {
 
         public AlertViewer(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            ip = JsonUtil.getStringFromJson(config, "ip", "localhost");
-            port = JsonUtil.getIntFromJson(config, "port", 4445);
-            name = JsonUtil.getStringFromJson(config, "name", "My Alerts");
-            logToFile = JsonUtil.getBooleanFromJson(config, "log_to_file", true);
-            logDir = JsonUtil.getStringFromJson(config, "log_dir", "./idslogs/alerts/logs");
-            prefixFilename = JsonUtil.getStringFromJson(config, "prefix_filename", "alert");
-            maxSizeOfLogFiles = JsonUtil.getIntFromJson(config, "max_size_of_log_files", 10000);
-            alertToWeb = JsonUtil.getBooleanFromJson(config, "alert_to_web", true);
-            alertJsonTag = JsonUtil.getStringFromJson(config, "alert_json_tag", "alert");
-            alertToUdp = JsonUtil.getBooleanFromJson(config, "alert_to_udp", true);
-            alertToDb = JsonUtil.getBooleanFromJson(config, "alert_to_db", true);
-            showAlerts = JsonUtil.getBooleanFromJson(config, "show_alerts", true);
-            doNotResentSameAlert = JsonUtil.getBooleanFromJson(config, "do_not_resent_same_alert", false);
-            alertDuration = JsonUtil.getIntFromJson(config, "alert_duration", 500);
-            filenameCurrentAlerts = JsonUtil.getStringFromJson(config, "filename_current_alerts", "current_alerts");
-            subdirBackupAlerts = JsonUtil.getStringFromJson(config, "subdir_backup_alerts", "alerts");
+            ip = config.get("ip").asString();
+            port = config.get("port").asInteger();
+            name = config.get("name").asString();
+            logToFile = config.get( "log_to_file").asBoolean();
+            logDir = config.get("log_dir").asString();
+            prefixFilename = config.get("prefix_filename").asString();
+            maxSizeOfLogFiles = config.get("max_size_of_log_files").asInteger();
+            alertToWeb = config.get( "alert_to_web").asBoolean();
+            alertJsonTag = config.get("alert_json_tag").asString();
+            alertToUdp = config.get( "alert_to_udp").asBoolean();
+            alertToDb = config.get( "alert_to_db").asBoolean();
+            showAlerts = config.get( "show_alerts").asBoolean();
+            doNotResentSameAlert = config.get( "do_not_resent_same_alert").asBoolean();
+            alertDuration = config.get("alert_duration").asInteger();
+            filenameCurrentAlerts = config.get("filename_current_alerts").asString();
+            subdirBackupAlerts = config.get("subdir_backup_alerts").asString();
         }
     }
 
@@ -523,9 +521,9 @@ public class Config {
 
         public Autocrypt(Json config) {
             if (config ==null) { throw new RuntimeException("Wrong configuration"); }
-            ip = JsonUtil.getStringFromJson(config, "ip", "localhost");
-            port = JsonUtil.getIntFromJson(config, "port", 8002);
-            syncFrequency = JsonUtil.getIntFromJson(config, "sync_frequency", 300);
+            ip = config.get("ip").asString();
+            port = config.get("port").asInteger();
+            syncFrequency = config.get("sync_frequency").asInteger();
         }
     }
 }

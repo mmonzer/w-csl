@@ -8,6 +8,7 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
@@ -314,12 +315,10 @@ public class CSLIDSMainClient {
      */
     private static void launchWebApiServerIfRequired(Config config) {
         if (config.Client.getLaunchWebApiServer()) {
-            int port = config.Client.getWebApiServerPort();
-            new ApiHttpServer().createServer(
-                new InetSocketAddress(port),
-                JServiceLoader.getApiCommandsList(),
-                new ApiGetHelp()
-            );
+            CSLHttpServerJetty server = new CSLHttpServerJetty();
+            server.initServer(config.Client);
+            server.start();
+
         }
     }
 }

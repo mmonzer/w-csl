@@ -30,6 +30,7 @@ import javax.servlet.http.Part;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ public class CSLHttpServerJetty {
     private ServerConfig serverConfig = null;
 
     private boolean initialized = false;
+    private boolean isRemote = true;
 
     private static final Logger logger = LoggerFactory.getLogger(CSLHttpServerJetty.class);
 
@@ -75,35 +77,43 @@ public class CSLHttpServerJetty {
         boolean isEnabled = config.getOn();
         if (!isEnabled) return;
 
-        ServerConfig sc = new ServerConfig(config);
-        initServer(sc);
+        isRemote = true;
+        serverConfig = new ServerConfig(config);
+        initServer(new InetSocketAddress(serverConfig.getPort()));
+    }
+
+    /**
+     * Initializes the server with the provided configuration.
+     *
+     * @param config The server configuration object.
+     */
+    public void initServer(Config.Client config) {
+        isRemote = false;
+        initServer(new InetSocketAddress(config.getIpServerRemote(), config.getWebApiServerPort()));
     }
 
     /**
      * Initializes the server with the provided server configuration.
      *
-     * @param sc The server configuration object.
+     * @param inetSocketAddress socket address for the server configuration.
      */
-    public void initServer(ServerConfig sc) {
+    public void initServer(InetSocketAddress inetSocketAddress) {
         if (initialized) {
             logger.error("Server already initialized");
             exit(0);
         }
 
-        serverConfig = sc;
-        jettyServer = new Server(serverConfig.getPort());
+        jettyServer = new Server(inetSocketAddress);
         context = new ServletContextHandler();
         initialized = true;
-
-        if (!sc.isRunning()) return;
 
         jettyServer.setErrorHandler(new JettyServerErrorHandler());
 
         setupContext();
-        setupWebSocketPolicy();
-        registerWebSockets();
+        if (isRemote) setupWebSocketPolicy();
+        if (isRemote) registerWebSockets();
         addApiHelpPageServlet();
-        addCorsOptionsServlet();
+        if (isRemote) addCorsOptionsServlet();
         registerApiCommands();
 
         jettyServer.setHandler(context);
@@ -118,14 +128,14 @@ public class CSLHttpServerJetty {
                 logger.error("CSL Web server not initialized, cannot start");
                 exit(0);
             }
-            logger.debug("Current user dir = {}", serverConfig.getUserDir());
+            if (isRemote) logger.debug("Current user dir = {}", serverConfig.getUserDir());
             jettyServer.start();
             jettyServer.join();
 
             // keep the web sockets alive
-            startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
+            if (isRemote) startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
 
-            logger.debug("Web server started on port {} ", serverConfig.getPort());
+            if (isRemote) logger.debug("Web server started on port {} ", serverConfig.getPort());
         } catch (Exception e) {
             logger.error("Error starting server", e);
             exit(0);

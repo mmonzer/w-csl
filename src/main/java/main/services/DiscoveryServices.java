@@ -48,7 +48,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     static private final String defaultName = "discovery";
 
     private static final Logger logger = LoggerFactory.getLogger(DiscoveryServices.class);
-    private final boolean isConcentrator;
+    private final boolean isRemote;
     private ScanWebSocketHandler scanWebSocketHandler = null;
     @Getter
     @Setter
@@ -79,27 +79,27 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     /**
      * Generic constructor of the Discovery service.
      */
-    public DiscoveryServices(String name, String configFileSectionName, boolean isConcentrator) {
+    public DiscoveryServices(String name, String configFileSectionName, boolean isRemote) {
         super(name,
                 "Service in charge of the SNMP manager microservice.\n" +
                         "It should expose an API to request a scan and fetch the database.\n" +
                         "It also manages CSL-Scan and the scanning.",
                 configFileSectionName);
-        this.isConcentrator = isConcentrator;
+        this.isRemote = isRemote;
     }
 
     /**
      * Constructor of the Discovery service with Concentration
      */
     public DiscoveryServices() {
-        this(defaultName, defaultConfigFileSectionName, true);
+        this(defaultName, defaultConfigFileSectionName, false);
     }
 
     /**
      * Constructor of the Discovery service with custom concentration
      */
-    public DiscoveryServices(boolean isConcentrator) {
-        this(defaultName, defaultConfigFileSectionName, isConcentrator);
+    public DiscoveryServices(boolean isRemote) {
+        this(defaultName, defaultConfigFileSectionName, isRemote);
     }
 
     /**
@@ -120,7 +120,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
 //        Json globalConfig = CSLContext.instance.getConfig().get("global");
 
-        if (isConcentrator) {
+        if (!isRemote) {
             cpeScanService = new CpeScanService();
             cpeItemSynchronizationService = new CpeItemsSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
             microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
@@ -1200,7 +1200,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     @Override
     public boolean terminate() {
         try {
-            if (isConcentrator) {
+            if (!isRemote) {
                 scanWebSocketHandler.stop();
                 dbapiHandler.close();
             }
@@ -1273,7 +1273,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         } else {
             status.set("is_http_api_reachable", false);
         }
-        if (isConcentrator) {
+        if (!isRemote) {
             Json websocketStatus = scanWebSocketHandler.getStatus();
             ///logger.debug("Scan websocket check status : {}", websocketStatus);
             boolean requests_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
@@ -1293,7 +1293,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * - CPE Items
      */
     public void syncAll() {
-        if (isConcentrator) {
+        if (!isRemote) {
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
                 cpeItemSynchronizationService.syncData();
@@ -1349,7 +1349,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             );
         }
 
-        if (isConcentrator) {
+        if (!isRemote) {
             return scanWebSocketHandler.requestScan(entities);
         } else {
             return JsonApiResponse.error("Scan WebSocket not in use");

@@ -16,9 +16,11 @@ import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.ucsl.interfaces.*;
+import com.ucsl.json.Json;
 import com.wcsl.ids.IDSMainProcessorFactory;
 import lombok.Getter;
 import lombok.Setter;
+import main.services.Service;
 import main.util.CSLRunningArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -393,6 +395,15 @@ public class CSLContext implements ICSLContext {
     public void registerHttpEndpoint(String apiname) {
         if (getCslHttpServer() == null) return;
         getCslHttpServer().registerHttpEndpoint(apiname);
+    }
+
+    public boolean registerHttpEndpoint(Service cslService, boolean executeInCSLClient) {
+        boolean initialized = JServiceLoader.registerService(cslService);
+
+        if (getCslHttpServer() == null) {return false;}
+        if (executeInCSLClient) {getCslHttpServer().registerHttpEndpoint(cslService.getName());}
+
+        return initialized;
     }
 
     /**

@@ -6,6 +6,7 @@ import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.ICSLService;
 import com.ucsl.json.Json;
 import lombok.Getter;
+import main.services.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -155,10 +156,9 @@ public class JServiceLoader {
      * 	- Adds the service commands
      * 	- Registers the api in the CSLInterModuleCommunicationManager
      * @param cslService implements ICSLService
-     * @param config the configuration as json
      * @return
      */
-    public static boolean registerService(ICSLService cslService, Json config) {
+    public static boolean registerService(Service cslService) {
         String name = cslService.getApiCommands().getName();
         listOfServiceNames.add(name);
 

@@ -8,22 +8,16 @@ import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import lombok.Getter;
 
-public class AlertsService implements ICSLService {
-	@Getter
-    String name="alerts";
-	@Getter
-	ApiCommands apiCommands= new ApiCommandsFactory().createApiCommands(name);
-	@Getter
-    String configFileSectionName="config_"+name;
+public class AlertsService extends Service {
 
 	public AlertsService() {
-		this.name="alerts";
-		this.configFileSectionName="ids_conf";
+		this("alerts","ids_conf");
 	}
 
 	public AlertsService(String name, String configFileSectionName) {
-        this.name=name;
-		this.configFileSectionName=configFileSectionName;
+		super(name,
+				"",
+				configFileSectionName);
 	}
 
 

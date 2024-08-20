@@ -15,7 +15,7 @@ public abstract class Service implements ICSLService {
      * Name of service
      */
     @Getter
-    protected String name;
+    public String name;
     /**
      * Name of service description
      */

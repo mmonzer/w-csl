@@ -15,7 +15,6 @@ public class CSLIDSMainServer {
     public static void main(String[] args) {
         initializeContext(args);
         registerServices();
-        setRemoteServices();
         startServers();
     }
 
@@ -35,25 +34,19 @@ public class CSLIDSMainServer {
      * Registers the necessary services with the JServiceLoader.
      */
     private static void registerServices() {
-        JServiceLoader.registerService(new CpeServices(), Json.object());
-        JServiceLoader.registerService(new CveServices(), Json.object());
-        JServiceLoader.registerService(new CSLServiceIDS(), Json.object());
-        JServiceLoader.registerService(new AlertsService(), Json.object());
-        JServiceLoader.registerService(new MonitorService(), Json.object());
-        JServiceLoader.registerService(new TapsServices(), Json.object());
-        JServiceLoader.registerService(new DiscoveryServices(false), Json.object());
-        JServiceLoader.registerService(new StatusService(), Json.object());
-        JServiceLoader.registerService(new AutoCryptService(true), Json.object());
-    }
-
-    /**
-     * Sets the registered services as remote services, which will be forwarded to a socket.
-     */
-    private static void setRemoteServices() {
-        String [] endpoints = {"ids", "alerts", "monitor", "taps", "discovery", "status", "autocrypt"};
-        for (String endpoint : endpoints) {
-            CSLContext.instance.registerHttpEndpoint(endpoint);
-        }
+        boolean forwardToCSLClient = true;
+        // remote services
+        CSLContext.instance.registerHttpEndpoint(new CpeServices(), !forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new CveServices(), !forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new NmapServices(), !forwardToCSLClient);
+        // concentrator services
+        CSLContext.instance.registerHttpEndpoint(new CSLServiceIDS(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new DiscoveryServices(forwardToCSLClient), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new StatusService(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new AutoCryptService(forwardToCSLClient), forwardToCSLClient);
     }
 
     /**

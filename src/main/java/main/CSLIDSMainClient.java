@@ -285,14 +285,15 @@ public class CSLIDSMainClient {
      * Registers the required services with the service loader.
      */
     private static void registerServices() {
-        JServiceLoader.registerService(new CSLServiceIDS(), Json.object());
-        JServiceLoader.registerService(new AlertsService(), Json.object());
-        JServiceLoader.registerService(new MonitorService(), Json.object());
-        JServiceLoader.registerService(new TapsServices(), Json.object());
-        JServiceLoader.registerService(new DiscoveryServices(), Json.object());
-        JServiceLoader.registerService(new StatusService(), Json.object());
-        JServiceLoader.registerService(new AutoCryptService(), Json.object());
-        JServiceLoader.registerService(new NmapServices(), Json.object());
+        boolean forwardToCSLClient = false;
+        CSLContext.instance.registerHttpEndpoint(new CSLServiceIDS(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new DiscoveryServices(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new StatusService(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new AutoCryptService(), forwardToCSLClient);
+        CSLContext.instance.registerHttpEndpoint(new NmapServices(), forwardToCSLClient);
     }
 
     /**

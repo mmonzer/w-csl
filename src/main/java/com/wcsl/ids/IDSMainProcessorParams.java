@@ -6,10 +6,10 @@ import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.interfaces.IIDSMainProcessorParams;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.ucsl.util.IDSUtil;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class IDSMainProcessorParams implements IIDSMainProcessorParams {
 	}
 
     public String getIdsModelDirBackup() {
-		return getIdsModelDir()+IDSUtil.fileSeparator+"backup";
+		return getIdsModelDir()+ File.separator+"backup";
 	}
 
 	public String getIdsModelDir() {

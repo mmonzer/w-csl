@@ -1,9 +1,6 @@
 package com.csl.ids;
 
-import com.csl.core.CSLContext;
 import com.ucsl.json.Json;
-import com.ucsl.util.IDSUtil;
-import com.wcsl.ids.IDSMainProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +63,8 @@ public class IDSDataSetManager {
 		if (nameFile.isEmpty()) {
 			nameFile=newdataSetName(getDirOfCategory(category));
 		}
-		String  path  = (getDirOfCategory(category)+ 
-				IDSUtil.fileSeparator + nameFile);
+		String  path  = (getDirOfCategory(category)+
+				File.separator + nameFile);
 		new File(path).mkdirs();
 
 		return nameFile;
@@ -123,12 +120,12 @@ public class IDSDataSetManager {
 	public String renameDataSet(int category, String oldName, String newName) {
 		String dirName=getDirOfCategory(category);
 		String selected=getCurrentdataSetOfCategory(category);
-		File oldDir = new File(dirName+IDSUtil.fileSeparator + oldName);
+		File oldDir = new File(dirName+File.separator + oldName);
 		if (!oldDir.isDirectory()) {
 			logger.error("cannot rename "+oldDir+" (not found)");
 			return "cannot rename, "+oldName+" not found";
 		} else {
-			File newDir = new File(dirName + IDSUtil.fileSeparator + newName);
+			File newDir = new File(dirName + File.separator + newName);
 			if (newDir.exists()) {
 				logger.error("cannot rename "+oldDir+" to "+newDir+" (already exist)");
 				return "cannot rename, target "+newName+" exists";
@@ -144,7 +141,7 @@ public class IDSDataSetManager {
 	
 	public String deleteDataSet(int category, String name) {
 		String dirName=getDirOfCategory(category);
-		File dir = new File(dirName+IDSUtil.fileSeparator + name);
+		File dir = new File(dirName+File.separator + name);
 		if (!dir.isDirectory()) {
 			logger.error("cannot delete "+dir+" (not found)");
 			return "cannot delete "+name+" (not found)";
@@ -185,8 +182,8 @@ public class IDSDataSetManager {
 		String dirNameOfTarget=getDirOfCategory(targetCategory);
 
 
-		String sourceDirectoryLocation=dirNameOfSource+IDSUtil.fileSeparator + name;
-		String destinationDirectoryLocation=	dirNameOfTarget+IDSUtil.fileSeparator + targetName;	
+		String sourceDirectoryLocation=dirNameOfSource+File.separator + name;
+		String destinationDirectoryLocation=	dirNameOfTarget+File.separator + targetName;
 
 		File dirSrc = new File(sourceDirectoryLocation);
 		File dirDst = new File(destinationDirectoryLocation);
@@ -228,7 +225,7 @@ public class IDSDataSetManager {
 
 		while (true) {
 			String s="data"+int2str(n);
-			File f= new File(dirName+IDSUtil.fileSeparator+s);
+			File f= new File(dirName+File.separator+s);
 			if (!f.isDirectory()) return s;
 			n=n+1;
 		}
@@ -305,7 +302,7 @@ public class IDSDataSetManager {
 	}
 	
 	private Json getFolderNumberOfFilesAndSize(String rootdir, String folderName) {
-		File folder= new File(rootdir+IDSUtil.fileSeparator+folderName);
+		File folder= new File(rootdir+File.separator+folderName);
 	    long length = 0;
 	    File[] files = folder.listFiles();
 
@@ -330,7 +327,7 @@ public class IDSDataSetManager {
 	private Json getFolderFilesListAsJson(int category, String folderName) {
 		
 		String rootdir=getDirOfCategory(category);
-		File folder= new File(rootdir+IDSUtil.fileSeparator+folderName);
+		File folder= new File(rootdir+File.separator+folderName);
 	    
 	    File[] files = folder.listFiles();
 	   

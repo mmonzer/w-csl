@@ -91,22 +91,13 @@ public class CSLRunningArgs {
         return startIdsRunner;
     }
 
-
     public CSLRunningArgs setHasIdsRunner(boolean hasIdsRunner) {
         this.startIdsRunner = hasIdsRunner;
         return this;
     }
 
-    public boolean hasDatabaseDir() {
-        return databasedir != "";
-    }
-
     public boolean hasIdsMode() {
         return idsMode >= 0;
-    }
-
-    public boolean hasDataDir() {
-        return dataDir != "";
     }
 
     public boolean hasLogDir() {
@@ -133,26 +124,13 @@ public class CSLRunningArgs {
         return dataSetForDetectionOffline != "";
     }
 
-    public CSLRunningArgs setConfigFile(String s) {
-        this.configFile = s;
-        return this;
-    }
-
     public boolean hasDirForDetectionOffLine() {
         return dirForDetectionOffline != "";
-    }
-
-    public String getPathOfConfigFile() {
-        File f = new File(configFile);
-        String s = f.getParentFile().toString();
-        if (s == null) return "";
-        return s;
     }
 
     public boolean hasError() {
         return !error.isEmpty();
     }
-
 
     public static String readResourceAsString(String resourcePath) {
         try (InputStream inputStream = CSLRunningArgs.class.getClassLoader().getResourceAsStream(resourcePath);
@@ -183,6 +161,7 @@ public class CSLRunningArgs {
             return null;
         }
     }
+
     public CSLRunningArgs parseArgs(String[] args) {
 
 
@@ -264,5 +243,4 @@ public class CSLRunningArgs {
 
         return this;
     }
-
 }

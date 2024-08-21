@@ -9,10 +9,10 @@ import com.csl.defaultclasses.FileStoreService;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.ucsl.util.IDSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -123,14 +123,14 @@ public class IDSMainProcessor implements IIDSMainProcessor {
     @Override
     public void saveJsonInModelDir(String dir, String fileName, Json j) {
         if (!dir.isEmpty())
-            dir = idsMainProcessorParams.getIdsModelDir() + IDSUtil.fileSeparator + dir;
+            dir = idsMainProcessorParams.getIdsModelDir() + File.separator + dir;
         getFileStoreServices().saveJsonToFile(dir, fileName, j);
     }
 
     @Override
     public Json readJsonFromModelDir(String dir, String fileName) {
         if (!dir.isEmpty())
-            dir = idsMainProcessorParams.getIdsModelDir() + IDSUtil.fileSeparator + dir;
+            dir = idsMainProcessorParams.getIdsModelDir() + File.separator + dir;
         return getFileStoreServices().readJsonFromFile(dir, fileName);
     }
 

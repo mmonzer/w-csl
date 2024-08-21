@@ -1,5 +1,6 @@
 package com.csl.defaultclasses;
 
+import com.csl.core.CSLContext;
 import com.ucsl.interfaces.IFileLog;
 import com.ucsl.json.Json;
 import com.wcsl.ids.IDSMainProcessor;
@@ -105,7 +106,7 @@ public class FileLog implements Runnable, IFileLog {
 
 			writerLogFile = Files.newBufferedWriter(pathLogFile);
 		} catch (IOException ex) {
-			IDSMainProcessor.cslLogger().logError( "This session cannot be logged to disk: " + ex.getMessage());
+			CSLContext.instance.printError( "This session cannot be logged to disk: " + ex.getMessage());
 		}
 
 	}

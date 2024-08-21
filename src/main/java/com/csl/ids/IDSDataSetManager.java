@@ -1,8 +1,11 @@
 package com.csl.ids;
 
+import com.csl.core.CSLContext;
 import com.ucsl.json.Json;
 import com.ucsl.util.IDSUtil;
 import com.wcsl.ids.IDSMainProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -15,6 +18,10 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 public class IDSDataSetManager {
+	/**
+	 * Logger instance for this class.
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(IDSDataSetManager.class);
 
 	public static int RECORDING=1;
 	public static int LEARNING=2;
@@ -118,12 +125,12 @@ public class IDSDataSetManager {
 		String selected=getCurrentdataSetOfCategory(category);
 		File oldDir = new File(dirName+IDSUtil.fileSeparator + oldName);
 		if (!oldDir.isDirectory()) {
-			IDSMainProcessor.cslLogger().printError("cannot rename "+oldDir+" (not found)");
+			logger.error("cannot rename "+oldDir+" (not found)");
 			return "cannot rename, "+oldName+" not found";
 		} else {
 			File newDir = new File(dirName + IDSUtil.fileSeparator + newName);
 			if (newDir.exists()) {
-				IDSMainProcessor.cslLogger().printError("cannot rename "+oldDir+" to "+newDir+" (already exist)");
+				logger.error("cannot rename "+oldDir+" to "+newDir+" (already exist)");
 				return "cannot rename, target "+newName+" exists";
 			}
 			else {
@@ -139,7 +146,7 @@ public class IDSDataSetManager {
 		String dirName=getDirOfCategory(category);
 		File dir = new File(dirName+IDSUtil.fileSeparator + name);
 		if (!dir.isDirectory()) {
-			IDSMainProcessor.cslLogger().printError("cannot delete "+dir+" (not found)");
+			logger.error("cannot delete "+dir+" (not found)");
 			return "cannot delete "+name+" (not found)";
 		} else {
 			deleteDirectory(dir);
@@ -186,7 +193,7 @@ public class IDSDataSetManager {
 
 		if (!overwrite) {
 			if (dirDst.exists()) {
-				IDSMainProcessor.cslLogger().printError("cannot overwrite "+dirDst);
+				logger.error("cannot overwrite "+dirDst);
 				return "Error: Target dataset exists ";
 			}
 		}
@@ -194,7 +201,7 @@ public class IDSDataSetManager {
 		dirDst.mkdirs();
 
 		if (!dirSrc.isDirectory()) {
-			IDSMainProcessor.cslLogger().printError("cannot delete "+dirSrc+" (not found)");
+			logger.error("cannot delete "+dirSrc+" (not found)");
 			return "Error: Source dataset doesn't exist";
 		} 
 

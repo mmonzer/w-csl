@@ -2,6 +2,7 @@ package com.csl.util;
 
 import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -120,8 +121,8 @@ public class FileUtils {
         if (dir != null) new File(dir).mkdirs();
 
 
-        System.out.println(dir);
-        System.out.println(filename);
+//        System.out.println(dir);
+//        System.out.println(filename);
 
         try {
 
@@ -423,11 +424,11 @@ public class FileUtils {
 
         String path = "/eaeae/../tes?t.ext/";
         File f = new File(path);
-        System.out.println(f.getName());
-        System.out.println(f.getParent());
-        System.out.println(f.getPath());
-        System.out.println(path);
-        System.out.println(sanitizeDirPath(path));
+//        System.out.println(f.getName());
+//        System.out.println(f.getParent());
+//        System.out.println(f.getPath());
+//        System.out.println(path);
+//        System.out.println(sanitizeDirPath(path));
 
 
         String dir = "/Users/flausj/Documents/usb/AMI";
@@ -460,6 +461,10 @@ public class FileUtils {
         }
     }
 
+    public static List<Json> parseConnexionsFromCSV(byte[] fileContent) {
+        return parseConnexionsFromCSV(new String(fileContent));
+    }
+
     public static List<Json> parseConnexionsFromCSV(String fileContent) {
         // CSV file delimiter
         String DELIMITER_COLUMN = ",";
@@ -478,6 +483,10 @@ public class FileUtils {
         }
 
         return connections;
+    }
+
+    public static List<Json> parseConnexionsFromCSV(Json fileContent) {
+        return parseConnexionsFromCSV(parseJsonByteFileToByteArray(fileContent));
     }
 
     /**
@@ -519,31 +528,57 @@ public class FileUtils {
         return tmp;
     }
 
-    public static List<Json> parseConnexionsFromExcelFile(String fileContent) {
-        List<Json> connections = new ArrayList<>();
+    public static List<Json> parseConnexionsFromXLSFile(Integer[] fileContent) throws FileNotFoundException {
+        byte[] bytes = new byte[fileContent.length];
+        for (int i=0;i<fileContent.length;i++) {
+            bytes[i] = (byte) (int) (fileContent[i]);
+        }
+        return parseConnexionsFromXLSFile(bytes);
+    }
+
+    public static List<Json> parseConnexionsFromXLSFile(Json fileContent) throws FileNotFoundException {
+        return parseConnexionsFromXLSFile(parseJsonByteFileToByteArray(fileContent));
+    }
+
+    public static List<Json> parseConnexionsFromXLSFile(byte[] fileContent) throws FileNotFoundException {
         try {
-            // Decode the Base64 encoded string
-            byte[] excelData = Base64.getDecoder().decode(fileContent);
-
             // Parse the Excel file
-            Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelData));
-            // Iterate through sheets
-//          for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-            for (int i = 0; i < 1; i++) {
-                Sheet sheet = workbook.getSheetAt(i);
-                System.out.println("Sheet: " + sheet.getSheetName());
+            Workbook workbook = new HSSFWorkbook(new ByteArrayInputStream(fileContent));
+            return parseExcelWorkbook(workbook);
+        } catch (IOException e) {
+            throw new FileNotFoundException();
+        }
+    }
 
-                // Iterate through rows
-                Row headers = sheet.getRow(0);
-                for (int j = 1; j < sheet.getLastRowNum(); j++) {
-                    Json tmp = lineXLSToJson(headers, sheet.getRow(j));
-                    if (tmp != null) {
-                        connections.add(tmp);
-                    }
+    public static List<Json> parseConnexionsFromXLSXFile(Json fileContent) throws FileNotFoundException {
+        return parseConnexionsFromXLSXFile(parseJsonByteFileToByteArray(fileContent));
+    }
+
+    public static List<Json> parseConnexionsFromXLSXFile(byte[] fileContent) throws FileNotFoundException {
+        try {
+            // Parse the Excel file
+            Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(fileContent));
+            return parseExcelWorkbook(workbook);
+        } catch (IOException e) {
+            throw new FileNotFoundException();
+        }
+    }
+
+    private static List<Json> parseExcelWorkbook(Workbook workbook) {
+        List<Json> connections = new ArrayList<>();
+        // Iterate through sheets
+//          for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+        for (int i = 0; i < 1; i++) {
+            Sheet sheet = workbook.getSheetAt(i);
+
+            // Iterate through rows
+            Row headers = sheet.getRow(0);
+            for (int j = 1; j < sheet.getLastRowNum(); j++) {
+                Json tmp = lineXLSToJson(headers, sheet.getRow(j));
+                if (tmp != null) {
+                    connections.add(tmp);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return connections;
     }
@@ -560,6 +595,10 @@ public class FileUtils {
         // Iterate through cells
         for (int i = 0; i < headers.getLastCellNum(); i++) {
             Cell cell = row.getCell(i);
+            if (cell==null) {
+                tmp.set(headers.getCell(i).getStringCellValue(), "");
+                continue;
+            }
             switch (cell.getCellType()) {
                 case STRING:
                     tmp.set(headers.getCell(i).getStringCellValue(), cell.getStringCellValue());
@@ -574,7 +613,16 @@ public class FileUtils {
                     break;
             }
         }
-        return Json.object();
+        return tmp;
+    }
+
+    public static byte[] parseJsonByteFileToByteArray(Json content) {
+        Integer[] fileContent = Arrays.stream(content.asJsonList().stream().map(Json::asInteger).toArray()).toArray(Integer[]::new);
+        byte[] bytes = new byte[fileContent.length];
+        for (int i=0;i<fileContent.length;i++) {
+            bytes[i] = (byte) (int) (fileContent[i]);
+        }
+        return bytes;
     }
 }
 

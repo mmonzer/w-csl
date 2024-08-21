@@ -32,6 +32,7 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.intercom.cslscan.enums.ScanApiEndpoint.CREATE_CONNECTIONS_DRAFT;
+import static com.csl.util.FileUtils.parseJsonByteFileToByteArray;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -546,8 +548,19 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         );
         addCmd("upload_entity_http_connection_file", (params, files) -> {
                     List<Json> listOfConnections = new ArrayList<>();
-                    for (Json file : files) {
-                        listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content").asString()));
+                    try {
+                        for (Json file : files) {
+                            if (file.get("filename").asString().endsWith(".csv")) {
+                                listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content")));
+                            } else if (file.get("filename").asString().endsWith(".xlsx")) {
+                                listOfConnections.addAll(FileUtils.parseConnexionsFromXLSXFile(file.get("content")));
+                            } else if (file.get("filename").asString().endsWith(".xls")) {
+                                listOfConnections.addAll(FileUtils.parseConnexionsFromXLSFile(file.get("content")));
+                            }
+                            else {throw new FileNotFoundException();}
+                        }
+                    } catch (FileNotFoundException ignored) {
+                        return JsonApiResponse.error("Wrong file format for connections : required csv or xlsx").toJson();
                     }
 
                     JsonApiResponse response = scanApiHandler.sendPost(CREATE_CONNECTIONS_DRAFT.endpoint(), Json.read(listOfConnections.toString()));

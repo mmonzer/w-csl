@@ -317,8 +317,9 @@ public class ScanWebSocketHandler {
                 if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
                     MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
                 }
-                MDC.put(X_CORRELATION_ID, UUID.randomUUID().toString());// TODO :remove
-                logger.info("HANDLE FRAME");// TODO :remove
+                String uuid = UUID.randomUUID().toString();
+                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
+                logger.info("subscribeToNotifications : "+uuid);// TODO :remove
                 super.handleFrame(headers, payloadRaw);
                 Json payload = (Json) payloadRaw;
 
@@ -398,6 +399,9 @@ public class ScanWebSocketHandler {
             @Override
             public void handleFrame(StompHeaders headers, Object payloadRaw) {
                 super.handleFrame(headers, payloadRaw);
+                String uuid = UUID.randomUUID().toString();
+                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
+                logger.info("subscribeToImportNotifications : "+uuid);// TODO :remove
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
@@ -432,6 +436,9 @@ public class ScanWebSocketHandler {
             @Override
             public void handleFrame(StompHeaders headers, Object payloadRaw) {
                 super.handleFrame(headers, payloadRaw);
+                String uuid = UUID.randomUUID().toString();
+                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
+                logger.info("subscribeToExportNotifications : "+uuid);// TODO :remove
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
@@ -475,6 +482,9 @@ public class ScanWebSocketHandler {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 super.handleFrame(headers, payload);
+                String uuid = UUID.randomUUID().toString();
+                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
+                logger.info("connectToRequestsWebSocket : "+uuid);// TODO :remove
                 if (payload != null) {
                     logger.debug("[STOMP] " + payload.toString());
                     // handle response
@@ -499,6 +509,9 @@ public class ScanWebSocketHandler {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 super.handleFrame(headers, payload);
+                String uuid = UUID.randomUUID().toString();
+                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
+                logger.info("connectToExternalScansNotificationsWebSocket : "+uuid);// TODO :remove
                 if (payload instanceof Json) {
                     logger.debug("[STOMP] " + payload.toString());
                     ExternalScan scan = ExternalScan.fromScannerJson((Json) payload);

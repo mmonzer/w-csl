@@ -7,7 +7,6 @@ import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.annotations.PostInit;
 import com.csl.intercom.services.exceptions.CpeScanException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
-import com.csl.util.SchedulerUtil;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -20,6 +19,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.function.Function;
+
+import static com.csl.util.ThreadUtils.correlatedSingleThreadScheduledAtFixedRate;
 
 /**
  * Represents and handles the list of currently running scans.
@@ -227,7 +228,7 @@ public class CpeScanService {
      * Loop over modifiedScans to handle the scans in there.
      */
     private void handleScans() {
-
+        logger.info("handleScans");
         while (!modifiedScans.isEmpty()) {
             handleScan(this.modifiedScans.poll());
         }
@@ -290,12 +291,10 @@ public class CpeScanService {
                     scansHandlingTask.shutdownNow();
                     Thread.currentThread().interrupt();
                 }
-                scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
-                SchedulerUtil.scheduleAtFixedRatedWithTimeout(scansHandlingTask, this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
+                scansHandlingTask = correlatedSingleThreadScheduledAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
             }
         } else {
-            scansHandlingTask = Executors.newSingleThreadScheduledExecutor();
-            SchedulerUtil.scheduleAtFixedRatedWithTimeout(scansHandlingTask, this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
+            scansHandlingTask = correlatedSingleThreadScheduledAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
         }
     }
 }

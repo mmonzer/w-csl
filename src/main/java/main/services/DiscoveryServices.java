@@ -34,6 +34,8 @@ import lombok.Setter;
 import main.services.endpoints.DiscoveryEndpoints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.FileNotFoundException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -548,48 +550,59 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("upload_entity_http_connection_file", (params, files) -> {
-                    List<Json> listOfConnections = new ArrayList<>();
+                List<Json> listOfConnections = new ArrayList<>();
+                try {
                     for (Json file : files) {
-                        listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content").asString()));
-                    }
-                    List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
-                    for (Json connection : listOfConnections) {
-                        EntityConnectionInfoDraft entityConnectionInfoDraft = new EntityConnectionInfoDraft();
-                        entityConnectionInfoDraft.setUuid(UUID.randomUUID().toString());
-                        entityConnectionInfoDraft.setName(connection.get("name").asString());
-                        entityConnectionInfoDraft.setProtocol(connection.get("protocol").asString());
-                        entityConnectionInfoDraft.setPort(connection.get("port").asString());
-                        entityConnectionInfoDraft.setUsername(connection.get("username").asString());
-                        entityConnectionInfoDraft.setPassword(connection.get("password").asString());
-                        entityConnectionInfoDraft.setSnmpCommunity(connection.get("snmpCommunity").asString());
-                        entityConnectionInfoDraft.setSnmpPrivacyKey(connection.get("snmpPrivacyKey").asString());
-                        entityConnectionInfoDraft.setSnmpAuthenticationAlgorithm(connection.get("snmpAuthenticationAlgorithm").asString());
-                        entityConnectionInfoDraft.setSnmpPrivacyAlgorithm(connection.get("snmpPrivacyAlgorithm").asString());
-                        entityConnectionInfoDraft.setSshKey(connection.get("sshKey").asString());
-                        entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
-                    }
-                    // Send data to scan
-                    try {
-                        JsonApiResponse response = scanApiHandler.addListOfConnectionInfoDrafts(entityConnectionInfoDrafts);
-                        if (response.isSuccess()) {
-                            externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
-                            // send data to CSL-Dbapi
-                            try {
-                                dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts);
-                            } catch (Exception e) {
-                                logger.error("Could not create list of connection drafts in CSL-Dbapi", e);
-                                return JsonApiResponse.error("Could not create list of connection drafts in CSL-Dbapi",
-                                        Json.object("exception", e.getMessage())
-                                ).toJson();
-                            }
+                        if (file.get("filename").asString().endsWith(".csv")) {
+                            listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content")));
+                        } else if (file.get("filename").asString().endsWith(".xlsx")) {
+                            listOfConnections.addAll(FileUtils.parseConnexionsFromXLSXFile(file.get("content")));
+                        } else if (file.get("filename").asString().endsWith(".xls")) {
+                            listOfConnections.addAll(FileUtils.parseConnexionsFromXLSFile(file.get("content")));
                         }
-                        return response.toJson();
-                    } catch (Exception e) {
-                        logger.error("Could not add list of connection drafts to CSL-Scan", e);
-                        return JsonApiResponse.error("Could not add list of connection drafts to CSL-Scan",
-                                Json.object("exception", e.getMessage())
-                        ).toJson();
+                        else {throw new FileNotFoundException();}
                     }
+                } catch (FileNotFoundException ignored) {
+                    return JsonApiResponse.error("Wrong file format for connections : required csv or xlsx").toJson();
+                }
+                List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
+                for (Json connection : listOfConnections) {
+                    EntityConnectionInfoDraft entityConnectionInfoDraft = new EntityConnectionInfoDraft();
+                    entityConnectionInfoDraft.setUuid(UUID.randomUUID().toString());
+                    entityConnectionInfoDraft.setName(connection.get("name").asString());
+                    entityConnectionInfoDraft.setProtocol(connection.get("protocol").asString());
+                    entityConnectionInfoDraft.setPort(connection.get("port").asString());
+                    entityConnectionInfoDraft.setUsername(connection.get("username").asString());
+                    entityConnectionInfoDraft.setPassword(connection.get("password").asString());
+                    entityConnectionInfoDraft.setSnmpCommunity(connection.get("snmpCommunity").asString());
+                    entityConnectionInfoDraft.setSnmpPrivacyKey(connection.get("snmpPrivacyKey").asString());
+                    entityConnectionInfoDraft.setSnmpAuthenticationAlgorithm(connection.get("snmpAuthenticationAlgorithm").asString());
+                    entityConnectionInfoDraft.setSnmpPrivacyAlgorithm(connection.get("snmpPrivacyAlgorithm").asString());
+                    entityConnectionInfoDraft.setSshKey(connection.get("sshKey").asString());
+                    entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
+                }
+                // Send data to scan
+                try {
+                    JsonApiResponse response = scanApiHandler.addListOfConnectionInfoDrafts(entityConnectionInfoDrafts);
+                    if (response.isSuccess()) {
+                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                        // send data to CSL-Dbapi
+                        try {
+                            dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts);
+                        } catch (Exception e) {
+                            logger.error("Could not create list of connection drafts in CSL-Dbapi", e);
+                            return JsonApiResponse.error("Could not create list of connection drafts in CSL-Dbapi",
+                                    Json.object("exception", e.getMessage())
+                            ).toJson();
+                        }
+                    }
+                    return response.toJson();
+                } catch (Exception e) {
+                    logger.error("Could not add list of connection drafts to CSL-Scan", e);
+                    return JsonApiResponse.error("Could not add list of connection drafts to CSL-Scan",
+                            Json.object("exception", e.getMessage())
+                    ).toJson();
+                }
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
                         .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)

@@ -42,7 +42,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:24.1.0'
     implementation 'org.mongodb:bson:5.1.1'
     implementation 'org.netbeans.external:org-apache-commons-codec:RELEASE220'
-    implementation 'org.netbeans.external:org-apache-commons-io:RELEASE113'
+    //implementation 'org.netbeans.external:org-apache-commons-io:RELEASE113'
     implementation 'org.apache.commons:commons-lang3:3.14.0'
     implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE220'
     implementation 'com.google.code.gson:gson:2.11.0'
@@ -80,11 +80,12 @@ dependencies {
     //implementation 'javax.websocket:javax.websocket-api:1.1'
 
     // excel reading/parsing
-    implementation 'org.apache.poi:poi:5.2.3' // For .xls files (HSSF)
-    implementation 'org.apache.poi:poi-ooxml:5.2.3' // For .xlsx files (XSSF)
+    implementation 'org.apache.poi:poi:4.1.2' // For .xls files (HSSF)
+    implementation 'org.apache.poi:poi-ooxml:4.1.2' // For .xlsx files (XSSF)
     implementation 'org.apache.poi:poi-ooxml-schemas:4.1.2'
-    implementation 'org.apache.poi:poi-scratchpad:5.2.3' // For additional formats (optional)
-    implementation 'org.apache.commons:commons-collections4:4.4' // For some additional features
+    implementation 'org.apache.poi:poi-scratchpad:4.1.2' // For additional formats (optional)
+    implementation 'org.apache.commons:commons-collections4:4.4' // For some additional features// https://mavenlibs.com/maven/dependency/commons-io/commons-io
+    implementation 'commons-io:commons-io:2.16.1'
 }
 sourceSets{
     main{

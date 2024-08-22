@@ -3,6 +3,7 @@ package com.csl.util;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -125,8 +126,8 @@ public class FileUtils {
         if (dir != null) new File(dir).mkdirs();
 
 
-        System.out.println(dir);
-        System.out.println(filename);
+//        System.out.println(dir);
+//        System.out.println(filename);
 
         try {
 
@@ -428,11 +429,11 @@ public class FileUtils {
 
         String path = "/eaeae/../tes?t.ext/";
         File f = new File(path);
-        System.out.println(f.getName());
-        System.out.println(f.getParent());
-        System.out.println(f.getPath());
-        System.out.println(path);
-        System.out.println(sanitizeDirPath(path));
+//        System.out.println(f.getName());
+//        System.out.println(f.getParent());
+//        System.out.println(f.getPath());
+//        System.out.println(path);
+//        System.out.println(sanitizeDirPath(path));
 
 
         String dir = "/Users/flausj/Documents/usb/AMI";
@@ -465,6 +466,10 @@ public class FileUtils {
         }
     }
 
+    public static List<Json> parseConnexionsFromCSV(byte[] fileContent) {
+        return parseConnexionsFromCSV(new String(fileContent));
+    }
+
     public static List<Json> parseConnexionsFromCSV(String fileContent) {
         // CSV file delimiter
         String DELIMITER_COLUMN = ",";
@@ -482,6 +487,10 @@ public class FileUtils {
             }
         }
         return connections;
+    }
+
+    public static List<Json> parseConnexionsFromCSV(Json fileContent) {
+        return parseConnexionsFromCSV(parseJsonByteFileToByteArray(fileContent));
     }
 
     /**
@@ -518,69 +527,130 @@ public class FileUtils {
     public static Json lineCSVToJson(String[] headers, String[] values) {
         Json tmp = Json.object();
         for (int i = 0; i < headers.length; i++) {
-            tmp.set(toCamelCase(headers[i]), (values.length>i)?values[i]:"");
+            // nto enough values (splits method trims the last empty spaces
+            if (values.length <= i) {
+                tmp.set(toCamelCase(headers[i]), "");
+                continue;
+            }
+            // check if integer
+            try {
+                tmp.set(toCamelCase(headers[i]), Integer.parseInt(values[i]));
+                continue;
+            } catch (NumberFormatException ignored) {
+            }
+            // check if double
+            try {
+                tmp.set(toCamelCase(headers[i]), Double.parseDouble(values[i]));
+                continue;
+            } catch (NumberFormatException ignored) {
+            }
+            // check if boolean
+            if (values[i]=="true" || values[i]=="false") {
+                tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
+                continue;
+            }
+
+            // otherwise string
+            tmp.set(toCamelCase(headers[i]), values[i]);
         }
         return tmp;
     }
 
-    public static List<Json> parseConnexionsFromExcelFile(String fileContent) {
-        List<Json> connections = new ArrayList<>();
+    public static List<Json> parseConnexionsFromXLSFile(Integer[] fileContent) throws FileNotFoundException {
+        byte[] bytes = new byte[fileContent.length];
+        for (int i=0;i<fileContent.length;i++) {
+            bytes[i] = (byte) (int) (fileContent[i]);
+        }
+        return parseConnexionsFromXLSFile(bytes);
+    }
+
+    public static List<Json> parseConnexionsFromXLSFile(Json fileContent) throws FileNotFoundException {
+        return parseConnexionsFromXLSFile(parseJsonByteFileToByteArray(fileContent));
+    }
+
+    public static List<Json> parseConnexionsFromXLSFile(byte[] fileContent) throws FileNotFoundException {
         try {
-            // Decode the Base64 encoded string
-            byte[] excelData = Base64.getDecoder().decode(fileContent);
-
             // Parse the Excel file
-            Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelData));
-            // Iterate through sheets
-//                for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-            for (int i = 0; i < 1; i++) {
-                Sheet sheet = workbook.getSheetAt(i);
-                System.out.println("Sheet: " + sheet.getSheetName());
+            Workbook workbook = new HSSFWorkbook(new ByteArrayInputStream(fileContent));
+            return parseExcelWorkbook(workbook);
+        } catch (IOException e) {
+            throw new FileNotFoundException();
+        }
+    }
 
-                // Iterate through rows
-                Row headers = sheet.getRow(0);
-                for (int j = 1; j < sheet.getLastRowNum(); j++) {
-                    Json tmp = lineXLSToJson(headers, sheet.getRow(j));
-                    if (tmp != null) {
-                        connections.add(tmp);
-                    }
+    public static List<Json> parseConnexionsFromXLSXFile(Json fileContent) throws FileNotFoundException {
+        return parseConnexionsFromXLSXFile(parseJsonByteFileToByteArray(fileContent));
+    }
+
+    public static List<Json> parseConnexionsFromXLSXFile(byte[] fileContent) throws FileNotFoundException {
+        try {
+            // Parse the Excel file
+            Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(fileContent));
+            return parseExcelWorkbook(workbook);
+        } catch (IOException e) {
+            throw new FileNotFoundException();
+        }
+    }
+
+    private static List<Json> parseExcelWorkbook(Workbook workbook) {
+        List<Json> connections = new ArrayList<>();
+        // Iterate through sheets
+//          for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+        for (int i = 0; i < 1; i++) {
+            Sheet sheet = workbook.getSheetAt(i);
+
+            // Iterate through rows
+            Row headers = sheet.getRow(0);
+            for (int j = 1; j < sheet.getLastRowNum(); j++) {
+                Json tmp = lineXLSToJson(headers, sheet.getRow(j));
+                if (tmp != null) {
+                    connections.add(tmp);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return connections;
     }
 
     /**
-     * From a list of values it makes a json object
+     * From a row of values in Excel it makes a json object
      *
      * @param headers key values of the json object
      * @param row     values of the json object
      * @return json object
      */
     public static Json lineXLSToJson(Row headers, Row row) {
+        Json tmp = Json.object();
         // Iterate through cells
-        for (Cell cell : row) {
+        for (int i = 0; i < headers.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+            if (cell==null) {
+                tmp.set(headers.getCell(i).getStringCellValue(), "");
+                continue;
+            }
             switch (cell.getCellType()) {
                 case STRING:
-                    System.out.print(cell.getStringCellValue() + "\t");
+                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getStringCellValue());
                     break;
                 case NUMERIC:
-                    System.out.print(cell.getNumericCellValue() + "\t");
+                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getNumericCellValue());
                     break;
                 case BOOLEAN:
-                    System.out.print(cell.getBooleanCellValue() + "\t");
-                    break;
-                case FORMULA:
-                    System.out.print(cell.getCellFormula() + "\t");
+                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getBooleanCellValue());
                     break;
                 default:
-                    System.out.print("UNKNOWN\t");
                     break;
             }
         }
-        return Json.object();
+        return tmp;
+    }
+
+    public static byte[] parseJsonByteFileToByteArray(Json content) {
+        Integer[] fileContent = Arrays.stream(content.asJsonList().stream().map(Json::asInteger).toArray()).toArray(Integer[]::new);
+        byte[] bytes = new byte[fileContent.length];
+        for (int i=0;i<fileContent.length;i++) {
+            bytes[i] = (byte) (int) (fileContent[i]);
+        }
+        return bytes;
     }
 }
 

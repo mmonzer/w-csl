@@ -242,7 +242,7 @@ public class CSLHttpServerJetty {
             if (part.getContentType() != null) {  // It's a file part
                 String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString(); // MSIE fix.
                 try (InputStream inputStream = part.getInputStream()) {
-                    String fileContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    byte[] fileContent = inputStream.readAllBytes();
                     files.add(Json.object("filename", fileName, "content", fileContent));
                 }
             } else {  // It's a form field part

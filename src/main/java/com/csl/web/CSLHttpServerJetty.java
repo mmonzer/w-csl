@@ -19,6 +19,7 @@ import org.eclipse.jetty.websocket.api.WebSocketBehavior;
 import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletException;
@@ -247,6 +248,11 @@ public class CSLHttpServerJetty {
 
             @Override
             protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                // X-Correlation-ID
+                String xCorrelationId = req.getHeader(X_CORRELATION_ID);
+                resp.setHeader(X_CORRELATION_ID, xCorrelationId);
+                MDC.put(X_CORRELATION_ID, xCorrelationId);
+
                 if ("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
                     context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/" + api.getName());
                 }
@@ -256,27 +262,25 @@ public class CSLHttpServerJetty {
                 while ((line = reader.readLine()) != null) {
                     bodyReq.append(line);
                 }
-                logger.debug("\n<" + bodyReq + ">");
-
-                // X-Correlation-ID
-                String xCorrelationId = req.getHeader(X_CORRELATION_ID);
+                logger.trace("raw request : {}", bodyReq);
 
                 Json data = Json.read(bodyReq.toString());
                 Json cmd = data.get("cmd");
                 Json params = data.get("params");
 
-                if (cmd == null) logger.warn("Invalid jcmd" + cmd);
+                if (cmd == null) {logger.warn("Command is required");}
                 if (params == null) params = Json.object();
 
                 String bodyResp = "";
+                logger.info("request : {}", data);
 
                 if (listOfRemoteApi.contains(api.getName())) {
                     bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data, xCorrelationId).toString();
-                    logger.debug("REMOTE SERVER RESPONSE:" + bodyResp);
                 } else {
                     bodyResp = api.exec(cmd.asString(), params.set(X_CORRELATION_ID, xCorrelationId)).toString();
-                    logger.debug("SERVER RESPONSE:" + bodyResp);
                 }
+                logger.info("response : {}", bodyResp);
+
                 resp.getWriter().write(bodyResp);
             }
         };

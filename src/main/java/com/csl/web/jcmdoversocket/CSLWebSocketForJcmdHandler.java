@@ -33,7 +33,7 @@ public class CSLWebSocketForJcmdHandler {
 
     @OnWebSocketMessage
     public void onMessage(Session session, String message) {
-    	message=message.trim();
+		message=message.trim();
     	if (message.startsWith("api:")) {
     		String apiName=message.substring(4);
     		CSLWebSocketForJcmd.addApi(apiName,session);
@@ -47,7 +47,7 @@ public class CSLWebSocketForJcmdHandler {
     		message=message.substring(4);
     		int n=message.indexOf(":");
     		if (n<0) {
-    			System.err.println("Invalid msg:"+message);
+                logger.error("Invalid msg:{}", message);
     		}
     		else {
     			String tag= message.substring(0, n);
@@ -60,7 +60,7 @@ public class CSLWebSocketForJcmdHandler {
     		message=message.substring(4);
     		int n=message.indexOf(":");
     		if (n<0) {
-    			System.err.println("Invalid msg:"+message);
+                logger.error("Invalid msg:{}", message);
     		}
     		else {
     			String tag= message.substring(0, n);
@@ -75,12 +75,13 @@ public class CSLWebSocketForJcmdHandler {
     		message=message.substring(6);
     		
     		Json j= Json.read(message);
-    		System.err.println("FORWARD ALERT FROM CLIENT TO UDP="+j);
+			logger.warn("deprecated : forward alert to user");
+			logger.debug("deprecated : forward alert to user {}", j);
     		((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).sendAlertToViewerUDP(j);
     	}
 		else if (message.startsWith("keep alive")) {}
     	else {
-    		System.err.println("Jcmd module Invalid message:"+message);
+            logger.warn("Jcmd module Invalid message:{}", message);
     	}
     	
     }

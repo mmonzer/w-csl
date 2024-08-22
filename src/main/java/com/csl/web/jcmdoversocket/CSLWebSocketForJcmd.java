@@ -6,7 +6,6 @@ import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CSLWebSocketForJcmd {
 
-    private static final Logger log = LoggerFactory.getLogger(CSLWebSocketForJcmd.class);
+    private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmd.class);
     public static long uuidctr = 0;
     private static final String RESPONSE = "response";
     public static final String ID = "uuid";
@@ -36,7 +35,7 @@ public class CSLWebSocketForJcmd {
 
     static public void addUser(String name, Session session) {
         name = name.toLowerCase();
-        CSLWebSocketForJcmd.log.info("Connected {} endpoint to the websocket", name);
+        CSLWebSocketForJcmd.logger.info("Connected {} endpoint to the websocket", name);
 
         Session s = sessionMap.get(name);
 
@@ -151,6 +150,7 @@ public class CSLWebSocketForJcmd {
             }
 
             if (fullMsg.has(RESPONSE)) {
+                logger.info("raw response {}",fullMsg.get(RESPONSE));
                 if (isDebug()) System.out.println("*** " + fullMsg);
                 pendingMessages.remove(id);
                 Json rep = fullMsg.get(RESPONSE);
@@ -205,7 +205,7 @@ public class CSLWebSocketForJcmd {
                             long start_time = message.get("start_time").asLong();
                             long end_time = start_time + TIME_OUT;
                             if (end_time < current_time) {
-                                if (isDebug()) System.out.println("Time out:" + message);
+                                logger.warn("request timed out");
                                 message.set(RESPONSE, Json.object().set("error", "TIMEOUT"));
                             }
                         }

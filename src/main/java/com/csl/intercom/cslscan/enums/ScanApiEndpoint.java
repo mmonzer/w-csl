@@ -7,21 +7,30 @@ public enum ScanApiEndpoint {
     ENTITY_LAST_DELETION(ENTITY.endpoint() + "last_deletion"),
     ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection"),
     ENTITY_TEST_EXISTING_CONNECTION(ENTITY_TEST_CONNECTION.endpoint() + "/%s"),
+
     CONNECTIONS("/entity-connection-info/"),
     CREATE_CONNECTIONS(CONNECTIONS.endpoint() + "create_list_of_connections"),
     CONNECTIONS_DETAILS(CONNECTIONS.endpoint() + "%s"),
     CONNECTIONS_LAST_UPDATE(CONNECTIONS.endpoint() + "last-updated"),
+
     CONNECTIONS_DRAFT("/entity-connection-info-draft/"),
-    CONNECTIONS_DRAFT_DETAILS(CONNECTIONS_DRAFT.endpoint() + "%s"),
+    CONNECTION_DRAFT_DETAILS(CONNECTIONS_DRAFT.endpoint() + "%s"),
     CREATE_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "create_list_of_connections_draft"),
     CONNECTIONS_DRAFT_LAST_UPDATE(CONNECTIONS_DRAFT.endpoint() + "last-updated"),
+    CLEAR_FAILED_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "clear_failed"),
+    CLEAR_VERIFIED_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "clear_verified"),
+    CLEAR_ALL_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "clear"),
+    PUBLISH_ALL_VERIFIED_CONNECTION_DRAFT(CONNECTIONS_DRAFT.endpoint() + "publish_all_verified"),
+
     CPE_ITEM("/cpeItem/"),
     CPE_ITEM_DETAILS(CPE_ITEM.endpoint() + "%s"),
     CPE_ITEM_DELETE_MANY(CPE_ITEM.endpoint() + "deleteMany"),
     CPE_ITEM_DELETE_MANY_HARD(CPE_ITEM_DELETE_MANY.endpoint() + "?hardDelete=true"),
     CPE_ITEM_HARD_DELETE_BEFORE(CPE_ITEM.endpoint() + "hardDeleteBefore"),
     CPE_ITEM_LAST_DELETION(CPE_ITEM.endpoint() + "last_deletion"),
+
     ENTITY_CPE_ITEMS(CPE_ITEM.endpoint() + "entity/%s"),
+
     MICROSOFT_KB("/microsoftKb/"),
     MICROSOFT_KB_DETAILS(MICROSOFT_KB.endpoint() + "%s"),
     MICROSOFT_KB_DELETE_MANY(MICROSOFT_KB.endpoint() + "deleteMany"),
@@ -29,7 +38,9 @@ public enum ScanApiEndpoint {
     MICROSOFT_KB_HARD_DELETE_BEFORE(MICROSOFT_KB.endpoint() + "hardDeleteBefore"),
     MICROSOFT_KB_LAST_DELETION(MICROSOFT_KB.endpoint() + "last_deletion"),
     MICROSOFT_KB_LAST_UPDATE(MICROSOFT_KB.endpoint() + "last_update"),
+
     ENTITY_MICROSOFT_KB(MICROSOFT_KB.endpoint() + "entity/%s"),
+
     DISCOVERY("/discovery"),
     DISCOVERY_STATUS(DISCOVERY.endpoint() + "/status"),
     DISCOVERY_STATUS_DETAILS(DISCOVERY_STATUS.endpoint() + "/%s"),

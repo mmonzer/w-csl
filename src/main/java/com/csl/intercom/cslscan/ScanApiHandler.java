@@ -10,10 +10,7 @@ import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.models.MicrosoftKB;
-import com.csl.intercom.dbapi.models.Connection;
-import com.csl.intercom.dbapi.models.ConnectionProtocol;
-import com.csl.intercom.dbapi.models.Device;
-import com.csl.intercom.dbapi.models.HttpConnection;
+import com.csl.intercom.dbapi.models.*;
 import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.ucsl.json.Json;
@@ -44,6 +41,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static com.csl.intercom.cslscan.enums.ScanApiEndpoint.CREATE_CONNECTIONS_DRAFT;
 
 /**
  * Class to handle communication with CSL-Scan's HTTP API.
@@ -82,6 +81,31 @@ public class ScanApiHandler extends ApiHandler  {
     }
     public JsonApiResponse updateConnectionInfo(Connection connection) {
         return sendPost(String.format(ScanApiEndpoint.CONNECTIONS_DETAILS.endpoint(), connection.getUuid()), connection.serializeForScanner());
+    }
+    public JsonApiResponse addListOfConnectionInfoDrafts(List<EntityConnectionInfoDraft> entityConnectionInfoDrafts) {
+        Json entityConnectionInfoDraftsJson = Json.array();
+        for (EntityConnectionInfoDraft entityConnectionInfoDraft : entityConnectionInfoDrafts) {
+            entityConnectionInfoDraftsJson.add(entityConnectionInfoDraft.serializeForScanner());
+        }
+        return sendPost(ScanApiEndpoint.CREATE_CONNECTIONS_DRAFT, entityConnectionInfoDraftsJson);
+    }
+    public JsonApiResponse deleteConnectionDraft(String connectionDraftUuid) {
+        return sendDelete(String.format(ScanApiEndpoint.CONNECTION_DRAFT_DETAILS.endpoint(), connectionDraftUuid), Json.object());
+    }
+    public JsonApiResponse updateConnectionDraft(EntityConnectionInfoDraft entityConnectionInfoDraft) {
+        return sendPost(String.format(ScanApiEndpoint.CONNECTION_DRAFT_DETAILS.endpoint(), entityConnectionInfoDraft.getUuid()), entityConnectionInfoDraft.serializeForScanner());
+    }
+    public JsonApiResponse clearFailedConnectionsDraft() {
+        return sendDelete(ScanApiEndpoint.CLEAR_FAILED_CONNECTIONS_DRAFT, Json.object());
+    }
+    public JsonApiResponse clearVerifiedConnectionsDraft() {
+        return sendDelete(ScanApiEndpoint.CLEAR_VERIFIED_CONNECTIONS_DRAFT, Json.object());
+    }
+    public JsonApiResponse clearAllConnectionsDraft() {
+        return sendDelete(ScanApiEndpoint.CLEAR_ALL_CONNECTIONS_DRAFT, Json.object());
+    }
+    public JsonApiResponse publishAllVerifiedConnectionsDraft() {
+        return sendPost(ScanApiEndpoint.PUBLISH_ALL_VERIFIED_CONNECTION_DRAFT, Json.object());
     }
     /**
      * Get connections since a specified date.

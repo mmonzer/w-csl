@@ -1039,6 +1039,18 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return 0;
         }
     }
+    public int getDbApiConnectionDraftId(String connectionDraftEntityId) {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS_DRAFT_DETAILS_BY_MONGO_ID);
+        request.param("mongo_entity_id", connectionDraftEntityId);
+        try {
+            ContentResponse response = request.send();
+            Json responseContents = Json.read(response.getContentAsString());
+            return JsonUtil.getIntFromJson(responseContents, "id", 0);
+        } catch (Exception e) {
+            logger.error("Could not get connection draft id from DB-API.", e);
+            return 0;
+        }
+    }
     public void updateConnection(Connection connection, Json connectionJson) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
         String connectionUuid = connection.getUuid();
         String connectionDbApiId = String.valueOf(getDbApiConnectionId(connectionUuid));
@@ -1119,6 +1131,121 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         );
     }
 
+    public void createListOfConnectionDrafts(List<EntityConnectionInfoDraft> entityConnectionInfoDrafts) {
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_CONNECTIONS_DRAFT);
+        Json requestContents = Json.array(entityConnectionInfoDrafts.stream().map(EntityConnectionInfoDraft::serializeForDbapi).toArray());
+        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 201) {
+                logger.error("Could not create connection drafts in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 201) {
+                logger.info("Connection drafts created in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not create connection drafts in DB-API.", e);
+            //  TODO: delete created ones in mongo scan and secret manager if failed
+        }
+    }
+    public Json getConnectionDraftOtherData(EntityConnectionInfoDraft connectionInfoDraft) {
+        Json otherData = Json.object();
+        if (connectionInfoDraft.getProtocol().equals("SNMPv1")) {
+            String community = connectionInfoDraft.getSnmpCommunity();
+            otherData.set("snmp_community", community);
+            return otherData;
+        } else if (connectionInfoDraft.getProtocol().equals("SNMPv2c")) {
+            String community = connectionInfoDraft.getSnmpCommunity();
+            otherData.set("snmp_community", community);
+            return otherData;
+        } else if (connectionInfoDraft.getProtocol().equals("SNMPv3")) {
+            String snmpPrivacyAlgorithm = String.valueOf(connectionInfoDraft.getSnmpPrivacyAlgorithm());
+            String snmpAuthAlgorithm = String.valueOf(connectionInfoDraft.getSnmpAuthenticationAlgorithm());
+            otherData.set("snmp_privacy_algorithm", snmpPrivacyAlgorithm);
+            otherData.set("snmp_authentication_algorithm", snmpAuthAlgorithm);
+        } else if (connectionInfoDraft.getProtocol().equals("SSH")) {
+            String sshKey = connectionInfoDraft.getSshKey();
+            otherData.set("ssh_key", sshKey);
+        }
+        return otherData;
+    }
+    public void updateConnectionDraft( EntityConnectionInfoDraft connectionInfoDraft ,String mongoEntityId) {
+        String connectionInfoDraftDbApiId = String.valueOf(getDbApiConnectionDraftId(mongoEntityId));
+        int connectionInfoDraftId = Integer.parseInt(connectionInfoDraftDbApiId);
+        String endpoint = String.format(DbapiEndpointForCSLScan.CONNECTIONS_DRAFT.getEndpoint(), connectionInfoDraftId) + '/' + connectionInfoDraftId;
+        Request request = createDbapiRequest(HttpMethod.PUT, endpoint);
+        Json requestContents = Json.object(
+               "name_draft", connectionInfoDraft.getName(),
+                "discovery_protocol_draft", connectionInfoDraft.getProtocol(),
+                "port_number_draft", connectionInfoDraft.getPort(),
+                "username_draft", connectionInfoDraft.getUsername(),
+                "mongo_entity_id", mongoEntityId,
+                "other_data_draft", getConnectionDraftOtherData(connectionInfoDraft)
+        );
+        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.error("Could not update connection draft in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 200) {
+                logger.info("Connection draft updated in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not update connection draft in DB-API.", e);
+        }
+    }
+    public void deleteConnectionDraft(String mongoEntityId){
+        Request request = createDbapiRequest(HttpMethod.DELETE, DbapiEndpointForCSLScan.DELETE_CONNECTION_DRAFT_BY_MONGO_ENTITY_ID);
+        request.param("mongo_entity_id", mongoEntityId);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.error("Could not delete connection draft in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 200) {
+                logger.info("Connection draft deleted in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not delete connection draft in DB-API.", e);
+        }
+    }
+    public void clearVerifiedConnectionsDraft() {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CLEAR_VERIFIED_CONNECTIONS_DRAFT);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.error("Could not clear verified connections drafts in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 200) {
+                logger.info("Verified connections drafts cleared in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not clear verified connections drafts in DB-API.", e);
+        }
+    }
+    public void clearFailedConnectionsDraft() {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CLEAR_FAILED_CONNECTIONS_DRAFT);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.error("Could not clear failed connections drafts in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 200) {
+                logger.info("Failed connections drafts cleared in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not clear failed connections drafts in DB-API.", e);
+        }
+    }
+    public void publishVerifiedConnectionsDraft() {
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.PUBLISH_VERIFIED_CONNECTION_DRAFT);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.error("Could not publish verified connections drafts in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 200) {
+                logger.info("Verified connections drafts published in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not publish verified connections drafts in DB-API.", e);
+        }
+    }
     /**
      * Create the list of entities to update on CSL-Scan.
      *

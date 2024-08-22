@@ -1,5 +1,6 @@
 package com.csl.util;
 
+import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
 import org.apache.poi.ss.usermodel.Cell;
@@ -7,6 +8,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -17,6 +20,8 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class FileUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
 
     public static String fileSeparator = File.separator;
 
@@ -460,7 +465,7 @@ public class FileUtils {
         }
     }
 
-    public static List<Json> parseConnexionsFromCSV(String fileContent) {
+    public static List<Json> parseConnexionsFromCSV(String fileContent, List<String> supportedColumns) {
         // CSV file delimiter
         String DELIMITER_COLUMN = ",";
         String DELIMITER_LINE = "\n";
@@ -470,14 +475,44 @@ public class FileUtils {
         // Parse into connexion
         String[] lines = fileContent.split(DELIMITER_LINE);
         String[] headers = lines[0].split(DELIMITER_COLUMN);
+//        // check if any of item in headers is not in supportedColumns
+//        for (String header : headers) {
+//            if (!supportedColumns.contains(header)) {
+//                logger.error("Column " + header + " is not supported");
+//                return connections;
+//            }
+//        }
         for (int i = 1; i < lines.length; i++) {
             Json tmp = lineCSVToJson(headers, lines[i].split(DELIMITER_COLUMN));
             if (tmp != null) {
                 connections.add(tmp);
             }
         }
-
         return connections;
+    }
+
+    /**
+     * This method converts a string to camel case.
+     * For example, "hello world" becomes "helloWorld".
+     * @param input The string to convert to camel case.
+     *              Must not be null.
+     *              Must not be empty.
+     * @return The input string converted to camel case.
+     * **/
+    public static String toCamelCase(String input) {
+        // Split the input string by spaces
+        String[] words = input.split(" ");
+
+        // Convert the first word to lowercase
+        StringBuilder camelCaseString = new StringBuilder(words[0].toLowerCase());
+
+        // Convert each subsequent word's first letter to uppercase and append to the result
+        for (int i = 1; i < words.length; i++) {
+            camelCaseString.append(words[i].substring(0, 1).toUpperCase())
+                    .append(words[i].substring(1).toLowerCase());
+        }
+
+        return camelCaseString.toString();
     }
 
     /**
@@ -490,7 +525,7 @@ public class FileUtils {
     public static Json lineCSVToJson(String[] headers, String[] values) {
         Json tmp = Json.object();
         for (int i = 0; i < headers.length; i++) {
-            tmp.set(headers[i], (values.length>i)?values[i]:"");
+            tmp.set(toCamelCase(headers[i]), (values.length>i)?values[i]:"");
         }
         return tmp;
     }

@@ -31,6 +31,17 @@ public enum DbapiEndpointForCSLScan {
     CONNECTIONS_DETAILS_BY_MONGO_ID(CONNECTIONS.getEndpoint() + "/get_connection_details_by_mongo_entity_id"),
     DELETE_CONNECTION_BY_MONGO_ID(CONNECTIONS.getEndpoint() + "/delete_connection_by_mongo_entity_id"),
     CREATE_CONNECTIONS(CONNECTIONS.getEndpoint() + "create_list_of_connections"),
+
+    CONNECTIONS_DRAFT("/connections_draft"),
+    CONNECTIONS_DRAFT_DETAILS_BY_MONGO_ID(CONNECTIONS_DRAFT.getEndpoint() + "/get_connection_draft_details_by_mongo_entity_id"),
+
+    CREATE_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.getEndpoint() + "/create_list_of_connection_draft"),
+    UPDATE_CONNECTION_DRAFT_BY_MONGO_ENTITY_ID(CONNECTIONS_DRAFT.getEndpoint() + "/update_connection_draft_by_mongo_entity_id"),
+    DELETE_CONNECTION_DRAFT_BY_MONGO_ENTITY_ID(CONNECTIONS_DRAFT.getEndpoint() + "/delete_connection_draft_by_mongo_entity_id"),
+    CLEAR_VERIFIED_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.getEndpoint() + "/clear_verified_rows"),
+    CLEAR_FAILED_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.getEndpoint() + "/clear_failed_rows"),
+    PUBLISH_VERIFIED_CONNECTION_DRAFT(CONNECTIONS_DRAFT.getEndpoint() + "/publish_verified_rows"),
+
     DISCOVERY_PROTOCOLS("/cpe_discovery_api"),
     DISCOVERY_PROTOCOL_DETAILS_BY_NAME(DISCOVERY_PROTOCOLS.getEndpoint() + "/get_discovery_protocol_by_name"),
     DISCOVERY_PROTOCOLS_DETAILS(DISCOVERY_PROTOCOLS.getEndpoint() + "/%d"),

@@ -52,6 +52,37 @@ public enum DiscoveryEndpoints implements Endpoint {
                             "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                     .setStatus(IJsonCmdHelp.STATUS_OK)),
 
+    UPDATE_CONNECTION_DRAFT("update_connection_draft",
+            new JsonCmdHelp().setDesc("Update a connection draft in CSL-Scan")
+                    .setParam("connection", "The connection draft to update", IJsonCmdHelp.JSON)
+                    .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                            "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+
+    DELETE_CONNECTION_DRAFT("delete_connection_draft",
+            new JsonCmdHelp().setDesc("Delete a connection draft from CSL-Scan and secret manager")
+                    .setParam("id", "The uuid of the connection draft to delete", IJsonCmdHelp.STR)
+                    .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                            "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+    CLEAR_VERIFIED_CONNECTION_DRAFT("clear_verified_connection_draft",
+            new JsonCmdHelp().setDesc("Clear all verified connection drafts from CSL-Scan and secret manager")
+                    .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                            "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+    CLEAR_FAILED_CONNECTION_DRAFT("clear_failed_connection_draft",
+            new JsonCmdHelp().setDesc("Clear all failed connection drafts from CSL-Scan and secret manager")
+                    .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                            "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+    PUBLISH_ALL_VERIFIED_CONNECTION_DRAFT("publish_all_verified_connection_draft",
+            new JsonCmdHelp().setDesc("publish all verified connection drafts from CSL-Scan and secret manager")
+                    .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                            "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+
+
+
     GET_ALL_CPES("get_all_cpes",
             new JsonCmdHelp().setDesc("Get the CPE Items in CSL-Scan")
                     .setResult("The list of CPE Items, in the format <code>{\"success\": true, \"result\": [...]}", IJsonCmdHelp.JSON)

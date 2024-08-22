@@ -9,6 +9,7 @@ import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.services.ExternalConnectionInfoTemplatesSynchronizationService;
 import com.csl.intercom.services.ExternalConnectionInfoSynchronizationService;
 import com.csl.intercom.services.ExternalScansService;
@@ -16,10 +17,6 @@ import com.csl.intercom.cslscan.models.CpeItem;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionTestResult;
 import com.csl.intercom.cslscan.services.ImportExportBsonService;
-import com.csl.intercom.dbapi.models.Connection;
-import com.csl.intercom.dbapi.models.ConnectionProtocol;
-import com.csl.intercom.dbapi.models.Device;
-import com.csl.intercom.dbapi.models.HttpTemplateImportNotification;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.intercom.services.*;
@@ -40,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.*;
 import static com.csl.intercom.cslscan.enums.ScanApiEndpoint.CREATE_CONNECTIONS_DRAFT;
 
@@ -550,17 +548,63 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("upload_entity_http_connection_file", (params, files) -> {
+                    List<String> supportedColumns = new ArrayList<>();
+                    supportedColumns.add("name");
+                    supportedColumns.add("protocol");
+                    supportedColumns.add("port");
+                    supportedColumns.add("username");
+                    supportedColumns.add("password");
+                    supportedColumns.add("snmpCommunity");
+                    supportedColumns.add("snmpPrivacyKey");
+                    supportedColumns.add("snmpAuthenticationAlgorithm");
+                    supportedColumns.add("snmpPrivacyAlgorithm");
+                    supportedColumns.add("sshKey");
+                    // TODO: validate if the file has the correct columns, if not return an error with good des
                     List<Json> listOfConnections = new ArrayList<>();
                     for (Json file : files) {
-                        listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content").asString()));
+                        listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content").asString(), supportedColumns));
                     }
-
-                    JsonApiResponse response = scanApiHandler.sendPost(CREATE_CONNECTIONS_DRAFT.endpoint(), Json.read(listOfConnections.toString()));
-                    if (response.isSuccess()) {
-                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                    // for each item in listOfConnections, create a new arrayList of EntityConnectionInfoDraft objects
+                    // and add them to the list of connections
+                    List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
+                    for (Json connection : listOfConnections) {
+                        EntityConnectionInfoDraft entityConnectionInfoDraft = new EntityConnectionInfoDraft();
+                        entityConnectionInfoDraft.setUuid(UUID.randomUUID().toString());
+                        entityConnectionInfoDraft.setName(connection.get("name").asString());
+                        entityConnectionInfoDraft.setProtocol(connection.get("protocol").asString());
+                        entityConnectionInfoDraft.setPort(connection.get("port").asString());
+                        entityConnectionInfoDraft.setUsername(connection.get("username").asString());
+                        entityConnectionInfoDraft.setPassword(connection.get("password").asString());
+                        entityConnectionInfoDraft.setSnmpCommunity(connection.get("snmpCommunity").asString());
+                        entityConnectionInfoDraft.setSnmpPrivacyKey(connection.get("snmpPrivacyKey").asString());
+                        entityConnectionInfoDraft.setSnmpAuthenticationAlgorithm(connection.get("snmpAuthenticationAlgorithm").asString());
+                        entityConnectionInfoDraft.setSnmpPrivacyAlgorithm(connection.get("snmpPrivacyAlgorithm").asString());
+                        entityConnectionInfoDraft.setSshKey(connection.get("sshKey").asString());
+                        entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
                     }
-
-                    return response.toJson();
+                    // Send data to scan
+                    try {
+                        JsonApiResponse response = scanApiHandler.addListOfConnectionInfoDrafts(entityConnectionInfoDrafts);
+                        if (response.isSuccess()) {
+                            externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                            // send data to CSL-Dbapi
+                            try {
+                                dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts);
+                            } catch (Exception e) {
+                                // TODO: delete created data in scan and secrets manager
+                                logger.error("Could not create list of connection drafts in CSL-Dbapi", e);
+                                return JsonApiResponse.error("Could not create list of connection drafts in CSL-Dbapi",
+                                        Json.object("exception", e.getMessage())
+                                ).toJson();
+                            }
+                        }
+                        return response.toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not add list of connection drafts to CSL-Scan", e);
+                        return JsonApiResponse.error("Could not add list of connection drafts to CSL-Scan",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
                         .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)
@@ -1300,6 +1344,35 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             return response.toJson();
         });
 
+        addCmd(DiscoveryEndpoints.DELETE_CONNECTION_DRAFT, params -> {
+            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
+            if (connectionUuid == null) {
+                return JsonApiResponse.error("Missing required parameter connection_uuid",
+                        Json.object("exception", "Missing parameter connection_uuid")
+                ).toJson();
+            }
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.deleteConnectionDraft(connectionUuid);
+                if (response.isSuccess()) {
+                    // delete connection info from dbapi
+                    try {
+                        dbapiHandler.deleteConnectionDraft(connectionUuid);
+                    } catch (Exception e) {
+                        logger.error("Could not delete connection info from dbapi", e);
+                    }
+                } else {
+                    logger.error("Could not delete connection info, {}", response.getError().toString());
+                }
+            } catch (Exception e) {
+                logger.error("Could not delete connection info", e);
+                response = JsonApiResponse.error("Could not delete connection info",
+                        Json.object("exception", e.getMessage())
+                );
+            }
+            return response.toJson();
+        });
+
         addCmd(DiscoveryEndpoints.UPDATE_CONNECTION, params -> {
             Json connectionJson = params.get("connection");
             Connection connection = null;
@@ -1340,6 +1413,123 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             }
             return response.toJson();
         });
+
+        addCmd(DiscoveryEndpoints.UPDATE_CONNECTION_DRAFT, params -> {
+            Json connectionJson = params.get("connection_draft");
+            EntityConnectionInfoDraft entityConnectionInfoDraft = null;
+            try{
+                entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIJson(connectionJson);
+            } catch (Exception e) {
+                logger.error("Could not parse connection draft", e);
+                return JsonApiResponse.error("Could not parse connection draft",
+                        Json.object("exception", e.getMessage())
+                ).toJson();
+            }
+
+            JsonApiResponse response;
+            try {
+                // update connection info in csl-scan
+                response = scanApiHandler.updateConnectionDraft(entityConnectionInfoDraft);
+                if (response.isSuccess()) {
+                    // update connection info in dbapi
+                    try {
+                        dbapiHandler.updateConnectionDraft(entityConnectionInfoDraft, entityConnectionInfoDraft.getUuid());
+                    } catch (Exception e) {
+                        logger.error("Could not update connection draft info in dbapi", e);
+                        return JsonApiResponse.error("Could not update connection info in dbapi",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                } else {
+                    logger.error("Could not update connection draft info, {}", response.getError().toString());
+                }
+            } catch (Exception e) {
+                logger.error("Could not update connection draft info", e);
+                response = JsonApiResponse.error("Could not update connection draft info",
+                        Json.object("exception", e.getMessage())
+                );
+            }
+            return response.toJson();
+        });
+
+        addCmd(DiscoveryEndpoints.CLEAR_VERIFIED_CONNECTION_DRAFT, params -> {
+            JsonApiResponse response;
+            try {
+                // CLEAR FROM SCAN AND SECRET MANAGER FIRST
+                response = scanApiHandler.clearVerifiedConnectionsDraft();
+                if (response.isSuccess()) {
+                    // clear from dbapi
+                    try {
+                         dbapiHandler.clearVerifiedConnectionsDraft();
+                    } catch (Exception e) {
+                        logger.error("Could not clear verified connection draft in dbapi", e);
+                        return JsonApiResponse.error("Could not clear verified connection draft in dbapi",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                }
+
+            } catch (Exception e) {
+                logger.error("Could not clear verified connection draft in csl-scan", e);
+                return JsonApiResponse.error("Could not clear verified connection draft in csl scan",
+                        Json.object("exception", e.getMessage())
+                ).toJson();
+            }
+            return response.toJson();
+        });
+
+        addCmd(DiscoveryEndpoints.CLEAR_FAILED_CONNECTION_DRAFT, params -> {
+            JsonApiResponse response;
+            try {
+                // CLEAR FROM SCAN AND SECRET MANAGER FIRST
+                response = scanApiHandler.clearFailedConnectionsDraft();
+                if (response.isSuccess()) {
+                    // clear from dbapi
+                    try {
+                        dbapiHandler.clearFailedConnectionsDraft();
+                    } catch (Exception e) {
+                        logger.error("Could not clear failed connection draft in dbapi", e);
+                        return JsonApiResponse.error("Could not clear failed connection draft in dbapi",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                }
+
+            } catch (Exception e) {
+                logger.error("Could not clear failed connection draft in csl-scan", e);
+                return JsonApiResponse.error("Could not clear failed connection draft in csl scan",
+                        Json.object("exception", e.getMessage())
+                ).toJson();
+            }
+            return response.toJson();
+        });
+
+        addCmd(DiscoveryEndpoints.PUBLISH_ALL_VERIFIED_CONNECTION_DRAFT, params -> {
+            JsonApiResponse response;
+            try {
+                // CLEAR FROM SCAN AND SECRET MANAGER FIRST
+                response = scanApiHandler.publishAllVerifiedConnectionsDraft();
+                if (response.isSuccess()) {
+                    // clear from dbapi
+                    try {
+                        dbapiHandler.publishVerifiedConnectionsDraft();
+                    } catch (Exception e) {
+                        logger.error("Could not publish verified connection draft in dbapi", e);
+                        return JsonApiResponse.error("Could not clear failed connection draft in dbapi",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                }
+
+            } catch (Exception e) {
+                logger.error("Could not publish verified connection draft in csl-scan", e);
+                return JsonApiResponse.error("Could not publish verified connection draft in csl scan",
+                        Json.object("exception", e.getMessage())
+                ).toJson();
+            }
+            return response.toJson();
+        });
+
 
         CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
 

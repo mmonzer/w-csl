@@ -1,14 +1,13 @@
 package com.csl.web;
 
 import com.csl.core.Config;
-import com.csl.logger.CSLLogger;
 import com.csl.udp.CSLFlowManager;
 import com.csl.util.NetUtil;
 import com.ucsl.interfaces.ICSLFlowListener;
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.DatagramSocket;
 
@@ -18,6 +17,7 @@ import java.net.DatagramSocket;
  * The response for an ICRoute is rendered in an after-filter.
  */
 public class CSLUDPServer {
+	private static final Logger logger = LoggerFactory.getLogger(CSLUDPServer.class);
 	private CSLFlowManager flowManager;
 	private int maxsize;
 	private int maxflows;
@@ -116,7 +116,7 @@ public class CSLUDPServer {
 		}
 
 		getFlowManager().startListener();
-		CSLLogger.instance.info("Listenning on port:"+port);
+		logger.info("Listenning on port:"+port);
 
 		if (verbose) System.out.println("  UDP server listening on "+port);
 	}

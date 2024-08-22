@@ -601,7 +601,7 @@ public class FileUtils {
 
             // Iterate through rows
             Row headers = sheet.getRow(0);
-            for (int j = 1; j < sheet.getLastRowNum(); j++) {
+            for (int j = 1; j <= sheet.getLastRowNum(); j++) {
                 Json tmp = lineXLSToJson(headers, sheet.getRow(j));
                 if (tmp != null) {
                     connections.add(tmp);
@@ -624,18 +624,18 @@ public class FileUtils {
         for (int i = 0; i < headers.getLastCellNum(); i++) {
             Cell cell = row.getCell(i);
             if (cell==null) {
-                tmp.set(headers.getCell(i).getStringCellValue(), "");
+                tmp.set( toCamelCase(headers.getCell(i).getStringCellValue()), "");
                 continue;
             }
             switch (cell.getCellType()) {
                 case STRING:
-                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getStringCellValue());
+                    tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), cell.getStringCellValue());
                     break;
                 case NUMERIC:
-                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getNumericCellValue());
+                    tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), Math.round(cell.getNumericCellValue()));
                     break;
                 case BOOLEAN:
-                    tmp.set(headers.getCell(i).getStringCellValue(), cell.getBooleanCellValue());
+                    tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), cell.getBooleanCellValue());
                     break;
                 default:
                     break;

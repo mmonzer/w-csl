@@ -585,7 +585,6 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 try {
                     JsonApiResponse response = scanApiHandler.addListOfConnectionInfoDrafts(entityConnectionInfoDrafts);
                     if (response.isSuccess()) {
-                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
                         // send data to CSL-Dbapi
                         try {
                             dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts);

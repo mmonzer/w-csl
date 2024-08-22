@@ -37,76 +37,12 @@ public class CSLUDPServer {
 
 	DatagramSocket dsocket=null;
 
-	
-	public void reinitServer(Json j) {
-		
-		stop();
-		initialized=false;
-		initUDPServer(j);
-		
-	}
 
-
-	public void initUDPServer(Json j) { //String rootdir, int port, boolean verbose) {
-
-
-		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
-		if (!on) return;
-
-
-		if (initialized) {
-			System.err.println("already initialized");
-			System.exit(0);
-		}
-
-		if (j==null) return;
-
-		String userDir = System.getProperty("user.dir");
-
-		boolean running = JsonUtil.getBooleanFromJson(j, "on", false);
-		if (!running) return;
-
-
-		verbose=JsonUtil.getBooleanFromJson(j,"verbose", false);
-		boolean debug = JsonUtil.getBooleanFromJson(j, "debug", false);
-		traceAllMessages=JsonUtil.getBooleanFromJson(j,"trace_all_messages", false);
-
-		initialized=true;
-
-		maxflows=JsonUtil.getIntFromJson(j,"max_input_queues",10);
-		maxsize=JsonUtil.getIntFromJson(j,"max_size_of_input_queues",100);
-
-		port = JsonUtil.getIntFromJson(j, "port",8001);
-		ip = JsonUtil.getStringFromJson(j, "ip","");
-		if (ip.isEmpty()) ip=NetUtil.findIPAddress();
-		if (ip.isEmpty()) ip="127.0.0.1";
-
-
-		int port=getCurrentPortForUCP();
-		boolean ok=false;
-		setCurrentPortForUCP(port);
-
-		if (verbose)
-		{
-			System.out.println("");
-			System.out.println("CSL UDP Server:");
-			System.out.println("===============");
-			System.out.println("  on  :"+ running);
-			System.out.println("  ip  :"+ip);
-			System.out.println("  port:"+port);
-			System.out.println("  trace all messages:"+traceAllMessages);
-
-
-		}
-	}
-
-
-	public void initUDPServer(Config.UdpServerConf config) { //String rootdir, int port, boolean verbose) {
+	public void initUDPServer(Config.UdpServerConf config) {
 
 
 		if (config==null) return;
 
-//		boolean on=JsonUtil.getBooleanFromJson(j, "on",true);
 		boolean on=config.getOn();
 		if (!on) return;
 
@@ -116,36 +52,24 @@ public class CSLUDPServer {
 			System.exit(0);
 		}
 
-
-		String userDir = System.getProperty("user.dir");
-
-		boolean running = config.getOn();
-		if (!running) return;
+		if (!config.getOn()) return;
 
 
-//		verbose=JsonUtil.getBooleanFromJson(j,"verbose", false);
 		verbose=config.getVerbose();
-//		boolean debug = JsonUtil.getBooleanFromJson(j, "debug", false);
-//		traceAllMessages=JsonUtil.getBooleanFromJson(j,"trace_all_messages", false);
 		traceAllMessages=config.getTraceAllMessages();
 
 		initialized=true;
 
-//		maxflows=JsonUtil.getIntFromJson(j,"max_input_queues",10);
 		maxflows=config.getMaxInputQueues();
-//		maxsize=JsonUtil.getIntFromJson(j,"max_size_of_input_queues",100);
 		maxsize=config.getMaxSizeOfInputQueues();
 
-//		port = JsonUtil.getIntFromJson(j, "port",8001);
 		port = config.getPort();
-//		ip = JsonUtil.getStringFromJson(j, "ip","");
 		ip = config.getIp();
 		if (ip.isEmpty()) {ip=NetUtil.findIPAddress();}
 		if (ip.isEmpty()) {ip="127.0.0.1";}
 
 
-		int port=getCurrentPortForUCP();
-		boolean ok=false;
+		int port= getCurrentPortForUDP();
 		setCurrentPortForUCP(port);
 
 		if (verbose)
@@ -153,7 +77,6 @@ public class CSLUDPServer {
 			System.out.println("");
 			System.out.println("CSL UDP Server:");
 			System.out.println("===============");
-			System.out.println("  on  :"+ running);
 			System.out.println("  ip  :"+ip);
 			System.out.println("  port:"+port);
 			System.out.println("  trace all messages:"+traceAllMessages);
@@ -168,25 +91,21 @@ public class CSLUDPServer {
 	}
 
 
-
-
 	public void setTraceAllMessages(boolean traceAllMessages) {
 		this.traceAllMessages = traceAllMessages;
 	}
 
 
-
-
-	public int getCurrentPortForUCP() {
+	public int getCurrentPortForUDP() {
 		return port;
 	}
 	
-	public String getCurrentIPForUCP() {
+	public String getCurrentIPForUDP() {
 		return ip;
 	}
 
-	private void setCurrentPortForUCP(int currentPortForUCP2) {
-		port = currentPortForUCP2;
+	private void setCurrentPortForUCP(int currentPortForUDP) {
+		port = currentPortForUDP;
 	}
 
 	public void start() {

@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
+import com.csl.web.websockets.CorrelatedStompSessionHandlerAdapter;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
@@ -311,16 +312,14 @@ public class ScanWebSocketHandler {
         WebSocketStompClient stompClient = createStompClient();
 
         // Define the callbacks and return the future when it is realized.
-        return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+        return stompClient.connect(this.scanManagerDiscoveryUrl, new CorrelatedStompSessionHandlerAdapter() {
             @Override
-            public void handleFrame(StompHeaders headers, Object payloadRaw) {
+            public void onFrame(StompHeaders headers, Object payloadRaw) {
                 if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
                     MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
                 }
-                String uuid = UUID.randomUUID().toString();
-                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
-                logger.info("subscribeToNotifications : "+uuid);// TODO :remove
                 super.handleFrame(headers, payloadRaw);
+
                 Json payload = (Json) payloadRaw;
 
                 //region Log the notification
@@ -371,37 +370,19 @@ public class ScanWebSocketHandler {
             }
 
             @Override
-            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+            public void onConnect(StompSession session, StompHeaders headers) {
                 logger.debug("Connected to notifications websocket");
-                super.afterConnected(session, connectedHeaders);
                 session.subscribe(websocketNotificationsEndpoint, this);
             }
-
-            @Override
-            public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                //logger.warn("Transport Error", exception);
-//                super.handleException(session, command, headers, payload, exception);
-            }
-
-            @Override
-            public void handleTransportError(StompSession session, Throwable exception) {
-                //logger.warn("Transport Error", exception);
-//                super.handleTransportError(session, exception);
-            }
-
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 
     private StompSession subscribeToImportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
         WebSocketStompClient stompClient = createStompClient();
 
-        return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+        return stompClient.connect(this.scanManagerDiscoveryUrl, new CorrelatedStompSessionHandlerAdapter() {
             @Override
-            public void handleFrame(StompHeaders headers, Object payloadRaw) {
-                super.handleFrame(headers, payloadRaw);
-                String uuid = UUID.randomUUID().toString();
-                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
-                logger.info("subscribeToImportNotifications : "+uuid);// TODO :remove
+            public void onFrame(StompHeaders headers, Object payloadRaw) {
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
@@ -421,9 +402,8 @@ public class ScanWebSocketHandler {
             }
 
             @Override
-            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+            public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 logger.debug("Connected to import notifications websocket");
-                super.afterConnected(session, connectedHeaders);
                 session.subscribe(websocketImportNotificationsEndpoint, this);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
@@ -432,13 +412,9 @@ public class ScanWebSocketHandler {
     private StompSession subscribeToExportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
         WebSocketStompClient stompClient = createStompClient();
 
-        return stompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+        return stompClient.connect(this.scanManagerDiscoveryUrl, new CorrelatedStompSessionHandlerAdapter() {
             @Override
-            public void handleFrame(StompHeaders headers, Object payloadRaw) {
-                super.handleFrame(headers, payloadRaw);
-                String uuid = UUID.randomUUID().toString();
-                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
-                logger.info("subscribeToExportNotifications : "+uuid);// TODO :remove
+            public void onFrame(StompHeaders headers, Object payloadRaw) {
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
@@ -458,9 +434,8 @@ public class ScanWebSocketHandler {
             }
 
             @Override
-            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+            public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 logger.debug("Connected to import notifications websocket");
-                super.afterConnected(session, connectedHeaders);
                 session.subscribe(websocketExportNotificationsEndpoint, this);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
@@ -478,13 +453,9 @@ public class ScanWebSocketHandler {
 
         WebSocketStompClient requestStompClient = createStompClient();
         // Define the callbacks and return the future when it is realized.
-        return requestStompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+        return requestStompClient.connect(this.scanManagerDiscoveryUrl, new CorrelatedStompSessionHandlerAdapter() {
             @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                super.handleFrame(headers, payload);
-                String uuid = UUID.randomUUID().toString();
-                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
-                logger.info("connectToRequestsWebSocket : "+uuid);// TODO :remove
+            public void onFrame(StompHeaders headers, Object payload) {
                 if (payload != null) {
                     logger.debug("[STOMP] " + payload.toString());
                     // handle response
@@ -494,9 +465,8 @@ public class ScanWebSocketHandler {
             }
 
             @Override
-            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+            public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 logger.debug("Connected to requests websocket");
-                super.afterConnected(session, connectedHeaders);
                 purgeScanRequestsQueue();
             }
         }).get(1, TimeUnit.SECONDS);
@@ -505,13 +475,9 @@ public class ScanWebSocketHandler {
     private StompSession connectToExternalScansNotificationsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
         WebSocketStompClient requestStompClient = createStompClient();
         // Define the callbacks and return the future when it is realized.
-        return requestStompClient.connect(this.scanManagerDiscoveryUrl, new StompSessionHandlerAdapter() {
+        return requestStompClient.connect(this.scanManagerDiscoveryUrl, new CorrelatedStompSessionHandlerAdapter() {
             @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                super.handleFrame(headers, payload);
-                String uuid = UUID.randomUUID().toString();
-                MDC.put(X_CORRELATION_ID, uuid);// TODO :remove
-                logger.info("connectToExternalScansNotificationsWebSocket : "+uuid);// TODO :remove
+            public void onFrame(StompHeaders headers, Object payload) {
                 if (payload instanceof Json) {
                     logger.debug("[STOMP] " + payload.toString());
                     ExternalScan scan = ExternalScan.fromScannerJson((Json) payload);
@@ -523,9 +489,8 @@ public class ScanWebSocketHandler {
             }
 
             @Override
-            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+            public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 logger.debug("Connected to external scans notifications websocket");
-                super.afterConnected(session, connectedHeaders);
                 session.subscribe(websocketExternalScanEndpoint, this);
             }
         }).get(1, TimeUnit.SECONDS);

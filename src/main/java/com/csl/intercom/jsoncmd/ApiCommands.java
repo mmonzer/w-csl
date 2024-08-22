@@ -159,13 +159,12 @@ public class ApiCommands implements IApiCommands {
     }
 
     @Override
-    public Json execJcmd(Json jCmd) {
-        Json data = jCmd;
-        Json cmd = data.get("cmd");
-        Json params = data.get("params");
+    public Json execJcmd(Json jsonCommand) {
+        Json cmd = jsonCommand.get("cmd");
+        Json params = jsonCommand.get("params");
 
         if (cmd == null) {
-            logger.warn("Invalid jcmd: null");
+            logger.warn("Invalid JSON command: null");
         }
         if (params == null) {
             params = Json.object();

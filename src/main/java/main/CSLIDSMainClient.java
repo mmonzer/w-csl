@@ -143,10 +143,7 @@ public class CSLIDSMainClient {
                         logger.trace("received:" + messageJson);
                         Json result = Json.object().set("error", "api not found ");
 
-                        if (apiname.isEmpty()) {
-
-                        } else {
-
+                        if (!apiname.isEmpty()) {
                             IApiCommands api = apiMap.get(apiname);
                             Json jcmd = messageJson.get("jcmd");
 

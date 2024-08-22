@@ -19,6 +19,7 @@ import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -27,7 +28,11 @@ import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
  * Class to handle communication for API client.
@@ -45,6 +50,7 @@ public class ApiHandler implements AutoCloseable {
     private String ip = "localhost";
     private String uriCommonPath = "";
     private boolean connected = false;
+    public static final String PATCH = "PATCH";
 
     /**
      * General constructor
@@ -330,7 +336,7 @@ public class ApiHandler implements AutoCloseable {
         JsonApiResponse res = JsonApiResponse.error(null);
 
         try {
-            ContentResponse response = createRequest(method, createUriFrom(endpoint), params, body).send();
+            ContentResponse response = createAndSendRequest(method, endpoint, params, body);
             if (!connected) {
                 logger.info("Connection recovered with {} at {}", moduleName, getUrl());
                 connected = true;
@@ -356,8 +362,22 @@ public class ApiHandler implements AutoCloseable {
         return outputReformer.apply(res);
     }
 
-    // endregion send request
+    /**
+     * Creates and send a request with the given method, to the given endpoint with the given parameters and body for the configured client
+     * @param method method of the request
+     * @param endpoint endpoint of the request
+     * @param params parameters of the request
+     * @param body body of the request
+     * @return the raw HTTP response
+     * @throws InterruptedException if send thread is interrupted
+     * @throws TimeoutException if send times out
+     * @throws ExecutionException if execution fails
+     */
+    synchronized protected ContentResponse createAndSendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
+        return createRequest(method, createUriFrom(endpoint), params, body).send();
+    }
 
+    // endregion send request
 
     // TODO : doPost instead sendPost
 
@@ -538,10 +558,15 @@ public class ApiHandler implements AutoCloseable {
      * @param request request to add parameters
      */
     protected static void addHeadersToRequest(HashMap<HttpHeader, String> headers, Request request) {
+        // Add correlation ID to request
+        if (MDC.get(X_CORRELATION_ID)!=null) {
+            request.header(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
+        }
+
+        // Add other headers to request
         if (headers == null) {
             return;
         }
-
         for (Map.Entry<HttpHeader, String> param : headers.entrySet()) {
             request.header(param.getKey().toString(), param.getValue());
         }

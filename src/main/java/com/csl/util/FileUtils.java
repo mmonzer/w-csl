@@ -465,7 +465,7 @@ public class FileUtils {
         }
     }
 
-    public static List<Json> parseConnexionsFromCSV(String fileContent, List<String> supportedColumns) {
+    public static List<Json> parseConnexionsFromCSV(String fileContent) {
         // CSV file delimiter
         String DELIMITER_COLUMN = ",";
         String DELIMITER_LINE = "\n";
@@ -475,13 +475,6 @@ public class FileUtils {
         // Parse into connexion
         String[] lines = fileContent.split(DELIMITER_LINE);
         String[] headers = lines[0].split(DELIMITER_COLUMN);
-//        // check if any of item in headers is not in supportedColumns
-//        for (String header : headers) {
-//            if (!supportedColumns.contains(header)) {
-//                logger.error("Column " + header + " is not supported");
-//                return connections;
-//            }
-//        }
         for (int i = 1; i < lines.length; i++) {
             Json tmp = lineCSVToJson(headers, lines[i].split(DELIMITER_COLUMN));
             if (tmp != null) {

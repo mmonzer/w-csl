@@ -548,24 +548,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("upload_entity_http_connection_file", (params, files) -> {
-                    List<String> supportedColumns = new ArrayList<>();
-                    supportedColumns.add("name");
-                    supportedColumns.add("protocol");
-                    supportedColumns.add("port");
-                    supportedColumns.add("username");
-                    supportedColumns.add("password");
-                    supportedColumns.add("snmpCommunity");
-                    supportedColumns.add("snmpPrivacyKey");
-                    supportedColumns.add("snmpAuthenticationAlgorithm");
-                    supportedColumns.add("snmpPrivacyAlgorithm");
-                    supportedColumns.add("sshKey");
-                    // TODO: validate if the file has the correct columns, if not return an error with good des
                     List<Json> listOfConnections = new ArrayList<>();
                     for (Json file : files) {
-                        listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content").asString(), supportedColumns));
+                        listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content").asString()));
                     }
-                    // for each item in listOfConnections, create a new arrayList of EntityConnectionInfoDraft objects
-                    // and add them to the list of connections
                     List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
                     for (Json connection : listOfConnections) {
                         EntityConnectionInfoDraft entityConnectionInfoDraft = new EntityConnectionInfoDraft();
@@ -591,7 +577,6 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                             try {
                                 dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts);
                             } catch (Exception e) {
-                                // TODO: delete created data in scan and secrets manager
                                 logger.error("Could not create list of connection drafts in CSL-Dbapi", e);
                                 return JsonApiResponse.error("Could not create list of connection drafts in CSL-Dbapi",
                                         Json.object("exception", e.getMessage())

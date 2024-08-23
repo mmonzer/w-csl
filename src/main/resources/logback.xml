@@ -5,7 +5,7 @@
               class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>
-                %gray(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %X{X-Correlation-ID:- [No X CORRELATION ID]} %yellow(%logger): %msg%n%throwable
+                %gray(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] [%X{X-Correlation-ID:-No X CORRELATION ID}] %yellow(%logger): %msg%n%throwable
             </Pattern>
         </layout>
     </appender>

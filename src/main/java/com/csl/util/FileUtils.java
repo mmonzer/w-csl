@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -594,20 +595,30 @@ public class FileUtils {
 
     private static List<Json> parseExcelWorkbook(Workbook workbook) {
         List<Json> connections = new ArrayList<>();
-        // Iterate through sheets
-//          for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-        for (int i = 0; i < 1; i++) {
-            Sheet sheet = workbook.getSheetAt(i);
 
-            // Iterate through rows
-            Row headers = sheet.getRow(0);
-            for (int j = 1; j <= sheet.getLastRowNum(); j++) {
-                Json tmp = lineXLSToJson(headers, sheet.getRow(j));
+        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+            Sheet sheet = workbook.getSheetAt(i);
+            String sheetName = sheet.getSheetName();
+            Row headers;
+            int startRow;
+
+            if (i == 0) {  // First sheet
+                headers = sheet.getRow(0);
+                startRow = 1; // Data starts from the second row
+            } else {  // All other sheets relate to http templates
+                headers = sheet.getRow(1);
+                startRow = 2; // Data starts from the third row
+            }
+
+            // Iterate through the rows starting from the determined startRow
+            for (int j = startRow; j <= sheet.getLastRowNum(); j++) {
+                Json tmp = lineXLSToJson(headers, sheet.getRow(j), sheetName);
                 if (tmp != null) {
                     connections.add(tmp);
                 }
             }
         }
+
         return connections;
     }
 
@@ -618,29 +629,70 @@ public class FileUtils {
      * @param row     values of the json object
      * @return json object
      */
-    public static Json lineXLSToJson(Row headers, Row row) {
+    public static Json lineXLSToJson(Row headers, Row row, String sheetName) {
+        // create a list of string
+        List<String> knowFixedColumnForCnxRelatedToHttp = new ArrayList<>();
+        knowFixedColumnForCnxRelatedToHttp.add("name");
+        knowFixedColumnForCnxRelatedToHttp.add("port");
+        knowFixedColumnForCnxRelatedToHttp.add("protocol");
+        Json cnxInputFotCnxRelatedToHttp = Json.object();
         Json tmp = Json.object();
+        // check if all values of temp are empty strings, return null
+        boolean allEmpty = false;
         // Iterate through cells
         for (int i = 0; i < headers.getLastCellNum(); i++) {
+            if(row==null) {
+                return null;
+            }
             Cell cell = row.getCell(i);
+            String headerKey = toCamelCase(headers.getCell(i).getStringCellValue());
+
             if (cell==null) {
                 tmp.set( toCamelCase(headers.getCell(i).getStringCellValue()), "");
+                allEmpty = true;
                 continue;
+            } else{
+                allEmpty = false;
             }
             switch (cell.getCellType()) {
                 case STRING:
-                    tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), cell.getStringCellValue());
+                    String stringValue = cell.getStringCellValue();
+                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey) && !Objects.equals(sheetName, "snmp_powershell")) {
+                        cnxInputFotCnxRelatedToHttp.set(headerKey, stringValue);
+                    } else {
+                        tmp.set(headerKey, stringValue);
+                    }
                     break;
                 case NUMERIC:
-                    tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), Math.round(cell.getNumericCellValue()));
+                    long numericValue = Math.round(cell.getNumericCellValue());
+                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, "snmp_powershell")) {
+                        cnxInputFotCnxRelatedToHttp.set(headerKey, numericValue);
+                    } else {
+                        tmp.set(headerKey, numericValue);
+                    }
                     break;
                 case BOOLEAN:
-                    tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), cell.getBooleanCellValue());
+                    boolean booleanValue = cell.getBooleanCellValue();
+                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, "snmp_powershell")) {
+                        cnxInputFotCnxRelatedToHttp.set(headerKey, booleanValue);
+                    } else {
+                        tmp.set(headerKey, booleanValue);
+                    }
                     break;
                 default:
                     break;
             }
         }
+        if (!Objects.equals(sheetName, "snmp_powershell")) {
+            tmp.set("protocol", "HTTP");
+            tmp.set("discoveryProtocolNameRelatedToHttpCnx", sheetName);
+        }
+        if (allEmpty) {
+            return null;
+        }
+        // Add cnxInputFotCnxRelatedToHttp JSON to tmp under the key "inputs"
+        tmp.set("inputs", cnxInputFotCnxRelatedToHttp);
+
         return tmp;
     }
 

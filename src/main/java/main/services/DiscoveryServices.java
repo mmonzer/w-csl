@@ -567,18 +567,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 }
                 List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
                 for (Json connection : listOfConnections) {
-                    EntityConnectionInfoDraft entityConnectionInfoDraft = new EntityConnectionInfoDraft();
-                    entityConnectionInfoDraft.setUuid(UUID.randomUUID().toString());
-                    entityConnectionInfoDraft.setName(connection.get("name").asString());
-                    entityConnectionInfoDraft.setProtocol(connection.get("protocol").asString());
-                    entityConnectionInfoDraft.setPort(connection.get("port").asString());
-                    entityConnectionInfoDraft.setUsername(connection.get("username").asString());
-                    entityConnectionInfoDraft.setPassword(connection.get("password").asString());
-                    entityConnectionInfoDraft.setSnmpCommunity(connection.get("snmpCommunity").asString());
-                    entityConnectionInfoDraft.setSnmpPrivacyKey(connection.get("snmpPrivacyKey").asString());
-                    entityConnectionInfoDraft.setSnmpAuthenticationAlgorithm(connection.get("snmpAuthenticationAlgorithm").asString());
-                    entityConnectionInfoDraft.setSnmpPrivacyAlgorithm(connection.get("snmpPrivacyAlgorithm").asString());
-                    entityConnectionInfoDraft.setSshKey(connection.get("sshKey").asString());
+                    EntityConnectionInfoDraft entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIUploadingFile(connection);
                     entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
                 }
                 // Send data to scan

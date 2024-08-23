@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import com.ucsl.json.Json;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 public class EntityConnectionInfoDraft {
     @Getter
@@ -37,6 +38,11 @@ public class EntityConnectionInfoDraft {
     boolean isKeepPassphrase;
     boolean isKeepSnmpPrivacyKey;
 
+    // region for cnx inputs
+    @Getter @Setter
+    Json inputs; // for cnx inputs related to http cnx
+    @Getter @Setter
+    String discoveryProtocolNameRelatedToHttpCnx;
 
     @Getter @Setter
     OffsetDateTime createdAt;
@@ -111,7 +117,9 @@ public class EntityConnectionInfoDraft {
                 "snmpPrivacyKey", this.snmpPrivacyKey,
                 "snmpAuthenticationAlgorithm", this.snmpAuthenticationAlgorithm,
                 "snmpPrivacyAlgorithm", this.snmpPrivacyAlgorithm,
-                "sshKey", this.sshKey
+                "sshKey", this.sshKey,
+                "inputs", this.inputs,
+                "discoveryProtocolNameRelatedToHttpCnx", this.discoveryProtocolNameRelatedToHttpCnx
         );
     }
 
@@ -127,7 +135,9 @@ public class EntityConnectionInfoDraft {
                 "snmpPrivacyKey", this.snmpPrivacyKey,
                 "snmpAuthenticationAlgorithm", this.snmpAuthenticationAlgorithm,
                 "snmpPrivacyAlgorithm", this.snmpPrivacyAlgorithm,
-                "sshKey", this.sshKey
+                "sshKey", this.sshKey,
+                "inputs", this.inputs,
+                "discoveryProtocolNameRelatedToHttpCnx", this.discoveryProtocolNameRelatedToHttpCnx
         );
     }
     public static EntityConnectionInfoDraft fromHMIJson(Json connectionDraftJson) {
@@ -185,5 +195,84 @@ public class EntityConnectionInfoDraft {
                 is_keep_passphrase,
                 is_keep_snmp_privacy_key
         );
+    }
+
+    public static EntityConnectionInfoDraft fromHMIUploadingFile(Json connectionDraftJson) {
+        EntityConnectionInfoDraft entityConnectionInfoDraft = new EntityConnectionInfoDraft();
+        entityConnectionInfoDraft.setUuid(UUID.randomUUID().toString());
+
+        String name = null;
+        if (connectionDraftJson.get("name") != null) {
+            name = connectionDraftJson.get("name").asString();
+        }
+        entityConnectionInfoDraft.setName(name);
+
+        String protocol = null;
+        if (connectionDraftJson.get("protocol") != null) {
+            protocol = connectionDraftJson.get("protocol").asString();
+        }
+        entityConnectionInfoDraft.setProtocol(protocol);
+
+        String port = null;
+        if (connectionDraftJson.get("port") != null) {
+            port = connectionDraftJson.get("port").asString();
+        }
+        entityConnectionInfoDraft.setPort(port);
+
+        String username = null;
+        if (connectionDraftJson.get("username") != null) {
+            username = connectionDraftJson.get("username").asString();
+        }
+        entityConnectionInfoDraft.setUsername(username);
+
+        String password = null;
+        if (connectionDraftJson.get("password") != null) {
+            password = connectionDraftJson.get("password").asString();
+        }
+        entityConnectionInfoDraft.setPassword(password);
+
+        String snmpCommunity = null;
+        if (connectionDraftJson.get("snmpCommunity") != null) {
+            snmpCommunity = connectionDraftJson.get("snmpCommunity").asString();
+        }
+        entityConnectionInfoDraft.setSnmpCommunity(snmpCommunity);
+
+        String snmpPrivacyKey = null;
+        if (connectionDraftJson.get("snmpPrivacyKey") != null) {
+            snmpPrivacyKey = connectionDraftJson.get("snmpPrivacyKey").asString();
+        }
+        entityConnectionInfoDraft.setSnmpPrivacyKey(snmpPrivacyKey);
+
+        String snmpAuthenticationAlgorithm = null;
+        if (connectionDraftJson.get("snmpAuthenticationAlgorithm") != null) {
+            snmpAuthenticationAlgorithm = connectionDraftJson.get("snmpAuthenticationAlgorithm").asString();
+        }
+        entityConnectionInfoDraft.setSnmpAuthenticationAlgorithm(snmpAuthenticationAlgorithm);
+
+        String snmpPrivacyAlgorithm = null;
+        if (connectionDraftJson.get("snmpPrivacyAlgorithm") != null) {
+            snmpPrivacyAlgorithm = connectionDraftJson.get("snmpPrivacyAlgorithm").asString();
+        }
+        entityConnectionInfoDraft.setSnmpPrivacyAlgorithm(snmpPrivacyAlgorithm);
+
+        String sshKey = null;
+        if (connectionDraftJson.get("sshKey") != null) {
+            sshKey = connectionDraftJson.get("sshKey").asString();
+        }
+        entityConnectionInfoDraft.setSshKey(sshKey);
+
+        // manage inputs
+        Json cnxInputFotCnxRelatedToHttp = Json.object();
+        if (connectionDraftJson.get("inputs") != null) {
+            cnxInputFotCnxRelatedToHttp = connectionDraftJson.get("inputs");
+        }
+        entityConnectionInfoDraft.setInputs(cnxInputFotCnxRelatedToHttp);
+        String discoveryProtocolNameRelatedToHttpCnx = null;
+        if (connectionDraftJson.get("discoveryProtocolNameRelatedToHttpCnx") != null) {
+            discoveryProtocolNameRelatedToHttpCnx = connectionDraftJson.get("discoveryProtocolNameRelatedToHttpCnx").asString();
+        }
+        entityConnectionInfoDraft.setDiscoveryProtocolNameRelatedToHttpCnx(discoveryProtocolNameRelatedToHttpCnx);
+
+        return entityConnectionInfoDraft;
     }
 }

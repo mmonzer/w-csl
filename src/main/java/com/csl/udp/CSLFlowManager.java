@@ -120,9 +120,8 @@ public class CSLFlowManager {
         if (traceAllMessages) System.out.println(" Queue size:" + getFlowSize(flowNumber));
 
         if (!ok) {
-            CSLContext.instance.logError("flow number " + flowNumber + " is full, lost of data: " + alertData);
+            //CSLContext.instance.logError("flow number " + flowNumber + " is full, lost of data: " + alertData);
             //if (traceAllMessages)
-            System.err.println("flow number " + flowNumber + " is full, lost of data: " + alertData);
         }
 
         return ok;

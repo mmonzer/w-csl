@@ -153,7 +153,6 @@ public class ScanWebSocketHandler {
         StompHeaders stompHeaders = new StompHeaders();
         stompHeaders.add(StompHeaders.DESTINATION, websocketStartDiscoveryEndpoint);
         stompHeaders.add(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
-        System.out.println(MDC.get(X_CORRELATION_ID));
         if (uuids == null || uuids.isEmpty()) {
 //            stompRequestsSession.send(websocketStartDiscoveryEndpoint, "");
             stompRequestsSession.send(stompHeaders, "");
@@ -315,11 +314,6 @@ public class ScanWebSocketHandler {
         return stompClient.connect(this.scanManagerDiscoveryUrl, new CorrelatedStompSessionHandlerAdapter() {
             @Override
             public void onFrame(StompHeaders headers, Object payloadRaw) {
-                if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
-                    MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
-                }
-                super.handleFrame(headers, payloadRaw);
-
                 Json payload = (Json) payloadRaw;
 
                 //region Log the notification
@@ -349,6 +343,8 @@ public class ScanWebSocketHandler {
                 //region Update the scan's info (status, progress)
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
                 if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
+                    logger.info("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
+                            payload.get("entitiesUuid").asJsonList().size(), payload.get("entitiesInError").asJsonList().size() );
                     // Put the end date in the scan information and notify DB-API the scan ended.
                     OffsetDateTime endDate = OffsetDateTime.now();
                     if (ScanConstants.successScanStatuses.contains(scanStatus)) {

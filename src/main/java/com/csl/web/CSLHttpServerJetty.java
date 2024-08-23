@@ -206,13 +206,27 @@ public class CSLHttpServerJetty {
                     data = handlerJsonRequest(req);
                 } else
                 if (req.getContentType().contains("multipart")) {
-                    req.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
-                            1024*1024*100, 1024*1024*100,1024*1024*100));
-                    req.getParts();
                     data = handlerMultipartRequest(req);
                 }
 
-                Json cmd = data.get("cmd");
+                // Get the full request URI
+                String requestUri = req.getRequestURI();  // e.g., /japi/discovery/upload_entity_http_connection_file
+
+                // Split the URI to extract the cmd part
+                String[] urlParts = requestUri.split("/");
+
+                String cmdStr = null;
+                // Ensure there are enough parts to extract endpoint and cmd
+                if (urlParts.length >= 3) {
+                    String endpoint = urlParts[1]; // discovery
+                    cmdStr = urlParts[2];      // upload_entity_http_connection_file
+                    data.set("cmd", cmdStr);
+                } else {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URL format");
+
+                }
+
+                Json cmd = Json.object("cmd", cmdStr).get("cmd");
                 Json params = data.get("params");
 
                 if (cmd == null) {
@@ -234,7 +248,7 @@ public class CSLHttpServerJetty {
         req.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
                 1024*1024*100, 1024*1024*100,1024*1024*100));
 
-        // Process the uploaded parts
+        // Process the uploaded urlParts
         Json body = Json.object();
         Json files = Json.array();
         for (Part part : req.getParts()) {

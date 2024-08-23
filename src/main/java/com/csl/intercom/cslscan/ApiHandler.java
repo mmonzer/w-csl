@@ -581,6 +581,7 @@ public class ApiHandler implements AutoCloseable {
     private static void addBodyToRequestJson(Json body, Request request) {
         if (body != null) {
             if (request.getMethod().equals(HttpMethod.POST.toString()) ||
+                    request.getMethod().equals(PATCH) ||
                     request.getMethod().equals(HttpMethod.PUT.toString()) ||
                     request.getMethod().equals(HttpMethod.DELETE.toString())) {
                 request.content(new StringContentProvider(body.toString()), "application/json");

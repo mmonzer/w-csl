@@ -12,12 +12,15 @@ import com.csl.intercom.dbapi.models.HttpTemplateImportNotification;
 import com.csl.util.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
+
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
  * Class for handling BSON file imports.
@@ -96,6 +99,7 @@ public class ImportExportBsonService {
             }
             logger.debug("startNewImportTask: importing file: {}", query.getFileName());
             importQuery = this.scanApiHandler.importBsonFile(downloadedPath, shouldDrop);
+            importQuery.setXCorrelationId(MDC.get(X_CORRELATION_ID));
             logger.debug("startNewImportTask: sent file to CSL-Scan: {}", query.getFileName());
             this.dbapiHandler.notifyImportStarted(query.getId(), importQuery);
             logger.debug("startNewImportTask: notified DB-API: {}", query.getFileName());
@@ -109,6 +113,7 @@ public class ImportExportBsonService {
     public int startNewExportTask() throws Exception {
         try {
             ExportQuery exportQuery = this.scanApiHandler.requestExportHttpTemplates();
+            exportQuery.setXCorrelationId(MDC.get(X_CORRELATION_ID));
             int id = this.dbapiHandler.requestBsonExportID(exportQuery);
             this.addExportTask(id, exportQuery);
             return id;
@@ -145,6 +150,7 @@ public class ImportExportBsonService {
         }
 
         ImportQuery importQuery = importTasks.get(id);
+        MDC.put(X_CORRELATION_ID, importQuery.getXCorrelationId());
         if (ImportQueryStatus.IN_PROGRESS_STATUSES.contains(importTasks.get(id).getStatus())) {
             logger.debug("handleImportTask: import in progress: {}", importQuery.getStatus());
             ImportQuery updatedImportQuery = this.scanApiHandler.getImportTaskStatus(importQuery.getId());
@@ -168,6 +174,7 @@ public class ImportExportBsonService {
             this.scanApiHandler.notifyEntityHttpConnectionSynchronized(entityHttpConnectionsToSync);
             this.importTasks.remove(id);
         }
+        MDC.remove(X_CORRELATION_ID);
     }
 
     private void handleExportTask(int id) {
@@ -177,6 +184,7 @@ public class ImportExportBsonService {
         }
 
         ExportQuery exportQuery = exportTasks.get(id);
+        MDC.put(X_CORRELATION_ID, exportQuery.getXCorrelationId());
         if (ExportQueryStatus.IN_PROGRESS_STATUSES.contains(exportQuery.getStatus())) {
             logger.debug("handleExportTask: export in progress: {}", exportQuery.getStatus());
             ExportQuery updatedExportQuery = this.scanApiHandler.getExportQueryStatus(exportQuery);
@@ -201,6 +209,7 @@ public class ImportExportBsonService {
                 logger.error("handleExportTask: error uploading file: {}", exportQuery.getFilename(), e);
             }
         }
+        MDC.remove(X_CORRELATION_ID);
     }
 
     /**

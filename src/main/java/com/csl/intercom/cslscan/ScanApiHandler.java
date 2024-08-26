@@ -28,6 +28,7 @@ import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.net.URI;
@@ -42,6 +43,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
  * Class to handle communication with CSL-Scan's HTTP API.
@@ -988,6 +991,7 @@ public class ScanApiHandler extends ApiHandler  {
 //        String uri = url + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
         String uri = createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint());
         Request request = httpClient.newRequest(uri);
+        request.header(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
         request.param("drop", String.valueOf(shouldDrop));
         request.method(HttpMethod.POST);
         MultiPartContentProvider multiPart = new MultiPartContentProvider();

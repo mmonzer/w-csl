@@ -687,9 +687,9 @@ public class FileUtils {
             tmp.set("protocol", "HTTP");
             tmp.set("discoveryProtocolNameRelatedToHttpCnx", sheetName);
         }
-        if (allEmpty) {
-            return null;
-        }
+//        if (allEmpty) {
+//            return null;
+//        }
         // Add cnxInputFotCnxRelatedToHttp JSON to tmp under the key "inputs"
         tmp.set("inputs", cnxInputFotCnxRelatedToHttp);
 

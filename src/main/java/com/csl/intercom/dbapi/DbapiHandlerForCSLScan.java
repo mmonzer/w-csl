@@ -16,7 +16,6 @@ import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ucsl.interfaces.IAlertDescriptor;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -1027,6 +1026,19 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             throw new DbapiUnexpectedStatusCodeException("Could not delete connection.", response.getStatus());
         }
     }
+    public void clearAllConnections() {
+        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CLEAR_ALL_CONNECTIONS);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.error("Could not clear all connections in DB-API. Got status code " + response.getStatus());
+            } else if (response.getStatus() == 200) {
+                logger.info("All connections cleared in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not clear all connections in DB-API.", e);
+        }
+    }
     public int getDbApiConnectionId(String connectionMongoEntityId) {
         Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS_DETAILS_BY_MONGO_ID);
         request.param("mongo_entity_id", connectionMongoEntityId);
@@ -1131,7 +1143,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         );
     }
 
-    public void createListOfConnectionDrafts(List<EntityConnectionInfoDraft> entityConnectionInfoDrafts) {
+    public void createListOfConnectionDrafts(List<EntityConnectionInfoDraft> entityConnectionInfoDrafts, int fileActionStatusIdInDbApi) {
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_CONNECTIONS_DRAFT);
         Json requestContents = Json.array(entityConnectionInfoDrafts.stream().map(EntityConnectionInfoDraft::serializeForDbapi).toArray());
         request.content(new StringContentProvider(requestContents.toString()), "application/json");
@@ -1144,9 +1156,41 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             }
         } catch (Exception e) {
             logger.error("Could not create connection drafts in DB-API.", e);
-            //  TODO: delete created ones in mongo scan and secret manager if failed
         }
     }
+
+    public int createFileActionStatusForImportConnectionDraftAndReturnCreatedId(){
+        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_FILE_ACTION_STATUS_FOR_IMPORT_CONNECTION_DRAFT);
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 201) {
+                logger.error("Could not create file action status for import connection draft in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 201) {
+                logger.info("File action status for import connection draft created in DB-API.");
+                Json responseContents = Json.read(response.getContentAsString());
+                return JsonUtil.getIntFromJson(responseContents, "id", 0);
+            }
+        } catch (Exception e) {
+            logger.error("Could not create file action status for import connection draft in DB-API.", e);
+        }
+        return 0;
+    }
+    public void updateFileActionStatusForImportSucceededConnectionDraft(int fileActionStatusId) {
+        Request request = createDbapiRequest(HttpMethod.PUT, DbapiEndpointForCSLScan.UPDATE_FILE_ACTION_STATUS_FOR_IMPORT_CONNECTION_DRAFT);
+        request.param("file_action_status_id", String.valueOf(fileActionStatusId));
+        request.param("status", String.valueOf(2));
+        try {
+            ContentResponse response = request.send();
+            if (response.getStatus() != 200) {
+                logger.error("Could not update file action status for import connection draft in DB-API. Got status code {}", response.getStatus());
+            } else if (response.getStatus() == 200) {
+                logger.info("File action status for import connection draft updated in DB-API.");
+            }
+        } catch (Exception e) {
+            logger.error("Could not update file action status for import connection draft in DB-API.", e);
+        }
+    }
+
     public Json getConnectionDraftOtherData(EntityConnectionInfoDraft connectionInfoDraft) {
         Json otherData = Json.object();
         if (connectionInfoDraft.getProtocol().equals("SNMPv1")) {

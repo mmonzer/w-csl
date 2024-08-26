@@ -39,9 +39,7 @@ import java.io.FileNotFoundException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.*;
-import static com.csl.intercom.cslscan.enums.ScanApiEndpoint.CREATE_CONNECTIONS_DRAFT;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -570,24 +568,36 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     EntityConnectionInfoDraft entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIUploadingFile(connection);
                     entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
                 }
-                // Send data to scan
+
+                // Create a file action status in dbapi first
                 try {
-                    JsonApiResponse response = scanApiHandler.addListOfConnectionInfoDrafts(entityConnectionInfoDrafts);
-                    if (response.isSuccess()) {
-                        // send data to CSL-Dbapi
-                        try {
-                            dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts);
-                        } catch (Exception e) {
-                            logger.error("Could not create list of connection drafts in CSL-Dbapi", e);
-                            return JsonApiResponse.error("Could not create list of connection drafts in CSL-Dbapi",
-                                    Json.object("exception", e.getMessage())
-                            ).toJson();
+                  int fileActionStatusIdInDbApi = dbapiHandler.createFileActionStatusForImportConnectionDraftAndReturnCreatedId();
+                    // Send data to scan
+                    try {
+                        JsonApiResponse response = scanApiHandler.addListOfConnectionInfoDrafts(entityConnectionInfoDrafts);
+                        if (response.isSuccess()) {
+                            // send data to CSL-Dbapi
+                            try {
+                                dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts, fileActionStatusIdInDbApi);
+                            } catch (Exception e) {
+                                logger.error("Could not create list of connection drafts in CSL-Dbapi", e);
+                                return JsonApiResponse.error("Could not create list of connection drafts in CSL-Dbapi",
+                                        Json.object("exception", e.getMessage())
+                                ).toJson();
+                            }
                         }
+
+                        dbapiHandler.updateFileActionStatusForImportSucceededConnectionDraft(fileActionStatusIdInDbApi);
+                        return response.toJson();
+                    } catch (Exception e) {
+                        logger.error("Could not add list of connection drafts to CSL-Scan", e);
+                        return JsonApiResponse.error("Could not add list of connection drafts to CSL-Scan",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
                     }
-                    return response.toJson();
                 } catch (Exception e) {
-                    logger.error("Could not add list of connection drafts to CSL-Scan", e);
-                    return JsonApiResponse.error("Could not add list of connection drafts to CSL-Scan",
+                    logger.error("Could not create file action status in CSL-Dbapi", e);
+                    return JsonApiResponse.error("Could not create file action status in CSL-Dbapi",
                             Json.object("exception", e.getMessage())
                     ).toJson();
                 }
@@ -622,12 +632,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         ).toJson();
                     }
                     if (connectionUuidJson != null && connectionUuidJson.isString()) {
-
                         connectionUuid = connectionUuidJson.asString();
                     } else {
                         connectionUuid = null;
                     }
-                    JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionId);
+                    JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid,connectionId);
                     logger.trace("Tested HTTP connection (deviceUuid={}  connectionId={}) : {}", deviceUuid, connectionIdJson, response);
                     return response.toJson();
                 },
@@ -1329,7 +1338,33 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             }
             return response.toJson();
         });
-
+        addCmd(DiscoveryEndpoints.CLEAR_ALL_CONNECTIONS, params -> {
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.clearAllEntityConnections();
+                if (response.isSuccess()) {
+                    logger.info("Cleared all connections from csl-scan");
+                    // clear all connections from dbapi
+                    try {
+                        dbapiHandler.clearAllConnections();
+                        logger.info("Cleared all connections from dbapi");
+                    } catch (Exception e) {
+                        logger.error("Could not clear all connections from dbapi", e);
+                        return JsonApiResponse.error("Could not clear all connections from dbapi",
+                                Json.object("exception", e.getMessage())
+                        ).toJson();
+                    }
+                } else {
+                    logger.error("Could not clear all connections, {}", response.getError().toString());
+                }
+            } catch (Exception e) {
+                logger.error("Could not clear all connections", e);
+                return JsonApiResponse.error("Could not clear all connections",
+                        Json.object("exception", e.getMessage())
+                ).toJson();
+            }
+            return response.toJson();
+        });
         addCmd(DiscoveryEndpoints.DELETE_CONNECTION_DRAFT, params -> {
             String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
             if (connectionUuid == null) {

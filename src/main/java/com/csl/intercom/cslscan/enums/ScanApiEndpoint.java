@@ -12,6 +12,7 @@ public enum ScanApiEndpoint {
     CREATE_CONNECTIONS(CONNECTIONS.endpoint() + "create_list_of_connections"),
     CONNECTIONS_DETAILS(CONNECTIONS.endpoint() + "%s"),
     CONNECTIONS_LAST_UPDATE(CONNECTIONS.endpoint() + "last-updated"),
+    CLEAR_ALL_ENTITY_CONNECTIONS(CONNECTIONS.endpoint() + "clear"),
 
     CONNECTIONS_DRAFT("/entity-connection-info-draft/"),
     CONNECTION_DRAFT_DETAILS(CONNECTIONS_DRAFT.endpoint() + "%s"),

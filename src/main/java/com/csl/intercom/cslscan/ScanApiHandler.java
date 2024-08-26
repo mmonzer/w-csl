@@ -144,6 +144,9 @@ public class ScanApiHandler extends ApiHandler  {
             return null;
         }
     }
+    public JsonApiResponse clearAllEntityConnections() {
+        return sendDelete(ScanApiEndpoint.CLEAR_ALL_ENTITY_CONNECTIONS, Json.object());
+    }
 
     /**
      * Get the list of configured entities in the scanner.
@@ -290,9 +293,9 @@ public class ScanApiHandler extends ApiHandler  {
      * @param connectionUuid The uuid of the connection to test.
      * @return A {@link JsonApiResponse} with CSL-Scan's response.
      */
-    public JsonApiResponse testConnection(String deviceUuid, String connectionUuid) {
+    public JsonApiResponse testConnection(String deviceUuid, String connectionUuid, String connectionId) {
         return sendGet(String.format(ScanApiEndpoint.ENTITY_TEST_EXISTING_CONNECTION.endpoint(), deviceUuid),
-                Json.object("connection_uuid", connectionUuid));
+                Json.object("connection_uuid", connectionUuid, "connection_id", connectionId));
     }
 
 

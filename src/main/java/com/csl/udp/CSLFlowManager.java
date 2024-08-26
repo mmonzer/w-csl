@@ -122,7 +122,7 @@ public class CSLFlowManager {
         if (!ok) {
             //logger.error("flow number " + flowNumber + " is full, lost of data: " + alertData);
             //if (traceAllMessages)
-            System.err.println("flow number " + flowNumber + " is full, lost of data: " + alertData);
+            // System.err.println("flow number " + flowNumber + " is full, lost of data: " + alertData);
         }
 
         return ok;

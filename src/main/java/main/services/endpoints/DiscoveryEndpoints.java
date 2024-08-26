@@ -45,6 +45,11 @@ public enum DiscoveryEndpoints implements Endpoint {
                     .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                             "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
                     .setStatus(IJsonCmdHelp.STATUS_OK)),
+    CLEAR_ALL_CONNECTIONS("clear_all_connections",
+            new JsonCmdHelp().setDesc("Clear all connection from CSL-Scan")
+                    .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                            "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                    .setStatus(IJsonCmdHelp.STATUS_OK)),
     UPDATE_CONNECTION("update_connection",
             new JsonCmdHelp().setDesc("Update a connection in CSL-Scan")
                     .setParam("connection", "The connection to update", IJsonCmdHelp.JSON)

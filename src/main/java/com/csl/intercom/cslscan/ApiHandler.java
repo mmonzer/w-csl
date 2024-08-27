@@ -50,7 +50,6 @@ public class ApiHandler implements AutoCloseable {
      * General constructor
      */
     public ApiHandler(String nameModule, String ip, int port, boolean useSSL) {
-//        this(nameModule, createUrl(ip, port, useSSL));
         this.moduleName = nameModule;
         this.ip = ip;
         this.port = port;
@@ -59,11 +58,11 @@ public class ApiHandler implements AutoCloseable {
         httpClient = initClient();
 
         try {
-            logger.debug("Connecting with {} ...", moduleName);
+            logger.debug("Connecting with {} at {} ...", moduleName, getUrl());
             httpClient.start();
-            logger.info("Connection successful with {}", moduleName);
+            logger.info("Connection successful with {} at {}", moduleName, getUrl());
         } catch (Exception e) {
-            logger.error("Could not start the http client for {} API.", nameModule, e);
+            logger.error("Could not start the http client for {} API at {}", nameModule, getUrl(), e);
         }
     }
 
@@ -131,11 +130,11 @@ public class ApiHandler implements AutoCloseable {
     @Override
     public void close() throws Exception {
         try {
-            logger.debug("Disconnecting from {} ...", moduleName);
+            logger.debug("Disconnecting from {} at {} ...", moduleName, getUrl());
             this.httpClient.stop();
-            logger.info("Disconnected successfully from {} ...", moduleName);
+            logger.info("Disconnected successfully from {} at {}.", moduleName, getUrl());
         } catch (Exception e) {
-            logger.error("Could not stop the {} HTTP client.", moduleName, e);
+            logger.error("Could not stop the {} HTTP client at {}.", moduleName, getUrl(), e);
         }
     }
 

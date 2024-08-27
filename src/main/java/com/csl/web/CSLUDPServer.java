@@ -11,143 +11,173 @@ import org.slf4j.LoggerFactory;
 
 import java.net.DatagramSocket;
 
-
 /**
  * This class uses the ICRoute interface to create void routes.
  * The response for an ICRoute is rendered in an after-filter.
  */
 public class CSLUDPServer {
-	private static final Logger logger = LoggerFactory.getLogger(CSLUDPServer.class);
-	private CSLFlowManager flowManager;
-	private int maxsize;
-	private int maxflows;
-
-
-	private String ip="127.0.0.1";
-	
-	private int port=-1;
-	private boolean verbose =false;
-
-    private boolean initialized =false;
-	@Setter
+    /**
+     * Logger of the UDP server
+     */
+    private static final Logger logger = LoggerFactory.getLogger(CSLUDPServer.class);
+    /**
+     * Flow manager of the UDP server
+     */
+    private CSLFlowManager flowManager;
+    /**
+     * Max size for the packets in UDP server
+     */
+    private int maxsize;
+    /**
+     * Max number of flows in UDP server
+     */
+    private int maxflows;
+    /**
+     * Listing ip of the UDP server
+     */
+    private String ip = "127.0.0.1";
+    /**
+     * Listing port of the UDP server
+     */
+    private int port = -1;
+    /**
+     * Whether the server is initialized
+     */
+    private boolean initialized = false;
+    /**
+     * Whether the server has started
+     */
+    @Setter
     @Getter
-    private  boolean started=false;
+    private boolean started = false;
 
-    private  boolean traceAllMessages=false;
+    /**
+     * Whether the server should trace all messages
+     */
+    private boolean traceAllMessages = false;
 
-	DatagramSocket dsocket=null;
+    /**
+     * Datagram socket
+     */
+    DatagramSocket dsocket = null;
 
+    /**
+     * Initialization of the UDP server
+     *
+     * @param config configuration for the UDP server
+     */
+    public void initUDPServer(Config.UdpServerConf config) {
+        if (config == null) return;
 
-	public void initUDPServer(Config.UdpServerConf config) {
-
-
-		if (config==null) return;
-
-		boolean on=config.getOn();
-		if (!on) return;
-
-
-		if (initialized) {
-			System.err.println("already initialized");
-			System.exit(0);
-		}
-
-		if (!config.getOn()) return;
-
-
-		verbose=config.getVerbose();
-		traceAllMessages=config.getTraceAllMessages();
-
-		initialized=true;
-
-		maxflows=config.getMaxInputQueues();
-		maxsize=config.getMaxSizeOfInputQueues();
-
-		port = config.getPort();
-		ip = config.getIp();
-		if (ip.isEmpty()) {ip=NetUtil.findIPAddress();}
-		if (ip.isEmpty()) {ip="127.0.0.1";}
+        boolean on = config.getOn();
+        if (!on) return;
 
 
-		int port= getCurrentPortForUDP();
-		setCurrentPortForUCP(port);
+        if (initialized) {
+            logger.error("already initialized");
+            System.exit(0);
+        }
 
-		if (verbose)
-		{
-			System.out.println("");
-			System.out.println("CSL UDP Server:");
-			System.out.println("===============");
-			System.out.println("  ip  :"+ip);
-			System.out.println("  port:"+port);
-			System.out.println("  trace all messages:"+traceAllMessages);
+        if (!config.getOn()) return;
 
+        traceAllMessages = config.getTraceAllMessages();
 
-		}
-	}
+        initialized = true;
 
+        maxflows = config.getMaxInputQueues();
+        maxsize = config.getMaxSizeOfInputQueues();
 
-    public boolean isTraceAllMessages() {
-		return traceAllMessages;
-	}
+        port = config.getPort();
+        ip = config.getIp();
+        if (ip.isEmpty()) {
+            ip = NetUtil.findIPAddress();
+        }
+        if (ip.isEmpty()) {
+            ip = "127.0.0.1";
+        }
 
+        int port = getCurrentPortForUDP();
+        setCurrentPortForUDP(port);
 
-	public void setTraceAllMessages(boolean traceAllMessages) {
-		this.traceAllMessages = traceAllMessages;
-	}
+        logger.info("UDP server initialized at {}:{}", ip, port);
+    }
 
+    /**
+     * Getter of the listening port of the UDP server
+     */
+    public int getCurrentPortForUDP() {
+        return port;
+    }
 
-	public int getCurrentPortForUDP() {
-		return port;
-	}
-	
-	public String getCurrentIPForUDP() {
-		return ip;
-	}
+    /**
+     * Getter of the listening IP of the UDP server
+     */
+    public String getCurrentIPForUDP() {
+        return ip;
+    }
 
-	private void setCurrentPortForUCP(int currentPortForUDP) {
-		port = currentPortForUDP;
-	}
+    /**
+     * Setter of the listening port of UDP server
+     *
+     * @param currentPortForUDP new port for listening
+     */
+    private void setCurrentPortForUDP(int currentPortForUDP) {
+        port = currentPortForUDP;
+    }
 
-	public void start() {
+    /**
+     * Start the UDP server
+     */
+    public void start() {
 
-		if (!initialized) {
-			System.err.println("CSL UDP server not initialized, cannot start");
-			System.exit(0);
-		}
+        if (!initialized) {
+            logger.error("CSL UDP server not initialized, cannot start");
+            System.exit(0);
+        }
 
-		getFlowManager().startListener();
-		logger.info("Listenning on port:"+port);
+        getFlowManager().startListener();
 
-		if (verbose) System.out.println("  UDP server listening on "+port);
-	}
+        logger.info("UDP server listening at {}:{}", ip, port);
+    }
 
-	public void stop() {
-		
-		if (dsocket!=null) 
-			dsocket.close();
-		getFlowManager().stopListener();
-		
-	}
+    /**
+     * Stop the UDP server
+     */
+    public void stop() {
 
-	//===UDP communication
-	private CSLFlowManager getFlowManager() {
+        if (dsocket != null) dsocket.close();
+        getFlowManager().stopListener();
 
-		if (!initialized) {
-			System.err.println("CSL UDP server not initialized, cannot start");
-			System.exit(0);
-		}
+        logger.info("UDP server stopped listening at {}:{}", ip, port);
+    }
 
-		if (flowManager==null) {
+    /**
+     * Getter of the flow manager of the UDP server
+     *
+     * @return the flow manager of the server
+     */
+    private CSLFlowManager getFlowManager() {
 
-			flowManager= new CSLFlowManager(maxflows, maxsize,traceAllMessages);
-		}
-		return flowManager;
-	}
+        if (!initialized) {
+            logger.error("CSL UDP server not initialized, cannot start");
+            System.exit(0);
+        }
 
+        if (flowManager == null) {
 
-	public void addListener(int queueNumber,ICSLFlowListener l ) {
+            flowManager = new CSLFlowManager(maxflows, maxsize, traceAllMessages);
+        }
+        return flowManager;
+    }
 
-		getFlowManager().addListener(queueNumber,l); 
-	}
+    /**
+     * Add listener to UDP server
+     *
+     * @param queueNumber  number of packets to queue
+     * @param flowListener flow listener of the UDP server
+     */
+    public void addListener(int queueNumber, ICSLFlowListener flowListener) {
 
+        getFlowManager().addListener(queueNumber, flowListener);
+    }
 }

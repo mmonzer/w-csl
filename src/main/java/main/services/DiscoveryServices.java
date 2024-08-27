@@ -32,6 +32,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -153,8 +154,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 }
             });
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.FILE_ACTION_STATUS, message -> {
-                HttpTemplateImportNotification notification = HttpTemplateImportNotification.fromMQTTMessage(Json.read(message.getResults()));
-                if (notification != null) {
+                Json jsonPayload = Json.read(message.getResults());
+                if (jsonPayload.has("correlation_id")) {
+                    MDC.put(X_CORRELATION_ID, jsonPayload.get("correlation_id").asString());
+                }
+                // TODO: change correlation_id by X-Correlation-ID
+                HttpTemplateImportNotification notification = HttpTemplateImportNotification.fromMQTTMessage(jsonPayload);
+                    if (notification != null) {
                     if (notification.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED) {
                         importExportBsonService.startNewImportTask(notification);
                     }
@@ -1299,16 +1305,17 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      */
     public void syncAll() {
         if (isConcentrator) {
+            logger.info("Starting Discovery synchronization");
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
                 cpeItemSynchronizationService.syncData();
-                logger.trace("CPE items synchronization finished");
+                logger.debug("CPE items synchronization finished");
                 microsoftKbSynchronizationService.syncData();
-                logger.trace("Microsoft KB synchronization finished");
+                logger.debug("Microsoft KB synchronization finished");
                 deletedCpeItemsSynchronizationService.syncData();
-                logger.trace("Deleted CPE items synchronization finished");
+                logger.debug("Deleted CPE items synchronization finished");
                 deletedMicrosoftKbsSynchronizationService.syncData();
-                logger.debug("Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
+                logger.info("Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
             } catch (SynchronizationException e) {
                 logger.warn("Could not synchronize CPE Items", e);
             }

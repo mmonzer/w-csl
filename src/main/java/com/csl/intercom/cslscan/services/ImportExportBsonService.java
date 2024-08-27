@@ -65,7 +65,7 @@ public class ImportExportBsonService {
             }
         }, 0, 5, TimeUnit.SECONDS);
         this.periodicStartExecutor.scheduleAtFixedRate(() -> this.dbapiHandler.getAvailableImportTasks().forEach(this::startNewImportTask),
-                0, 10, TimeUnit.MINUTES);
+                1, 10, TimeUnit.MINUTES);
     }
 
     /**
@@ -98,6 +98,7 @@ public class ImportExportBsonService {
                 this.dbapiHandler.deleteDiscoveryProtocolsList(uuids);
             }
             logger.debug("startNewImportTask: importing file: {}", query.getFileName());
+
             importQuery = this.scanApiHandler.importBsonFile(downloadedPath, shouldDrop);
             importQuery.setXCorrelationId(MDC.get(X_CORRELATION_ID));
             logger.debug("startNewImportTask: sent file to CSL-Scan: {}", query.getFileName());
@@ -202,12 +203,12 @@ public class ImportExportBsonService {
                 this.dbapiHandler.uploadHttpTemplatesBsonFile(exportQuery);
                 this.dbapiHandler.notifyExportFinished(id, exportQuery);
                 this.fileStorageService.deleteFile(exportQuery.getFilename());
-                this.exportTasks.remove(id);
             } catch (ExecutionException | InterruptedException | TimeoutException e) {
                 logger.error("handleExportTask: error downloading file: {}", exportQuery.getFilename(), e);
             } catch (Exception e) {
                 logger.error("handleExportTask: error uploading file: {}", exportQuery.getFilename(), e);
             }
+            this.exportTasks.remove(id);
         }
         MDC.remove(X_CORRELATION_ID);
     }

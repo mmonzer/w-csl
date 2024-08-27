@@ -714,8 +714,8 @@ public class ApiHandler implements AutoCloseable {
      */
     private JsonApiResponse parseStreamResponse(Response response, InputStreamResponseListener listener) throws IOException {
         Json responseJson = Json.object();
-        if (response.getHeaders().containsKey("Content-Type")) {
-            responseJson.at("Content-Type", response.getHeaders().getField("Content-Type").getValue());
+        if (response.getHeaders().containsKey(HttpHeader.CONTENT_TYPE.toString())) {
+            responseJson.at(HttpHeader.CONTENT_TYPE.toString(), response.getHeaders().getField(HttpHeader.CONTENT_TYPE).getValue());
         }
         if (response.getHeaders().containsKey("Content-disposition")) {
             responseJson.at("Content-disposition", response.getHeaders().getField("Content-disposition").getValue());

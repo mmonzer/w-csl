@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
+import org.eclipse.jetty.http.HttpHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -209,7 +210,7 @@ public class AutoCrypt {
                 responseFromModule.getResult().has(Certificate.CERTIFICATE) && responseFromModule.getResult().get(Certificate.CERTIFICATE).isString()) {
             Json response = Json.object();
             // TODO : range this formating elsewhere, probably not the right place
-            response.at("Content-Type", "application/octet-stream");
+            response.at(HttpHeader.CONTENT_TYPE.toString(), "application/octet-stream");
             response.at("Content", responseFromModule.getResult().get(Certificate.CERTIFICATE).asString());
             return JsonApiResponse.result(response);
         }

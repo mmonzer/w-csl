@@ -922,12 +922,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return initRequestWithHeaders(method.toString(), endpoint);
     }
 
-    private Request createDbApiRequestWithCustomHeaders(String method, String endpoint, String contentType) {
-        setCustomHeaders(contentType);
+    private Request createDbApiRequestWithCustomContentType(String method, String endpoint, String contentType) {
         Request request =  initRequest(method, createUriFrom(endpoint), httpClient);
-        for (Map.Entry<HttpHeader, String> entry : headers.entrySet()) {
-            request.header(entry.getKey(), entry.getValue());
-        }
+
+        addHeadersToRequest(headers, request);
+        request.header(HttpHeader.CONTENT_TYPE, contentType);
+
         return request;
     }
 
@@ -1194,9 +1194,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return;
         }
         multiPart.close();
-        Request request = createDbApiRequestWithCustomHeaders("POST", DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint(), multiPart.getContentType());
+        Request request = createDbApiRequestWithCustomContentType("POST", DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint(), multiPart.getContentType());
         request.content(multiPart);
-        // TODO : this multipart request must be sent with a synchronized method, becquse the x-correlation-id may cause problems
+        // TODO : this multipart request must be sent with a synchronized method, because the x-correlation-id may cause problems
         try {
             ContentResponse response = request.send();
             if (response.getStatus() >= 400) {

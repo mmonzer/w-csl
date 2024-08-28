@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <!-- Print console -->
     <appender name="Console"
               class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
@@ -10,8 +11,26 @@
         </layout>
     </appender>
 
-    <!-- LOG everything at INFO level -->
+    <!-- Save to file -->
+    <appender name="STASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/redditApp123.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logback/redditApp.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+<!--            <includeMdcKeyName>X-Correlation-ID</includeMdcKeyName>-->
+<!--            <excludeMdcKeyName>X-Correlation-ID</excludeMdcKeyName>-->
+        </encoder>
+    </appender>
+
+    <!-- Where to log and the level by default -->
     <root level="${LOG_LEVEL:-DEBUG}">
+        <appender-ref ref="STASH" />
         <appender-ref ref="Console" />
     </root>
+<!--    We can define different levels  to save to different places as-->
+<!--    <logger name="trace" level="TRACE">-->
+<!--        <appender-ref ref="Console" />-->
+<!--    </logger>-->
 </configuration>

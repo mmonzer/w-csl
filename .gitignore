@@ -11,6 +11,7 @@ csl-dev
 build/
 classes/
 downloads/
+logs/
 
 cacerts.jks
 
@@ -27,4 +28,6 @@ w_csl.iml
 w-csl.iml
 W_CSL.iml
 
+
+#
 

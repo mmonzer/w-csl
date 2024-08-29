@@ -25,6 +25,8 @@ public class CSLWebSocketForJcmd {
     private static final String RESPONSE = "response";
     public static final String ID = "uuid";
     public static final String X_CORRELATION_ID = "X-Correlation-ID";
+    public static final String ENDPOINT = "endpoint";
+    public static final String COMMAND = "command";
     public static long TIME_OUT = 60000;
 
     public static String WEB_SOCKET_CMD = "/cmd";

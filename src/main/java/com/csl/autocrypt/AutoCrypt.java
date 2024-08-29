@@ -5,6 +5,11 @@ import com.csl.autocrypt.services.*;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.logger.CustomLogger;
+import com.csl.logger.LoggerActions;
+import com.csl.logger.LoggerInterfaces;
+import com.csl.logger.LoggerInterfaces.*;
+import com.csl.logger.LoggerActions.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -38,7 +43,7 @@ public class AutoCrypt {
     @Getter
     private ApiHandlerForCSLAutoCrypt autocryptApiHandler = null;
 
-    private static final Logger logger = LoggerFactory.getLogger(AutoCrypt.class);
+    private static final CustomLogger logger = CustomLogger.getLogger(AutoCrypt.class);
 
     private IssuerSynchronizationService issuerSynchronizationService = null;
     private RoleSynchronizationService roleSynchronizationService = null;
@@ -551,22 +556,22 @@ public class AutoCrypt {
 
         boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
         String type = isRoot ? "root" : "intermediate";
-        logger.debug("Generating {} CA ...", type);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Generating {} CA ...", type);
         transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Creating CA in Autocrypt
-        logger.trace("Creating {} CA creation in Autocrypt with params {} and body {} ...", type, params, body);
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API, "Creating {} CA creation in Autocrypt with params {} and body {} ...", type, params, body);
         JsonApiResponse responseFromModule;
         if (isRoot) {
             responseFromModule = autocryptApiHandler.generateRootCA(body, params);
         } else {
             responseFromModule = autocryptApiHandler.generateIntermediateCA(body, params);
         }
-        logger.trace("Created {} CA creation in Autocrypt with response {}", type, responseFromModule);
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API, "Created {} CA creation in Autocrypt with response {}", type, responseFromModule);
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Issuer.ISSUER_REF) ||
                 !responseFromModule.getResult().get(Issuer.ISSUER_REF).isString()) {
-            logger.error("{} : {} CA creation in Autocrypt failed", typeCA, type);
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"{} : {} CA creation in Autocrypt failed", typeCA, type);
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
         String issuerRef = responseFromModule.getResult().get(Issuer.ISSUER_REF).asString();
@@ -579,11 +584,11 @@ public class AutoCrypt {
             syncIssuers();
             syncCertificates();
         } catch (SynchronizationException e) {
-            logger.error("Failed to generate {} CA with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to generate {} CA with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
 
         return responseFromModule;
     }

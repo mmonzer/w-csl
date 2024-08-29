@@ -29,7 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.autocrypt.outils.JsonHelper.getValueStringOrNull;
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 
 public class CSLIDSMainClient {
 
@@ -157,6 +157,7 @@ public class CSLIDSMainClient {
 
                 if (!apiName.isEmpty()) {
                     IApiCommands api = apiMap.get(apiName);
+                    MDC.put(ENDPOINT, apiName);
                     Json jcmd = messageJson.get("jcmd");
 
                     if (jcmd != null && api != null) {
@@ -173,6 +174,8 @@ public class CSLIDSMainClient {
 
                 logger.info("Sending result: {}", resultMessageJson);
                 clientEndPoint.sendMessage("res:" + resultMessageJson);
+                MDC.remove(COMMAND);
+                MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);
             }
         }).start();

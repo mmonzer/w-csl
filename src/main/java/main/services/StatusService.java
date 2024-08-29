@@ -38,12 +38,11 @@ public class StatusService extends Service {
 
     /**
      * Initialization of the Status service commands
-     * @param jConfig the configuration section of the configuration file
-     * @param cslDir the CSL directory
+     *
      * @return true if the initialization happened with no problems, false otherwise.
      */
     @Override
-    public boolean init(Json jConfig, String cslDir) {
+    public boolean init() {
         System.out.println("Initializing status service ...");
         notifier = CSLContext.instance.getStatusNotifier();
 //        notifier.setSendNotifications(JsonUtil.getBooleanFromJson(jConfig, "send_notifications", false));

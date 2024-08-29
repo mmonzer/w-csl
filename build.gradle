@@ -4,6 +4,11 @@
  * This generated file contains a sample Java application project to get you started.
  * For more details on building Java & JVM projects, please refer to https://docs.gradle.org/8.7/userguide/building_java_projects.html in the Gradle documentation.
  */
+
+//plugins {
+//    id 'org.owasp.dependencycheck' version '10.0.3'
+//}
+
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin : 'jacoco'
@@ -128,3 +133,15 @@ task printEnvVariables {
         println "JAVA_HOME: ${System.getenv('JAVA_HOME')}"
     }
 }
+
+//// Optional: Configuration for the dependencyCheck task (customize as needed)
+//dependencyCheck {
+//    failBuildOnCVSS = 7.0 // Fail the build if any vulnerability is above this score
+//    format = 'HTML' // Report format (HTML, XML, JUNIT, SARIF, etc.)
+//    outputDirectory = "build/reports" // Where to put the report
+//    // additional configurations can be added here
+//
+//    nvd {
+//        apiKey = System.getenv("NVD_API_KEY") ?: System.getProperty("nvd.apiKey")
+//    }
+//}

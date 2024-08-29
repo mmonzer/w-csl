@@ -6,17 +6,17 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
-
-import com.csl.core.CSLContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for a UDP client that listens to the given ip address and port, and adds the received message into
  * the messageQueue to be treated later.
  */
 public class CSLUdpUnicastClient implements Runnable {
+	private static final Logger logger = LoggerFactory.getLogger(CSLUdpUnicastClient.class);
 	private final int port;
 	private String ip="";
 	private final BlockingQueue<byte[]> messageQueue;
@@ -112,7 +112,7 @@ public class CSLUdpUnicastClient implements Runnable {
 		} catch (SocketException e) {
 			if (!closing) e.printStackTrace();
 		} catch (IOException e) {
-			CSLContext.instance.logInfo("Timeout. Client is closing.");
+			logger.info("Timeout. Client is closing.");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			clientSocket.disconnect();

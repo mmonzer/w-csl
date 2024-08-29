@@ -1,5 +1,6 @@
 package com.csl.web.websockets;
 
+import com.csl.core.CSLContext;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -19,21 +20,20 @@ public class CSLWebSocketHandler {
 
     @OnWebSocketConnect
     public void onConnect(Session user) throws Exception {
-        logger.info("Connected User Client websocket though path {}", cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath()));
+        logger.trace("Connection :"+user);
+        logger.info("A new user has connected to the CSLWebSocketHandler websocket through path {}", cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath()));
     	CSLWebSocket.addUser(user);
-//        user.getUpgradeRequest().getHeader("X-Correlation-ID");
     }
 
     @OnWebSocketClose
     public void onClose(Session user, int statusCode, String reason) {
         logger.info("Disconnected from User Client websocket though path {}", cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath()));
         CSLWebSocket.removeUser(user);
-//        user.getUpgradeRequest().getHeader("X-Correlation-ID");
     }
 
     @OnWebSocketMessage
     public void onMessage(Session user, String message) {
-        logger.warn("User client websocket message");
+    	System.out.println("OnMessage user="+user+" message="+message);
     }
 
 }

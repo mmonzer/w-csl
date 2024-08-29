@@ -108,12 +108,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     /**
      * Initialize the service, setting the list of known managers and registering the commands.
      *
-     * @param jConfig The configuration of the service (that is, the relevant section of the config file)
-     * @param cslDir  The working directory
      * @return True is the initialization was successful, false otherwise
      */
     @Override
-    public boolean init(Json jConfig, String cslDir) {
+    public boolean init() {
         logger.info("Initializing SNMP service ..");
 
 //        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
@@ -573,7 +571,6 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     } else {
                         JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionId);
                         logger.trace("Tested HTTP connection (deviceUuid={}  connectionId={}) : {}", deviceUuid, connectionIdJson, response);
-                        logger.info("Successfully tested HTTP connection (deviceUuid={}  connectionId={}) {}", deviceUuid, connectionIdJson, response.isSuccess() ? "successfully" : "failed");
                         return response.toJson();
                     }
                 },

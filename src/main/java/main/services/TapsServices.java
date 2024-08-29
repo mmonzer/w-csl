@@ -925,12 +925,10 @@ public class TapsServices extends Service {
     /**
      * Initialization of the TAPs commands
      *
-     * @param jConfig the configuration section of the configuration file
-     * @param cslDir the CSL directory
      * @return true if the initialization happened with no problems, false otherwise.
      */
     @Override
-    public boolean init(Json jConfig, String cslDir) {
+    public boolean init() {
         Config.Tap config = Config.instance.TapService;
         idsconf = CSLContext.instance.getCslConfDir();
         Json conf;

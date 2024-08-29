@@ -21,7 +21,8 @@ public class CSLWebSocketForJcmdHandler {
      
     @OnWebSocketConnect
     public void onConnect(Session session) throws Exception {
-		logger.info("Connected to CSL-Client websocket");
+		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket");
+		logger.trace("Connection :"+session);
     }
 
     @OnWebSocketClose
@@ -79,7 +80,9 @@ public class CSLWebSocketForJcmdHandler {
 			logger.debug("deprecated : forward alert to user {}", j);
     		((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).sendAlertToViewerUDP(j);
     	}
-		else if (message.startsWith("keep alive")) {}
+		else if (message.compareToIgnoreCase("keep alive") == 0)  {
+			// do nothing
+		}
     	else {
             logger.warn("Jcmd module Invalid message:{}", message);
     	}

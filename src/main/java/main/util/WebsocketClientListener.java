@@ -14,7 +14,8 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
-import com.csl.logger.CSLLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -24,6 +25,7 @@ import com.csl.logger.CSLLogger;
  */
 @ClientEndpoint
 public class WebsocketClientListener {
+	private static final Logger logger = LoggerFactory.getLogger(WebsocketClientListener.class);
 
 	static List<WebsocketClientListener> list = new ArrayList<WebsocketClientListener>();
 
@@ -35,20 +37,20 @@ public class WebsocketClientListener {
 
 		for (WebsocketClientListener w:list) {
 			if (w.uriName.compareTo(s)==0) {
-				System.out.println("Socket already open :"+s);
+				logger.info("Socket already open :"+s);
 				return w;
 			}
 		}
 		try {
 			WebsocketClientListener w = new WebsocketClientListener(s,new URI(s)); 
-			System.out.println("Socket created :"+s);
+			logger.info("Socket created :"+s);
 			
 			list.add(w);
 			return w;
 			
 		} catch (URISyntaxException ex) {
 			System.err.println("URISyntaxException exception: " + s);
-			CSLLogger.instance.error("URISyntaxException exception: " + s);
+			logger.error("URISyntaxException exception: " + s);
 			
 		}
 
@@ -62,7 +64,7 @@ public class WebsocketClientListener {
 		for (WebsocketClientListener w:list) {
 			if (w.uriName.compareTo(s)==0) {
 				list2.add(w);
-				System.out.println("Socket deleted :"+w.uriName);
+				logger.info("Socket deleted :"+w.uriName);
 			}
 		}
 		
@@ -76,7 +78,7 @@ public class WebsocketClientListener {
 			container.connectToServer(this, endpointURI);
 		} catch (Exception e) {
 			System.err.println("Cannot connect to "+endpointURI);
-			CSLLogger.instance.error("Cannot connect to "+endpointURI);
+			logger.error("Cannot connect to "+endpointURI);
 		}
 	}
 
@@ -87,7 +89,7 @@ public class WebsocketClientListener {
 	 */
 	@OnOpen
 	public void onOpen(Session userSession) {
-		System.out.println("Opening websocket listener "+userSession.getRequestURI());
+		logger.info("Opening websocket listener "+userSession.getRequestURI());
 		this.userSession = userSession;
 	}
 
@@ -99,7 +101,7 @@ public class WebsocketClientListener {
 	 */
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
-		System.out.println("closing websocket listener ");
+		logger.info("closing websocket listener ");
 		this.userSession = null;
 
 		remove(uriName);

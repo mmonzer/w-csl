@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <!-- Suppress Logback's internal initialization logs -->
+    <logger name="ch.qos.logback" level="ERROR"/>
+
     <!-- Print console -->
     <appender name="Console"
               class="ch.qos.logback.core.ConsoleAppender">

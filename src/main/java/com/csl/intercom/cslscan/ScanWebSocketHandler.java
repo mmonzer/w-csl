@@ -31,7 +31,6 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Queue;
-import java.util.UUID;
 import java.util.concurrent.*;
 
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
@@ -99,6 +98,8 @@ public class ScanWebSocketHandler {
         if (stompExportNotificationSession != null) {
             stompExportNotificationSession.disconnect();
         }
+
+        logger.info("CSL-Scan websocket disconnected at {}", scanManagerDiscoveryUrl);
     }
 
     /**
@@ -367,9 +368,22 @@ public class ScanWebSocketHandler {
 
             @Override
             public void onConnect(StompSession session, StompHeaders headers) {
-                logger.debug("Connected to notifications websocket");
                 session.subscribe(websocketNotificationsEndpoint, this);
+                logger.info("Connected to notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketNotificationsEndpoint);
             }
+
+            @Override
+            public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+                //logger.warn("Transport Error", exception);
+//                super.handleException(session, command, headers, payload, exception);
+            }
+
+            @Override
+            public void handleTransportError(StompSession session, Throwable exception) {
+                //logger.warn("Transport Error", exception);
+//                super.handleTransportError(session, exception);
+            }
+
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 
@@ -399,8 +413,8 @@ public class ScanWebSocketHandler {
 
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-                logger.debug("Connected to import notifications websocket");
                 session.subscribe(websocketImportNotificationsEndpoint, this);
+                logger.info("Connected to notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketImportNotificationsEndpoint);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
     }
@@ -431,8 +445,8 @@ public class ScanWebSocketHandler {
 
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-                logger.debug("Connected to import notifications websocket");
                 session.subscribe(websocketExportNotificationsEndpoint, this);
+                logger.info("Connected to import notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketExportNotificationsEndpoint);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
     }
@@ -462,8 +476,8 @@ public class ScanWebSocketHandler {
 
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-                logger.debug("Connected to requests websocket");
                 purgeScanRequestsQueue();
+                logger.info("Connected to requests websocket at {}", scanManagerDiscoveryUrl);
             }
         }).get(1, TimeUnit.SECONDS);
     }
@@ -486,8 +500,8 @@ public class ScanWebSocketHandler {
 
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-                logger.debug("Connected to external scans notifications websocket");
                 session.subscribe(websocketExternalScanEndpoint, this);
+                logger.info("Connected to external scans notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketExternalScanEndpoint);
             }
         }).get(1, TimeUnit.SECONDS);
     }

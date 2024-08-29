@@ -3,13 +3,14 @@ package com.csl.alert;
 import com.csl.core.CSLContext;
 import com.csl.core.CSLUtil;
 import com.csl.core.Config;
-import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLog;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -39,6 +40,10 @@ import java.util.Map;
  * 
  */
 public class CSLAlertManager implements IAlertManager {
+	/**
+	 * Logger instance for this class.
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(CSLAlertManager.class);
 	
 	public boolean NO_ALERT_FILTERING=true;
 	public IAlertFactory alertFactory=new CSLAlertFactory();
@@ -142,13 +147,9 @@ public class CSLAlertManager implements IAlertManager {
 	}
 
 	private void init(Config.AlertViewer config) {
-
-//		this.jConfig=jConfig;
 		this.config = config;
 
-//		this.port= CSLUtil.getConfigIntegerValue(jConfig,  "port",8001);
 		this.port= config.getPort();
-//		String ip=CSLUtil.getConfigStringValue(jConfig,  "ip","127.0.0.1" ); //. j.get("ip").asString();
 		String ip=config.getIp();
 
 		try {
@@ -159,48 +160,31 @@ public class CSLAlertManager implements IAlertManager {
 			e.printStackTrace();
 		}
 
-//		this.alert_to_web= CSLUtil.getConfigBooleanValue(jConfig,  "alert_to_web",false);
 		this.alert_to_web= config.getAlertToWeb();
-//		this.alert_json_tag= CSLUtil.getConfigStringValue(jConfig, "alert_json_tag","alert");
 		this.alert_json_tag= config.getAlertJsonTag();
-//		this.alert_to_udp= CSLUtil.getConfigBooleanValue(jConfig,  "alert_to_udp",true);
 		this.alert_to_udp= config.getAlertToUdp();
-//		this.alertToDb= CSLUtil.getConfigBooleanValue(jConfig,  "alertToDb",true);
 		this.alertToDb= config.getAlertToDb();
-//		this.showAlert= CSLUtil.getConfigBooleanValue(jConfig,  "showAlerts",true);
 		this.showAlert= config.getShowAlerts();
 
-//		this.loggerName=CSLUtil.getConfigStringValue(jConfig,  "name",  "Alerts") ; //j.get("name")
 		this.loggerName= config.getName();
 
-
-//		this.filename_current_alerts=CSLUtil.getConfigStringValue(jConfig,  "filename_current_alerts",  "current_alerts") ; //j.get("name")
 		this.filename_current_alerts=config.getFilenameCurrentAlerts(); //j.get("name")
-//		this.subdir_backup_alerts=CSLUtil.getConfigStringValue(jConfig,  "subdir_backup_alerts",  "alerts") ; //j.get("name")
 		this.subdir_backup_alerts=config.getSubdirBackupAlerts();
 
-
-//		this.logToFile=CSLUtil.getConfigBooleanValue(jConfig, "logToFile", false);
 		this.logToFile=config.getLogToFile();
 		if (logToFile) {
 			initFileLog();
 		}
 
-//		this.durationOfAlert=CSLUtil.getConfigIntegerValue(jConfig,  "alert_duration",5000);
 		this.durationOfAlert=config.getAlertDuration();
-//		this.doNotResendSameAlert=CSLUtil.getConfigBooleanValue(jConfig,  "do_not_resent_same_alert",false);
 		this.doNotResendSameAlert= config.getDoNotResentSameAlert();
 
 	}
 
 	private void initFileLog() {
 		if (config!=null) {
-//			this.datadir=
-//					CSLContext.instance.buildFullPathInUserDir(CSLUtil.getConfigStringValue(jConfig,"log_dir", "./logs"));
 			this.datadir=					CSLContext.instance.buildFullPathInUserDir(config.getLogDir());
-//			this.filename=CSLUtil.getConfigStringValue(jConfig,"prefix_filename", "alert");
 			this.filename=config.getPrefixFilename();
-//			this.max_size=CSLUtil.getConfigLongValue(jConfig,"max_size_of_log_files",100000);
 			this.max_size= config.getMaxSizeOfLogFiles();
 			this.fileLog= new FileLog(datadir, filename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 
@@ -241,7 +225,7 @@ public class CSLAlertManager implements IAlertManager {
 		
 		if (NO_ALERT_FILTERING ) return null;
 		
-		long t=CSLContext.instance.getTimeSystemCurrent();
+		long t=CSLContext.instance.getSystemCurrentTimeMillis();
 
 		for (IAlertDescriptor a:listOfCurrentAlerts) {
 			if (a.alertEqualTo(alert)) {
@@ -256,7 +240,7 @@ public class CSLAlertManager implements IAlertManager {
 
 	private void clearAlerts() {
 
-		long t=CSLContext.instance.getTimeSystemCurrent();
+		long t=CSLContext.instance.getSystemCurrentTimeMillis();
 
 		List<IAlertDescriptor> toRemove = new ArrayList<IAlertDescriptor>();
 
@@ -327,7 +311,7 @@ public class CSLAlertManager implements IAlertManager {
 
 			if (fileLog==null) initFileLog();
 			if (fileLog==null) {
-				CSLLogger.instance.error("Cannot log CSLAlert to file ");
+				logger.error("Cannot log CSLAlert to file ");
 				return;
 			}
 			if (alert.hasProps()) 
@@ -362,7 +346,7 @@ public class CSLAlertManager implements IAlertManager {
 
 
 			if (iNetAddress==null) {
-				CSLLogger.instance.error("Invalid IP for alert viewer");
+				logger.error("Invalid IP for alert viewer");
 			}
 			jalert.set("type","alert");
 

@@ -11,7 +11,10 @@ csl-dev
 build/
 classes/
 downloads/
+# current logs
 logs/
+# rotated logs
+logback/
 
 cacerts.jks
 

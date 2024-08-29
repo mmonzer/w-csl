@@ -14,11 +14,9 @@ public interface ICSLService {
 	 * Initialise the service.
 	 * Specifically, commands should be defined here.
 	 *
-	 * @param jConfig the configuration section of the configuration file
-	 * @param cslDir the CSL directory
 	 * @return true if the service is correctly initialised
 	 */
-	public boolean init(Json jConfig, String cslDir);
+	public boolean init();
 
 	/**
 	 * Returns the list of commands of the service.

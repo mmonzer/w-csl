@@ -1,7 +1,8 @@
 package com.csl.util;
 
-import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,6 +13,10 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class FileUtils  {
+	/**
+	 * Logger instance for this class.
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
 	
 	public static  String fileSeparator=File.separator;
@@ -85,7 +90,7 @@ public class FileUtils  {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			CSLLogger.instance.error("Cannot read Json file :"+f);
+			logger.error("Cannot read Json file :"+f);
 		}
 
 		Json j=Json.read(content);

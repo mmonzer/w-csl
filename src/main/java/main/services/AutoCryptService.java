@@ -56,12 +56,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
     /**
      * Initialization of the TAPs commands
      *
-     * @param config     the configuration section of the configuration file
-     * @param configFile the CSL directory
      * @return true if the initialization happened with no problems, false otherwise.
      */
     @Override
-    public boolean init(Json config, String configFile) {
+    public boolean init() {
         if (!isRemote) {
             autocrypt.reinitApiHandlers();
             autocrypt.syncAll();

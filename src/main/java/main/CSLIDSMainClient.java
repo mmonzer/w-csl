@@ -4,30 +4,26 @@ import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.core.NoLogging;
-import com.csl.intercom.broker.MosquittoConfig;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
-import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
-import main.xcom.WebsocketClientEndpoint;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.xcsl.miniserver.ApiHttpServer;
 import main.services.*;
 import main.util.CSLRunningArgs;
+import main.xcom.WebsocketClientEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.net.*;
 import java.util.HashMap;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -38,61 +34,58 @@ import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 public class CSLIDSMainClient {
 
     private static final Logger logger = LoggerFactory.getLogger(CSLIDSMainClient.class);
-    static String SERVER_IP = "127.0.0.1";
-    static String SERVER_URL_PREFIX = "";
-    static String API_KEY = "";
-    static int SERVER_PORT = 8000;
-    static boolean USE_SSL = false;
 
-    static WebsocketClientEndpoint clientEndPoint = null;
+    // Server configuration variables
+    private static String serverIp = "127.0.0.1";
+    private static String serverUrlPrefix = "";
+    private static String apiKey = "";
+    private static int serverPort = 8000;
+    private static boolean useSsl = false;
 
-    static HashMap<String, IApiCommands> apiMap = new HashMap<String, IApiCommands>();
+    // WebSocket client endpoint
+    private static WebsocketClientEndpoint clientEndPoint = null;
 
-    static IMessageBroadcaster messageBroadcaster =
-            new IMessageBroadcaster() {
+    // API Command map
+    private static final HashMap<String, IApiCommands> apiMap = new HashMap<>();
 
-                @Override
-                public void broadcastMessageString(String socketName, String s) {
-                    // TODO Auto-generated method stub
+    // Message broadcaster for WebSocket communication
+    private static final IMessageBroadcaster messageBroadcaster = new IMessageBroadcaster() {
 
-                    if (clientEndPoint != null) {
-                        if (!clientEndPoint.isOpen()) return;
-                        clientEndPoint.sendMessage("wss:" + socketName + ":" + s);
-                    }
-                }
+        @Override
+        public void broadcastMessageString(String socketName, String message) {
+            if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                clientEndPoint.sendMessage("wss:" + socketName + ":" + message);
+            }
+        }
 
-                @Override
-                public void broadcastMessageJson(String socketName, Json j) {
+        @Override
+        public void broadcastMessageJson(String socketName, Json jsonMessage) {
+            if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                clientEndPoint.sendMessage("wsj:" + socketName + ":" + jsonMessage);
+            }
+        }
+    };
 
-                    if (clientEndPoint != null) {
-                        if (!clientEndPoint.isOpen()) return;
-                        clientEndPoint.sendMessage("wsj:" + socketName + ":" + j);
-                    }
-                }
-            };
-
-    static IAlertForwarder alertForwarder = new IAlertForwarder() {
+    // Alert forwarder for handling alerts
+    private static final IAlertForwarder alertForwarder = new IAlertForwarder() {
 
         @Override
         public void sendAlert(Json alert) {
-            logger.debug("********Forward alert:\n" + alert + "\n*************");
-            if (clientEndPoint != null) {
-                if (!clientEndPoint.isOpen()) return;
+            logger.debug("Forwarding alert:\n{}", alert);
+            if (clientEndPoint != null && clientEndPoint.isOpen()) {
                 clientEndPoint.sendMessage("alert:" + alert);
             }
         }
     };
 
-    /***
-     * Adds the < serviceName, service > to the apiMap hashmap from the JServiceLoader's commandsList (listOfAPIToRegister)
+    /**
+     * Initializes services and registers them to the API command map.
      */
-    static public void iniServices() {
-
+    public static void initServices() {
         for (IApiCommands api : JServiceLoader.getApiCommandsList()) {
-
-            String path = api.getName();
-            logger.info("REGISTER API:<" + path + ">");
-            apiMap.put(path.toLowerCase(), api);
+            String path = api.getName().toLowerCase();
+            logger.info("Registering API: <{}>", path);
+            apiMap.put(path, api);
         }
     }
 
@@ -110,190 +103,224 @@ public class CSLIDSMainClient {
      * }
      * NOTE that each message is handled by a new thread
      */
-    static public void connectToServer() {
+    public static void connectToServer() {
         try {
-            String wsProtocol = USE_SSL ? "wss" : "ws";
-            String s = null;
-            if (SERVER_PORT > 0) {
-                s = wsProtocol + "://" + SERVER_IP + ":" + SERVER_PORT + SERVER_URL_PREFIX + "/cmd";
-            } else
-                s = wsProtocol + "://" + SERVER_IP + SERVER_URL_PREFIX + "/cmd";
+            String wsProtocol = useSsl ? "wss" : "ws";
+            String webSocketUrl = (serverPort > 0)
+                    ? wsProtocol + "://" + serverIp + ":" + serverPort + serverUrlPrefix + "/cmd"
+                    : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
 
-            logger.debug("Try to connect to WS server {} with API Key {}", s, API_KEY);
+            logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", webSocketUrl, apiKey);
 
-            clientEndPoint = new WebsocketClientEndpoint(new URI(s), API_KEY);
+            clientEndPoint = new WebsocketClientEndpoint(new URI(webSocketUrl), apiKey);
+
             if (!clientEndPoint.isOpen()) {
-                logger.warn("Connection to server failed, retrying...");
+                logger.warn("Failed to connect to the server, retrying...");
                 return;
-            } else
-                logger.info("Connected to server");
-
-            // add listener
-            clientEndPoint.addMessageHandler(messageString -> {
-                new Thread(() -> {
-                    try {
-                        Json messageJson = Json.read(messageString.trim());
-                        String uuid = getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
-                        String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
-                        MDC.put(X_CORRELATION_ID, xCorrelationId);
-                        logger.trace("MESSAGE:" + messageString);
-
-                        String apiname = JsonUtil.getStringFromJson(messageJson, "api", "");
-
-                        logger.trace("received:" + messageJson);
-                        Json result = Json.object().set("error", "api not found ");
-
-                        if (!apiname.isEmpty()) {
-                            IApiCommands api = apiMap.get(apiname);
-                            Json jcmd = messageJson.get("jcmd");
-
-                            if (api == null) {
-                                result.set("error", "api endpoint not found");
-                            } else if (jcmd == null) {
-                                result.set("error", "jcmd not found");
-                            } else {
-                                if (jcmd.get("params") == null) {
-                                    jcmd.set("params", Json.object("x-correlation-id", xCorrelationId));
-                                } else {
-                                    jcmd.get("params").set("x-correlation-id", xCorrelationId);
-                                }
-                                result = api.execJcmd(jcmd);
-                            }
-                        }
-
-                        Json resultMessageJson = Json.object();
-                        resultMessageJson.set(CSLWebSocketForJcmd.ID, uuid);
-                        resultMessageJson.set(X_CORRELATION_ID, xCorrelationId);
-                        resultMessageJson.set("result", result);
-                        logger.trace("****RESULT:" + resultMessageJson);
-                        clientEndPoint.sendMessage("res:" + resultMessageJson);
-                    } catch (Exception e) {
-                        MDC.remove("X_CORRELATION_ID");
-                    }
-                }).start();
-            });
-
-
-            for (String sx : apiMap.keySet()) {
-                clientEndPoint.sendMessage("api:" + sx);
+            } else {
+                logger.info("Successfully connected to the server");
             }
+
+            // Add message handler
+            clientEndPoint.addMessageHandler(messageString -> handleServerMessage(messageString.trim()));
+
+            // Register available APIs with the server
+            apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessage("api:" + apiName));
+
             Thread.sleep(100);
         } catch (InterruptedException ex) {
-            logger.error("InterruptedException exception: {}", ex.getMessage(), ex);
+            logger.error("InterruptedException: {}", ex.getMessage(), ex);
         } catch (URISyntaxException ex) {
-            logger.error("URISyntaxException exception: {}", ex.getMessage(), ex);
+            logger.error("URISyntaxException: {}", ex.getMessage(), ex);
         }
     }
 
-    /***
-     * At a scheduled rate, check if the connection to the server socket (cmd) is open, if not try to connect
+    /**
+     * Handles messages received from the WebSocket server.
+     *
+     * @param messageString the raw message string received
      */
-    static public void startRemoteConnectTask() {
-        ScheduledExecutorService executorService;
-        executorService = Executors.newSingleThreadScheduledExecutor();
+    private static void handleServerMessage(String messageString) {
+        new Thread(() -> {
+            logger.trace("Received message: {}", messageString);
 
-        // reconnect
-        executorService.scheduleAtFixedRate(
-                new Runnable() {
-                    public void run() {
-                        boolean reconnect = false;
-                        if (clientEndPoint != null) {
-                            reconnect = !clientEndPoint.isOpen();
-                        } else reconnect = true;
+            if (messageString.startsWith("{") && messageString.endsWith("}")) {
+                Json messageJson = Json.read(messageString);
+                String uuid = getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
+                String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
+                MDC.put(X_CORRELATION_ID, xCorrelationId);
+                logger.trace("Parsed JSON message: {}", messageJson);
 
-                        if (reconnect) connectToServer();
+                String apiName = JsonUtil.getStringFromJson(messageJson, "api", "");
+
+                Json result = Json.object().set("error", "api not found");
+
+                if (!apiName.isEmpty()) {
+                    IApiCommands api = apiMap.get(apiName);
+                    Json jcmd = messageJson.get("jcmd");
+
+                    if (jcmd != null && api != null) {
+                        result = api.execJcmd(jcmd);
+                    } else if (jcmd == null) {
+                        result.set("error", "jcmd not found");
                     }
-                },
-                0, 1, TimeUnit.SECONDS);
+                }
 
-        // keep alive the websocket
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-                new Runnable() {
-                    public void run() {
-                        if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                            clientEndPoint.sendMessage("keep alive");
-                        }
-                    }
-                },
-                1, 5, TimeUnit.SECONDS);
+                Json resultMessageJson = Json.object()
+                        .set("uuid", messageJson.get("uuid"))
+                        .set(X_CORRELATION_ID, xCorrelationId)
+                        .set("result", result);
+
+                logger.info("Sending result: {}", resultMessageJson);
+                clientEndPoint.sendMessage("res:" + resultMessageJson);
+                MDC.remove(X_CORRELATION_ID);
+            }
+        }).start();
+    }
+
+    /**
+     * Starts tasks for maintaining the connection to the WebSocket server and keeping the connection alive.
+     */
+    public static void openWsConnectionWithCSLServer() {
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+        // Reconnect task
+        executorService.scheduleAtFixedRate(() -> {
+            boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
+            if (reconnect) {
+                connectToServer();
+            }
+        }, 0, 1, TimeUnit.SECONDS);
+
+        // Keep-alive task
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+            if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                clientEndPoint.sendMessage("keep alive");
+            }
+        }, 1, 5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Initializes the CSLContext with the provided arguments and sets debug mode.
+     *
+     * @param args Command-line arguments passed to the application.
+     */
+    private static void initializeContext(String[] args) {
+        // Disable Jetty logging
+        org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+
+        Config config = Config.instance;
+        CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
+        configureClientSettings(config);
+
+        // Provide the callback method for the
+        CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
+        ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
     }
 
     public static void main(String[] args) {
-        org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+        initializeContext(args);
+        registerServices();
+        initServices();
 
-//        Json configObj = CSLContext.instance.getConfig();
-        Config config = Config.instance;
+        // Connect to the server using WebSocket and keep the connection alive
+        openWsConnectionWithCSLServer();
+        // Start the servers and services of the csl_client
+        startServers();
 
-        CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
+        // Sends the list of supported API commands to the csl-server
+        sendApiCommandsToServer();
 
-        CSLContext.instance.setDebug(true);
+        // Launch the Web API server if required by the configuration (for testing purposes)
+        launchWebApiServerIfRequired(Config.instance);
+    }
 
-        // region -- read configuration
-        // This is the client, override configuration is needed not to launch servers
+    /**
+     * Initializes databases, HTTP server, UDP server, and other necessary components, and starts them.
+     */
+    private static void startServers() {
+        // Start the servers
+        CSLContext.instance.postInit(false);
+        // Start the UDP Server (To receive IDS Alerts) and the task executor
+        CSLContext.instance.startServers();
+        CSLContext.instance.getIdsRunner().start();
+    }
+
+    /**
+     * Configures client settings based on the provided configuration.
+     *
+     * @param config the configuration object
+     */
+    private static void configureClientSettings(Config config) {
+        // Override server configuration for the client
         config.Server.setOn(false);
         config.UdpServerConf.setOn(true);
 
-        // The proxy server to connect
-        SERVER_IP = config.Client.getIpServerRemote();
-        SERVER_URL_PREFIX = config.Client.getServerRemoteUrlPrefix();
-        if (SERVER_URL_PREFIX == null) {
-            SERVER_URL_PREFIX = "";
-        }
+        serverIp = config.Client.getIpServerRemote();
+        serverUrlPrefix = config.Client.getServerRemoteUrlPrefix();
+        serverUrlPrefix = (serverUrlPrefix == null) ? "" : serverUrlPrefix;
 
-        Boolean force_host_name_resolution = config.Client.getForceHostNameResolution();
-        // Try to resolve host name (mainly for Docker hostnames)
-        if (force_host_name_resolution) {
+        resolveHostNameIfRequired(config);
+
+        serverPort = config.Client.getPortServerRemote();
+        useSsl = config.Client.getUseSsl();
+        apiKey = config.Client.getApiKey();
+        logger.trace("API Key: {}", apiKey);
+    }
+
+    /**
+     * Attempts to resolve the host name if the configuration requires it.
+     *
+     * @param config the configuration object
+     */
+    private static void resolveHostNameIfRequired(Config config) {
+        if (config.Client.getForceHostNameResolution()) {
             try {
-                SERVER_IP = InetAddress.getByName(SERVER_IP).getHostAddress();
+                serverIp = InetAddress.getByName(serverIp).getHostAddress();
             } catch (UnknownHostException e) {
                 logger.error("Error while resolving host name: {}", e.getMessage(), e);
             }
         }
+    }
 
-        SERVER_PORT = config.Client.getPortServerRemote();
-        USE_SSL = config.Client.getUseSsl();
-        API_KEY = config.Client.getApiKey();
-        logger.trace("API KEY is: " + API_KEY);
-        // endregion -- read configuration
+    /**
+     * Registers the required services with the service loader.
+     */
+    private static void registerServices() {
+        JServiceLoader.registerService(new CSLServiceIDS(), Json.object());
+        JServiceLoader.registerService(new AlertsService(), Json.object());
+        JServiceLoader.registerService(new MonitorService(), Json.object());
+        JServiceLoader.registerService(new TapsServices(), Json.object());
+        JServiceLoader.registerService(new DiscoveryServices(), Json.object());
+        JServiceLoader.registerService(new StatusService(), Json.object());
+        JServiceLoader.registerService(new AutoCryptService(), Json.object());
+        JServiceLoader.registerService(new NmapServices(), Json.object());
+    }
 
-        boolean USE_BROKER = false;
-
-        JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
-
-        JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
-        JServiceLoader.registerService(new AlertsService(), Json.object(), true);
-        JServiceLoader.registerService(new MonitorService(), Json.object(), true);
-        JServiceLoader.registerService(new TapsServices(), Json.object(), true);
-        JServiceLoader.registerService(new DiscoveryServices(), Json.object(), true);
-        JServiceLoader.registerService(new StatusService(), Json.object(), true);
-        JServiceLoader.registerService(new AutoCryptService(), Json.object(), true);
-        JServiceLoader.registerService(new NmapServices(), Json.object(), true);
-
-
-        iniServices();
-
-        startRemoteConnectTask();    // connect/reconnect
-        CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
-
-        CSLContext.instance.postInit(false, true);
-        CSLContext.instance.start();
-
-        CSLContext.instance.getIdsRunner().start();
-        ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
-
-        // Send API commands with specific privileges to the server
+    /**
+     * Sends the API commands to the server using the DbapiHandler.
+     */
+    private static void sendApiCommandsToServer() {
         try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
             dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
         } catch (Exception e) {
             logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);
         }
+    }
 
-        if (Config.instance.Client.getLaunchWebApiServer()) {
-            int port = Config.instance.Client.getWebApiServerPort();
-            ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
+    /**
+     * Launches the Web API server if required by the configuration.
+     *
+     * @param config the configuration object
+     */
+    private static void launchWebApiServerIfRequired(Config config) {
+        if (config.Client.getLaunchWebApiServer()) {
+            int port = config.Client.getWebApiServerPort();
+            new ApiHttpServer().createServer(
                     new InetSocketAddress(port),
                     JServiceLoader.getApiCommandsList(),
-                    new ApiGetHelp());
+                    new ApiGetHelp()
+            );
         }
     }
 }

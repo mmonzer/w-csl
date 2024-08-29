@@ -15,7 +15,6 @@ public class Test03TestCtrl {
 
 	
 	static public void sendEncapsulatedMsg(String host, int port, String msg) {
-		CSLContext.instance.logInfo("   sending to "+host+':'+port+" >>>> msg:"+msg);
 		try {
 
 			byte[] message = msg.getBytes();
@@ -47,12 +46,12 @@ public class Test03TestCtrl {
 
 		static public Json encapsulateObject(String targetID, int n,Json j,boolean acquit) {
 			Json obj =Json.object();
-			obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUCP());
+			obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUDP());
 			obj.at("idOfTarget", targetID);
 			obj.at("flowNumber", ""+n);
 			//obj.at("nameOfVariable", varName);
 
-			if (acquit) obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUCP());
+			if (acquit) obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUDP());
 
 			obj.at("data",j);
 

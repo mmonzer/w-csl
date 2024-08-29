@@ -1,8 +1,11 @@
 package com.csl.logger;
 
+import com.csl.alert.CSLAlertManager;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.interfaces.IFileLog;
 import com.ucsl.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,6 +23,10 @@ import java.util.function.LongSupplier;
 
 
 public class FileLog implements Runnable, IFileLog {
+	/**
+	 * Logger instance for this class.
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(FileLog.class);
 
 	private boolean running=false;
 
@@ -133,7 +140,7 @@ public class FileLog implements Runnable, IFileLog {
 
 			//Start listening for alerts.
 		} catch (IOException ex) {
-			CSLLogger.instance.error( "This session cannot be logged to disk: " + ex.getMessage());
+			logger.error( "This session cannot be logged to disk: " + ex.getMessage());
 		}
 
 	}

@@ -1,78 +1,69 @@
 package main;
 
 import com.csl.core.CSLContext;
-import com.csl.core.Config;
-import com.csl.intercom.broker.MosquittoConfig;
-import com.csl.intercom.jsoncmd.ApiGetHelp;
+import com.csl.core.NoLogging;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.json.Json;
-import com.xcsl.miniserver.ApiHttpServer;
 import main.services.*;
 import main.util.CSLRunningArgs;
 
-import java.net.InetSocketAddress;
+
+// JDK 17
 
 public class CSLIDSMainServer {
 
-    static boolean START_MOSQUITTO = false;
-
-
     public static void main(String[] args) {
+        initializeContext(args);
+        registerServices();
+        setRemoteServices();
+        startServers();
+    }
 
-        System.out.println("Starting CSL IDS version  " + CSLContext.VERSION);
-
+    /**
+     * Initializes the CSLContext with the provided arguments and sets debug mode.
+     *
+     * @param args Command-line arguments passed to the application.
+     */
+    private static void initializeContext(String[] args) {
+        // Disable Jetty logging
+        org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+        System.out.println("Starting CSL IDS version " + CSLContext.VERSION);
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
+    }
 
-        CSLContext.instance.setDebug(true);
+    /**
+     * Registers the necessary services with the JServiceLoader.
+     */
+    private static void registerServices() {
+        JServiceLoader.registerService(new CpeServices(), Json.object());
+        JServiceLoader.registerService(new CveServices(), Json.object());
+        JServiceLoader.registerService(new CSLServiceIDS(), Json.object());
+        JServiceLoader.registerService(new AlertsService(), Json.object());
+        JServiceLoader.registerService(new MonitorService(), Json.object());
+        JServiceLoader.registerService(new TapsServices(), Json.object());
+        JServiceLoader.registerService(new DiscoveryServices(false), Json.object());
+        JServiceLoader.registerService(new StatusService(), Json.object());
+        JServiceLoader.registerService(new AutoCryptService(true), Json.object());
+    }
 
-        boolean USE_BROKER = false;
-        JServiceLoader.setModuleName("IDS", new MosquittoConfig().setUseBroker(USE_BROKER));
+    /**
+     * Sets the registered services as remote services, which will be forwarded to a socket.
+     */
+    private static void setRemoteServices() {
+        String [] endpoints = {"ids", "alerts", "monitor", "taps", "discovery", "status", "autocrypt"};
+        for (String endpoint : endpoints) {
+            CSLContext.instance.registerHttpEndpoint(endpoint);
+        }
+    }
 
-
-//        JServiceLoader.registerService(new CSLServiceIDS(), configObj, true);
-//        JServiceLoader.registerService(new AlertsService(), configObj, true);
-//        JServiceLoader.registerService(new MonitorService(), configObj, true);
-//        JServiceLoader.registerService(new TapsServices(), configObj, true);
-//        JServiceLoader.registerService(new CSLServiceJsonDataBase(), configObj, true);
-//        JServiceLoader.registerService(new CpeServices(), configObj, true);
-//        JServiceLoader.registerService(new CveServices(), configObj, true);
-//        JServiceLoader.registerService(new DiscoveryServices(false), configObj, true);
-//        JServiceLoader.registerService(new StatusService(), configObj, true);
-//        JServiceLoader.registerService(new AutoCryptService(true), configObj, true);
-
-        JServiceLoader.registerService(new CpeServices(), Json.object(), true);
-        JServiceLoader.registerService(new CveServices(), Json.object(), true);
-        JServiceLoader.registerService(new CSLServiceIDS(), Json.object(), true);
-        JServiceLoader.registerService(new AlertsService(), Json.object(), true);
-        JServiceLoader.registerService(new MonitorService(), Json.object(), true);
-        JServiceLoader.registerService(new TapsServices(), Json.object(), true);
-        JServiceLoader.registerService(new DiscoveryServices(false), Json.object(), true);
-        JServiceLoader.registerService(new StatusService(), Json.object(), true);
-        JServiceLoader.registerService(new AutoCryptService(true), Json.object(), true);
-
-        // set services as remote services (to be forward to socket), otherwise run on remote
-        CSLContext.instance.setApiRemote("ids");
-        CSLContext.instance.setApiRemote("alerts");
-        CSLContext.instance.setApiRemote("monitor");
-        CSLContext.instance.setApiRemote("taps");
-        CSLContext.instance.setApiRemote("discovery");
-        CSLContext.instance.setApiRemote("status");
-        CSLContext.instance.setApiRemote("autocrypt");
-
-        // Init Databaseserver, httpserver, udpserver, ...
-
+    /**
+     * Initializes databases, HTTP server, UDP server, and other necessary components, and starts them.
+     */
+        private static void startServers() {
         System.out.println(CSLContext.instance);
-        CSLContext.instance.postInit(true, false);
-        CSLContext.instance.start();
-
-
-        // FIXME: Client & Server are creating the same HTTP Server at the same port
-        // Mini http server included in JAVA (for api)
-        ApiHttpServer apiHttpServer = new ApiHttpServer().createServer(
-                new InetSocketAddress(9000),
-                JServiceLoader.getApiCommandsList(),
-                new ApiGetHelp());
-
+        CSLContext.instance.postInit(true);
+        // Start the HTTP server and the Mqtt broker if enabled (Mqtt broker is not enabled by default)
+        CSLContext.instance.startServers();
     }
 
 }

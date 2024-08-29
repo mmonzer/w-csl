@@ -11,7 +11,6 @@ import com.csl.intercom.status.StatusNotifier;
 import com.csl.interfaces.ICSLContext;
 import com.csl.interfaces.IIDSRunner;
 import com.csl.interfaces.IModule;
-import com.csl.logger.CSLLogger;
 import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServerJetty;
@@ -29,15 +28,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-
-public class CSLContext implements ICSLContext, ICSLLogger {
+public class CSLContext implements ICSLContext {
     /**
-     * Instance of logger for this class
+     * Logger instance for this class.
      */
     private static final Logger logger = LoggerFactory.getLogger(CSLContext.class);
 
     /**
-     * Version of {@link CSLContext}
+     * Version of {@link CSLContext}.
      */
     public static String VERSION = "0.1.0-alpha1";
 
@@ -45,202 +43,212 @@ public class CSLContext implements ICSLContext, ICSLLogger {
     private String cslConfDir = "";
 
     /**
-     * The only instance of the class
+     * Singleton instance of the class.
      */
     public static CSLContext instance = new CSLContext();
-    /**
-     * The only instance of the CSLLogger
-     */
-    public static CSLLogger cslLogger = CSLLogger.instance;
 
     /**
-     * If the CSL correspond to CSL-Client. Initialized at postInit.
+     * Indicates if the context is running as a server (true), client (false), or uninitialized (null).
      */
-    boolean client = false;
-    /**
-     * If the CSL correspond to CSL-Server. Initialized at postInit.
-     */
-    boolean server = false;
+    private Boolean isServer = null;
 
     /**
      * Instance of the alert manager.
      */
-    CSLAlertManager cslAlertManager = null;
+    private CSLAlertManager cslAlertManager = null;
+
     private IDSRunner idsRunner = null;
+
     @Getter
     private IDSParams idsParams = null;
+
     private CSLMqttBrokerHandler mqttBroker = null;
+
     private StatusNotifier statusNotifier = null;
 
     /**
-     * Instance of the http server
+     * Instance of the HTTP server.
      */
-    CSLHttpServerJetty cslHttpServer = null;
+    private CSLHttpServerJetty cslHttpServer = null;
 
     /**
-     * Instance of the UDP server
+     * Instance of the UDP server.
      */
-    CSLUDPServer cslUDPServer = null;
+    private CSLUDPServer cslUDPServer = null;
 
-    boolean replayMode = false;
-    long lastSystemCurrentTimeMillis = 0;
-    int samplingTime = 100;
+    private boolean replayMode = false;
+    private long lastSystemCurrentTimeMillis = 0;
+    private int samplingTime = 100;
 
     @Getter
     private boolean exitCSL = false;
-    boolean autostart = false;
-    int nExecSteps = 0;
-    boolean showProgression = false;
 
-    int numberOfExecLoops = 1;
+    private boolean autostart = false;
+    private int nExecSteps = 0;
+    private boolean showProgression = false;
 
+    private int numberOfExecLoops = 1;
 
-    Map<String, com.csl.core.ModuleContext> modules = new HashMap<String, com.csl.core.ModuleContext>();
-    List<com.csl.core.ModuleContext> inputExecList = new ArrayList<com.csl.core.ModuleContext>();
-    List<com.csl.core.ModuleContext> outputExecList = new ArrayList<com.csl.core.ModuleContext>();
-    List<com.csl.core.ModuleContext> stepExecList = new ArrayList<com.csl.core.ModuleContext>();
+    private final Map<String, com.csl.core.ModuleContext> modules = new HashMap<>();
+    private final List<com.csl.core.ModuleContext> inputExecList = new ArrayList<>();
+    private final List<com.csl.core.ModuleContext> outputExecList = new ArrayList<>();
+    private final List<com.csl.core.ModuleContext> stepExecList = new ArrayList<>();
 
-    Map<String, Class<IModule>> moduleClassList = new HashMap<String, Class<IModule>>();
+    private final Map<String, Class<IModule>> moduleClassList = new HashMap<>();
 
-    ScheduledExecutorService scheduler = null;
+    private ScheduledExecutorService scheduler = null;
 
     private long initialTime = 0;
 
-    @Getter
-    private boolean debug = true;
-
-    @Getter
-    @Setter
-    private boolean verbose = false;
     @Getter
     @Setter
     private boolean testMode = false;
 
     private IFileStoreService fileUtils;
-    /**
-     * Instance of the file log factory
-     */
     private IFileLogFactory fileLogFactory;
-    /**
-     * Instance of the IDS main processor
-     */
     private IIDSMainProcessor idsMainProcessor;
 
+    /**
+     * Private constructor for singleton pattern.
+     */
     private CSLContext() {
-
+        // Singleton instance
     }
 
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-        CSLLogger.instance.setDebug(debug);
+    /**
+     * Prints an error message to the standard error stream.
+     *
+     * @param message The error message to print.
+     */
+    public void printError(String message) {
+        logger.error(message);
     }
 
-    public void printError(String s) {
-        System.err.println(s);
-    }
-
-    @Override
-    public void logError(String msg) {
-        // TODO Auto-generated method stub
-        cslLogger.error(msg);
-    }
-
-    @Override
-    public void logInfo(String msg) {
-        // TODO Auto-generated method stub
-        cslLogger.info(msg);
-    }
-
-    @Override
-    public void logFatal(String msg) {
-        // TODO Auto-generated method stub
-        cslLogger.fatal(msg);
-    }
-
-    @Override
-    public void logWarn(String msg) {
-        // TODO Auto-generated method stub
-        cslLogger.warn(msg);
-    }
-
-    @Override
-    public void logDebug(String msg) {
-        // TODO Auto-generated method stub
-        cslLogger.debug(msg);
-    }
-
-    @Override
-    public void setLogLevel(int v) {
-        // TODO Auto-generated method stub
-        cslLogger.setLogLevel(v);
-    }
-
+    /**
+     * Gets the user directory.
+     *
+     * @return The user directory as a string.
+     */
     public String getUserDir() {
         return JServiceLoader.getUserDir();
     }
 
+    /**
+     * Gets the alert manager instance, logging a warning if not registered.
+     *
+     * @return The alert manager instance.
+     */
     public IAlertManager getCSLAlertManager() {
-        if (cslAlertManager == null) System.err.println("Warning, no alertManager registered");
-
+        if (cslAlertManager == null) {
+            logger.warn("Warning, no alertManager registered");
+        }
         return cslAlertManager;
     }
 
+    /**
+     * Gets the file log factory instance.
+     *
+     * @return The file log factory instance.
+     */
     public IFileLogFactory getFileLogFactory() {
-        if (fileLogFactory == null) fileLogFactory = new FileLogFactory();
+        if (fileLogFactory == null) {
+            fileLogFactory = new FileLogFactory();
+        }
         return fileLogFactory;
     }
 
+    /**
+     * Gets the IDS runner instance, logging a warning if not registered.
+     *
+     * @return The IDS runner instance.
+     */
     public IIDSRunner getIdsRunner() {
-        if (idsRunner == null) System.err.println("Warning, no idsRunner registered");
+        if (idsRunner == null) {
+            logger.warn("Warning, no idsRunner registered");
+        }
         return idsRunner;
     }
 
+    /**
+     * Gets the HTTP server instance, logging a warning if not registered.
+     *
+     * @return The HTTP server instance.
+     */
     public CSLHttpServerJetty getCslHttpServer() {
-        if (cslHttpServer == null) System.err.println("Warning, no CSL HTTP server registered");
-
+        if (cslHttpServer == null) {
+            logger.warn("Warning, no CSL HTTP server registered");
+        }
         return cslHttpServer;
     }
 
+    /**
+     * Sets the HTTP server instance.
+     *
+     * @param cslHttpServer The HTTP server instance to set.
+     */
     private void setCslHttpServer(CSLHttpServerJetty cslHttpServer) {
         this.cslHttpServer = cslHttpServer;
     }
 
+    /**
+     * Gets the UDP server instance, logging a warning if not registered.
+     *
+     * @return The UDP server instance.
+     */
     public CSLUDPServer getCslUDPServer() {
-        if (cslUDPServer == null) System.err.println("Warning, no CSL UDP server registered");
-
+        if (cslUDPServer == null) {
+            logger.warn("Warning, no CSL UDP server registered");
+        }
         return cslUDPServer;
     }
 
+    /**
+     * Sets the UDP server instance.
+     *
+     * @param cslUDPServer The UDP server instance to set.
+     */
     private void setCslUDPServer(CSLUDPServer cslUDPServer) {
         this.cslUDPServer = cslUDPServer;
     }
 
+    /**
+     * Builds the full path within the user directory.
+     *
+     * @param dir The directory to build the path for.
+     * @return The full path as a string.
+     */
     public String buildFullPathInUserDir(String dir) {
-
         return JServiceLoader.buildFullPathInUserDir(dir);
     }
 
-    public void registerModuleClass(String name, Class c) {
-
-        System.out.println("JMFXXXX__register:" + name + " --> " + c.getName());
+    /**
+     * Registers a module class with the given name.
+     *
+     * @param name The name of the module.
+     * @param c    The class of the module.
+     */
+    public void registerModuleClass(String name, Class<?> c) {
         if (moduleClassList.get(name) != null) {
             logger.error("Module {} already registered", name);
             return;
         }
-        moduleClassList.put(name, c);
-
+        moduleClassList.put(name, (Class<IModule>) c);
     }
 
+    /**
+     * Gets the time elapsed since the context was started.
+     *
+     * @return The time in milliseconds.
+     */
     public long getTimeFromStartingTime() {
-
         return getSystemCurrentTimeMillis() - initialTime;
     }
 
-    public long getTimeSystemCurrent() {
-
-        return getSystemCurrentTimeMillis();
-    }
-
+    /**
+     * Gets the current system time, accounting for replay mode if enabled.
+     *
+     * @return The current system time in milliseconds.
+     */
     public long getSystemCurrentTimeMillis() {
         if (isReplayMode()) {
             return lastSystemCurrentTimeMillis;
@@ -248,149 +256,127 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return System.currentTimeMillis();
     }
 
+    /**
+     * Gets the configuration instance.
+     *
+     * @return The configuration instance.
+     */
     public Config getConfig() {
         if (Config.instance.Server == null) {
-            System.out.println("Invalid config file, update to new format");
+            logger.error("Invalid config file, update to new format");
             System.exit(0);
         }
         return Config.instance;
     }
 
+    /**
+     * Sets the configuration file name and reloads the configuration.
+     *
+     * @param configFileName The configuration file name.
+     * @return The configuration instance.
+     */
     private Config setConfigFileName(String configFileName) {
-
-        if (isVerbose()) System.out.println("Reading configuration from " + configFileName);
+        logger.debug("Reading configuration from {}", configFileName);
         Config.reload(configFileName);
-
         return getConfig();
-
     }
 
+    /**
+     * Sets the user directory.
+     *
+     * @param dir The user directory to set.
+     */
     private void setUserDir(String dir) {
-
         JServiceLoader.setUserDir(dir);
     }
 
+    /**
+     * Updates the configuration based on the provided {@link CSLRunningArgs}.
+     *
+     * @param cslRunningArgs The arguments for CSL running.
+     */
     public void updateConfigFromCSLRunningArgs(CSLRunningArgs cslRunningArgs) {
-
-
-        // userdir
-        // take the dir from config file if defined and no command line
-
+        // User directory
         if (!cslRunningArgs.isUserDirDefault()) {
             setUserDir(cslRunningArgs.getUserDir());
         } else {
-//            String s = JsonUtil.getStringFromJson(jConfig, "csl/cslconf", "");
             String s = "";
-            if (!s.isEmpty())
+            if (!s.isEmpty()) {
                 setUserDir(s);
-            else {
-                setUserDir(cslRunningArgs.getUserDir());  // set default
+            } else {
+                setUserDir(cslRunningArgs.getUserDir()); // set default
             }
         }
 
-        // datadir (set in IDSRunner)
-        if (cslRunningArgs.hasDataDir()) {
-            //	safeztGet
-        }
-
-        // dirs data
+        // Update other directories
         if (cslRunningArgs.hasDirForRecording()) {
-//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_RECORDING,
-//                    cslRunningArgs.getDirForRecording());
             Config.instance.IdsConf.setPacketsDirForRecording(cslRunningArgs.getDirForRecording());
         }
         if (cslRunningArgs.hasDirForLearning()) {
-//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_LEARNING,
-//                    cslRunningArgs.getDirForLearning());
             Config.instance.IdsConf.setPacketsDirForLearning(cslRunningArgs.getDirForLearning());
         }
         if (cslRunningArgs.hasDirForDetectionOffLine()) {
-//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.PACKETS_DIR_FOR_DETECTION_OFFLINE,
-//                    cslRunningArgs.getDirForDetectionOffline());
             Config.instance.IdsConf.setPacketsDirForDetectionOffline(cslRunningArgs.getDirForDetectionOffline());
         }
         if (cslRunningArgs.hasIdsMode()) {
-//            safeGet(getConfig(), IDSParams.IDS_CONF).set(IDSParams.MODE,
-//                    cslRunningArgs.getIdsMode());
             Config.instance.IdsConf.setMode(cslRunningArgs.getIdsMode());
         }
 
-        // logdir
+        // Log directory
         if (cslRunningArgs.hasLogDir()) {
-//            safeGet(getConfig(), "ids_conf").set("idstrace_dir", cslRunningArgs.getLogDir());
             Config.instance.IdsConf.setIdstraceDir(cslRunningArgs.getLogDir());
-            // jcmd logs
-//            safeGet(getConfig(), "web_server_conf").set("log_dir", cslRunningArgs.getLogDir());
             Config.instance.Server.setLogDir(cslRunningArgs.getLogDir());
-            // alerts
-//            safeGet(getConfig(), "alert_viewer").set("log_dir", cslRunningArgs.getLogDir());
             Config.instance.AlertViewer.setLogDir(cslRunningArgs.getLogDir());
         }
     }
 
+    /**
+     * Initializes the CSL context with the provided running arguments.
+     *
+     * @param cslRunningArgs The running arguments.
+     */
     public void init(CSLRunningArgs cslRunningArgs) {
-
         if (cslRunningArgs.hasError()) {
-            System.out.println("Error :" + cslRunningArgs.getError());
+            logger.error("Error: {}", cslRunningArgs.getError());
             System.exit(0);
         }
 
         setConfigFileName(cslRunningArgs.getConfigFile());
-
-
         getConfig();
-
         updateConfigFromCSLRunningArgs(cslRunningArgs);
 
-//        String cslConf = JsonUtil.getStringFromJson(getConfig(), "csl/cslconf", "cslconf");
         this.cslConfDir = buildFullPathInUserDir("cslconf");
-
-        setVerbose(cslRunningArgs.isVerbose());
-        setDebug(cslRunningArgs.isDebug());
-
-        setTestMode(cslRunningArgs.isTestparam());
 
         org.eclipse.jetty.util.log.Log.setLog(new com.csl.core.NoLogging());
 
-
-//        this.idsMainProcessor = IDSMainProcessorFactory.instance.createIDSMainProcessor(
-//                getConfig().get("ids_conf"),
-//                getCslConfDir(),
-//                this);
         this.idsMainProcessor = IDSMainProcessorFactory.instance.createIDSMainProcessor(
-                Config.instance.IdsConf,
-                getCslConfDir(),
-                this);
+                Config.instance.IdsConf, getCslConfDir());
 
         idsMainProcessor.setFileLogFactory(getFileLogFactory());
-
         fileUtils = new FileStoreService(getCslConfDir());
         idsMainProcessor.setFileStoreServices(fileUtils);
 
-
-//        cslAlertManager = new CSLAlertManager(idsMainProcessor, getConfig().get("alert_viewer"));
         cslAlertManager = new CSLAlertManager(idsMainProcessor, getConfig().AlertViewer);
         idsMainProcessor.setAlertManager(cslAlertManager);
-
         idsMainProcessor.setAlertFactory(new CSLAlertFactory());
 
         if (cslRunningArgs.isHasIdsRunner()) {
             idsParams = new IDSParams(idsMainProcessor);
-
             idsParams.initFromJson(getConfig(), cslRunningArgs.getDataDir(),
-                    cslRunningArgs.isTestparam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName()); // pworkingDir);
+                    cslRunningArgs.isTestparam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName());
 
-
-            if (cslRunningArgs.hasIdsMode())
+            if (cslRunningArgs.hasIdsMode()) {
                 idsParams.setIDSMode(cslRunningArgs.getIdsMode());
-            if (cslRunningArgs.hasDataSetForRecording())
+            }
+            if (cslRunningArgs.hasDataSetForRecording()) {
                 idsParams.setCurrentDataSetNameForRecording(cslRunningArgs.getDataSetForRecording());
-            if (cslRunningArgs.hasDataSetForLearning())
+            }
+            if (cslRunningArgs.hasDataSetForLearning()) {
                 idsParams.setCurrentDataSetNameForLearning(cslRunningArgs.getDataSetForLearning());
-            if (cslRunningArgs.hasDataSetForDetectionOffLine())
+            }
+            if (cslRunningArgs.hasDataSetForDetectionOffLine()) {
                 idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffline());
-
-
+            }
         }
 
         idsMainProcessor.setConsole(idsParams.getConsole());
@@ -399,51 +385,65 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         setCslUDPServer(new CSLUDPServer());
     }
 
-    public void setApiRemote(String apiname) {
+    /**
+     * Sets the API as a remote API to be accessible via the HTTP server.
+     *
+     * @param apiname The name of the API.
+     */
+    public void registerHttpEndpoint(String apiname) {
         if (getCslHttpServer() == null) return;
-
-        getCslHttpServer().addRemoteApi(apiname);
-
+        getCslHttpServer().registerHttpEndpoint(apiname);
     }
 
-    public void postInit(boolean server, boolean client) {
-        this.server = server;
-        this.client = client;
+    /**
+     * Performs post-initialization tasks, setting up the server and/or client configurations.
+     *
+     * @param isServer Indicates if the context should operate as a server (true), client (false), or uninitialized (null).
+     */
+    public void postInit(Boolean isServer) {
+        this.isServer = isServer;
 
-        if (server) {
-//            getCslHttpServer().initServer(getConfig().get("web_server_conf"));
+        if (isServer == null) {
+            logger.error("CSLContext not initialized as server or client");
+            return;
+        }
+
+        if (isServer) {
             getCslHttpServer().initServer(Config.instance.Server);
-        }
-        if (client) {
-//            getCslUDPServer().initUDPServer(getConfig().get("udp_server_conf"));
-            getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
-        }
-        // The server should not send status notifications
-        if (server) {
             getStatusNotifier().setSendNotifications(false);
-        }
-
-        if (client) {
-
-            initModules();  // by default only ModuleIDS
+        } else {
+            getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
+            initDynamicModules();
             initTime();
 
             ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-
-            idsRunner = new IDSRunner(idsParams, ids, this);
+            idsRunner = new IDSRunner(idsParams, ids);
         }
     }
 
-    public void start() {
-        if (server) getCslHttpServer().start();
+    /**
+     * Starts the HTTP and UDP servers.
+     */
+    public void startServers() {
+        if (isServer == null) {
+            logger.error("CSLContext not initialized as server or client, cannot start servers");
+            return;
+        }
 
-        if (client) getCslUDPServer().start();
-        if (client) startExec();
+        if (isServer) {
+            getCslHttpServer().start();
+        } else {
+            getCslUDPServer().start();
+            startExec();
+        }
+
         JServiceLoader.getCSLInterModuleCommunicationManager().start();
-
     }
 
-    public void stop() {
+    /**
+     * Stops the HTTP and UDP servers.
+     */
+    public void stopServers() {
         getCslHttpServer().stop();
         getCslUDPServer().stop();
 
@@ -455,281 +455,187 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         if (statusNotifier != null) statusNotifier.close();
     }
 
+    /**
+     * Initializes the timing settings for module execution.
+     */
     private void initTime() {
-        initialTime = getSystemCurrentTimeMillis(); //  System.currentTimeMillis();
-//        samplingTime = JsonUtil.getIntFromJson(getConfig(), "module_exec/sampling_time", 100);
+        initialTime = getSystemCurrentTimeMillis();
         samplingTime = Config.instance.ModuleExec.getSamplingTime();
     }
 
+    /**
+     * Gets the module context by name.
+     *
+     * @param name The name of the module.
+     * @return The module context.
+     */
     public com.csl.core.ModuleContext getModuleContext(String name) {
         return modules.get(name);
     }
 
+    /**
+     * Initializes internal modules, starting with {@link ModuleIDS}.
+     */
     private void initInternalModules() {
-
         new ModuleIDS();
-
     }
 
-    private void initModules() {
-
-        boolean notfound = true;
-
+    /**
+     * Initializes the modules based on the configuration.
+     */
+    private void initDynamicModules() {
         String modulesPackageName = Config.instance.ModuleExec.getModulesPackageName();
-//        String modulesPackageName = JsonUtil.getStringFromJson(getConfig(), "module_exec/modules_package_name", "modules");
-
-        //test if csl.jar ?
-
-        if (isVerbose()) System.out.println("Loading modules");
+        logger.debug("Loading modules");
+        
         initInternalModules();
 
-//        numberOfExecLoops = JsonUtil.getIntFromJson(getConfig(), "module_exec/number_of_exec_loops", 1);
         numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
+        logger.debug("Running {} execution loops", numberOfExecLoops);
 
-        if (isVerbose()) System.out.println("Running " + numberOfExecLoops + " execution loops");
-
-//        Json j = getConfig().get("modules");
-        List<Config.Module> modulesConfig = Config.instance.Modules;
-
-//        Iterator<Json> itr = j.iterator();
-        Iterator<Config.Module> itr = modulesConfig.iterator();
-
-        while (itr.hasNext()) {
-//            Json moduleDescriptor = itr.next();
-            Config.Module moduleDescriptor = itr.next();
-            CSLContext.instance.logInfo(moduleDescriptor + " ");
-
-//            String mname = moduleDescriptor.get("name").asString();
+        for (Config.Module moduleDescriptor : Config.instance.Modules) {
             String mname = moduleDescriptor.getName();
 
             if (modules.get(mname) != null) {
-                logger.error("A module with this name <" + mname + "> has already been declared");
-                //existe dejae
+                logger.error("A module with this name <{}> has already been declared", mname);
             } else {
                 String type = moduleDescriptor.getType();
-                Class clazz = getModuleClass(type);
+                Class<?> clazz = getModuleClass(type);
 
                 if (clazz == null) {
-                    logger.error("Cannot find modules of type <" + type + "> ");
-
+                    logger.error("Cannot find modules of type <{}>", type);
                 } else {
                     try {
-                        IModule m = (IModule) clazz.newInstance();
+                        IModule m = (IModule) clazz.getDeclaredConstructor().newInstance();
                         com.csl.core.ModuleContext mc = new com.csl.core.ModuleContext();
-                        mc.setClazz(clazz);
+                        mc.setClazz((Class<IModule>) clazz);
                         mc.setModule(m);
                         mc.setName(mname);
-//                        Json mconfig = moduleDescriptor.get("config");
-                        Config.Module.CSLModuleConfig mconfig = moduleDescriptor.getConfig();
-//                        mc.setMConfig(mconfig);
-                        mc.setConfig(mconfig);
+                        mc.setConfig(moduleDescriptor.getConfig());
 
                         modules.put(mname, mc);
-                        CSLContext.instance.logInfo("Module:" + mc);
                         logger.info("Initialization of module {}[{}]", mname, type);
-                    } catch (InstantiationException | IllegalAccessException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                    } catch (Exception e) {
+                        logger.error("Error initializing module {}: {}", mname, e.getMessage(), e);
                     }
                 }
             }
-
-
         }
 
-
-        // do init
-
-//        for (com.csl.core.ModuleContext m : modules.values()) {
-//
-//            if (m.getConfig().get("input_priority") != null) {
-//                int n = m.getConfig().get("input_priority").asInteger();
-//                m.setInputPriority(n);
-//            } else
-//                logger.warn("input priority undefined for module {}", m.getName());
-//
-//            if (m.getConfig().get("step_priority") != null) {
-//                int n = m.getConfig().get("step_priority").asInteger();
-//                m.setStepPriority(n);
-//            } else
-//                logger.warn("step priority undefined for module {}", m.getName());
-//
-//            if (m.getConfig().get("output_priority") != null) {
-//                int n = m.getConfig().get("output_priority").asInteger();
-//                m.setOutputPriority(n);
-//            } else
-//                logger.warn("output priority undefined for module {}", m.getName());
-//
-//            if (m.getConfig().get("exec_loop_number") != null) {
-//                int n = m.getConfig().get("exec_loop_number").asInteger();
-//                if (n < 0) n = 0;
-//                if (n > numberOfExecLoops - 1) n = numberOfExecLoops - 1;
-//                m.setLoopNumber(n);
-//            }
-//
-//
-//            // do the module init
-//            m.getModule().init(this, m);
-//
-//            inputExecList.add(m);
-//            outputExecList.add(m);
-//            stepExecList.add(m);
-//        }
-
-        // region useful?
-//        for (com.csl.core.ModuleContext m : modules.values()) {
-//
-//            if (m.getConfig().getInputPriority() != null) {
-//                int n = m.getConfig().getInputPriority();
-//                m.setInputPriority(n);
-//            } else
-//                logger.warn("input priority undefined for module {}", m.getName());
-//
-//            if (m.getConfig().getStepPriority() != null) {
-//                int n = m.getConfig().getStepPriority();
-//                m.setStepPriority(n);
-//            } else
-//                logger.warn("step priority undefined for module {}", m.getName());
-//
-//            if (m.getConfig().getOutputPriority() != null) {
-//                int n = m.getConfig().getOutputPriority();
-//                m.setOutputPriority(n);
-//            } else
-//                logger.warn("output priority undefined for module {}", m.getName());
-//
-//            if (m.getConfig().getExecLoopNumber() != null) {
-//                int n = m.getConfig().getExecLoopNumber();
-//                if (n < 0) n = 0;
-//                if (n > numberOfExecLoops - 1) n = numberOfExecLoops - 1;
-//                m.setLoopNumber(n);
-//            }
-//
-//
-//            // do the module init
-//            m.getModule().init(this, m);
-//
-//            inputExecList.add(m);
-//            outputExecList.add(m);
-//            stepExecList.add(m);
-//        }
-//
-//
-//        inputExecList.sort(new Comparator<com.csl.core.ModuleContext>() {
-//            @Override
-//            public int compare(com.csl.core.ModuleContext o1, com.csl.core.ModuleContext o2) {
-//                return -o1.getInputPriority() + o2.getInputPriority();
-//            }
-//        });
-//        outputExecList.sort(new Comparator<com.csl.core.ModuleContext>() {
-//            @Override
-//            public int compare(com.csl.core.ModuleContext o1, com.csl.core.ModuleContext o2) {
-//                return -o1.getOutputPriority() + o2.getOutputPriority();
-//            }
-//        });
-//        stepExecList.sort(new Comparator<com.csl.core.ModuleContext>() {
-//            @Override
-//            public int compare(com.csl.core.ModuleContext o1, com.csl.core.ModuleContext o2) {
-//                return -o1.getStepPriority() + o2.getStepPriority();
-//            }
-//        });
-
-        // endregion useful?
-
-//        autostart = JsonUtil.getBooleanFromJson(getConfig(), "module_exec/autostart", true);
         autostart = Config.instance.ModuleExec.getAutostart();
     }
 
-    Class getModuleClass(String name) {
+    /**
+     * Gets the module class by name.
+     *
+     * @param name The name of the module class.
+     * @return The module class.
+     */
+    private Class<?> getModuleClass(String name) {
         return moduleClassList.get(name);
     }
 
+    /**
+     * Logs the result of a module execution.
+     *
+     * @param r The result to log.
+     */
     private void logResult(IResult r) {
-        if (r == null)
-            cslLogger.warn("No result");
-        if (!r.isOK())
-            cslLogger.error("Error " + r.getErrorCode() + ":" + r.getMessage());
+        if (r == null) {
+            logger.warn("No result");
+        } else if (!r.isOK()) {
+            logger.error("Error {}: {}", r.getErrorCode(), r.getMessage());
+        }
     }
 
-    Runnable task = new Runnable() {
+    /**
+     * Task that executes the modules in the defined order.
+     */
+    private final Runnable task = () -> {
+        logger.trace("Sampling time: {}", getTimeFromStartingTime());
 
-        public void run() {
-
-            cslLogger.debug("Sampling time:" + getTimeFromStartingTime());
-
-            if (showProgression) {
-                if (nExecSteps > 80) {
-                }//System.out.println("");nExecSteps=0;}}
-                else nExecSteps++;
+        if (showProgression && nExecSteps > 80) {
+            nExecSteps = 0;
+        } else {
+            nExecSteps++;
             }
 
             try {
                 for (int nloop = 0; nloop < numberOfExecLoops; nloop++) {
-                    cslLogger.info("Exec loop #" + nloop);
+                logger.trace("Exec loop #{}", nloop);
                     for (com.csl.core.ModuleContext m : inputExecList) {
                         if (m.getLoopNumber() == nloop) {
-                            cslLogger.info("  input for " + m.getName());
+                            logger.trace("  input for {}", m.getName());
                             IResult r = m.getModule().execInputPart(instance, m);
                             logResult(r);
                         }
                     }
                     for (com.csl.core.ModuleContext m : stepExecList) {
                         if (m.getLoopNumber() == nloop) {
-                            cslLogger.info("  exec for " + m.getName());
+                            logger.trace("  exec for {}", m.getName());
                             IResult r = m.getModule().execStepPart(instance, m);
                             logResult(r);
                         }
                     }
                     for (com.csl.core.ModuleContext m : outputExecList) {
                         if (m.getLoopNumber() == nloop) {
-                            cslLogger.info("  output for " + m.getName());
+                            logger.trace("  output for {}", m.getName());
                             IResult r = m.getModule().execOutputPart(instance, m);
                             logResult(r);
                         }
                     }
                 }
             } catch (Exception e) {
-                //System.err.println(e);
-                for (StackTraceElement z : e.getStackTrace()) {
-                    System.err.println("" + z);
-                }
-
+                logger.error("Error during execution: {}", e.getMessage(), e);
             }
+
             if (isExitCSL()) {
                 scheduler.shutdown();
                 System.exit(0);
             }
-        }
-
     };
 
+    /**
+     * Checks if replay mode is enabled.
+     *
+     * @return True if replay mode is enabled, false otherwise.
+     */
     private boolean isReplayMode() {
         return replayMode;
     }
 
+    /**
+     * Starts the execution of the modules.
+     */
     public void startExec() {
+        logger.debug("Starting modules execution");
 
-        if (CSLContext.instance.isVerbose()) System.out.println("Starting modules execution");
-
-        scheduler
-                = Executors.newSingleThreadScheduledExecutor();
-
-
+        scheduler = Executors.newSingleThreadScheduledExecutor();
         int delay = samplingTime;
-        CSLContext.instance.logInfo("Starting with sampling time :" + samplingTime + " ms");
+        logger.info("Starting with sampling time: {} ms", samplingTime);
         scheduler.scheduleAtFixedRate(task, 0, delay, TimeUnit.MILLISECONDS);
-
     }
 
+    /**
+     * Stops the execution of the modules.
+     */
     public void stopExec() {
-
         scheduler.shutdown();
     }
 
+    /**
+     * Gets the IDS main processor.
+     *
+     * @return The IDS main processor.
+     */
     public IIDSMainProcessor getIDSMainProcessor() {
-        // TODO Auto-generated method stub
         return idsMainProcessor;
     }
 
+    /**
+     * Gets the MQTT broker handler.
+     *
+     * @return The MQTT broker handler.
+     */
     public CSLMqttBrokerHandler getMqttBroker() {
         if (mqttBroker == null) {
             mqttBroker = new CSLMqttBrokerHandler(getConfig());
@@ -737,6 +643,11 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return mqttBroker;
     }
 
+    /**
+     * Gets the status notifier.
+     *
+     * @return The status notifier.
+     */
     public StatusNotifier getStatusNotifier() {
         if (statusNotifier == null) {
             statusNotifier = new StatusNotifier(false);
@@ -744,4 +655,3 @@ public class CSLContext implements ICSLContext, ICSLLogger {
         return statusNotifier;
     }
 }
-

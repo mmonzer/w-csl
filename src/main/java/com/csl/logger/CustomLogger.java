@@ -20,6 +20,8 @@ public class CustomLogger {
         return new CustomLogger(LoggerFactory.getLogger(clazz));
     }
 
+    // region LoggerActions and LoggerInterfaces
+
     public void trace(LoggerActions action, LoggerInterfaces interfce, String format, Object... objects) {
         this.trace(action.toString(), interfce.toString(), String.format(format, objects));
     }
@@ -59,6 +61,94 @@ public class CustomLogger {
     public void error(LoggerActions action, LoggerInterfaces interfce, String msg) {
         this.error(action.toString(), interfce.toString(), msg);
     }
+
+    // region quickers LoggerActions and LoggerInterfaces
+
+    // TODO : generalize with a interface string -> void
+
+    public void traceResp(LoggerInterfaces interfce, String format, Object... objects) {
+        this.trace(LoggerActions.RESPONSE, interfce, format, objects);
+    }
+
+    public void traceReq(LoggerInterfaces interfce, String format, Object... objects) {
+        this.trace(LoggerActions.REQUEST, interfce, format, objects);
+    }
+
+    public void debugResp(LoggerInterfaces interfce, String format, Object... objects) {
+        this.debug(LoggerActions.RESPONSE, interfce, format, objects);
+    }
+
+    public void debugReq(LoggerInterfaces interfce, String format, Object... objects) {
+        this.debug(LoggerActions.REQUEST, interfce, format, objects);
+    }
+
+    public void infoResp(LoggerInterfaces interfce, String format, Object... objects) {
+        this.info(LoggerActions.RESPONSE, interfce, format, objects);
+    }
+
+    public void infoReq(LoggerInterfaces interfce, String format, Object... objects) {
+        this.info(LoggerActions.REQUEST, interfce, format, objects);
+    }
+
+    public void warnResp(LoggerInterfaces interfce, String format, Object... objects) {
+        this.warn(LoggerActions.RESPONSE, interfce, format, objects);
+    }
+
+    public void warnReq(LoggerInterfaces interfce, String format, Object... objects) {
+        this.warn(LoggerActions.REQUEST, interfce, format, objects);
+    }
+
+    public void errorResp(LoggerInterfaces interfce, String format, Object... objects) {
+        this.error(LoggerActions.RESPONSE, interfce, format, objects);
+    }
+
+    public void errorReq(LoggerInterfaces interfce, String format, Object... objects) {
+        this.error(LoggerActions.REQUEST, interfce, format, objects);
+    }
+
+    public void traceResp(LoggerInterfaces interfce, String msg) {
+        this.trace(LoggerActions.RESPONSE, interfce, msg);
+    }
+
+    public void traceReq(LoggerInterfaces interfce, String msg) {
+        this.trace(LoggerActions.REQUEST, interfce, msg);
+    }
+
+    public void debugResp(LoggerInterfaces interfce, String msg) {
+        this.debug(LoggerActions.RESPONSE, interfce, msg);
+    }
+
+    public void debugReq(LoggerInterfaces interfce, String msg) {
+        this.debug(LoggerActions.REQUEST, interfce, msg);
+    }
+
+    public void infoResp(LoggerInterfaces interfce, String msg) {
+        this.info(LoggerActions.RESPONSE, interfce, msg);
+    }
+
+    public void infoReq(LoggerInterfaces interfce, String msg) {
+        this.info(LoggerActions.REQUEST, interfce, msg);
+    }
+
+    public void warnResp(LoggerInterfaces interfce, String msg) {
+        this.warn(LoggerActions.RESPONSE, interfce, msg);
+    }
+
+    public void warnReq(LoggerInterfaces interfce, String msg) {
+        this.warn(LoggerActions.REQUEST, interfce, msg);
+    }
+
+    public void errorResp(LoggerInterfaces interfce, String msg) {
+        this.error(LoggerActions.RESPONSE, interfce, msg);
+    }
+
+    public void errorReq(LoggerInterfaces interfce, String msg) {
+        this.error(LoggerActions.REQUEST, interfce, msg);
+    }
+
+    // endregion quickers LoggerActions and LoggerInterfaces
+
+    // region wrappers LoggerActions and LoggerInterfaces
 
     // TODO : generalize with a interface string -> void
     private void trace(String action, String requestInterface, String msg) {
@@ -100,6 +190,12 @@ public class CustomLogger {
         MDC.remove("interface");
         MDC.remove("action");
     }
+
+    // endregion wrappers LoggerActions and LoggerInterfaces
+
+    // endregion LoggerActions and LoggerInterfaces
+
+    // region usual level commands
 
     public void trace(String msg) {
         logger.trace(msg);
@@ -160,4 +256,6 @@ public class CustomLogger {
     public void error(String format, Throwable throwable) {
         logger.error(format, throwable);
     }
+
+    // endregion usual level commands
 }

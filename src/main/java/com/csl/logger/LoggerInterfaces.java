@@ -8,6 +8,7 @@ public enum LoggerInterfaces {
     CSL_SCAN_WS("CSL_SCAN_WS"),
     CSL_AUTOCRYPT_API("CSL_AUTOCRYPT_API"),
     CSL_DBAPI_API("CSL_DBAPI_API"),
+    NULL("NULL"),
     ;
     private final String name;
 

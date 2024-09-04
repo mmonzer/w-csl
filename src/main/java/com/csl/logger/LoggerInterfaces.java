@@ -9,6 +9,8 @@ public enum LoggerInterfaces {
     CSL_AUTOCRYPT_API("CSL_AUTOCRYPT_API"),
     CSL_DBAPI_API("CSL_DBAPI_API"),
     NULL("NULL"),
+    CSL_NGINX("CSL_NGINX"),
+    LOCAL("LOCAL"),
     ;
     private final String name;
 

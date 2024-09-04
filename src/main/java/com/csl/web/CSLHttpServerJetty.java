@@ -2,6 +2,8 @@ package com.csl.web;
 
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.core.Config;
+import com.csl.logger.CustomLogger;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.web.auth.ServerConfig;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
@@ -36,7 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 import static java.lang.System.exit;
 
 /**
@@ -52,7 +54,7 @@ public class CSLHttpServerJetty {
 
     private boolean initialized = false;
 
-    private static final Logger logger = LoggerFactory.getLogger(CSLHttpServerJetty.class);
+    private static final CustomLogger logger = CustomLogger.getLogger(CSLHttpServerJetty.class);
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -188,11 +190,12 @@ public class CSLHttpServerJetty {
                 String xCorrelationId = req.getHeader(X_CORRELATION_ID);
                 resp.setHeader(X_CORRELATION_ID, xCorrelationId);
                 MDC.put(X_CORRELATION_ID, xCorrelationId);
+                MDC.put(ENDPOINT, api.getName());
 
                 handleWebSocketUpgrade(req, api);
 
                 String bodyReq = readRequestBody(req);
-                logger.debug("Request Body: {}", bodyReq);
+                logger.trace("Request Body: {}", bodyReq);
 
                 Json data = Json.read(bodyReq.toString());
                 Json cmd = data.get("cmd");
@@ -201,9 +204,16 @@ public class CSLHttpServerJetty {
                 if (cmd == null) {
                     logger.warn("Invalid command: {}", cmd);
                 }
+                MDC.put(COMMAND, cmd.asString());
 
+                logger.infoReq(LoggerInterfaces.CSL_NGINX, "Received command to execute ...");
                 String bodyResp = executeApiCommand(api, data, cmd, params, xCorrelationId);
+                logger.infoResp(LoggerInterfaces.CSL_NGINX, "Received result from command execution");
+
                 resp.getWriter().write(bodyResp);
+                MDC.remove(COMMAND);
+                MDC.remove(ENDPOINT);
+                MDC.remove(X_CORRELATION_ID);
             }
         };
     }
@@ -419,11 +429,13 @@ public class CSLHttpServerJetty {
     private String executeApiCommand(IApiCommands api, Json data, Json cmd, Json params, String xCorrelationId) {
         String bodyResp;
         if (listOfRemoteApi.contains(api.getName().toLowerCase())) {
+            logger.debugReq(LoggerInterfaces.CSL_CLIENT,"Sending command with body {} ...", params);
             bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data, xCorrelationId).toString();
-            logger.debug("Remote server response: {}", bodyResp);
+            logger.debugResp(LoggerInterfaces.CSL_CLIENT,"Sent command with body {} : {}", params, bodyResp);
         } else {
+            logger.debugReq(LoggerInterfaces.LOCAL,"Executing command with body {} ...", params);
             bodyResp = api.exec(cmd.asString(), params.set(X_CORRELATION_ID, xCorrelationId)).toString();
-            logger.debug("Server response: {}", bodyResp);
+            logger.debugResp(LoggerInterfaces.LOCAL,"Executed command with body {} : {}", params, bodyResp);
         }
         return bodyResp;
     }

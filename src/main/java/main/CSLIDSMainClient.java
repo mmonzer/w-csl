@@ -172,7 +172,7 @@ public class CSLIDSMainClient {
                         .set(X_CORRELATION_ID, xCorrelationId)
                         .set("result", result);
 
-                logger.info("Sending result: {}", resultMessageJson);
+                logger.trace("Sending result: {}", resultMessageJson);
                 clientEndPoint.sendMessage("res:" + resultMessageJson);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);

@@ -1495,19 +1495,19 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      */
     public void syncAll() {
         if (isConcentrator) {
-            logger.info("Starting Discovery synchronization");
+            logger.info(LoggerActions.SYNC, LoggerInterfaces.CSL_SCAN_API, "Starting Discovery synchronization");
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
                 cpeItemSynchronizationService.syncData();
-                logger.debug("CPE items synchronization finished");
+                logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_SCAN_API, "CPE items synchronization finished");
                 microsoftKbSynchronizationService.syncData();
-                logger.debug("Microsoft KB synchronization finished");
+                logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_SCAN_API, "Microsoft KB synchronization finished");
                 deletedCpeItemsSynchronizationService.syncData();
-                logger.debug("Deleted CPE items synchronization finished");
+                logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_SCAN_API, "Deleted CPE items synchronization finished");
                 deletedMicrosoftKbsSynchronizationService.syncData();
-                logger.info("Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
+                logger.info(LoggerActions.SYNC, LoggerInterfaces.CSL_SCAN_API, "Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
             } catch (SynchronizationException e) {
-                logger.warn("Could not synchronize CPE Items", e);
+                logger.warn(LoggerActions.SYNC, LoggerInterfaces.CSL_SCAN_API, "Could not synchronize CPE Items", e);
             }
         }
     }

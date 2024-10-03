@@ -1027,7 +1027,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
     }
     public void clearAllConnections() {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CLEAR_ALL_CONNECTIONS);
+        Request request = createDbapiRequest(HttpMethod.DELETE, DbapiEndpointForCSLScan.CLEAR_ALL_CONNECTIONS);
         try {
             ContentResponse response = request.send();
             if (response.getStatus() != 200) {

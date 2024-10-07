@@ -1,7 +1,6 @@
 package com.csl.util;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

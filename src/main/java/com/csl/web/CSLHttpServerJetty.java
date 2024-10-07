@@ -212,8 +212,8 @@ public class CSLHttpServerJetty {
 
                 handleWebSocketUpgrade(req, api);
 
-                String bodyReq = readRequestBody(req);
-                logger.trace("Request Body: {}", bodyReq);
+//                String bodyReq = readRequestBody(req);
+//                logger.trace("Request Body: {}", bodyReq);
 
                 Json data = Json.object();
                 if (req.getContentType().contains("json")) {

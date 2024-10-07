@@ -160,7 +160,7 @@ public class CSLIDSMainClient {
                 if (!apiName.isEmpty()) {
                     ApiCommands api = apiMap.get(apiName);
                     MDC.put(ENDPOINT, apiName);
-                    Json jsonCommand = messageJson.get("jcmd");
+                    Json jsonCommand = messageJson.get("jsonCommand");
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);

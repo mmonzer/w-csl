@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The CSLWebSocket class manages WebSocket connections, broadcasts messages, 
+ * The CSLWebSocket class manages WebSocket connections, broadcasts messages,
  * and integrates with the broker for inter-module communication.
  */
 public class CSLWebSocket {
 	
     public static boolean VIA_BROKER = true;
-	
+
     public static final String WEB_SOCKET_ALERT = "/alerts";
     public static final String WEB_SOCKET_CONSOLE = "/console";
     public static final String WEB_SOCKET_DATABASE = "/database";
@@ -46,7 +46,7 @@ public class CSLWebSocket {
 				          }
 				      });
 				}
-				
+
 		@Override
         public void broadcastMessageJson(String socketName, Json jsonMessage) {
             String tag = websocketTags.get(socketName);
@@ -54,11 +54,11 @@ public class CSLWebSocket {
                 System.err.println("Invalid socket name: " + socketName);
 			    		return;
 			    	}
-			    	
+
             Json jsonWrapper = Json.object();
             jsonWrapper.set(tag, jsonMessage);
             String messageString = jsonWrapper.toString();
-			    	
+
 			if (VIA_BROKER) {
                 JServiceLoader.getCSLInterModuleCommunicationManager().sendSocketMsg(socketName, messageString);
             } else {
@@ -73,7 +73,7 @@ public class CSLWebSocket {
 			    	}
 				}
 			};
-			
+
     /**
      * Registers a custom message broadcaster.
      *
@@ -82,18 +82,18 @@ public class CSLWebSocket {
     public static void registerMessageBroadcaster(IMessageBroadcaster broadcaster) {
         messageBroadcaster = broadcaster;
 	}
-			
+
     /**
      * Registers all WebSocket paths and integrates with the broker if enabled.
      */
     public static void registerAll() {
         VIA_BROKER = JServiceLoader.getCSLInterModuleCommunicationManager().isUseBroker();
-    	
+
     	register(WEB_SOCKET_ALERT, "alert");
     	register(WEB_SOCKET_CONSOLE, "loginfo");
     	register(WEB_SOCKET_DATABASE, "database");
     	register(WEB_SOCKET_VARIABLES, "userMessage");
-    	
+
     	if (VIA_BROKER) {
             ISocketMsgListener listener = new ISocketMsgListener() {
     			@Override
@@ -133,7 +133,7 @@ public class CSLWebSocket {
     public static List<String> getListOfWebsocketsPath() {
         return new ArrayList<>(websocketTags.keySet());
     }
-    
+
     /**
      * Registers a WebSocket path with an associated tag.
      *
@@ -152,9 +152,9 @@ public class CSLWebSocket {
     public static void addUser(Session session) {
         String username = "User" + (nextUserNumber++);
         String socketName = cleanSocketName(session.getUpgradeRequest().getRequestURI().getPath());
-        
+
         System.out.println("Connect: " + socketName + " Username: " + username);
-    	
+
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.put(session, username);
     }
@@ -166,9 +166,9 @@ public class CSLWebSocket {
      */
     public static void removeUser(Session session) {
         String socketName = cleanSocketName(session.getUpgradeRequest().getRequestURI().getPath());
-        
+
         System.out.println("Disconnect: " + session + " from " + socketName);
-    	
+
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.remove(session);
     }
@@ -181,7 +181,7 @@ public class CSLWebSocket {
      */
     public static Map<Session, String> getSocketUsernameMap(String socketName) {
         socketName = cleanSocketName(socketName);
-    	
+
         return allSocketsUsernameMap.computeIfAbsent(socketName, k -> new ConcurrentHashMap<>());
     }
 
@@ -206,7 +206,7 @@ public class CSLWebSocket {
 			}
 		});
 	}
-    
+
     /**
      * Broadcasts a JSON message to all users connected to a specific WebSocket.
      *

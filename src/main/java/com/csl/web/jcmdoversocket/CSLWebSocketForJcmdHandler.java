@@ -12,29 +12,32 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Web socket to connect the CSL-Client
+ */
 @WebSocket
 public class CSLWebSocketForJcmdHandler {
 	private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmdHandler.class);
-
-    private String sender, msg;
      
     @OnWebSocketConnect
-    public void onConnect(Session user) throws Exception {
-		logger.info("A new user has connected to the CSLWebSocketForJcmdHandler websocket");
-		logger.trace("Connection :"+user);
+    public void onConnect(Session session) throws Exception {
+		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket");
+		logger.trace("Connection :"+session);
     }
 
     @OnWebSocketClose
-    public void onClose(Session user, int statusCode, String reason) {
-        CSLWebSocketForJcmd.removeUser(user);
-    }
+    public void onClose(Session session, int statusCode, String reason) {
+		logger.info("Disconnected from CSL-Client websocket ({}) : {}", statusCode, reason);
+		CSLWebSocketForJcmd.removeUser(session);
+
+		}
 
     @OnWebSocketMessage
-    public void onMessage(Session user, String message) {
-    	message=message.trim();
+    public void onMessage(Session session, String message) {
+		message=message.trim();
     	if (message.startsWith("api:")) {
     		String apiName=message.substring(4);
-    		CSLWebSocketForJcmd.addApi(apiName,user);
+    		CSLWebSocketForJcmd.addApi(apiName,session);
     	}
     	else if (message.startsWith("res:{")&&message.endsWith("}")) {
     		message=message.substring(4);
@@ -45,7 +48,7 @@ public class CSLWebSocketForJcmdHandler {
     		message=message.substring(4);
     		int n=message.indexOf(":");
     		if (n<0) {
-    			System.err.println("Invalid msg:"+message);
+                logger.error("Invalid msg:{}", message);
     		}
     		else {
     			String tag= message.substring(0, n);
@@ -58,12 +61,13 @@ public class CSLWebSocketForJcmdHandler {
     		message=message.substring(4);
     		int n=message.indexOf(":");
     		if (n<0) {
-    			System.err.println("Invalid msg:"+message);
+                logger.error("Invalid msg:{}", message);
     		}
     		else {
     			String tag= message.substring(0, n);
     			String msg= message.substring(n+1, message.length());
     		Json j= Json.read(msg);
+
     		CSLWebSocket.broadcastMessageJson(tag,j);
     		}
     		
@@ -72,14 +76,15 @@ public class CSLWebSocketForJcmdHandler {
     		message=message.substring(6);
     		
     		Json j= Json.read(message);
-    		System.err.println("FORWARD ALERT FROM CLIENT TO UDP="+j);
+			logger.warn("deprecated : forward alert to user");
+			logger.debug("deprecated : forward alert to user {}", j);
     		((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).sendAlertToViewerUDP(j);
     	}
 		else if (message.compareToIgnoreCase("keep alive") == 0)  {
 			// do nothing
 		}
     	else {
-    		System.err.println("Jcmd module Invalid message:"+message);
+            logger.warn("Jcmd module Invalid message:{}", message);
     	}
     	
     }

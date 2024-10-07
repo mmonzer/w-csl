@@ -4,6 +4,7 @@ import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.autocrypt.DbapiHandlerForCSLAutoCrypt;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.logger.CustomLogger;
 import com.ucsl.json.Json;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class IssuerSynchronizationService extends AutocryptTemplateSynchronizationService {
     public IssuerSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
         super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Issuers");
-        logger = LoggerFactory.getLogger(IssuerSynchronizationService.class);
+        logger = CustomLogger.getLogger(IssuerSynchronizationService.class);
     }
 
     @Override

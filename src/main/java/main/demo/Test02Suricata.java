@@ -48,12 +48,12 @@ public class Test02Suricata {
 
 		public static Json encapsulateObject(String targetID, int n,Json j,boolean acquit) {
 			Json obj =Json.object();
-			obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUCP());
+			obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUDP());
 			obj.at("idOfTarget", targetID);
 			obj.at("flowNumber", ""+n);
 			//obj.at("nameOfVariable", varName);
 
-			if (acquit) obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUCP());
+			if (acquit) obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUDP());
 
 			obj.at("data",j);
 

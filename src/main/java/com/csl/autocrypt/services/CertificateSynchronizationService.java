@@ -4,6 +4,7 @@ import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.autocrypt.DbapiHandlerForCSLAutoCrypt;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.logger.CustomLogger;
 import com.ucsl.json.Json;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public class CertificateSynchronizationService extends AutocryptTemplateSynchron
 
     public CertificateSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
         super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Certificates");
-        logger = LoggerFactory.getLogger(CertificateSynchronizationService.class);
+        logger = CustomLogger.getLogger(CertificateSynchronizationService.class);
     }
 
     @Override

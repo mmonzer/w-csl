@@ -10,12 +10,15 @@ import lombok.Getter;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.COMMAND;
 
 public class ApiCommands {
 //    public class ApiCommands implements IApiCommands {
@@ -185,8 +188,9 @@ public class ApiCommands {
         Json files = data.get("files");
 
         if (cmd == null) {
-            logger.warn("Invalid jcmd: null");
+            logger.warn("Invalid JSON command: null");
         }
+        MDC.put(COMMAND, cmd.asString());
         if (params == null) {
             params = Json.object();
         }

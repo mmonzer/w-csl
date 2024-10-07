@@ -4,16 +4,40 @@
     <!-- Suppress Logback's internal initialization logs -->
     <logger name="ch.qos.logback" level="ERROR"/>
 
-    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>
-                %gray(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%logger): %msg%n%throwable
-            </pattern>
+    <!-- Local variables -->
+    <property name="LOG_PATH" value="${CSL__WCSL__LOGS_PATH:-/var/log/csl/wcsl/}" />
+    <property name="LOG_FILENAME" value="${CSL__WCSL__LOGS_FILENAME:-wcsl}" />
+
+    <!-- Print console -->
+    <appender name="Console"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %gray(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] [%X{X-Correlation-ID:-No X CORRELATION ID}] %yellow(%logger) [%X{endpoint:-No endpoint}] [%X{command:-No command}] : [%X{action:-No action}] [%X{interface:-No interface}] %msg%n%throwable
+            </Pattern>
+        </layout>
+    </appender>
+
+    <!-- Save to file -->
+    <appender name="STASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_PATH}${LOG_FILENAME}.current.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}${LOG_FILENAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+<!--            <includeMdcKeyName>X-Correlation-ID</includeMdcKeyName>-->
+<!--            <excludeMdcKeyName>X-Correlation-ID</excludeMdcKeyName>-->
         </encoder>
     </appender>
 
-    <!-- LOG everything at INFO level -->
+    <!-- Where to log and the level by default -->
     <root level="${LOG_LEVEL:-DEBUG}">
+        <appender-ref ref="STASH" />
         <appender-ref ref="Console" />
     </root>
+<!--    We can define different levels  to save to different places as-->
+<!--    <logger name="trace" level="TRACE">-->
+<!--        <appender-ref ref="Console" />-->
+<!--    </logger>-->
 </configuration>

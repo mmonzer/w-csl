@@ -9,15 +9,18 @@ import com.csl.defaultclasses.FileStoreService;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.ucsl.util.DefaultLogger;
-import com.ucsl.util.IDSUtil;
-import lombok.Getter;
-import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 public class IDSMainProcessor implements IIDSMainProcessor {
+    /**
+     * Logger instance for this class.
+     */
+    private static final Logger logger = LoggerFactory.getLogger(IDSMainProcessor.class);
 
     private IFileStoreService fileStoreServices;
 
@@ -36,13 +39,9 @@ public class IDSMainProcessor implements IIDSMainProcessor {
     //=======================================================================================================================
     // Logger
     //
-    @Setter
-    @Getter
-    static private ICSLLogger logger = new DefaultLogger();
-
-    public static ICSLLogger cslLogger() {
-        return logger;
-    }
+//    @Setter
+//    @Getter
+//    static private ICSLLogger logger1 = new DefaultLogger();
 
     //=======================================================================================================================
     public IDSMainProcessor(Config.IdsConf config, String cslConfDir) {
@@ -124,14 +123,14 @@ public class IDSMainProcessor implements IIDSMainProcessor {
     @Override
     public void saveJsonInModelDir(String dir, String fileName, Json j) {
         if (!dir.isEmpty())
-            dir = idsMainProcessorParams.getIdsModelDir() + IDSUtil.fileSeparator + dir;
+            dir = idsMainProcessorParams.getIdsModelDir() + File.separator + dir;
         getFileStoreServices().saveJsonToFile(dir, fileName, j);
     }
 
     @Override
     public Json readJsonFromModelDir(String dir, String fileName) {
         if (!dir.isEmpty())
-            dir = idsMainProcessorParams.getIdsModelDir() + IDSUtil.fileSeparator + dir;
+            dir = idsMainProcessorParams.getIdsModelDir() + File.separator + dir;
         return getFileStoreServices().readJsonFromFile(dir, fileName);
     }
 
@@ -263,10 +262,10 @@ public class IDSMainProcessor implements IIDSMainProcessor {
             t = JsonUtil.getLongFromJson(j, "time", -1);
         }
         if (t < 0) {
-            cslLogger().printError("Invalid time in  :" + j);
+            logger.error("Invalid time in  :" + j);
         } else {
             if (this.currentTime > t) {
-                cslLogger().printError("Invalid time in  :" + j + " t=" + t + "  before last time:" + currentTime);
+                logger.error("Invalid time in  :" + j + " t=" + t + "  before last time:" + currentTime);
             }
             this.currentTime = t;
         }

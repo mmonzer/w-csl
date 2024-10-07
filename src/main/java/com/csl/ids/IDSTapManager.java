@@ -8,10 +8,10 @@ import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.interfaces.IIDSMainProcessorParams;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.ucsl.util.IDSUtil;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +74,7 @@ public class IDSTapManager {
 	}
 
     public String getTapsDir() {
-		return getRootDir()+IDSUtil.fileSeparator+tapsDir;
+		return getRootDir()+ File.separator+tapsDir;
 	}
 
 	public void setTapsIDs(List<String> listTapIds) {
@@ -128,7 +128,7 @@ public class IDSTapManager {
 	public Json loadSuricataRulesBase(String idname) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+getRulesForSuricataBaseFileName();
+				getTapsDir()+File.separator+idname+File.separator+getRulesForSuricataBaseFileName();
 		if (!fileUtils.fileExists( filename)) return emptyFile();
 		return fileUtils.readFileInAJsonText(filename);
 	}
@@ -136,7 +136,7 @@ public class IDSTapManager {
 	public Json saveSuricataRulesBase(String idname,String text) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+getRulesForSuricataBaseFileName();
+				getTapsDir()+File.separator+idname+File.separator+getRulesForSuricataBaseFileName();
 		
 		return fileUtils.writeFileFromText(filename, text);
 		
@@ -145,7 +145,7 @@ public class IDSTapManager {
 	public Json loadSuricataRulesLearned(String idname) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+getRulesForSuricataLearnedFileName();
+				getTapsDir()+File.separator+idname+File.separator+getRulesForSuricataLearnedFileName();
 		
 		if (!fileUtils.fileExists( filename)) return emptyFile();	
 		return fileUtils.readFileInAJsonText(filename);
@@ -154,7 +154,7 @@ public class IDSTapManager {
 	public Json saveSuricataRulesLearned(String idname, String text) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+getRulesForSuricataLearnedFileName();
+				getTapsDir()+File.separator+idname+File.separator+getRulesForSuricataLearnedFileName();
 		
 		return fileUtils.writeFileFromText(filename, text);
 		
@@ -163,7 +163,7 @@ public class IDSTapManager {
 	public Json loadSuricataConfig(String idname) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+suricataConfigFileName;
+				getTapsDir()+File.separator+idname+File.separator+suricataConfigFileName;
 		if (!fileUtils.fileExists( filename)) return emptyFile();
 		return fileUtils.readFileInAJsonText(filename);
 	}
@@ -171,7 +171,7 @@ public class IDSTapManager {
 	public Json saveSuricataConfig(String idname, String text) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+suricataConfigFileName;
+				getTapsDir()+File.separator+idname+File.separator+suricataConfigFileName;
 		
 		return fileUtils.writeFileFromText(filename, text);
 		
@@ -180,7 +180,7 @@ public class IDSTapManager {
 	public Json loadTapConfig(String idname) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+tapConfigFileName;
+				getTapsDir()+File.separator+idname+File.separator+tapConfigFileName;
 		if (!fileUtils.fileExists( filename)) return emptyFile();
 		return fileUtils.readFileInAJsonText(filename);
 	}
@@ -188,7 +188,7 @@ public class IDSTapManager {
 	public Json saveTapConfig(String idname, String text) {
 		if (!isExistingTapDescriptor(idname)) return emptyFileError("Tap not found "+idname);
 		String filename=
-				getTapsDir()+IDSUtil.fileSeparator+idname+IDSUtil.fileSeparator+tapConfigFileName;
+				getTapsDir()+File.separator+idname+File.separator+tapConfigFileName;
 		
 		return fileUtils.writeFileFromText(filename, text);
 		
@@ -337,7 +337,7 @@ public class IDSTapManager {
 	public boolean isExistingTapDir(String s) {
 		String dirName= getTapsDir();
 		
-		return idsMainProcessor.getFileStoreServices().dirExists(dirName+IDSUtil.fileSeparator+s);
+		return idsMainProcessor.getFileStoreServices().dirExists(dirName+File.separator+s);
 	}
 
 	public void createTapDir(String name) {
@@ -357,7 +357,7 @@ public class IDSTapManager {
 		src=normalizeName(src);
 		dst=normalizeName(dst);
 		
-		String dir=		getTapsDir()+IDSUtil.fileSeparator;
+		String dir=		getTapsDir()+File.separator;
 	    return
 			  idsMainProcessor.getFileStoreServices().renameSubDir(dir, src, dst);
 	}

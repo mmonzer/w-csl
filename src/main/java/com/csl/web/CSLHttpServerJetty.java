@@ -3,6 +3,8 @@ package com.csl.web;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.core.Config;
+import com.csl.logger.CustomLogger;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.web.auth.ServerConfig;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
@@ -19,6 +21,7 @@ import org.eclipse.jetty.websocket.api.WebSocketBehavior;
 import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.MultipartConfigElement;
@@ -41,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 import static java.lang.System.exit;
 
 /**
@@ -57,16 +61,17 @@ public class CSLHttpServerJetty {
     private boolean initialized = false;
     private boolean isRemote = true;
 
-    private static final Logger logger = LoggerFactory.getLogger(CSLHttpServerJetty.class);
+    private static final CustomLogger logger = CustomLogger.getLogger(CSLHttpServerJetty.class);
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     // Global configuration constants
     public static int REFRESH_SOCKET_PERIOD = 280;
     static boolean ADD_GET_ROUTE = false;
-
     private final List<String> httpEndpointList = new ArrayList<>();
-    private final List<String> listOfWebsocketPath = new ArrayList<>();
+
+    private final List<String> listOfRemoteApi = new ArrayList<String>();
+    private final List<String> listOfWebsocketPath = new ArrayList<String>();
 
     /**
      * Initializes the server with the provided configuration.
@@ -134,6 +139,9 @@ public class CSLHttpServerJetty {
 
             // keep the web sockets alive
             if (isRemote) startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
+
+            logger.debug("Web server started on port {} ", serverConfig.getPort());
+
         } catch (Exception e) {
             logger.error("Error starting server", e);
             exit(0);
@@ -196,10 +204,16 @@ public class CSLHttpServerJetty {
 
             @Override
             protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+                // X-Correlation-ID
+                String xCorrelationId = req.getHeader(X_CORRELATION_ID);
+                resp.setHeader(X_CORRELATION_ID, xCorrelationId);
+                MDC.put(X_CORRELATION_ID, xCorrelationId);
+                MDC.put(ENDPOINT, api.getName());
+
                 handleWebSocketUpgrade(req, api);
 
-                //String bodyReq = readRequestBody(req);
-                //logger.debug("Request Body: {}", bodyReq);
+                String bodyReq = readRequestBody(req);
+                logger.trace("Request Body: {}", bodyReq);
 
                 Json data = Json.object();
                 if (req.getContentType().contains("json")) {
@@ -232,9 +246,16 @@ public class CSLHttpServerJetty {
                 if (cmd == null) {
                     logger.warn("Invalid command: {}", cmd);
                 }
+                MDC.put(COMMAND, cmd.asString());
 
-                String bodyResp = executeApiCommand(api, data, cmd, params);
+                logger.infoReq(LoggerInterfaces.CSL_NGINX, "Received command to execute ...");
+                String bodyResp = executeApiCommand(api, data, cmd, params, xCorrelationId);
+                logger.infoResp(LoggerInterfaces.CSL_NGINX, "Received result from command execution");
+
                 resp.getWriter().write(bodyResp);
+                MDC.remove(COMMAND);
+                MDC.remove(ENDPOINT);
+                MDC.remove(X_CORRELATION_ID);
             }
         };
     }
@@ -319,7 +340,7 @@ public class CSLHttpServerJetty {
      * @param endpointPath The name of the endpoint API.
      */
     public void registerHttpEndpoint(String endpointPath) {
-        httpEndpointList.add(endpointPath.toLowerCase());
+        listOfRemoteApi.add(endpointPath.toLowerCase());
     }
 
     // Private Helper Methods
@@ -482,14 +503,16 @@ public class CSLHttpServerJetty {
      * @param params The parameters for the command.
      * @return The response from executing the command.
      */
-    private String executeApiCommand(ApiCommands api, Json data, Json cmd, Json params) {
+    private String executeApiCommand(ApiCommands api, Json data, Json cmd, Json params, String xCorrelationId) {
         String bodyResp;
-        if (httpEndpointList.contains(api.getName().toLowerCase())) {
-            bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data).toString();
-            logger.debug("Remote server response: {}", bodyResp);
+        if (listOfRemoteApi.contains(api.getName().toLowerCase())) {
+            logger.debugReq(LoggerInterfaces.CSL_CLIENT,"Sending command with body {} ...", params);
+            bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data, xCorrelationId).toString();
+            logger.debugResp(LoggerInterfaces.CSL_CLIENT,"Sent command with body {} : {}", params, bodyResp);
         } else {
-            bodyResp = api.exec(cmd.asString(), params, data.get("files")).toString();
-            logger.debug("Server response: {}", bodyResp);
+            logger.debugReq(LoggerInterfaces.LOCAL,"Executing command with body {} ...", params);
+            bodyResp = api.exec(cmd.asString(), params.set(X_CORRELATION_ID, xCorrelationId), data.get("files")).toString();
+            logger.debugResp(LoggerInterfaces.LOCAL,"Executed command with body {} : {}", params, bodyResp);
         }
         return bodyResp;
     }
@@ -511,7 +534,67 @@ public class CSLHttpServerJetty {
         if (accessControlRequestMethod != null) {
             resp.setHeader("Access-Control-Allow-Methods", accessControlRequestMethod);
         }
+    }
 
-        resp.setStatus(HttpServletResponse.SC_OK);
+    /**
+     * Add a remote api
+     *
+     * @param apiname : name of the remote api
+     */
+    public void registerRemoteApi(String apiname) {
+        listOfRemoteApi.add(apiname.toLowerCase());
+    }
+
+    /**
+     * Create API help servlet holder
+     *
+     * @return the corresponding servlet Holder
+     */
+    private ServletHolder createApiHelpServletHolder() {
+        return new ServletHolder(new HttpServlet() {
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                Json cmd = Json.object();
+                Set<String> paramKeys = req.getParameterMap().keySet();
+                List<String> varNames = new ArrayList<String>(paramKeys);
+
+                for (String name : varNames) {
+                    String[] values = req.getParameterValues(name);
+                    if (values != null) cmd.set(name, values[0]);
+                }
+
+                cmd.set("url", req.getRequestURL().toString());
+                String fullUrl = req.getRequestURL().toString();
+                if (req.getQueryString() != null) fullUrl += "?" + req.getQueryString();
+                cmd.set("fullUrl", fullUrl);
+
+                String cmdBody = JServiceLoader.getApiHelpPage(cmd);
+                resp.setContentType("text/html");
+                resp.getWriter().write(cmdBody);
+            }
+        });
+    }
+
+    /**
+     * Create CORS options servlet holder
+     * @return the corresponding servlet Holder
+     */
+    private ServletHolder createCORSOptionsServletHolder() {
+        return new ServletHolder(new HttpServlet() {
+            @Override
+            protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+                String accessControlRequestHeaders = req.getHeader("Access-Control-Request-Headers");
+                if (accessControlRequestHeaders != null) {
+                    resp.setHeader("Access-Control-Allow-Headers", accessControlRequestHeaders);
+                }
+
+                String accessControlRequestMethod = req.getHeader("Access-Control-Request-Method");
+                if (accessControlRequestMethod != null) {
+                    resp.setHeader("Access-Control-Allow-Methods", accessControlRequestMethod);
+                }
+
+                resp.setStatus(HttpServletResponse.SC_OK);
+            }
+        });
     }
 }

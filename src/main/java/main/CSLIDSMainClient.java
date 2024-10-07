@@ -9,28 +9,29 @@ import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.CSLHttpServerJetty;
+import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
-import main.services.*;
-import main.util.CSLRunningArgs;
-import main.xcom.WebsocketClientEndpoint;
 import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.xcsl.miniserver.ApiHttpServer;
+import main.services.*;
+import main.util.CSLRunningArgs;
+import main.xcom.WebsocketClientEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.net.URISyntaxException;
+import java.net.*;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static com.csl.autocrypt.outils.JsonHelper.getValueStringOrNull;
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 
 public class CSLIDSMainClient {
 
@@ -52,14 +53,14 @@ public class CSLIDSMainClient {
     // Message broadcaster for WebSocket communication
     private static final IMessageBroadcaster messageBroadcaster = new IMessageBroadcaster() {
 
-                @Override
+        @Override
         public void broadcastMessageString(String socketName, String message) {
             if (clientEndPoint != null && clientEndPoint.isOpen()) {
                 clientEndPoint.sendMessage("wss:" + socketName + ":" + message);
             }
         }
 
-                @Override
+        @Override
         public void broadcastMessageJson(String socketName, Json jsonMessage) {
             if (clientEndPoint != null && clientEndPoint.isOpen()) {
                 clientEndPoint.sendMessage("wsj:" + socketName + ":" + jsonMessage);
@@ -118,9 +119,9 @@ public class CSLIDSMainClient {
             if (!clientEndPoint.isOpen()) {
                 logger.warn("Failed to connect to the server, retrying...");
                 return;
-                        } else {
+            } else {
                 logger.info("Successfully connected to the server");
-                        }
+            }
 
             // Add message handler
             clientEndPoint.addMessageHandler(messageString -> handleServerMessage(messageString.trim()));
@@ -129,7 +130,6 @@ public class CSLIDSMainClient {
             apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessage("api:" + apiName));
 
             Thread.sleep(100);
-
         } catch (InterruptedException ex) {
             logger.error("InterruptedException: {}", ex.getMessage(), ex);
         } catch (URISyntaxException ex) {
@@ -143,20 +143,24 @@ public class CSLIDSMainClient {
      * @param messageString the raw message string received
      */
     private static void handleServerMessage(String messageString) {
-        logger.trace("Received message: {}", messageString);
+        new Thread(() -> {
+            logger.trace("Received message: {}", messageString);
 
-        if (messageString.startsWith("{") && messageString.endsWith("}")) {
-            Json messageJson = Json.read(messageString);
-            logger.trace("Parsed JSON message: {}", messageJson);
+            if (messageString.startsWith("{") && messageString.endsWith("}")) {
+                Json messageJson = Json.read(messageString);
+                String uuid = getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
+                String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
+                MDC.put(X_CORRELATION_ID, xCorrelationId);
+                logger.trace("Parsed JSON message: {}", messageJson);
 
-            String apiName = JsonUtil.getStringFromJson(messageJson, "api", "");
+                String apiName = JsonUtil.getStringFromJson(messageJson, "api", "");
 
-            Runnable task = () -> {
                 Json result = Json.object().set("error", "api not found");
 
                 if (!apiName.isEmpty()) {
                     ApiCommands api = apiMap.get(apiName);
-                    Json jsonCommand = messageJson.get("jsonCommand");
+                    MDC.put(ENDPOINT, apiName);
+                    Json jsonCommand = messageJson.get("jcmd");
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);
@@ -167,14 +171,16 @@ public class CSLIDSMainClient {
 
                 Json resultMessageJson = Json.object()
                         .set("uuid", messageJson.get("uuid"))
+                        .set(X_CORRELATION_ID, xCorrelationId)
                         .set("result", result);
 
                 logger.trace("Sending result: {}", resultMessageJson);
                 clientEndPoint.sendMessage("res:" + resultMessageJson);
-            };
-
-            new Thread(task).start();
-        }
+                MDC.remove(COMMAND);
+                MDC.remove(ENDPOINT);
+                MDC.remove(X_CORRELATION_ID);
+            }
+        }).start();
     }
 
     /**
@@ -193,9 +199,9 @@ public class CSLIDSMainClient {
 
         // Keep-alive task
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-                        if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                            clientEndPoint.sendMessage("keep alive");
-                        }
+            if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                clientEndPoint.sendMessage("keep alive");
+            }
         }, 1, 5, TimeUnit.SECONDS);
     }
 

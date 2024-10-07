@@ -6,9 +6,10 @@ import com.ucsl.interfaces.IConsole;
 import com.ucsl.interfaces.IIDSMainProcessor;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.ucsl.util.IDSUtil;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.io.File;
 
 @Getter
 @Setter
@@ -34,8 +35,8 @@ public class IDSParams {
 	boolean doNotUseCurrentIDSParamsFileName=false;
 
 	Json jCurrentVariables = Json.object();
-    private String dataDir=CSLContext.instance.getUserDir()+IDSUtil.fileSeparator+"idsdata";
-	private final String defaultDataDir=CSLContext.instance.getUserDir()+IDSUtil.fileSeparator+"idsdata";
+    private String dataDir=CSLContext.instance.getUserDir()+ File.separator+"idsdata";
+	private final String defaultDataDir=CSLContext.instance.getUserDir()+File.separator+"idsdata";
 
     int idsMode=0;
 
@@ -197,7 +198,7 @@ public class IDSParams {
 		int category=IDSDataSetManager.DETECTION_OFFLINE;
 
 		return datasetManager.getDirOfCategory(category)+
-				IDSUtil.fileSeparator+
+				File.separator+
 				datasetManager.getCurrentdataSetOfCategory(category);
 	}
 
@@ -205,7 +206,7 @@ public class IDSParams {
 		int category=IDSDataSetManager.RECORDING;
 
 		return datasetManager.getDirOfCategory(category)+
-				IDSUtil.fileSeparator+
+				File.separator+
 				datasetManager.getCurrentdataSetOfCategory(category);
 	}
 
@@ -213,7 +214,7 @@ public class IDSParams {
 		int category=IDSDataSetManager.LEARNING;
 
 		String dir= datasetManager.getDirOfCategory(category)+
-				IDSUtil.fileSeparator+
+				File.separator+
 				datasetManager.getCurrentdataSetOfCategory(category);
 		return dir;
 	}
@@ -237,9 +238,9 @@ public class IDSParams {
 		dir=clean(dir);
 
 		if (dir.startsWith(".")) dir =dir.substring(1);
-		if (dir.startsWith(IDSUtil.fileSeparator)) dir =dir.substring(1);
+		if (dir.startsWith(File.separator)) dir =dir.substring(1);
 
-		return getDataDir()+IDSUtil.fileSeparator+dir;
+		return getDataDir()+File.separator+dir;
 	}
 
 	public void initFromJson(Json j, String dataDir, boolean testParam, boolean doNotUseCurrentIDSParamsFileName ) {

@@ -137,8 +137,8 @@ public class CSLFlowManager {
     }
 
     public void startListener() {
-        String ip = CSLContext.instance.getCslUDPServer().getCurrentIPForUCP();
-        int port = CSLContext.instance.getCslUDPServer().getCurrentPortForUCP();
+        String ip = CSLContext.instance.getCslUDPServer().getCurrentIPForUDP();
+        int port = CSLContext.instance.getCslUDPServer().getCurrentPortForUDP();
 
         /**
          * The initial capacity for the blocking collection needs to be fine tuned

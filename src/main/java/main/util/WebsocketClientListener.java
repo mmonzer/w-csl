@@ -14,7 +14,6 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
-import com.csl.logger.CSLLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +50,7 @@ public class WebsocketClientListener {
 			
 		} catch (URISyntaxException ex) {
 			System.err.println("URISyntaxException exception: " + s);
-			CSLLogger.instance.error("URISyntaxException exception: " + s);
+			logger.error("URISyntaxException exception: " + s);
 			
 		}
 
@@ -79,7 +78,7 @@ public class WebsocketClientListener {
 			container.connectToServer(this, endpointURI);
 		} catch (Exception e) {
 			System.err.println("Cannot connect to "+endpointURI);
-			CSLLogger.instance.error("Cannot connect to "+endpointURI);
+			logger.error("Cannot connect to "+endpointURI);
 		}
 	}
 

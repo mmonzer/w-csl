@@ -21,16 +21,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class CSLWebSocketForJcmd {
 
-	private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmd.class);
-	private static final String RESPONSE = "response";
+    private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmd.class);
+    private static final String RESPONSE = "response";
+    public static final String ID = "uuid";
+    public static final String X_CORRELATION_ID = "X-Correlation-ID";
+    public static final String ENDPOINT = "endpoint";
+    public static final String COMMAND = "command";
     public static long TIME_OUT = 60000;
 
     public static String WEB_SOCKET_CMD = "/cmd";
 
-    private static long uuidCounter = 0;
+    public static long uuidCounter = 0;
 
     // Concurrent map to manage WebSocket sessions by API name
-    static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
+    static Map<String,Session> sessionMap = new ConcurrentHashMap<>();
 
     // Map to keep track of pending messages and their status
     static Map<String, Json> pendingMessages = new HashMap<>();
@@ -43,7 +47,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Checks if the debug level is high enough to enable debug logging.
-     * 
+     *
      * @return true if debug level is greater than 1.
      */
     public static boolean isDebug() {
@@ -53,7 +57,7 @@ public class CSLWebSocketForJcmd {
     /**
      * Adds a new user session associated with a specific API name.
      * If a session already exists for the user, it will be closed and replaced.
-     * 
+     *
      * @param name    The API name (user) associated with the session.
      * @param session The WebSocket session to be added.
      */
@@ -77,7 +81,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Broadcasts a JSON message from one user to all connected users.
-     * 
+     *
      * @param name The API name of the sender.
      * @param json The JSON message to broadcast.
      */
@@ -102,7 +106,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Generates a unique UUID for each message.
-     * 
+     *
      * @return A unique UUID as a long value.
      */
 	public static long getUuid() {
@@ -113,7 +117,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Adds an API to the session map, associating it with a user session.
-     * 
+     *
      * @param apiName The API name to add.
      * @param user    The session associated with the API name.
      */
@@ -123,7 +127,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Removes a user session from the session map.
-     * 
+     *
      * @param user The session to be removed.
      */
 	public static void removeUser(Session user) {
@@ -142,18 +146,19 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Executes a Jcmd command, sending the command to the appropriate API and waiting for the response.
-     * 
+     *
      * @param apiName The API name to send the command to.
      * @param jsonCmd    The JSON command to execute.
      * @return The JSON response from the API.
      */
-	public static Json execJCmd(String apiName, Json jsonCmd) {
+	public static Json execJCmd(String apiName, Json jsonCmd, String xCorrelationId) {
 		startTimeOutDetector();
 
         Json fullMessage = Json.object();
         String uuid = String.valueOf(getUuid());
 
-        fullMessage.set("uuid", uuid);
+        fullMessage.set(ID, uuid);
+        fullMessage.set(X_CORRELATION_ID, xCorrelationId);
         fullMessage.set("api", apiName);
         fullMessage.set("jsonCommand", jsonCmd);
 
@@ -165,9 +170,10 @@ public class CSLWebSocketForJcmd {
         return waitForResponse(uuid, fullMessage);
     }
 
+
     /**
      * Processes an incoming WebSocket message, matching it to a pending command and storing the response.
-     * 
+     *
      * @param message The incoming WebSocket message as a string.
      */
     public static void messageArrived(String message) {
@@ -214,7 +220,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Waits for a response to the given command until it arrives or times out.
-     * 
+     *
      * @param uuid        The UUID of the command.
      * @param fullMessage The full message containing the command.
      * @return The response JSON object, or a timeout error if the response is not received in time.
@@ -239,7 +245,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Sends a message over the given session and handles success or failure.
-     * 
+     *
      * @param session The WebSocket session to send the message through.
      * @param message The message to send.
      */
@@ -263,7 +269,7 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Delays the broadcast by 1 second to allow reconnection attempts.
-     * 
+     *
      * @param name The API name to wait for.
      */
     private static void delayForReconnect(String name) {

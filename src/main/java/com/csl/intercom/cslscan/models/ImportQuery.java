@@ -2,6 +2,8 @@ package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.ImportQueryStatus;
 import com.ucsl.json.Json;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,9 @@ public class ImportQuery {
     private ImportQueryStatus status;
     private OffsetDateTime startTime;
     String message;
+    @Getter
+    @Setter
+    String xCorrelationId="";  // TODO: need cleaning
 
     private ImportQuery(UUID id, ImportQueryStatus status, String message) {
         this.id = id;

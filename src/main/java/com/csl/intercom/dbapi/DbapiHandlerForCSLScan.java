@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi;
 import com.csl.autocrypt.enums.AutocryptConstants.Common;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
+import com.csl.intercom.cslscan.ApiHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
@@ -43,6 +44,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.ucsl.json.Json.object;
+
 import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
 
 /**
@@ -73,24 +76,26 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @param deletedItems The list of CPE Items to remove in DB-API.
      */
     private void deleteCpeItemsFromDbapi(List<CpeItem> deletedItems) {
-        Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(CpeItem::getMongoEntityId).toArray()));
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_CPE_ITEMS.getEndpoint())
-                .header(HttpHeader.CONTENT_TYPE, "application/json")
-                .content(new StringContentProvider(contents.toString()));
+        Json contents = object("mongo_entity_ids", Json.array(deletedItems.stream().map(CpeItem::getMongoEntityId).toArray()));
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_CPE_ITEMS.getEndpoint())
+//                .header(HttpHeader.CONTENT_TYPE, "application/json")
+//                .content(new StringContentProvider(contents.toString()));
         try {
-            request.send();
+//            request.send();
+            createAndSendRequest(HttpMethod.POST.toString(),  DbapiEndpointForCSLScan.DELETE_CPE_ITEMS.getEndpoint(), null, contents);
         } catch (Exception e) {
             logger.error("Could not delete the CPE Items from DB-API.", e);
         }
     }
 
     private void deleteMicrosoftKbsFromDbapi(List<MicrosoftKB> deletedItems) {
-        Json contents = Json.object("mongo_entity_ids", Json.array(deletedItems.stream().map(MicrosoftKB::getMongoEntityId).toArray()));
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_MICROSOFT_KBS.getEndpoint())
-                .header(HttpHeader.CONTENT_TYPE, "application/json")
-                .content(new StringContentProvider(contents.toString()));
+        Json contents = object("mongo_entity_ids", Json.array(deletedItems.stream().map(MicrosoftKB::getMongoEntityId).toArray()));
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DELETE_MICROSOFT_KBS.getEndpoint())
+//                .header(HttpHeader.CONTENT_TYPE, "application/json")
+//                .content(new StringContentProvider(contents.toString()));
         try {
-            request.send();
+//            request.send();
+            createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.DELETE_MICROSOFT_KBS.getEndpoint(), null, contents);
         } catch (Exception e) {
             logger.error("Could not delete the Microsoft KBs from DB-API.", e);
         }
@@ -127,21 +132,22 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             Json deviceCpeItemsArray = Json.array(
                     deviceCpeItems.getValue().stream().map(CpeItem::serializeForDbapi).toArray()
             );
-            cpeItemsArray.add(Json.object(
+            cpeItemsArray.add(object(
                     "device", deviceCpeItems.getKey(),
                     "discovered_cpe_list", deviceCpeItemsArray
             ));
         }
 
-        Json requestContents = Json.object(
+        Json requestContents = object(
                 "progress", scan.getProgress(),
                 "event_id", scan.getDbapiId(),
                 "discovered_cpe_dict_arr", cpeItemsArray,
                 "has_more", hasMore
         );
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_CPE_ITEMS)
-                .content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_CPE_ITEMS)
+//                .content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.CREATE_CPE_ITEMS.getEndpoint(), null, requestContents );
         if (response.getStatus() != 200) {
             throw new Exception("Error sending CpeItem Batch to dbapi: got unexpected status " + response.getStatus());
         }
@@ -183,20 +189,21 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             Json deviceKBsArray = Json.array(
                     deviceKBs.getValue().stream().map(MicrosoftKB::serializeForDbapi).toArray()
             );
-            KBsArray.add(Json.object(
+            KBsArray.add(object(
                     "device", deviceKBs.getKey(),
                     "discovered_kb_list", deviceKBsArray
             ));
         }
 
-        Json requestContents = Json.object(
+        Json requestContents = object(
                 "progress", scan.getProgress(),
                 "event_id", scan.getDbapiId(),
                 "discovered_kb_dict_arr", KBsArray
         );
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_MICROSOFT_KBS)
-                .content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_MICROSOFT_KBS)
+//                .content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.CREATE_MICROSOFT_KBS.getEndpoint(), null, requestContents );
         if (response.getStatus() != 200) {
             throw new Exception("Error sending KBs Batch to dbapi: got unexpected status " + response.getStatus());
         }
@@ -236,8 +243,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws Exception If it was not possible to fetch from DB-API or the format was not recognised.
      */
     private OffsetDateTime getLastUpdateDateAt(DbapiEndpointForCSLScan endpoint) throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, endpoint);
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.GET, endpoint);
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), endpoint.getEndpoint(), null, null );
         if (response.getContentAsString().isEmpty()) { return DbapiUtilsForCSLScan.dbapiDateToLocal(Common.MIN_DATE);}
         Json responseContents = Json.read(response.getContentAsString());
         String lastUpdatedDateString;
@@ -272,13 +280,19 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      */
     public List<Device> getDevicesSince(OffsetDateTime date) throws Exception {
         OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DEVICES);
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DEVICES);
+//        if (dateUtc != null) {
+//            request.param("updated_at__gt", dateUtc.toString());
+//        }
+//        Json responseJson = Json.read(request.send().getContentAsString());
+        Json params = object();
         if (dateUtc != null) {
-            request.param("updated_at__gt", dateUtc.toString());
+            params.set("updated_at__gt", dateUtc.toString());
         }
-        Json response = Json.read(request.send().getContentAsString());
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DEVICES.getEndpoint(), params, null);
+        Json responseJson = Json.read(response.getContentAsString());
 
-        List<Device> devices = response.asJsonList().stream()
+        List<Device> devices = responseJson.asJsonList().stream()
                 .map(Device::fromJson)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -294,12 +308,18 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      */
     public List<Connection> getConnectionsSince(OffsetDateTime date, List<ConnectionProtocol> protocols) throws Exception {
         OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS);
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS);
+//        if (dateUtc != null) {
+//            request.param("updated_at__gt", dateUtc.toString());
+//        }
+//        Json response = Json.read(request.send().getContentAsString());
+        Json params = object();
         if (dateUtc != null) {
-            request.param("updated_at__gt", dateUtc.toString());
+            params.set("updated_at__gt", dateUtc.toString());
         }
-        Json response = Json.read(request.send().getContentAsString());
-        return response.asJsonList().stream()
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), params, null);
+        Json responseJson = Json.read(response.getContentAsString());
+        return responseJson.asJsonList().stream()
                 .map(json -> Connection.fromDbapiJson(json, protocols))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -318,19 +338,25 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         boolean hasMore = true;
         int offset = 0;
         while (hasMore) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DELETED_DEVICES)
-                    .param("offset", String.valueOf(offset))
-                    .param("limit", String.valueOf(this.maxPageSize));
+//            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DELETED_DEVICES)
+//                    .param("offset", String.valueOf(offset))
+//                    .param("limit", String.valueOf(this.maxPageSize));
+//            if (dateUtc != null) {
+//                request.param("deleted_date__gt", dateUtc.toString());
+//            }
+//            Json response = Json.read(request.send().getContentAsString());
+            Json params = object("offset", String.valueOf(offset), "limit", String.valueOf(this.maxPageSize));
             if (dateUtc != null) {
-                request.param("deleted_date__gt", dateUtc.toString());
+                params.set("deleted_date__gt", dateUtc.toString());
             }
-            Json response = Json.read(request.send().getContentAsString());
-            for (Json deletedDevice : response.get("results").asJsonList()) {
+            ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DELETED_DEVICES.getEndpoint(), params, null);
+            Json responseJson = Json.read(response.getContentAsString());
+            for (Json deletedDevice : responseJson.get("results").asJsonList()) {
                 String uuid = deletedDevice.get("object_id").asString();
                 OffsetDateTime deletedDate = DbapiUtilsForCSLScan.dbapiDateToLocal(deletedDevice.get("deleted_at").asString());
                 deletedDevices.add(new Pair<>(uuid, deletedDate));
             }
-            hasMore = !response.get("next").isNull();
+            hasMore = !responseJson.get("next").isNull();
             offset += this.maxPageSize;
         }
         return deletedDevices;
@@ -347,18 +373,30 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedCpeItems = new ArrayList<>();
 
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_DELETED_CPE_ITEMS);
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_DELETED_CPE_ITEMS);
+//        if (offset > 0) {
+//            request.param("offset", String.valueOf(offset));
+//        }
+//        if (limit > 0) {
+//            request.param("limit", String.valueOf(limit));
+//        }
+//        if (dateUtc != null) {
+//            request.param("deleted_date__gt", dateUtc.toString());
+//        }
+//        ContentResponse response = request.send();
+
+        Json params = object();
         if (offset > 0) {
-            request.param("offset", String.valueOf(offset));
+            params.set("offset", String.valueOf(offset));
         }
         if (limit > 0) {
-            request.param("limit", String.valueOf(limit));
+            params.set("limit", String.valueOf(limit));
         }
         if (dateUtc != null) {
-            request.param("deleted_date__gt", dateUtc.toString());
+            params.set("deleted_date__gt", dateUtc.toString());
         }
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_DELETED_CPE_ITEMS.getEndpoint(), params, null );
 
-        ContentResponse response = request.send();
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code " + response.getStatus());
         }
@@ -387,18 +425,30 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
         List<Pair<String, OffsetDateTime>> deletedMicrosoftKbs = new ArrayList<>();
 
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_DELETED_MICROSOFT_KBS);
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_DELETED_MICROSOFT_KBS);
+//        if (offset > 0) {
+//            request.param("offset", String.valueOf(offset));
+//        }
+//        if (limit > 0) {
+//            request.param("limit", String.valueOf(limit));
+//        }
+//        if (dateUtc != null) {
+//            request.param("deleted_date__gt", dateUtc.toString());
+//        }
+//        ContentResponse response = request.send();
+
+        Json params = object();
         if (offset > 0) {
-            request.param("offset", String.valueOf(offset));
+            params.set("offset", String.valueOf(offset));
         }
         if (limit > 0) {
-            request.param("limit", String.valueOf(limit));
+            params.set("limit", String.valueOf(limit));
         }
         if (dateUtc != null) {
-            request.param("deleted_date__gt", dateUtc.toString());
+            params.set("deleted_date__gt", dateUtc.toString());
         }
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_DELETED_MICROSOFT_KBS.getEndpoint(),params, null );
 
-        ContentResponse response = request.send();
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code " + response.getStatus());
         }
@@ -429,10 +479,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         if (uuids == null || uuids.isEmpty()) {
             return devices;
         }
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DEVICES);
-        request.param("uuid", String.join(",", uuids));
-        Json response = Json.read(request.send().getContentAsString());
-        response.asJsonList().stream()
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DEVICES);
+//        request.param("uuid", String.join(",", uuids));
+//        Json response = Json.read(request.send().getContentAsString());
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DEVICES.getEndpoint(), object("uuid", String.join(",", uuids)), null );
+        Json responseJson = Json.read(response.getContentAsString());
+        responseJson.asJsonList().stream()
                 .map(Device::fromJson)
                 .filter(Objects::nonNull)
                 .forEach(devices::add);
@@ -451,14 +503,13 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public List<Connection> fetchConnections(List<String> ids, List<ConnectionProtocol> protocols) throws ExecutionException, InterruptedException, TimeoutException {
         List<Connection> connections = new ArrayList<>();
         for (String id : ids) {
-            Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.CONNECTIONS);
-            request.param("id", id);
-            Json response = Json.read(request.send().getContentAsString());
+            ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), object("id", String.valueOf(id)), null);
+            Json responseJson = Json.read(response.getContentAsString());
             Connection connection;
-            if (response.isArray()) {
-                connection = Connection.fromDbapiJson(response.at(0), protocols);
+            if (responseJson.isArray()) {
+                connection = Connection.fromDbapiJson(responseJson.at(0), protocols);
             } else {
-                connection = Connection.fromDbapiJson(response, protocols);
+                connection = Connection.fromDbapiJson(responseJson, protocols);
             }
             if (connection != null) {
                 connections.add(connection);
@@ -477,8 +528,13 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws TimeoutException     If the connection with DB-API times out.
      */
     public List<ConnectionProtocol> fetchDiscoveryProtocols() throws ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS);
-        return Json.read(request.send().getContentAsString()).asJsonList().stream()
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS);
+//        return Json.read(request.send().getContentAsString()).asJsonList().stream()
+//                .map(ConnectionProtocol::fromJson)
+//                .collect(Collectors.toList());
+
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS.getEndpoint(), null, null );
+        return Json.read(response.getContentAsString()).asJsonList().stream()
                 .map(ConnectionProtocol::fromJson)
                 .collect(Collectors.toList());
     }
@@ -496,16 +552,17 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws Exception If the creation failed.
      */
     public void createDiscoveryProtocol(EntityHttpConnection entityHttpConnection) throws Exception {
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS);
-        Json requestContents = Json.object(
+        Json requestContents = object(
                 ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
                 ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
                 ConnectionProtocolField.DEFAULT_PORT.dbapiName(), 443,
                 ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid(),
                 ConnectionProtocolField.CONNECTION_TEMPLATE_DETAILS.dbapiName(), entityHttpConnection.serializeForDbapi()
         );
-        request.content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS);
+//        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS.getEndpoint(), null, requestContents );
         if (response.getStatus() >= 400) {
             throw new Exception("Error creating discovery protocol: got unexpected status " + response.getStatus());
         }
@@ -524,16 +581,17 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             createDiscoveryProtocol(entityHttpConnection);
         } else {
             int protocolId = protocol.getId();
-            Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
-            Json requestContents = Json.object(
+            Json requestContents = object(
                     ConnectionProtocolField.NAME.dbapiName(), entityHttpConnection.getName(),
                     ConnectionProtocolField.IS_DYNAMIC.dbapiName(), true,
                     ConnectionProtocolField.DEFAULT_PORT.dbapiName(), 443,
                     ConnectionProtocolField.CONNECTION_TEMPLATE_ID.dbapiName(), entityHttpConnection.getUuid(),
                     ConnectionProtocolField.CONNECTION_TEMPLATE_DETAILS.dbapiName(), entityHttpConnection.serializeForDbapi()
             );
-            request.content(new StringContentProvider(requestContents.toString()), "application/json");
-            ContentResponse response = request.send();
+//            Request request = createDbapiRequest(HttpMethod.PUT, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
+//            request.content(new StringContentProvider(requestContents.toString()), "application/json");
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(HttpMethod.PUT.toString(), String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId), null, requestContents );
             if (response.getStatus() >= 400) {
                 throw new Exception("Error updating discovery protocol: got unexpected status " + response.getStatus());
             }
@@ -550,8 +608,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         ConnectionProtocol protocol = getDiscoveryProtocolByTemplateId(uuid);
         if (protocol != null) {
             int protocolId = protocol.getId();
-            Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
-            ContentResponse response = request.send();
+//            Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId));
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(HttpMethod.DELETE.toString(), String.format(DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS.getEndpoint(), protocolId), null, null );
             if (response.getStatus() >= 400) {
                 throw new Exception("Error deleting discovery protocol: got unexpected status " + response.getStatus());
             }
@@ -569,14 +628,16 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public ConnectionProtocol getDiscoveryProtocolByTemplateId(String id) {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
-        request.param("connection_template_id", id);
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID);
+//        request.param("connection_template_id", id);
         try {
-            Json response = Json.read(request.send().getContentAsString());
-            if (response.isArray()) {
-                return ConnectionProtocol.fromJson(response.at(0));
+//            Json responseJson = Json.read(request.send().getContentAsString());
+            ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS_DETAILS_BY_TEMPLATE_ID.getEndpoint(), Json.object("connection_template_id", id), null);
+            Json responseJson = Json.read(response.getContentAsString());
+            if (responseJson.isArray()) {
+                return ConnectionProtocol.fromJson(responseJson.at(0));
             } else {
-                return ConnectionProtocol.fromJson(response);
+                return ConnectionProtocol.fromJson(responseJson);
             }
         } catch (Exception e) {
             logger.error("Could not get discovery protocol by template id.", e);
@@ -586,28 +647,31 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
     // region External discovery
     public void createOrUpdateExternalConnectionInfoTemplates(List<ExternalConnectionInfoTemplate> externalConnectionInfoTemplates) throws DbapiUnexpectedStatusCodeException, ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_TEMPLATES_CREATE_OR_UPDATE);
         Json requestContents = Json.array(externalConnectionInfoTemplates.stream().map(ExternalConnectionInfoTemplate::serializeForDbapi).toArray());
-        request.content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_TEMPLATES_CREATE_OR_UPDATE);
+//        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_TEMPLATES_CREATE_OR_UPDATE.getEndpoint(), null, requestContents );
         if (response.getStatus() >= 400) {
             throw new DbapiUnexpectedStatusCodeException("Could not create or update external connection info templates.", response.getStatus());
         }
     }
 
     public void createOrUpdateExternalConnectionInfos(List<ExternalConnectionInfo> externalConnectionInfos) throws DbapiUnexpectedStatusCodeException, ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_CREATE_OR_UPDATE);
         Json requestContents = Json.array(externalConnectionInfos.stream().map(ExternalConnectionInfo::serializeForDbapi).toArray());
-        request.content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_CREATE_OR_UPDATE);
+//        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_CREATE_OR_UPDATE.getEndpoint(), null, requestContents );
         if (response.getStatus() >= 400) {
             throw new DbapiUnexpectedStatusCodeException("Could not create or update external connection infos.", response.getStatus());
         }
     }
 
     public void deleteExternalConnectionInfo(String id) throws DbapiUnexpectedStatusCodeException, ExecutionException, InterruptedException, TimeoutException {
-        Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_DETAILS.getEndpoint(), id));
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.DELETE, String.format(DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_DETAILS.getEndpoint(), id));
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.DELETE.toString(), String.format(DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_DETAILS.getEndpoint(), id), null, null );
         if (response.getStatus() >= 400) {
             throw new DbapiUnexpectedStatusCodeException("Could not delete external connection info.", response.getStatus());
         }
@@ -635,12 +699,14 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public int createExternalDeviceScanEvent(ExternalScan scan) throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CREATE_EVENT);
-        Json requestContents = Json.object(
+        Json requestContents = object(
                 "started_at", DbapiUtilsForCSLScan.localDateToDbapi(scan.getCreatedAt()).toString()
         );
-        request.content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CREATE_EVENT);
+//        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CREATE_EVENT.getEndpoint(), null, requestContents );
+
         if (response.getStatus() >= 400) {
             throw new DbapiUnexpectedStatusCodeException("Could not create external device scan event.", response.getStatus());
         }
@@ -662,29 +728,35 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 .map(ExternalDiscoveredDevice::serializeForDbapi)
                 .filter(Objects::nonNull)
                 .forEach(serializedDevices::add);
-        Json requestContents = Json.object(
+        Json requestContents = object(
                 "event_id", scan.getDbapiId(),
                 "discovered_device_dict_arr", serializedDevices
         );
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CREATE);
-        request.content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CREATE);
+//        request.content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CREATE.getEndpoint(), null, requestContents );
+
         if (response.getStatus() >= 400) {
             throw new DbapiUnexpectedStatusCodeException("Could not send external discovered devices to DB-API.", response.getStatus());
         }
     }
 
     public void clearExternalDiscoveredDevices() throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CLEAR);
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CLEAR);
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.EXTERNAL_DISCOVERED_DEVICES_CLEAR.getEndpoint(), null, null );
+
         if (response.getStatus() != 200) {
             throw new DbapiUnexpectedStatusCodeException("Could not clear external discovered devices.", response.getStatus());
         }
     }
 
     public void clearExternalConnectionInfos() throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_CLEAR);
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_CLEAR);
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.EXTERNAL_CONNECTION_INFO_CLEAR.getEndpoint(), null, null );
+
         if (response.getStatus() != 200) {
             throw new DbapiUnexpectedStatusCodeException("Could not clear external connection infos.", response.getStatus());
         }
@@ -698,12 +770,14 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @return The id attributed by DB-API to the scan object.
      */
     public int notifyScanStarted(OffsetDateTime startDate) {
-        Json params = Json.object("started_at", DbapiUtilsForCSLScan.localDateToDbapi(startDate).toString());
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.SCAN_EVENT_CREATION)
-                .header(HttpHeader.CONTENT_TYPE, "application/json")
-                .content(new StringContentProvider(params.toString()));
+        Json params = object("started_at", DbapiUtilsForCSLScan.localDateToDbapi(startDate).toString());
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.SCAN_EVENT_CREATION)
+//                .header(HttpHeader.CONTENT_TYPE, "application/json")
+//                .content(new StringContentProvider(params.toString()));
         try {
-            ContentResponse response = request.send();
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.SCAN_EVENT_CREATION.getEndpoint(), null, params );
+
             return JsonUtil.getIntFromJson(Json.read(response.getContentAsString()), "id", 0);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             return 0;
@@ -733,8 +807,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         if (!scan.isFinished()) return;
         if (scan.getDbapiId() <= 0) return;
 
-        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
-        Json params = Json.object("ended_at", DbapiUtilsForCSLScan.localDateToDbapi(scan.getEndDate()).toString());
+        Json params = object("ended_at", DbapiUtilsForCSLScan.localDateToDbapi(scan.getEndDate()).toString());
         FinishedScanStatus status;
         if (scan.isSuccess()) {
             status = FinishedScanStatus.FINISHED_SUCCESS;
@@ -748,8 +821,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         if (scan.getDescription() != null) {
             params.set("description", scan.getDescription());
         }
-        request.content(new StringContentProvider(params.toString()));
-        ContentResponse response = request.send();
+//        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
+//        request.content(new StringContentProvider(params.toString()));
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(ApiHandler.PATCH, String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()), null, params);
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code: " + response.getStatus());
         }
@@ -765,13 +840,16 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws Exception            If received an unexpected HTTP status code (i.e. != 200) or if the JSON was malformed.
      */
     public void notifySynchronisationEnded(ScanEntity scan) throws Exception {
-        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
-        Json params = Json.object(
+        Json params = object(
                 "is_synchronization_ended", true
         );
 
-        request.content(new StringContentProvider(params.toString()));
-        ContentResponse response = request.send();
+//        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()));
+//        request.content(new StringContentProvider(params.toString()));
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(ApiHandler.PATCH, String.format(DbapiEndpointForCSLScan.SCAN_EVENT_UPDATE.getEndpoint(), scan.getDbapiId()), null, params);
+
+
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code: " + response.getStatus());
         }
@@ -781,9 +859,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * Send a request to DB-API to inform it the current scan provided no new CPE Item.
      */
     public void notifyNoNewCpe() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.NO_NEW_CPE_ITEM);
+//        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.NO_NEW_CPE_ITEM);
         try {
-            request.send();
+//            request.send();
+            createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.NO_NEW_CPE_ITEM.getEndpoint(), null, null);
         } catch (Exception e) {
             logger.error("Could not send the no new CPE Item notification to DB-API.", e);
         }
@@ -793,9 +872,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * Cancel all scan events in DB-API.
      */
     public void cancelAllScans() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EVENTS_CANCEL_ALL);
+//        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.EVENTS_CANCEL_ALL);
         try {
-            request.send();
+//            request.send();
+            createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.EVENTS_CANCEL_ALL.getEndpoint(), null, null);
         } catch (Exception e) {
             logger.error("Could not send the cancel all scans notification to DB-API.", e);
         }
@@ -807,9 +887,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @return The organization name. Defaults to "None" if the request failed.
      */
     public String getOrganizationName() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_ORGANIZATION_NAME);
+//        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_ORGANIZATION_NAME);
         try {
-            ContentResponse response = request.send();
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_ORGANIZATION_NAME.getEndpoint(), null, null );
+
             return response.getContentAsString();
         } catch (Exception e) {
             logger.warn("Could not get the organization name from DB-API.", e);
@@ -818,9 +900,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public String getMqttTopicPrefix() {
-        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_MQTT_TOPIC_PREFIX);
+//        Request request = this.createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.GET_MQTT_TOPIC_PREFIX);
         try {
-            ContentResponse response = request.send();
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_MQTT_TOPIC_PREFIX.getEndpoint(), null, null );
+
             String result = response.getContentAsString();
             if (result == null || result.isEmpty()) {
                 return "None";
@@ -846,12 +930,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return initRequestWithHeaders(method.toString(), endpoint);
     }
 
-    private Request createDbApiRequestWithCustomHeaders(String method, String endpoint, String contentType) {
-        setCustomHeaders(contentType);
+    private Request createDbApiRequestWithCustomContentType(String method, String endpoint, String contentType) {
         Request request =  initRequest(method, createUriFrom(endpoint), httpClient);
-        for (Map.Entry<HttpHeader, String> entry : headers.entrySet()) {
-            request.header(entry.getKey(), entry.getValue());
-        }
+
+        addHeadersToRequest(headers, request);
+        request.header(HttpHeader.CONTENT_TYPE, contentType);
+
         return request;
     }
 
@@ -886,7 +970,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @return The crafted {@link Request}.
      */
     private Request createDbapiPatchRequest(String endpoint) {
-        return initRequestWithHeaders("PATCH", endpoint);
+        return initRequestWithHeaders(ApiHandler.PATCH, endpoint);
     }
 
     /**
@@ -1139,7 +1223,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 ? JsonApiResponse.success()
                 : JsonApiResponse.error(
                 "Failed to send updated devices to CSL-Scan",
-                Json.object("failed_devices", Json.array(failedDevices.toArray()))
+                object("failed_devices", Json.array(failedDevices.toArray()))
         );
     }
 
@@ -1349,29 +1433,32 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public void sendCommandsList(List<IApiCommands> apiCommandsList) throws Exception {
-        Json requestContents = Json.object();
+        Json requestContents = object();
         apiCommandsList.stream()
                 .map(apiCommands -> new Pair<>(apiCommands.getName(), apiCommands.getListOfCommandPrivileges()))
                 .filter(Predicate.not(pair -> pair.getSecond().isEmpty()))
                 .map(pair -> pair.map((name, map) -> {
-                    Json result = Json.object();
+                    Json result = object();
                     map.forEach((key, value) -> result.set(key, value.toString()));
                     return new Pair<>(name, result);
                 }))
                 .forEach(pair -> requestContents.set(pair.getFirst(), pair.getSecond()));
         logger.debug("Sending commands to DB-API: " + requestContents.toString());
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.JAVACOMM_SEND_COMMANDS)
-                .content(new StringContentProvider(requestContents.toString()), "application/json");
-        ContentResponse response = request.send();
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.JAVACOMM_SEND_COMMANDS)
+//                .content(new StringContentProvider(requestContents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.JAVACOMM_SEND_COMMANDS.getEndpoint(), null, requestContents );
+
         if (response.getStatus() != 200) {
             throw new Exception("Error sending commands to dbapi: got unexpected status " + response.getStatus());
         }
     }
 
     public List<HttpTemplateImportNotification> getAvailableImportTasks() {
-        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.FILE_ACTION_STATUS_AVAILABLE);
+//        Request request = createDbapiRequest(HttpMethod.GET, DbapiEndpointForCSLScan.FILE_ACTION_STATUS_AVAILABLE);
         try {
-            ContentResponse response = request.send();
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.FILE_ACTION_STATUS_AVAILABLE.getEndpoint(), null, null );
             if (response.getStatus() >= 400) {
                 logger.warn("Unable to fetch available import tasks from DB-API: Unexpected status code: {}", response.getStatus());
                 return new ArrayList<>();
@@ -1388,8 +1475,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
     }
 
-    public Path downloadHttpTemplatesBsonFile(HttpTemplateImportNotification query) throws ExecutionException, InterruptedException, TimeoutException {
-        Json contents = Json.object("file_action_status_id", query.getId());
+    synchronized public Path downloadHttpTemplatesBsonFile(HttpTemplateImportNotification query) throws ExecutionException, InterruptedException, TimeoutException {
+        Json contents = object("file_action_status_id", query.getId());
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.DOWNLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint());
         // create contentProvider with the json contents
 
@@ -1413,8 +1500,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
     }
 
-    public void uploadHttpTemplatesBsonFile(ExportQuery exportQuery) {
-        // Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE);
+    synchronized public void uploadHttpTemplatesBsonFile(ExportQuery exportQuery) {
         MultiPartContentProvider multiPart = new MultiPartContentProvider();
         try {
             Path filePath = fileStorageService.getFilePath(exportQuery.getFilename());
@@ -1427,8 +1513,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return;
         }
         multiPart.close();
-        Request request = createDbApiRequestWithCustomHeaders("POST", DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint(), multiPart.getContentType());
+        Request request = createDbApiRequestWithCustomContentType("POST", DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint(), multiPart.getContentType());
         request.content(multiPart);
+        // TODO : this multipart request must be sent with a synchronized method, because the x-correlation-id may cause problems
         try {
             ContentResponse response = request.send();
             if (response.getStatus() >= 400) {
@@ -1440,11 +1527,13 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public void notifyImportStarted(int id, ImportQuery importQuery) {
-        Json contents = Json.object("status", FileActionStatus.FILE_PROCESSING.getValue());
-        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
-        request.content(new StringContentProvider(contents.toString()), "application/json");
+        Json contents = object("status", FileActionStatus.FILE_PROCESSING.getValue());
+//        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+//        request.content(new StringContentProvider(contents.toString()), "application/json");
         try {
-            ContentResponse response = request.send();
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(ApiHandler.PATCH,String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id), null, contents);
+
             if (response.getStatus() != 200) {
                 logger.warn("Unexpected status code: {}", response.getStatus());
             }
@@ -1457,20 +1546,21 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         Json contents;
         switch (importQuery.getStatus()) {
             case SUCCESS:
-                contents = Json.object("status", FileActionStatus.SUCCEEDED.getValue());
+                contents = object("status", FileActionStatus.SUCCEEDED.getValue());
                 break;
             case ERROR:
                 // Add an error status
-                contents = Json.object("status", FileActionStatus.FAILED.getValue());
+                contents = object("status", FileActionStatus.FAILED.getValue());
                 break;
             default:
                 logger.warn("Unknown import status: {}", importQuery.getStatus());
                 return;
         }
-        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
-        request.content(new StringContentProvider(contents.toString()), "application/json");
+//        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+//        request.content(new StringContentProvider(contents.toString()), "application/json");
         try {
-            ContentResponse response = request.send();
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(ApiHandler.PATCH,String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id), null, contents);
             if (response.getStatus() != 200) {
                 logger.warn("Unexpected status code: {}", response.getStatus());
             }
@@ -1486,10 +1576,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @throws Exception If the request failed.
      */
     public int requestBsonExportID(ExportQuery exportQuery) throws Exception {
-        Json contents = Json.object("file_name", exportQuery.getFilename());
-        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.FILE_ACTION_STATUS_CREATE_FOR_HTTP_TEMPLATE_EXPORT);
-        request.content(new StringContentProvider(contents.toString()), "application/json");
-        ContentResponse response = request.send();
+        Json contents = object("file_name", exportQuery.getFilename());
+//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.FILE_ACTION_STATUS_CREATE_FOR_HTTP_TEMPLATE_EXPORT);
+//        request.content(new StringContentProvider(contents.toString()), "application/json");
+//        ContentResponse response = request.send();
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.FILE_ACTION_STATUS_CREATE_FOR_HTTP_TEMPLATE_EXPORT.getEndpoint(), null, contents);
         if (response.getStatus() != 200) {
             throw new Exception("Unexpected status code: " + response.getStatus());
         }
@@ -1512,20 +1603,22 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         Json contents;
         switch (exportQuery.getStatus()) {
             case SUCCESS:
-                contents = Json.object("status", FileActionStatus.SUCCEEDED.getValue());
+                contents = object("status", FileActionStatus.SUCCEEDED.getValue());
                 break;
             case ERROR:
                 // Add an error status
-                contents = Json.object("status", FileActionStatus.FAILED.getValue());
+                contents = object("status", FileActionStatus.FAILED.getValue());
                 break;
             default:
                 logger.warn("Unknown export status: {}", exportQuery.getStatus());
                 return;
         }
-        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
-        request.content(new StringContentProvider(contents.toString()), "application/json");
+//        Request request = createDbapiPatchRequest(String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id));
+//        request.content(new StringContentProvider(contents.toString()), "application/json");
         try {
-            ContentResponse response = request.send();
+//            ContentResponse response = request.send();
+            ContentResponse response = createAndSendRequest(ApiHandler.PATCH,String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id), null, contents);
+
             if (response.getStatus() != 200) {
                 logger.warn("Unexpected status code: {}", response.getStatus());
             }

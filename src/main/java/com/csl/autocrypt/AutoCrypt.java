@@ -2,17 +2,17 @@ package com.csl.autocrypt;
 
 import com.csl.autocrypt.enums.AutocryptConstants;
 import com.csl.autocrypt.services.*;
-import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.logger.CustomLogger;
+import com.csl.logger.LoggerActions;
+import com.csl.logger.LoggerInterfaces;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.eclipse.jetty.http.HttpHeader;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
@@ -37,7 +37,7 @@ public class AutoCrypt {
     @Getter
     private ApiHandlerForCSLAutoCrypt autocryptApiHandler = null;
 
-    private static final Logger logger = LoggerFactory.getLogger(AutoCrypt.class);
+    private static final CustomLogger logger = CustomLogger.getLogger(AutoCrypt.class);
 
     private IssuerSynchronizationService issuerSynchronizationService = null;
     private RoleSynchronizationService roleSynchronizationService = null;
@@ -45,15 +45,8 @@ public class AutoCrypt {
 
     public AutoCrypt(String name) {
         this.name = name;
-//        Json config = CSLContext.instance.getConfig();
-//        Json localConfig = config.get("autocrypt");
-//        moduleIp = JsonUtil.getStringFromJson(localConfig, "ip", "host.docker.internal");
-//        modulePort = JsonUtil.getIntFromJson(localConfig, "port", 8002);
         moduleIp = Config.instance.Autocrypt.getIp();
         modulePort = Config.instance.Autocrypt.getPort();
-//        Json globalConfig = config.get("global");
-//        dbIp = JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "host.docker.internal");
-//        dbApikey = JsonUtil.getStringFromJson(globalConfig, "api_key", "");
     }
 
     /**
@@ -97,25 +90,27 @@ public class AutoCrypt {
      * @param params    parameters of the request
      */
     public JsonApiResponse updateIssuerInfo(String issuerRef, Json params, Json body) {
-        logger.trace("Updating info from issuer {} with params {} and body {}", issuerRef, params, body);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Updating info from issuer {} with params {} and body {}", issuerRef, params, body);
 
         // Update issuer chez Autocrypt
-        logger.trace("Updating info from issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Updating info from issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.updateIssuerInfo(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} : Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, issuerRef, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Updating info from issuer {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ISSUER_INFO, issuerRef, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error updating issuer : " + responseFromModule.getError().toJson());
         }
-        logger.debug("Updating info from issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Updated info from issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 
         // Sync issuers
         try {
             syncIssuers();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized issuers");
         } catch (SynchronizationException e) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Updated issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
         return responseFromModule;
     }
@@ -128,26 +123,28 @@ public class AutoCrypt {
      * @param params    parameters with the path
      */
     public JsonApiResponse deleteIssuer(String issuerRef, Json body, Json params) {
-        logger.trace("Deleting issuer {} with params {} and body {}", issuerRef, params, body);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Deleting issuer {} with params {} and body {}", issuerRef, params, body);
 
         // Delete issuer in autocrypt
-        logger.trace("Deleting issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Deleting issuer {} at path {} in autocrypt ...", issuerRef, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.deleteIssuer(issuerRef, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("Deleting issuer {} at path {} in autocrypt failed", issuerRef, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Deleting issuer {} at path {} in autocrypt failed", issuerRef, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error deleting issuer : " + responseFromModule.getError().toJson());
         }
-        logger.debug("Deleting issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Deleted issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
 
         // Sync issuers
         try {
             syncIssuers();
             syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized issuers and certificates");
         } catch (SynchronizationException e) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Deleted issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Deleted issuer {} at path {}", issuerRef, params.get(Common.PATH).asString());
 
         return responseFromModule;
     }
@@ -216,7 +213,7 @@ public class AutoCrypt {
                 responseFromModule.getResult().has(Certificate.CERTIFICATE) && responseFromModule.getResult().get(Certificate.CERTIFICATE).isString()) {
             Json response = Json.object();
             // TODO : range this formating elsewhere, probably not the right place
-            response.at("Content-Type", "application/octet-stream");
+            response.at(HttpHeader.CONTENT_TYPE.toString(), "application/octet-stream");
             response.at("Content", responseFromModule.getResult().get(Certificate.CERTIFICATE).asString());
             return JsonApiResponse.result(response);
         }
@@ -240,29 +237,30 @@ public class AutoCrypt {
      * @param body      body of the creation
      */
     public JsonApiResponse createRole(String name, Json params, Json body) {
-        logger.trace("Creating role {} with params {} and body {} ", name, params, body);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Creating role {} at path {} ...", name, params.get(Common.PATH).asString());
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Creating role {} with params {} and body {} ", name, params, body);
 
-        logger.debug("Creating role {} at path {} ...", name, params.get(Common.PATH).asString());
         transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Create role in autocrypt
-        logger.trace("Creating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Creating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.createRole(body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("Creating role {} at path {} in autocrypt failed", name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Creating role {} at path {} in autocrypt failed", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error("Error creating role : " + responseFromModule.getError().toJson());
         }
-        logger.debug("Created role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Created role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
 
         // Sync roles
         try {
             syncRoles();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized roles");
         } catch (SynchronizationException e) {
-            logger.error("Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Created role {} at path {}", name, params.get(Common.PATH).asString());
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Created role {} at path {}", name, params.get(Common.PATH).asString());
 
         return responseFromModule;
     }
@@ -285,26 +283,27 @@ public class AutoCrypt {
      * @param params parameters with the path
      */
     public JsonApiResponse deleteRole(String name, Json body, Json params) {
-        logger.trace("Deleting role {} with params {} and body {}", name, params, body);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Deleting role {} with params {} and body {}", name, params, body);
 
         // Delete role in autocrypt
-        logger.trace("Deleting role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Deleting role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.deleteRole(name, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} : Deleting role {} at path {} in autocrypt failed", AutoCryptEndpoints.DELETE_ROLE, name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Deleting role {} at path {} in autocrypt failed", name, params.get(Common.PATH).asString());
             return responseFromModule;
         }
-        logger.debug("Deleted role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Deleted role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
 
         // sync roles
         try {
             syncRoles();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized roles");
         } catch (SynchronizationException e) {
-            logger.error("Failed to delete role {} at path {}", name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to delete role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Deleted role {} at path {}", name, params.get(Common.PATH).asString());
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Deleted role {} at path {}", name, params.get(Common.PATH).asString());
 
         return responseFromModule;
     }
@@ -317,27 +316,28 @@ public class AutoCrypt {
      * @param body      body with the field to update
      */
     public JsonApiResponse updateRole(String name, Json params, Json body) {
-        logger.trace("Updating role {} with params {} and body {}", name, params, body);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Updating role {} with params {} and body {}", name, params, body);
         transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Update role in autocrypt
-        logger.trace("Updating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Updating role {} at path {} in autocrypt ...", name, params.get(Common.PATH).asString());
         JsonApiResponse responseFromModule = autocryptApiHandler.updateRole(name, body, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} : Updating role {} at path {} in autocrypt failed", AutoCryptEndpoints.UPDATE_ROLE, name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Updating role {} at path {} in autocrypt failed", name, params.get(Common.PATH).asString());
             return responseFromModule;
         }
-        logger.debug("Updated role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Updated role {} at path {} in autocrypt", name, params.get(Common.PATH).asString());
 
         // sync roles
         try {
             syncRoles();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized roles");
         } catch (SynchronizationException e) {
-            logger.error("Failed to update role {} at path {}", name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to update role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Updated role {} at path {}", name, params.get(Common.PATH).asString());
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Updated role {} at path {}", name, params.get(Common.PATH).asString());
 
         return responseFromModule;
     }
@@ -369,29 +369,31 @@ public class AutoCrypt {
      * @param body body with the parameters of the certificate
      */
     public JsonApiResponse generateCertificate(Json params, Json body) {
-        logger.trace("Generating certificate with params {} and body {}", params, body);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Generating certificate with params {} and body {}", params, body);
 
         // Generate certificate in autocrypt
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Generating certificate with params {} and body {}", params, body);
         JsonApiResponse responseFromModule = autocryptApiHandler.generateCertificate(body, params);
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Certificate.SERIAL_NUMBER) ||
                 !responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).isString()) {
-            logger.error("certificate creation in Autocrypt failed ");
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"certificate creation in Autocrypt failed ");
             return JsonApiResponse.error("Error creating the certificate : " + responseFromModule.getError().toJson());
         }
-        logger.debug("certificate ({}) created in Autocrypt",  responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString());
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"certificate ({}) created in Autocrypt",  responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString());
 
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
 
         // Sync certificates
         try {
             syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized certificates");
         } catch (SynchronizationException e) {
-            logger.error("Failed to generate the certificate {} at path {}", serialNumber, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to generate the certificate {} at path {}", serialNumber, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Successfully generated the certificate {} at path {}", serialNumber, params.get(Common.PATH).asString());
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Successfully generated the certificate {} at path {}", serialNumber, params.get(Common.PATH).asString());
 
         return responseFromModule;
     }
@@ -412,12 +414,16 @@ public class AutoCrypt {
      * @param params       parameters with the serialNumber
      */
     public JsonApiResponse getCertificateInfo(String serialNumber, Json params) {
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"fetching information of certificate ({}) ...", serialNumber);
+
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"fetching information of certificate ({}) ...", serialNumber);
         JsonApiResponse response = autocryptApiHandler.getCertificateInfo(serialNumber, params);
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"fetched information of certificate ({})", serialNumber);
 
         if (response.isSuccess()) {
-            logger.info("{} : information of certificate ({}) fetched", AutoCryptEndpoints.GET_CERTIFICATE_INFO, serialNumber);
+            logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"fetched information of certificate ({})", serialNumber);
         } else {
-            logger.error("{} : fetching information of certificate ({}) failed", AutoCryptEndpoints.GET_CERTIFICATE_INFO, serialNumber);
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"fetched information of certificate ({}) failed", serialNumber);
         }
         return response;
     }
@@ -430,21 +436,23 @@ public class AutoCrypt {
      * @param params         parameters with the serialNumber
      */
     public JsonApiResponse getCertificate(String serialNumber, boolean needPrivateKey, Json params) {
-        logger.info("Fetching certificate {} at path {} ...", serialNumber, params.get("path").asString());
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Fetching certificate {} at path {} ...", serialNumber, params.get("path").asString());
         JsonApiResponse response;
 
         if (needPrivateKey) {
-            logger.debug("{} : Fetching certificate {} at path {} with private key ...", AutoCryptEndpoints.GET_CERTIFICATE, serialNumber, params.get("path").asString());
+            logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Fetching certificate {} at path {} with private key ...", serialNumber, params.get("path").asString());
             response = autocryptApiHandler.getCertificateWithPrivateKey(serialNumber, params);
         } else {
-            logger.debug("{} : Fetching certificate {} at path {} without private key ...", AutoCryptEndpoints.GET_CERTIFICATE, serialNumber, params.get("path").asString());
+            logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Fetching certificate {} at path {} without private key ...", serialNumber, params.get("path").asString());
             response = autocryptApiHandler.getCertificateWithoutPrivateKey(serialNumber, params);
         }
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Fetched certificate {} at path {} with private key ...", serialNumber, params.get("path").asString());
+
 
         if (response.isSuccess()) {
-            logger.info("{} : certificate ({}) at path {} fetched {} private key", AutoCryptEndpoints.GET_CERTIFICATE, serialNumber, params.get("path").asString(), needPrivateKey ? "with" : "without");
+            logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"certificate ({}) at path {} fetched {} private key", serialNumber, params.get("path").asString(), needPrivateKey ? "with" : "without");
         } else {
-            logger.error("{} : fetching certificate ({}) at path {} {} private key failed", AutoCryptEndpoints.GET_CERTIFICATE, serialNumber, params.get("path").asString(), needPrivateKey ? "with" : "without");
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"fetching certificate ({}) at path {} {} private key failed", serialNumber, params.get("path").asString(), needPrivateKey ? "with" : "without");
         }
 
         return response;
@@ -457,13 +465,16 @@ public class AutoCrypt {
      * @param params       parameters with the serialNumber
      */
     public JsonApiResponse downloadCertificate(String serialNumber, Json params) {
-        logger.trace("Downloading certificate {} at path {} and params {}", serialNumber, params.get("path").asString(), params);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Downloading certificate {} at path {} and params {}", serialNumber, params.get("path").asString(), params);
 
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Downloading certificate {} at path {} and params {}", serialNumber, params.get("path").asString(), params);
         JsonApiResponse responseFromModule = autocryptApiHandler.downloadCertificate(serialNumber, params);
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Downloaded certificate {} at path {} and params {}", serialNumber, params.get("path").asString(), params);
+
         if (!responseFromModule.isSuccess()) {
-            logger.error("{} : Failed to download certificate {} at path {} in Autocrypt", AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, serialNumber, params.get("path").asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to download certificate {} at path {} in Autocrypt", serialNumber, params.get("path").asString());
         } else {
-            logger.info("Downloaded certificate {} at path {}.", serialNumber, params.get("path").asString());
+            logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Downloaded certificate {} at path {}.", serialNumber, params.get("path").asString());
         }
         return responseFromModule;
     }
@@ -475,28 +486,29 @@ public class AutoCrypt {
      * @param params       parameters with the path
      */
     public JsonApiResponse revokeCertificate(String serialNumber, Json params) {
-        logger.trace("Revoking certificate {} at path {} and params {}", serialNumber, params.get("path").asString(), params);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Revoking certificate {} at path {} and params {}", serialNumber, params.get("path").asString(), params);
+
         String path = params.get("path").asString();
-        logger.debug("Revoking certificate {} at path {} ...", serialNumber, path);
 
         // Revoke from autocrypt
-        logger.trace("revoking certificate {} at path {} in Autocrypt ...", serialNumber, path);
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"Revoking certificate {} at path {} ...", serialNumber, path);
         JsonApiResponse responseFromModule = autocryptApiHandler.revokeCertificate(serialNumber, params);
         if (!responseFromModule.isSuccess()) {
-            logger.error("failed to revoked certificate {} at path {} in Autocrypt", serialNumber, path);
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"failed to revoked certificate {} at path {} in Autocrypt", serialNumber, path);
             return responseFromModule;
         }
-        logger.debug("revoked certificate {} at path {} in Autocrypt", serialNumber, path);
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"revoked certificate {} at path {} in Autocrypt", serialNumber, path);
 
         // sync certificates
         try {
             syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API,"synchronized certificates", serialNumber, path);
         } catch (SynchronizationException e) {
-            logger.error("Failed to revoke certificate {} at path {}", serialNumber, path);
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to revoke certificate {} at path {}", serialNumber, path);
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("Revoked certificate {} at path {}", serialNumber, path);
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Revoked certificate {} at path {}", serialNumber, path);
 
         return responseFromModule;
     }
@@ -508,18 +520,20 @@ public class AutoCrypt {
      * @param params       parameters with the path
      */
     public JsonApiResponse deployCertificate(Json body, Json params) {
-        logger.trace("Deploying certificate with params {} and body {}", params, params);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Deploying certificate with params {} and body {}", params, params);
+
         String path = params.get("path").asString();
-        logger.debug("deploying certificate {} ({}) at device {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
 
         // deploying certificate
-        logger.trace("deploying certificate {} ({}) at device {} with username {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP), body.get(Device.USERNAME));
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"deploying certificate {} ({}) at device {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
         JsonApiResponse responseFromModule = autocryptApiHandler.deployCertificate(body, params);
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"deployed certificate {} ({}) at device {} with username {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP), body.get(Device.USERNAME));
+
         if (!responseFromModule.isSuccess()) {
-            logger.error("failed to deploy certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"failed to deploy certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
             return responseFromModule;
         }
-        logger.info("successfully deployed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"successfully deployed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
 
         return responseFromModule;
     }
@@ -545,7 +559,7 @@ public class AutoCrypt {
     }
 
     /**
-     * Generic method to generate a intermediate or root CA
+     * Generic method to generate an intermediate or root CA
      *
      * @param typeCA        either GENERATE_ROOT_CA either GENERATE_INTERMEDIATE_CA
      * @param params        parameters with  path
@@ -553,43 +567,43 @@ public class AutoCrypt {
      * @return if creation was successful, the body for HMI, otherwise, the error message
      */
     private JsonApiResponse generateCA(AutoCryptEndpoints typeCA, Json params, Json body) {
-        logger.trace("Generating {} CA with params {} and body {}", typeCA, params, body);
 
         boolean isRoot = typeCA == AutoCryptEndpoints.GENERATE_ROOT_CA;
         String type = isRoot ? "root" : "intermediate";
-        logger.debug("Generating {} CA ...", type);
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Generating {} CA ...", type);
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Generating {} CA with params {} and body {}", typeCA, params, body);
         transformKeysFromDbapiToVault(body, Common.ORGANIZATION_UNIT, Common.STATE);
 
         // Creating CA in Autocrypt
-        logger.trace("Creating {} CA creation in Autocrypt with params {} and body {} ...", type, params, body);
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API, "Creating {} CA creation in Autocrypt with params {} and body {} ...", type, params, body);
         JsonApiResponse responseFromModule;
         if (isRoot) {
             responseFromModule = autocryptApiHandler.generateRootCA(body, params);
         } else {
             responseFromModule = autocryptApiHandler.generateIntermediateCA(body, params);
         }
-        logger.trace("Created {} CA creation in Autocrypt with response {}", type, responseFromModule);
         if (!responseFromModule.isSuccess() ||
                 !responseFromModule.getResult().has(Issuer.ISSUER_REF) ||
                 !responseFromModule.getResult().get(Issuer.ISSUER_REF).isString()) {
-            logger.error("{} : {} CA creation in Autocrypt failed", typeCA, type);
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"{} CA creation in Autocrypt failed", typeCA, type);
             return JsonApiResponse.error("Error creating the CA : " + responseFromModule.getError().toJson());
         }
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API, "Created {} CA creation in Autocrypt with response {}", type, responseFromModule);
         String issuerRef = responseFromModule.getResult().get(Issuer.ISSUER_REF).asString();
         String path = responseFromModule.getResult().get(AutocryptConstants.Common.PATH).asString();
         String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
 
         // Sync issuers
-        logger.debug("{} CA ({}) created in Autocrypt at path {} and certificate with number {}, synchronizing ...", type, issuerRef, path, serialNumber);
         try {
             syncIssuers();
             syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized issuers and certificates", type, issuerRef, path, serialNumber);
         } catch (SynchronizationException e) {
-            logger.error("Failed to generate {} CA with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to generate {} CA with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
             return JsonApiResponse.error(e.getMessage());
         }
 
-        logger.info("{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "{} CA was successfully generated with id {} and certificate number {}", type.substring(0, 1).toUpperCase() + type.substring(1), issuerRef, serialNumber);
 
         return responseFromModule;
     }
@@ -609,7 +623,7 @@ public class AutoCrypt {
             syncIssuers();
             syncRoles();
             syncCertificates();
-            logger.info("CSL-Autocrypt synchronized with CSL-Dbapi at schedule");
+            logger.info(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "CSL-Autocrypt synchronized with CSL-Dbapi at schedule");
         } catch (SynchronizationException ignored) {
         }
     }
@@ -621,10 +635,10 @@ public class AutoCrypt {
         try {
             if (issuerSynchronizationService != null) {
                 issuerSynchronizationService.syncData();
-                logger.trace("Synchronization of issuers with Dbapi successful");
+                logger.trace(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Synchronization of issuers with Dbapi successful");
             }
         } catch (NullPointerException e) {
-            logger.error("Issuer synchronizer not initialized");
+            logger.error(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Issuer synchronizer not initialized");
             throw new SynchronizationException("Issuer synchronizer not initialized");
         }
     }
@@ -636,10 +650,10 @@ public class AutoCrypt {
         try {
             if (roleSynchronizationService != null) {
                 roleSynchronizationService.syncData();
-                logger.trace("Synchronization of roles with Dbapi successful");
+                logger.trace(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Synchronization of roles with Dbapi successful");
             }
         } catch (NullPointerException e) {
-            logger.error("Roles synchronizer not initialized");
+            logger.error(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Roles synchronizer not initialized");
             throw new SynchronizationException("Roles synchronizer not initialized");
         }
     }
@@ -651,10 +665,10 @@ public class AutoCrypt {
         try {
             if (certificateSynchronizationService != null) {
                 certificateSynchronizationService.syncData();
-                logger.trace("Synchronization of certificates with Dbapi successful");
+                logger.trace(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Synchronization of certificates with Dbapi successful");
             }
         } catch (NullPointerException e) {
-            logger.error("Certificates synchronizer not initialized");
+            logger.error(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Certificates synchronizer not initialized");
             throw new SynchronizationException("Certificates synchronizer not initialized");
         }
     }

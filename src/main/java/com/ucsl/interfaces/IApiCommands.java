@@ -21,8 +21,22 @@ public interface IApiCommands {
 
 	Map<String, JsonCmdPrivilegeFamily> getListOfCommandPrivileges();
 
-	public Json execJcmd(Json jCmd) throws IllegalArgumentException;
-	public Json exec(String name, Json params) throws IllegalArgumentException;
+	/**
+	 * Executes the command given, with the parameters given
+	 * @param jsonCommand json with the command and parameters for executing it
+	 * @return the result of the command execution
+	 * @throws IllegalArgumentException if parameter required and not found
+	 */
+	Json execJcmd(Json jsonCommand) throws IllegalArgumentException;
+
+	/**
+	 * Executes the command given, with the parameters given
+	 * @param commandName name of the command to execute
+	 * @param params parameters of the command to execute
+	 * @return the result of the command execution
+	 * @throws IllegalArgumentException if parameter required and not found
+	 */
+	Json exec(String commandName, Json params) throws IllegalArgumentException;
 
 	String getPathFilter();
 

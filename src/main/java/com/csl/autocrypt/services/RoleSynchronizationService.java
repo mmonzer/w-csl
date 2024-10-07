@@ -4,6 +4,7 @@ import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.autocrypt.DbapiHandlerForCSLAutoCrypt;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.logger.CustomLogger;
 import com.ucsl.json.Json;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import java.util.List;
 public class RoleSynchronizationService extends AutocryptTemplateSynchronizationService {
     public RoleSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
         super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Roles");
-        logger = LoggerFactory.getLogger(RoleSynchronizationService.class);
+        logger = CustomLogger.getLogger(RoleSynchronizationService.class);
     }
 
     @Override

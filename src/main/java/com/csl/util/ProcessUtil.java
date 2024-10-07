@@ -1,7 +1,6 @@
 package com.csl.util;
 
 import com.csl.core.CSLContext;
-import com.csl.logger.CSLLogger;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -10,6 +9,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProcessUtil {
+	private static final Logger logger = LoggerFactory.getLogger(ProcessUtil.class);
 
 	public static boolean DEBUG=false;
 
@@ -722,7 +724,7 @@ public class ProcessUtil {
 			//return e.toString();
 			String s="Cannot connect to "+url+" to exec <"+cmd+">";
 			System.err.println(s);
-			CSLLogger.instance.error(s);
+			logger.error(s);
 			return s;
 		}
 

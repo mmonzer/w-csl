@@ -3,6 +3,8 @@ package com.csl.util;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.logger.CSLLogger;
 import com.ucsl.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -21,8 +23,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class FileUtils {
-
+public class FileUtils  {
+	/**
+	 * Logger instance for this class.
+	 */
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
 
     public static String fileSeparator = File.separator;
@@ -85,14 +89,14 @@ public class FileUtils {
 
         String f = dir + File.separator + fileName;
 
-        String content = "{}";
-        try {
-            content = readFile(f);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            CSLLogger.instance.error("Cannot read Json file :" + f);
-        }
+		String content="{}";
+		try {
+			content = readFile(f);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			logger.error("Cannot read Json file :"+f);
+		}
 
         Json j = Json.read(content);
         return j;

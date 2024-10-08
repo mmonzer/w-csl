@@ -39,7 +39,7 @@ public class SNMPv2cConnection extends Connection {
             if (connectionJson.has("uuid")) {
                 uuid = connectionJson.get("uuid").asString();
             } else {
-                if(connectionJson.has("mongo_entity_id"))
+                if(connectionJson.has("mongo_entity_id") && !connectionJson.get("mongo_entity_id").isNull())
                     uuid = connectionJson.get("mongo_entity_id").asString();
                 else
                     uuid = null;

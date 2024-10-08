@@ -79,42 +79,42 @@ public class HttpConnection extends Connection {
     /**
      * Parse the JSON serialization received from DB-API. This method requires the connection protocol to find the right template.
      *
-     * @param jsonConnection The serialized connection as handed by DB-API.
+     * @param connectionJson The serialized connection as handed by DB-API.
      * @param protocol The connection protocol corresponding to this connection.
      * @return An instance of {@link HttpConnection} if the parsing was successful, null otherwise.
      */
-    public static HttpConnection fromJson(Json jsonConnection, ConnectionProtocol protocol) {
+    public static HttpConnection fromJson(Json connectionJson, ConnectionProtocol protocol) {
         try {
             String uuid;
-            if (jsonConnection.has("uuid")) {
-                uuid = jsonConnection.get("uuid").asString();
+            if (connectionJson.has("uuid")) {
+                uuid = connectionJson.get("uuid").asString();
             } else {
-                if(jsonConnection.has("mongo_entity_id"))
-                    uuid = jsonConnection.get("mongo_entity_id").asString();
+                if(connectionJson.has("mongo_entity_id") && !connectionJson.get("mongo_entity_id").isNull())
+                    uuid = connectionJson.get("mongo_entity_id").asString();
                 else
                     uuid = null;
             }
             String port;
-            if (jsonConnection.has(HttpConnectionField.PORT.dbapiName()) && jsonConnection.get(HttpConnectionField.PORT.dbapiName()).isString()) {
-                port = jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asString();
-            } else if (jsonConnection.has(HttpConnectionField.PORT.dbapiName()) && jsonConnection.get(HttpConnectionField.PORT.dbapiName()).isNumber()) {
-                port = String.valueOf(jsonConnection.get(HttpConnectionField.PORT.dbapiName()).asInteger());
+            if (connectionJson.has(HttpConnectionField.PORT.dbapiName()) && connectionJson.get(HttpConnectionField.PORT.dbapiName()).isString()) {
+                port = connectionJson.get(HttpConnectionField.PORT.dbapiName()).asString();
+            } else if (connectionJson.has(HttpConnectionField.PORT.dbapiName()) && connectionJson.get(HttpConnectionField.PORT.dbapiName()).isNumber()) {
+                port = String.valueOf(connectionJson.get(HttpConnectionField.PORT.dbapiName()).asInteger());
             } else {
                 port = null;
             }
             String username = null;
             try {
-                username = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.USERNAME.dbapiName(), null);
+                username = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.USERNAME.dbapiName(), null);
             } catch (UnsupportedOperationException ignored) {
             }
             String password = null;
             try {
-                password = JsonUtil.getStringFromJson(jsonConnection, HttpConnectionField.PASSWORD.dbapiName(), null);
+                password = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.PASSWORD.dbapiName(), null);
             } catch (UnsupportedOperationException ignored) {
             }
 
-            Json otherData = jsonConnection.get("other_data");
-            Json readOnlyOtherData = jsonConnection.get("read_only_other_data");
+            Json otherData = connectionJson.get("other_data");
+            Json readOnlyOtherData = connectionJson.get("read_only_other_data");
             if(otherData == null && readOnlyOtherData != null) {
                 otherData = readOnlyOtherData;
             }
@@ -127,13 +127,13 @@ public class HttpConnection extends Connection {
             String token = JsonUtil.getStringFromJson(otherData, HttpConnectionField.TOKEN.dbapiName(), null);
             String realm = JsonUtil.getStringFromJson(otherData, HttpConnectionField.REALM.dbapiName(), null);
             boolean isSimulated = false;
-            if (jsonConnection.has("is_simulated") && !jsonConnection.get("is_simulated").isNull()) {
-                isSimulated = jsonConnection.get("is_simulated").asBoolean();
+            if (connectionJson.has("is_simulated") && !connectionJson.get("is_simulated").isNull()) {
+                isSimulated = connectionJson.get("is_simulated").asBoolean();
             }
             Map<Integer, StageConfig> stagesConfig = new HashMap<>();
             otherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), StageConfig.fromJson(value)));
 
-            List<String> devices = jsonConnection.get("connected_devices").asJsonList().stream()
+            List<String> devices = connectionJson.get("connected_devices").asJsonList().stream()
                     .map(Json::asString)
                     .collect(java.util.stream.Collectors.toList());
 
@@ -147,7 +147,7 @@ public class HttpConnection extends Connection {
                 }
             }
 
-            String name = jsonConnection.get("name").asString();
+            String name = connectionJson.get("name").asString();
 
             return new HttpConnection(name, uuid, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, stagesConfig, isSimulated, inputs);
         } catch (Throwable e) {

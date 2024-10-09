@@ -487,13 +487,13 @@ public class CSLHttpServerJetty {
     private String executeApiCommand(IApiCommands api, Json data, Json cmd, Json params, String xCorrelationId) {
         String bodyResp;
         if (listOfRemoteApi.contains(api.getName().toLowerCase())) {
-            logger.debugReq(LoggerInterfaces.CSL_CLIENT,"Sending command with body {} ...", params);
+            logger.traceReq(LoggerInterfaces.CSL_CLIENT,"Sending command with body {} ...", params);
             bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data, xCorrelationId).toString();
-            logger.debugResp(LoggerInterfaces.CSL_CLIENT,"Sent command with body {} : {}", params, bodyResp);
+            logger.traceResp(LoggerInterfaces.CSL_CLIENT,"Sent command with body {} : {}", params, bodyResp);
         } else {
-            logger.debugReq(LoggerInterfaces.LOCAL,"Executing command with body {} ...", params);
+            logger.traceReq(LoggerInterfaces.LOCAL,"Executing command with body {} ...", params);
             bodyResp = api.exec(cmd.asString(), params.set(X_CORRELATION_ID, xCorrelationId)).toString();
-            logger.debugResp(LoggerInterfaces.LOCAL,"Executed command with body {} : {}", params, bodyResp);
+            logger.traceResp(LoggerInterfaces.LOCAL,"Executed command with body {} : {}", params, bodyResp);
         }
         return bodyResp;
     }

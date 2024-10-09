@@ -89,7 +89,7 @@ public class CSLWebSocketForJcmd {
      * @param json The JSON message to broadcast.
      */
     public static void broadcastMessageJson(String name, Json json) {
-        logger.debug("Broadcast message: {}{}", name, json);
+        logger.trace("Broadcast message: {}{}", name, json);
 
         Session session = sessionMap.get(name);
         if (session == null) {
@@ -173,7 +173,7 @@ public class CSLWebSocketForJcmd {
 
         Json response = waitForResponse(uuid, fullMessage);
 
-        debugOutboundRequest(logger, "CSL-Client", 0, "", apiName, "WS");
+        debugInboundResponse(logger, "CSL-Client", 0, "", apiName, "WS", 0);
         return response;
     }
 
@@ -184,7 +184,7 @@ public class CSLWebSocketForJcmd {
      * @param message The incoming WebSocket message as a string.
      */
     public static void messageArrived(String message) {
-        logger.debug("Message received: {}", message);
+//        logger.debug("Message received: {}", message);
 
         try {
             Json jsonMessage = Json.read(message);
@@ -242,7 +242,7 @@ public class CSLWebSocketForJcmd {
 			}
 
             if (fullMessage.has(RESPONSE)) {
-                logger.debug("Received response: {}", fullMessage);
+                logger.trace("Received response: {}", fullMessage);
                 pendingMessages.remove(uuid);
                 Json response = fullMessage.get(RESPONSE);
                 return response.has("result") ? response.get("result") : Json.object().set("error", "timeout");
@@ -261,12 +261,12 @@ public class CSLWebSocketForJcmd {
             session.getRemote().sendString(message, new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable x) {
-                    logger.error("Failed to send message", x);
+//                    logger.error("Failed to send message", x);
                 }
 
                 @Override
                 public void writeSuccess() {
-                    logger.debug("Message sent successfully");
+//                    logger.debug("Message sent successfully");
                 }
             });
         } catch (Exception e) {

@@ -22,7 +22,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.info("");
+        logger.info("HTTP response received.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -46,7 +46,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.info("");
+        logger.info("HTTP request sent.");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -69,7 +69,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.info("");
+        logger.info("HTTP request received");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -94,7 +94,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.info("");
+        logger.info("HTTP response sent.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -120,7 +120,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.info("");
+        logger.info("HTTP response received.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -144,7 +144,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.info("");
+        logger.info("HTTP request sent.");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -167,7 +167,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.info("");
+        logger.info("HTTP request received.");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -192,7 +192,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.info("");
+        logger.info("HTTP response sent.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -218,7 +218,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.debug("");
+        logger.debug("HTTP response received.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -242,7 +242,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.debug("");
+        logger.debug("HTTP request sent.");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -265,7 +265,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.debug("");
+        logger.debug("HTTP request received.");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -290,7 +290,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.debug("");
+        logger.debug("HTTP response sent.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -316,7 +316,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.debug("");
+        logger.debug("HTTP response received.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -340,7 +340,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.debug("");
+        logger.debug("HTTP request sent.");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -363,7 +363,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        logger.debug("");
+        logger.debug("HTTP request received.");
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
@@ -388,7 +388,7 @@ public class LoggerUtils {
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
-        logger.debug("");
+        logger.debug("HTTP response sent.");
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);

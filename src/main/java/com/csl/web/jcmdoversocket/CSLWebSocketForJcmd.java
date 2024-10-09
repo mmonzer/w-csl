@@ -15,6 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.csl.logger.LoggerUtils.*;
+
 /**
  * CSLWebSocketForJcmd handles WebSocket communication for Jcmd commands.
  * It manages sessions, sends messages, and processes responses with timeout management.
@@ -27,6 +29,7 @@ public class CSLWebSocketForJcmd {
     public static final String X_CORRELATION_ID = "X-Correlation-ID";
     public static final String ENDPOINT = "endpoint";
     public static final String COMMAND = "command";
+    public static final String PROTOCOL = "protocol";
     public static long TIME_OUT = 60000;
 
     public static String WEB_SOCKET_CMD = "/cmd";
@@ -101,6 +104,7 @@ public class CSLWebSocketForJcmd {
         json.set("api", name);
         String message = json.toString();
 
+        debugOutboundRequest(logger, "CSL-Client", 0, "", name, "WS");
         sendMessage(session, message);
     }
 
@@ -167,7 +171,10 @@ public class CSLWebSocketForJcmd {
 
         pendingMessages.put(uuid, fullMessage);
 
-        return waitForResponse(uuid, fullMessage);
+        Json response = waitForResponse(uuid, fullMessage);
+
+        debugOutboundRequest(logger, "CSL-Client", 0, "", apiName, "WS");
+        return response;
     }
 
 

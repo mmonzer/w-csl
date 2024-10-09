@@ -24,12 +24,17 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.servlet.DispatcherType;
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -39,6 +44,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
+
+import static com.csl.logger.LoggerUtils.infoInboundRequest;
+import static com.csl.logger.LoggerUtils.infoOutboundResponse;
 import static java.lang.System.exit;
 
 /**
@@ -185,20 +193,44 @@ public class CSLHttpServerJetty {
             }
 
             @Override
-            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+            protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
                 // X-Correlation-ID
                 String xCorrelationId = req.getHeader(X_CORRELATION_ID);
                 resp.setHeader(X_CORRELATION_ID, xCorrelationId);
                 MDC.put(X_CORRELATION_ID, xCorrelationId);
-                MDC.put(ENDPOINT, api.getName());
+                MDC.put(ENDPOINT, req.getRequestURI());
+                infoInboundRequest(logger, req.getRemoteAddr(), req.getRemotePort(), req.getMethod(), req.getRequestURI(), req.getProtocol());
 
                 handleWebSocketUpgrade(req, api);
 
-                String bodyReq = readRequestBody(req);
-                logger.trace("Request Body: {}", bodyReq);
+                Json data = Json.object();
+                if (req.getContentType() != null && req.getContentType().contains("json")) {
+                    data = handlerJsonRequest(req);
+                } else if (req.getContentType() != null && req.getContentType().contains("multipart")) {
+                    data = handlerMultipartRequest(req);
+                } else {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content type not supported");
+                    logger.warn("Wrong format");
+                    return;
+                }
 
-                Json data = Json.read(bodyReq.toString());
-                Json cmd = data.get("cmd");
+                // Get the full request URI
+                String requestUri = req.getRequestURI();  // e.g., /japi/discovery/upload_entity_http_connection_file
+
+                // Split the URI to extract the cmd part
+                String[] urlParts = requestUri.split("/");
+
+                String cmdStr = null;
+                // Ensure there are enough parts to extract endpoint and cmd
+                if (urlParts.length >= 3) {
+                    String endpoint = urlParts[1]; // discovery
+                    cmdStr = urlParts[2];      // upload_entity_http_connection_file
+                    data.set("cmd", cmdStr);
+                } else {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URL format");
+                }
+
+                Json cmd = Json.object("cmd", cmdStr).get("cmd");
                 Json params = data.get("params");
 
                 if (cmd == null) {
@@ -206,17 +238,43 @@ public class CSLHttpServerJetty {
                 }
                 MDC.put(COMMAND, cmd.asString());
 
-                logger.infoReq(LoggerInterfaces.CSL_NGINX, "Received command to execute ...");
                 String bodyResp = executeApiCommand(api, data, cmd, params, xCorrelationId);
-                logger.infoResp(LoggerInterfaces.CSL_NGINX, "Received result from command execution");
 
                 resp.getWriter().write(bodyResp);
+                infoOutboundResponse(logger, req.getRemoteAddr(), req.getRemotePort(), req.getMethod(), req.getRequestURI(), req.getProtocol(), resp.getStatus());
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);
             }
         };
     }
+    protected Json handlerJsonRequest(HttpServletRequest request) throws IOException {
+        return Json.read(readRequestBody(request));
+    }
+
+    protected Json handlerMultipartRequest(HttpServletRequest req) throws IOException, ServletException {
+        // Enable multi-part configuration
+        req.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
+                1024 * 1024 * 100, 1024 * 1024 * 100, 1024 * 1024 * 100));
+
+        // Process the uploaded urlParts
+        Json body = Json.object();
+        Json files = Json.array();
+        for (Part part : req.getParts()) {
+            // Read the content of the file and print it to the console
+            if (part.getContentType() != null) {  // It's a file part
+                String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString(); // MSIE fix.
+                try (InputStream inputStream = part.getInputStream()) {
+                    byte[] fileContent = inputStream.readAllBytes();
+                    files.add(Json.object("filename", fileName, "content", fileContent));
+                }
+            } else {  // It's a form field part
+                body.set(part.getName(), new String(part.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+            }
+        }
+        return body.set("files", files);
+    }
+
 
     /**
      * Creates a WebSocket servlet for the given path and handler.

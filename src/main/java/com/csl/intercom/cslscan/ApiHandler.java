@@ -32,6 +32,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.csl.logger.LoggerUtils.debugInboundResponse;
+import static com.csl.logger.LoggerUtils.debugOutboundRequest;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
@@ -374,7 +376,11 @@ public class ApiHandler implements AutoCloseable {
      * @throws ExecutionException if execution fails
      */
     synchronized protected ContentResponse createAndSendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
-        return createRequest(method, createUriFrom(endpoint), params, body).send();
+        Request request = createRequest(method, createUriFrom(endpoint), params, body);
+        debugOutboundRequest(logger, ip, port, method, endpoint, request.getVersion().toString());
+        ContentResponse response = request.send();
+        debugInboundResponse(logger, ip, port, method, endpoint, response.getVersion().toString(), response.getStatus());
+        return response;
     }
 
     // endregion send request

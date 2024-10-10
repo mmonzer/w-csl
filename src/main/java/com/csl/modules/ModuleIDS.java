@@ -92,42 +92,32 @@ public class ModuleIDS implements IModule {
 	}
 	
 	public void openLogFiles() {
-
-//		Json j=context.getConfig();
 		Config.IdsConf config=context.getConfig().IdsConf;
 
-//		String datadir=JsonUtil.getStringFromJson(j, "ids_conf/packets_dir_for_recording", "./recorded_packets");
 		String datadir=config.getPacketsDirForRecording();
 
-//		this.variablesFilename=JsonUtil.getStringFromJson(j,"ids_conf/variables_prefix_filename", "vars");
 		this.variablesFilename=config.getVariablesPrefixFilename();
-//		this.packetsFilename=JsonUtil.getStringFromJson(j, "ids_conf/packets_prefix_filename", "pkt");
 		this.packetsFilename=config.getPacketsPrefixFilename();
-//		this.networkFilename=JsonUtil.getStringFromJson(j, "ids_conf/network_prefix_filename", "net");
 		this.networkFilename=config.getNetworkPrefixFilename();
 
-
-
-//		this.max_size=JsonUtil.getLongFromJson(j, "ids_conf/max_size_of_log_files", 10000000);
 		this.max_size=config.getMaxSizeOfLogFiles();
 		packetsLog= new FileLog(datadir, packetsFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 		variablesLog= new FileLog(datadir, variablesFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 		networkLog= new FileLog(datadir, networkFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-	
-			
 	}
 	
 	public void reOpenLogFiles(String datadir) {
-		
 		packetsLog= new FileLog(datadir, packetsFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 		variablesLog= new FileLog(datadir, variablesFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
 		networkLog= new FileLog(datadir, networkFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-		
-		
 	}
 
 	@Override
 	public IResult init(ICSLContext context,IModuleContext mcontext) {
+		return IResult.OK;
+	}
+
+	public IResult initOld(ICSLContext context,IModuleContext mcontext) {
 		// TODO Auto-generated method stub
 		this.context=context;
 //		Json config=context.getConfig();

@@ -2,6 +2,7 @@ package com.csl.intercom.status;
 
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
+import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -38,14 +39,18 @@ public class StatusNotifier implements AutoCloseable {
     public StatusNotifier(boolean sendNotifications, int notificationsPeriod) {
         this.sendNotifications = sendNotifications;
         sender = Executors.newScheduledThreadPool(1);
-        sender.scheduleAtFixedRate(() -> {
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                sender,
+                () -> {
                     if (this.sendNotifications) {
                         sendNotification(buildNotification());
                     }
                 },
                 0,
                 notificationsPeriod,
-                TimeUnit.SECONDS);
+                TimeUnit.SECONDS,
+                "status_notifier",
+                "CSL_CLIENT");
     }
 
     /**

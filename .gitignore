@@ -13,6 +13,7 @@ classes/
 downloads/
 # current logs
 logs/
+*.log
 # rotated logs
 logback/
 

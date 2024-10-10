@@ -1,5 +1,6 @@
 package com.csl.intercom.broker;
 
+import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.paho.client.mqttv3.*;
@@ -121,7 +122,8 @@ public class ApiMessageSender implements MqttCallback {
 
         ScheduledExecutorService executorService;
         executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(this::detectTimeOut, 0, 1, TimeUnit.SECONDS);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+        executorService,this::detectTimeOut, 0, 1, TimeUnit.SECONDS, "mqtt timeout detector", "CSL_CLIENT");
 
     }
 

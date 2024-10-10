@@ -2,6 +2,7 @@ package com.csl.intercom.broker;
 
 import com.csl.core.Config;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.eclipse.paho.client.mqttv3.*;
@@ -77,7 +78,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
             this.organization = "None";
         }
         mqttConnectionAttempts = Executors.newScheduledThreadPool(1);
-        mqttConnectionAttempts.scheduleAtFixedRate(this::connectToMqttClientIfNecessary, 0, 10, TimeUnit.SECONDS);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(mqttConnectionAttempts,this::connectToMqttClientIfNecessary, 0, 10, TimeUnit.SECONDS, "reconnect mqtt", "CSL_CLIENT");
         mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setCleanSession(true);
         mqttConnectOptions.setUserName(apiKey);

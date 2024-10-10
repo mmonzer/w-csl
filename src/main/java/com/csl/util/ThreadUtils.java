@@ -1,5 +1,6 @@
 package com.csl.util;
 
+import com.csl.logger.LoggerInterfaces;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
@@ -98,6 +99,23 @@ public class ThreadUtils {
             long period,
             TimeUnit timeUnit, String endpoint, String initializerService) {
         singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, CorrelationUtils.createXCorrelationId(), endpoint, initializerService);
+    }
+
+    /**
+     * Executor for thread running at fixed rate that creates the X_Correlation_ID .
+     * @param threadExecutor thread executor.
+     * @param command The task to execute.
+     * @param initialDelay The delay before executing the task.
+     * @param period The period between executions.
+     * @param timeUnit The time unit of the timeout.
+     */
+    public static void uncorrelatedSingleThreadScheduledAtFixedRate(
+            ScheduledExecutorService threadExecutor,
+            Runnable command,
+            long initialDelay,
+            long period,
+            TimeUnit timeUnit, String endpoint, LoggerInterfaces initializerService) {
+        singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, CorrelationUtils.createXCorrelationId(), endpoint, initializerService.toString());
     }
 
     private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint) {

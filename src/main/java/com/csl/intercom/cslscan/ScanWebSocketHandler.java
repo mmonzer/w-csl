@@ -7,7 +7,7 @@ import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
-import com.csl.util.CorrelationUtils;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CorrelatedStompSessionHandlerAdapter;
 import com.ucsl.json.Json;
@@ -20,7 +20,10 @@ import org.slf4j.MDC;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.AbstractMessageConverter;
-import org.springframework.messaging.simp.stomp.*;
+import org.springframework.messaging.simp.stomp.ConnectionLostException;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.scheduling.concurrent.DefaultManagedTaskScheduler;
 import org.springframework.util.MimeType;
 import org.springframework.web.client.ResourceAccessException;
@@ -76,11 +79,11 @@ public class ScanWebSocketHandler {
 
         // Schedule reconnection to websockets every 2 seconds
         webSocketsConnectionAttempts = Executors.newScheduledThreadPool(1);
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(webSocketsConnectionAttempts,
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                webSocketsConnectionAttempts,
                 this::connectStompSessionsIfNecessary,
-                0,
-                2,
-                TimeUnit.SECONDS, "ws reconnect", "CSL_CLIENT");
+                0, 2, TimeUnit.SECONDS,
+                "ws reconnect", LoggerInterfaces.CSL_CLIENT);
     }
 
     /**
@@ -187,7 +190,7 @@ public class ScanWebSocketHandler {
                 stompNotificationSession = null;
             } catch (Throwable e) {
                 disconnect(new Exception(e), "request");
-                logger.error ("Unexpected exception at stompNotificationSession", new Exception(e));
+                logger.error("Unexpected exception at stompNotificationSession", new Exception(e));
                 stompNotificationSession = null;
             }
         }
@@ -206,7 +209,7 @@ public class ScanWebSocketHandler {
                 }
             } catch (Throwable e) {
                 disconnect(new Exception(e), "request");
-                logger.error ("Unexpected exception at stompRequestsSession", new Exception(e));
+                logger.error("Unexpected exception at stompRequestsSession", new Exception(e));
                 stompRequestsSession = null;
             }
         }
@@ -225,7 +228,7 @@ public class ScanWebSocketHandler {
                 stompImportNotificationSession = null;
             } catch (Throwable e) {
                 disconnect(new Exception(e), "import notifications");
-                logger.error ("Unexpected exception at stompImportNotificationSession", new Exception(e));
+                logger.error("Unexpected exception at stompImportNotificationSession", new Exception(e));
                 stompImportNotificationSession = null;
             }
         }
@@ -244,7 +247,7 @@ public class ScanWebSocketHandler {
                 stompExportNotificationSession = null;
             } catch (Throwable e) {
                 disconnect(new Exception(e), "export notifications");
-                logger.error ("Unexpected exception at stompExportNotificationSession", new Exception(e));
+                logger.error("Unexpected exception at stompExportNotificationSession", new Exception(e));
                 stompExportNotificationSession = null;
             }
         }
@@ -262,7 +265,7 @@ public class ScanWebSocketHandler {
                 stompExternalScanSession = null;
             } catch (Throwable e) {
                 disconnect(new Exception(e), "external scans");
-                logger.error ("Unexpected exception at stompExternalScanSession", new Exception(e));
+                logger.error("Unexpected exception at stompExternalScanSession", new Exception(e));
                 stompExternalScanSession = null;
             }
         }
@@ -284,7 +287,6 @@ public class ScanWebSocketHandler {
             moduleConnected = true;
         } else {
             moduleConnected = false;
-
         }
     }
 
@@ -295,7 +297,7 @@ public class ScanWebSocketHandler {
      * @param msg       the channel to customize the logs
      */
     private boolean disconnect(Exception exception, String msg) {
-        if (moduleConnected ){
+        if (moduleConnected) {
             logger.warn("Connection lost with CSLScan for STOMP - {}", msg);
             moduleConnected = false;
         }
@@ -347,7 +349,7 @@ public class ScanWebSocketHandler {
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
                 if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
                     logger.info("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
-                            payload.get("entitiesUuid").asJsonList().size(), payload.get("entitiesInError").asJsonList().size() );
+                            payload.get("entitiesUuid").asJsonList().size(), payload.get("entitiesInError").asJsonList().size());
                     // Put the end date in the scan information and notify DB-API the scan ended.
                     OffsetDateTime endDate = OffsetDateTime.now();
                     if (ScanConstants.successScanStatuses.contains(scanStatus)) {
@@ -385,7 +387,6 @@ public class ScanWebSocketHandler {
                 //logger.warn("Transport Error", exception);
 //                super.handleTransportError(session, exception);
             }
-
         }).get(1000, TimeUnit.MILLISECONDS);
     }
 

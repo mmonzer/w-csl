@@ -2,6 +2,7 @@ package com.csl.intercom.status;
 
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
@@ -50,7 +51,7 @@ public class StatusNotifier implements AutoCloseable {
                 notificationsPeriod,
                 TimeUnit.SECONDS,
                 "status_notifier",
-                "CSL_CLIENT");
+                LoggerInterfaces.CSL_CLIENT);
     }
 
     /**

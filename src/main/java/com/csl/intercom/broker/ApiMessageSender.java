@@ -1,5 +1,6 @@
 package com.csl.intercom.broker;
 
+import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -49,7 +50,6 @@ public class ApiMessageSender implements MqttCallback {
         this.api = apiName;
         setDebugLevel(debugLevel);
         this.init();
-
     }
 
     public ApiMessageSender(String moduleName, String apiName, int debugLevel) {
@@ -94,7 +94,6 @@ public class ApiMessageSender implements MqttCallback {
             clientToListen.subscribe(RESPONSE_TOPIC + api); //subscribing to the topic name  test/topic
 
             subscribed = true;
-
         } catch (MqttException me) {
             logger.error("Error while connecting to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
@@ -114,8 +113,6 @@ public class ApiMessageSender implements MqttCallback {
             if (isDebug()) logger.debug("Connecting to broker: " + BROKER_TCP_LOCALHOST_1883);
             clientToSend.connect(connOpts);
             if (isDebug()) logger.debug("Connected, topic=" + REQUEST_TOPIC + api);
-
-
         } catch (MqttException me) {
             logger.error("Error while connecting to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
@@ -123,8 +120,11 @@ public class ApiMessageSender implements MqttCallback {
         ScheduledExecutorService executorService;
         executorService = Executors.newSingleThreadScheduledExecutor();
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-        executorService,this::detectTimeOut, 0, 1, TimeUnit.SECONDS, "mqtt timeout detector", "CSL_CLIENT");
-
+                executorService,
+                this::detectTimeOut,
+                0, 1, TimeUnit.SECONDS,
+                "mqtt timeout detector", LoggerInterfaces.CSL_CLIENT
+        );
     }
 
     public void close() {
@@ -141,7 +141,6 @@ public class ApiMessageSender implements MqttCallback {
             clientToSend.disconnect();
             if (isDebug()) logger.debug("Disconnected");
             clientToSend.close();
-
         } catch (MqttException me) {
             logger.error("Error while closing connection to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
@@ -260,7 +259,6 @@ public class ApiMessageSender implements MqttCallback {
                 if (isDebug()) logger.debug("Time out: {}", message);
                 message.set(RESPONSE, Json.object().set("error", "TIMEOUT"));
             }
-
         }
     }
 }

@@ -7,6 +7,7 @@ import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.annotations.PostInit;
 import com.csl.intercom.services.exceptions.CpeScanException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -45,7 +46,12 @@ public class CpeScanService {
         this.cpeItemsSynchronizationService = cpeItemsSynchronizationService;
         this.microsoftKbSynchronizationService = microsoftKbSynchronizationService;
 
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scansListSanitizer, this::sanitizeScans, 0, 5, TimeUnit.MINUTES, "scan list sanitizer", "CSL_CLIENT");
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                scansListSanitizer,
+                this::sanitizeScans,
+                0, 5, TimeUnit.MINUTES,
+                "scan list sanitizer", LoggerInterfaces.CSL_CLIENT
+        );
 
         // Execute post-init tasks
         Class<?> clazz = this.getClass();

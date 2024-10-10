@@ -1,5 +1,6 @@
 package com.csl.util;
 
+import com.csl.logger.LoggerInterfaces;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,11 @@ public class FileStorageService {
         } catch (Exception e) {
             logger.error("Error creating download directory: " + downloadPath, e);
         }
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduledExecutorService, this::deleteFiles, 0, 1, java.util.concurrent.TimeUnit.HOURS, "auto deleting files", "CSL_CLIENT");
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                scheduledExecutorService,
+                this::deleteFiles,
+                0, 1, java.util.concurrent.TimeUnit.HOURS,
+                "auto deleting files", LoggerInterfaces.CSL_CLIENT);
     }
 
     public FileStorageService() {

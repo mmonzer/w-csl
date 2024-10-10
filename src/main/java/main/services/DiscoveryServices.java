@@ -177,7 +177,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(synchronizationSchedule, this::syncAll, 0, 300, TimeUnit.SECONDS, "discovery sync", "CSL_CLIENT");
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                synchronizationSchedule,
+                this::syncAll,
+                0, 300, TimeUnit.SECONDS,
+                "discovery sync", LoggerInterfaces.CSL_CLIENT
+        );
 
         addCmd("get_status", params -> {
                     logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Fetching CSL-Scan status");

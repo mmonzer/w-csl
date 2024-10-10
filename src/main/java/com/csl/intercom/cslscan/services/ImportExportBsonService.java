@@ -9,6 +9,7 @@ import com.csl.intercom.cslscan.models.ImportQuery;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.models.HttpTemplateImportNotification;
 import com.csl.logger.LoggerConstants;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.util.FileStorageService;
 import com.csl.util.ThreadUtils;
 import org.slf4j.Logger;
@@ -65,12 +66,14 @@ public class ImportExportBsonService {
                         handleImportTask(id);
                     }
                 },
-                0, 5, TimeUnit.SECONDS, "handle import/export BSON task", "CSL_CLIENT");
+                0, 5, TimeUnit.SECONDS,
+                "handle import/export BSON task", LoggerInterfaces.CSL_CLIENT);
 
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 this.periodicStartExecutor,
                 () -> this.dbapiHandler.getAvailableImportTasks().forEach(this::startNewImportTask),
-                1, 10, TimeUnit.MINUTES, "start import BSON task", "CSL_CLIENT");
+                1, 10, TimeUnit.MINUTES,
+                "start import BSON task", LoggerInterfaces.CSL_CLIENT);
     }
 
     /**

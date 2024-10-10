@@ -6,20 +6,18 @@ import com.csl.core.Config;
 import com.csl.core.NoLogging;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.logger.LoggerInterfaces;
+import com.csl.logger.LoggerUtils;
 import com.csl.util.CorrelationUtils;
 import com.csl.util.ThreadUtils;
 import com.csl.web.CSLHttpServerJetty;
-import com.csl.logger.LoggerUtils;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
-import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.xcsl.miniserver.ApiHttpServer;
 import main.services.*;
 import main.util.CSLRunningArgs;
 import main.xcom.WebsocketClientEndpoint;
@@ -27,7 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.net.*;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -165,7 +166,7 @@ public class CSLIDSMainClient {
                     ApiCommands api = apiMap.get(apiName);
                     MDC.put(ENDPOINT, apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
-                    uri = "/"+apiName+"/"+jsonCommand.get("cmd");
+                    uri = "/" + apiName + "/" + jsonCommand.get("cmd");
                     MDC.put(ENDPOINT, uri);
                     LoggerUtils.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS");
 
@@ -202,24 +203,25 @@ public class CSLIDSMainClient {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
         // Reconnect task
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(executorService,
-
-                        () -> {
-                        boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
-                        if (reconnect) {
-                            connectToServer();
-                        }
-                    }                ,
-                0, 1, TimeUnit.SECONDS,"reconnect ws", "CSL_CLIENT");
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                executorService,
+                () -> {
+                    boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
+                    if (reconnect) {
+                        connectToServer();
+                    }
+                },
+                0, 1, TimeUnit.SECONDS,
+                "reconnect ws", LoggerInterfaces.CSL_CLIENT);
 
         // Keep-alive task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
-                        () -> {
-                            if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                                clientEndPoint.sendMessage("keep alive");
-                            }
-                        }                ,
-                1, 5, TimeUnit.SECONDS,"keep alive WS", "CSL_CLIENT");
+                () -> {
+                    if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                        clientEndPoint.sendMessage("keep alive");
+                    }
+                },
+                1, 5, TimeUnit.SECONDS, "keep alive WS", LoggerInterfaces.CSL_CLIENT);
     }
 
     /**
@@ -230,7 +232,7 @@ public class CSLIDSMainClient {
     private static void initializeContext(String[] args) {
         CorrelationUtils.setXCorrelationId();
         CorrelationUtils.setEndpoint("mainClient");
-        CorrelationUtils.setInitializerService("CSL_CLIENT");
+        CorrelationUtils.setInitializerService(LoggerInterfaces.CSL_CLIENT.toString());
 
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
@@ -345,7 +347,6 @@ public class CSLIDSMainClient {
             CSLHttpServerJetty server = new CSLHttpServerJetty();
             server.initServer(config.Client);
             server.start();
-
         }
     }
 }

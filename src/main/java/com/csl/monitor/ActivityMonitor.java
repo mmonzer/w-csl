@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 import com.csl.core.CSLContext;
 import com.csl.ids.Tap;
 import com.csl.intercom.status.IStatusProvider;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
@@ -225,8 +226,12 @@ public class ActivityMonitor implements IStatusProvider {
 
 			}
 		};
-		ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduler,sendTic ,1, 1, TimeUnit.SECONDS, "tics monitor", "CSL_CLIENT");
-//		scheduler.scheduleAtFixedRate(sendTic, 1, 1, TimeUnit.SECONDS);
+		ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+				scheduler,
+				sendTic ,
+				1, 1, TimeUnit.SECONDS,
+				"tics monitor", LoggerInterfaces.CSL_CLIENT
+		);
 	}
 
 	public Json getHistoryJson() {

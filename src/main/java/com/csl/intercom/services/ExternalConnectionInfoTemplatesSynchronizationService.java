@@ -4,6 +4,7 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.ExternalDiscoveredDevice;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.util.ThreadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,9 @@ public class ExternalConnectionInfoTemplatesSynchronizationService {
         this.synchronizationIntervalSeconds = synchronizationIntervalSeconds;
 
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        this.scheduledExecutorService.scheduleAtFixedRate(this::synchronizeDiscoveredDevices, 0, synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduledExecutorService,
+                this::synchronizeDiscoveredDevices, 0,
+                synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS, "synchronizeDiscoveredDevices", "CSL_CLIENT");
     }
 
     public void synchronizeDiscoveredDevices() {

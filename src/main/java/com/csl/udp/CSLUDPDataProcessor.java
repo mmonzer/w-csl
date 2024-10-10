@@ -1,6 +1,7 @@
 package com.csl.udp;
 
 import com.csl.udp.CSLFlowManager;
+import com.csl.util.CorrelationUtils;
 import com.ucsl.json.Json;
 
 import java.util.concurrent.BlockingQueue;
@@ -9,13 +10,13 @@ import java.util.concurrent.BlockingQueue;
  * Runnable class that treats the alerts from suricata stored in a Queue
  */
 public class CSLUDPDataProcessor implements Runnable {
-	private final BlockingQueue<byte[]> messageQueue;
+	private final BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue;
 	CSLFlowManager flowManager;
 	private boolean traceAllMessages=false;
 	boolean interrupted=false;
 	
 
-	public CSLUDPDataProcessor(CSLFlowManager fw, BlockingQueue<byte[]> messageQueue, boolean traceAllMessages) {
+	public CSLUDPDataProcessor(CSLFlowManager fw, BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue, boolean traceAllMessages) {
 		this.messageQueue = messageQueue;
 		this.flowManager=fw;
 		this.traceAllMessages=traceAllMessages;
@@ -26,7 +27,7 @@ public class CSLUDPDataProcessor implements Runnable {
 		interrupted=true;
 		
 		try {
-			this.messageQueue.put("stop".getBytes());
+			this.messageQueue.put(new CSLUdpUnicastClient.CorrelatedMessage("","stop".getBytes()));
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -46,7 +47,9 @@ public class CSLUDPDataProcessor implements Runnable {
 				 * Try and take a message from the queue. Will block if the
 				 * message queue is empty, until an element becomes available.
 				 */
-				byte[] rawData = this.messageQueue.take();
+				CSLUdpUnicastClient.CorrelatedMessage message = this.messageQueue.take();
+				CorrelationUtils.setXCorrelationId(message.getXCorrelationId());
+				byte[] rawData = message.getBytes();
 
 				if (interrupted) {
 					System.out.println("STOP UDP");

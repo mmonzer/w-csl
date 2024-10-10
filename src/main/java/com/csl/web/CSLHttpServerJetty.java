@@ -194,13 +194,6 @@ public class CSLHttpServerJetty {
 
             @Override
             protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-                // X-Correlation-ID
-                String xCorrelationId = req.getHeader(X_CORRELATION_ID);
-                resp.setHeader(X_CORRELATION_ID, xCorrelationId);
-                MDC.put(X_CORRELATION_ID, xCorrelationId);
-                MDC.put(ENDPOINT, req.getRequestURI());
-                infoInboundRequest(logger, req.getRemoteAddr(), req.getRemotePort(), req.getMethod(), req.getRequestURI(), req.getProtocol());
-
                 handleWebSocketUpgrade(req, api);
 
                 Json data = Json.object();
@@ -228,6 +221,7 @@ public class CSLHttpServerJetty {
                     data.set("cmd", cmdStr);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URL format");
+                    return ;
                 }
 
                 Json cmd = Json.object("cmd", cmdStr).get("cmd");
@@ -235,32 +229,43 @@ public class CSLHttpServerJetty {
 
                 if (cmd == null) {
                     logger.warn("Invalid command: {}", cmd);
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST,"Invalid command: "+ cmd);
+                    return ;
                 }
-                MDC.put(COMMAND, cmd.asString());
 
-                String bodyResp = executeApiCommand(api, data, cmd, params, xCorrelationId);
+                String bodyResp = executeApiCommand(api, data, cmd, params, req.getHeader(X_CORRELATION_ID));
 
                 resp.getWriter().write(bodyResp);
-                infoOutboundResponse(logger, req.getRemoteAddr(), req.getRemotePort(), req.getMethod(), req.getRequestURI(), req.getProtocol(), resp.getStatus());
-                MDC.remove(COMMAND);
-                MDC.remove(ENDPOINT);
-                MDC.remove(X_CORRELATION_ID);
             }
         };
     }
+
+    /**
+     * Handles the body parsing of a JSON formated requests
+     * @param request request with body to parse
+     * @return the body in JSON format
+     * @throws IOException if error reading body
+     */
     protected Json handlerJsonRequest(HttpServletRequest request) throws IOException {
         return Json.read(readRequestBody(request));
     }
 
-    protected Json handlerMultipartRequest(HttpServletRequest req) throws IOException, ServletException {
+    /**
+     * Handles the body parsing of a Multipart requests
+     * @param request HTTP request with body to parse
+     * @return the body parsed into JSON format
+     * @throws IOException if error reading body
+     * @throws ServletException if error reading parts
+     */
+    protected Json handlerMultipartRequest(HttpServletRequest request) throws IOException, ServletException {
         // Enable multi-part configuration
-        req.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
+        request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
                 1024 * 1024 * 100, 1024 * 1024 * 100, 1024 * 1024 * 100));
 
         // Process the uploaded urlParts
         Json body = Json.object();
         Json files = Json.array();
-        for (Part part : req.getParts()) {
+        for (Part part : request.getParts()) {
             // Read the content of the file and print it to the console
             if (part.getContentType() != null) {  // It's a file part
                 String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString(); // MSIE fix.

@@ -6,12 +6,11 @@ import com.csl.intercom.cslscan.enums.ImportQueryStatus;
 import com.csl.intercom.cslscan.models.EntityHttpConnection;
 import com.csl.intercom.cslscan.models.ExportQuery;
 import com.csl.intercom.cslscan.models.ImportQuery;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.models.HttpTemplateImportNotification;
 import com.csl.logger.LoggerConstants;
-import com.csl.util.CorrelationUtils;
 import com.csl.util.FileStorageService;
+import com.csl.util.ThreadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -21,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
-
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
  * Class for handling BSON file imports.
@@ -58,24 +55,22 @@ public class ImportExportBsonService {
         this.scanApiHandler = scanApiHandler;
         this.fileStorageService = fileStorageService;
 
-        this.periodicHandleExecutor.scheduleAtFixedRate(
-                () -> CorrelationUtils.correlatedRunnable(
-                        "handle import/export BSON task",
-                        () -> {
-                            for (int id : exportTasks.keySet()) {
-                                handleExportTask(id);
-                            }
-                            for (int id : importTasks.keySet()) {
-                                handleImportTask(id);
-                            }
-                        }
-                ), 0, 5, TimeUnit.SECONDS);
-        this.periodicStartExecutor.scheduleAtFixedRate(
-                () -> CorrelationUtils.correlatedRunnable(
-                        "start import BSON task",
-                        () -> this.dbapiHandler.getAvailableImportTasks().forEach(this::startNewImportTask)
-                ),
-                1, 10, TimeUnit.MINUTES);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                this.periodicHandleExecutor,
+                () -> {
+                    for (int id : exportTasks.keySet()) {
+                        handleExportTask(id);
+                    }
+                    for (int id : importTasks.keySet()) {
+                        handleImportTask(id);
+                    }
+                },
+                0, 5, TimeUnit.SECONDS, "handle import/export BSON task", "CSL_CLIENT");
+
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                this.periodicStartExecutor,
+                () -> this.dbapiHandler.getAvailableImportTasks().forEach(this::startNewImportTask),
+                1, 10, TimeUnit.MINUTES, "start import BSON task", "CSL_CLIENT");
     }
 
     /**
@@ -127,7 +122,7 @@ public class ImportExportBsonService {
             this.addExportTask(id, exportQuery);
             return id;
         } catch (Exception e) {
-            logger.error("startNewExportTask: error exporting file",  e);
+            logger.error("startNewExportTask: error exporting file", e);
             throw e;
         }
     }

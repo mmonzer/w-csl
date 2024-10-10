@@ -47,5 +47,26 @@ public class CorrelationUtils {
         setEndpoint("??");
     }
 
+    /**
+     * Adds the custom variables to the task
+     * @param xCorrelationId XCorrelationId
+     * @param endpoint endpoint of the request
+     * @param callback method to run
+     */
+    public static void correlatedRunnable(String xCorrelationId, String endpoint, Runnable callback) {
+        CorrelationUtils.setXCorrelationId(xCorrelationId);
+        CorrelationUtils.setEndpoint(endpoint);
+        callback.run();
+    }
+
+    /**
+     * Adds the custom variables to the task
+     * @param endpoint endpoint of the request
+     * @param callback method to run
+     */
+    public static void correlatedRunnable(String endpoint, Runnable callback) {
+        correlatedRunnable(createXCorrelationId(), endpoint, callback);
+    }
+
 
 }

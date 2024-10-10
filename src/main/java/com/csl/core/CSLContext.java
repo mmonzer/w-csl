@@ -13,6 +13,7 @@ import com.csl.interfaces.IIDSRunner;
 import com.csl.interfaces.IModule;
 import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
+import com.csl.util.CorrelationUtils;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.ucsl.interfaces.*;
@@ -551,6 +552,9 @@ public class CSLContext implements ICSLContext {
      * Task that executes the modules in the defined order.
      */
     private final Runnable task = () -> {
+        CorrelationUtils.setXCorrelationId();
+        CorrelationUtils.setEndpoint("??");
+
         logger.trace("Sampling time: {}", getTimeFromStartingTime());
 
         if (showProgression && nExecSteps > 80) {
@@ -610,9 +614,9 @@ public class CSLContext implements ICSLContext {
         logger.debug("Starting modules execution");
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        int delay = samplingTime;
+        int period = samplingTime;
         logger.info("Starting with sampling time: {} ms", samplingTime);
-        scheduler.scheduleAtFixedRate(task, 0, delay, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(task, 0, period, TimeUnit.MILLISECONDS);
     }
 
     /**

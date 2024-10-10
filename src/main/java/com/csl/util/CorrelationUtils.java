@@ -69,7 +69,7 @@ public class CorrelationUtils {
     }
 
     /**
-     * Adds the custom variables to the task
+     * Adds the custom variables to the task. It creates a new X-Correlation-Id
      * @param endpoint endpoint of the request
      * @param callback method to run
      */

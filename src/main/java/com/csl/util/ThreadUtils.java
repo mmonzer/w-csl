@@ -1,9 +1,11 @@
 package com.csl.util;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
 import java.util.concurrent.*;
 
+import static com.csl.logger.LoggerConstants.INIT_SERVICE;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.ENDPOINT;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
@@ -23,15 +25,9 @@ public class ThreadUtils {
     public static ScheduledExecutorService correlatedSingleThreadScheduledAtFixedRate(Runnable command, long initialDelay,
                                                                                       long period,
                                                                                       TimeUnit timeUnit) {
-        String xCorrelationId = MDC.get(X_CORRELATION_ID);
-        String endpoint = MDC.get(ENDPOINT);
         ScheduledExecutorService threadExecutor = Executors.newSingleThreadScheduledExecutor();
-        threadExecutor.scheduleAtFixedRate(
-                ()->{
-                    MDC.put(X_CORRELATION_ID, xCorrelationId);
-                    MDC.put(ENDPOINT, endpoint);
-                    command.run();
-                }, initialDelay, period, timeUnit);
+
+        singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, MDC.get(X_CORRELATION_ID), MDC.get(ENDPOINT));
 
         return threadExecutor;
     }
@@ -50,12 +46,70 @@ public class ThreadUtils {
             long initialDelay,
             long period,
             TimeUnit timeUnit) {
-        String xCorrelationId = MDC.get(X_CORRELATION_ID);
-        String endpoint = MDC.get(ENDPOINT);
-        threadExecutor.scheduleAtFixedRate(
-                ()->{
+        singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, MDC.get(X_CORRELATION_ID), MDC.get(ENDPOINT));
+    }
+
+    /**
+     * Executor for thread running at fixed rate that creates the X_Correlation_ID .
+     * @param threadExecutor thread executor.
+     * @param command The task to execute.
+     * @param initialDelay The delay before executing the task.
+     * @param period The period between executions.
+     * @param timeUnit The time unit of the timeout.
+     */
+    public static void uncorrelatedSingleThreadScheduledAtFixedRate(
+            ScheduledExecutorService threadExecutor,
+            Runnable command,
+            long initialDelay,
+            long period,
+            TimeUnit timeUnit) {
+        uncorrelatedSingleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, MDC.get(ENDPOINT));
+    }
+
+    /**
+     * Executor for thread running at fixed rate that creates the X_Correlation_ID .
+     * @param threadExecutor thread executor.
+     * @param command The task to execute.
+     * @param initialDelay The delay before executing the task.
+     * @param period The period between executions.
+     * @param timeUnit The time unit of the timeout.
+     */
+    public static void uncorrelatedSingleThreadScheduledAtFixedRate(
+            ScheduledExecutorService threadExecutor,
+            Runnable command,
+            long initialDelay,
+            long period,
+            TimeUnit timeUnit, String endpoint) {
+        singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, CorrelationUtils.createXCorrelationId(), endpoint);
+    }
+
+    /**
+     * Executor for thread running at fixed rate that creates the X_Correlation_ID .
+     * @param threadExecutor thread executor.
+     * @param command The task to execute.
+     * @param initialDelay The delay before executing the task.
+     * @param period The period between executions.
+     * @param timeUnit The time unit of the timeout.
+     */
+    public static void uncorrelatedSingleThreadScheduledAtFixedRate(
+            ScheduledExecutorService threadExecutor,
+            Runnable command,
+            long initialDelay,
+            long period,
+            TimeUnit timeUnit, String endpoint, String initializerService) {
+        singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, CorrelationUtils.createXCorrelationId(), endpoint, initializerService);
+    }
+
+    private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint) {
+        return singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, xCorrelationId, endpoint, null);
+    }
+
+    private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint, String initializerService) {
+        return threadExecutor.scheduleAtFixedRate(
+                () -> {
                     MDC.put(X_CORRELATION_ID, xCorrelationId);
                     MDC.put(ENDPOINT, endpoint);
+                    MDC.put(INIT_SERVICE, initializerService);
                     command.run();
                 }, initialDelay, period, timeUnit);
     }

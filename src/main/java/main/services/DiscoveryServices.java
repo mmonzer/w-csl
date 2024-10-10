@@ -27,6 +27,7 @@ import com.csl.logger.LoggerActions;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.FileStorageService;
 import com.csl.util.FileUtils;
+import com.csl.util.ThreadUtils;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmdWithFiles;
@@ -176,7 +177,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         }
 
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        synchronizationSchedule.scheduleAtFixedRate(this::syncAll, 0, 300, TimeUnit.SECONDS);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(synchronizationSchedule, this::syncAll, 0, 300, TimeUnit.SECONDS, "discovery sync", "CSL_CLIENT");
 
         addCmd("get_status", params -> {
                     logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Fetching CSL-Scan status");

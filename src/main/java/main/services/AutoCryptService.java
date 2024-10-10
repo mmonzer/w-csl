@@ -4,6 +4,7 @@ import com.csl.autocrypt.AutoCrypt;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.status.IStatusProvider;
+import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -601,7 +602,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      */
     private void launchAutoSync() {
         ScheduledExecutorService synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        synchronizationSchedule.scheduleAtFixedRate(autocrypt::syncAll, syncFrequency, syncFrequency, TimeUnit.SECONDS);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(synchronizationSchedule, autocrypt::syncAll, syncFrequency, syncFrequency, TimeUnit.SECONDS, "autocrypt sync", "CSL_CLIENT");
     }
 
 }

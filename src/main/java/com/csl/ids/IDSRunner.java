@@ -42,28 +42,11 @@ public class IDSRunner implements IIDSRunner {
 
 	ModuleIDS ids=null;
 
-	Runnable task = new Runnable() {
-		public void run() {
-			String more="";
-			if (ids!=null) more = "  ModuleIDS:"+ids.runningState();
-		}
-	};
-
 	private final Logger logger =  LoggerFactory.getLogger(IDSRunner.class);
 
 	public IDSRunner(IDSParams idsParams, ModuleIDS ids) {
 		this.idsParams=idsParams;
-		
 		this.ids=ids;
-		if (DEBUG) {
-			scheduler
-			= Executors.newSingleThreadScheduledExecutor();
-
-			int delay = 1000;
-			scheduler.scheduleAtFixedRate(task, 0, delay, TimeUnit.MILLISECONDS);
-
-		}
-
 	}
 
 	public void stop() {

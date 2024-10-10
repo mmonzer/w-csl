@@ -23,6 +23,14 @@ public class CorrelationUtils {
     }
 
     /**
+     * Sets the initializer service to the logging variables
+     * @param service initializer service
+     */
+    public static void setInitializerService(String service) {
+        MDC.put(LoggerConstants.INIT_SERVICE, service);
+    }
+
+    /**
      * Sets endpoint to environment
      * @param endpoint endpoint
      */

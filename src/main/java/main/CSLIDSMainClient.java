@@ -8,6 +8,7 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.util.CorrelationUtils;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.logger.LoggerUtils;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
@@ -221,6 +222,10 @@ public class CSLIDSMainClient {
      * @param args Command-line arguments passed to the application.
      */
     private static void initializeContext(String[] args) {
+        CorrelationUtils.setXCorrelationId();
+        CorrelationUtils.setEndpoint("mainClient");
+        CorrelationUtils.setInitializerService("CSL_CLIENT");
+
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 

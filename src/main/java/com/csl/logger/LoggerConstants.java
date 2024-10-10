@@ -10,4 +10,5 @@ public final class LoggerConstants {
     public static final String STATUS_CODE= "status_code";
     public static final String IP_DST= "ip_dst";
     public static final String PORT_DST= "port_dst";
+    public static final String INIT_SERVICE= "initializer_service";
 }

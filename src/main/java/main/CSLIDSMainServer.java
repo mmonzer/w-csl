@@ -3,6 +3,7 @@ package main;
 import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.util.CorrelationUtils;
 import com.ucsl.json.Json;
 import main.services.*;
 import main.util.CSLRunningArgs;
@@ -24,8 +25,13 @@ public class CSLIDSMainServer {
      * @param args Command-line arguments passed to the application.
      */
     private static void initializeContext(String[] args) {
+        CorrelationUtils.setXCorrelationId();
+        CorrelationUtils.setEndpoint("mainServer");
+        CorrelationUtils.setInitializerService("CSL_SERVER");
+
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+
         System.out.println("Starting CSL IDS version " + CSLContext.VERSION);
         CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
     }

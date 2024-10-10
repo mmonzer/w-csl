@@ -27,13 +27,37 @@ public class ThreadUtils {
         String endpoint = MDC.get(ENDPOINT);
         ScheduledExecutorService threadExecutor = Executors.newSingleThreadScheduledExecutor();
         threadExecutor.scheduleAtFixedRate(
-            ()->{
-                MDC.put(X_CORRELATION_ID, xCorrelationId);
-                MDC.put(ENDPOINT, endpoint);
-                command.run();
-            }, initialDelay, period, timeUnit);
+                ()->{
+                    MDC.put(X_CORRELATION_ID, xCorrelationId);
+                    MDC.put(ENDPOINT, endpoint);
+                    command.run();
+                }, initialDelay, period, timeUnit);
 
         return threadExecutor;
+    }
+
+    /**
+     * Executor for thread running at fixed rate that transfers the X_Correlation_ID from parent thread to child thread.
+     * @param threadExecutor thread executor.
+     * @param command The task to execute.
+     * @param initialDelay The delay before executing the task.
+     * @param period The period between executions.
+     * @param timeUnit The time unit of the timeout.
+     */
+    public static void correlatedSingleThreadScheduledAtFixedRate(
+            ScheduledExecutorService threadExecutor,
+            Runnable command,
+            long initialDelay,
+            long period,
+            TimeUnit timeUnit) {
+        String xCorrelationId = MDC.get(X_CORRELATION_ID);
+        String endpoint = MDC.get(ENDPOINT);
+        threadExecutor.scheduleAtFixedRate(
+                ()->{
+                    MDC.put(X_CORRELATION_ID, xCorrelationId);
+                    MDC.put(ENDPOINT, endpoint);
+                    command.run();
+                }, initialDelay, period, timeUnit);
     }
 
     /**

@@ -5,6 +5,7 @@ import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.core.Config;
 import com.csl.logger.CustomLogger;
 import com.csl.logger.LoggerInterfaces;
+import com.csl.util.ThreadUtils;
 import com.csl.web.auth.ServerConfig;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
@@ -341,7 +342,8 @@ public class CSLHttpServerJetty {
                 // Refresh the CSLWebSocketForJcmd
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD);
         };
-        scheduler.scheduleAtFixedRate(refreshTask, interval, interval, TimeUnit.SECONDS);
+
+        ThreadUtils.correlatedSingleThreadScheduledAtFixedRate(scheduler, refreshTask, interval, interval, TimeUnit.SECONDS);
     }
 
     /**

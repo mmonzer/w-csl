@@ -9,6 +9,7 @@ import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.util.CorrelationUtils;
+import com.csl.util.ThreadUtils;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.logger.LoggerUtils;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
@@ -201,27 +202,24 @@ public class CSLIDSMainClient {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
         // Reconnect task
-        executorService.scheduleAtFixedRate(
-                () -> CorrelationUtils.correlatedRunnable(
-                    "reconnect ws",
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(executorService,
+
                         () -> {
                         boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
                         if (reconnect) {
                             connectToServer();
                         }
-                    }
-                ), 0, 1, TimeUnit.SECONDS);
+                    }                ,
+                0, 1, TimeUnit.SECONDS,"reconnect ws", "CSL_CLIENT");
 
         // Keep-alive task
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-                () -> CorrelationUtils.correlatedRunnable(
-                        "keep alive ws",
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
                         () -> {
                             if (clientEndPoint != null && clientEndPoint.isOpen()) {
                                 clientEndPoint.sendMessage("keep alive");
                             }
-                        }
-                ), 1, 5, TimeUnit.SECONDS);
+                        }                ,
+                1, 5, TimeUnit.SECONDS,"keep alive WS", "CSL_CLIENT");
     }
 
     /**

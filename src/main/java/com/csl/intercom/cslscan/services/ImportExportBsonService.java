@@ -9,6 +9,8 @@ import com.csl.intercom.cslscan.models.ImportQuery;
 import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.models.HttpTemplateImportNotification;
+import com.csl.logger.LoggerConstants;
+import com.csl.util.CorrelationUtils;
 import com.csl.util.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +58,23 @@ public class ImportExportBsonService {
         this.scanApiHandler = scanApiHandler;
         this.fileStorageService = fileStorageService;
 
-        this.periodicHandleExecutor.scheduleAtFixedRate(() -> {
-            for (int id : exportTasks.keySet()) {
-                handleExportTask(id);
-            }
-            for (int id : importTasks.keySet()) {
-                handleImportTask(id);
-            }
-        }, 0, 5, TimeUnit.SECONDS);
-        this.periodicStartExecutor.scheduleAtFixedRate(() -> this.dbapiHandler.getAvailableImportTasks().forEach(this::startNewImportTask),
+        this.periodicHandleExecutor.scheduleAtFixedRate(
+                () -> CorrelationUtils.correlatedRunnable(
+                        "handle import/export BSON task",
+                        () -> {
+                            for (int id : exportTasks.keySet()) {
+                                handleExportTask(id);
+                            }
+                            for (int id : importTasks.keySet()) {
+                                handleImportTask(id);
+                            }
+                        }
+                ), 0, 5, TimeUnit.SECONDS);
+        this.periodicStartExecutor.scheduleAtFixedRate(
+                () -> CorrelationUtils.correlatedRunnable(
+                        "start import BSON task",
+                        () -> this.dbapiHandler.getAvailableImportTasks().forEach(this::startNewImportTask)
+                ),
                 1, 10, TimeUnit.MINUTES);
     }
 
@@ -100,7 +110,6 @@ public class ImportExportBsonService {
             logger.debug("startNewImportTask: importing file: {}", query.getFileName());
 
             importQuery = this.scanApiHandler.importBsonFile(downloadedPath, shouldDrop);
-            importQuery.setXCorrelationId(MDC.get(X_CORRELATION_ID));
             logger.debug("startNewImportTask: sent file to CSL-Scan: {}", query.getFileName());
             this.dbapiHandler.notifyImportStarted(query.getId(), importQuery);
             logger.debug("startNewImportTask: notified DB-API: {}", query.getFileName());
@@ -114,7 +123,6 @@ public class ImportExportBsonService {
     public int startNewExportTask() throws Exception {
         try {
             ExportQuery exportQuery = this.scanApiHandler.requestExportHttpTemplates();
-            exportQuery.setXCorrelationId(MDC.get(X_CORRELATION_ID));
             int id = this.dbapiHandler.requestBsonExportID(exportQuery);
             this.addExportTask(id, exportQuery);
             return id;
@@ -151,7 +159,7 @@ public class ImportExportBsonService {
         }
 
         ImportQuery importQuery = importTasks.get(id);
-        MDC.put(X_CORRELATION_ID, importQuery.getXCorrelationId());
+        MDC.put(LoggerConstants.X_CORRELATION_ID, importQuery.getXCorrelationId()); // TODO: cleaning
         if (ImportQueryStatus.IN_PROGRESS_STATUSES.contains(importTasks.get(id).getStatus())) {
             logger.debug("handleImportTask: import in progress: {}", importQuery.getStatus());
             ImportQuery updatedImportQuery = this.scanApiHandler.getImportTaskStatus(importQuery.getId());
@@ -175,7 +183,7 @@ public class ImportExportBsonService {
             this.scanApiHandler.notifyEntityHttpConnectionSynchronized(entityHttpConnectionsToSync);
             this.importTasks.remove(id);
         }
-        MDC.remove(X_CORRELATION_ID);
+        MDC.remove(LoggerConstants.X_CORRELATION_ID); // TODO: cleaning
     }
 
     private void handleExportTask(int id) {
@@ -185,7 +193,7 @@ public class ImportExportBsonService {
         }
 
         ExportQuery exportQuery = exportTasks.get(id);
-        MDC.put(X_CORRELATION_ID, exportQuery.getXCorrelationId());
+        MDC.put(LoggerConstants.X_CORRELATION_ID, exportQuery.getXCorrelationId()); // TODO: cleaning
         if (ExportQueryStatus.IN_PROGRESS_STATUSES.contains(exportQuery.getStatus())) {
             logger.debug("handleExportTask: export in progress: {}", exportQuery.getStatus());
             ExportQuery updatedExportQuery = this.scanApiHandler.getExportQueryStatus(exportQuery);
@@ -210,7 +218,7 @@ public class ImportExportBsonService {
             }
             this.exportTasks.remove(id);
         }
-        MDC.remove(X_CORRELATION_ID);
+        MDC.remove(LoggerConstants.X_CORRELATION_ID); // TODO: cleaning
     }
 
     /**

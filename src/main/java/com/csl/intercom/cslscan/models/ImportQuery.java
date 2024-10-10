@@ -1,11 +1,13 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.ImportQueryStatus;
+import com.csl.logger.LoggerConstants;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -20,13 +22,13 @@ public class ImportQuery {
     private OffsetDateTime startTime;
     String message;
     @Getter
-    @Setter
     String xCorrelationId="";  // TODO: need cleaning
 
     private ImportQuery(UUID id, ImportQueryStatus status, String message) {
         this.id = id;
         this.status = status;
         this.message = message;
+        xCorrelationId = MDC.get(LoggerConstants.X_CORRELATION_ID);
     }
 
     public static ImportQuery fromScannerJson(Json json) {

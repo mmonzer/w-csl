@@ -201,19 +201,27 @@ public class CSLIDSMainClient {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
         // Reconnect task
-        executorService.scheduleAtFixedRate(() -> {
-            boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
-            if (reconnect) {
-                connectToServer();
-            }
-        }, 0, 1, TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(
+                () -> CorrelationUtils.correlatedRunnable(
+                    "reconnect ws",
+                        () -> {
+                        boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
+                        if (reconnect) {
+                            connectToServer();
+                        }
+                    }
+                ), 0, 1, TimeUnit.SECONDS);
 
         // Keep-alive task
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-            if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                clientEndPoint.sendMessage("keep alive");
-            }
-        }, 1, 5, TimeUnit.SECONDS);
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+                () -> CorrelationUtils.correlatedRunnable(
+                        "keep alive ws",
+                        () -> {
+                            if (clientEndPoint != null && clientEndPoint.isOpen()) {
+                                clientEndPoint.sendMessage("keep alive");
+                            }
+                        }
+                ), 1, 5, TimeUnit.SECONDS);
     }
 
     /**

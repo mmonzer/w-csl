@@ -64,6 +64,7 @@ public class CorrelationUtils {
     public static void correlatedRunnable(String xCorrelationId, String endpoint, Runnable callback) {
         CorrelationUtils.setXCorrelationId(xCorrelationId);
         CorrelationUtils.setEndpoint(endpoint);
+        CorrelationUtils.setInitializerService("CSL_Client");
         callback.run();
     }
 

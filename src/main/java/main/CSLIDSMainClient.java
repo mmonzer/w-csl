@@ -9,6 +9,7 @@ import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiGetHelp;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.web.CSLHttpServerJetty;
+import com.csl.logger.LoggerUtils;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
@@ -31,6 +32,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.autocrypt.outils.JsonHelper.getValueStringOrNull;
+import static com.csl.logger.LoggerConstants.PROTOCOL;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 
 public class CSLIDSMainClient {
@@ -151,7 +153,7 @@ public class CSLIDSMainClient {
                 String uuid = getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
                 String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
                 MDC.put(X_CORRELATION_ID, xCorrelationId);
-                logger.trace("Parsed JSON message: {}", messageJson);
+                String uri = "";
 
                 String apiName = JsonUtil.getStringFromJson(messageJson, "api", "");
 
@@ -161,13 +163,19 @@ public class CSLIDSMainClient {
                     ApiCommands api = apiMap.get(apiName);
                     MDC.put(ENDPOINT, apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
+                    uri = "/"+apiName+"/"+jsonCommand.get("cmd");
+                    MDC.put(ENDPOINT, uri);
+                    LoggerUtils.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS");
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);
                     } else if (jsonCommand == null) {
                         result.set("error", "jsonCommand not found");
                     }
+                } else {
+                    logger.warn("API endpoint not found");
                 }
+
 
                 Json resultMessageJson = Json.object()
                         .set("uuid", messageJson.get("uuid"))
@@ -176,9 +184,11 @@ public class CSLIDSMainClient {
 
                 logger.trace("Sending result: {}", resultMessageJson);
                 clientEndPoint.sendMessage("res:" + resultMessageJson);
+                LoggerUtils.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);
+                MDC.remove(PROTOCOL);
             }
         }).start();
     }

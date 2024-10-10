@@ -1,5 +1,8 @@
 package com.csl.web.websockets;
 
+import com.csl.logger.LoggerConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -7,12 +10,14 @@ import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+import com.csl.logger.LoggerUtils;
 
 /**
  * Class that modifies @link{StompSessionHandlerAdapter} to transfer the X_CORRELATION_ID from headers of message
  * to MDC environment (thread local)..
  */
 public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAdapter {
+    Logger logger = LoggerFactory.getLogger("WS filter");
 
     /**
      * Method called at the reception of a message
@@ -30,9 +35,11 @@ public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAda
      */
     @Override
     public void handleFrame(StompHeaders headers, Object payloadRaw) {
-        if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
-            MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
-        }
+        // Variables to logger : X-Correlation-ID ...
+        setVariablesToMDC(headers);
+        // Log info message received
+        logMessage("DEBUG",headers, "Incoming message in WS");
+        // Handle frame
         super.handleFrame(headers, payloadRaw);
         onFrame(headers, payloadRaw);
     }
@@ -55,9 +62,11 @@ public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAda
      */
     @Override
     public void afterConnected(StompSession session, StompHeaders headers) {
-        if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
-            MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
-        }
+        // Variables to logger : X-Correlation-ID ...
+        setVariablesToMDC(headers);
+        // Log connection
+        logMessage("INFO", headers, "Connected to WS");
+        // Handles after connection
         super.afterConnected(session, headers);
         onConnect(session, headers);
     }
@@ -86,9 +95,11 @@ public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAda
      */
     @Override
     public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-        if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
-            MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
-        }
+        // Variables to logger : X-Correlation-ID ...
+        setVariablesToMDC(headers);
+        // Log exception in message
+        logMessage("WARN", headers, exception.getMessage());
+        // Handles the exception
         onException(session, command, headers, payload, exception);
     }
 
@@ -111,5 +122,42 @@ public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAda
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
         onTransportError(session, exception);
+    }
+
+    /**
+     * Wrapper pour logging a message with the connection variables
+     * @param logger logger to use
+     * @param level log level
+     * @param headers headers to fetch the information
+     * @param message message to print
+     */
+    private static void logMessage(Logger logger, String level, StompHeaders headers, String message) {
+        if (headers.get("destination") != null && !headers.get("destination").isEmpty()) {
+            MDC.put(LoggerConstants.ENDPOINT, headers.get("destination").get(0));
+        }
+        MDC.put(LoggerConstants.PROTOCOL, "WS");
+        LoggerUtils.log(logger,"debug", message);
+        MDC.remove(LoggerConstants.PROTOCOL);
+        MDC.remove(LoggerConstants.ENDPOINT);
+    }
+
+    /**
+     * Wrapper pour logging a message with the connection variables
+     * @param level log level
+     * @param headers headers to fetch the information
+     * @param message message to print
+     */
+    private void logMessage(String level, StompHeaders headers, String message) {
+        logMessage(logger, level, headers, message);
+    }
+
+    /**
+     * Set the logging variables to the thread environment
+     * @param headers headers to fetch the variables
+     */
+    private static void setVariablesToMDC(StompHeaders headers) {
+        if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
+            MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
+        }
     }
 }

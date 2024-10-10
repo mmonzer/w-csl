@@ -144,7 +144,7 @@ public class CSLFlowManager {
          * The initial capacity for the blocking collection needs to be fine tuned
          * based on your application requirements.
          */
-        BlockingQueue<byte[]> messageQueue = new ArrayBlockingQueue<>(1200);
+        BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue = new ArrayBlockingQueue<>(1200);
 
         // message queue is shared between UDP client and Data Processor
         client = new CSLUdpUnicastClient(ip, port, messageQueue, traceAllMessages);

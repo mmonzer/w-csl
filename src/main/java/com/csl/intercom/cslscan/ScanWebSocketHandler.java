@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
+import com.csl.util.CorrelationUtils;
 import com.csl.web.websockets.CorrelatedStompSessionHandlerAdapter;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -74,8 +75,7 @@ public class ScanWebSocketHandler {
 
         // Schedule reconnection to websockets every 2 seconds
         webSocketsConnectionAttempts = Executors.newScheduledThreadPool(1);
-        webSocketsConnectionAttempts.scheduleAtFixedRate(
-                this::connectStompSessionsIfNecessary,
+        webSocketsConnectionAttempts.scheduleAtFixedRate(() -> CorrelationUtils.correlatedRunnable("ws reconnect", this::connectStompSessionsIfNecessary),
                 0,
                 2,
                 TimeUnit.SECONDS);

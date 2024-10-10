@@ -13,6 +13,7 @@ import com.csl.interfaces.IIDSRunner;
 import com.csl.interfaces.IModule;
 import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
+import com.csl.util.CorrelationUtils;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.ucsl.interfaces.*;
@@ -25,7 +26,10 @@ import main.util.CSLRunningArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -82,19 +86,11 @@ public class CSLContext implements ICSLContext {
     private long lastSystemCurrentTimeMillis = 0;
     private int samplingTime = 100;
 
-    @Getter
-    private boolean exitCSL = false;
-
     private boolean autostart = false;
-    private int nExecSteps = 0;
-    private boolean showProgression = false;
 
     private int numberOfExecLoops = 1;
 
     private final Map<String, com.csl.core.ModuleContext> modules = new HashMap<>();
-    private final List<com.csl.core.ModuleContext> inputExecList = new ArrayList<>();
-    private final List<com.csl.core.ModuleContext> outputExecList = new ArrayList<>();
-    private final List<com.csl.core.ModuleContext> stepExecList = new ArrayList<>();
 
     private final Map<String, Class<IModule>> moduleClassList = new HashMap<>();
 
@@ -445,7 +441,6 @@ public class CSLContext implements ICSLContext {
             getCslHttpServer().start();
         } else {
             getCslUDPServer().start();
-            startExec();
         }
 
         JServiceLoader.getCSLInterModuleCommunicationManager().start();
@@ -497,7 +492,7 @@ public class CSLContext implements ICSLContext {
     private void initDynamicModules() {
         String modulesPackageName = Config.instance.ModuleExec.getModulesPackageName();
         logger.debug("Loading modules");
-        
+
         initInternalModules();
 
         numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
@@ -546,64 +541,9 @@ public class CSLContext implements ICSLContext {
     }
 
     /**
-     * Logs the result of a module execution.
-     *
-     * @param r The result to log.
-     */
-    private void logResult(IResult r) {
-        if (r == null) {
-            logger.warn("No result");
-        } else if (!r.isOK()) {
-            logger.error("Error {}: {}", r.getErrorCode(), r.getMessage());
-        }
-    }
-
-    /**
      * Task that executes the modules in the defined order.
      */
-    private final Runnable task = () -> {
-        logger.trace("Sampling time: {}", getTimeFromStartingTime());
-
-        if (showProgression && nExecSteps > 80) {
-            nExecSteps = 0;
-        } else {
-            nExecSteps++;
-            }
-
-            try {
-                for (int nloop = 0; nloop < numberOfExecLoops; nloop++) {
-                logger.trace("Exec loop #{}", nloop);
-                    for (com.csl.core.ModuleContext m : inputExecList) {
-                        if (m.getLoopNumber() == nloop) {
-                            logger.trace("  input for {}", m.getName());
-                            IResult r = m.getModule().execInputPart(instance, m);
-                            logResult(r);
-                        }
-                    }
-                    for (com.csl.core.ModuleContext m : stepExecList) {
-                        if (m.getLoopNumber() == nloop) {
-                            logger.trace("  exec for {}", m.getName());
-                            IResult r = m.getModule().execStepPart(instance, m);
-                            logResult(r);
-                        }
-                    }
-                    for (com.csl.core.ModuleContext m : outputExecList) {
-                        if (m.getLoopNumber() == nloop) {
-                            logger.trace("  output for {}", m.getName());
-                            IResult r = m.getModule().execOutputPart(instance, m);
-                            logResult(r);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error during execution: {}", e.getMessage(), e);
-            }
-
-            if (isExitCSL()) {
-                scheduler.shutdown();
-                System.exit(0);
-            }
-    };
+    private final Runnable task = () -> {};
 
     /**
      * Checks if replay mode is enabled.
@@ -617,14 +557,7 @@ public class CSLContext implements ICSLContext {
     /**
      * Starts the execution of the modules.
      */
-    public void startExec() {
-        logger.debug("Starting modules execution");
-
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-        int delay = samplingTime;
-        logger.info("Starting with sampling time: {} ms", samplingTime);
-        scheduler.scheduleAtFixedRate(task, 0, delay, TimeUnit.MILLISECONDS);
-    }
+    public void startExec() {}
 
     /**
      * Stops the execution of the modules.

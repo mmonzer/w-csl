@@ -36,6 +36,9 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -45,6 +48,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
+
+import static com.csl.logger.LoggerUtils.infoInboundRequest;
+import static com.csl.logger.LoggerUtils.infoOutboundResponse;
 import static java.lang.System.exit;
 
 /**
@@ -205,22 +211,16 @@ public class CSLHttpServerJetty {
             @Override
             protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
                 // X-Correlation-ID
-                String xCorrelationId = req.getHeader(X_CORRELATION_ID);
-                resp.setHeader(X_CORRELATION_ID, xCorrelationId);
-                MDC.put(X_CORRELATION_ID, xCorrelationId);
-                MDC.put(ENDPOINT, api.getName());
-
                 handleWebSocketUpgrade(req, api);
-
-//                String bodyReq = readRequestBody(req);
-//                logger.trace("Request Body: {}", bodyReq);
-
                 Json data = Json.object();
-                if (req.getContentType().contains("json")) {
+                if (req.getContentType() != null && req.getContentType().contains("json")) {
                     data = handlerJsonRequest(req);
-                } else
-                if (req.getContentType().contains("multipart")) {
+                } else if (req.getContentType() != null && req.getContentType().contains("multipart")) {
                     data = handlerMultipartRequest(req);
+                } else {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Content type not supported");
+                    logger.warn("Wrong format");
+                    return;
                 }
 
                 // Get the full request URI
@@ -237,42 +237,52 @@ public class CSLHttpServerJetty {
                     data.set("cmd", cmdStr);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URL format");
-
+                    return;
                 }
-
-                Json cmd = Json.object("cmd", cmdStr).get("cmd");
+                Json cmd = data.get("cmd");
                 Json params = data.get("params");
 
                 if (cmd == null) {
                     logger.warn("Invalid command: {}", cmd);
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid command: " + cmd);
+                    return;
                 }
-                MDC.put(COMMAND, cmd.asString());
 
-                logger.infoReq(LoggerInterfaces.CSL_NGINX, "Received command to execute ...");
-                String bodyResp = executeApiCommand(api, data, cmd, params, xCorrelationId);
-                logger.infoResp(LoggerInterfaces.CSL_NGINX, "Received result from command execution");
+                String bodyResp = executeApiCommand(api, data, cmd, params, req.getHeader(X_CORRELATION_ID));
 
                 resp.getWriter().write(bodyResp);
-                MDC.remove(COMMAND);
-                MDC.remove(ENDPOINT);
-                MDC.remove(X_CORRELATION_ID);
             }
         };
     }
 
+    /**
+     * Handles the body parsing of a JSON formated requests
+     *
+     * @param request request with body to parse
+     * @return the body in JSON format
+     * @throws IOException if error reading body
+     */
     protected Json handlerJsonRequest(HttpServletRequest request) throws IOException {
         return Json.read(readRequestBody(request));
     }
 
-    protected Json handlerMultipartRequest(HttpServletRequest req) throws IOException, ServletException {
+    /**
+     * Handles the body parsing of a Multipart requests
+     *
+     * @param request HTTP request with body to parse
+     * @return the body parsed into JSON format
+     * @throws IOException      if error reading body
+     * @throws ServletException if error reading parts
+     */
+    protected Json handlerMultipartRequest(HttpServletRequest request) throws IOException, ServletException {
         // Enable multi-part configuration
-        req.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
-                1024*1024*100, 1024*1024*100,1024*1024*100));
+        request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
+                1024 * 1024 * 100, 1024 * 1024 * 100, 1024 * 1024 * 100));
 
         // Process the uploaded urlParts
         Json body = Json.object();
         Json files = Json.array();
-        for (Part part : req.getParts()) {
+        for (Part part : request.getParts()) {
             // Read the content of the file and print it to the console
             if (part.getContentType() != null) {  // It's a file part
                 String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString(); // MSIE fix.
@@ -378,11 +388,11 @@ public class CSLHttpServerJetty {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_CONSOLE);
         }
-        if (serverConfig.isVars_commands()){
+        if (serverConfig.isVars_commands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_VARIABLES, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_VARIABLES);
         }
-        if (serverConfig.isDatabase_commands()){
+        if (serverConfig.isDatabase_commands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_DATABASE);
         }
@@ -506,13 +516,13 @@ public class CSLHttpServerJetty {
     private String executeApiCommand(ApiCommands api, Json data, Json cmd, Json params, String xCorrelationId) {
         String bodyResp;
         if (listOfRemoteApi.contains(api.getName().toLowerCase())) {
-            logger.debugReq(LoggerInterfaces.CSL_CLIENT,"Sending command with body {} ...", params);
+            logger.traceReq(LoggerInterfaces.CSL_CLIENT, "Sending command with body {} ...", params);
             bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data, xCorrelationId).toString();
-            logger.debugResp(LoggerInterfaces.CSL_CLIENT,"Sent command with body {} : {}", params, bodyResp);
+            logger.traceResp(LoggerInterfaces.CSL_CLIENT, "Sent command with body {} : {}", params, bodyResp);
         } else {
-            logger.debugReq(LoggerInterfaces.LOCAL,"Executing command with body {} ...", params);
+            logger.traceReq(LoggerInterfaces.LOCAL, "Executing command with body {} ...", params);
             bodyResp = api.exec(cmd.asString(), params.set(X_CORRELATION_ID, xCorrelationId), data.get("files")).toString();
-            logger.debugResp(LoggerInterfaces.LOCAL,"Executed command with body {} : {}", params, bodyResp);
+            logger.traceResp(LoggerInterfaces.LOCAL, "Executed command with body {} : {}", params, bodyResp);
         }
         return bodyResp;
     }
@@ -577,6 +587,7 @@ public class CSLHttpServerJetty {
 
     /**
      * Create CORS options servlet holder
+     *
      * @return the corresponding servlet Holder
      */
     private ServletHolder createCORSOptionsServletHolder() {

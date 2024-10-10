@@ -1,11 +1,13 @@
 package com.csl.intercom.cslscan.models;
 
 import com.csl.intercom.cslscan.enums.ExportQueryStatus;
+import com.csl.logger.LoggerConstants;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -21,8 +23,7 @@ public class ExportQuery {
     private String filename;
     private String message;
     @Getter
-    @Setter
-    String xCorrelationId="";  // TODO: need cleaning
+    String xCorrelationId = null;  // TODO: need cleaning
 
     private ExportQuery(UUID id, ExportQueryStatus status, String message, OffsetDateTime startTime, String filename) {
         this.id = id;
@@ -30,6 +31,7 @@ public class ExportQuery {
         this.message = message;
         this.startTime = startTime;
         this.filename = filename;
+        xCorrelationId = MDC.get(LoggerConstants.X_CORRELATION_ID);
     }
 
     public static ExportQuery fromScannerJson(Json json) {

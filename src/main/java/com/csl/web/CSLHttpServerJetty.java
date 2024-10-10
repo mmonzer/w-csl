@@ -343,7 +343,7 @@ public class CSLHttpServerJetty {
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD);
         };
 
-        ThreadUtils.correlatedSingleThreadScheduledAtFixedRate(scheduler, refreshTask, interval, interval, TimeUnit.SECONDS);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduler, refreshTask, interval, interval, TimeUnit.SECONDS, "keep alive ihm ws", "CSL_SERVER");
     }
 
     /**

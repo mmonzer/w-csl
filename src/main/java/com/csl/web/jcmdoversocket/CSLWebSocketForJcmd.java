@@ -1,10 +1,15 @@
 package com.csl.web.jcmdoversocket;
 
+import com.csl.logger.LoggerConstants;
+import com.csl.logger.LoggerUtils;
+import com.csl.util.CorrelationUtils;
+import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -208,21 +213,22 @@ public class CSLWebSocketForJcmd {
         if (timeOutDetectorRunning) return;
         timeOutDetectorRunning = true;
 
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        executorService.scheduleAtFixedRate(() -> {
-            long currentTime = System.currentTimeMillis();
+        ThreadUtils.correlatedSingleThreadScheduledAtFixedRate(
+            () -> {
+                long currentTime = System.currentTimeMillis();
 
-            for (Map.Entry<String, Json> entry : pendingMessages.entrySet()) {
-                Json message = entry.getValue();
-                long startTime = message.get("start_time").asLong();
-                long endTime = startTime + TIME_OUT;
+                for (Map.Entry<String, Json> entry : pendingMessages.entrySet()) {
+                    Json message = entry.getValue();
+                    long startTime = message.get("start_time").asLong();
+                    long endTime = startTime + TIME_OUT;
 
-                if (endTime < currentTime) {
-                    logger.debug("Timeout: {}", message);
-                    message.set(RESPONSE, Json.object().set("error", "TIMEOUT"));
+                    if (endTime < currentTime) {
+                        logger.debug("Timeout: {}", message);
+                        message.set(RESPONSE, Json.object().set("error", "TIMEOUT"));
+                    }
                 }
             }
-        }, 0, 1, TimeUnit.SECONDS);
+            , 0, 1, TimeUnit.SECONDS);
     }
 
     /**

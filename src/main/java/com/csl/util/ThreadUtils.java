@@ -4,12 +4,37 @@ import org.slf4j.MDC;
 
 import java.util.concurrent.*;
 
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.ENDPOINT;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
  * Utils for threads
  */
 public class ThreadUtils {
+
+    /**
+     * Executor for thread running at fixed rate that transfers the X_Correlation_ID from parent thread to child thread.
+     * @param command The task to execute.
+     * @param initialDelay The delay before executing the task.
+     * @param period The period between executions.
+     * @param timeUnit The time unit of the timeout.
+     * @return the given concurrent executor
+     */
+    public static ScheduledExecutorService correlatedSingleThreadScheduledAtFixedRate(Runnable command, long initialDelay,
+                                                                                      long period,
+                                                                                      TimeUnit timeUnit) {
+        String xCorrelationId = MDC.get(X_CORRELATION_ID);
+        String endpoint = MDC.get(ENDPOINT);
+        ScheduledExecutorService threadExecutor = Executors.newSingleThreadScheduledExecutor();
+        threadExecutor.scheduleAtFixedRate(
+            ()->{
+                MDC.put(X_CORRELATION_ID, xCorrelationId);
+                MDC.put(ENDPOINT, endpoint);
+                command.run();
+            }, initialDelay, period, timeUnit);
+
+        return threadExecutor;
+    }
 
     /**
      * Executor for thread running at fixed rate and with timeout that transfers the X_Correlation_ID from parent thread to child thread.
@@ -27,14 +52,17 @@ public class ThreadUtils {
                                                                                       long timeout,
                                                                                       TimeUnit timeoutUnit) {
         String xCorrelationId = MDC.get(X_CORRELATION_ID);
+        String endpoint = MDC.get(ENDPOINT);
         ScheduledExecutorService threadExecutor = Executors.newSingleThreadScheduledExecutor();
         scheduleAtFixedRatedWithTimeout(threadExecutor, ()->{
             MDC.put(X_CORRELATION_ID, xCorrelationId);
+            MDC.put(ENDPOINT, endpoint);
             command.run();
         }, initialDelay, period, unit, timeout, timeoutUnit);
 
         return threadExecutor;
     }
+
     /**
      * Schedule a task to be executed after a delay.
      *

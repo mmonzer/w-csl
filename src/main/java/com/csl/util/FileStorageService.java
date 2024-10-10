@@ -30,7 +30,7 @@ public class FileStorageService {
         } catch (Exception e) {
             logger.error("Error creating download directory: " + downloadPath, e);
         }
-        scheduledExecutorService.scheduleAtFixedRate(this::deleteFiles, 0, 1, java.util.concurrent.TimeUnit.HOURS);
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduledExecutorService, this::deleteFiles, 0, 1, java.util.concurrent.TimeUnit.HOURS, "auto deleting files", "CSL_CLIENT");
     }
 
     public FileStorageService() {

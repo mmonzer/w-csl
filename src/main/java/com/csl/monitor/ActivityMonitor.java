@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 import com.csl.core.CSLContext;
 import com.csl.ids.Tap;
 import com.csl.intercom.status.IStatusProvider;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CSLWebSocket;
@@ -230,7 +231,7 @@ public class ActivityMonitor implements IStatusProvider {
 				scheduler,
 				sendTic ,
 				1, 1, TimeUnit.SECONDS,
-				"tics monitor", LoggerInterfaces.CSL_CLIENT
+				LoggerCustomEndpoints.TICS_MONITOR, LoggerInterfaces.CSL_CLIENT
 		);
 	}
 

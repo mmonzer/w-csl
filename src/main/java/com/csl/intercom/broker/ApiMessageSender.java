@@ -1,5 +1,6 @@
 package com.csl.intercom.broker;
 
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
@@ -123,7 +124,7 @@ public class ApiMessageSender implements MqttCallback {
                 executorService,
                 this::detectTimeOut,
                 0, 1, TimeUnit.SECONDS,
-                "mqtt timeout detector", LoggerInterfaces.CSL_CLIENT
+                LoggerCustomEndpoints.MQTT_TIMEOUT_DETECTOR, LoggerInterfaces.CSL_CLIENT
         );
     }
 

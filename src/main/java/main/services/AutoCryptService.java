@@ -4,6 +4,7 @@ import com.csl.autocrypt.AutoCrypt;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.status.IStatusProvider;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
@@ -607,7 +608,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
                 synchronizationSchedule,
                 autocrypt::syncAll,
                 syncFrequency, syncFrequency, TimeUnit.SECONDS,
-                "autocrypt sync", LoggerInterfaces.CSL_CLIENT);
+                LoggerCustomEndpoints.AUTOCRYPT_SYNC, LoggerInterfaces.CSL_CLIENT);
     }
 
 }

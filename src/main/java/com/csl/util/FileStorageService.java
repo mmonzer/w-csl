@@ -1,5 +1,6 @@
 package com.csl.util;
 
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class FileStorageService {
                 scheduledExecutorService,
                 this::deleteFiles,
                 0, 1, java.util.concurrent.TimeUnit.HOURS,
-                "auto deleting files", LoggerInterfaces.CSL_CLIENT);
+                LoggerCustomEndpoints.AUTO_DELETING_FILES, LoggerInterfaces.CSL_CLIENT);
     }
 
     public FileStorageService() {

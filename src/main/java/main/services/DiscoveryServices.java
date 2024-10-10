@@ -24,6 +24,7 @@ import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CustomLogger;
 import com.csl.logger.LoggerActions;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.FileStorageService;
 import com.csl.util.FileUtils;
@@ -181,7 +182,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 synchronizationSchedule,
                 this::syncAll,
                 0, 300, TimeUnit.SECONDS,
-                "discovery sync", LoggerInterfaces.CSL_CLIENT
+                LoggerCustomEndpoints.DISCOVERY_SYNC, LoggerInterfaces.CSL_CLIENT
         );
 
         addCmd("get_status", params -> {

@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CorrelatedStompSessionHandlerAdapter;
@@ -83,7 +84,7 @@ public class ScanWebSocketHandler {
                 webSocketsConnectionAttempts,
                 this::connectStompSessionsIfNecessary,
                 0, 2, TimeUnit.SECONDS,
-                "ws reconnect", LoggerInterfaces.CSL_CLIENT);
+                LoggerCustomEndpoints.RECONNECT_WS_SCAN, LoggerInterfaces.CSL_CLIENT);
     }
 
     /**

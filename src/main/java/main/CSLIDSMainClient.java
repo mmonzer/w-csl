@@ -7,6 +7,7 @@ import com.csl.core.NoLogging;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.logger.LoggerUtils;
 import com.csl.util.CorrelationUtils;
@@ -212,7 +213,7 @@ public class CSLIDSMainClient {
                     }
                 },
                 0, 1, TimeUnit.SECONDS,
-                "reconnect ws", LoggerInterfaces.CSL_CLIENT);
+                LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
 
         // Keep-alive task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
@@ -221,7 +222,8 @@ public class CSLIDSMainClient {
                         clientEndPoint.sendMessage("keep alive");
                     }
                 },
-                1, 5, TimeUnit.SECONDS, "keep alive WS", LoggerInterfaces.CSL_CLIENT);
+                1, 5, TimeUnit.SECONDS,
+                LoggerCustomEndpoints.KEEP_ALIVE_WS_CSL, LoggerInterfaces.CSL_CLIENT);
     }
 
     /**

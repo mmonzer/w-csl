@@ -2,6 +2,7 @@ package com.csl.intercom.broker;
 
 import com.csl.core.Config;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
@@ -83,7 +84,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
                 mqttConnectionAttempts,
                 this::connectToMqttClientIfNecessary,
                 0, 10, TimeUnit.SECONDS,
-                "reconnect mqtt", LoggerInterfaces.CSL_CLIENT
+                LoggerCustomEndpoints.RECONNECT_MQTT, LoggerInterfaces.CSL_CLIENT
         );
         mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setCleanSession(true);

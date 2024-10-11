@@ -3,7 +3,7 @@ package com.csl.logger;
 public final class LoggerConstants {
     public static final String X_CORRELATION_ID= "X-Correlation-ID";
     public static final String IP_SRC= "ip_src";
-    public static final String PORT_SRC= "ip_src";
+    public static final String PORT_SRC= "port_src";
     public static final String ENDPOINT = "endpoint";
     public static final String METHOD= "method";
     public static final String PROTOCOL= "protocol";

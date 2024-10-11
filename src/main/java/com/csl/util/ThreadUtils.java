@@ -11,7 +11,7 @@ import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.ENDPOINT;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
- * Utils for threads
+ * Utils for correlation of threads
  */
 public class ThreadUtils {
 
@@ -48,6 +48,33 @@ public class ThreadUtils {
             long period,
             TimeUnit timeUnit) {
         singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, MDC.get(X_CORRELATION_ID), MDC.get(ENDPOINT));
+    }
+
+    /**
+     * Executor for thread running at fixed rate and with timeout that transfers the X_Correlation_ID from parent thread to child thread.
+     * @param command The task to execute.
+     * @param initialDelay The delay before executing the task.
+     * @param period The period between executions.
+     * @param unit The time unit of the delay.
+     * @param timeout The timeout of the task, in milliseconds.
+     * @param timeoutUnit The time unit of the timeout.
+     * @return the given concurrent executor
+     */
+    public static ScheduledExecutorService correlatedSingleThreadScheduledAtFixedRate(Runnable command, long initialDelay,
+                                                                                      long period,
+                                                                                      TimeUnit unit,
+                                                                                      long timeout,
+                                                                                      TimeUnit timeoutUnit) {
+        String xCorrelationId = MDC.get(X_CORRELATION_ID);
+        String endpoint = MDC.get(ENDPOINT);
+        ScheduledExecutorService threadExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduleAtFixedRatedWithTimeout(threadExecutor, ()->{
+            MDC.put(X_CORRELATION_ID, xCorrelationId);
+            MDC.put(ENDPOINT, endpoint);
+            command.run();
+        }, initialDelay, period, unit, timeout, timeoutUnit);
+
+        return threadExecutor;
     }
 
     /**
@@ -118,10 +145,33 @@ public class ThreadUtils {
         singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, CorrelationUtils.createXCorrelationId(), endpoint, initializerService.toString());
     }
 
+    /**
+     * Launches a task in a single thread as scheduleAtFixedRate but adds the X-Correlation-ID and the endpoint to the MDC environment of the new thread.
+     * @param threadExecutor executor for thread
+     * @param command callback to execute
+     * @param initialDelay init delay to start the thread
+     * @param period frequency to execute the thread
+     * @param timeUnit time unit for initialDelay and period
+     * @param xCorrelationId X-Correlation-ID to add to MDC env of the new thread
+     * @param endpoint endpoint to add to MDC env of the new thread
+     * @return the future of the execution
+     */
     private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint) {
         return singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, xCorrelationId, endpoint, null);
     }
 
+    /**
+     * Launches a task in a single thread as scheduleAtFixedRate but adds the X-Correlation-ID the endpoint and the initializer service to the MDC environment of the new thread.
+     * @param threadExecutor executor for thread
+     * @param command callback to execute
+     * @param initialDelay init delay to start the thread
+     * @param period frequency to execute the thread
+     * @param timeUnit time unit for initialDelay and period
+     * @param xCorrelationId X-Correlation-ID to add to MDC env of the new thread
+     * @param endpoint endpoint to add to MDC env of the new thread
+     * @param initializerService initializerService to add to MDC env of the new thread
+     * @return the future of the execution
+     */
     private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint, String initializerService) {
         return threadExecutor.scheduleAtFixedRate(
                 () -> {
@@ -130,33 +180,6 @@ public class ThreadUtils {
                     MDC.put(INIT_SERVICE, initializerService);
                     command.run();
                 }, initialDelay, period, timeUnit);
-    }
-
-    /**
-     * Executor for thread running at fixed rate and with timeout that transfers the X_Correlation_ID from parent thread to child thread.
-     * @param command The task to execute.
-     * @param initialDelay The delay before executing the task.
-     * @param period The period between executions.
-     * @param unit The time unit of the delay.
-     * @param timeout The timeout of the task, in milliseconds.
-     * @param timeoutUnit The time unit of the timeout.
-     * @return the given concurrent executor
-     */
-    public static ScheduledExecutorService correlatedSingleThreadScheduledAtFixedRate(Runnable command, long initialDelay,
-                                                                                      long period,
-                                                                                      TimeUnit unit,
-                                                                                      long timeout,
-                                                                                      TimeUnit timeoutUnit) {
-        String xCorrelationId = MDC.get(X_CORRELATION_ID);
-        String endpoint = MDC.get(ENDPOINT);
-        ScheduledExecutorService threadExecutor = Executors.newSingleThreadScheduledExecutor();
-        scheduleAtFixedRatedWithTimeout(threadExecutor, ()->{
-            MDC.put(X_CORRELATION_ID, xCorrelationId);
-            MDC.put(ENDPOINT, endpoint);
-            command.run();
-        }, initialDelay, period, unit, timeout, timeoutUnit);
-
-        return threadExecutor;
     }
 
     /**

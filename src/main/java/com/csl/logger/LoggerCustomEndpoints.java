@@ -18,5 +18,6 @@ public final class LoggerCustomEndpoints {
     public static final String SYNC_EXT_CONNECTION_INFO= "synchronize external connection infos";
     public static final String DISCOVERY_SYNC= "discovery sync";
     public static final String AUTOCRYPT_SYNC= "autocrypt sync";
+    public static final String KEEP_ALIVE_IHM_WS= "keep alive ihm ws";
 }
 

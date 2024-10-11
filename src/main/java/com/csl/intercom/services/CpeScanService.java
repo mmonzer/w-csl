@@ -23,8 +23,6 @@ import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-import static com.csl.util.ThreadUtils.correlatedSingleThreadScheduledAtFixedRate;
-
 /**
  * Represents and handles the list of currently running scans.
  * Should not be created, but accessed through the static instance.
@@ -296,10 +294,10 @@ public class CpeScanService {
                     scansHandlingTask.shutdownNow();
                     Thread.currentThread().interrupt();
                 }
-                scansHandlingTask = correlatedSingleThreadScheduledAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
+                scansHandlingTask = ThreadUtils.correlatedSingleThreadScheduledAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
             }
         } else {
-            scansHandlingTask = correlatedSingleThreadScheduledAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
+            scansHandlingTask = ThreadUtils.correlatedSingleThreadScheduledAtFixedRate(this::handleScans, 0, 1, TimeUnit.SECONDS, 5, TimeUnit.MINUTES);
         }
     }
 }

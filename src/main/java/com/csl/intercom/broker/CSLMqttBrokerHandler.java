@@ -62,15 +62,11 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      * @param config The configuration of the project. Can be retrieved with <code>CSLContext.instance.getConfig()</code>.
      */
     public CSLMqttBrokerHandler(Config config) {
-//        Json globalConfig = config.get("global");
         Config.Client clientConfig = config.Client;
-//        brokerUri = JsonUtil.getBooleanFromJson(globalConfig, "use_ssl", true) ? "wss://" : "ws://";
         brokerUri = clientConfig.getUseSsl() ? "wss://" : "ws://";
-//        brokerUri += JsonUtil.getStringFromJson(globalConfig, "ip_server_remote", "localhost");
         brokerUri += clientConfig.getIpServerRemote();
         brokerUri += "/mqtt";
         // The API key to include in each message
-//        String apiKey = globalConfig.get("api_key").asString();
         String apiKey = clientConfig.getApiKey();
 
         // Get the organization name, or "None" if it doesn't exist.

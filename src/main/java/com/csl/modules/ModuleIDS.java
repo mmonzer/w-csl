@@ -18,268 +18,243 @@ import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-
-
 /*   CONFIG
- * 
- * 
+ *
+ *
  */
 public class ModuleIDS implements IModule {
 
-	ICSLContext context=null;
-	
-	@Getter
+    ICSLContext context = null;
+
+    @Getter
     ActivityMonitor activityMonitor = new ActivityMonitor();
-	
-	boolean loggingOn=false;			// record the packets
-	boolean idsDetectOn=false;			// do the detection
 
-	@Setter
-    boolean sendToBrowser=true;
-	@Setter
-    boolean sendToConsole=true;
+    boolean loggingOn = false;            // record the packets
+    boolean idsDetectOn = false;            // do the detection
 
-	FileLog packetsLog , variablesLog, networkLog;
+    @Setter
+    boolean sendToBrowser = true;
+    @Setter
+    boolean sendToConsole = true;
 
-	IIDSMainProcessor idsMainProcessor=null;
-	
-	boolean running=false;
+    FileLog packetsLog, variablesLog, networkLog;
 
-    private String variablesFilename="VARIABLES";
+    IIDSMainProcessor idsMainProcessor = null;
 
-	private String packetsFilename="PACKETS";
+    boolean running = false;
 
-	private String networkFilename="NETWORK";
+    private String variablesFilename = "VARIABLES";
 
-	private long max_size=10000000;
+    private String packetsFilename = "PACKETS";
 
-    public String runningState( ) {
-		
-		return "Running:"+running+" detect:"+idsDetectOn+" record:"+loggingOn+" sendToConsole:"+sendToConsole+" sendToBrowser:"+sendToBrowser;
-		
-	}
+    private String networkFilename = "NETWORK";
 
-	public void setModeIdle() {
-		idsDetectOn=false;
-		loggingOn=false;
+    private long max_size = 10000000;
 
+    public String runningState() {
 
-	}
+        return "Running:" + running + " detect:" + idsDetectOn + " record:" + loggingOn + " sendToConsole:" + sendToConsole + " sendToBrowser:" + sendToBrowser;
+    }
 
-	public void setModeRecord() {
-		idsDetectOn=false;
-		loggingOn=true;
-	}
+    public void setModeIdle() {
+        idsDetectOn = false;
+        loggingOn = false;
+    }
 
-	public void setModeDetect() {
-		idsDetectOn=true;
-		loggingOn=true;
-	}
+    public void setModeRecord() {
+        idsDetectOn = false;
+        loggingOn = true;
+    }
 
-	public void outDisplay(Json jj) {
-		if (sendToBrowser) {
-			Json j=Json.object();
-	        j.set("line", jj.toString());
-	        j.set("type", "packet");
-			CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j );
-		}
-		
-	}
-	
-	public void openLogFiles() {
-		Config.IdsConf config=context.getConfig().IdsConf;
+    public void setModeDetect() {
+        idsDetectOn = true;
+        loggingOn = true;
+    }
 
-		String datadir=config.getPacketsDirForRecording();
+    public void outDisplay(Json jj) {
+        if (sendToBrowser) {
+            Json j = Json.object();
+            j.set("line", jj.toString());
+            j.set("type", "packet");
+            CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE, j);
+        }
+    }
 
-		this.variablesFilename=config.getVariablesPrefixFilename();
-		this.packetsFilename=config.getPacketsPrefixFilename();
-		this.networkFilename=config.getNetworkPrefixFilename();
+    public void openLogFiles() {
+        Config.IdsConf config = context.getConfig().IdsConf;
 
-		this.max_size=config.getMaxSizeOfLogFiles();
-		packetsLog= new FileLog(datadir, packetsFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-		variablesLog= new FileLog(datadir, variablesFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-		networkLog= new FileLog(datadir, networkFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-	}
-	
-	public void reOpenLogFiles(String datadir) {
-		packetsLog= new FileLog(datadir, packetsFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-		variablesLog= new FileLog(datadir, variablesFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-		networkLog= new FileLog(datadir, networkFilename,max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-	}
+        String datadir = config.getPacketsDirForRecording();
 
-	@Override
-	public IResult init(ICSLContext context,IModuleContext mcontext) {
-		return IResult.OK;
-	}
+        this.variablesFilename = config.getVariablesPrefixFilename();
+        this.packetsFilename = config.getPacketsPrefixFilename();
+        this.networkFilename = config.getNetworkPrefixFilename();
 
-	public IResult initOld(ICSLContext context,IModuleContext mcontext) {
-		// TODO Auto-generated method stub
-		this.context=context;
-//		Json config=context.getConfig();
-		Config.IdsConf config = Config.instance.IdsConf;
+        this.max_size = config.getMaxSizeOfLogFiles();
+        packetsLog = new FileLog(datadir, packetsFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+        variablesLog = new FileLog(datadir, variablesFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+        networkLog = new FileLog(datadir, networkFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+    }
+
+    public void reOpenLogFiles(String datadir) {
+        packetsLog = new FileLog(datadir, packetsFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+        variablesLog = new FileLog(datadir, variablesFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+        networkLog = new FileLog(datadir, networkFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+    }
+
+    @Override
+    public IResult init(ICSLContext context, IModuleContext mcontext) {
+        return IResult.OK;
+    }
+
+    public IResult initOld(ICSLContext context, IModuleContext mcontext) {
+        // TODO Auto-generated method stub
+        this.context = context;
+        Config.IdsConf config = Config.instance.IdsConf;
 
 
+        boolean showTicks = config.getShowTicks();
+
+        activityMonitor.setShowTicks(showTicks);
+
+        int maxHistSize = config.getHistoryLength();
+        activityMonitor.setMaxHistorySize(maxHistSize);
+
+        activityMonitor.startTicTask();
+
+        CSLContext.instance.getStatusNotifier().registerStatusProvider("taps", activityMonitor);
+        {
+
+            openLogFiles();
+        }
+        idsMainProcessor = CSLContext.instance.getIDSMainProcessor();
 
 
-//		boolean showTicks=JsonUtil.getBooleanFromJson(config, "ids_conf/show_ticks", true);
-		boolean showTicks=config.getShowTicks();
-
-		activityMonitor.setShowTicks(showTicks);
-
-//		int maxHistSize = JsonUtil.getIntFromJson(config, "ids_conf/history_length", 60);
-		int maxHistSize = config.getHistoryLength();
-		activityMonitor.setMaxHistorySize(maxHistSize);
-		
-		activityMonitor.startTicTask();
-
-		CSLContext.instance.getStatusNotifier().registerStatusProvider("taps", activityMonitor);
-		{
-			
-			openLogFiles();
-		}
-		idsMainProcessor=CSLContext.instance.getIDSMainProcessor();
-		
-		
-		this.sendToBrowser=CSLContext.instance.getIdsParams().isSendToBrowser();
-		this.sendToConsole=CSLContext.instance.getIdsParams().isSendToConsole();
+        this.sendToBrowser = CSLContext.instance.getIdsParams().isSendToBrowser();
+        this.sendToConsole = CSLContext.instance.getIdsParams().isSendToConsole();
 
 
-		boolean on =config.getOn();
-		running=on;
-			
-		int n_input=1;
-		ICSLFlowListener listener=new ICSLFlowListener() {
-			@Override
-			public String getName() {
-				// TODO Auto-generated method stub
-				return "IDS";
-			}
-			@Override
-			public int newElementOnQueue(Json jj) {
-				if (!running) {
-					return ICSLFlowListener.REMOVE_FROM_QUEUE;
-				}
-				
-				try
-				{
-					if (CSLContext.instance.getIdsParams().isShowReceivedObject()) System.out.println("Received object:"+jj);
-						if (jj.has("type")) {
-						String type =jj.get("type").asString();
-						if (type.compareTo("PKT")==0) {
-							if (loggingOn) {
-								String s= jj.toString();
-								packetsLog.RecordLogMessage(s);
-							}
-							outDisplay(jj);
-							if (idsDetectOn) idsMainProcessor.processPacket(jj);
-						}
-						else if (type.compareTo("VAR")==0) {
-							if (loggingOn) 
-								variablesLog.RecordLogMessage(jj.toString());
-							outDisplay(jj);
-							if (idsDetectOn) idsMainProcessor.processVariables(jj);
-						}
-						else if (type.compareTo("EVE")==0) {
-							EveMessageUtill.reformatTimeStamp(jj);
-							if (loggingOn) packetsLog.RecordLogMessage(jj.toString());
-							System.out.println("EVE:"+jj);
-								idsMainProcessor.processSuricataEvent(jj);
-						} 
-						else if (type.compareTo("TIC")==0) {
-							activityMonitor.processEvent(jj);
-						} 
-						else if (CSLContext.instance.isTestMode()) {
-							if (type.compareTo("CTRL")==0) {
-								String cmd=JsonUtil.getStringFromJson(jj, "cmd", "");
-								if (cmd.compareTo("stop")==0) {
-									System.err.println("Received cmd:stop");
-									System.exit(0);
-								}
-							}
-						}
-						else if ((type.compareTo("NET_FLOW")==0)||(type.compareTo("NET_NODE")==0)) {
-							if (loggingOn) 
-								networkLog.RecordLogMessage(jj.toString());
-							outDisplay(jj);
-						}
-					} else {
-						outDisplay(jj);
-					}
-						
-				}
-				catch (Exception e) {
-					System.out.println("Exception while processing "+jj);
-					System.out.println(e);
-				}
-				return ICSLFlowListener.REMOVE_FROM_QUEUE; // cancel next listeners
-			}
-		};
+        boolean on = config.getOn();
+        running = on;
 
-		
-		idsMainProcessor.init();
-		
-		CSLContext.instance.getCslUDPServer().addListener(n_input,listener);
-		return IResult.OK;
-	}
+        int n_input = 1;
+        ICSLFlowListener listener = new ICSLFlowListener() {
+            @Override
+            public String getName() {
+                // TODO Auto-generated method stub
+                return "IDS";
+            }
 
-	@Override
-	public IResult start(ICSLContext context,IModuleContext mcontext) {
-		// TODO Auto-generated method stub
-		//context.getGlobalVariablesTable().createDoubleVariable("u",0);
+            @Override
+            public int newElementOnQueue(Json jj) {
+                if (!running) {
+                    return ICSLFlowListener.REMOVE_FROM_QUEUE;
+                }
+
+                try {
+                    if (CSLContext.instance.getIdsParams().isShowReceivedObject())
+                        System.out.println("Received object:" + jj);
+                    if (jj.has("type")) {
+                        String type = jj.get("type").asString();
+                        if (type.compareTo("PKT") == 0) {
+                            if (loggingOn) {
+                                String s = jj.toString();
+                                packetsLog.RecordLogMessage(s);
+                            }
+                            outDisplay(jj);
+                            if (idsDetectOn) idsMainProcessor.processPacket(jj);
+                        } else if (type.compareTo("VAR") == 0) {
+                            if (loggingOn)
+                                variablesLog.RecordLogMessage(jj.toString());
+                            outDisplay(jj);
+                            if (idsDetectOn) idsMainProcessor.processVariables(jj);
+                        } else if (type.compareTo("EVE") == 0) {
+                            EveMessageUtill.reformatTimeStamp(jj);
+                            if (loggingOn) packetsLog.RecordLogMessage(jj.toString());
+                            System.out.println("EVE:" + jj);
+                            idsMainProcessor.processSuricataEvent(jj);
+                        } else if (type.compareTo("TIC") == 0) {
+                            activityMonitor.processEvent(jj);
+                        } else if (CSLContext.instance.isTestMode()) {
+                            if (type.compareTo("CTRL") == 0) {
+                                String cmd = JsonUtil.getStringFromJson(jj, "cmd", "");
+                                if (cmd.compareTo("stop") == 0) {
+                                    System.err.println("Received cmd:stop");
+                                    System.exit(0);
+                                }
+                            }
+                        } else if ((type.compareTo("NET_FLOW") == 0) || (type.compareTo("NET_NODE") == 0)) {
+                            if (loggingOn)
+                                networkLog.RecordLogMessage(jj.toString());
+                            outDisplay(jj);
+                        }
+                    } else {
+                        outDisplay(jj);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Exception while processing " + jj);
+                    System.out.println(e);
+                }
+                return ICSLFlowListener.REMOVE_FROM_QUEUE; // cancel next listeners
+            }
+        };
 
 
+        idsMainProcessor.init();
 
-		return IResult.OK;
-	}
+        CSLContext.instance.getCslUDPServer().addListener(n_input, listener);
+        return IResult.OK;
+    }
 
-	@Override
-	public IResult restart(ICSLContext context,IModuleContext mcontext) {
-		// TODO Auto-generated method stub
-		return IResult.OK;
-	}
+    @Override
+    public IResult start(ICSLContext context, IModuleContext mcontext) {
+        // TODO Auto-generated method stub
+        //context.getGlobalVariablesTable().createDoubleVariable("u",0);
 
-	@Override
-	public IResult stop(ICSLContext context,IModuleContext mcontext) {
-		// TODO Auto-generated method stub
-		return IResult.OK;
-	}
 
-	@Override
-	public IResult execInputPart(ICSLContext context,IModuleContext mcontext) {
-		// TODO Auto-generated method stub
-		return IResult.OK;
+        return IResult.OK;
+    }
 
-	}
-	
-	@Override
-	public IResult execStepPart(ICSLContext context,IModuleContext mcontext) {
+    @Override
+    public IResult restart(ICSLContext context, IModuleContext mcontext) {
+        // TODO Auto-generated method stub
+        return IResult.OK;
+    }
 
-		if (!running) return IResult.OK;
-		if (idsDetectOn) idsMainProcessor.execSysStateRules(context.getSystemCurrentTimeMillis());
-		return IResult.OK;
+    @Override
+    public IResult stop(ICSLContext context, IModuleContext mcontext) {
+        // TODO Auto-generated method stub
+        return IResult.OK;
+    }
 
-	}
+    @Override
+    public IResult execInputPart(ICSLContext context, IModuleContext mcontext) {
+        // TODO Auto-generated method stub
+        return IResult.OK;
+    }
 
-	@Override
-	public IResult execOutputPart(ICSLContext context,IModuleContext mcontext) {
-		// TODO Auto-generated method stub
-		return IResult.OK;
+    @Override
+    public IResult execStepPart(ICSLContext context, IModuleContext mcontext) {
 
-	}
+        if (!running) return IResult.OK;
+        if (idsDetectOn) idsMainProcessor.execSysStateRules(context.getSystemCurrentTimeMillis());
+        return IResult.OK;
+    }
 
-	@Override
-	public IResult execCommand(ICSLContext context, IModuleContext mcontext, Map<String, String> params) {
-		// TODO Auto-generated method stub
-		return new ErrorResult("Invalid Command", 1);
-	}
+    @Override
+    public IResult execOutputPart(ICSLContext context, IModuleContext mcontext) {
+        // TODO Auto-generated method stub
+        return IResult.OK;
+    }
 
-	static {
-		CSLContext.instance.registerModuleClass("ModuleIDS", ModuleIDS.class);
-	}
+    @Override
+    public IResult execCommand(ICSLContext context, IModuleContext mcontext, Map<String, String> params) {
+        // TODO Auto-generated method stub
+        return new ErrorResult("Invalid Command", 1);
+    }
 
+    static {
+        CSLContext.instance.registerModuleClass("ModuleIDS", ModuleIDS.class);
+    }
 }

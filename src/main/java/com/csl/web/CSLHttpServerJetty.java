@@ -4,6 +4,7 @@ import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.core.Config;
 import com.csl.logger.CustomLogger;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.csl.web.auth.ServerConfig;
@@ -20,9 +21,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.api.WebSocketBehavior;
 import org.eclipse.jetty.websocket.api.WebSocketPolicy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.MultipartConfigElement;
@@ -37,9 +35,6 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -49,9 +44,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
-
-import static com.csl.logger.LoggerUtils.infoInboundRequest;
-import static com.csl.logger.LoggerUtils.infoOutboundResponse;
 import static java.lang.System.exit;
 
 /**
@@ -343,7 +335,7 @@ public class CSLHttpServerJetty {
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD);
         };
 
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduler, refreshTask, interval, interval, TimeUnit.SECONDS, "keep alive ihm ws", "CSL_SERVER");
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduler, refreshTask, interval, interval, TimeUnit.SECONDS, LoggerCustomEndpoints.KEEP_ALIVE_IHM_WS, LoggerInterfaces.CSL_SERVER);
     }
 
     /**

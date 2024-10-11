@@ -67,14 +67,14 @@ public class LoggerUtils {
      * @param protocol protocol of the request
      */
     public static void infoInboundRequest(Logger logger, String ip, Integer port, String method, String endpoint, String protocol) {
-        MDC.put(LoggerConstants.IP_DST, ip);
-        MDC.put(LoggerConstants.PORT_DST, "" + port);
+        MDC.put(LoggerConstants.IP_SRC, ip);
+        MDC.put(LoggerConstants.PORT_SRC, "" + port);
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         logger.info("HTTP request received");
-        MDC.remove(LoggerConstants.IP_DST);
-        MDC.remove(LoggerConstants.PORT_DST);
+        MDC.remove(LoggerConstants.IP_SRC);
+        MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -92,15 +92,15 @@ public class LoggerUtils {
      * @param statusCode HTTP code of the response
      */
     public static void infoOutboundResponse(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
-        MDC.put(LoggerConstants.IP_SRC, ip);
-        MDC.put(LoggerConstants.PORT_SRC, port.toString());
+        MDC.put(LoggerConstants.IP_DST, ip);
+        MDC.put(LoggerConstants.PORT_DST, port.toString());
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
         logger.info("HTTP response sent.");
-        MDC.remove(LoggerConstants.IP_SRC);
-        MDC.remove(LoggerConstants.PORT_SRC);
+        MDC.remove(LoggerConstants.IP_DST);
+        MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -169,14 +169,14 @@ public class LoggerUtils {
      * @param protocol protocol of the request
      */
     public static void infoInboundRequest(CustomLogger logger, String ip, Integer port, String method, String endpoint, String protocol) {
-        MDC.put(LoggerConstants.IP_DST, ip);
-        MDC.put(LoggerConstants.PORT_DST, "" + port);
+        MDC.put(LoggerConstants.IP_SRC, ip);
+        MDC.put(LoggerConstants.PORT_SRC, "" + port);
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         logger.info("HTTP request received.");
-        MDC.remove(LoggerConstants.IP_DST);
-        MDC.remove(LoggerConstants.PORT_DST);
+        MDC.remove(LoggerConstants.IP_SRC);
+        MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -194,15 +194,15 @@ public class LoggerUtils {
      * @param statusCode HTTP code of the response
      */
     public static void infoOutboundResponse(CustomLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
-        MDC.put(LoggerConstants.IP_SRC, ip);
-        MDC.put(LoggerConstants.PORT_SRC, port.toString());
+        MDC.put(LoggerConstants.IP_DST, ip);
+        MDC.put(LoggerConstants.PORT_DST, port.toString());
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
         logger.info("HTTP response sent.");
-        MDC.remove(LoggerConstants.IP_SRC);
-        MDC.remove(LoggerConstants.PORT_SRC);
+        MDC.remove(LoggerConstants.IP_DST);
+        MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -271,14 +271,14 @@ public class LoggerUtils {
      * @param protocol protocol of the request
      */
     public static void debugInboundRequest(Logger logger, String ip, Integer port, String method, String endpoint, String protocol) {
-        MDC.put(LoggerConstants.IP_DST, ip);
-        MDC.put(LoggerConstants.PORT_DST, "" + port);
+        MDC.put(LoggerConstants.IP_SRC, ip);
+        MDC.put(LoggerConstants.PORT_SRC, "" + port);
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         logger.debug("HTTP request received.");
-        MDC.remove(LoggerConstants.IP_DST);
-        MDC.remove(LoggerConstants.PORT_DST);
+        MDC.remove(LoggerConstants.IP_SRC);
+        MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -296,15 +296,15 @@ public class LoggerUtils {
      * @param statusCode HTTP code of the response
      */
     public static void debugOutboundResponse(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
-        MDC.put(LoggerConstants.IP_SRC, ip);
-        MDC.put(LoggerConstants.PORT_SRC, port.toString());
+        MDC.put(LoggerConstants.IP_DST, ip);
+        MDC.put(LoggerConstants.PORT_DST, port.toString());
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
         logger.debug("HTTP response sent.");
-        MDC.remove(LoggerConstants.IP_SRC);
-        MDC.remove(LoggerConstants.PORT_SRC);
+        MDC.remove(LoggerConstants.IP_DST);
+        MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -373,14 +373,14 @@ public class LoggerUtils {
      * @param protocol protocol of the request
      */
     public static void debugInboundRequest(CustomLogger logger, String ip, Integer port, String method, String endpoint, String protocol) {
-        MDC.put(LoggerConstants.IP_DST, ip);
-        MDC.put(LoggerConstants.PORT_DST, "" + port);
+        MDC.put(LoggerConstants.IP_SRC, ip);
+        MDC.put(LoggerConstants.PORT_SRC, "" + port);
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         logger.debug("HTTP request received.");
-        MDC.remove(LoggerConstants.IP_DST);
-        MDC.remove(LoggerConstants.PORT_DST);
+        MDC.remove(LoggerConstants.IP_SRC);
+        MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -398,15 +398,15 @@ public class LoggerUtils {
      * @param statusCode HTTP code of the response
      */
     public static void debugOutboundResponse(CustomLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
-        MDC.put(LoggerConstants.IP_SRC, ip);
-        MDC.put(LoggerConstants.PORT_SRC, port.toString());
+        MDC.put(LoggerConstants.IP_DST, ip);
+        MDC.put(LoggerConstants.PORT_DST, port.toString());
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
         logger.debug("HTTP response sent.");
-        MDC.remove(LoggerConstants.IP_SRC);
-        MDC.remove(LoggerConstants.PORT_SRC);
+        MDC.remove(LoggerConstants.IP_DST);
+        MDC.remove(LoggerConstants.PORT_DST);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);

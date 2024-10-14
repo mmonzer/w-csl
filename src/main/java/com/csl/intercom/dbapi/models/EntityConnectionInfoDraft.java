@@ -1,9 +1,12 @@
 package com.csl.intercom.dbapi.models;
 
+import com.csl.logger.CustomLogger;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Getter;
 import lombok.Setter;
 import com.ucsl.json.Json;
+import main.services.DiscoveryServices;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -48,6 +51,7 @@ public class EntityConnectionInfoDraft {
     OffsetDateTime createdAt;
     @Getter @Setter
     OffsetDateTime updatedAt;
+    private static final CustomLogger logger = CustomLogger.getLogger(DiscoveryServices.class);
 
     public EntityConnectionInfoDraft(String uuid, String port, String name, String userName, String password, String discoveryProtocol) {
         this.uuid = uuid;
@@ -119,7 +123,11 @@ public class EntityConnectionInfoDraft {
                 "snmpPrivacyAlgorithm", this.snmpPrivacyAlgorithm,
                 "sshKey", this.sshKey,
                 "inputs", this.inputs,
-                "discoveryProtocolNameRelatedToHttpCnx", this.discoveryProtocolNameRelatedToHttpCnx
+                "discoveryProtocolNameRelatedToHttpCnx", this.discoveryProtocolNameRelatedToHttpCnx,
+                "isKeepPassword", this.isKeepPassword,
+                "isKeepSshKey", this.isKeepSshKey,
+                "isKeepPassphrase", this.isKeepPassphrase,
+                "isKeepSnmpPrivacyKey", this.isKeepSnmpPrivacyKey
         );
     }
 
@@ -141,7 +149,7 @@ public class EntityConnectionInfoDraft {
         );
     }
     public static EntityConnectionInfoDraft fromHMIJson(Json connectionDraftJson) {
-
+        logger.info("*************fromHMIJson: connectionDraftJson:**********" + connectionDraftJson.toString());
         boolean is_keep_password = true;
         if (connectionDraftJson.has("is_keep_password"))
             is_keep_password = connectionDraftJson.get("is_keep_password").asBoolean();

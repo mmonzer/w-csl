@@ -1652,7 +1652,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         Json.object("exception", e.getMessage())
                 ).toJson();
             }
-
+            logger.info("Updating connection draft, {}", entityConnectionInfoDraft);
             JsonApiResponse response;
             try {
                 // update connection info in csl-scan

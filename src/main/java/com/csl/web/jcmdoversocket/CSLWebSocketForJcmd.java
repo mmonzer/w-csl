@@ -103,7 +103,6 @@ public class CSLWebSocketForJcmd {
         json.set("api", name);
         String message = json.toString();
 
-        debugOutboundRequest(logger, "CSL-Client", 0, "", name, "WS");
         sendMessage(session, message);
     }
 
@@ -165,6 +164,7 @@ public class CSLWebSocketForJcmd {
         fullMessage.set("api", apiName);
         fullMessage.set("jsonCommand", jsonCmd);
 
+        debugOutboundRequest(logger, "CSL-Client", 0, "", apiName, "WS");
         broadcastMessageJson(apiName, fullMessage);
         fullMessage.set("start_time", System.currentTimeMillis());
 

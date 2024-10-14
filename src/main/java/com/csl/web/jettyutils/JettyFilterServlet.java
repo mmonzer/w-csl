@@ -11,6 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.rmi.ServerException;
 
+import static com.csl.logger.LoggerUtils.addNetworkLog;
+import static com.csl.logger.LoggerUtils.removeNetworkLog;
+
 /**
  * This class prints logs before and after each Jetty Server request
  */
@@ -102,7 +105,9 @@ public class JettyFilterServlet implements Filter {
         MDC.put(LoggerConstants.IP_SRC, request.getRemoteAddr());
         MDC.put(LoggerConstants.PORT_SRC, ""+ request.getRemotePort());
         MDC.put(LoggerConstants.PROTOCOL, request.getProtocol());
+        addNetworkLog();
         logger.info("Incoming HTTP request");
+        removeNetworkLog();
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.PROTOCOL);
@@ -134,7 +139,7 @@ public class JettyFilterServlet implements Filter {
      * @param request HTTP response received
      */
     private void setVariablesToMDC(HttpServletRequest request) {
-        MDC.put(LoggerConstants.X_CORRELATION_ID, request.getHeader("X-Correlation-ID"));
+        MDC.put(LoggerConstants.X_CORRELATION_ID, request.getHeader(LoggerConstants.X_CORRELATION_ID));
         MDC.put(LoggerConstants.ENDPOINT, request.getRequestURI());
         MDC.put(LoggerConstants.METHOD, request.getMethod());
     }

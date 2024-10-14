@@ -11,4 +11,21 @@ public final class LoggerConstants {
     public static final String IP_DST= "ip_dst";
     public static final String PORT_DST= "port_dst";
     public static final String INIT_SERVICE= "initializer_service";
+
+    // Orthogonal log level
+    public static final String LOG_TYPE= "log_type";
+    public static final String APPLICATIVE= "applicative";
+    public static final String NETWORK= "network";
+
+    // Logger default messages
+    public static final String API_REQUEST_SENT= "API request sent.";
+    public static final String API_REQUEST_RECV= "API request received.";
+    public static final String API_RESPONSE_RECV= "API response received.";
+    public static final String API_RESPONSE_SENT= "API response sent.";
+    public static final String WS_REQUEST_SENT= "WS request sent.";
+    public static final String WS_REQUEST_RECV= "WS request received.";
+    public static final String WS_RESPONSE_RECV= "WS response received.";
+    public static final String WS_RESPONSE_SENT= "WS response sent.";
+
+
 }

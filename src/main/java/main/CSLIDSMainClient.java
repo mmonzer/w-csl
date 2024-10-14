@@ -167,7 +167,7 @@ public class CSLIDSMainClient {
                     ApiCommands api = apiMap.get(apiName);
                     MDC.put(ENDPOINT, apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
-                    uri = "/" + apiName + "/" + jsonCommand.get("cmd");
+                    uri = "/" + apiName + "/" + jsonCommand.get("cmd").asString();
                     MDC.put(ENDPOINT, uri);
                     LoggerUtils.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS");
 

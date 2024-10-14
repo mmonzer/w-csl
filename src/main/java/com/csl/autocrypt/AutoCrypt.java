@@ -4,7 +4,7 @@ import com.csl.autocrypt.enums.AutocryptConstants;
 import com.csl.autocrypt.services.*;
 import com.csl.core.Config;
 import com.csl.intercom.services.exceptions.SynchronizationException;
-import com.csl.logger.CustomLogger;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerActions;
 import com.csl.logger.LoggerInterfaces;
 import com.ucsl.json.Json;
@@ -37,7 +37,7 @@ public class AutoCrypt {
     @Getter
     private ApiHandlerForCSLAutoCrypt autocryptApiHandler = null;
 
-    private static final CustomLogger logger = CustomLogger.getLogger(AutoCrypt.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(AutoCrypt.class);
 
     private IssuerSynchronizationService issuerSynchronizationService = null;
     private RoleSynchronizationService roleSynchronizationService = null;

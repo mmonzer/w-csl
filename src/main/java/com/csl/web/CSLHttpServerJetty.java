@@ -3,7 +3,7 @@ package com.csl.web;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.core.Config;
-import com.csl.logger.CustomLogger;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
@@ -60,7 +60,7 @@ public class CSLHttpServerJetty {
     private boolean initialized = false;
     private boolean isRemote = true;
 
-    private static final CustomLogger logger = CustomLogger.getLogger(CSLHttpServerJetty.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(CSLHttpServerJetty.class);
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 

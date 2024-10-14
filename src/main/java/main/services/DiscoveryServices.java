@@ -22,7 +22,7 @@ import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
-import com.csl.logger.CustomLogger;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerActions;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
@@ -58,7 +58,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     static private final String defaultConfigFileSectionName = "discovery";
     static private final String defaultName = "discovery";
 
-    private static final CustomLogger logger = CustomLogger.getLogger(DiscoveryServices.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DiscoveryServices.class);
     private static final Logger log = LoggerFactory.getLogger(DiscoveryServices.class);
     private final boolean isRemote;
     private ScanWebSocketHandler scanWebSocketHandler = null;

@@ -122,7 +122,7 @@ public class CSLNetworkLogger {
      * @param protocol   protocol of the response
      * @param statusCode HTTP code of the response
      */
-    public static void debugInboundResponse(CustomLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
+    public static void debugInboundResponse(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
         setVariablesSource(ip, port);
         setVariables(endpoint, method, protocol, statusCode);
         logger.debug("HTTP response received.");
@@ -139,7 +139,7 @@ public class CSLNetworkLogger {
      * @param endpoint endpoint of the request
      * @param protocol protocol of the request
      */
-    public static void debugOutboundRequest(CustomLogger logger, String ip, Integer port, String method, String endpoint, String protocol) {
+    public static void debugOutboundRequest(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol) {
         setVariablesDestination(ip, port);
         setVariables(endpoint, method, protocol, null);
         logger.debug("HTTP request sent.");

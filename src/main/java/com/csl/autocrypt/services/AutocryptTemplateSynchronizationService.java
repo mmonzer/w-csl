@@ -7,7 +7,7 @@ import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.csl.intercom.services.PaginatedSynchronizationService;
 import com.csl.intercom.services.exceptions.SynchronizationException;
-import com.csl.logger.CustomLogger;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerActions;
 import com.csl.logger.LoggerInterfaces;
 import com.ucsl.interfaces.IVoidToJsonApiResponse;
@@ -23,7 +23,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
     protected final ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt;
     protected final String prefixLogger;
     protected Logger logger0;
-    protected CustomLogger logger;
+    protected CSLApplicativeLogger logger;
 
     public AutocryptTemplateSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt, String prefixLogger) {
         super("CSL-Autocrypt");

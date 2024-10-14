@@ -3,24 +3,18 @@ package com.csl.logger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.slf4j.Marker;
 
-import java.util.Objects;
-
-import static com.csl.logger.LoggerUtils.addApplicativeLog;
-import static com.csl.logger.LoggerUtils.removeApplicativeLog;
-
-public class CustomLogger {
+public class CSLApplicativeLogger {
     private final Logger logger;
 
     // Private constructor to prevent direct instantiation
-    private CustomLogger(Logger logger) {
+    private CSLApplicativeLogger(Logger logger) {
         this.logger = logger;
     }
 
     // Static factory method to create CustomLogger instances
-    public static CustomLogger getLogger(Class<?> clazz) {
-        return new CustomLogger(LoggerFactory.getLogger(clazz));
+    public static CSLApplicativeLogger getLogger(Class<?> clazz) {
+        return new CSLApplicativeLogger(LoggerFactory.getLogger(clazz));
     }
 
     // region LoggerActions and LoggerInterfaces
@@ -155,45 +149,23 @@ public class CustomLogger {
 
     // TODO : generalize with a interface string -> void
     private void trace(String action, String requestInterface, String msg) {
-        addVariabalesToMDC(action, requestInterface);
-        logger.trace(msg);
-        removeVariables();
+        log("TRACE", action, requestInterface, msg);
     }
 
     private void debug(String action, String requestInterface, String msg) {
-        addVariabalesToMDC(action, requestInterface);
-        logger.debug(msg);
-        removeVariables();
+        log("DEBUG", action, requestInterface, msg);
     }
 
     private void info(String action, String requestInterface, String msg) {
-        addVariabalesToMDC(action, requestInterface);
-        logger.info(msg);
-        removeVariables();
+        log("INFO", action, requestInterface, msg);
     }
 
     private void warn(String action, String requestInterface, String msg) {
-        addVariabalesToMDC(action, requestInterface);
-        logger.warn(msg);
-        removeVariables();
+        log("WARN", action, requestInterface, msg);
     }
 
     private void error(String action, String requestInterface, String msg) {
-        addVariabalesToMDC(action, requestInterface);
-        logger.error(msg);
-        removeVariables();
-    }
-
-    private static void removeVariables() {
-        MDC.remove("interface");
-        MDC.remove("action");
-        removeApplicativeLog();
-    }
-
-    private static void addVariabalesToMDC(String action, String requestInterface) {
-        MDC.put("action", action);
-        MDC.put("interface", requestInterface);
-        addApplicativeLog();
+        log("ERROR", action, requestInterface, msg);
     }
 
     // endregion wrappers LoggerActions and LoggerInterfaces
@@ -203,64 +175,148 @@ public class CustomLogger {
     // region usual level commands
 
     public void trace(String format, Object... objects) {
-        addApplicativeLog();
-        logger.trace(format, objects);
-        removeApplicativeLog();
+        log("TRACE", format, objects);
     }
 
     public void debug(String format, Object... objects) {
-        addApplicativeLog();
-        logger.debug(format, objects);
-        removeApplicativeLog();
+        log("DEBUG", format, objects);
     }
 
     public void info(String format, Object... objects) {
-        addApplicativeLog();
-        logger.info(format, objects);
-        removeApplicativeLog();
+        log("INFO", format, objects);
     }
 
     public void warn(String format, Object... objects) {
-        addApplicativeLog();
-        logger.warn(format, objects);
-        removeApplicativeLog();
+        log("WARN", format, objects);
     }
 
     public void error(String format, Object... objects) {
-        addApplicativeLog();
-        logger.error(format, objects);
-        removeApplicativeLog();
+        log("ERROR", format, objects);
     }
 
     public void trace(String format, Throwable throwable) {
-        addApplicativeLog();
-        logger.trace(format, throwable);
-        removeApplicativeLog();
+        log("TRACE", format, throwable);
     }
 
     public void debug(String format, Throwable throwable) {
-        addApplicativeLog();
-        logger.debug(format, throwable);
-        removeApplicativeLog();
+        log("DEBUG", format, throwable);
     }
 
     public void info(String format, Throwable throwable) {
-        addApplicativeLog();
-        logger.info(format, throwable);
-        removeApplicativeLog();
+        log("INFO", format, throwable);
     }
 
     public void warn(String format, Throwable throwable) {
-        addApplicativeLog();
-        logger.warn(format, throwable);
-        removeApplicativeLog();
+        log("WARN", format, throwable);
     }
 
     public void error(String format, Throwable throwable) {
-        addApplicativeLog();
-        logger.error(format, throwable);
-        removeApplicativeLog();
+        log("ERROR", format, throwable);
     }
 
     // endregion usual level commands
+
+    private void log(String level, String action, String requestInterface, String message, Object... objects) {
+        addVariablesToMDC(action, requestInterface);
+
+        switch (level.toLowerCase()) {
+            case "trace":
+                logger.trace(message, objects);
+                break;
+            case "debug":
+                logger.debug(message, objects);
+                break;
+            case "info":
+                logger.info(message, objects);
+                break;
+            case "warn":
+                logger.warn(message, objects);
+                break;
+            case "error":
+                logger.error(message, objects);
+                break;
+            default:
+                break;
+        }
+        removeVariables();
+    }
+
+    private void log(String level, String message, Object... objects) {
+        addVariablesToMDC();
+
+        switch (level.toLowerCase()) {
+            case "trace":
+                logger.trace(message, objects);
+                break;
+            case "debug":
+                logger.debug(message, objects);
+                break;
+            case "info":
+                logger.info(message, objects);
+                break;
+            case "warn":
+                logger.warn(message, objects);
+                break;
+            case "error":
+                logger.error(message, objects);
+                break;
+            default:
+                break;
+        }
+        removeVariables();
+    }
+
+    private void log(String level, String message, Throwable throwable) {
+        addVariablesToMDC();
+
+        switch (level.toLowerCase()) {
+            case "trace":
+                logger.trace(message, throwable);
+                break;
+            case "debug":
+                logger.debug(message, throwable);
+                break;
+            case "info":
+                logger.info(message, throwable);
+                break;
+            case "warn":
+                logger.warn(message, throwable);
+                break;
+            case "error":
+                logger.error(message, throwable);
+                break;
+            default:
+                break;
+        }
+
+        removeVariables();
+    }
+
+    /**
+     * Remove variables from MDC logger environment
+     */
+    private static void removeVariables() {
+        MDC.remove("interface");
+        MDC.remove("action");
+        MDC.remove(LoggerConstants.LOG_TYPE);
+    }
+
+    /**
+     * Add variables to MDC logger environment
+     *
+     * @param action           action variable
+     * @param requestInterface communication interfaces variable
+     */
+    private static void addVariablesToMDC(String action, String requestInterface) {
+        MDC.put("action", action);
+        MDC.put("interface", requestInterface);
+        MDC.put(LoggerConstants.LOG_TYPE, LoggerConstants.APPLICATIVE);
+    }
+
+    /**
+     * Add variables to MDC logger environment
+     */
+    private static void addVariablesToMDC() {
+        addVariablesToMDC(null, null);
+    }
 }

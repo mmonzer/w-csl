@@ -38,18 +38,4 @@ public class LoggerUtils {
         MDC.remove(LoggerConstants.PROTOCOL);
     }
 
-    /**
-     * Sets the applicative log label on
-     */
-    public static void addApplicativeLog() {
-        MDC.put(LoggerConstants.LOG_TYPE, LoggerConstants.APPLICATIVE);
-    }
-
-    /**
-     * Sets the applicative log label off
-     */
-    public static void removeApplicativeLog() {
-        MDC.remove(LoggerConstants.LOG_TYPE);
-    }
-
 }

@@ -1,15 +1,12 @@
 package com.csl.autocrypt.services;
 
 import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
-import com.csl.autocrypt.AutoCrypt;
 import com.csl.autocrypt.DbapiHandlerForCSLAutoCrypt;
 import com.csl.intercom.services.exceptions.SynchronizationException;
-import com.csl.logger.CustomLogger;
+import com.csl.logger.CSLApplicativeLogger;
 import com.ucsl.json.Json;
-import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +15,7 @@ import java.util.List;
 public class IssuerSynchronizationService extends AutocryptTemplateSynchronizationService {
     public IssuerSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt) {
         super( dbapiHandlerForCSLAutoCrypt, apiHandlerForCSLAutoCrypt, "SYNC-Autocrypt:Issuers");
-        logger = CustomLogger.getLogger(IssuerSynchronizationService.class);
+        logger = CSLApplicativeLogger.getLogger(IssuerSynchronizationService.class);
     }
 
     @Override

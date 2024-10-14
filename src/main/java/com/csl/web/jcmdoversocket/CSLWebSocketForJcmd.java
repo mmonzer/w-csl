@@ -1,5 +1,7 @@
 package com.csl.web.jcmdoversocket;
 
+import com.csl.logger.LoggerConstants;
+import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import org.eclipse.jetty.websocket.api.Session;
@@ -14,7 +16,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.csl.logger.LoggerUtils.*;
+import static com.csl.logger.CSLNetworkLogger.*;
 
 /**
  * CSLWebSocketForJcmd handles WebSocket communication for Jcmd commands.
@@ -164,7 +166,8 @@ public class CSLWebSocketForJcmd {
         fullMessage.set("api", apiName);
         fullMessage.set("jsonCommand", jsonCmd);
 
-        debugOutboundRequest(logger, "CSL-Client", 0, "", apiName, "WS");
+        debugOutboundRequest(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", LoggerConstants.WS_REQUEST_SENT);
+
         broadcastMessageJson(apiName, fullMessage);
         fullMessage.set("start_time", System.currentTimeMillis());
 
@@ -172,7 +175,7 @@ public class CSLWebSocketForJcmd {
 
         Json response = waitForResponse(uuid, fullMessage);
 
-        debugInboundResponse(logger, "CSL-Client", 0, "", apiName, "WS", 0);
+        debugInboundResponse(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", 0, LoggerConstants.WS_RESPONSE_RECV);
         return response;
     }
 

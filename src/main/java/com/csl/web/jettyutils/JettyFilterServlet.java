@@ -11,8 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.rmi.ServerException;
 
-import static com.csl.logger.LoggerUtils.addNetworkLog;
-import static com.csl.logger.LoggerUtils.removeNetworkLog;
+import static com.csl.logger.CSLNetworkLogger.*;
 
 /**
  * This class prints logs before and after each Jetty Server request
@@ -102,15 +101,8 @@ public class JettyFilterServlet implements Filter {
      * @param request HTTP request received
      */
     private void logIncomingRequest(HttpServletRequest request) {
-        MDC.put(LoggerConstants.IP_SRC, request.getRemoteAddr());
-        MDC.put(LoggerConstants.PORT_SRC, ""+ request.getRemotePort());
-        MDC.put(LoggerConstants.PROTOCOL, request.getProtocol());
-        addNetworkLog();
-        logger.info("Incoming HTTP request");
-        removeNetworkLog();
-        MDC.remove(LoggerConstants.IP_SRC);
-        MDC.remove(LoggerConstants.PORT_SRC);
-        MDC.remove(LoggerConstants.PROTOCOL);
+        infoInboundRequest(logger, request.getRemoteAddr(), request.getRemotePort(), "POST", request.getRequestURI(), request.getProtocol(), LoggerConstants.API_REQUEST_RECV);
+
     }
 
     /**
@@ -119,19 +111,7 @@ public class JettyFilterServlet implements Filter {
      * @param response HTTP response sent
      */
     private void logOutgoingResponse(HttpServletRequest request, HttpServletResponse response) {
-        MDC.put(LoggerConstants.IP_DST, request.getRemoteAddr());
-        MDC.put(LoggerConstants.PORT_DST, ""+ request.getRemotePort());
-        MDC.put(LoggerConstants.PROTOCOL, request.getProtocol());
-        MDC.put(LoggerConstants.STATUS_CODE, ""+ response.getStatus());
-        if (response.getStatus() == HttpServletResponse.SC_OK) {
-            logger.info("Http request completed successfully");
-        } else {
-            logger.error("Http request failed");
-        }
-        MDC.remove(LoggerConstants.IP_DST);
-        MDC.remove(LoggerConstants.PORT_DST);
-        MDC.remove(LoggerConstants.PROTOCOL);
-        MDC.remove(LoggerConstants.STATUS_CODE);
+        infoOutboundResponse(logger, request.getRemoteAddr(), request.getRemotePort(), "POST", request.getRequestURI(), request.getProtocol(), response.getStatus(), LoggerConstants.API_RESPONSE_SENT);
     }
 
     /**

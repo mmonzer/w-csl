@@ -7,9 +7,10 @@ import com.csl.core.NoLogging;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
+import com.csl.logger.CSLNetworkLogger;
+import com.csl.logger.LoggerConstants;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
-import com.csl.logger.LoggerUtils;
 import com.csl.util.CorrelationUtils;
 import com.csl.util.ThreadUtils;
 import com.csl.web.CSLHttpServerJetty;
@@ -169,7 +170,8 @@ public class CSLIDSMainClient {
                     Json jsonCommand = messageJson.get("jsonCommand");
                     uri = "/" + apiName + "/" + jsonCommand.get("cmd").asString();
                     MDC.put(ENDPOINT, uri);
-                    LoggerUtils.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS");
+
+                    CSLNetworkLogger.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);
@@ -188,7 +190,7 @@ public class CSLIDSMainClient {
 
                 logger.trace("Sending result: {}", resultMessageJson);
                 clientEndPoint.sendMessage("res:" + resultMessageJson);
-                LoggerUtils.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0);
+                CSLNetworkLogger.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);

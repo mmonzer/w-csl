@@ -2,6 +2,8 @@ package com.csl.intercom.cslscan;
 
 import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
 import com.csl.core.Config;
+import com.csl.logger.CSLNetworkLogger;
+import com.csl.logger.LoggerConstants;
 import com.ucsl.interfaces.IVoidToJsonApiResponse;
 import com.ucsl.json.Json;
 import lombok.Getter;
@@ -32,8 +34,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.csl.logger.LoggerUtils.debugInboundResponse;
-import static com.csl.logger.LoggerUtils.debugOutboundRequest;
+import static com.csl.logger.CSLNetworkLogger.debugInboundResponse;
+import static com.csl.logger.CSLNetworkLogger.debugOutboundRequest;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**
@@ -376,9 +378,9 @@ public class ApiHandler implements AutoCloseable {
      */
     synchronized protected ContentResponse createAndSendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
         Request request = createRequest(method, createUriFrom(endpoint), params, body);
-        debugOutboundRequest(logger, ip, port, method, endpoint, request.getVersion().toString());
+        CSLNetworkLogger.debugOutboundRequest(logger, ip, port, method, endpoint, request.getVersion().toString(), LoggerConstants.API_REQUEST_SENT);
         ContentResponse response = request.send();
-        debugInboundResponse(logger, ip, port, method, endpoint, response.getVersion().toString(), response.getStatus());
+        CSLNetworkLogger.debugInboundResponse(logger, ip, port, method, endpoint, response.getVersion().toString(), response.getStatus(), LoggerConstants.API_RESPONSE_RECV);
         return response;
     }
 

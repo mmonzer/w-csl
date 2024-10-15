@@ -1,5 +1,6 @@
 package com.csl.intercom.dbapi.models;
 
+import com.csl.intercom.dbapi.enums.SNMPv1ConnectionField;
 import com.csl.intercom.dbapi.enums.SNMPv2cConnectionField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
 import com.ucsl.json.Json;
@@ -47,7 +48,7 @@ public class SNMPv1Connection extends Connection {
                     uuid = null;
             }
 
-            int port = connectionJson.get(SNMPv2cConnectionField.PORT.dbapiName()).asInteger();
+            int port = connectionJson.get(SNMPv1ConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices = new ArrayList<>();
             for (Json device: connectionJson.get("connected_devices").asJsonList()) {
                 devices.add(device.asString());
@@ -56,9 +57,9 @@ public class SNMPv1Connection extends Connection {
             Json readOnlyOtherData = connectionJson.get("read_only_other_data");
             String community = null;
             if (otherData != null) {
-                community = String.valueOf(otherData.get(SNMPv2cConnectionField.COMMUNITY.dbapiName()));
+                community = String.valueOf(otherData.get(SNMPv1ConnectionField.COMMUNITY.dbapiName()).getValue());
             } else if (readOnlyOtherData != null) {
-                community = String.valueOf(readOnlyOtherData.get(SNMPv2cConnectionField.COMMUNITY.dbapiName()));
+                community = String.valueOf(readOnlyOtherData.get(SNMPv1ConnectionField.COMMUNITY.dbapiName()).getValue());
             }
             String name = connectionJson.get("name").asString();
             return new SNMPv1Connection(name, uuid, port, devices, community);

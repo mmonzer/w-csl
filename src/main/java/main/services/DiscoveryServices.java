@@ -732,6 +732,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         connectionUuid = null;
                     }
                     JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid,connectionId);
+                    Boolean successResponse = (Boolean) response.toJson().get("success").getValue();
+                    if(!successResponse){
+                        logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to test HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
+                        // force synchronize and re-test
+                        JsonApiResponse SynchronizeResponse = dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+                        response = scanApiHandler.testConnection(deviceUuid, connectionUuid,connectionId);
+                    }
                     logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SCAN_API,"Tested HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
                     logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Tested HTTP connection (deviceUuid={}  connectionId={})", deviceUuid, connectionIdJson);
                     return response.toJson();

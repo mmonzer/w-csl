@@ -188,9 +188,9 @@ public class EntityConnectionInfoDraft {
 
         return new EntityConnectionInfoDraft(
                 connectionDraftJson.get("mongo_entity_id").asString(),
-                connectionDraftJson.get("port_number_draft").asString(),
-                connectionDraftJson.get("name_draft").asString(),
-                connectionDraftJson.get("username_draft").asString(),
+                connectionDraftJson.get("port_number").asString(),
+                connectionDraftJson.get("name").asString(),
+                connectionDraftJson.get("username").asString(),
                 connectionDraftJson.get("password")==null ? "" : connectionDraftJson.get("password").asString(),
                 connectionDraftJson.get("discovery_protocol_draft").asString(),
                 snmpCommunity,

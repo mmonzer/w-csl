@@ -187,7 +187,7 @@ public class CSLNetworkLogger {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        MDC.put(LoggerConstants.STATUS_CODE, statusCode.toString());
+        MDC.put(LoggerConstants.STATUS_CODE, (statusCode==null)?null:statusCode.toString());
         addNetworkLog();
     }
 
@@ -198,7 +198,7 @@ public class CSLNetworkLogger {
      */
     private static void setVariablesSource(String ip, Integer port) {
         MDC.put(LoggerConstants.IP_SRC, ip);
-        MDC.put(LoggerConstants.PORT_SRC, port.toString());
+        MDC.put(LoggerConstants.PORT_SRC, (port==null)?null:port.toString());
     }
 
 
@@ -209,6 +209,6 @@ public class CSLNetworkLogger {
      */
     private static void setVariablesDestination(String ip, Integer port) {
         MDC.put(LoggerConstants.IP_DST, ip);
-        MDC.put(LoggerConstants.PORT_DST, port.toString());
+        MDC.put(LoggerConstants.PORT_DST, (port==null)?null:port.toString());
     }
 }

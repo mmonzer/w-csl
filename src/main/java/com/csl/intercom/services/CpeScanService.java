@@ -47,7 +47,10 @@ public class CpeScanService {
 
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 scansListSanitizer,
-                this::sanitizeScans,
+                () -> {
+                    this.sanitizeScans();
+                    logger.info("Successfully sanitized the scans.");
+                },
                 0, 5, TimeUnit.MINUTES,
                 LoggerCustomEndpoints.SCAN_LIST_SANITIZER, LoggerInterfaces.CSL_CLIENT
         );

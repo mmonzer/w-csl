@@ -29,9 +29,12 @@ public class ExternalConnectionInfoTemplatesSynchronizationService {
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 scheduledExecutorService,
-                this::synchronizeDiscoveredDevices, 0,
+                () -> {
+                    this.synchronizeDiscoveredDevices();
+                    logger.info("Successfully synchronized external connection's information templates.");
+                }, 0,
                 synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS,
-                LoggerCustomEndpoints.SYNC_DISCOVERED_DEVICES, LoggerInterfaces.CSL_CLIENT
+                LoggerCustomEndpoints.SYNC_DISCOVERED_DEVICES
         );
     }
 

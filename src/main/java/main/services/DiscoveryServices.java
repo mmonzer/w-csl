@@ -165,9 +165,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         synchronizationSchedule = Executors.newScheduledThreadPool(1);
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 synchronizationSchedule,
-                this::syncAll,
+                () -> {
+                    this.syncAll();
+                    logger.info("Successfully synchronized all CPE items.");
+                },
                 0, 300, TimeUnit.SECONDS,
-                LoggerCustomEndpoints.DISCOVERY_SYNC, LoggerInterfaces.CSL_CLIENT
+                LoggerCustomEndpoints.DISCOVERY_SYNC
         );
 
         addCmd("get_status", params -> {

@@ -606,7 +606,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
         ScheduledExecutorService synchronizationSchedule = Executors.newScheduledThreadPool(1);
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 synchronizationSchedule,
-                autocrypt::syncAll,
+                () -> {
+                    autocrypt.syncAll();
+                    logger.info("Successfully synchronized CSL-Autocrypt items.");
+                },
                 syncFrequency, syncFrequency, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.AUTOCRYPT_SYNC, LoggerInterfaces.CSL_CLIENT);
     }

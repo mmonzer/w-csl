@@ -34,9 +34,12 @@ public class ExternalConnectionInfoSynchronizationService {
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 scheduledExecutorService,
-                this::synchronizeExternalConnectionInfos,
+                () -> {
+                    this.synchronizeExternalConnectionInfos();
+                    logger.info("Successfully synchronized external connection's informations.");
+                },
                 0, synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS,
-                LoggerCustomEndpoints.SYNC_EXT_CONNECTION_INFO, LoggerInterfaces.CSL_CLIENT
+                LoggerCustomEndpoints.SYNC_EXT_CONNECTION_INFO
         );
     }
 

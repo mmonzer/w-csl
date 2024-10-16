@@ -4,7 +4,6 @@ import com.csl.core.CSLContext;
 import com.csl.core.NoLogging;
 import com.csl.util.CorrelationUtils;
 import main.services.*;
-import main.util.CSLRunningArgs;
 
 
 // JDK 17
@@ -29,8 +28,7 @@ public class CSLIDSMainServer {
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
-        System.out.println("Starting CSL IDS version " + CSLContext.VERSION);
-        CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
+        CSLContext.instance.init();
     }
 
     /**
@@ -38,12 +36,7 @@ public class CSLIDSMainServer {
      */
     private static void registerServices() {
         boolean forwardToCSLClient = true;
-        // remote services
-        CSLContext.instance.registerHttpEndpoint(new CpeServices(), !forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new CveServices(), !forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new NmapServices(), !forwardToCSLClient);
         // concentrator services
-        CSLContext.instance.registerHttpEndpoint(new CSLServiceIDS(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
@@ -55,12 +48,10 @@ public class CSLIDSMainServer {
     /**
      * Initializes databases, HTTP server, UDP server, and other necessary components, and starts them.
      */
-        private static void startServers() {
-        System.out.println(CSLContext.instance);
+    private static void startServers() {
         CSLContext.instance.postInit(true);
         // Start the HTTP server and the Mqtt broker if enabled (Mqtt broker is not enabled by default)
         CSLContext.instance.startServers();
     }
-
 }
 

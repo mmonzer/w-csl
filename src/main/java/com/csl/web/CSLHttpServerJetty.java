@@ -1,13 +1,12 @@
 package com.csl.web;
 
+import com.csl.core.Config;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.core.Config;
 import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
-import com.csl.web.auth.ServerConfig;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
 import com.csl.web.jettyutils.JettyFilterServlet;
@@ -44,7 +43,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 import static java.lang.System.exit;
 
 /**
@@ -56,7 +54,6 @@ public class CSLHttpServerJetty {
 
     private Server jettyServer = null;
     private ServletContextHandler context = null;
-    private ServerConfig serverConfig = null;
 
     private boolean initialized = false;
     private boolean isRemote = true;
@@ -83,8 +80,7 @@ public class CSLHttpServerJetty {
         if (!isEnabled) return;
 
         isRemote = true;
-        serverConfig = new ServerConfig(config);
-        initServer(new InetSocketAddress(serverConfig.getPort()));
+        initServer(new InetSocketAddress(config.getWebserverPort()));
     }
 
     /**
@@ -140,8 +136,7 @@ public class CSLHttpServerJetty {
             // keep the web sockets alive
             if (isRemote) startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
 
-            logger.debug("Web server started on port {} ", serverConfig.getPort());
-
+            logger.debug("Web server started on port {} ", Config.instance.Server.getWebserverPort());
         } catch (Exception e) {
             logger.error("Error starting server", e);
             exit(0);
@@ -319,19 +314,19 @@ public class CSLHttpServerJetty {
         if (interval <= 0) return;
 
         Runnable refreshTask = () -> {
-            if (serverConfig.isSend_alerts())
+            if (Config.instance.Server.getSendAlerts())
                 // Refresh the CSLWebSocketForAlert
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT);
-            if (serverConfig.isSend_console_output())
+            if (Config.instance.Server.getSendConsoleOutput())
                 // Refresh the CSLWebSocketForConsole
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE);
-            if (serverConfig.isVars_commands())
+            if (Config.instance.Server.getVarsCommands())
                 // Refresh the CSLWebSocketForVariables
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES);
-            if (serverConfig.isDatabase_commands())
+            if (Config.instance.Server.getDatabaseCommands())
                 // Refresh the CSLWebSocketForDatabase
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE);
-            if (serverConfig.isJcmd_commands())
+            if (Config.instance.Server.getJcmdCommands())
                 // Refresh the CSLWebSocketForJcmd
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD);
         };
@@ -375,23 +370,23 @@ public class CSLHttpServerJetty {
 
         // CSLWebSocketHandler is the WS to the HMI (alerts deprecated?, console used, variables deprecated?, database deprecated?)
         // CSLWebSocketForJcmd is the WS with CSL-Client
-        if (serverConfig.isSend_alerts()) {
+        if (Config.instance.Server.getSendAlerts()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_ALERT, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_ALERT);
         }
-        if (serverConfig.isSend_console_output()) {
+        if (Config.instance.Server.getSendConsoleOutput()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_CONSOLE);
         }
-        if (serverConfig.isVars_commands()) {
+        if (Config.instance.Server.getVarsCommands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_VARIABLES, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_VARIABLES);
         }
-        if (serverConfig.isDatabase_commands()) {
+        if (Config.instance.Server.getDatabaseCommands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class)),
                     CSLWebSocket.WEB_SOCKET_DATABASE);
         }
-        if (serverConfig.isJcmd_commands()) {
+        if (Config.instance.Server.getJcmdCommands()) {
             context.addServlet(new ServletHolder(addWebSocket(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class)),
                     CSLWebSocketForJcmd.WEB_SOCKET_CMD);
         }

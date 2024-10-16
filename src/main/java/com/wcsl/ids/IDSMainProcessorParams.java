@@ -1,111 +1,45 @@
 package com.wcsl.ids;
 
 import com.csl.core.Config;
-import com.ucsl.interfaces.IFileStoreService;
-import com.ucsl.interfaces.IIDSMainProcessor;
-import com.ucsl.interfaces.IIDSMainProcessorParams;
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
+import com.csl.defaultclasses.FileStoreService;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class IDSMainProcessorParams implements IIDSMainProcessorParams {
-	
-	public static final String IDS_CONF = "";
-	private static final String IDS_CONF_SEP =""; //  IDS_CONF+"/";
-
-	public static String TAPS_ID="taps_id";
-	public static String TAPS_DIR="taps_dir";
-
-	@Setter
+public class IDSMainProcessorParams {
+    @Setter
     @Getter
-    private IIDSMainProcessor idsMainProcessor;
-	@Getter
-    private final IFileStoreService fileUtils;
+    private IDSMainProcessor idsMainProcessor;
+    @Getter
+    private final FileStoreService fileUtils;
 
-	List<String> listTapIds= new ArrayList<>();
-	String tapsDir="";
+    List<String> listTapIds = new ArrayList<>();
 
-	String rulesForSuricataBaseFileName="";
+    String rulesForSuricataBaseFileName = "";
 
-	public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Json config) {
+    public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Config.IdsConf config) {
 
-		this.idsMainProcessor = idsMainProcessor;
-		fileUtils=idsMainProcessor.getFileStoreServices();
-		initFromJson(config);
-	}
+        this.idsMainProcessor = idsMainProcessor;
+        fileUtils = idsMainProcessor.getFileStoreServices();
+        initFromJson(config);
+    }
 
-	public IDSMainProcessorParams(IDSMainProcessor idsMainProcessor, Config.IdsConf config) {
+    public String getIdsModelDir() {
+        return "";
+    }
 
-		this.idsMainProcessor = idsMainProcessor;
-		fileUtils=idsMainProcessor.getFileStoreServices();
-		initFromJson(config);
-	}
+    public List<String> getTapsIDs() {
+        return listTapIds;
+    }
 
-    public String getIdsModelDirBackup() {
-		return getIdsModelDir()+ File.separator+"backup";
-	}
+    public void initFromJson(Config.IdsConf config) {
+        rulesForSuricataBaseFileName = config.getRulesForSuricataBase();
+        rulesForSuricataBaseFileName = config.getTapsDir();
+    }
 
-	public String getIdsModelDir() {
-		return "";
-	}
-
-	
-	public String getTapsDir() {
-		return tapsDir;
-	}
-	
-	public List<String> getTapsIDs() {
-		return listTapIds;
-	}
-
-
-	public void initFromJson(Json config) {
-		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(config, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
-		Json listIDs=JsonUtil.getJson(config,  IDS_CONF_SEP+TAPS_ID);
-
-		if (listIDs!=null) {
-			if (listIDs.isArray()) {
-				for (Json e:listIDs.asJsonList()) {
-					if (e.isString())
-						this.listTapIds.add(e.asString());
-				}
-			}
-		}
-		tapsDir=JsonUtil.getStringFromJson(config, IDS_CONF_SEP+TAPS_DIR,"taps");
-	}
-
-
-	public void initFromJson(Config.IdsConf config) {
-//		rulesForSuricataBaseFileName=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+"rules_for_suricata_base","rulesForSuricataBase.txt");
-		rulesForSuricataBaseFileName=config.getRulesForSuricataBase();
-
-		// Since this propName does nto exists, getJson returns null always
-//		Json listIDs=JsonUtil.getJson(j,  IDS_CONF_SEP+TAPS_ID);
-//
-//		if (listIDs!=null) {
-//			if (listIDs.isArray()) {
-//				for (Json e:listIDs.asJsonList()) {
-//					if (e.isString())
-//						this.listTapIds.add(e.asString());
-//				}
-//			}
-//		}
-
-
-//		tapsDir=JsonUtil.getStringFromJson(j, IDS_CONF_SEP+TAPS_DIR,"taps");
-		rulesForSuricataBaseFileName=config.getTapsDir();
-//		System.out.println(this);
-	}
-
-
-	@Override
-	public String getRulesForSuricataBaseFileName() {
-		// TODO Auto-generated method stub
-		return rulesForSuricataBaseFileName;
-	}
+    public String getRulesForSuricataBaseFileName() {
+        return rulesForSuricataBaseFileName;
+    }
 }

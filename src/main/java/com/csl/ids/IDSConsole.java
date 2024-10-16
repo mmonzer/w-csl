@@ -1,10 +1,9 @@
 package com.csl.ids;
 
 import com.csl.web.websockets.CSLWebSocket;
-import com.ucsl.interfaces.IConsole;
 import com.ucsl.json.Json;
 
-public class IDSConsole implements IConsole {
+public class IDSConsole {
 	
 	private final IDSParams idsParams;
 
@@ -13,7 +12,6 @@ public class IDSConsole implements IConsole {
 		this.idsParams=idsParams;
 	}
 
-	@Override
 	public void print(String outputName, String s) {
 		println(outputName, s);
 	}

@@ -1,18 +1,17 @@
 package com.csl.core;
 
-import com.csl.interfaces.IModule;
-import com.csl.interfaces.IModuleContext;
+import com.csl.modules.ModuleIDS;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
-public class ModuleContext implements IModuleContext {
+public class ModuleContext {
 	
 	private String name;
-	private  IModule module;
-	private  Class<IModule> clazz;
+	private ModuleIDS module;
+	private  Class<Module> clazz;
 
 	private  Json mConfig;
 	private Config.Module.CSLModuleConfig config;
@@ -33,6 +32,4 @@ public class ModuleContext implements IModuleContext {
 		
 		return s;
 	}
-
-
 }

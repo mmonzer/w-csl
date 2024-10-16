@@ -24,29 +24,6 @@ public class ProcessUtil {
 
     public static boolean DEBUG = false;
 
-    public static void listJavaProcesses() {
-
-        Process process;
-        try {
-            process = Runtime.getRuntime().exec("ps -e");
-
-            BufferedReader processReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            // Read from BufferedReader
-
-            List<String> list = readAllLines(processReader, "java");
-
-            for (String s : list)
-                System.out.println(s);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    public static boolean isProcessRunning(String filter) {
-        return findProcess(filter).size() > 0;
-    }
-
     public static List<String> findProcess(String filter) {
 
         List<String> content = new ArrayList<String>();
@@ -75,23 +52,6 @@ public class ProcessUtil {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-
-        return content;
-    }
-
-    public static List<String> readAllLines(BufferedReader reader, String filter) throws IOException {
-        List<String> content = new ArrayList<String>();
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            //content.append(line);
-            //content.append(System.lineSeparator());
-
-            if (line.contains(filter)) {
-                //System.out.println(line);
-                content.add(line);
-            }
         }
 
         return content;
@@ -202,8 +162,6 @@ public class ProcessUtil {
         }
     }
 
-    //public static String startScript2(String dir, String scriptName, String filter,boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
-
     public static String startScript(String dir, String scriptName, String filter, boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
         //					if (!filter.isEmpty()) {
         //			            killProcess(filter);
@@ -298,153 +256,6 @@ public class ProcessUtil {
             e.printStackTrace();
             return "cannot start " + info;
         }
-    }
-
-    public static String startScript2(String dir, String scriptName, String filter, boolean sudo, boolean showOuput, boolean send_output_to_hmi) {
-
-        //		if (!filter.isEmpty()) {
-        //			killProcess(filter);
-        //		}
-
-        String cmd = dir + File.separator + scriptName;
-        cmd = "./" + scriptName;
-
-
-        String info = "";
-        ProcessBuilder pb;
-        if (sudo) {
-
-            pb = new ProcessBuilder("sudo", cmd);
-            if (showOuput) System.out.println("Running: sudo " + cmd);
-            info = "sudo " + cmd;
-        } else {
-            pb = new ProcessBuilder(cmd);
-            if (showOuput) System.out.println("Running:" + cmd);
-        }
-
-        File fdir = new File(dir);
-        if (!fdir.exists() | !fdir.isDirectory()) {
-            System.err.println("*** ERROR *** Cannot not find directory :" + fdir);
-        }
-        if (showOuput) System.out.println("Running in dir :" + fdir);
-
-        File fcmd = new File(fdir, scriptName);
-        if (!fcmd.exists()) {
-            System.err.println("Cannot not find script :" + scriptName);
-            if (showOuput) System.out.println("Direcory contents :");
-            File[] fileList = fdir.listFiles();
-            for (File file : fileList) {
-                if (showOuput) System.out.println(file);
-            }
-        }
-
-        pb.directory(new File(dir));
-
-        try {
-            Process p = pb.start();
-
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            Thread thread = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    // TODO Auto-generated method stub
-                    try {
-                        String line = reader.readLine();
-                        while (line != null) {
-                            if (showOuput) System.out.println(line);
-                            if (send_output_to_hmi) sendStrToHmi(scriptName, line);
-                            line = reader.readLine();
-                        }
-                        reader.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            thread.start();
-
-            return "starting " + info;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "cannot start " + info;
-        }
-    }
-
-    public static String execCmdInShell(String dir, String cmd, boolean showOuput) {
-        //					if (!filter.isEmpty()) {
-        //			            killProcess(filter);
-        //			        }
-
-
-        String info = cmd;
-
-
-        ProcessBuilder pb;
-        {
-            pb = new ProcessBuilder(cmd);
-            if (showOuput) System.out.println("Running cmd: " + cmd);
-        }
-
-
-        if (!dir.isEmpty()) {
-            File fdir = new File(dir);
-            if (!fdir.exists() | !fdir.isDirectory()) {
-                System.err.println("*** ERROR *** Cannot not find directory :" + fdir);
-            }
-            if (showOuput) System.out.println("Running in dir :" + fdir);
-
-
-            pb.directory(new File(dir));
-        }
-
-        try {
-            Process p = pb.start();
-
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            final BufferedReader readerError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-
-			/*Thread thread = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						String line = reader.readLine();
-						while (line != null) {
-							if (showOuput) {
-								System.out.println(line);
-							}
-							
-							line = reader.readLine();
-						}
-						reader.close();
-
-						String lineError = readerError.readLine();
-						while (lineError != null) {
-							if (showOuput) {
-								System.out.println(lineError);
-								
-							}
-							lineError = readerError.readLine();
-						}
-						readerError.close();			                        
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-			thread.start();*/
-            //int exitCode = p.waitFor();
-            return "starting " + info; //+" exit code:"+exitCode;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "cannot start " + info;
-        }
-		/*catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return "interrupted "+info;
-		}*/
     }
 
     public static void sendStrToHmi(String name, String s) {

@@ -8,7 +8,7 @@ import com.csl.intercom.jsoncmd.ApiCommands;
  */
 public interface ICSLService {
 	
-	public String getConfigFileSectionName() ;
+	String getConfigFileSectionName() ;
 
 	/**
 	 * Initialise the service.
@@ -16,16 +16,16 @@ public interface ICSLService {
 	 *
 	 * @return true if the service is correctly initialised
 	 */
-	public boolean init();
+	boolean init();
 
 	/**
 	 * Returns the list of commands of the service.
 	 *
 	 * @return the list of commands of the service
 	 */
-	public ApiCommands getApiCommands();
+	ApiCommands getApiCommands();
 
-	public boolean terminate() ;
+	boolean terminate() ;
 	
 	
 }

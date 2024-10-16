@@ -21,7 +21,6 @@ import com.csl.web.websockets.IMessageBroadcaster;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.*;
-import main.util.CSLRunningArgs;
 import main.xcom.WebsocketClientEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -241,7 +240,7 @@ public class CSLIDSMainClient {
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
         Config config = Config.instance;
-        CSLContext.instance.init(new CSLRunningArgs().parseArgs(args).setHasIdsRunner(true));
+        CSLContext.instance.init();
         configureClientSettings(config);
 
         // Provide the callback method for the
@@ -274,7 +273,6 @@ public class CSLIDSMainClient {
         CSLContext.instance.postInit(false);
         // Start the UDP Server (To receive IDS Alerts) and the task executor
         CSLContext.instance.startServers();
-        CSLContext.instance.getIdsRunner().start();
     }
 
     /**
@@ -319,14 +317,12 @@ public class CSLIDSMainClient {
      */
     private static void registerServices() {
         boolean forwardToCSLClient = false;
-        CSLContext.instance.registerHttpEndpoint(new CSLServiceIDS(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new DiscoveryServices(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new StatusService(), forwardToCSLClient);
         CSLContext.instance.registerHttpEndpoint(new AutoCryptService(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new NmapServices(), forwardToCSLClient);
     }
 
     /**

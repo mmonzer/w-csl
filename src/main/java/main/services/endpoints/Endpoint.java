@@ -1,7 +1,6 @@
 package main.services.endpoints;
 
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.ucsl.interfaces.IJsonCmdHelp;
 
 /**
  * Generic interface for endpoints enums.
@@ -26,7 +25,7 @@ public interface Endpoint {
      *
      * @return an empty deprecated help.
      */
-    static IJsonCmdHelp EMPTY_DEPRECATED() {
+    static JsonCmdHelp EMPTY_DEPRECATED() {
         return new JsonCmdHelp().setDesc("DEPRECATED");
     }
 

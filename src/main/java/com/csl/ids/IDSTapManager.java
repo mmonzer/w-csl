@@ -1,13 +1,10 @@
 package com.csl.ids;
 
-//import java.io.File;
-//import java.io.FilenameFilter;
-
-import com.ucsl.interfaces.IFileStoreService;
-import com.ucsl.interfaces.IIDSMainProcessor;
-import com.ucsl.interfaces.IIDSMainProcessorParams;
+import com.csl.defaultclasses.FileStoreService;
+import com.wcsl.ids.IDSMainProcessorParams;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import com.wcsl.ids.IDSMainProcessor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,18 +44,14 @@ public class IDSTapManager {
 
     Json jTaps = Json.array();
 
-    IIDSMainProcessorParams idsParams;
-    private IFileStoreService fileUtils;
-    private IIDSMainProcessor idsMainProcessor;
+    IDSMainProcessorParams idsParams;
+    private FileStoreService fileUtils;
+    private IDSMainProcessor idsMainProcessor;
 
-    public IDSTapManager(IIDSMainProcessorParams idsParams) {
+    public IDSTapManager(IDSMainProcessorParams idsParams) {
         this.idsParams = idsParams;
         this.idsMainProcessor = idsParams.getIdsMainProcessor();
         this.fileUtils = idsParams.getFileUtils();
-    }
-
-    public IDSTapManager() {
-
     }
 
     void init() {

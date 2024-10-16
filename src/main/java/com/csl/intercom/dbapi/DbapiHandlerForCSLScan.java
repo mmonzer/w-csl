@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi;
 import com.csl.autocrypt.enums.AutocryptConstants.Common;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.logger.CSLApplicativeLogger;
 import com.csl.web.ApiHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
@@ -18,7 +19,6 @@ import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;
@@ -31,8 +31,6 @@ import org.eclipse.jetty.client.util.PathContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -1338,7 +1336,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return devices;
     }
 
-    public void sendCommandsList(List<IApiCommands> apiCommandsList) throws Exception {
+    public void sendCommandsList(List<ApiCommands> apiCommandsList) throws Exception {
         Json requestContents = object();
         apiCommandsList.stream()
                 .map(apiCommands -> new Pair<>(apiCommands.getName(), apiCommands.getListOfCommandPrivileges()))

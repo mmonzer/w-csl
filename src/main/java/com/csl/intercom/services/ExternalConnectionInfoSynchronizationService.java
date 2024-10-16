@@ -6,7 +6,6 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.logger.LoggerCustomEndpoints;
-import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ public class ExternalConnectionInfoSynchronizationService {
                 scheduledExecutorService,
                 () -> {
                     this.synchronizeExternalConnectionInfos();
-                    logger.info("Successfully synchronized external connection's informations.");
+                    logger.info("Successfully synchronized the external connection's informations.");
                 },
                 0, synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS,
                 LoggerCustomEndpoints.SYNC_EXT_CONNECTION_INFO

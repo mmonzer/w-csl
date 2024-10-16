@@ -39,8 +39,7 @@ public class FileLog implements Runnable, IFileLog {
         this.getSystemCurrentTimeMillis = getSystemCurrentTimeMillis;
         this.dataDir = dataDir;
         this.prefixFileName = prefixFile;
-        if (maxSize > 1000)
-            this.max_size_of_log_files = maxSize;
+        if (maxSize > 1000) this.max_size_of_log_files = maxSize;
 
 
         builFileName();
@@ -79,8 +78,7 @@ public class FileLog implements Runnable, IFileLog {
             nameFile = nameFile + '_' + Instant.now().atZone(ZoneId.of("Z")).format(DateTimeFormatter.ISO_INSTANT).replaceAll("\\D+", "_");
             if (nameFile.endsWith("_")) nameFile = nameFile.substring(0, nameFile.length() - 1);
             nameFile = nameFile + "." + ext;
-        } else
-            nameFile = nameFile + "." + ext;
+        } else nameFile = nameFile + "." + ext;
     }
 
     public void InitializeLogging() {

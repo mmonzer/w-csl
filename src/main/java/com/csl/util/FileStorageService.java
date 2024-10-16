@@ -43,14 +43,6 @@ public class FileStorageService {
         this("downloads");
     }
 
-    public Path getRootLocation() {
-        return rootLocation;
-    }
-
-    public String getRootLocationString() {
-        return rootLocation.toString();
-    }
-
     public Path saveFile(InputStream inputStream, String fileName) throws IOException {
         Path filePath = rootLocation.resolve(fileName);
         Files.copy(inputStream, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);

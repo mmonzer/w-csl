@@ -4,31 +4,26 @@ import com.csl.alert.CSLAlertFactory;
 import com.csl.alert.CSLAlertManager;
 import com.csl.defaultclasses.FileStoreService;
 import com.csl.ids.IDSParams;
-import com.csl.ids.IDSRunner;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.intercom.status.StatusNotifier;
-import com.csl.interfaces.ICSLContext;
-import com.csl.interfaces.IIDSRunner;
-import com.csl.interfaces.IModule;
 import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.ucsl.interfaces.*;
+import com.wcsl.ids.IDSMainProcessor;
 import com.wcsl.ids.IDSMainProcessorFactory;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.Service;
-import main.util.CSLRunningArgs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
 
-public class CSLContext implements ICSLContext {
+public class CSLContext {
     /**
      * Logger instance for this class.
      */
@@ -57,7 +52,8 @@ public class CSLContext implements ICSLContext {
      */
     private CSLAlertManager cslAlertManager = null;
 
-    private IDSRunner idsRunner = null;
+
+    private static final String configFile = "application.json";
 
     @Getter
     private IDSParams idsParams = null;
@@ -86,9 +82,7 @@ public class CSLContext implements ICSLContext {
 
     private final Map<String, com.csl.core.ModuleContext> modules = new HashMap<>();
 
-    private final Map<String, Class<IModule>> moduleClassList = new HashMap<>();
-
-    private ScheduledExecutorService scheduler = null;
+    private final Map<String, Class<Module>> moduleClassList = new HashMap<>();
 
     private long initialTime = 0;
 
@@ -96,9 +90,9 @@ public class CSLContext implements ICSLContext {
     @Setter
     private boolean testMode = false;
 
-    private IFileStoreService fileUtils;
+    private FileStoreService fileUtils;
     private IFileLogFactory fileLogFactory;
-    private IIDSMainProcessor idsMainProcessor;
+    private IDSMainProcessor idsMainProcessor;
 
     /**
      * Private constructor for singleton pattern.
@@ -130,7 +124,7 @@ public class CSLContext implements ICSLContext {
      *
      * @return The alert manager instance.
      */
-    public IAlertManager getCSLAlertManager() {
+    public CSLAlertManager getCSLAlertManager() {
         if (cslAlertManager == null) {
             logger.warn("Warning, no alertManager registered");
         }
@@ -147,18 +141,6 @@ public class CSLContext implements ICSLContext {
             fileLogFactory = new FileLogFactory();
         }
         return fileLogFactory;
-    }
-
-    /**
-     * Gets the IDS runner instance, logging a warning if not registered.
-     *
-     * @return The IDS runner instance.
-     */
-    public IIDSRunner getIdsRunner() {
-        if (idsRunner == null) {
-            logger.warn("Warning, no idsRunner registered");
-        }
-        return idsRunner;
     }
 
     /**
@@ -224,7 +206,7 @@ public class CSLContext implements ICSLContext {
             logger.error("Module {} already registered", name);
             return;
         }
-        moduleClassList.put(name, (Class<IModule>) c);
+        moduleClassList.put(name, (Class<Module>) c);
     }
 
     /**
@@ -274,68 +256,11 @@ public class CSLContext implements ICSLContext {
     }
 
     /**
-     * Sets the user directory.
-     *
-     * @param dir The user directory to set.
+     * Initializes the CSL context with the default running arguments.
      */
-    private void setUserDir(String dir) {
-        JServiceLoader.setUserDir(dir);
-    }
-
-    /**
-     * Updates the configuration based on the provided {@link CSLRunningArgs}.
-     *
-     * @param cslRunningArgs The arguments for CSL running.
-     */
-    public void updateConfigFromCSLRunningArgs(CSLRunningArgs cslRunningArgs) {
-        // User directory
-        if (!cslRunningArgs.isUserDirDefault()) {
-            setUserDir(cslRunningArgs.getUserDir());
-        } else {
-            String s = "";
-            if (!s.isEmpty()) {
-                setUserDir(s);
-            } else {
-                setUserDir(cslRunningArgs.getUserDir()); // set default
-            }
-        }
-
-        // Update other directories
-        if (cslRunningArgs.hasDirForRecording()) {
-            Config.instance.IdsConf.setPacketsDirForRecording(cslRunningArgs.getDirForRecording());
-        }
-        if (cslRunningArgs.hasDirForLearning()) {
-            Config.instance.IdsConf.setPacketsDirForLearning(cslRunningArgs.getDirForLearning());
-        }
-        if (cslRunningArgs.hasDirForDetectionOffLine()) {
-            Config.instance.IdsConf.setPacketsDirForDetectionOffline(cslRunningArgs.getDirForDetectionOffline());
-        }
-        if (cslRunningArgs.hasIdsMode()) {
-            Config.instance.IdsConf.setMode(cslRunningArgs.getIdsMode());
-        }
-
-        // Log directory
-        if (cslRunningArgs.hasLogDir()) {
-            Config.instance.IdsConf.setIdstraceDir(cslRunningArgs.getLogDir());
-            Config.instance.Server.setLogDir(cslRunningArgs.getLogDir());
-            Config.instance.AlertViewer.setLogDir(cslRunningArgs.getLogDir());
-        }
-    }
-
-    /**
-     * Initializes the CSL context with the provided running arguments.
-     *
-     * @param cslRunningArgs The running arguments.
-     */
-    public void init(CSLRunningArgs cslRunningArgs) {
-        if (cslRunningArgs.hasError()) {
-            logger.error("Error: {}", cslRunningArgs.getError());
-            System.exit(0);
-        }
-
-        setConfigFileName(cslRunningArgs.getConfigFile());
+    public void init() {
+        setConfigFileName(configFile);
         getConfig();
-        updateConfigFromCSLRunningArgs(cslRunningArgs);
 
         this.cslConfDir = buildFullPathInUserDir("cslconf");
 
@@ -352,39 +277,8 @@ public class CSLContext implements ICSLContext {
         idsMainProcessor.setAlertManager(cslAlertManager);
         idsMainProcessor.setAlertFactory(new CSLAlertFactory());
 
-        if (cslRunningArgs.isHasIdsRunner()) {
-            idsParams = new IDSParams(idsMainProcessor);
-            idsParams.initFromJson(getConfig(), cslRunningArgs.getDataDir(),
-                    cslRunningArgs.isTestparam(), cslRunningArgs.isDoNotUseCurrentIDSParamsFileName());
-
-            if (cslRunningArgs.hasIdsMode()) {
-                idsParams.setIDSMode(cslRunningArgs.getIdsMode());
-            }
-            if (cslRunningArgs.hasDataSetForRecording()) {
-                idsParams.setCurrentDataSetNameForRecording(cslRunningArgs.getDataSetForRecording());
-            }
-            if (cslRunningArgs.hasDataSetForLearning()) {
-                idsParams.setCurrentDataSetNameForLearning(cslRunningArgs.getDataSetForLearning());
-            }
-            if (cslRunningArgs.hasDataSetForDetectionOffLine()) {
-                idsParams.setCurrentDataSetNameForDetectionOffLine(cslRunningArgs.getDataSetForDetectionOffline());
-            }
-        }
-
-        idsMainProcessor.setConsole(idsParams.getConsole());
-
         setCslHttpServer(new CSLHttpServerJetty());
         setCslUDPServer(new CSLUDPServer());
-    }
-
-    /**
-     * Sets the API as a remote API to be accessible via the HTTP server.
-     *
-     * @param apiname The name of the API.
-     */
-    public void registerHttpEndpoint(String apiname) {
-        if (getCslHttpServer() == null) return;
-        getCslHttpServer().registerHttpEndpoint(apiname);
     }
 
     public boolean registerHttpEndpoint(Service cslService, boolean executeInCSLClient) {
@@ -416,9 +310,6 @@ public class CSLContext implements ICSLContext {
             getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
             initDynamicModules();
             initTime();
-
-            ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
-            idsRunner = new IDSRunner(idsParams, ids);
         }
     }
 
@@ -438,21 +329,6 @@ public class CSLContext implements ICSLContext {
         }
 
         JServiceLoader.getCSLInterModuleCommunicationManager().start();
-    }
-
-    /**
-     * Stops the HTTP and UDP servers.
-     */
-    public void stopServers() {
-        getCslHttpServer().stop();
-        getCslUDPServer().stop();
-
-        CSLContext.instance.stopExec();
-        JServiceLoader.getCSLInterModuleCommunicationManager().stop();
-
-        if (idsRunner != null) idsRunner.stop();
-        if (mqttBroker != null) mqttBroker.close();
-        if (statusNotifier != null) statusNotifier.close();
     }
 
     /**
@@ -492,34 +368,34 @@ public class CSLContext implements ICSLContext {
         numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
         logger.debug("Running {} execution loops", numberOfExecLoops);
 
-        for (Config.Module moduleDescriptor : Config.instance.Modules) {
-            String mname = moduleDescriptor.getName();
-
-            if (modules.get(mname) != null) {
-                logger.error("A module with this name <{}> has already been declared", mname);
-            } else {
-                String type = moduleDescriptor.getType();
-                Class<?> clazz = getModuleClass(type);
-
-                if (clazz == null) {
-                    logger.error("Cannot find modules of type <{}>", type);
-                } else {
-                    try {
-                        IModule m = (IModule) clazz.getDeclaredConstructor().newInstance();
-                        com.csl.core.ModuleContext mc = new com.csl.core.ModuleContext();
-                        mc.setClazz((Class<IModule>) clazz);
-                        mc.setModule(m);
-                        mc.setName(mname);
-                        mc.setConfig(moduleDescriptor.getConfig());
-
-                        modules.put(mname, mc);
-                        logger.info("Initialization of module {}[{}]", mname, type);
-                    } catch (Exception e) {
-                        logger.error("Error initializing module {}: {}", mname, e.getMessage(), e);
-                    }
-                }
-            }
-        }
+//        for (Config.Module moduleDescriptor : Config.instance.Modules) {
+//            String mname = moduleDescriptor.getName();
+//
+//            if (modules.get(mname) != null) {
+//                logger.error("A module with this name <{}> has already been declared", mname);
+//            } else {
+//                String type = moduleDescriptor.getType();
+//                Class<?> clazz = getModuleClass(type);
+//
+//                if (clazz == null) {
+//                    logger.error("Cannot find modules of type <{}>", type);
+//                } else {
+//                    try {
+//                        ModuleIDS m = (ModuleIDS) clazz.getDeclaredConstructor().newInstance();
+//                        com.csl.core.ModuleContext mc = new com.csl.core.ModuleContext();
+//                        mc.setClazz((Class<Module>) clazz);
+//                        mc.setModule(m);
+//                        mc.setName(mname);
+//                        mc.setConfig(moduleDescriptor.getConfig());
+//
+//                        modules.put(mname, mc);
+//                        logger.info("Initialization of module {}[{}]", mname, type);
+//                    } catch (Exception e) {
+//                        logger.error("Error initializing module {}: {}", mname, e.getMessage(), e);
+//                    }
+//                }
+//            }
+//        }
 
         autostart = Config.instance.ModuleExec.getAutostart();
     }
@@ -535,11 +411,6 @@ public class CSLContext implements ICSLContext {
     }
 
     /**
-     * Task that executes the modules in the defined order.
-     */
-    private final Runnable task = () -> {};
-
-    /**
      * Checks if replay mode is enabled.
      *
      * @return True if replay mode is enabled, false otherwise.
@@ -549,23 +420,11 @@ public class CSLContext implements ICSLContext {
     }
 
     /**
-     * Starts the execution of the modules.
-     */
-    public void startExec() {}
-
-    /**
-     * Stops the execution of the modules.
-     */
-    public void stopExec() {
-        scheduler.shutdown();
-    }
-
-    /**
      * Gets the IDS main processor.
      *
      * @return The IDS main processor.
      */
-    public IIDSMainProcessor getIDSMainProcessor() {
+    public IDSMainProcessor getIDSMainProcessor() {
         return idsMainProcessor;
     }
 

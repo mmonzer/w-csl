@@ -285,17 +285,13 @@ public class SuricataServices extends Service {
 				configuredSuricata = (ArrayList<Json>) conf.asJsonList();
 			else
 				configuredSuricata =  new ArrayList<Json>();
-
-
 		} catch (IOException e1) {
 			System.err.println("No tap config found");
 			configuredSuricata =  new ArrayList<Json>();
 		}
-//		knownHostFilePath = jConfig.at("knowHostFilePath").asString();
+
 		knownHostFilePath = config.getKnowHostFilePath();
-//		localIP = jConfig.at("localIpAddr").asString();
 		localIP = config.getLocalIpAddress();
-//		localPort = jConfig.at("localPort").asString();
 		localPort = config.getLocalPort();
 
 

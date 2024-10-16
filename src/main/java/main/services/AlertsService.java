@@ -1,5 +1,6 @@
 package main.services;
 
+import com.csl.alert.AlertDescriptor;
 import com.csl.core.CSLContext;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.*;
@@ -227,7 +228,7 @@ public class AlertsService extends Service {
 
 
 
-				IAlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().
+				AlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().
 						createAlertDescriptor(3, "ALERT 3", System.currentTimeMillis());
 				CSLContext.instance.getCSLAlertManager().sendAlert(a3);
 
@@ -321,7 +322,7 @@ public class AlertsService extends Service {
 		return apiCommands.registerCmd(name, j);
 	}
 
-	public String addCmd(String name, IJsonCmd j, IJsonCmdHelp jh) {
+	public String addCmd(String name, IJsonCmd j, JsonCmdHelp jh) {
 		return apiCommands.registerCmd(name, j,jh);
 	}
 

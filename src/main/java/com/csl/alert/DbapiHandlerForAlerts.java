@@ -3,7 +3,6 @@ package com.csl.alert;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.dbapi.DbapiHandler;
-import com.ucsl.interfaces.IAlertDescriptor;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.slf4j.Logger;
@@ -31,7 +30,7 @@ public class DbapiHandlerForAlerts extends DbapiHandler {
      * @param alert alert to insert
      * @return the content of the response
      */
-    public String insertAlert(IAlertDescriptor alert) {
+    public String insertAlert(AlertDescriptor alert) {
         String res = null;
         Request request = createRequest("POST", "/alerts", null, alert.toJson());
         try {

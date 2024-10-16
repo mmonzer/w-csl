@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -68,17 +67,6 @@ public class FileUtils  {
         return file.getPath().toString();
     }
 
-    public static void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation) throws IOException {
-        Files.walk(Paths.get(sourceDirectoryLocation)).forEach(source -> {
-            Path destination = Paths.get(destinationDirectoryLocation, source.toString().substring(sourceDirectoryLocation.length()));
-            try {
-                Files.copy(source, destination);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
     public static Json readJsonFromFile(String dir, String fileName) {
 
         if (dir.isEmpty()) dir = ".";
@@ -116,27 +104,6 @@ public class FileUtils  {
         } finally {
             if (br != null) br.close();
             if (fr != null) fr.close();
-        }
-    }
-
-    public static String writeFile(String filename, String content) {
-
-        File file = new File(filename);
-        String dir = file.getAbsoluteFile().getParent();
-
-        if (dir != null) new File(dir).mkdirs();
-
-
-//        System.out.println(dir);
-//        System.out.println(filename);
-
-        try {
-
-            Files.write(Paths.get(filename), content.getBytes());
-            return "ok";
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "error " + e.getMessage();
         }
     }
 
@@ -236,161 +203,6 @@ public class FileUtils  {
         return sdf.format(date.getTime());
     }
 
-    public static String renameFileWithTimeStamp(String filePath, String moreInfo) {
-
-        File f = new File(filePath);
-
-        Path path = Paths.get(filePath);
-
-        Path fileName = path.getFileName();
-        Path parentPath = path.getParent();
-
-
-        String fs = fileName.getFileName().toString();
-        int pos = fs.lastIndexOf(".");
-        String fileNameExtension = "", fileNameWithoutExtension = "";
-        if (pos != -1) {
-            fileNameExtension = fs.substring(pos);
-            fileNameWithoutExtension = fs.substring(0, pos);
-        } else {
-            fileNameWithoutExtension = fs;
-        }
-
-        Date date = new Date();
-        String dir = parentPath.toString();
-        String newFileName = dir + File.separatorChar + fileNameWithoutExtension + '_' + sdf.format(date.getTime()) + fileNameExtension + moreInfo;
-
-
-        if (f.exists() && !f.isDirectory()) {
-            File f2 = new File(newFileName);
-            boolean success = f.renameTo(f2);
-            if (success) return newFileName;
-            return "";
-        } else {
-            return "";
-        }
-    }
-
-    public static void backupFileWithTimeStamp(String filePath, String backupDir) {
-
-        if (backupDir == null) backupDir = "";
-
-        if (!backupDir.isEmpty()) {
-            File f = new File(backupDir);
-            f.mkdirs();
-        }
-
-        File f = new File(filePath);
-
-
-        Path path = Paths.get(filePath);
-
-        Path fileName = path.getFileName();
-        Path parentPath = path.getParent();
-
-
-        String fs = fileName.getFileName().toString();
-        int pos = fs.lastIndexOf(".");
-        String fileNameExtension = "", fileNameWithoutExtension = "";
-        if (pos != -1) {
-            fileNameExtension = fs.substring(pos);
-            fileNameWithoutExtension = fs.substring(0, pos);
-        } else {
-            fileNameWithoutExtension = fs;
-        }
-
-        Date date = new Date();
-        String dir = parentPath.toString(); //System.getProperty("user.dir");
-        String newFileName = fileNameWithoutExtension + '_' + sdf.format(date.getTime()) + fileNameExtension;
-
-        if (!backupDir.isEmpty()) {
-            newFileName = backupDir + File.separatorChar + newFileName;
-        } else {
-            newFileName = dir + File.separatorChar + newFileName;
-        }
-
-        if (f.exists() && !f.isDirectory()) {
-            File f2 = new File(newFileName);
-            try {
-                Files.copy(f.toPath(), f2.toPath());
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
-
-    static private void deleteReverseFile(String filePath) {
-        File[] files2 = getListOfFilesWithTimeStamp(filePath, ".reversed");
-        for (File file : files2) {
-            boolean ok = file.delete();
-        }
-    }
-
-    public static String reverseToLastBackupFile(String filePath) {
-
-        File[] files = getListOfFilesWithTimeStamp(filePath, "");
-        File f = null;
-
-        if (files.length > 0) {
-            f = files[0];
-        } else {
-            return "No previous version ";
-        }
-
-        deleteReverseFile(filePath);
-
-
-        if (f != null) {
-            renameFileWithTimeStamp(filePath, ".reversed"); // rename current file
-        }
-
-        if (f.exists() && !f.isDirectory()) {
-            File f2 = new File(filePath);
-            boolean success = f.renameTo(f2);
-        }
-        return "ok";
-    }
-
-    static private File[] getListOfFilesWithTimeStamp(String filePath, String moreInfo) {
-        Path path = Paths.get(filePath);
-
-
-        Path fileName = path.getFileName();
-        Path parentPath = path.getParent();
-
-
-        String fs = fileName.getFileName().toString();
-        int pos = fs.lastIndexOf(".");
-        String fileNameExtension = "", fileNameWithoutExtension = "";
-        if (pos != -1) {
-            fileNameExtension = fs.substring(pos);
-            fileNameWithoutExtension = fs.substring(0, pos);
-        } else {
-            fileNameWithoutExtension = fs;
-        }
-
-
-        File f = new File(parentPath.toString());
-        final String ext = fileNameExtension + moreInfo;
-        final String fwext = fileNameWithoutExtension;
-
-
-        FilenameFilter filter = new FilenameFilter() {
-            @Override
-            public boolean accept(File f, String name) {
-                return name.endsWith(ext) && name.startsWith(fwext + "_");
-            }
-        };
-
-
-        File[] files = f.listFiles(filter);
-
-        Arrays.sort(files, Comparator.comparingLong(File::lastModified).reversed());
-
-        return files;
-    }
-
     public static String sanitize(String filename) {
         if (filename == null) return null;
         if (filename.contains("/")) filename = filename.replace("/", "_");
@@ -424,25 +236,6 @@ public class FileUtils  {
         if (absolute) s = File.separator + s;
 
         return s;
-    }
-
-    public static List<String> readFileAsStringList(String filename) throws IOException {
-        BufferedReader br = null;
-        FileReader fr = null;
-
-        try {
-            fr = new FileReader(filename);
-            br = new BufferedReader(fr);
-            String nextLine = "";
-            List<String> list = new ArrayList<String>();
-            while ((nextLine = br.readLine()) != null) {
-                list.add(nextLine);
-            }
-            return list;
-        } finally {
-            if (br != null) br.close();
-            if (fr != null) fr.close();
-        }
     }
 
     public static List<Json> parseConnexionsFromCSV(byte[] fileContent) {
@@ -533,14 +326,6 @@ public class FileUtils  {
             tmp.set(toCamelCase(headers[i]), values[i]);
         }
         return tmp;
-    }
-
-    public static List<Json> parseConnexionsFromXLSFile(Integer[] fileContent) throws FileNotFoundException {
-        byte[] bytes = new byte[fileContent.length];
-        for (int i=0;i<fileContent.length;i++) {
-            bytes[i] = (byte) (int) (fileContent[i]);
-        }
-        return parseConnexionsFromXLSFile(bytes);
     }
 
     public static List<Json> parseConnexionsFromXLSFile(Json fileContent) throws FileNotFoundException {

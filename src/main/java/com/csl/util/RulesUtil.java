@@ -6,46 +6,6 @@ import com.ucsl.json.JsonUtil;
 import java.util.Map;
 
 public class RulesUtil {
-
-    public Json generateTestData() {
-
-
-        Json listDevices = Json.array();
-
-        Json device = Json.object();
-        listDevices.add(device);
-
-        device.set("ip", "1.1.12.1");
-        device.set("name", "computer1");
-
-
-        Json links = Json.array();
-        device.set("links", links);
-
-        Json link = Json.object();
-        links.add(link);
-
-        link.set("protocol", "TCP");
-        link.set("app_protocol", "modbus");
-
-        link.set("ip_dst", "10.0.208.16");
-        link.set("port_dst", "502");
-        link.set("permission", "allowed");  // default
-
-        link = Json.object();
-        links.add(link);
-
-        link.set("protocol", "TCP");
-        link.set("app_protocol", "modbus");
-
-        link.set("ip_dst", "10.0.208.18");
-        link.set("port_dst", "502");
-        link.set("permission", "forbidden");  // default
-
-
-        return listDevices;
-    }
-
     public String port2str(Json j, String name) {
         return port2str(j, name, false);
     }

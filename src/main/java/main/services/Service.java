@@ -2,6 +2,7 @@ package main.services;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
 import lombok.Getter;
@@ -107,7 +108,7 @@ public abstract class Service implements ICSLService {
      * @param help The helper to display in the '/apihelp' page.
      * @return A {@link String}
      */
-    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help) {
+    public String addCmd(String name, IJsonCmd cmd, JsonCmdHelp help) {
         return apiCommands.registerCmd(name, cmd, help);
     }
 

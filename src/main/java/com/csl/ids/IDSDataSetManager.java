@@ -70,12 +70,6 @@ public class IDSDataSetManager {
 		return nameFile;
 	}
 
-	public Json getListOfDataSetAsJson(int category) {
-		String selected=getCurrentdataSetOfCategory(category);
-		
-		return dataSetNamesAsJson(getDirOfCategory(category),selected,category);
-	}
-
 	public String selectDataSet(int category, String name) {
 		String [] ds=dataSetNames(getDirOfCategory(category));
 		if (ds==null) return "";
@@ -243,85 +237,6 @@ public class IDSDataSetManager {
 
 		return directories;
 
-	}
-
-	public Json dataSetNamesAsJson(String dirName,String selected,int category) {
-		System.out.println("get list of dataset for "+dirName);
-		File file = new File(dirName);
-		String[] directories = file.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File current, String name) {
-				return new File(current, name).isDirectory();
-			}
-		});
-
-		Arrays.sort(directories, new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                  return o1.compareToIgnoreCase(o2);
-            }
-	    });
-	    
-		Json jArray= Json.array();
-		for (int i=0;i<directories.length;i++) {
-			Json x = getFolderNumberOfFilesAndSize(dirName, directories[i]);
-			x.set("name", directories[i]);
-			x.set("dir", dirName);
-			if (directories[i].toLowerCase().compareToIgnoreCase(selected)==0) {
-				x.set("selected", true);
-				x.set("files",
-				getFolderFilesListAsJson(category, selected));
-			}
-			else x.set("selected", false);
-			jArray.add(x);
-		}
-
-		System.out.println("dirname="+dirName);
-		System.out.println("selected="+selected);
-		System.out.println("category="+category);
-		
-		System.out.println(jArray);
-		return jArray;
-	}
-
-	private long getFolderSize(File folder) {
-	    long length = 0;
-	    File[] files = folder.listFiles();
-
-	    int count = files.length;
-
-	    for (int i = 0; i < count; i++) {
-	        if (files[i].isFile()) {
-	            length += files[i].length();
-	        }
-	        else {
-	            length += getFolderSize(files[i]);
-	        }
-	    }
-	    return length;
-	}
-	
-	private Json getFolderNumberOfFilesAndSize(String rootdir, String folderName) {
-		File folder= new File(rootdir+File.separator+folderName);
-	    long length = 0;
-	    File[] files = folder.listFiles();
-
-	    int count = files.length;
-
-	    for (int i = 0; i < count; i++) {
-	        if (files[i].isFile()) {
-	            length += files[i].length();
-	        }
-	        else {
-	            length += getFolderSize(files[i]);
-	        }
-	    }
-	    Json j= Json.object();
-	    j.set("files",count);
-	    j.set("size",length);
-	    
-	    
-	    return j;
 	}
 
 	private Json getFolderFilesListAsJson(int category, String folderName) {

@@ -1,13 +1,20 @@
 package com.csl.intercom.jsoncmd;
 
 import com.ucsl.interfaces.ICmdHelpProvider;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.json.Json;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class JsonCmdHelp implements IJsonCmdHelp {
+public class JsonCmdHelp {
+	public static final String INT = "int";
+	public static final String LONG = "long";
+	public static final String STR = "string";
+	public static final String JSON = "json";
+	public static final String BOOL = "boolean";
+
+	public static final String STATUS_TODO = "TODO";
+	public static final String STATUS_OK = "OK";
 
 	boolean hidden=false;
 	
@@ -25,28 +32,24 @@ public class JsonCmdHelp implements IJsonCmdHelp {
 		
 	}
 	
-	@Override
 	public JsonCmdHelp setName(String s) {
 		name=s;
 		return this;
 	}
 	
-	@Override
-	public IJsonCmdHelp setDesc(String s) {
+	public JsonCmdHelp setDesc(String s) {
 		desc=s;
 		return this;
 	}
 	
-	@Override
-	public IJsonCmdHelp setParam(String name, String desc, String type) {
+	public JsonCmdHelp setParam(String name, String desc, String type) {
 		paramsdesc.put(name,desc);
 		paramstype.put(name,type);
 		
 		return this;
 	}
 	
-	@Override
-	public IJsonCmdHelp setResult(String s, String type) {
+	public JsonCmdHelp setResult(String s, String type) {
 		result=s;
 		resultType=type;
 		return this;
@@ -75,17 +78,14 @@ public class JsonCmdHelp implements IJsonCmdHelp {
 		return j;
 	}
 	
-	@Override
 	public boolean isHidden() {
 		return hidden;
 	}
 
-	@Override
 	public void setHidden(boolean hidden) {
 		this.hidden = hidden;
 	}
 
-	@Override
 	public Json toJson(Json mode) {
 	
 		
@@ -129,23 +129,20 @@ public class JsonCmdHelp implements IJsonCmdHelp {
 		
 	}
 
-	@Override
-	public IJsonCmdHelp hide() {
+	public JsonCmdHelp hide() {
 		// TODO Auto-generated method stub
 		setHidden(true);
 		return this;
 	}
 	
-	@Override
-	public IJsonCmdHelp setStatus(String s) {
+	public JsonCmdHelp setStatus(String s) {
 		// TODO Auto-generated method stub
 		this.status=s;
 		return this;
 	}
 	
 	
-	@Override
-	public IJsonCmdHelp setHelpProvider(ICmdHelpProvider helpProvider) {
+	public JsonCmdHelp setHelpProvider(ICmdHelpProvider helpProvider) {
 		// TODO Auto-generated method stub
 		this.helpProvider=helpProvider;
 		return this;

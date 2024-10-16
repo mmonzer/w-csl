@@ -21,7 +21,6 @@ import com.csl.util.FileStorageService;
 import com.csl.util.FileUtils;
 import com.csl.util.ThreadUtils;
 import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmdWithFiles;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -187,7 +186,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 "\"is_http_api_reachable\": true/false" +
                                 "\"is_websocket_connected\": true/false" +
                                 "}" +
-                                "</code>", IJsonCmdHelp.JSON).setStatus(IJsonCmdHelp.STATUS_OK)
+                                "</code>", JsonCmdHelp.JSON).setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("get_all_cpes", params -> {
                     logger.debug("Fetching all CPEs ...");
@@ -204,8 +203,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 }
                 ,
                 new JsonCmdHelp().setDesc("Get the CPE Items in CSL-Scan")
-                        .setResult("The list of CPE Items, in the format <code>{\"success\": true, \"result\": [...]}", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setResult("The list of CPE Items, in the format <code>{\"success\": true, \"result\": [...]}", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("get_entity_cpes", params -> {
                     logger.debug("Fetching entity CPE ...");
@@ -224,9 +223,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Get an entity's CPE Items")
-                        .setParam("id", "The entity's uuid", IJsonCmdHelp.STR)
-                        .setResult("The list of CPE Items of the entity, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setParam("id", "The entity's uuid", JsonCmdHelp.STR)
+                        .setResult("The list of CPE Items of the entity, in the format <code>{ \"success\": true, \"result\": [...] }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("get_cpes_since", params -> {
                     logger.debug("Fetching CPEs since date");
@@ -246,10 +245,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Retrieve CPE Items that change strictly after a specified date")
-                        .setParam("date", "in ISO format, example: 2023-04-13T13:56:56.66 (local date format)", IJsonCmdHelp.STR)
+                        .setParam("date", "in ISO format, example: 2023-04-13T13:56:56.66 (local date format)", JsonCmdHelp.STR)
                         .setResult("The list of CPE Items that changed strictly after <code>date</code>, in the format" +
-                                "<code>{\"success\": true, \"result\": [...]</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                                "<code>{\"success\": true, \"result\": [...]</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("scan_status", params -> {
                     logger.debug("Fetching scan status ...");
@@ -271,8 +270,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Get the status of a specific scan")
                         .setParam("id", "The uuid of the scan to inquire", JsonCmdHelp.STR)
-                        .setResult("The status of the scan, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setResult("The status of the scan, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("start_scan", params -> {
                     logger.debug("Starting the scan ...");
@@ -300,9 +299,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Start a scan from CSL-Scan")
-                        .setParam("entities", "An array of strings with the uuids of the entities to scan. May be omitted or null, resulting in scanning all entities.", IJsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                        .setParam("entities", "An array of strings with the uuids of the entities to scan. May be omitted or null, resulting in scanning all entities.", JsonCmdHelp.JSON)
+                        .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("stop_scan", params -> {
@@ -320,9 +319,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Stop a scan in CSL-Scan")
-                        .setParam("id", "The uuid of the scan to stop", IJsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the scan was stopped successfully", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                        .setParam("id", "The uuid of the scan to stop", JsonCmdHelp.STR)
+                        .setResult("<code>{ \"success\": true }</code> if the scan was stopped successfully", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("synchronize_devices", params -> {
@@ -343,8 +342,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Synchronize devices between DB-API and CSL-Scan.")
                         .setResult("<code>{\"success\": true }</code> if the synchronisation went without error," +
-                                "<code>{\"success\": false, \"error\", {\"reason\": \"...\", \"failed_devices\": [...]}}</code> otherwise. The failed_devices field is present if devices were actually fetched from DB-API.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{\"success\": false, \"error\", {\"reason\": \"...\", \"failed_devices\": [...]}}</code> otherwise. The failed_devices field is present if devices were actually fetched from DB-API.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_SCAN_DB
         );
         addCmd("drop_all_collections", params -> {
@@ -365,8 +364,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Drop all collections in DB-API")
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_SCAN_DB
         );
         addCmd("get_entity_http_connections", params -> {
@@ -387,8 +386,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get all entity HTTP connections from CSL-Scan")
-                        .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("get_entity_http_connections_full", params -> {
                     logger.debug("Getting the list of entities to HTTP connections full ...");
@@ -408,8 +407,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get all entity HTTP connections from CSL-Scan, also showing non-visible stages")
-                        .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                        .setResult("The list of entity HTTP connections, in the format <code>{ \"success\": true, \"result\": [...] }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_entity_http_connection", params -> {
@@ -451,9 +450,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan")
-                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.STR)
-                        .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", JsonCmdHelp.STR)
+                        .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
         addCmd("get_entity_http_connection_full", params -> {
@@ -493,9 +492,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get a specific entity HTTP connection from CSL-Scan, also showing non-visible stages")
-                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", IJsonCmdHelp.STR)
-                        .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                        .setParam("uuid", "The uuid of the entity HTTP connection to retrieve", JsonCmdHelp.STR)
+                        .setResult("The entity HTTP connection, in the format <code>{ \"success\": true, \"result\": { ... } }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("delete_entity_http_connection", params -> {
@@ -546,10 +545,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Delete an EntityHttpConnection from CSL-Scan")
-                        .setParam("uuid", "The uuid of the EntityHttpConnection to delete", IJsonCmdHelp.STR)
+                        .setParam("uuid", "The uuid of the EntityHttpConnection to delete", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("add_entity_http_connection", params -> {
@@ -625,10 +624,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
-                        .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)
+                        .setParam("entity_http_connection", "The EntityHttpConnection to add", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("upload_entity_http_connection_file", (params, files) -> {
@@ -695,10 +694,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 }
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
-                        .setParam("entity_http_connection", "The EntityHttpConnection to add", IJsonCmdHelp.JSON)
+                        .setParam("entity_http_connection", "The EntityHttpConnection to add", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_connection", params -> {
@@ -748,12 +747,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                 },
                 new JsonCmdHelp().setDesc("Test if an existing connection is valid")
-                        .setParam("device_uuid", "The uuid of the device to test the connection on", IJsonCmdHelp.STR)
-                        .setParam("connection_id", "The id of the connection to test", IJsonCmdHelp.STR)
+                        .setParam("device_uuid", "The uuid of the device to test the connection on", JsonCmdHelp.STR)
+                        .setParam("connection_id", "The id of the connection to test", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
 //        addCmd("test_new_connection", params -> {
 //                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
@@ -856,13 +855,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 //                    }
 //                },
 //                new JsonCmdHelp().setDesc("Test if a new connection is valid")
-//                        .setParam("ip_address", "The IP address to test the connection on", IJsonCmdHelp.STR)
-//                        .setParam("connection", "The connection to test", IJsonCmdHelp.JSON)
-//                        .setParam("base_connection_id", "The id of the base connection to fetch the password from", IJsonCmdHelp.INT)
+//                        .setParam("ip_address", "The IP address to test the connection on", JsonCmdHelp.STR)
+//                        .setParam("connection", "The connection to test", JsonCmdHelp.JSON)
+//                        .setParam("base_connection_id", "The id of the base connection to fetch the password from", JsonCmdHelp.INT)
 //                        .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
 //                                "where result contains \"true\" (as a String) if the connection is valid," +
-//                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-//                        .setStatus(IJsonCmdHelp.STATUS_OK)
+//                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+//                        .setStatus(JsonCmdHelp.STATUS_OK)
 //        );
         addCmd("fetch_http_connection_stage", params -> {
                     logger.debug("Starting fetching HTTP connection stage ..." );
@@ -924,14 +923,14 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Try to fetch the contents of a stage in the Http Connection API")
-                        .setParam("stage", "The stage to fetch", IJsonCmdHelp.JSON)
-                        .setParam("ip_address", "The IP address to test", IJsonCmdHelp.STR)
-                        .setParam("port", "The port to test", IJsonCmdHelp.INT)
-                        .setParam("username", "The username to test. Optional.", IJsonCmdHelp.STR)
-                        .setParam("password", "The password to test. Optional.", IJsonCmdHelp.STR)
+                        .setParam("stage", "The stage to fetch", JsonCmdHelp.JSON)
+                        .setParam("ip_address", "The IP address to test", JsonCmdHelp.STR)
+                        .setParam("port", "The port to test", JsonCmdHelp.INT)
+                        .setParam("username", "The username to test. Optional.", JsonCmdHelp.STR)
+                        .setParam("password", "The password to test. Optional.", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": { \"page\": \"...\", \"status\": int }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_predefined_http_variables", params -> {
@@ -950,8 +949,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Get the list of predefined HTTP variables")
-                        .setResult("The list of predefined HTTP variables, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                        .setResult("The list of predefined HTTP variables, in the format <code>{ \"success\": true, \"result\": [...] }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_list_of_allowed_libraries_in_http_templates", params -> {
@@ -970,8 +969,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Get the list of installed NPM packages")
-                        .setResult("The list of installed NPM packages, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                        .setResult("The list of installed NPM packages, in the format <code>{ \"success\": true, \"result\": [...] }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_http_template", params -> {
@@ -1102,15 +1101,15 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Test an HTTP template")
-                        .setParam("ip_address", "The IP address to test the connection on - optional", IJsonCmdHelp.STR)
-                        .setParam("device_uuid", "The uuid of the device to test the connection on - optional", IJsonCmdHelp.STR)
-                        .setParam("connection_id", "The id of the connection to test - optional", IJsonCmdHelp.INT)
-                        .setParam("connection", "The connection to test - optional", IJsonCmdHelp.JSON)
-                        .setParam("template_uuid", "The uuid of the template to test", IJsonCmdHelp.STR)
-                        .setParam("template", "The template to test - optional", IJsonCmdHelp.JSON)
+                        .setParam("ip_address", "The IP address to test the connection on - optional", JsonCmdHelp.STR)
+                        .setParam("device_uuid", "The uuid of the device to test the connection on - optional", JsonCmdHelp.STR)
+                        .setParam("connection_id", "The id of the connection to test - optional", JsonCmdHelp.INT)
+                        .setParam("connection", "The connection to test - optional", JsonCmdHelp.JSON)
+                        .setParam("template_uuid", "The uuid of the template to test", JsonCmdHelp.STR)
+                        .setParam("template", "The template to test - optional", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
                                 "where result contains <code>{ \"success\": true }</code> if the template is valid," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("get_discovery_cron", params -> {
@@ -1134,8 +1133,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get the discovery cron")
-                        .setResult("The discovery cron, in the format <code>{ \"success\": true, \"result\": { \"cron\": \"...\" } }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setResult("The discovery cron, in the format <code>{ \"success\": true, \"result\": { \"cron\": \"...\" } }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("set_discovery_cron", params -> {
                     logger.debug( "Setting discovery cron ...");
@@ -1170,10 +1169,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Set the discovery cron")
-                        .setParam("cron", "The cron to set", IJsonCmdHelp.STR)
+                        .setParam("cron", "The cron to set", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("is_discovery_cron_active", params -> {
@@ -1190,8 +1189,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Get the status of the discovery cron")
-                        .setResult("The status of the discovery cron, in the format <code>{ \"success\": true, \"result\": { \"active\": \"true/false\" } }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setResult("The status of the discovery cron, in the format <code>{ \"success\": true, \"result\": { \"active\": \"true/false\" } }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("set_discovery_cron_active", params -> {
                     logger.debug( "Setting discovery cron status ...");
@@ -1220,10 +1219,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Set the status of the discovery cron")
-                        .setParam("isActive", "The status to set", IJsonCmdHelp.BOOL)
+                        .setParam("isActive", "The status to set", JsonCmdHelp.BOOL)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
         addCmd("import_http_templates_bson", params -> {
@@ -1246,9 +1245,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Import HTTP templates from a BSON file")
-                        .setParam("file", "The BSON file to import", IJsonCmdHelp.STR)
+                        .setParam("file", "The BSON file to import", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
         );
         addCmd("export_http_templates_bson", params -> {
                     logger.debug( "Exporting HTTP templates from bson file ...");
@@ -1267,7 +1266,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Request to export HTTP templates to a BSON file")
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
         );
         addCmd("get_external_connection_info_templates", params -> {
                     logger.debug( "Getting external connection info templates ...");
@@ -1283,8 +1282,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return JsonApiResponse.result(serializedTemplates).toJson();
                 },
                 new JsonCmdHelp().setDesc("Get the list of device discovery fetcher templates")
-                        .setResult("The list of device discovery fetcher templates, in the format <code>{ \"success\": true, \"result\": [...] }</code>", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK)
+                        .setResult("The list of device discovery fetcher templates, in the format <code>{ \"success\": true, \"result\": [...] }</code>", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK)
         );
         addCmd("create_external_connection_info", params -> {
                     logger.debug( "Creating external connection info ...");
@@ -1320,10 +1319,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         return response.toJson();
                     }
                 }, new JsonCmdHelp().setDesc("Create a device discovery connection info")
-                        .setParam("connection_info", "The connection info to create", IJsonCmdHelp.JSON)
+                        .setParam("connection_info", "The connection info to create", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.CREATE_EXTERNAL_CONNECTION_INFO
         );
         addCmd("update_external_connection_info", params -> {
@@ -1360,10 +1359,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Update a device discovery connection info")
-                        .setParam("connection_info", "The connection info to update", IJsonCmdHelp.JSON)
+                        .setParam("connection_info", "The connection info to update", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.UPDATE_EXTERNAL_CONNECTION_INFO
         );
         addCmd("delete_external_connection_info", params -> {
@@ -1392,10 +1391,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                     return response.toJson();
                 }, new JsonCmdHelp().setDesc("Remove a device discovery connection info")
-                        .setParam("connection_info_uuid", "The id of the connection info to remove", IJsonCmdHelp.STR)
+                        .setParam("connection_info_uuid", "The id of the connection info to remove", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_EXTERNAL_CONNECTION_INFO
         );
         addCmd("clear_external_connection_infos", params -> {
@@ -1416,8 +1415,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Clear the collection of device discovery connection infos")
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_EXTERNAL_CONNECTION_INFO
         );
         addCmd("clear_external_discovered_devices", params -> {
@@ -1439,8 +1438,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Clear the collection of discovered devices")
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_EXTERNAL_DISCOVERED_DEVICE
         );
         addCmd("start_external_scan", params -> {
@@ -1469,10 +1468,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Start a device discovery scan")
-                        .setParam("connection_info_uuid", "The id of the connection info to use", IJsonCmdHelp.INT)
+                        .setParam("connection_info_uuid", "The id of the connection info to use", JsonCmdHelp.INT)
                         .setResult("<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", IJsonCmdHelp.JSON)
-                        .setStatus(IJsonCmdHelp.STATUS_OK),
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_DEVICE_SCAN
         );
 
@@ -1864,7 +1863,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * @param privilegeFamily The privilege family of the command.
      * @return A {@link String}
      */
-    public String addCmd(String name, IJsonCmd cmd, IJsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
+    public String addCmd(String name, IJsonCmd cmd, JsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
         return apiCommands.registerCmd(name, cmd, help, privilegeFamily);
     }
 
@@ -1889,7 +1888,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * @param privilegeFamily The privilege family of the command.
      * @return A {@link String}
      */
-    public String addCmd(String name, IJsonCmdWithFiles cmd, IJsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
+    public String addCmd(String name, IJsonCmdWithFiles cmd, JsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
         return apiCommands.registerCmd(name, cmd, help, privilegeFamily);
     }
 

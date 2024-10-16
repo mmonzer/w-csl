@@ -1,7 +1,6 @@
 package com.csl.intercom.jsoncmd;
 
 import com.ucsl.interfaces.IJsonCmd;
-import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmdWithFiles;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -27,7 +26,7 @@ public class ApiCommands {
 
     HashMap<String, IJsonCmd> listOfCommands = new HashMap<String, IJsonCmd>();
     HashMap<String, IJsonCmdWithFiles> listOfCommandsWithFiles = new HashMap<String, IJsonCmdWithFiles>();
-    HashMap<String, IJsonCmdHelp> listOfCommandHelps = new HashMap<String, IJsonCmdHelp>();
+    HashMap<String, JsonCmdHelp> listOfCommandHelps = new HashMap<String, JsonCmdHelp>();
     List<String> listOfCommandNames = new ArrayList<String>();
     Map<String, JsonCmdPrivilegeFamily> listOfCommandPrivileges = new HashMap<>();
     @Getter
@@ -66,7 +65,7 @@ public class ApiCommands {
     }
 
 //    @Override
-    public String registerCmd(String name, IJsonCmd jsonCommand, IJsonCmdHelp jsonCommandHelp) {
+    public String registerCmd(String name, IJsonCmd jsonCommand, JsonCmdHelp jsonCommandHelp) {
         return registerCmd(name, jsonCommand, jsonCommandHelp, null);
     }
 
@@ -76,7 +75,7 @@ public class ApiCommands {
     }
 
 //    @Override
-    public String registerCmd(String name, IJsonCmd jsonCommand, IJsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
+    public String registerCmd(String name, IJsonCmd jsonCommand, JsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
         if (listOfCommands.get(name) != null)
             return "Command with this name already registered :" + name;
         listOfCommands.put(name, jsonCommand);
@@ -92,7 +91,7 @@ public class ApiCommands {
         return registerCmd(name, jsonCommand, null, null);
     }
 
-    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, IJsonCmdHelp jsonCommandHelp) {
+    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, JsonCmdHelp jsonCommandHelp) {
         return registerCmd(name, jsonCommand, jsonCommandHelp, null);
     }
 
@@ -100,7 +99,7 @@ public class ApiCommands {
         return registerCmd(name, jsonCommand, null, privilegeFamily);
     }
 
-    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, IJsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
+    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, JsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
         if (listOfCommands.get(name) != null)
             return "Command with this name already registered :" + name;
         listOfCommandsWithFiles.put(name, jsonCommand);
@@ -215,7 +214,7 @@ public class ApiCommands {
 
         for (String name : listOfCommandNames) {
             if (listOfCommandHelps.get(name) != null) {
-                IJsonCmdHelp z = listOfCommandHelps.get(name);
+                JsonCmdHelp z = listOfCommandHelps.get(name);
                 if (!z.isHidden()) {
                     Json jz = z.toJson(params);
                     if (jz == null) continue;

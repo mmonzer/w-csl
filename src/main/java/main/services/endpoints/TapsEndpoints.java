@@ -1,7 +1,6 @@
 package main.services.endpoints;
 
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.ucsl.interfaces.IJsonCmdHelp;
 
 /**
  * Endpoints for the service Tap
@@ -176,171 +175,171 @@ public enum TapsEndpoints implements Endpoint {
             .setStatus(JsonCmdHelp.STATUS_OK)),
     RELOAD_ALL_TAPS_RULES_DEPRECATED("reloadAllTapsRules",
             new JsonCmdHelp().setDesc("DEPRECATED : Reloads the rules of all the taps")
-                    .setResult("The summary of the update", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setResult("The summary of the update", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     RELOAD_RULES("reload_rules", new JsonCmdHelp().setDesc("Reloads the rules of the given tap")
             .setParam("name", "name of the tap, where the rules should be reloaded. ", JsonCmdHelp.STR)
-            .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setResult("The entity as returned by CSL-Probe", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     RELOAD_RULES_DEPRECATED("reloadRules",
             new JsonCmdHelp().setDesc("DEPRECATED : Reloads the rules of the given tap")
                     .setParam("name", "name of the tap, where the rules should be reloaded. ", JsonCmdHelp.STR)
-                    .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setResult("The entity as returned by CSL-Probe", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_PROCESS_JSON("get_process_json",
             new JsonCmdHelp().setDesc("FUTURE : get variables of the industrial process")
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_PROCESS_JSON_DEPRECATED("getProcessJson", Endpoint.EMPTY_DEPRECATED()),
     GET_NETWORK_JSON("get_network_json", Endpoint.EMPTY()),
     GET_NETWORK_JSON_DEPRECATED("getNetworkJson", Endpoint.EMPTY_DEPRECATED()),
     SET_PROCESS_JSON("set_process_json",
             new JsonCmdHelp().setDesc("FUTURE : set variables of the industrial process")
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     SET_PROCESS_JSON_DEPRECATED("setProcessJson", Endpoint.EMPTY_DEPRECATED()),
     SET_NETWORK_JSON("set_network_json", Endpoint.EMPTY()),
     SET_NETWORK_JSON_DEPRECATED("setNetworkJson", Endpoint.EMPTY_DEPRECATED()),
     GET_SURICATA_STATUS("get_suricata_status",
             new JsonCmdHelp().setDesc("Get the Suricata status of the given tap")
-                    .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
-                    .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap where we query the configuration", JsonCmdHelp.JSON)
+                    .setResult("The entity as returned by CSL-Probe", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_SURICATA_STATUS_DEPRECATED("getSuricataStatus", new JsonCmdHelp().setDesc("DEPRECATED : Get the Suricata status of the given tap")
-            .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
-            .setResult("The entity as returned by CSL-Probe", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "Name of the tap where we query the configuration", JsonCmdHelp.JSON)
+            .setResult("The entity as returned by CSL-Probe", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_SURICATA_CONF("get_suricata_conf", new JsonCmdHelp().setDesc("Get the Suricata configuration file (yaml) of the given tap")
-            .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
-            .setResult("teh file content of the configuration file", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "Name of the tap where we query the configuration", JsonCmdHelp.JSON)
+            .setResult("teh file content of the configuration file", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_SURICATA_CONF_DEPRECATED("getSuricataConf",
             new JsonCmdHelp().setDesc("DEPRECATED : Get the Suricata configuration file of the given tap")
-                    .setParam("name", "Name of the tap where we query the configuration", IJsonCmdHelp.JSON)
-                    .setResult("teh file content of the configuration file", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap where we query the configuration", JsonCmdHelp.JSON)
+                    .setResult("teh file content of the configuration file", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     SET_SURICATA_CONF("set_suricata_conf",
             new JsonCmdHelp().setDesc("Uploads the new configuration file to the IDS and reloads it. The request part of the file is called file: " +
                             "{\"cmd\":cmdtodo, \"file\":file, \"params\": {...}}")
-                    .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
-                    .setResult("The new properties values and the tap's name", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "The name of the tap", JsonCmdHelp.JSON)
+                    .setResult("The new properties values and the tap's name", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     SET_SURICATA_CONF_DEPRECATED("setSuricataConf",
             new JsonCmdHelp().setDesc("DEPRECATED : Uploads the new configuration file to the IDS and reloads it." +
                             "{\"cmd\":cmdtodo, \"file\":file, \"params\": {...}}")
-                    .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
-                    .setResult("The new properties values and the tap's name", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "The name of the tap", JsonCmdHelp.JSON)
+                    .setResult("The new properties values and the tap's name", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     RESET_SURICATA_CONF("reset_suricata_conf",
             new JsonCmdHelp().setDesc("Reset the configuration file of IDS")
-                    .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
-                    .setResult("Whether the reset was successful", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "The name of the tap", JsonCmdHelp.JSON)
+                    .setResult("Whether the reset was successful", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_BASE_RULES("get_base_rules", new JsonCmdHelp().setDesc("Retrieve the base rules of the given tap")
-            .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
-            .setResult("An object with the list of base rules of the given tap", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "The name of the tap", JsonCmdHelp.JSON)
+            .setResult("An object with the list of base rules of the given tap", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_BASE_RULES_DEPRECATED("getBaseRules", new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the base rules of Suricata")
-            .setParam("name", "The name of the tap", IJsonCmdHelp.JSON)
-            .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "The name of the tap", JsonCmdHelp.JSON)
+            .setResult("An object with the sid as key and the rule as value", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_GENERATED_RULES("get_gen_rules", new JsonCmdHelp().setDesc("Retrieve the generated rules of the given tap")
-            .setParam("name", "The name of the tap", IJsonCmdHelp.STR)
-            .setResult("An object with the list of generated rules of the given tap", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "The name of the tap", JsonCmdHelp.STR)
+            .setResult("An object with the list of generated rules of the given tap", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_GENERATED_RULES_DEPRECATED("getGenRules", new JsonCmdHelp().setDesc("DEPRECATED : Retrieve the generated rules of Suricata")
-            .setResult("An object with the sid as key and the rule as value", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setResult("An object with the sid as key and the rule as value", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     MODIFY_GENERATED_RULES("modify_gen_rules",
             new JsonCmdHelp().setDesc("Modify the generated rules of the given tap")
-                    .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap", JsonCmdHelp.STR)
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("An object with the sid as keys and the rules as values", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     MODIFY_GENERATED_RULES_DEPRECATED("modifyGenRules",
             new JsonCmdHelp().setDesc("DEPRECATED : Modify the generated rules of Suricata")
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("An object with the sid as keys and the rules as values", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     MODIFY_BASE_RULES("modify_base_rules",
             new JsonCmdHelp().setDesc("Modify the base rules of the given tap")
-                    .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap", JsonCmdHelp.STR)
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("An object with the sid as keys and the rules as values", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     MODIFY_BASE_RULES_DEPRECATED("modifyBaseRules",
             new JsonCmdHelp().setDesc("DEPRECATED : Modify the base rules of Suricata")
-                    .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap", JsonCmdHelp.STR)
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("An object with the sid as keys and the rules as values", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     REPLACE_BASE_RULES("replace_base_rules", new JsonCmdHelp().setDesc("Replace the base rules of the given tap")
-            .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-            .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-            .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "Name of the tap", JsonCmdHelp.STR)
+            .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+            .setResult("An object with the sid as keys and the rules as values", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     REPLACE_GENERATED_RULES("replace_gen_rules", new JsonCmdHelp().setDesc("Replace the generated rules of the given tap")
-            .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-            .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-            .setResult("An object with the sid as keys and the rules as values", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "Name of the tap", JsonCmdHelp.STR)
+            .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+            .setResult("An object with the sid as keys and the rules as values", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     ADD_BASE_RULES("set_base_rules", new JsonCmdHelp().setDesc("Set the base rules of the given tap")
-            .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-            .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-            .setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
-            .setStatus(IJsonCmdHelp.STATUS_OK)),
+            .setParam("name", "Name of the tap", JsonCmdHelp.STR)
+            .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+            .setResult("The entity as returned by CSL-Probe, with the new updated rules", JsonCmdHelp.JSON)
+            .setStatus(JsonCmdHelp.STATUS_OK)),
     ADD_BASE_RULES_DEPRECATED("setBaseRules",
             new JsonCmdHelp().setDesc("DEPRECATED : Set the base rules of Suricata")
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     ADD_GENERATED_RULES("set_generated_rules",
             new JsonCmdHelp().setDesc("Set the generated rules of the given tap")
-                    .setParam("name", "Name of the tap", IJsonCmdHelp.STR)
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap", JsonCmdHelp.STR)
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     ADD_GENERATED_RULES_DEPRECATED("setGeneratedRules",
             new JsonCmdHelp().setDesc("DEPRECATED : Set the generated rules of the given tap")
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     UPDATE_ALL_TAPS_RULES("update_all_taps_suricata_rules",
             new JsonCmdHelp().setDesc("Update all generated suricata rules in all taps")
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     UPDATE_ALL_TAPS_RULES_DEPRECATED("updateAllTapsSuricataRules", Endpoint.EMPTY_DEPRECATED()),
     GET_SURICATA_LOGS("get_suricata_logs",
             new JsonCmdHelp().setDesc("Get the IDS logs of the given tap")
-                    .setParam("name", "name of the tap", IJsonCmdHelp.JSON)
-                    .setResult("The most recent logs of the IDS of the given tap", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "name of the tap", JsonCmdHelp.JSON)
+                    .setResult("The most recent logs of the IDS of the given tap", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_SURICATA_LOGS_DEPRECATED("getSuricataLogs",
             new JsonCmdHelp().setDesc("Clear the IDS logs of the given tap")
-                    .setParam("name", "name of the tap", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "name of the tap", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     CLEAR_SURICATA_LOGS("clear_suricata_logs",
             new JsonCmdHelp().setDesc("Update all generated suricata rules in all taps")
-                    .setParam("rules", "A list of strings, each string is a rule", IJsonCmdHelp.JSON)
-                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("rules", "A list of strings, each string is a rule", JsonCmdHelp.JSON)
+                    .setResult("The entity as returned by CSL-Probe, with the new updated rules", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     CLEAR_SURICATA_LOGS_DEPRECATED("clearSuricataLogs",
             new JsonCmdHelp().setDesc("DEPRECATED : Clear the IDS logs of the given tap")
-                    .setParam("name", "name of the tap", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "name of the tap", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     SEND_INCLUDES("send_includes",
             new JsonCmdHelp().setDesc("FUTURE : Send a list of rules files to tap")
-                    .setParam("name", "Name of the tap when the rules will be add.", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap when the rules will be add.", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     SEND_INCLUDES_DEPRECATED("sendIncludes", Endpoint.EMPTY_DEPRECATED()),
     SET_INCLUDES("set_include",
             new JsonCmdHelp().setDesc("FUTURE : set a list of rules files to tap")
-                    .setParam("name", "Name of the tap when the rules will be add.", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap when the rules will be add.", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     SET_INCLUDES_DEPRECATED("setInclude", Endpoint.EMPTY_DEPRECATED()),
     GET_INCLUDES("get_includes",
             new JsonCmdHelp().setDesc("FUTURE : get a list of rules files to tap")
-                    .setParam("name", "Name of the tap when the rules will be add.", IJsonCmdHelp.JSON)
-                    .setStatus(IJsonCmdHelp.STATUS_OK)),
+                    .setParam("name", "Name of the tap when the rules will be add.", JsonCmdHelp.JSON)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_INCLUDES_DEPRECATED("getIncludes", Endpoint.EMPTY_DEPRECATED()),
     TEST("test", Endpoint.EMPTY_DEPRECATED());
 
@@ -353,7 +352,7 @@ public enum TapsEndpoints implements Endpoint {
      * @param command command of the request
      * @param help    help of the command for the api help
      */
-    TapsEndpoints(String command, IJsonCmdHelp help) {
+    TapsEndpoints(String command, JsonCmdHelp help) {
         this.command = command;
         this.help = (JsonCmdHelp) help;
     }

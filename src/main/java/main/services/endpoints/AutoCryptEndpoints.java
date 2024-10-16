@@ -1,7 +1,6 @@
 package main.services.endpoints;
 
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.ucsl.interfaces.IJsonCmdHelp;
 
 public enum AutoCryptEndpoints implements Endpoint  {
     SET_IP("set_ip",
@@ -222,9 +221,9 @@ public enum AutoCryptEndpoints implements Endpoint  {
      * @param command command of the request
      * @param help    help of the command for the api help
      */
-    AutoCryptEndpoints(String command, IJsonCmdHelp help) {
+    AutoCryptEndpoints(String command, JsonCmdHelp help) {
         this.command = command;
-        this.help = (JsonCmdHelp) help;
+        this.help = help;
     }
 
     public String cmd() {

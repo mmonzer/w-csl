@@ -21,8 +21,6 @@ public class ActivityHistory {
         history_size = max_size;
     }
 
-    ActivityHistory() {}
-
     public void addTick(int nb_packets, int nb_links, long time) {
         /**
          * Registers a tick in the history

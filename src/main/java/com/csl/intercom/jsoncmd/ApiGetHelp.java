@@ -3,14 +3,13 @@ package com.csl.intercom.jsoncmd;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.ucsl.interfaces.IApiGetHelp;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
 /**
  * Helper class that builds the apihelp HTML page.
  */
-public class ApiGetHelp implements IApiGetHelp {
+public class ApiGetHelp {
 	/**
 	 * Method that builds the body of HTML page from the api data.
 	 * @param apiNames list of names of the api endpoints
@@ -18,7 +17,6 @@ public class ApiGetHelp implements IApiGetHelp {
 	 * @param params parameters passed through the request
 	 * @return the HTML page in f{@link String} format.
 	 */
-	@Override
 	public String getHelp(List<String> apiNames, List<String> apiDescriptions, Json params) {
 
 		String s="";
@@ -77,7 +75,6 @@ public class ApiGetHelp implements IApiGetHelp {
 	 * @param params parameters passed through the request
 	 * @return the HTML page in f{@link String} format.
 	 */
-	@Override
 	public String getHelp(String apiName, String apiDescription, Json params) {
 
 		String styletr=" style =\"width:100 mm\" ";

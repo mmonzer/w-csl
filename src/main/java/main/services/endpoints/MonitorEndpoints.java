@@ -1,7 +1,6 @@
 package main.services.endpoints;
 
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
-import com.ucsl.interfaces.IJsonCmdHelp;
 
 /**
  * Endpoints for the service Monitor
@@ -44,7 +43,7 @@ public enum MonitorEndpoints implements Endpoint {
      * @param command command of the request
      * @param help    help of the command for the api help
      */
-    MonitorEndpoints(String command, IJsonCmdHelp help) {
+    MonitorEndpoints(String command, JsonCmdHelp help) {
         this.command = command;
         this.help = (JsonCmdHelp) help;
     }

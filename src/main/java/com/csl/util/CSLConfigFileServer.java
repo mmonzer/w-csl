@@ -32,36 +32,6 @@ public class CSLConfigFileServer {
 
 
     //================================================================================================================
-
-    public static void main(String[] args) {
-        CSLConfigFileServer cslFileManager = new CSLConfigFileServer();
-
-        cslFileManager.setMaxNumberOfLocalFileVersion(3); // default 99, -1 keep all
-
-        cslFileManager.addLocalFileTransferableViaHttp("testfile.txt");
-        cslFileManager.addFileModificationViaUploadListener(new IFileModificationViaUploadListener() {
-
-            @Override
-            public void modifying(String filename) {
-                // TODO Auto-generated method stub
-                System.out.println("File " + filename + " has been modified");
-            }
-        });
-        String s = cslFileManager.reverseToPreviousFileVersion("testfile.txt");
-        System.out.println(s);
-    }
-
-    /*
-     "config_file_manager": {
-        "on":true,
-        "verbose":true,
-        "port":8011,
-        "show_modified_files":true,
-        "root_conf_dir":"./idsconf",
-        "conf_files":["NewLearnedRules.json", "RulesForDetection.txt","RulesForLearning.txt","LearnedRules.json","SystemConfiguration.json"],
-        "max_number_of_version":10
-    }
-     */
     public void initConfigFileManager(Json j) {
         if (j == null) return;
 

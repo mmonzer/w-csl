@@ -24,22 +24,6 @@ public class DBDjango {
 	static String DEVICE_ENDPOINT = "api/devices";
 	static int PORT = 4445;
 
-	public static void main(String[] args) throws IOException {
-
-		boolean bool = readConfiguration();
-		if (!bool) {
-			System.out.println("configuration.json is required with {\"apikey\": \"...\", \"baseurl\": \"http://localhost:8005/\" }");
-			return;
-		}
-
-		Json j= Json.object();
-		j.set("ip", "1.1.1.1");
-		j.set("name", "test1");
-		
-		createDevice(j);
-		
-	}
-
 	// A utility method to convert the byte array
 	// data into a string representation.
 	public static StringBuilder data(byte[] a) {

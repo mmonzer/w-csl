@@ -429,28 +429,6 @@ public class FileUtils  {
         return s;
     }
 
-    public static void main(String[] args) {
-
-        String path = "/eaeae/../tes?t.ext/";
-        File f = new File(path);
-//        System.out.println(f.getName());
-//        System.out.println(f.getParent());
-//        System.out.println(f.getPath());
-//        System.out.println(path);
-//        System.out.println(sanitizeDirPath(path));
-
-
-        String dir = "/Users/flausj/Documents/usb/AMI";
-
-
-        try {
-            copyDirectory(dir, "/Users/flausj/Documents/usb/AMI2");
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
     public static List<String> readFileAsStringList(String filename) throws IOException {
         BufferedReader br = null;
         FileReader fr = null;

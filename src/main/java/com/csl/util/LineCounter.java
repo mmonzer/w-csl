@@ -203,29 +203,5 @@ public class LineCounter {
 		return j;
 		
 	}
-
-
-	public static void main(String[] args) {
-
-		
-		List<String> toExclude =new ArrayList<String>();
-		toExclude.add("/csl/pcap");
-		
-		LineCounter lc= new LineCounter(toExclude, "java");
-		
-		
-		List<String> alls =new ArrayList<String>();
-		
-		alls.add("./src/com");
-		alls.add("./src/main");
-		
-		
-		Json j=(lc.countAll(alls,  ".java"));
-		
-		dump(j);
-
-		FileUtils.saveJsonToFile(".","count.json", j);
-		
-	}
 }
 

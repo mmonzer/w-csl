@@ -239,31 +239,6 @@ public class CveSearch {
 			return cpeUris;
 	}
 	
-	public static void main(String[] args) {
-
-		CPENameUnbinder cpenu = new CPENameUnbinder();
-		List<WellFormedName> keys= new ArrayList<WellFormedName>();
-		WellFormedName key2;
-		
-		try {
-			String path="./datafile/cve/";
-			load2(path);
-			key2 = cpenu.unbindURI("cpe:/o:linux:linux_kernel:2.6");
-			keys.add(key2);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		int found=0;
-		for (CVEDescriptor cve:allcve) {
-			if (cve.eval(keys)) {
-				System.out.println(cve.toJson());
-				found++;
-			}
-		}
-		System.out.println("found "+found+" cve");
-
-	}
-	
 	public ArrayList<Json> getFullCve(String cpe) throws ParseException{
 		List<WellFormedName> keys= new ArrayList<WellFormedName>();
 		WellFormedName key2 = cpenu.unbindURI(cpe);

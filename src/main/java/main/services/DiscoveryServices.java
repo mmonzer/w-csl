@@ -124,14 +124,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public boolean init() {
         logger.info("Initializing SNMP service ..");
 
-//        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(jConfig);
         String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(Config.instance.Scan);
 
         dbapiHandler = new DbapiHandlerForCSLScan();
         scanApiHandler = new ScanApiHandler();
         fileStorageService = new FileStorageService();
-
-//        Json globalConfig = CSLContext.instance.getConfig().get("global");
 
         if (!isRemote) {
             cpeScanService = new CpeScanService();

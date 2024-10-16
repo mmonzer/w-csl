@@ -1,7 +1,6 @@
 package com.csl.intercom.dbapi.models;
 
-import com.csl.logger.CustomLogger;
-import com.fasterxml.jackson.annotation.JsonView;
+import com.csl.logger.CSLApplicativeLogger;
 import lombok.Getter;
 import lombok.Setter;
 import com.ucsl.json.Json;
@@ -51,7 +50,7 @@ public class EntityConnectionInfoDraft {
     OffsetDateTime createdAt;
     @Getter @Setter
     OffsetDateTime updatedAt;
-    private static final CustomLogger logger = CustomLogger.getLogger(DiscoveryServices.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DiscoveryServices.class);
 
     public EntityConnectionInfoDraft(String uuid, String port, String name, String userName, String password, String discoveryProtocol) {
         this.uuid = uuid;

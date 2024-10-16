@@ -64,11 +64,11 @@ public class TestAutoCryptService_Roles extends TestConfig {
         returnModule.at("issuer_ref", issuerRef);
         // Define mocked service
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/role"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -80,11 +80,11 @@ public class TestAutoCryptService_Roles extends TestConfig {
         }
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -96,8 +96,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "create_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "create_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -126,8 +126,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "create_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "create_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -158,8 +158,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "create_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "create_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -186,11 +186,11 @@ public class TestAutoCryptService_Roles extends TestConfig {
         returnModule.at("ttl", "24h");
         // Define mocked service
         MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/role/" + name))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -202,11 +202,11 @@ public class TestAutoCryptService_Roles extends TestConfig {
         }
         // Define mocked service behavior
         MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/"+id))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(returnModule.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -219,8 +219,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -251,8 +251,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -285,8 +285,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -319,8 +319,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -347,11 +347,11 @@ public class TestAutoCryptService_Roles extends TestConfig {
         returnModule.at("ttl", ttl);
         // Define mocked service
         MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/role/" + name))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                 );
         wireMockServerModule.stubFor(x);
 
@@ -359,10 +359,10 @@ public class TestAutoCryptService_Roles extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/vault_roles/"+id))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                 );
         wireMockServerBd.stubFor(y);
 
@@ -374,8 +374,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -405,8 +405,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -439,8 +439,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -473,8 +473,8 @@ public class TestAutoCryptService_Roles extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_role");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_role");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);

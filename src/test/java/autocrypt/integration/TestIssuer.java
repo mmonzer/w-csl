@@ -45,8 +45,8 @@ public class TestIssuer {
                 "-----END CERTIFICATE-----");
         params.at("name","abc");
         Json inputJson = Json.object();
-        inputJson.at("cmd", "import_issuer");
-        inputJson.at("params", params);
+        inputJson.at(JCmd.CMD, "import_issuer");
+        inputJson.at(JCmd.PARAMETERS, params);
 
         // Define request to th mocked service
         ContentResponse response = sendPostTo(BASE_URL_CLIENT+ENDPOINT_CLIENT, inputJson);

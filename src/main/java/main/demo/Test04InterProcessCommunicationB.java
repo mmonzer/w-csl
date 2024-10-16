@@ -4,6 +4,7 @@ import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.util.JCmd;
 import com.ucsl.json.Json;
 
 /*
@@ -23,7 +24,7 @@ public class Test04InterProcessCommunicationB {
 
         // Execute commande externe (module A)
 
-        Json r = test.imcm.executeCommand("essai", Json.object().set("cmd", "test").set("params", Json.object().set("x", 10)));
+        Json r = test.imcm.executeCommand("essai", Json.object().set(JCmd.CMD, "test").set(JCmd.PARAMETERS, Json.object().set("x", 10)));
 
         System.out.println("Result (extern):" + r);
     }

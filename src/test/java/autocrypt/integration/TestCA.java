@@ -30,8 +30,8 @@ public class TestCA {
         params.at("ttl","24h");
         params.at("name","abc");
         Json inputJson = Json.object();
-        inputJson.at("cmd", "generate_root_ca");
-        inputJson.at("params", params);
+        inputJson.at(JCmd.CMD, "generate_root_ca");
+        inputJson.at(JCmd.PARAMETERS, params);
 
         // Define request to th mocked service
         ContentResponse response = sendPostTo(BASE_URL_CLIENT+ENDPOINT_CLIENT, inputJson);
@@ -53,8 +53,8 @@ public class TestCA {
         params.at("name","abc2");
         params.at("type","external");
         Json inputJson = Json.object();
-        inputJson.at("cmd", "generate_root_ca");
-        inputJson.at("params", params);
+        inputJson.at(JCmd.CMD, "generate_root_ca");
+        inputJson.at(JCmd.PARAMETERS, params);
 
         // Define request to th mocked service
         ContentResponse response = sendPostTo(BASE_URL_CLIENT+ENDPOINT_CLIENT, inputJson);

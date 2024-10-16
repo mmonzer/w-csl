@@ -17,9 +17,9 @@ public class OutilsForTesting {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         Request request = httpClient.newRequest(uri);
-        request.header("Content-Type", "application/json");
+        request.header(CONTENT_TYPE, JSON_FORMAT);
         request.method(HttpMethod.POST);
-        request.content(new StringContentProvider(content), "application/json");
+        request.content(new StringContentProvider(content), JSON_FORMAT);
         return request.send();
     }
     public static ContentResponse sendPostTo(String uri, Json content) throws Exception {

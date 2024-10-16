@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import com.csl.util.JCmd;
+import com.csl.web.HTTPConstants;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -25,8 +27,8 @@ public class Utils {
 
 		Json j= Json.object();
 
-		j.set("cmd", cmd);
-		j.set("params",jparams);
+		j.set(JCmd.CMD, cmd);
+		j.set(JCmd.PARAMETERS,jparams);
 		return JServiceLoader.cslInterModuleCommunicationManager.executeCommand(api, j);
 	}
 
@@ -70,14 +72,14 @@ public class Utils {
 
 		Json j= Json.object();
 		System.out.println("params : "+jparams);
-		j.set("cmd", cmd);
-		j.set("params",jparams);
+		j.set(JCmd.CMD, cmd);
+		j.set(JCmd.PARAMETERS,jparams);
 
 		HttpPost post = new HttpPost(getServerURL()+"devdb");
 		HttpClient  client    = HttpClientBuilder.create().build();
 		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
 		post.setEntity(postingString);
-		post.setHeader("Content-type", "application/json");
+		post.setHeader(HTTPConstants.CONTENT_TYPE, HTTPConstants.JSON_FORMAT);
 		try {
 			HttpResponse response = client.execute(post);
 			

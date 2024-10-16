@@ -2,6 +2,7 @@ package main.xcom;
 
 import com.csl.core.Config;
 import com.csl.logger.CSLNetworkLogger;
+import com.csl.logger.LoggerInterfaces;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,7 @@ import java.util.Map;
 @ClientEndpoint(subprotocols = {"xsCrossfire"}, configurator = WebsocketClientEndpoint.Configurator.class)
 public class WebsocketClientEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(WebsocketClientEndpoint.class);
+    public static final String WEBSOCKET_CONNECTION = "websocket/connection";
     Session userSession = null;
     private MessageHandler messageHandler;
     private URI endpointURI;
@@ -62,14 +64,14 @@ public class WebsocketClientEndpoint {
      */
     @OnOpen
     public void onOpen(Session userSession) {
-        CSLNetworkLogger.info(logger, "websocket/connection", "WS", "Opening websocket "+ userSession.getRequestURI());
+        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opening websocket "+ userSession.getRequestURI());
         this.userSession = userSession;
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
-        CSLNetworkLogger.debug(logger, "websocket/connection", "WS", "Timeout = "+ userSession.getMaxIdleTimeout());
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = "+ userSession.getMaxIdleTimeout());
         {
     		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
     		LocalDateTime now = LocalDateTime.now();
-            CSLNetworkLogger.debug(logger, "websocket/connection", "WS", "Sending message to websocket "+ dtf.format(now));
+            CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Sending message to websocket "+ dtf.format(now));
     	}
     }
 
@@ -81,8 +83,8 @@ public class WebsocketClientEndpoint {
      */
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        CSLNetworkLogger.info(logger, "websocket/connection", "WS", "Closing websocket "+ userSession.getRequestURI());
-        CSLNetworkLogger.debug(logger, "websocket/connection", "WS", "Closing websocket "+ userSession.getRequestURI() + " User session:"+userSession+ " Reason:"+reason.getReasonPhrase());
+        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket "+ userSession.getRequestURI());
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket "+ userSession.getRequestURI() + " User session:"+userSession+ " Reason:"+reason.getReasonPhrase());
         this.userSession = null;
     }
 

@@ -45,18 +45,18 @@ public class TestAutoCryptModule_Misc extends TestConfig {
 
         // Define mocked service
         MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/general/health-check"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                 );
         stubFor(x);
 
         // Define expected input/output of the api
         Json sentParams = Json.object();
         Json sentInput = Json.object();
-        sentInput.at("cmd", "is_alive");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "is_alive");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -80,12 +80,12 @@ public class TestAutoCryptModule_Misc extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/general/activate-ocsp"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withQueryParam("ocsp_servers", (StringValuePattern) new EqualToPattern(ocspServers))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                 );
         stubFor(x);
 
@@ -95,8 +95,8 @@ public class TestAutoCryptModule_Misc extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("ocsp_servers", ocspServers);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "activate_ocsp");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "activate_ocsp");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -119,8 +119,8 @@ public class TestAutoCryptModule_Misc extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("ocsp_servers", ocspServers);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "activate_ocsp");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "activate_ocsp");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -146,8 +146,8 @@ public class TestAutoCryptModule_Misc extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "activate_ocsp");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "activate_ocsp");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);

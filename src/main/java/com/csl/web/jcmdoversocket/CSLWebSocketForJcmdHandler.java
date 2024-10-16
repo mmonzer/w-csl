@@ -20,9 +20,9 @@ public class CSLWebSocketForJcmdHandler {
 	private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmdHandler.class);
      
     @OnWebSocketConnect
-    public void onConnect(Session session) throws Exception {
+    public void onConnect(Session session) {
 		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket");
-		logger.trace("Connection :"+session);
+		logger.trace("Connection : {}",session);
     }
 
     @OnWebSocketClose

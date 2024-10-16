@@ -28,7 +28,6 @@ public class CSLFlowManager {
     List<List<ICSLFlowListener>> listeners = new ArrayList<List<ICSLFlowListener>>();
 
     public CSLFlowManager(int maxflows, int maxsize, boolean trace) {
-        // TODO Auto-generated constructor stub
         this.maxflows = maxflows;
         this.maxsize = maxsize;
         this.traceAllMessages = trace;

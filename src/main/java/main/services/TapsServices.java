@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.csl.web.HTTPConstants.*;
+
 public class TapsServices extends Service {
     private static final String SCRIPTS_DIR = "~/csl/scripts";
     private static final String START_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./launchTap.sh & exit";
@@ -884,18 +886,18 @@ public class TapsServices extends Service {
             // Create a POST request to the server
             Request request = httpClient.newRequest(serverUrl)
                     .method(HttpMethod.POST)
-                    .content(new StringContentProvider("{\"cmd\":\"suricataGetLogFile\"}"), "application/json");
+                    .content(new StringContentProvider("{\"cmd\":\"suricataGetLogFile\"}"), JSON_FORMAT);
 
             // Send the request and get the response
             InputStreamResponseListener listener = new InputStreamResponseListener();
             request.send(listener);
 
             Response response = listener.get(30, TimeUnit.SECONDS); // Wait for the response
-            if (response.getHeaders().containsKey("Content-Type")) {
-                responseJson.at("Content-Type", response.getHeaders().getField("Content-Type").getValue());
+            if (response.getHeaders().containsKey(CONTENT_TYPE)) {
+                responseJson.at(CONTENT_TYPE, response.getHeaders().getField(CONTENT_TYPE).getValue());
             }
-            if (response.getHeaders().containsKey("Content-disposition")) {
-                responseJson.at("Content-disposition", response.getHeaders().getField("Content-disposition").getValue());
+            if (response.getHeaders().containsKey(CONTENT_DISPOSITION)) {
+                responseJson.at(CONTENT_DISPOSITION, response.getHeaders().getField(CONTENT_DISPOSITION).getValue());
             }
             String strResponse = "";
             // Check if the response status is OK (200)

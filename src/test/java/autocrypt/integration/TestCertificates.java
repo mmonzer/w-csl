@@ -26,8 +26,8 @@ public class TestCertificates {
         params.at("issuer_ref","bbae9fe3-e1f6-6732-5d99-9b1b45856847");
         params.at("name","abc");
         Json inputJson = Json.object();
-        inputJson.at("cmd", "validate_template");
-        inputJson.at("params", params);
+        inputJson.at(JCmd.CMD, "validate_template");
+        inputJson.at(JCmd.PARAMETERS, params);
 
         // Define request to th mocked service
         ContentResponse response = sendPostTo(BASE_URL_CLIENT+ENDPOINT_CLIENT, inputJson);
@@ -45,8 +45,8 @@ public class TestCertificates {
         params.at("name","abgsfggd");
         params.at("ttl","24h");
         Json inputJson = Json.object();
-        inputJson.at("cmd", "generate_certificate");
-        inputJson.at("params", params);
+        inputJson.at(JCmd.CMD, "generate_certificate");
+        inputJson.at(JCmd.PARAMETERS, params);
 
         // Define request to th mocked service
         ContentResponse response = sendPostTo(BASE_URL_CLIENT+ENDPOINT_CLIENT, inputJson);
@@ -65,8 +65,8 @@ public class TestCertificates {
         params.at("id",6);
         params.at("name","dummyCert2");
         Json inputJson = Json.object();
-        inputJson.at("cmd", "revoke_certificate");
-        inputJson.at("params", params);
+        inputJson.at(JCmd.CMD, "revoke_certificate");
+        inputJson.at(JCmd.PARAMETERS, params);
 
         // Define request to th mocked service
         ContentResponse response = sendPostTo(BASE_URL_CLIENT+ENDPOINT_CLIENT, inputJson);
@@ -82,8 +82,8 @@ public class TestCertificates {
         params.at("path","pki");
         params.at("serial_number","74:47:cf:b7:8e:6d:8d:dc:67:64:b4:03:5f:01:a0:62:3c:84:f6:a4");
         Json inputJson = Json.object();
-        inputJson.at("cmd", "download_certificate");
-        inputJson.at("params", params);
+        inputJson.at(JCmd.CMD, "download_certificate");
+        inputJson.at(JCmd.PARAMETERS, params);
 
         // Define request to th mocked service
         ContentResponse response = sendPostTo(BASE_URL_CLIENT+ENDPOINT_CLIENT, inputJson);

@@ -50,21 +50,18 @@ public class CorrelationUtils {
         setXCorrelationId();
         setEndpoint("??");
     }
-
     /**
      * Formats the XCorrelationId with the initializer service.
-     *
-     * @param uuid               unique identifier for the XCorrelationId
+     * @param uuid unique identifier for the XCorrelationId
      * @param initializerService action initializer service. For example, periodic synchronizations.
      * @return a new formated X-Correlation-ID
      */
     public static String getFormattedXCorrelationId(String uuid, String initializerService) {
-        return uuid + "(" + initializerService + ")";
+        return uuid+"("+initializerService+")";
     }
 
     /**
      * Formats the XCorrelationId with the initializer service.
-     *
      * @param uuid unique identifier for the XCorrelationId
      * @return a new formated X-Correlation-ID
      */
@@ -74,10 +71,9 @@ public class CorrelationUtils {
 
     /**
      * Formats the XCorrelationId with the initializer service.
-     *
      * @return a new formated X-Correlation-ID
      */
     public static String getFormattedXCorrelationId() {
-        return getFormattedXCorrelationId(createXCorrelationId());
+        return getFormattedXCorrelationId(createXCorrelationId(), LoggerInterfaces.CSL_CLIENT.toString());
     }
 }

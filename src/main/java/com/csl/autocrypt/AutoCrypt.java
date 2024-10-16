@@ -17,6 +17,7 @@ import org.eclipse.jetty.http.HttpHeader;
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
+import static com.csl.web.HTTPConstants.CONTENT_DISPOSITION;
 import static main.services.endpoints.AutoCryptEndpoints.*;
 
 /**
@@ -213,7 +214,7 @@ public class AutoCrypt {
                 responseFromModule.getResult().has(Certificate.CERTIFICATE) && responseFromModule.getResult().get(Certificate.CERTIFICATE).isString()) {
             Json response = Json.object();
             // TODO : range this formating elsewhere, probably not the right place
-            response.at(HttpHeader.CONTENT_TYPE.toString(), "application/octet-stream");
+            response.at(HttpHeader.CONTENT_TYPE.toString(), CONTENT_DISPOSITION);
             response.at("Content", responseFromModule.getResult().get(Certificate.CERTIFICATE).asString());
             return JsonApiResponse.result(response);
         }

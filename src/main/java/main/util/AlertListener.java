@@ -1,5 +1,6 @@
 package main.util;
 
+import com.csl.web.HTTPConstants;
 import com.ucsl.json.Json;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -17,6 +18,7 @@ import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
 import static com.ucsl.util.FileUtils.readFile;
+import com.csl.util.JCmd;
 
 public class AlertListener {
     static String CONFIGURATION_FILE = "configuration.json";
@@ -120,7 +122,7 @@ public class AlertListener {
 
         StringEntity postingString = new StringEntity(j.toString(), StandardCharsets.UTF_8);
         post.setEntity(postingString);
-        post.setHeader("Content-type", "application/json");
+        post.setHeader(HTTPConstants.CONTENT_TYPE, HTTPConstants.JSON_FORMAT);
         try {
             HttpResponse response = client.execute(post);
 
@@ -154,8 +156,8 @@ public class AlertListener {
 
 
         Json body = Json.object();
-        body.set("cmd", "test_alert0");
-        body.set("params", Json.object());
+        body.set(JCmd.CMD, "test_alert0");
+        body.set(JCmd.PARAMETERS, Json.object());
 
 
         System.out.println(al.doPost(ALERT_ENDPOINT, body, API_KEY));

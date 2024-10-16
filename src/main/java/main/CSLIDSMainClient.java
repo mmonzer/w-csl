@@ -9,6 +9,7 @@ import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.logger.*;
 import com.csl.util.CorrelationUtils;
+import com.csl.util.JCmd;
 import com.csl.util.ThreadUtils;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
@@ -71,14 +72,10 @@ public class CSLIDSMainClient {
     };
 
     // Alert forwarder for handling alerts
-    private static final IAlertForwarder alertForwarder = new IAlertForwarder() {
-
-        @Override
-        public void sendAlert(Json alert) {
-            logger.debug("Forwarding alert:\n{}", alert);
-            if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                clientEndPoint.sendMessage("alert:" + alert);
-            }
+    private static final IAlertForwarder alertForwarder = alert -> {
+        logger.debug("Forwarding alert:\n{}", alert);
+        if (clientEndPoint != null && clientEndPoint.isOpen()) {
+            clientEndPoint.sendMessage("alert:" + alert);
         }
     };
 
@@ -150,7 +147,7 @@ public class CSLIDSMainClient {
 
             if (messageString.startsWith("{") && messageString.endsWith("}")) {
                 Json messageJson = Json.read(messageString);
-                String uuid = getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
+                getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
                 String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
                 MDC.put(X_CORRELATION_ID, xCorrelationId);
                 String uri = "";
@@ -163,7 +160,7 @@ public class CSLIDSMainClient {
                     ApiCommands api = apiMap.get(apiName);
                     MDC.put(ENDPOINT, apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
-                    uri = "/" + apiName + "/" + jsonCommand.get("cmd").asString();
+                    uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
                     MDC.put(ENDPOINT, uri);
 
                     CSLNetworkLogger.infoInboundRequest((Logger) logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
@@ -228,7 +225,7 @@ public class CSLIDSMainClient {
      *
      * @param args Command-line arguments passed to the application.
      */
-    private static void initializeContext(String[] args) {
+    private static void initializeContext() {
         CorrelationUtils.setXCorrelationId();
         CorrelationUtils.setEndpoint("mainClient");
 
@@ -241,11 +238,11 @@ public class CSLIDSMainClient {
 
         // Provide the callback method for the
         CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
-        ((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).registerAlertForwarder(alertForwarder);
+        CSLContext.instance.getCSLAlertManager().registerAlertForwarder(alertForwarder);
     }
 
     public static void main(String[] args) {
-        initializeContext(args);
+        initializeContext();
         registerServices();
         initServices();
 

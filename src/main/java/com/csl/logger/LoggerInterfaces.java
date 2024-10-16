@@ -12,12 +12,15 @@ public enum LoggerInterfaces {
     NULL("NULL"),
     CSL_NGINX("CSL_NGINX"),
     LOCAL("LOCAL"),
+    WS("WS"),
     ;
     private final String name;
 
     LoggerInterfaces(String name) {
         this.name = name;
     }
+
+    @Override
     public String toString() {
         return name;
     }

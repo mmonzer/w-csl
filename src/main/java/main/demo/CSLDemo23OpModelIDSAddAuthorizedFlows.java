@@ -1,5 +1,7 @@
 package main.demo;
 
+import com.csl.util.JCmd;
+import com.csl.web.HTTPConstants;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.apache.http.HttpResponse;
@@ -32,14 +34,14 @@ public class CSLDemo23OpModelIDSAddAuthorizedFlows {
 
         Json j = Json.object();
 
-        j.set("cmd", cmd);
-        j.set("params", jparams);
+        j.set(JCmd.CMD, cmd);
+        j.set(JCmd.PARAMETERS, jparams);
 
         HttpPost post = new HttpPost(getServerURL() + "ids");
         HttpClient client = HttpClientBuilder.create().build();
         StringEntity postingString = new StringEntity(j.toString(), StandardCharsets.UTF_8);
         post.setEntity(postingString);
-        post.setHeader("Content-type", "application/json");
+        post.setHeader(HTTPConstants.CONTENT_TYPE, HTTPConstants.JSON_FORMAT);
         try {
             HttpResponse response = client.execute(post);
 

@@ -29,9 +29,10 @@ public class CSLWebSocketForJcmd {
     private static final String RESPONSE = "response";
     public static final String ID = "uuid";
     public static final String COMMAND = "command";
-    public static long TIME_OUT = 60000;
+    public static final String ERROR = "error";
+    private static final long TIME_OUT = 60000;
 
-    public static String WEB_SOCKET_CMD = "/cmd";
+    public static final String WEB_SOCKET_CMD = "/cmd";
 
     public static long uuidCounter = 0;
 
@@ -42,7 +43,7 @@ public class CSLWebSocketForJcmd {
     static Map<String, Json> pendingMessages = new HashMap<>();
 
     // Debug level for logging
-    static private int debugLevel = 2;
+    private static int debugLevel = 2;
 
     // Flag to indicate whether the timeout detector is running
     static boolean timeOutDetectorRunning = false;
@@ -92,7 +93,7 @@ public class CSLWebSocketForJcmd {
 
         Session session = sessionMap.get(name);
         if (session == null) {
-            delayForReconnect(name);
+            delayForReconnect();
             session = sessionMap.get(name);
             if (session == null) {
                 logger.error("Invalid API name: {}. Client not connected", name);
@@ -184,8 +185,6 @@ public class CSLWebSocketForJcmd {
      * @param message The incoming WebSocket message as a string.
      */
     public static void messageArrived(String message) {
-//        logger.debug("Message received: {}", message);
-
         try {
             Json jsonMessage = Json.read(message);
             String uuid = jsonMessage.get("uuid").asString();
@@ -219,7 +218,7 @@ public class CSLWebSocketForJcmd {
 
                     if (endTime < currentTime) {
                         logger.debug("Timeout: {}", message);
-                        message.set(RESPONSE, Json.object().set("error", "TIMEOUT"));
+                        message.set(RESPONSE, Json.object().set(ERROR, "TIMEOUT"));
                     }
                 }
             }
@@ -239,14 +238,14 @@ public class CSLWebSocketForJcmd {
 				Thread.sleep(3);
 			} catch (InterruptedException e) {
                 logger.error("Interrupted while waiting for response", e);
-				return Json.object().set("error", "timeout");
+				return Json.object().set(ERROR, "timeout");
 			}
 
             if (fullMessage.has(RESPONSE)) {
                 logger.trace("Received response: {}", fullMessage);
                 pendingMessages.remove(uuid);
                 Json response = fullMessage.get(RESPONSE);
-                return response.has("result") ? response.get("result") : Json.object().set("error", "timeout");
+                return response.has("result") ? response.get("result") : Json.object().set(ERROR, "timeout");
             }
         }
     }
@@ -262,12 +261,10 @@ public class CSLWebSocketForJcmd {
             session.getRemote().sendString(message, new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable x) {
-//                    logger.error("Failed to send message", x);
                 }
 
                 @Override
                 public void writeSuccess() {
-//                    logger.debug("Message sent successfully");
                 }
             });
         } catch (Exception e) {
@@ -280,7 +277,7 @@ public class CSLWebSocketForJcmd {
      *
      * @param name The API name to wait for.
      */
-    private static void delayForReconnect(String name) {
+    private static void delayForReconnect() {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {

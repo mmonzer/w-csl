@@ -1,5 +1,6 @@
 package com.csl.intercom.jsoncmd;
 
+import com.csl.util.JCmd;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdWithFiles;
 import com.ucsl.json.Json;
@@ -181,8 +182,8 @@ public class ApiCommands {
 //    @Override
     public Json execJcmd(Json jCmd) {
         Json data = jCmd;
-        Json cmd = data.get("cmd");
-        Json params = data.get("params");
+        Json cmd = data.get(JCmd.CMD);
+        Json params = data.get(JCmd.PARAMETERS);
         Json files = data.get("files");
 
         if (cmd == null) {
@@ -224,7 +225,7 @@ public class ApiCommands {
                         if (showExamples) {
                             Json ex = findExemple(jExamples, name);
                             if (ex != null) {
-                                if (ex.has("params")) jz.set("ex_params", ex.get("params"));
+                                if (ex.has(JCmd.PARAMETERS)) jz.set("ex_params", ex.get(JCmd.PARAMETERS));
                                 if (ex.has("result")) jz.set("ex_result", ex.get("result"));
                             }
                         }
@@ -233,7 +234,7 @@ public class ApiCommands {
                 }
             } else {
                 if (name.compareToIgnoreCase("help") != 0) {
-                    Json r = Json.object().set("cmd", name).set("desc", "no info");
+                    Json r = Json.object().set(JCmd.CMD, name).set("desc", "no info");
                     if (params.has("status")) r.set("status", "");
                     jlist.add(r);
                 }
@@ -246,8 +247,8 @@ public class ApiCommands {
     private Json execCmd(String api, String cmd, Json jparams) {
         Json j = Json.object();
 
-        j.set("cmd", cmd);
-        j.set("params", jparams);
+        j.set(JCmd.CMD, cmd);
+        j.set(JCmd.PARAMETERS, jparams);
         return JServiceLoader.cslInterModuleCommunicationManager.executeCommand(api, j);
     }
 
@@ -273,8 +274,8 @@ public class ApiCommands {
 
     public Json findExemple(Json examples, String cmd) {
         for (Json j : examples) {
-            if (j.has("cmd")) {
-                String c = JsonUtil.getStringFromJson(j, "cmd", "");
+            if (j.has(JCmd.CMD)) {
+                String c = JsonUtil.getStringFromJson(j, JCmd.CMD, "");
                 if (cmd.compareTo(c) == 0) return j;
             }
         }

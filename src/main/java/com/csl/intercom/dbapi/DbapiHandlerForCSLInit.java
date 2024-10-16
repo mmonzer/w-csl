@@ -42,7 +42,7 @@ public class DbapiHandlerForCSLInit extends DbapiHandler {
                 .forEach(pair -> requestContents.set(pair.getFirst(), pair.getSecond()));
         logger.debug("Sending commands to DB-API: " + requestContents.toString());
 //        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.JAVACOMM_SEND_COMMANDS)
-//                .content(new StringContentProvider(requestContents.toString()), "application/json");
+//                .content(new StringContentProvider(requestContents.toString()), JSON_FORMAT);
 //        ContentResponse response = request.send();
 //        if (response.getStatus() != 200) {
 //            throw new Exception("Error sending commands to dbapi: got unexpected status " + response.getStatus());

@@ -68,13 +68,13 @@ public class TestAutoCryptService_CA extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-root"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("common_name",(StringValuePattern) new EqualToPattern(commonName))
                 .withQueryParam("ttl",(StringValuePattern) new EqualToPattern(ttl))
                 .withQueryParam("path",(StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -86,11 +86,11 @@ public class TestAutoCryptService_CA extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/certificate_authorities"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -125,12 +125,12 @@ public class TestAutoCryptService_CA extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-root"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("common_name",(StringValuePattern) new EqualToPattern(commonName))
                 .withQueryParam("ttl",(StringValuePattern) new EqualToPattern(ttl))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                 );
         wireMockServerModule.stubFor(x);
 
@@ -138,10 +138,10 @@ public class TestAutoCryptService_CA extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/certificate_authorities"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -153,8 +153,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_root_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -180,8 +180,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("ttl", ttl);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_root_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -209,8 +209,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_root_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -238,8 +238,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("common_name", commonName);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_root_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -270,12 +270,12 @@ public class TestAutoCryptService_CA extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-intermediate"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path",(StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedBody.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -288,11 +288,11 @@ public class TestAutoCryptService_CA extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/certificate_authorities"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -306,8 +306,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("ttl", ttl);
         sentParams.at("type", type);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -341,8 +341,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("ttl", ttl);
         sentParams.at("type", type);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -371,8 +371,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("ttl", ttl);
         sentParams.at("type", type);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -401,8 +401,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("common_name", commonName);
         sentParams.at("type", type);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -431,8 +431,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("common_name", commonName);
         sentParams.at("ttl", ttl);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -461,8 +461,8 @@ public class TestAutoCryptService_CA extends TestConfig {
         sentParams.at("ttl", ttl);
         sentParams.at("type", type);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);

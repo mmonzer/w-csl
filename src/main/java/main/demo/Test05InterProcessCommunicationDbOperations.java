@@ -4,6 +4,7 @@ import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.util.JCmd;
 import com.ucsl.json.Json;
 
 /*
@@ -27,7 +28,7 @@ public class Test05InterProcessCommunicationDbOperations {
         jparams.set("user", "user1");
         jparams.set("op", "LST_DEVICES");
 
-        Json r = test.imcm.executeExternalCommand("devdb", Json.object().set("cmd", "op").set("params", jparams));
+        Json r = test.imcm.executeExternalCommand("devdb", Json.object().set(JCmd.CMD, "op").set(JCmd.PARAMETERS, jparams));
         System.out.println(r);
     }
 }

@@ -4,6 +4,7 @@ import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.util.JCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
@@ -26,19 +27,19 @@ public class Test99ShowHelp {
         Json jparams = Json.object();
         jparams.set("user", "user1");
 
-        Json r = test.imcm.executeCommand("devdb", Json.object().set("cmd", "help").set("params", jparams));
+        Json r = test.imcm.executeCommand("devdb", Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
         System.out.println(JsonUtil.prettyPrint(r));
 
-        r = test.imcm.executeCommand("ids", Json.object().set("cmd", "help").set("params", jparams));
+        r = test.imcm.executeCommand("ids", Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
         System.out.println(JsonUtil.prettyPrint(r));
 
-        r = test.imcm.executeCommand("cve", Json.object().set("cmd", "help").set("params", jparams));
+        r = test.imcm.executeCommand("cve", Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
         System.out.println(JsonUtil.prettyPrint(r));
 
-        r = test.imcm.executeCommand("cpe", Json.object().set("cmd", "help").set("params", jparams));
+        r = test.imcm.executeCommand("cpe", Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
         System.out.println(JsonUtil.prettyPrint(r));
 
-        r = test.imcm.executeCommand("alerts", Json.object().set("cmd", "help").set("params", jparams));
+        r = test.imcm.executeCommand("alerts", Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
         System.out.println(JsonUtil.prettyPrint(r));
 
         System.exit(0);

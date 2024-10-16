@@ -3,6 +3,7 @@ package com.csl.intercom.jsoncmd;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.csl.util.JCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
@@ -88,7 +89,7 @@ public class ApiGetHelp {
 		s="<tr width=\"100mm\"><td colspan=\""+size+"\" class=\"apiname\">"+apiName+"</td></tr>";
 		s+="<tr width=\"100mm\"><td colspan=\""+size+"\" class=\"apidescription\">"+apiDescription+"</td></tr>";
 
-		if (params.has("api")&&params.has("cmd")&params.has("url")) {
+		if (params.has("api")&&params.has(JCmd.CMD)&params.has("url")) {
 			
 			String urlMain=params.get("url").asString()+"?ex";
 			if (params.has("print")) urlMain=urlMain+"&print";
@@ -103,8 +104,8 @@ public class ApiGetHelp {
 		Json j= getHelpInfoAsJson(apiName,  params);
 
 		String cmd="";
-		if (params.has("cmd")) {
-			cmd=params.get("cmd").asString();
+		if (params.has(JCmd.CMD)) {
+			cmd=params.get(JCmd.CMD).asString();
 		}
 		
 		if (!j.isArray()) {
@@ -131,8 +132,8 @@ public class ApiGetHelp {
 				boolean okcmd=true;
 				boolean full=false;
 				String url="";
-				String jcmd=jrow.get("cmd").asString();
-				if (params.has("api")&&params.has("cmd")) {
+				String jcmd=jrow.get(JCmd.CMD).asString();
+				if (params.has("api")&&params.has(JCmd.CMD)) {
 					full=true;
 				}
 				else {
@@ -145,13 +146,13 @@ public class ApiGetHelp {
 				
 				String row="";
 				//System.out.println(jrow);
-				row=row+"<td><b>"+jrow.get("cmd").asString()+"</b><br><i>"+jrow.get("desc").asString()+ "</td>";
+				row=row+"<td><b>"+jrow.get(JCmd.CMD).asString()+"</b><br><i>"+jrow.get("desc").asString()+ "</td>";
 				//row=row+"<td>"+jrow.get("desc").asString()+"</td>";
-				if (jrow.has("params")) {
+				if (jrow.has(JCmd.PARAMETERS)) {
 					String sx="";
 					
-					//for (Json jp:jrow.get("params").asJsonList()) {
-					for (Entry<String, Json> entry : jrow.get("params").asJsonMap().entrySet()) {
+					//for (Json jp:jrow.get(JCmd.PARAMETERS).asJsonList()) {
+					for (Entry<String, Json> entry : jrow.get(JCmd.PARAMETERS).asJsonMap().entrySet()) {
 						sx=sx+"&bull; "+entry.getKey()+" : "+""+entry.getValue().asString()+"<br>";
 					}
 					row=row+"<td>"+sx+"</td>";
@@ -226,7 +227,7 @@ public class ApiGetHelp {
 		jparams.set("user", "user1");
 		//jparams.set("op", "LST_DEVICES");
 
-		Json r=JServiceLoader.getCSLInterModuleCommunicationManager().executeCommand(apiName, Json.object().set("cmd", "help").set("params", jparams));
+		Json r=JServiceLoader.getCSLInterModuleCommunicationManager().executeCommand(apiName, Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
 		//System.out.println(JsonUtil.prettyPrint(r));
 
 		return r;

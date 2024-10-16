@@ -12,15 +12,6 @@ public class CSLUtil {
 		if (obj==null) return defaulValue;
 		return obj.asInteger();
 	}
-	
-	public static long getConfigLongValue(Json config,String name,int defaulValue) {
-
-		if (config==null) return defaulValue;
-				
-		Json obj=config.get(name);
-		if (obj==null) return defaulValue;
-		return obj.asLong();
-	}
 
 	public static String getConfigStringValue(Json config,String name,String defaulValue) {
 

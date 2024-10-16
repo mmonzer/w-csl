@@ -5,6 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 public class CSLApplicativeLogger {
+    public static final String LOG_LEVEL_TRACE = "TRACE";
+    public static final String LOG_LEVEL_DEBUG = "DEBUG";
+    public static final String LOG_LEVEL_INFO = "INFO";
+    public static final String LOG_LEVEL_WARN = "WARN";
+    public static final String LOG_LEVEL_ERROR = "ERROR";
     private final Logger logger;
 
     // Private constructor to prevent direct instantiation
@@ -149,23 +154,23 @@ public class CSLApplicativeLogger {
 
     // TODO : generalize with a interface string -> void
     private void trace(String action, String requestInterface, String msg) {
-        log("TRACE", action, requestInterface, msg);
+        log(LOG_LEVEL_TRACE, action, requestInterface, msg);
     }
 
     private void debug(String action, String requestInterface, String msg) {
-        log("DEBUG", action, requestInterface, msg);
+        log(LOG_LEVEL_DEBUG, action, requestInterface, msg);
     }
 
     private void info(String action, String requestInterface, String msg) {
-        log("INFO", action, requestInterface, msg);
+        log(LOG_LEVEL_INFO, action, requestInterface, msg);
     }
 
     private void warn(String action, String requestInterface, String msg) {
-        log("WARN", action, requestInterface, msg);
+        log(LOG_LEVEL_WARN, action, requestInterface, msg);
     }
 
     private void error(String action, String requestInterface, String msg) {
-        log("ERROR", action, requestInterface, msg);
+        log(LOG_LEVEL_ERROR, action, requestInterface, msg);
     }
 
     // endregion wrappers LoggerActions and LoggerInterfaces
@@ -175,43 +180,43 @@ public class CSLApplicativeLogger {
     // region usual level commands
 
     public void trace(String format, Object... objects) {
-        log("TRACE", format, objects);
+        log(LOG_LEVEL_TRACE, format, objects);
     }
 
     public void debug(String format, Object... objects) {
-        log("DEBUG", format, objects);
+        log(LOG_LEVEL_DEBUG, format, objects);
     }
 
     public void info(String format, Object... objects) {
-        log("INFO", format, objects);
+        log(LOG_LEVEL_INFO, format, objects);
     }
 
     public void warn(String format, Object... objects) {
-        log("WARN", format, objects);
+        log(LOG_LEVEL_WARN, format, objects);
     }
 
     public void error(String format, Object... objects) {
-        log("ERROR", format, objects);
+        log(LOG_LEVEL_ERROR, format, objects);
     }
 
     public void trace(String format, Throwable throwable) {
-        log("TRACE", format, throwable);
+        log(LOG_LEVEL_TRACE, format, throwable);
     }
 
     public void debug(String format, Throwable throwable) {
-        log("DEBUG", format, throwable);
+        log(LOG_LEVEL_DEBUG, format, throwable);
     }
 
     public void info(String format, Throwable throwable) {
-        log("INFO", format, throwable);
+        log(LOG_LEVEL_INFO, format, throwable);
     }
 
     public void warn(String format, Throwable throwable) {
-        log("WARN", format, throwable);
+        log(LOG_LEVEL_WARN, format, throwable);
     }
 
     public void error(String format, Throwable throwable) {
-        log("ERROR", format, throwable);
+        log(LOG_LEVEL_ERROR, format, throwable);
     }
 
     // endregion usual level commands
@@ -219,20 +224,20 @@ public class CSLApplicativeLogger {
     private void log(String level, String action, String requestInterface, String message, Object... objects) {
         addVariablesToMDC(action, requestInterface);
 
-        switch (level.toLowerCase()) {
-            case "trace":
+        switch (level.toUpperCase()) {
+            case LOG_LEVEL_TRACE:
                 logger.trace(message, objects);
                 break;
-            case "debug":
+            case LOG_LEVEL_DEBUG:
                 logger.debug(message, objects);
                 break;
-            case "info":
+            case LOG_LEVEL_INFO:
                 logger.info(message, objects);
                 break;
-            case "warn":
+            case LOG_LEVEL_WARN:
                 logger.warn(message, objects);
                 break;
-            case "error":
+            case LOG_LEVEL_ERROR:
                 logger.error(message, objects);
                 break;
             default:
@@ -246,19 +251,19 @@ public class CSLApplicativeLogger {
         addVariablesToMDC();
 
         switch (level.toLowerCase()) {
-            case "trace":
+            case LOG_LEVEL_TRACE:
                 logger.trace(message, objects);
                 break;
-            case "debug":
+            case LOG_LEVEL_DEBUG:
                 logger.debug(message, objects);
                 break;
-            case "info":
+            case LOG_LEVEL_INFO:
                 logger.info(message, objects);
                 break;
-            case "warn":
+            case LOG_LEVEL_WARN:
                 logger.warn(message, objects);
                 break;
-            case "error":
+            case LOG_LEVEL_ERROR:
                 logger.error(message, objects);
                 break;
             default:
@@ -272,19 +277,19 @@ public class CSLApplicativeLogger {
         addVariablesToMDC();
 
         switch (level.toLowerCase()) {
-            case "trace":
+            case LOG_LEVEL_TRACE:
                 logger.trace(message, throwable);
                 break;
-            case "debug":
+            case LOG_LEVEL_DEBUG:
                 logger.debug(message, throwable);
                 break;
-            case "info":
+            case LOG_LEVEL_INFO:
                 logger.info(message, throwable);
                 break;
-            case "warn":
+            case LOG_LEVEL_WARN:
                 logger.warn(message, throwable);
                 break;
-            case "error":
+            case LOG_LEVEL_ERROR:
                 logger.error(message, throwable);
                 break;
             default:

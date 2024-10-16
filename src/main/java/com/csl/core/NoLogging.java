@@ -16,9 +16,5 @@ public class NoLogging implements Logger {
     @Override public void debug(String msg, Throwable thrown) { }
     @Override public Logger getLogger(String name) { return this; }
     @Override public void ignore(Throwable ignored) { }
-	@Override
-	public void debug(String arg0, long arg1) {
-		// TODO Auto-generated method stub
-		
-	}
+	@Override public void debug(String arg0, long arg1) { }
 }

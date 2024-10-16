@@ -11,7 +11,7 @@ import main.services.*;
 public class CSLIDSMainServer {
 
     public static void main(String[] args) {
-        initializeContext(args);
+        initializeContext();
         registerServices();
         startServers();
     }
@@ -21,7 +21,7 @@ public class CSLIDSMainServer {
      *
      * @param args Command-line arguments passed to the application.
      */
-    private static void initializeContext(String[] args) {
+    private static void initializeContext() {
         CorrelationUtils.setXCorrelationId();
         CorrelationUtils.setEndpoint("mainServer");
 

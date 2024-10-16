@@ -1,5 +1,6 @@
 package com.csl.intercom.jsoncmd;
 
+import com.csl.util.JCmd;
 import com.ucsl.interfaces.ICmdHelpProvider;
 import com.ucsl.json.Json;
 
@@ -93,9 +94,9 @@ public class JsonCmdHelp {
 				
 		Json j= Json.object();
 		
-		j.set("cmd",name);
+		j.set(JCmd.CMD,name);
 		j.set("desc",desc);
-		j.set("params",paramsToJson());
+		j.set(JCmd.PARAMETERS,paramsToJson());
 		String type=resultType;
 		if (!type.isEmpty()) type ="["+type+"] ";
 		j.set("result",type+result);
@@ -116,7 +117,7 @@ public class JsonCmdHelp {
 			s=s+"   "+getStrPad("no parameters",16)+"\n";
 		}
 		else {
-			s=s+"params\n";//   "+getStrPad("params",16)+"\n";
+			s=s+"params\n";//   "+getStrPad(JCmd.PARAMETERS,16)+"\n";
 			for (Map.Entry<String, String> entry : paramsdesc.entrySet()) {
 				s=s+"  "+getStrPad(entry.getKey(),16)+':'+entry.getValue()+"\n";
 			}

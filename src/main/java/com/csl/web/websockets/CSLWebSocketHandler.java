@@ -18,8 +18,8 @@ public class CSLWebSocketHandler {
     private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketHandler.class);
 
     @OnWebSocketConnect
-    public void onConnect(Session user) throws Exception {
-        logger.trace("Connection :"+user);
+    public void onConnect(Session user) {
+        logger.trace("Connection : {}",user);
         logger.info("A new user has connected to the CSLWebSocketHandler websocket through path {}", cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath()));
     	CSLWebSocket.addUser(user);
     }

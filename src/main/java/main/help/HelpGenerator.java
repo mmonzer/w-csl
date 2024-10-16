@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import com.csl.util.JCmd;
+import com.csl.web.HTTPConstants;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.HttpResponse;
@@ -61,8 +63,8 @@ public class HelpGenerator {
 	public Json execCmd(String api,String cmd, Json jparams) {
 		Json j= Json.object();
 
-		j.set("cmd", cmd);
-		j.set("params",jparams);
+		j.set(JCmd.CMD, cmd);
+		j.set(JCmd.PARAMETERS,jparams);
 
 		HttpPost post = new HttpPost(getServerURL()+api);
 
@@ -80,7 +82,7 @@ public class HelpGenerator {
 
 		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
 		post.setEntity(postingString);
-		post.setHeader("Content-type", "application/json");
+		post.setHeader(HTTPConstants.CONTENT_TYPE, HTTPConstants.JSON_FORMAT);
 		try {
 			HttpResponse response = client.execute(post);
 
@@ -154,8 +156,8 @@ public class HelpGenerator {
 		
 		Json jrow= Json.object();
 		
-		jrow.set("cmd", cmd);
-		jrow.set("params", params);
+		jrow.set(JCmd.CMD, cmd);
+		jrow.set(JCmd.PARAMETERS, params);
 		jrow.set("result",result);
 		
 		examples.add(jrow);
@@ -167,8 +169,8 @@ public class HelpGenerator {
 	private Json findExampleInList(Json examples, String cmd) {
 		
 		for (Json j:examples) {
-			if (j.has("cmd")) {
-				String c=JsonUtil.getStringFromJson(j,"cmd","");
+			if (j.has(JCmd.CMD)) {
+				String c=JsonUtil.getStringFromJson(j,JCmd.CMD,"");
 				if (cmd.compareTo(c)==0) return j;
 			}
 		}
@@ -181,8 +183,8 @@ public class HelpGenerator {
 		
 		Json new_list= Json.array();
 		for (Json j:examples) {
-			if (j.has("cmd")) {
-				String c=JsonUtil.getStringFromJson(j,"cmd","");
+			if (j.has(JCmd.CMD)) {
+				String c=JsonUtil.getStringFromJson(j,JCmd.CMD,"");
 				if (cmd.compareTo(c)!=0) new_list.add(j);
 			}
 		}

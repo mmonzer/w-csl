@@ -481,14 +481,6 @@ public class CSLAlertManager {
 
             boolean b = JsonUtil.getBooleanFromJson(params, "value", false);
 
-            if (b) {
-
-                int level = JsonUtil.getIntFromJson(params, "level", 4); // from 0 to 4
-                if (!a.isAdded_to_model()) idsMainProcessor.addAlertToModel(a, level); //.addToModel(level);
-            } else {
-                if (a.isAdded_to_model()) idsMainProcessor.removeAlertFromModel(a, 0); //a.removeFromModel();
-            }
-
             return alertToJsonForHmi(a);
         } else if (op.compareToIgnoreCase("set_acked") == 0) {
 

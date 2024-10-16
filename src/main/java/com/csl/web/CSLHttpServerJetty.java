@@ -6,6 +6,7 @@ import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
+import com.csl.util.JCmd;
 import com.csl.util.ThreadUtils;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
@@ -65,10 +66,9 @@ public class CSLHttpServerJetty {
     // Global configuration constants
     public static int REFRESH_SOCKET_PERIOD = 280;
     static boolean ADD_GET_ROUTE = false;
-    private final List<String> httpEndpointList = new ArrayList<>();
 
-    private final List<String> listOfRemoteApi = new ArrayList<String>();
-    private final List<String> listOfWebsocketPath = new ArrayList<String>();
+    private final List<String> listOfRemoteApi = new ArrayList<>();
+    private final List<String> listOfWebsocketPath = new ArrayList<>();
 
     /**
      * Initializes the server with the provided configuration.
@@ -173,7 +173,6 @@ public class CSLHttpServerJetty {
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
                 handleWebSocketUpgrade(req, api);
 
-                Set<String> paramKeys = req.getParameterMap().keySet();
                 String cmd = extractCommandFromRequest(req);
                 Json params = extractParamsFromRequest(req);
 
@@ -201,7 +200,7 @@ public class CSLHttpServerJetty {
             protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
                 // X-Correlation-ID
                 handleWebSocketUpgrade(req, api);
-                Json data = Json.object();
+                Json data;
                 if (req.getContentType() != null && req.getContentType().contains("json")) {
                     data = handlerJsonRequest(req);
                 } else if (req.getContentType() != null && req.getContentType().contains("multipart")) {
@@ -223,13 +222,13 @@ public class CSLHttpServerJetty {
                 if (urlParts.length >= 3) {
                     String endpoint = urlParts[1]; // discovery
                     cmdStr = urlParts[2];      // upload_entity_http_connection_file
-                    data.set("cmd", cmdStr);
+                    data.set(JCmd.CMD, cmdStr);
                 } else {
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid URL format");
                     return;
                 }
-                Json cmd = data.get("cmd");
-                Json params = data.get("params");
+                Json cmd = data.get(JCmd.CMD);
+                Json params = data.get(JCmd.PARAMETERS);
 
                 if (cmd == null) {
                     logger.warn("Invalid command: {}", cmd);

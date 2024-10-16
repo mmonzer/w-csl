@@ -53,22 +53,22 @@ public class TestAutoCryptModule_CA extends TestConfig {
 
         // Define mocked service behavior creation
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-root"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedBody.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody("{\"issuer_ref\":\"issuerRef\"}")
                 );
         stubFor(x);
 
         // Define mocked service behavior get
         MappingBuilder y = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/issuerRef"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path",(StringValuePattern) new EqualToPattern("pki"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody("{\"issuer_ref\":\""+issuerRef+"\"}")
                 );
         stubFor(y);
@@ -111,8 +111,8 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentParams.at("ttl", ttl);
         sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_root_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         String missingParam = "common_name";
 
@@ -140,8 +140,8 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentParams.at("common_name", commonName);
         sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_root_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_root_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         String missingParam = "ttl";
 
@@ -170,23 +170,23 @@ public class TestAutoCryptModule_CA extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/ca/generate-intermediate"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path",(StringValuePattern) new EqualToPattern(commonName))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedBody.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody("{\"issuer_ref\":\""+issuerRef+"\"}")
                 );
         stubFor(x);
 
         // Define mocked service behavior get
         MappingBuilder y = get(urlPathMatching(ENDPOINT_MODULE + "/issuer/issuerRef"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path",(StringValuePattern) new EqualToPattern(commonName))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody("{\"issuer_ref\":\"issuerRef\"}")
                 );
         stubFor(y);
@@ -199,8 +199,8 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentParams.at("ttl", ttl);
         sentParams.at("type", type);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -235,8 +235,8 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("type", type);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         String missingParam = "common_name";
 
@@ -264,8 +264,8 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentParams.at("type", type);
         sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         String missingParam = "ttl";
 
@@ -292,8 +292,8 @@ public class TestAutoCryptModule_CA extends TestConfig {
         sentParams.at("ttl", ttl);
         sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_inter_ca");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_inter_ca");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         String missingParam = "type";
 

@@ -1,6 +1,7 @@
 package com.csl.web.jettyutils;
 
 import com.csl.logger.LoggerConstants;
+import com.csl.web.HTTPConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -38,13 +39,13 @@ public class JettyFilterServlet implements Filter {
         setResponseHeaders(httpResponse);
 
         // actions before the execution of the request (controller handling)
-        preHandle(httpRequest, httpResponse, chain);
+        preHandle(httpRequest);
 
         // execute controller handling
         chain.doFilter(httpRequest, httpResponse);
 
         // actions after the execution of the request (controller handling)
-        postHandle(httpRequest, httpResponse, chain);
+        postHandle(httpRequest, httpResponse);
     }
 
     @Override
@@ -57,7 +58,7 @@ public class JettyFilterServlet implements Filter {
      * @param response
      * @param chain
      */
-    private void preHandle(HttpServletRequest request, HttpServletResponse response, FilterChain chain) {
+    private void preHandle(HttpServletRequest request) {
         setVariablesToMDC(request);
 
         // Log the input
@@ -70,7 +71,7 @@ public class JettyFilterServlet implements Filter {
      * @param response
      * @param chain
      */
-    private void postHandle(HttpServletRequest request, HttpServletResponse response, FilterChain chain) {
+    private void postHandle(HttpServletRequest request, HttpServletResponse response) {
         sendBackXCorrelationId(request, response);
 
         // Log the output
@@ -85,7 +86,7 @@ public class JettyFilterServlet implements Filter {
     private static void setResponseHeaders(HttpServletResponse response) {
         response.addHeader("Access-Control-Allow-Origin", "*");
         response.addHeader("Access-Control-Allow-Headers", "*");
-        response.setContentType("application/json");
+        response.setContentType(HTTPConstants.JSON_FORMAT);
     }
 
     /**

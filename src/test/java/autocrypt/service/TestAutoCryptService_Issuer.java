@@ -67,12 +67,12 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/issuer/import"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\""+file+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -84,11 +84,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/issuer"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -100,8 +100,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("file", file);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "import_issuer");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "import_issuer");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -128,12 +128,12 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/issuer/import"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\""+file+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -145,11 +145,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/issuer"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -161,8 +161,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("file", file.toString());
         Json sentInput = Json.object();
-        sentInput.at("cmd", "import_issuer");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "import_issuer");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -190,12 +190,12 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/issuer/import"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"file\":\""+file+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -207,11 +207,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/issuer"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -223,8 +223,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("file", file.toString());
         Json sentInput = Json.object();
-        sentInput.at("cmd", "import_issuer");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "import_issuer");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -256,8 +256,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", "str");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "import_issuer");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "import_issuer");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -284,12 +284,12 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"ttl\":\"24h\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -301,11 +301,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -319,8 +319,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("ttl", "24h");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -342,12 +342,12 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"enable_aia_url_templating\":false}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -359,11 +359,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -377,8 +377,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("enable_aia_url_templating", false);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -404,12 +404,12 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"issuing_certificates\":"+inputList+"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -421,11 +421,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -438,8 +438,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("issuing_certificates", inputList);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -467,13 +467,13 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = put(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern(
                         "{\"issuing_certificates\":"+inputList+",\"ttl\":\"24h\",\"enable_aia_url_templating\":false}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnModule.toString())
                 );
         wireMockServerModule.stubFor(x);
@@ -486,11 +486,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = put(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -506,8 +506,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("ttl", "24h");
         sentParams.at("enable_aia_url_templating", false);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -533,8 +533,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -562,8 +562,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -591,8 +591,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -620,8 +620,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "update_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "update_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -648,11 +648,11 @@ public class TestAutoCryptService_Issuer extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/issuer/"+issuerRef))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                 );
         wireMockServerModule.stubFor(x);
 
@@ -660,10 +660,10 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         returnBd.at("id", id);
         // Define mocked service behavior
         MappingBuilder y = delete(urlPathMatching(ENDPOINT_DBAPI + "/issuer/"+id))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnBd.toString())
                 );
         wireMockServerBd.stubFor(y);
@@ -676,8 +676,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -702,8 +702,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -730,8 +730,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("name", name);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -758,8 +758,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -786,8 +786,8 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "delete_issuer_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "delete_issuer_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);

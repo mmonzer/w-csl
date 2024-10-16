@@ -56,11 +56,11 @@ public class TestAutoCryptService {
 
         // Define mocked service
         MappingBuilder x = post(urlEqualTo(ENDPOINT_MODULE))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withRequestBody(equalToJson(inputJson, true, true))   // TODO : match the body
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnedOutput)
                 );
         stubFor(x);
@@ -70,7 +70,7 @@ public class TestAutoCryptService {
         httpClient.start();
         Request request = httpClient.newRequest(BASE_URL_MODULE + ENDPOINT_MODULE);
         request.method(HttpMethod.POST);
-        request.content(new StringContentProvider(inputJson), "application/json");
+        request.content(new StringContentProvider(inputJson), JSON_FORMAT);
         ContentResponse response = request.send();
 
         // assert behavior
@@ -119,12 +119,12 @@ public class TestAutoCryptService {
 
         // Define mocked AutoCrypt service
         MappingBuilder x = post(urlPathMatching("/api/certificate/issue"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\"" + roleName + "\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         wireMockServer1.stubFor(x);
@@ -134,11 +134,11 @@ public class TestAutoCryptService {
         returnOutput2.at("idDB", "id");
         // Define mocked bd service
         MappingBuilder y = post(urlPathMatching("/api/autocrypt/certificates"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 //.withRequestBody((StringValuePattern) new EqualToPattern(returnOutput.toString()))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput2.toString())
                 );
         wireMockServer2.stubFor(y);
@@ -149,8 +149,8 @@ public class TestAutoCryptService {
         sentParams.at("path", path);
         sentParams.at("role_name", roleName);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -175,7 +175,7 @@ public class TestAutoCryptService {
         httpClient.start();
         Request request = httpClient.newRequest("http://localhost:9900/autocrypt");
         request.method(HttpMethod.POST);
-        request.content(new StringContentProvider(inputJson), "application/json");
+        request.content(new StringContentProvider(inputJson), JSON_FORMAT);
         ContentResponse response = request.send();
 
         // assert behavior

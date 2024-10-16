@@ -1,5 +1,7 @@
 package main.help;
 
+import com.csl.util.JCmd;
+import com.csl.web.HTTPConstants;
 import com.ucsl.json.Json;
 import main.xcom.WebsocketClientEndpoint;
 import org.apache.http.HttpResponse;
@@ -41,8 +43,8 @@ public class Help51ApiDBJson {
 
         Json j = Json.object();
 
-        j.set("cmd", cmd);
-        j.set("params", jparams);
+        j.set(JCmd.CMD, cmd);
+        j.set(JCmd.PARAMETERS, jparams);
 
         HttpPost post = new HttpPost(getServerURL() + api);
 
@@ -59,7 +61,7 @@ public class Help51ApiDBJson {
 
         StringEntity postingString = new StringEntity(j.toString(), StandardCharsets.UTF_8);
         post.setEntity(postingString);
-        post.setHeader("Content-type", "application/json");
+        post.setHeader(HTTPConstants.CONTENT_TYPE, HTTPConstants.JSON_FORMAT);
         try {
             HttpResponse response = client.execute(post);
 

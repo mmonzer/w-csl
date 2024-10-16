@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
+import static com.csl.web.HTTPConstants.*;
 
 /**
  * Class to handle communication for API client.
@@ -46,13 +47,12 @@ public class ApiHandler implements AutoCloseable {
     @Setter
     protected HashMap<HttpHeader, String> headers = new HashMap<>();
     protected HttpClient httpClient;
-    private IJsonApeResponseToJsonApiResponse outputReformer = (e) -> e;
+    private IJsonApeResponseToJsonApiResponse outputReformer = e -> e;
     private boolean useSSL = false;
     private int port = 80;
     private String ip = "localhost";
     private String uriCommonPath = "";
     private boolean connected = false;
-    public static final String PATCH = "PATCH";
 
     /**
      * General constructor
@@ -62,7 +62,7 @@ public class ApiHandler implements AutoCloseable {
         this.ip = ip;
         this.port = port;
         this.useSSL = useSSL;
-        headers.put(HttpHeader.CONTENT_TYPE, "application/json");
+        headers.put(HttpHeader.CONTENT_TYPE, JSON_FORMAT);
         httpClient = initClient();
 
         try {
@@ -189,7 +189,6 @@ public class ApiHandler implements AutoCloseable {
          * Add the api key to the headers
          * @param contentType content type of the request
          */
-//        String apiKey = JsonUtil.getStringFromJson(CSLContext.instance.getConfig().get("global"), "api_key", "");
         String apiKey = Config.instance.Client.getApiKey();
         HashMap<HttpHeader, String> customHeaders = new HashMap<>();
         customHeaders.put(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
@@ -373,7 +372,7 @@ public class ApiHandler implements AutoCloseable {
      * @throws TimeoutException if send times out
      * @throws ExecutionException if execution fails
      */
-    synchronized protected ContentResponse createAndSendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
+    protected synchronized ContentResponse createAndSendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
         Request request = createRequest(method, createUriFrom(endpoint), params, body);
         CSLNetworkLogger.debugOutboundRequest(logger, ip, port, method, endpoint, request.getVersion().toString(), LoggerConstants.API_REQUEST_SENT);
         ContentResponse response = request.send();
@@ -441,7 +440,7 @@ public class ApiHandler implements AutoCloseable {
     public JsonApiResponse sendPostFile(String endpoint, Json params, Json body) {
         addHeader(HttpHeader.CONTENT_TYPE, "multipart/form-data");
         JsonApiResponse response = sendRequestToApi(HttpMethod.POST, endpoint, params, body, false);
-        addHeader(HttpHeader.CONTENT_TYPE, "application/json");
+        addHeader(HttpHeader.CONTENT_TYPE, JSON_FORMAT);
         return response;
     }
 
@@ -499,7 +498,7 @@ public class ApiHandler implements AutoCloseable {
      * @return The response to the request.
      */
     public JsonApiResponse sendPatch(String endpoint, Json params, Json body) {
-        return sendRequestToApi("PATCH", endpoint, params, body, false);
+        return sendRequestToApi(HttpMethod.PATCH, endpoint, params, body, false);
     }
 
     /**
@@ -588,7 +587,7 @@ public class ApiHandler implements AutoCloseable {
                     request.getMethod().equals(PATCH) ||
                     request.getMethod().equals(HttpMethod.PUT.toString()) ||
                     request.getMethod().equals(HttpMethod.DELETE.toString())) {
-                request.content(new StringContentProvider(body.toString()), "application/json");
+                request.content(new StringContentProvider(body.toString()), JSON_FORMAT);
             } else if (!request.getMethod().equals(HttpMethod.GET.toString())) {
                 throw new UnsupportedOperationException("Unsupported HTTP method: " + request.getMethod());
             }
@@ -622,25 +621,25 @@ public class ApiHandler implements AutoCloseable {
         JsonApiResponse parsedResponse;
         if (response.getStatus() >= 400) {
             logger.trace("Error while sending request to {} : status_code : {} content: {}", moduleName, response.getStatus(), response.getContentAsString());
-            return JsonApiResponse.error("Error while sending request to " + moduleName, Json.object("status_code", response.getStatus(), "content", response.getContentAsString()));
+            return JsonApiResponse.error("Error while sending request to " + moduleName, Json.object(STATUS_CODE, response.getStatus(), "content", response.getContentAsString()));
         }
         if (response.getContent().length > 0) {
             if (response.getContent()[0] == '{' || response.getContent()[0] == '[') {
                 logger.trace("Successful request : parsing json response : {}", response.getContent());
                 parsedResponse = JsonApiResponse.result(
                         Json.read(response.getContentAsString()),
-                        Json.object("status_code", response.getStatus())
+                        Json.object(STATUS_CODE, response.getStatus())
                 );
             } else {
                 logger.trace("Successful request : parsing plain text response : {}", response.getContent());
                 parsedResponse = JsonApiResponse.result(Json.object("value", response.getContentAsString()),
-                        Json.object("status_code", response.getStatus())
+                        Json.object(STATUS_CODE, response.getStatus())
                 );
             }
         } else {
             logger.trace("Successful request : parsing empty response : {}", response.getStatus());
             parsedResponse = JsonApiResponse.result(null,
-                    Json.object("status_code", response.getStatus())
+                    Json.object(STATUS_CODE, response.getStatus())
             );
         }
         logger.trace("Successful request : successfully parsed response : {}", parsedResponse.getResult());
@@ -657,10 +656,10 @@ public class ApiHandler implements AutoCloseable {
      *
      * @param endpoint endpoint to fetch the file
      * @param body     body needed for the fetch
-     * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
+     * @return a Json Object with the fields : {CONTENT_TYPE:"...", CONTENT_DISPOSITION:"...", "Content":"..."}
      * @throws Exception if it couldn't fetch the file from the module
      */
-    public JsonApiResponse downloadFilePost(String endpoint, Json body) throws Exception {
+    public JsonApiResponse downloadFilePost(String endpoint, Json body) {
         return downloadFile(HttpMethod.POST, endpoint, null, body);
     }
 
@@ -669,10 +668,10 @@ public class ApiHandler implements AutoCloseable {
      *
      * @param endpoint endpoint to fetch the file
      * @param params   parameters needed for the fetch
-     * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
+     * @return a Json Object with the fields : {CONTENT_TYPE:"...", CONTENT_DISPOSITION:"...", "Content":"..."}
      * @throws Exception if it couldn't fetch the file from the module
      */
-    public JsonApiResponse downloadFileGet(String endpoint, Json params) throws Exception {
+    public JsonApiResponse downloadFileGet(String endpoint, Json params) {
         return downloadFile(HttpMethod.GET, endpoint, params, null);
     }
 
@@ -681,12 +680,12 @@ public class ApiHandler implements AutoCloseable {
      *
      * @param endpoint endpoint to fetch the file
      * @param body     parameters needed for the fetch
-     * @return a Json Object with the fields : {"Content-Type":"...", "Content-disposition":"...", "Content":"..."}
+     * @return a Json Object with the fields : {CONTENT_TYPE:"...", CONTENT_DISPOSITION:"...", "Content":"..."}
      */
     public JsonApiResponse downloadFile(HttpMethod method, String endpoint, Json params, Json body) {
         endpoint = endpoint.replace(":", "%3A").replace(" ", "%20");
         Request request = createRequest(method, endpoint, params, body);
-        request.header("Accept", "application/octet-stream");
+        request.header("Accept", OCTET_STREAM_FORMAT);
 
         // Send the request and get the response async
         InputStreamResponseListener listener = new InputStreamResponseListener();
@@ -700,7 +699,7 @@ public class ApiHandler implements AutoCloseable {
             logger.error("Error while reading the response from {}", moduleName);
             responseApi = JsonApiResponse.error("File reading error from connection to " + moduleName);
         } catch (Exception e) {
-            logger.error("Error while sending request to " + moduleName);
+            logger.error("Error while sending request to {}", moduleName);
             if (e.getCause() instanceof ConnectException) {
                 responseApi = JsonApiResponse.error("Connection error with " + moduleName);
             }
@@ -721,8 +720,8 @@ public class ApiHandler implements AutoCloseable {
         if (response.getHeaders().containsKey(HttpHeader.CONTENT_TYPE.toString())) {
             responseJson.at(HttpHeader.CONTENT_TYPE.toString(), response.getHeaders().getField(HttpHeader.CONTENT_TYPE).getValue());
         }
-        if (response.getHeaders().containsKey("Content-disposition")) {
-            responseJson.at("Content-disposition", response.getHeaders().getField("Content-disposition").getValue());
+        if (response.getHeaders().containsKey(CONTENT_DISPOSITION)) {
+            responseJson.at(CONTENT_DISPOSITION, response.getHeaders().getField(CONTENT_DISPOSITION).getValue());
         }
         // Check if the response status is OK (200)
         JsonApiResponse responseApi;

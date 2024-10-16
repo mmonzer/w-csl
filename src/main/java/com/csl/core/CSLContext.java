@@ -11,7 +11,7 @@ import com.csl.logger.FileLogFactory;
 import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
-import com.ucsl.interfaces.*;
+import com.ucsl.interfaces.IFileLogFactory;
 import com.wcsl.ids.IDSMainProcessor;
 import com.wcsl.ids.IDSMainProcessorFactory;
 import lombok.Getter;
@@ -52,7 +52,6 @@ public class CSLContext {
      */
     private CSLAlertManager cslAlertManager = null;
 
-
     private static final String configFile = "application.json";
 
     @Getter
@@ -71,14 +70,6 @@ public class CSLContext {
      * Instance of the UDP server.
      */
     private CSLUDPServer cslUDPServer = null;
-
-    private boolean replayMode = false;
-    private long lastSystemCurrentTimeMillis = 0;
-    private int samplingTime = 100;
-
-    private boolean autostart = false;
-
-    private int numberOfExecLoops = 1;
 
     private final Map<String, com.csl.core.ModuleContext> modules = new HashMap<>();
 
@@ -224,9 +215,6 @@ public class CSLContext {
      * @return The current system time in milliseconds.
      */
     public long getSystemCurrentTimeMillis() {
-        if (isReplayMode()) {
-            return lastSystemCurrentTimeMillis;
-        }
         return System.currentTimeMillis();
     }
 
@@ -284,8 +272,12 @@ public class CSLContext {
     public boolean registerHttpEndpoint(Service cslService, boolean executeInCSLClient) {
         boolean initialized = JServiceLoader.registerService(cslService);
 
-        if (getCslHttpServer() == null) {return false;}
-        if (executeInCSLClient) {getCslHttpServer().registerHttpEndpoint(cslService.getName());}
+        if (getCslHttpServer() == null) {
+            return false;
+        }
+        if (executeInCSLClient) {
+            getCslHttpServer().registerHttpEndpoint(cslService.getName());
+        }
 
         return initialized;
     }
@@ -336,7 +328,6 @@ public class CSLContext {
      */
     private void initTime() {
         initialTime = getSystemCurrentTimeMillis();
-        samplingTime = Config.instance.ModuleExec.getSamplingTime();
     }
 
     /**
@@ -360,12 +351,12 @@ public class CSLContext {
      * Initializes the modules based on the configuration.
      */
     private void initDynamicModules() {
-        String modulesPackageName = Config.instance.ModuleExec.getModulesPackageName();
+//        String modulesPackageName = Config.instance.ModuleExec.getModulesPackageName();
         logger.debug("Loading modules");
 
         initInternalModules();
 
-        numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
+        int numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
         logger.debug("Running {} execution loops", numberOfExecLoops);
 
 //        for (Config.Module moduleDescriptor : Config.instance.Modules) {
@@ -381,9 +372,9 @@ public class CSLContext {
 //                    logger.error("Cannot find modules of type <{}>", type);
 //                } else {
 //                    try {
-//                        ModuleIDS m = (ModuleIDS) clazz.getDeclaredConstructor().newInstance();
+//                        IModule m = (IModule) clazz.getDeclaredConstructor().newInstance();
 //                        com.csl.core.ModuleContext mc = new com.csl.core.ModuleContext();
-//                        mc.setClazz((Class<Module>) clazz);
+//                        mc.setClazz((Class<IModule>) clazz);
 //                        mc.setModule(m);
 //                        mc.setName(mname);
 //                        mc.setConfig(moduleDescriptor.getConfig());
@@ -397,7 +388,7 @@ public class CSLContext {
 //            }
 //        }
 
-        autostart = Config.instance.ModuleExec.getAutostart();
+//        autostart = Config.instance.ModuleExec.getAutostart();
     }
 
     /**
@@ -408,15 +399,6 @@ public class CSLContext {
      */
     private Class<?> getModuleClass(String name) {
         return moduleClassList.get(name);
-    }
-
-    /**
-     * Checks if replay mode is enabled.
-     *
-     * @return True if replay mode is enabled, false otherwise.
-     */
-    private boolean isReplayMode() {
-        return replayMode;
     }
 
     /**

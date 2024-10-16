@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * and integrates with the broker for inter-module communication.
  */
 public class CSLWebSocket {
-	
+
     public static boolean VIA_BROKER = true;
 
     public static final String WEB_SOCKET_ALERT = "/alerts";
@@ -33,46 +33,45 @@ public class CSLWebSocket {
 
     // IMessageBroadcaster instance for broadcasting messages
     private static IMessageBroadcaster messageBroadcaster = new IMessageBroadcaster() {
-		@Override
+        @Override
         public void broadcastMessageString(String socketName, String message) {
             System.out.println("Broadcasting string to <" + socketName + ">: " + message);
             Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
-					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
-				          try {
-                    System.out.println("Sending String: " + message);
+            socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
+                try {
                     session.getRemote().sendString(message);
-				          } catch (Exception e) {
-				              e.printStackTrace();
-				          }
-				      });
-				}
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
 
-		@Override
+        @Override
         public void broadcastMessageJson(String socketName, Json jsonMessage) {
             String tag = websocketTags.get(socketName);
             if (tag == null) {
                 System.err.println("Invalid socket name: " + socketName);
-			    		return;
-			    	}
+                return;
+            }
 
             Json jsonWrapper = Json.object();
             jsonWrapper.set(tag, jsonMessage);
             String messageString = jsonWrapper.toString();
 
-			if (VIA_BROKER) {
+            if (VIA_BROKER) {
                 JServiceLoader.getCSLInterModuleCommunicationManager().sendSocketMsg(socketName, messageString);
             } else {
                 Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
-					socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
-			            try {
+                socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
+                    try {
                         session.getRemote().sendString(messageString);
-			            } catch (Exception e) {
-			                e.printStackTrace();
-			            }
-			        });
-			    	}
-				}
-			};
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+        }
+    };
 
     /**
      * Registers a custom message broadcaster.
@@ -81,7 +80,7 @@ public class CSLWebSocket {
      */
     public static void registerMessageBroadcaster(IMessageBroadcaster broadcaster) {
         messageBroadcaster = broadcaster;
-	}
+    }
 
     /**
      * Registers all WebSocket paths and integrates with the broker if enabled.
@@ -89,31 +88,26 @@ public class CSLWebSocket {
     public static void registerAll() {
         VIA_BROKER = JServiceLoader.getCSLInterModuleCommunicationManager().isUseBroker();
 
-    	register(WEB_SOCKET_ALERT, "alert");
-    	register(WEB_SOCKET_CONSOLE, "loginfo");
-    	register(WEB_SOCKET_DATABASE, "database");
-    	register(WEB_SOCKET_VARIABLES, "userMessage");
+        register(WEB_SOCKET_ALERT, "alert");
+        register(WEB_SOCKET_CONSOLE, "loginfo");
+        register(WEB_SOCKET_DATABASE, "database");
+        register(WEB_SOCKET_VARIABLES, "userMessage");
 
-    	if (VIA_BROKER) {
-            ISocketMsgListener listener = new ISocketMsgListener() {
-    			@Override
-                public void messageArrived(String websocketName, String message) {
-                    System.out.println("Forwarding to WebSocket: " + websocketName);
-                    System.out.println("Message: " + message);
-                    Map<Session, String> socketUsernameMap = getSocketUsernameMap(websocketName);
-    				socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
-    		            try {
-                            session.getRemote().sendString(message);
-    		            } catch (Exception e) {
-    		                e.printStackTrace();
-    		            }
-    		        });
-    			}
-    		};
+        if (VIA_BROKER) {
+            ISocketMsgListener listener = (websocketName, message) -> {
+                Map<Session, String> socketUsernameMap = getSocketUsernameMap(websocketName);
+                socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
+                    try {
+                        session.getRemote().sendString(message);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            };
             JServiceLoader.getCSLInterModuleCommunicationManager().registerSocketMsgListener(listener);
-    	}
+        }
     }
-    
+
     /**
      * Cleans and standardizes the WebSocket path name.
      *
@@ -122,9 +116,9 @@ public class CSLWebSocket {
      */
     public static String cleanSocketName(String name) {
         if (name.startsWith("/")) name = name.substring(1);
-    	return name.toLowerCase();
+        return name.toLowerCase();
     }
-    
+
     /**
      * Gets the list of registered WebSocket paths.
      *
@@ -141,7 +135,7 @@ public class CSLWebSocket {
      * @param socketTag  The tag associated with the WebSocket.
      */
     public static void register(String socketName, String socketTag) {
-    	websocketTags.put(socketName, socketTag);
+        websocketTags.put(socketName, socketTag);
     }
 
     /**
@@ -152,8 +146,6 @@ public class CSLWebSocket {
     public static void addUser(Session session) {
         String username = "User" + (nextUserNumber++);
         String socketName = cleanSocketName(session.getUpgradeRequest().getRequestURI().getPath());
-
-        System.out.println("Connect: " + socketName + " Username: " + username);
 
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.put(session, username);
@@ -166,8 +158,6 @@ public class CSLWebSocket {
      */
     public static void removeUser(Session session) {
         String socketName = cleanSocketName(session.getUpgradeRequest().getRequestURI().getPath());
-
-        System.out.println("Disconnect: " + session + " from " + socketName);
 
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.remove(session);
@@ -194,36 +184,35 @@ public class CSLWebSocket {
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.keySet().forEach(session -> {
             String username = socketUsernameMap.get(session);
-            System.out.println("Refresh socket " + socketName + ": " + username + " open: " + session.isOpen());
 
             Json refreshMessage = Json.object().set("refresh", socketName);
-			try {
+            try {
                 if (session.isOpen()) {
                     session.getRemote().sendString(refreshMessage.toString());
                 }
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		});
-	}
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
 
     /**
      * Broadcasts a JSON message to all users connected to a specific WebSocket.
      *
-     * @param socketName The WebSocket path name.
+     * @param socketName  The WebSocket path name.
      * @param jsonMessage The JSON message to broadcast.
      */
     public static void broadcastMessageJson(String socketName, Json jsonMessage) {
         messageBroadcaster.broadcastMessageJson(socketName, jsonMessage);
     }
-    
+
     /**
      * Broadcasts a string message to all users connected to a specific WebSocket.
      *
      * @param socketName The WebSocket path name.
-     * @param message The string message to broadcast.
+     * @param message    The string message to broadcast.
      */
     public static void broadcastMessageString(String socketName, String message) {
         messageBroadcaster.broadcastMessageString(socketName, message);
-  }
+    }
 }

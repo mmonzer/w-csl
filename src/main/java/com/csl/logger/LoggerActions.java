@@ -12,6 +12,8 @@ public enum LoggerActions {
     LoggerActions(String name) {
         this.name = name;
     }
+
+    @Override
     public String toString() {
         return name;
     }

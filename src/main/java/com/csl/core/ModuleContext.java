@@ -27,7 +27,6 @@ public class ModuleContext {
 		
 		s=s+"Class:"+getClazz()+"\n";
 		s=s+"Priority: input="+inputPriority+" step="+stepPriority+" output="+outputPriority+"\n";
-		//s=s+paramsToString();
 		s=s+"Config:\n"+getConfig()+"\n";
 		
 		return s;

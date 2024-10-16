@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
+import com.csl.util.JCmd;
+import com.csl.web.HTTPConstants;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -37,7 +39,7 @@ public class CSLDemo10XApiCommand {
 		HttpClient  client    = HttpClientBuilder.create().build();
 		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
 		post.setEntity(postingString);
-		post.setHeader("Content-type", "application/json");
+		post.setHeader(HTTPConstants.CONTENT_TYPE, HTTPConstants.JSON_FORMAT);
 		try {
 			HttpResponse response = client.execute(post);
 			
@@ -76,8 +78,8 @@ public class CSLDemo10XApiCommand {
 
 		Json j= Json.object();
 	
-		j.set("cmd", cmd);
-		j.set("params",jparams);
+		j.set(JCmd.CMD, cmd);
+		j.set(JCmd.PARAMETERS,jparams);
 
 		HttpPost post = new HttpPost(getServerURL()+api);
 		
@@ -100,7 +102,7 @@ public class CSLDemo10XApiCommand {
 		
 		StringEntity postingString = new StringEntity(j.toString(),StandardCharsets.UTF_8);
 		post.setEntity(postingString);
-		post.setHeader("Content-type", "application/json");
+		post.setHeader(HTTPConstants.CONTENT_TYPE, HTTPConstants.JSON_FORMAT);
 		try {
 			HttpResponse response = client.execute(post);
 			

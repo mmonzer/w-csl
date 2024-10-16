@@ -112,7 +112,7 @@ public class CSLNetworkLogger {
      */
     public static void debugInboundResponse(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
         setVariablesSource(ip, port);
-        String oldEndpoint = setVariables(endpoint, method, protocol, statusCode);
+        String oldEndpoint = setVariables( method, endpoint,protocol, statusCode);
         logger.debug(message);
         removeVariables(oldEndpoint);
     }
@@ -144,7 +144,7 @@ public class CSLNetworkLogger {
      */
     public static void debugOutboundRequest(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, String message) {
         setVariablesDestination(ip, port);
-        String oldEndpoint = setVariables(endpoint, method, protocol, null);
+        String oldEndpoint = setVariables( method, endpoint,protocol, null);
         logger.debug(message);
         removeVariables(oldEndpoint);
     }
@@ -176,7 +176,7 @@ public class CSLNetworkLogger {
      */
     public static void debugInboundResponse(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
         setVariablesSource(ip, port);
-        String oldEndpoint = setVariables(endpoint, method, protocol, statusCode);
+        String oldEndpoint = setVariables(method, endpoint, protocol, statusCode);
         logger.debug("HTTP response received.");
         removeVariables(oldEndpoint);
     }
@@ -193,7 +193,7 @@ public class CSLNetworkLogger {
      */
     public static void debugOutboundRequest(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol) {
         setVariablesDestination(ip, port);
-        String oldEndpoint = setVariables(endpoint, method, protocol, null);
+        String oldEndpoint = setVariables(method, endpoint, protocol, null);
         logger.debug("HTTP request sent.");
         removeVariables(oldEndpoint);
     }

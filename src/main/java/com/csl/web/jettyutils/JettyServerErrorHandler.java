@@ -23,19 +23,18 @@ public class JettyServerErrorHandler extends ErrorHandler {
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         Throwable th = (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
         if (th != null) {
-            logger.error("Exception: ", th);
-            logger.error("Exception message: " + th.getMessage());
+            logger.error("Exception message: {}", th.getMessage());
         } else {
             // No exception was thrown, log the status and error message of the response
             int status = response.getStatus();
             String errorMessage = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
-            logger.error("Response status: " + status);
-            logger.error("Error message: " + errorMessage);
+            logger.error("Response status: {}", status);
+            logger.error("Error message: {}", errorMessage);
         }
-        logger.error("Request URI: " + request.getRequestURI());
-        logger.error("Request method: " + request.getMethod());
-        logger.error("Request parameters: " + request.getParameterMap().toString());
-        logger.error("Request attributes: " + Collections.list(request.getAttributeNames()).toString());
+        logger.error("Request URI: {}", request.getRequestURI());
+        logger.error("Request method: {}", request.getMethod());
+        logger.error("Request parameters: {}", request.getParameterMap());
+        logger.error("Request attributes: {}", Collections.list(request.getAttributeNames()));
         try {
             super.handle(target, baseRequest, request, response);
         }catch (ServletException e) {

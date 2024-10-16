@@ -41,20 +41,20 @@ public class WebsocketClientListener {
 
 		for (WebsocketClientListener w:list) {
 			if (w.uriName.compareTo(s)==0) {
-				logger.info("Socket already open :"+s);
+				logger.info("Socket already open :{}",s);
 				return w;
 			}
 		}
 		try {
 			WebsocketClientListener w = new WebsocketClientListener(s,new URI(s)); 
-			logger.info("Socket created :"+s);
+			logger.info("Socket created :{}",s);
 			
 			list.add(w);
 			return w;
 			
 		} catch (URISyntaxException ex) {
 			System.err.println("URISyntaxException exception: " + s);
-			logger.error("URISyntaxException exception: " + s);
+			logger.error("URISyntaxException exception: {}", s);
 			
 		}
 
@@ -68,7 +68,7 @@ public class WebsocketClientListener {
 		for (WebsocketClientListener w:list) {
 			if (w.uriName.compareTo(s)==0) {
 				list2.add(w);
-				logger.info("Socket deleted :"+w.uriName);
+				logger.info("Socket deleted :{}",w.uriName);
 			}
 		}
 		
@@ -81,7 +81,7 @@ public class WebsocketClientListener {
 			this.uriName=name;
 			container.connectToServer(this, endpointURI);
 		} catch (Exception e) {
-			logger.error("Cannot connect to "+endpointURI);
+			logger.error("Cannot connect to {}",endpointURI);
 		}
 	}
 

@@ -1,6 +1,7 @@
 package com.csl.autocrypt.tests.module;
 
 import com.csl.autocrypt.tests.TestConfig;
+import com.csl.util.JCmd;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
+import static com.csl.web.HTTPConstants.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -51,11 +53,11 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         returnOutput.at("key2", "val2");
         // Define mocked service
         MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate/"+serialNumber))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -65,8 +67,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "get_certificate_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -90,11 +92,11 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         returnOutput.at("key2", "val2");
         // Define mocked service
         MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate/"+serialNumber))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -103,10 +105,10 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
-        sentParams.at("cmd", "extra");
+        sentParams.at(JCmd.CMD, "extra");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "get_certificate_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -130,8 +132,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "get_certificate_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -156,8 +158,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificate_info");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "get_certificate_info");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -185,11 +187,11 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         returnOutput.add("string2");
         // Define mocked service
         MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -199,8 +201,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificates");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "get_certificates");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -222,10 +224,10 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -233,8 +235,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         // Define expected input/output of the api
         Json sentParams = Json.object();
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificates");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "get_certificates");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -256,10 +258,10 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -269,8 +271,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("extra", "param");
         Json sentInput = Json.object();
-        sentInput.at("cmd", "get_certificates");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "get_certificates");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -294,11 +296,11 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         String returnOutput = "this is the safest certificate";
         // Define mocked service
         MappingBuilder x = get(urlPathMatching(ENDPOINT_MODULE + "/certificate/download/"+serialNumber))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/octet-stream")
+                        .withHeader(CONTENT_TYPE, CONTENT_DISPOSITION)
                         .withBody(returnOutput)
                 );
         stubFor(x);
@@ -309,13 +311,13 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "download_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "download_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
         Json expectedOutput = Json.object();
-        expectedOutput.at("Content-Type", "application/octet-stream");
+        expectedOutput.at(CONTENT_TYPE, CONTENT_DISPOSITION);
         expectedOutput.at("Content", returnOutput);
 
         recvOutput.at("result", expectedOutput);
@@ -340,8 +342,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "download_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "download_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -369,8 +371,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         Json sentParams = Json.object();
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "download_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "download_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -398,12 +400,12 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/certificate/validate-template"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"name\":\""+name+"\",\"issuer_ref\":\""+issuerRef+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -415,8 +417,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "validate_template");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "validate_template");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -441,8 +443,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("issuer_ref", issuerRef);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "validate_template");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "validate_template");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -469,8 +471,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "validate_template");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "validate_template");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -497,8 +499,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("issuer_ref", issuerRef);
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "validate_template");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "validate_template");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -525,12 +527,12 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/certificate/issue"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\""+roleName+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -542,8 +544,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("role_name", roleName);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -567,12 +569,12 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = post(urlPathMatching(ENDPOINT_MODULE + "/certificate/issue"))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .withRequestBody((StringValuePattern) new EqualToPattern("{\"role_name\":\""+roleName+"\",\"common_name\":\""+commonName+"\"}"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                         .withBody(returnOutput.toString())
                 );
         stubFor(x);
@@ -585,8 +587,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("role_name", roleName);
         sentParams.at("common_name", commonName);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -611,8 +613,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("role_name", name);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -639,8 +641,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -665,8 +667,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "generate_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "generate_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -691,11 +693,11 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
 
         // Define mocked service behavior
         MappingBuilder x = delete(urlPathMatching(ENDPOINT_MODULE + "/certificate/revoke/"+serialNumber))
-                .withHeader("Content-Type", (StringValuePattern) new EqualToPattern("application/json"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
                 .withQueryParam("path", (StringValuePattern) new EqualToPattern(path))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
                 );
         stubFor(x);
 
@@ -707,8 +709,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "revoke_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", true);
@@ -732,8 +734,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "revoke_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -760,8 +762,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("name", name);
         sentParams.at("path", path);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "revoke_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -788,8 +790,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "revoke_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);
@@ -816,8 +818,8 @@ public class TestAutoCryptModule_Certificate extends TestConfig {
         sentParams.at("path", path);
         sentParams.at("serial_number", serialNumber);
         Json sentInput = Json.object();
-        sentInput.at("cmd", "revoke_certificate");
-        sentInput.at("params", sentParams);
+        sentInput.at(JCmd.CMD, "revoke_certificate");
+        sentInput.at(JCmd.PARAMETERS, sentParams);
 
         Json recvOutput = Json.object();
         recvOutput.at("success", false);

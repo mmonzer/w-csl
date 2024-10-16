@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 public class Config {
     static String configFileName = "application.json";
+    private static final String WRONG_CONFIGURATION = "Wrong configuration";
     Logger logger = LoggerFactory.getLogger(Config.class);
     Json jConfig;
     String separator = "__";
@@ -123,7 +124,7 @@ public class Config {
         // endregion define variables
 
         public Client(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             ipServerRemote = config.get("ip_server_remote").asString();
             portServerRemote = config.get("port_server_remote").asInteger();
             serverRemoteUrlPrefix = config.get("server_remote_url_prefix").asString();
@@ -148,7 +149,7 @@ public class Config {
         // endregion define variables
 
         public Scan(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             managerIp = config.get("manager_ip").asString();
             managerPort = config.get("manager_port").asInteger();
             managerProtocol = config.get("manager_protocol").asString();
@@ -166,7 +167,7 @@ public class Config {
         // endregion define variables
 
         public Status(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             sendNotifications = config.get( "send_notifications").asBoolean();
             notificationsPeriod = config.get("notifications_period").asInteger();
         }
@@ -183,7 +184,7 @@ public class Config {
         // endregion define variables
 
         public NmapService(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             debugMode = config.get( "debug_mode").asBoolean();
             debugDir = config.get("debug_dir").asString();
             logMode = config.get( "log_mode").asBoolean();
@@ -199,7 +200,7 @@ public class Config {
         // endregion define variables
 
         public CpeService(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             dictionaryPath = config.get("dictionaryPath").asString();
         }
     }
@@ -214,7 +215,7 @@ public class Config {
         // endregion define variables
 
         public Tap(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             localIpAddress = config.get("localIpAddr").asString();
             localPort = config.get("localPort").asInteger();
             knowHostFilePath = config.get("knowHostFilePath").asString();
@@ -253,7 +254,7 @@ public class Config {
         // endregion define variables
 
         public Server(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             on = config.get( "on").asBoolean();
             verbose = config.get( "verbose").asBoolean();
             debug = config.get( "debug").asBoolean();
@@ -296,7 +297,7 @@ public class Config {
         // endregion define variables
 
         public UdpServerConf(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             on = config.get( "on").asBoolean();
             verbose = config.get( "verbose").asBoolean();
             traceAllMessages = config.get( "trace_all_messages").asBoolean();
@@ -318,7 +319,7 @@ public class Config {
         // endregion define variables
 
         public ModuleExec(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             modulesPackageName = config.get("modules_package_name").asString();
             samplingTime = config.get("sampling_time").asInteger();
             numberOfExecLoops = config.get("number_of_exec_loops").asInteger();
@@ -336,7 +337,7 @@ public class Config {
         // endregion define variables
 
         public Module(Json moduleConfig) {
-            if (moduleConfig ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (moduleConfig ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             name = moduleConfig.get("name").asString();
             type = moduleConfig.get("type").asString();
             config = new CSLModuleConfig(moduleConfig.get("config"));
@@ -365,7 +366,7 @@ public class Config {
             Integer outputPriority;
 
             public CSLModuleConfig(Json config) {
-                if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+                if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
                 autostart = config.get( "autostart").asBoolean();
                 execLoopNumber = config.get("exec_loop_number").asInteger();
                 inputPriority = config.get("input_priority").asInteger();
@@ -422,7 +423,7 @@ public class Config {
         // endregion define variables
 
         public IdsConf(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             on = config.get( "on").asBoolean();
             mode = config.get("mode").asInteger();
             helpMode = config.get("help_mode").asString();
@@ -488,7 +489,7 @@ public class Config {
         // endregion define variables
 
         public AlertViewer(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             ip = config.get("ip").asString();
             port = config.get("port").asInteger();
             name = config.get("name").asString();
@@ -518,7 +519,7 @@ public class Config {
         // endregion define variables
 
         public Autocrypt(Json config) {
-            if (config ==null) { throw new RuntimeException("Wrong configuration"); }
+            if (config ==null) { throw new RuntimeException(WRONG_CONFIGURATION); }
             ip = config.get("ip").asString();
             port = config.get("port").asInteger();
             syncFrequency = config.get("sync_frequency").asInteger();

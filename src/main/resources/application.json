@@ -72,7 +72,6 @@
     "max_size_of_input_queues": 100
   },
   "module_exec": {
-    "sampling_time": 1000,
     "modules_package_name": "main.modules",
     "number_of_exec_loops": 2,
     "autostart": true,

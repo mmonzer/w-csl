@@ -4,6 +4,7 @@ import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.ApiCommandsFactory;
+import com.csl.util.JCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
@@ -29,7 +30,7 @@ public class Test50ApiDevDb {
 	public Json exec(String cmd, Json params) {
 		params.set("user", "user1");
 
-		Json r=imcm.executeCommand("devdb", Json.object().set("cmd", cmd).set("params", params));
+		Json r=imcm.executeCommand("devdb", Json.object().set(JCmd.CMD, cmd).set(JCmd.PARAMETERS, params));
 
 
 		return r;

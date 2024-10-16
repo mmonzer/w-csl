@@ -5,8 +5,6 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
-import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 

@@ -3,7 +3,6 @@ package com.csl.intercom.services;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.ExternalConnectionInfoTemplate;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
@@ -59,10 +58,6 @@ public class ExternalScansService {
             scan.setDbapiId(externalScans.get(scan.getUuid()).getDbapiId());
         }
         externalScans.put(scan.getUuid(), scan);
-    }
-
-    private void handleExternalScan(ExternalScan scan) {
-//        ExternalScan updatedScan = scanApiHandler
     }
 
     private void purgeOldScans() {

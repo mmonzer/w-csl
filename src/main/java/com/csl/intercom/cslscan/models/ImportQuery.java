@@ -4,7 +4,6 @@ import com.csl.intercom.cslscan.enums.ImportQueryStatus;
 import com.csl.logger.LoggerConstants;
 import com.ucsl.json.Json;
 import lombok.Getter;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;

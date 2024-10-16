@@ -1,4 +1,4 @@
-package com.csl.intercom.cslscan;
+package com.csl.web;
 
 import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
 import com.csl.core.Config;
@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
@@ -34,8 +33,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.csl.logger.CSLNetworkLogger.debugInboundResponse;
-import static com.csl.logger.CSLNetworkLogger.debugOutboundRequest;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 
 /**

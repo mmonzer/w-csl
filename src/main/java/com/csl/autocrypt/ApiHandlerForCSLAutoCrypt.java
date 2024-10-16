@@ -1,7 +1,7 @@
 package com.csl.autocrypt;
 
 import com.csl.autocrypt.enums.AutocryptConstants;
-import com.csl.intercom.cslscan.ApiHandler;
+import com.csl.web.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import com.csl.autocrypt.enums.ApiEndpointForCSLAutocrypt;

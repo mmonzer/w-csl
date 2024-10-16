@@ -1,7 +1,6 @@
 package com.csl.autocrypt.tests.module;
 
 import com.csl.autocrypt.tests.TestConfig;
-import com.csl.core.CSLContext;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;

@@ -1,6 +1,5 @@
 package com.csl.logger;
 
-import com.csl.alert.CSLAlertManager;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.interfaces.IFileLog;
 import com.ucsl.json.Json;

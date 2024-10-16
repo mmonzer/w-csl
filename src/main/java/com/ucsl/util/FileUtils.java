@@ -82,11 +82,6 @@ public class FileUtils {
         Files.copy(new File(sourceFilename).toPath(), new File(destFilename).toPath());
     }
 
-    public static void clearDir(String dir) {
-
-
-    }
-
     public static boolean isValidFilePath(String path) {
         File f = new File(path);
         try {

@@ -1,7 +1,6 @@
 package com.ucsl.interfaces;
 
 import com.csl.intercom.jsoncmd.ApiCommands;
-import com.ucsl.json.Json;
 
 /**
  * Interface for CSL services.

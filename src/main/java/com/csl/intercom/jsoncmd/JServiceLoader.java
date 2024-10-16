@@ -2,8 +2,6 @@ package com.csl.intercom.jsoncmd;
 
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
-import com.ucsl.interfaces.IApiCommands;
-import com.ucsl.interfaces.ICSLService;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import main.services.Service;

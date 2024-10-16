@@ -5,7 +5,6 @@ import com.csl.core.Config;
 import com.csl.intercom.dbapi.enums.DbapiEndpointForCSLScan;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.util.Pair;
-import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;

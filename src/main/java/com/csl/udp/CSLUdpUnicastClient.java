@@ -1,7 +1,5 @@
 package com.csl.udp;
 
-import com.csl.core.CSLContext;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

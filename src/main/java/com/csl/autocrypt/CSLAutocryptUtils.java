@@ -1,11 +1,8 @@
 package com.csl.autocrypt;
 
-import com.csl.autocrypt.enums.AutocryptConstants;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromVaultToDbapi;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;

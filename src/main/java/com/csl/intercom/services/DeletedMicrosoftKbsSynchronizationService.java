@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class DeletedMicrosoftKbsSynchronizationService extends PaginatedSynchronizationService<Pair<String, OffsetDateTime>> {
     private Logger logger = LoggerFactory.getLogger(DeletedMicrosoftKbsSynchronizationService.class);

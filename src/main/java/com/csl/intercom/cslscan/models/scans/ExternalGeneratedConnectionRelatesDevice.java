@@ -4,8 +4,6 @@ import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
-
 @Setter
 @Getter
 public class ExternalGeneratedConnectionRelatesDevice {

@@ -1,12 +1,9 @@
 package main.services;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommands;
-import com.csl.intercom.jsoncmd.ApiCommandsFactory;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.*;
 import com.ucsl.json.Json;
-import lombok.Getter;
 
 public class AlertsService extends Service {
 

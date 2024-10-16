@@ -3,7 +3,7 @@ package com.csl.intercom.dbapi;
 import com.csl.autocrypt.enums.AutocryptConstants.Common;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
-import com.csl.intercom.cslscan.ApiHandler;
+import com.csl.web.ApiHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;

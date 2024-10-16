@@ -1,7 +1,6 @@
 package com.csl.ids;
 
-import com.csl.intercom.cslscan.ApiHandler;
-import com.csl.intercom.cslscan.ScanApiHandler;
+import com.csl.web.ApiHandler;
 import com.jcraft.jsch.JSchException;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;

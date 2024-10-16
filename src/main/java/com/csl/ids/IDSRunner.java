@@ -1,7 +1,6 @@
 package com.csl.ids;
 
 import com.csl.core.CSLContext;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.interfaces.IIDSRunner;
 import com.csl.modules.ModuleIDS;
 import com.csl.web.websockets.CSLWebSocket;
@@ -12,10 +11,7 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 
 public class IDSRunner implements IIDSRunner {
 

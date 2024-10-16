@@ -2,12 +2,8 @@ package com.csl.autocrypt;
 
 import com.csl.autocrypt.enums.DbapiEndpointForCSLAutocrypt;
 import com.csl.intercom.dbapi.DbapiHandler;
-import com.csl.intercom.dbapi.DbapiUtilsForCSLScan;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
-
-import java.time.OffsetDateTime;
-import java.util.List;
 
 import static com.csl.autocrypt.CSLAutocryptUtils.*;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;

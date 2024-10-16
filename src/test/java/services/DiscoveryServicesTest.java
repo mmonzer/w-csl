@@ -2,25 +2,18 @@ package services;
 
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
-import com.csl.core.NoLogging;
 import com.csl.intercom.cslscan.ScanApiHandler;
-import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.models.CpeItem;
-import com.csl.intercom.dbapi.DbapiHandler;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
-import com.csl.intercom.services.CpeItemsSynchronizationService;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.DataSynchronizationService;
-import com.csl.intercom.services.PaginatedSynchronizationService;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
-import main.util.CSLRunningArgs;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;

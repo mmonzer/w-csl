@@ -1,6 +1,5 @@
 package com.csl.intercom.jsoncmd;
 
-import com.ucsl.interfaces.IApiCommands;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmdWithFiles;

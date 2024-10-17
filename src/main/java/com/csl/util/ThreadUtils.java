@@ -7,7 +7,6 @@ import org.slf4j.MDC;
 import java.util.concurrent.*;
 
 import static com.csl.logger.LoggerConstants.*;
-import static com.csl.util.CorrelationUtils.getFormattedXCorrelationId;
 
 /**
  * Utils for correlation of threads

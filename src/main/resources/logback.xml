@@ -16,13 +16,6 @@
                 %gray(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] [%X{X-Correlation-ID:-No X CORRELATION ID}] %yellow(%logger) [%X{log_type}] [%X{endpoint:-No endpoint}]: %msg%n%throwable
             </Pattern>
         </layout>
-
-        <filter class="ch.qos.logback.classic.filter.MDCFilter">
-            <MDCKey>log_type</MDCKey>
-            <MDCValue>applicative</MDCValue>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
     </appender>
 
     <!-- Save logs to file based on "log_type" flag : "applicative" or "network" -->

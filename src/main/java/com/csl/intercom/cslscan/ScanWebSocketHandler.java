@@ -349,7 +349,7 @@ public class ScanWebSocketHandler {
                 //region Update the scan's info (status, progress)
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
                 if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
-                    logger.debug("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
+                    logger.info("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
                             payload.get("entitiesUuid").asJsonList().size(), payload.get("entitiesInError").asJsonList().size());
                     // Put the end date in the scan information and notify DB-API the scan ended.
                     OffsetDateTime endDate = OffsetDateTime.now();

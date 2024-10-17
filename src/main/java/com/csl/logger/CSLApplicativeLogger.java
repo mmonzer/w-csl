@@ -238,6 +238,7 @@ public class CSLApplicativeLogger {
             default:
                 break;
         }
+
         removeVariables();
     }
 
@@ -263,6 +264,7 @@ public class CSLApplicativeLogger {
             default:
                 break;
         }
+
         removeVariables();
     }
 

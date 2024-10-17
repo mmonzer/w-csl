@@ -5,8 +5,8 @@
     <logger name="ch.qos.logback" level="ERROR"/>
 
     <!-- Local variables -->
-    <property name="LOG_PATH" value="${CSL__WCSL__LOGS_PATH:-/var/log/csl/wcsl/}" />
-    <property name="LOG_FILENAME" value="${CSL__WCSL__LOGS_FILENAME:-wcsl}" />
+    <property name="LOG_PATH" value="${CSL__WCSL__LOGS_PATH:-/var/log/csl/wcsl/}"/>
+    <property name="LOG_FILENAME" value="${CSL__WCSL__LOGS_FILENAME:-wcsl}"/>
 
     <!-- Print console -->
     <appender name="Console"
@@ -20,24 +20,52 @@
 
     <!-- Save to file -->
     <appender name="STASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${LOG_PATH}${LOG_FILENAME}.current.log</file>
+        <file>${LOG_PATH}${LOG_FILENAME}.current.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}${LOG_FILENAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-<!--            <includeMdcKeyName>X-Correlation-ID</includeMdcKeyName>-->
-<!--            <excludeMdcKeyName>X-Correlation-ID</excludeMdcKeyName>-->
         </encoder>
     </appender>
 
+    <!-- Save logs to file based on "log_type" flag : "applicative" or "network" -->
+    <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
+            <key>log_type</key>
+            <defaultValue>applicative</defaultValue>
+        </discriminator>
+
+        <sift>
+            <appender name="LOG_FILE_%log_type" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${LOG_PATH}${log_type}/${LOG_FILENAME}-${log_type}.log</file>
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${LOG_PATH}${log_type}/${LOG_FILENAME}-${log_type}.%d{yyyy-MM-dd}.log</fileNamePattern>
+                    <maxHistory>
+                        <conditional>
+                            <on>applicative</on>
+                            <then>7</then>
+                            <on>network</on>
+                            <then>1</then>
+                        </conditional>
+                    </maxHistory>
+                </rollingPolicy>
+                <!-- Logstash encoder -->
+                <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                    <!-- <includeMdcKeyName>X-Correlation-ID</includeMdcKeyName> -->
+                    <!-- <excludeMdcKeyName>X-Correlation-ID</excludeMdcKeyName> -->
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+
     <!-- Where to log and the level by default -->
-    <root level="${LOG_LEVEL:-DEBUG}">
-        <appender-ref ref="STASH" />
-        <appender-ref ref="Console" />
+    <root level="${LOG_LEVEL:-INFO}">
+        <appender-ref ref="SIFT"/>
+        <appender-ref ref="Console"/>
     </root>
-<!--    We can define different levels  to save to different places as-->
-<!--    <logger name="trace" level="TRACE">-->
-<!--        <appender-ref ref="Console" />-->
-<!--    </logger>-->
+    <!--    We can define different levels  to save to different places as-->
+    <!--    <logger name="trace" level="TRACE">-->
+    <!--        <appender-ref ref="Console" />-->
+    <!--    </logger>-->
 </configuration>

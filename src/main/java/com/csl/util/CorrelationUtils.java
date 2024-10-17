@@ -1,13 +1,14 @@
 package com.csl.util;
 
 import com.csl.logger.LoggerConstants;
+import com.csl.logger.LoggerInterfaces;
 import org.slf4j.MDC;
 
 import java.util.UUID;
 
 public class CorrelationUtils {
     /**
-     * Creates an X-Correlation-ID
+     * Creates an X-Correlation-ID.
      * @return return the created X-Correlation-ID
      */
     public static String createXCorrelationId() {

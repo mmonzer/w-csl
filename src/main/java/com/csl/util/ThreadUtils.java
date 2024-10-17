@@ -175,9 +175,8 @@ public class ThreadUtils {
     private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint, String initializerService) {
         return threadExecutor.scheduleAtFixedRate(
                 () -> {
-                    MDC.put(X_CORRELATION_ID, xCorrelationId);
+                    MDC.put(X_CORRELATION_ID, formatXCorrelationId(xCorrelationId, initializerService));
                     MDC.put(ENDPOINT, endpoint);
-                    MDC.put(INIT_SERVICE, initializerService);
                     command.run();
                 }, initialDelay, period, timeUnit);
     }
@@ -207,5 +206,15 @@ public class ThreadUtils {
             }
         };
         scheduledExecutorService.scheduleAtFixedRate(task, initialDelay, period, unit);
+    }
+
+    /**
+     * Formats the XCorrelationId with the initializer service.
+     * @param uuid unique identifier for the XCorrelationId
+     * @param initializerService action initializer service. For example, periodic synchronizations.
+     * @return a new formated X-Correlation-ID
+     */
+    private static String formatXCorrelationId(String uuid, String initializerService) {
+        return uuid+"("+initializerService+")";
     }
 }

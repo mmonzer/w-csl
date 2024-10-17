@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -1945,8 +1945,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      */
     public void syncAll() {
         if (!isRemote) {
-            logger.info("Starting Discovery synchronization");
-            logger.info("Starting Discovery synchronization");
+            logger.debug("Starting Discovery synchronization");
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
@@ -1960,7 +1959,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 deletedMicrosoftKbsSynchronizationService.syncData();
                 logger.info("Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
             } catch (SynchronizationException e) {
-                logger.warn("Failed to synchronize CPE Items", e);
+                logger.warn("Failed to synchronize CPE Items : {}", e.getMessage(), e);
             }
         }
     }

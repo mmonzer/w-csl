@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.logger.CSLNetworkLogger.*;
+import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
 /**
  * CSLWebSocketForJcmd handles WebSocket communication for Jcmd commands.
@@ -27,10 +28,7 @@ public class CSLWebSocketForJcmd {
     private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmd.class);
     private static final String RESPONSE = "response";
     public static final String ID = "uuid";
-    public static final String X_CORRELATION_ID = "X-Correlation-ID";
-    public static final String ENDPOINT = "endpoint";
     public static final String COMMAND = "command";
-    public static final String PROTOCOL = "protocol";
     public static long TIME_OUT = 60000;
 
     public static String WEB_SOCKET_CMD = "/cmd";

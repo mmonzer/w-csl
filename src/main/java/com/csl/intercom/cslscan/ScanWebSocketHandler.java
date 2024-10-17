@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
 
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
 /**
  * Handle the WebSocket connections with CSL-Scan.

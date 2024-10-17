@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.autocrypt.outils.JsonHelper.getValueStringOrNull;
-import static com.csl.logger.LoggerConstants.PROTOCOL;
+import static com.csl.logger.LoggerConstants.*;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 
 public class CSLIDSMainClient {
@@ -236,7 +236,6 @@ public class CSLIDSMainClient {
     private static void initializeContext(String[] args) {
         CorrelationUtils.setXCorrelationId();
         CorrelationUtils.setEndpoint("mainClient");
-        CorrelationUtils.setInitializerService(LoggerInterfaces.CSL_CLIENT.toString());
 
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());

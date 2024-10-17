@@ -9,8 +9,9 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
 import com.csl.logger.LoggerUtils;
+
+import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
 /**
  * Class that modifies @link{StompSessionHandlerAdapter} to transfer the X_CORRELATION_ID from headers of message

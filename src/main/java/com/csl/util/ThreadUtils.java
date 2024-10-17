@@ -6,9 +6,8 @@ import org.slf4j.MDC;
 
 import java.util.concurrent.*;
 
-import static com.csl.logger.LoggerConstants.INIT_SERVICE;
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.ENDPOINT;
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+import static com.csl.logger.LoggerConstants.*;
+import static com.csl.util.CorrelationUtils.getFormattedXCorrelationId;
 
 /**
  * Utils for correlation of threads
@@ -175,7 +174,7 @@ public class ThreadUtils {
     private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint, String initializerService) {
         return threadExecutor.scheduleAtFixedRate(
                 () -> {
-                    MDC.put(X_CORRELATION_ID, formatXCorrelationId(xCorrelationId, initializerService));
+                    MDC.put(X_CORRELATION_ID, CorrelationUtils.getFormattedXCorrelationId(xCorrelationId, initializerService));
                     MDC.put(ENDPOINT, endpoint);
                     command.run();
                 }, initialDelay, period, timeUnit);
@@ -208,13 +207,4 @@ public class ThreadUtils {
         scheduledExecutorService.scheduleAtFixedRate(task, initialDelay, period, unit);
     }
 
-    /**
-     * Formats the XCorrelationId with the initializer service.
-     * @param uuid unique identifier for the XCorrelationId
-     * @param initializerService action initializer service. For example, periodic synchronizations.
-     * @return a new formated X-Correlation-ID
-     */
-    private static String formatXCorrelationId(String uuid, String initializerService) {
-        return uuid+"("+initializerService+")";
-    }
 }

@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.X_CORRELATION_ID;
+import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
 /**
  * Class to handle communication with CSL-Scan's HTTP API.

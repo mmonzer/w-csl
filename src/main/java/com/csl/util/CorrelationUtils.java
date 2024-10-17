@@ -24,14 +24,6 @@ public class CorrelationUtils {
     }
 
     /**
-     * Sets the initializer service to the logging variables
-     * @param service initializer service
-     */
-    public static void setInitializerService(String service) {
-        MDC.put(LoggerConstants.INIT_SERVICE, service);
-    }
-
-    /**
      * Sets endpoint to environment
      * @param endpoint endpoint
      */
@@ -43,7 +35,7 @@ public class CorrelationUtils {
      * Creates and sets X-Correlation-ID to environment
      */
     public static String setXCorrelationId() {
-        String xCorrelationId = createXCorrelationId();
+        String xCorrelationId = getFormattedXCorrelationId();
         MDC.put(LoggerConstants.X_CORRELATION_ID, xCorrelationId);
         return xCorrelationId;
     }
@@ -54,6 +46,32 @@ public class CorrelationUtils {
     public static void setLoggingVariables() {
         setXCorrelationId();
         setEndpoint("??");
+    }
+    /**
+     * Formats the XCorrelationId with the initializer service.
+     * @param uuid unique identifier for the XCorrelationId
+     * @param initializerService action initializer service. For example, periodic synchronizations.
+     * @return a new formated X-Correlation-ID
+     */
+    public static String getFormattedXCorrelationId(String uuid, String initializerService) {
+        return uuid+"("+initializerService+")";
+    }
+
+    /**
+     * Formats the XCorrelationId with the initializer service.
+     * @param uuid unique identifier for the XCorrelationId
+     * @return a new formated X-Correlation-ID
+     */
+    public static String getFormattedXCorrelationId(String uuid) {
+        return getFormattedXCorrelationId(uuid, LoggerInterfaces.CSL_CLIENT.toString());
+    }
+
+    /**
+     * Formats the XCorrelationId with the initializer service.
+     * @return a new formated X-Correlation-ID
+     */
+    public static String getFormattedXCorrelationId() {
+        return getFormattedXCorrelationId(createXCorrelationId(), LoggerInterfaces.CSL_CLIENT.toString());
     }
 
 

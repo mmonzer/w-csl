@@ -20,9 +20,9 @@ public class CSLNetworkLogger {
      */
     public static void infoInboundRequest(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, String message) {
         setVariablesSource(ip, port);
-        setVariables(method, endpoint, protocol, null);
+        String oldEndpoint = setVariables(method, endpoint, protocol, null);
         logger.info(message);
-        removeVariables();
+        removeVariables(oldEndpoint);
     }
 
     /**
@@ -42,9 +42,9 @@ public class CSLNetworkLogger {
 
     private static void infoMessage(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
         setVariablesDestination(ip, port);
-        setVariables(method, endpoint, protocol, statusCode);
+        String oldEndpoint = setVariables(method, endpoint, protocol, statusCode);
         logger.info(message);
-        removeVariables();
+        removeVariables(oldEndpoint);
     }
 
     /**
@@ -60,9 +60,9 @@ public class CSLNetworkLogger {
      */
     public static void debugInboundResponse(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
         setVariablesSource(ip, port);
-        setVariables(endpoint, method, protocol, statusCode);
+        String oldEndpoint = setVariables(endpoint, method, protocol, statusCode);
         logger.debug(message);
-        removeVariables();
+        removeVariables(oldEndpoint);
     }
 
     /**
@@ -92,9 +92,9 @@ public class CSLNetworkLogger {
      */
     public static void debugOutboundRequest(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, String message) {
         setVariablesDestination(ip, port);
-        setVariables(endpoint, method, protocol, null);
+        String oldEndpoint = setVariables(endpoint, method, protocol, null);
         logger.debug(message);
-        removeVariables();
+        removeVariables(oldEndpoint);
     }
 
     /**
@@ -124,9 +124,9 @@ public class CSLNetworkLogger {
      */
     public static void debugInboundResponse(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
         setVariablesSource(ip, port);
-        setVariables(endpoint, method, protocol, statusCode);
+        String oldEndpoint = setVariables(endpoint, method, protocol, statusCode);
         logger.debug("HTTP response received.");
-        removeVariables();
+        removeVariables(oldEndpoint);
     }
 
     /**
@@ -141,9 +141,9 @@ public class CSLNetworkLogger {
      */
     public static void debugOutboundRequest(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol) {
         setVariablesDestination(ip, port);
-        setVariables(endpoint, method, protocol, null);
+        String oldEndpoint = setVariables(endpoint, method, protocol, null);
         logger.debug("HTTP request sent.");
-        removeVariables();
+        removeVariables(oldEndpoint);
     }
 
 
@@ -164,16 +164,16 @@ public class CSLNetworkLogger {
     /**
      * Removes all the set of MDC variables from the logger environment
      */
-    private static void removeVariables() {
+    private static void removeVariables(String oldEndpoint) {
         MDC.remove(LoggerConstants.IP_SRC);
         MDC.remove(LoggerConstants.PORT_SRC);
         MDC.remove(LoggerConstants.IP_DST);
         MDC.remove(LoggerConstants.PORT_DST);
-        MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.METHOD);
         MDC.remove(LoggerConstants.PROTOCOL);
         MDC.remove(LoggerConstants.STATUS_CODE);
         removeNetworkLog();
+        MDC.put(LoggerConstants.ENDPOINT, oldEndpoint);
     }
 
     /**
@@ -183,12 +183,14 @@ public class CSLNetworkLogger {
      * @param protocol protocol of the communication
      * @param statusCode code of the response
      */
-    private static void setVariables(String method, String endpoint, String protocol, Integer statusCode) {
+    private static String setVariables(String method, String endpoint, String protocol, Integer statusCode) {
+        String oldEndpoint =  MDC.get(LoggerConstants.ENDPOINT);
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
         MDC.put(LoggerConstants.STATUS_CODE, (statusCode==null)?null:statusCode.toString());
         addNetworkLog();
+        return oldEndpoint;
     }
 
     /**

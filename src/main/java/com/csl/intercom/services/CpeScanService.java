@@ -168,7 +168,7 @@ public class CpeScanService {
                 try {
                     dbapiHandler.notifyScanFinished(scan);
                     scanEntities.remove(scan.getScanId());
-                    logger.info("Notified DB-API that a scan finished");
+                    logger.debug("Notified DB-API that a scan finished");
                 } catch (Exception e) {
                     logger.error("Could not notify DB-API a scan finished", e);
                 }

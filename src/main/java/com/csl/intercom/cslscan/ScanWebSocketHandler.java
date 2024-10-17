@@ -140,12 +140,12 @@ public class ScanWebSocketHandler {
         if ((stompRequestsSession == null || !stompRequestsSession.isConnected())) {
             // not connected to csl-scan --> add this request to the queue
             scanRequestsQueue.add(entities);
-            logger.info("Scan service unavailable, added scan request to queue");
+            logger.debug("Scan service unavailable, added scan request to queue");
             return JsonApiResponse.error("Scan service unavailable, added scan request to queue");
         } else {
             // request the startScan to the csl-scan
             startScan(entities);
-            logger.info("CPE scan started");
+            logger.debug("CPE scan started");
             return JsonApiResponse.success();
         }
     }
@@ -349,7 +349,7 @@ public class ScanWebSocketHandler {
                 //region Update the scan's info (status, progress)
                 String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
                 if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
-                    logger.info("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
+                    logger.debug("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
                             payload.get("entitiesUuid").asJsonList().size(), payload.get("entitiesInError").asJsonList().size());
                     // Put the end date in the scan information and notify DB-API the scan ended.
                     OffsetDateTime endDate = OffsetDateTime.now();

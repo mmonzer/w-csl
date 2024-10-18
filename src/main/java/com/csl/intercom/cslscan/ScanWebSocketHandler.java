@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
+import com.csl.logger.CSLNetworkLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
@@ -374,7 +375,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders headers) {
                 session.subscribe(websocketNotificationsEndpoint, this);
-                logger.info("Connected to notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketNotificationsEndpoint);
+                CSLNetworkLogger.info(logger, "scanWebsocket/discovery", "WS", "Connected to notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketNotificationsEndpoint);
             }
 
             @Override
@@ -418,7 +419,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 session.subscribe(websocketImportNotificationsEndpoint, this);
-                logger.info("Connected to notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketImportNotificationsEndpoint);
+                CSLNetworkLogger.info(logger, "scanWebsocket/import", "WS", "Connected to import notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketImportNotificationsEndpoint);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
     }
@@ -450,7 +451,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 session.subscribe(websocketExportNotificationsEndpoint, this);
-                logger.info("Connected to import notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketExportNotificationsEndpoint);
+                CSLNetworkLogger.info(logger, "scanWebsocket/export", "WS", "Connected to export notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketExportNotificationsEndpoint);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
     }
@@ -481,7 +482,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 purgeScanRequestsQueue();
-                logger.info("Connected to requests websocket at {}", scanManagerDiscoveryUrl);
+                CSLNetworkLogger.info(logger, "scanWebsocket/", "WS", "Connected to requests websocket at "+ scanManagerDiscoveryUrl);
             }
         }).get(1, TimeUnit.SECONDS);
     }
@@ -505,7 +506,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 session.subscribe(websocketExternalScanEndpoint, this);
-                logger.info("Connected to external scans notifications websocket at {}/{}", scanManagerDiscoveryUrl, websocketExternalScanEndpoint);
+                CSLNetworkLogger.info(logger, "scanWebsocket/external_discovery", "WS", "Connected to external scans notifications websocket at "+ scanManagerDiscoveryUrl+"/"+ websocketExternalScanEndpoint);
             }
         }).get(1, TimeUnit.SECONDS);
     }

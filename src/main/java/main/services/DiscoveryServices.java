@@ -640,13 +640,18 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if (file.get("filename").asString().endsWith(".csv")) {
                             listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content")));
                         } else if (file.get("filename").asString().endsWith(".xlsx")) {
-                            listOfConnections.addAll(FileUtils.parseConnexionsFromXLSXFile(file.get("content")));
+                            listOfConnections.addAll(FileUtils.parseConnexionsFromXLSXFile(file.get("content"))); //TODO
                         } else if (file.get("filename").asString().endsWith(".xls")) {
                             listOfConnections.addAll(FileUtils.parseConnexionsFromXLSFile(file.get("content")));
                         }
-                        else {throw new FileNotFoundException();}
+                        else {
+                            logger.error("Failed to create list of connection drafts in CSL-Dbapi : file not found");
+                            throw new FileNotFoundException();
+                        }
+
                     }
                 } catch (FileNotFoundException ignored) {
+                    logger.warn("Failed to create list of connection drafts in CSL-Dbapi : required csv or xlsx");
                     return JsonApiResponse.error("Wrong file format for connections : required csv or xlsx").toJson();
                 }
                 List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();

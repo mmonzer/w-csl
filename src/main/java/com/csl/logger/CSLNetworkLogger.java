@@ -9,6 +9,28 @@ import org.slf4j.MDC;
 public class CSLNetworkLogger {
 
     /**
+     * Logs for  info
+     *
+     * @param logger   logger for logging the request
+     * @param endpoint endpoint of the request
+     * @param protocol protocol of the request
+     */
+    public static void info(Logger logger, String endpoint, String protocol, String message) {
+        infoInboundRequest(logger, null, null, null, endpoint, protocol, message);
+    }
+
+    /**
+     * Logs for debug
+     *
+     * @param logger   logger for logging the request
+     * @param endpoint endpoint of the request
+     * @param protocol protocol of the request
+     */
+    public static void debug(Logger logger, String endpoint, String protocol, String message) {
+        debugOutboundRequest(logger, null, null, null, endpoint, protocol, message);
+    }
+
+    /**
      * Logs for outbound requests in the APIHandler
      *
      * @param logger   logger for logging the request
@@ -146,7 +168,6 @@ public class CSLNetworkLogger {
         removeVariables(oldEndpoint);
     }
 
-
     /**
      * Sets the network log label on
      */
@@ -178,39 +199,41 @@ public class CSLNetworkLogger {
 
     /**
      * Sets some variables to the MDC logger environment
-     * @param method method of the request
-     * @param endpoint endpoint of the request
-     * @param protocol protocol of the communication
+     *
+     * @param method     method of the request
+     * @param endpoint   endpoint of the request
+     * @param protocol   protocol of the communication
      * @param statusCode code of the response
      */
     private static String setVariables(String method, String endpoint, String protocol, Integer statusCode) {
-        String oldEndpoint =  MDC.get(LoggerConstants.ENDPOINT);
+        String oldEndpoint = MDC.get(LoggerConstants.ENDPOINT);
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.METHOD, method);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
-        MDC.put(LoggerConstants.STATUS_CODE, (statusCode==null)?null:statusCode.toString());
+        MDC.put(LoggerConstants.STATUS_CODE, (statusCode == null) ? null : statusCode.toString());
         addNetworkLog();
         return oldEndpoint;
     }
 
     /**
      * Set the ip and port of the source to MDC logger environment
-     * @param ip ip source of the communication
+     *
+     * @param ip   ip source of the communication
      * @param port port source of the communication
      */
     private static void setVariablesSource(String ip, Integer port) {
         MDC.put(LoggerConstants.IP_SRC, ip);
-        MDC.put(LoggerConstants.PORT_SRC, (port==null)?null:port.toString());
+        MDC.put(LoggerConstants.PORT_SRC, (port == null) ? null : port.toString());
     }
-
 
     /**
      * Set the ip and port of the destination to MDC logger environment
-     * @param ip ip destination of the communication
+     *
+     * @param ip   ip destination of the communication
      * @param port port destination of the communication
      */
     private static void setVariablesDestination(String ip, Integer port) {
         MDC.put(LoggerConstants.IP_DST, ip);
-        MDC.put(LoggerConstants.PORT_DST, (port==null)?null:port.toString());
+        MDC.put(LoggerConstants.PORT_DST, (port == null) ? null : port.toString());
     }
 }

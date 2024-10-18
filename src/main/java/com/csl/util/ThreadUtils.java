@@ -155,7 +155,7 @@ public class ThreadUtils {
      * @return the future of the execution
      */
     private static @NotNull ScheduledFuture<?> singleThreadScheduledAtFixedRate(ScheduledExecutorService threadExecutor, Runnable command, long initialDelay, long period, TimeUnit timeUnit, String xCorrelationId, String endpoint) {
-        return singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, xCorrelationId, endpoint, null);
+        return singleThreadScheduledAtFixedRate(threadExecutor, command, initialDelay, period, timeUnit, xCorrelationId, endpoint, LoggerInterfaces.CSL_CLIENT.toString());
     }
 
     /**
@@ -175,6 +175,7 @@ public class ThreadUtils {
                 () -> {
                     MDC.put(X_CORRELATION_ID, CorrelationUtils.getFormattedXCorrelationId(xCorrelationId, initializerService));
                     MDC.put(ENDPOINT, endpoint);
+                    MDC.put(LOG_TYPE, APPLICATIVE);
                     command.run();
                 }, initialDelay, period, timeUnit);
     }

@@ -10,6 +10,12 @@ WORKDIR /usr/w-csl
 RUN ["./gradlew","shadowJar","-b","buildServer.gradle"]
 
 FROM eclipse-temurin:17.0.11_9-jre AS production-stage
+
+RUN apt update \
+    && apt upgrade -y \
+    && apt autoremove -y \
+    && apt clean -y
+
 WORKDIR /usr/src/app
 COPY --from=build-stage /usr/w-csl/build/libs/cslmainserver-all.jar ./cslmainserver.jar
 

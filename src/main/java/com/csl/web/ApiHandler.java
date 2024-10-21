@@ -4,6 +4,7 @@ import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
 import com.csl.core.Config;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.logger.LoggerConstants;
+import com.csl.logger.LoggerInterfaces;
 import com.ucsl.interfaces.IVoidToJsonApiResponse;
 import com.ucsl.json.Json;
 import lombok.Getter;
@@ -65,11 +66,11 @@ public class ApiHandler implements AutoCloseable {
         httpClient = initClient();
 
         try {
-            logger.debug("Connecting with {} at {} ...", moduleName, getUrl());
+            CSLNetworkLogger.debug(logger, moduleName, LoggerInterfaces.API.toString(), "Connecting with "+moduleName+" at "+getUrl()+" ...");
             httpClient.start();
-            logger.info("Connection successful with {} at {}", moduleName, getUrl());
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Connection successful with "+moduleName+" at "+getUrl()+".");
         } catch (Exception e) {
-            logger.error("Could not start the http client for {} API at {}", nameModule, getUrl(), e);
+            CSLNetworkLogger.warn(logger, moduleName, LoggerInterfaces.API.toString(), "Could not start the http client for "+moduleName+" API at "+getUrl()+".");
         }
     }
 
@@ -87,9 +88,9 @@ public class ApiHandler implements AutoCloseable {
      */
     public void testConnexion(IVoidToJsonApiResponse testMethod) {
         if (testMethod.apply().isSuccess()) {
-            logger.info("Connection successfully established with {} : server is running", moduleName);
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Connection successfully established with "+moduleName+" : server is running");
         } else {
-            logger.warn("Connection could not be established with {} : server is probably not started", moduleName);
+            CSLNetworkLogger.warn(logger, moduleName, LoggerInterfaces.API.toString(), "\"Connection could not be established with "+moduleName+" : server is probably not started");
         }
     }
 
@@ -102,7 +103,7 @@ public class ApiHandler implements AutoCloseable {
         if (useSSL) {
             return initSSLApiHandler();
         }
-        logger.info("Initialized HTTP client for {}", moduleName);
+        CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Initialized HTTP client for "+ moduleName);
         return new HttpClient();
     }
 
@@ -117,9 +118,8 @@ public class ApiHandler implements AutoCloseable {
 
         // Ensure the properties are set
         if (trustStorePath == null || trustStorePassword == null) {
-            logger.info("Initialized CA-signed HTTPS client for {}", moduleName);
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized HTTP client for "+ moduleName );
             return new HttpClient();
-//            throw new IllegalStateException("Trust store properties are not set.");
         }
 
         // Configure SslContextFactory with the retrieved properties
@@ -128,7 +128,7 @@ public class ApiHandler implements AutoCloseable {
         sslContextFactory.setTrustStorePassword(trustStorePassword);
         sslContextFactory.setTrustAll(true);
 
-        logger.info("Initialized self-signed HTTPS client for {}", moduleName);
+        CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized self-signed HTTPS client for "+ moduleName );
         return new HttpClient(sslContextFactory);
     }
 
@@ -137,11 +137,11 @@ public class ApiHandler implements AutoCloseable {
     @Override
     public void close() throws Exception {
         try {
-            logger.debug("Disconnecting from {} at {} ...", moduleName, getUrl());
+            CSLNetworkLogger.debug(logger, moduleName, LoggerInterfaces.API.toString(), "Disconnecting from "+moduleName+" at "+getUrl()+" ...");
             this.httpClient.stop();
-            logger.info("Disconnected successfully from {} at {}", moduleName, getUrl());
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Disconnected successfully from "+moduleName+" at "+getUrl()+".");
         } catch (Exception e) {
-            logger.error("Could not stop the {} HTTP client at {}", moduleName, getUrl(), e);
+            CSLNetworkLogger.error(logger, moduleName, LoggerInterfaces.API.toString(), "Could not stop the "+moduleName+" HTTP client at "+getUrl()+".");
         }
     }
 
@@ -339,7 +339,6 @@ public class ApiHandler implements AutoCloseable {
             ContentResponse response = createAndSendRequest(method, endpoint, params, body);
             if (!connected) {
                 CSLNetworkLogger.info(logger, moduleName, "API", "Connection recovered with "+moduleName+" at "+ getUrl());
-//                logger.info("Connection recovered with {} at {}", moduleName, getUrl());
                 connected = true;
             }
             res = parseResponse(response, moduleName);
@@ -351,7 +350,6 @@ public class ApiHandler implements AutoCloseable {
             if (e.getCause() instanceof ConnectException) {
                 if (connected) {
                     CSLNetworkLogger.warn(logger, moduleName, "API", "Connection lost with "+moduleName+" at "+ getUrl());
-//                    logger.error("Connection lost with {} at {}", moduleName, getUrl());
                     connected = false;
                 }
                 res = JsonApiResponse.error("Connection lost with " + moduleName);

@@ -1,6 +1,7 @@
 package com.csl.web;
 
 import com.csl.core.Config;
+import com.csl.logger.CSLNetworkLogger;
 import com.csl.udp.CSLFlowManager;
 import com.csl.util.NetUtil;
 import com.ucsl.interfaces.ICSLFlowListener;
@@ -99,7 +100,7 @@ public class CSLUDPServer {
         int port = getCurrentPortForUDP();
         setCurrentPortForUDP(port);
 
-        logger.info("UDP server initialized at {}:{}", ip, port);
+        CSLNetworkLogger.info(logger, "TAP", "UDP","UDP server initialized at "+ip+":"+ port);
     }
 
     /**
@@ -131,13 +132,13 @@ public class CSLUDPServer {
     public void start() {
 
         if (!initialized) {
-            logger.error("CSL UDP server not initialized, cannot start");
+            CSLNetworkLogger.info(logger, "TAP", "UDP","CSL UDP server not initialized at "+ip+":"+ port);
             System.exit(0);
         }
 
         getFlowManager().startListener();
 
-        logger.info("UDP server listening at {}:{}", ip, port);
+        CSLNetworkLogger.info(logger, "TAP", "UDP","UDP server listening at "+ip+":"+ port);
     }
 
     /**
@@ -148,7 +149,7 @@ public class CSLUDPServer {
         if (dsocket != null) dsocket.close();
         getFlowManager().stopListener();
 
-        logger.info("UDP server stopped listening at {}:{}", ip, port);
+        CSLNetworkLogger.info(logger, "TAP", "UDP","UDP server stopped listening at "+ip+":"+ port);
     }
 
     /**

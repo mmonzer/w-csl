@@ -5,11 +5,10 @@ import com.csl.intercom.cslscan.models.ExternalConnectionInfo;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.util.ThreadUtils;
 import main.services.JsonApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -19,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class ExternalConnectionInfoSynchronizationService {
-    private Logger logger = LoggerFactory.getLogger(ExternalConnectionInfoSynchronizationService.class);
+    private CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(ExternalConnectionInfoSynchronizationService.class);
     private DbapiHandlerForCSLScan dbapiHandler;
     private ScanApiHandler scanApiHandler;
     private final long synchronizationIntervalSeconds;

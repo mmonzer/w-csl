@@ -7,10 +7,7 @@ import com.csl.core.NoLogging;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.logger.CSLNetworkLogger;
-import com.csl.logger.LoggerConstants;
-import com.csl.logger.LoggerCustomEndpoints;
-import com.csl.logger.LoggerInterfaces;
+import com.csl.logger.*;
 import com.csl.util.CorrelationUtils;
 import com.csl.util.ThreadUtils;
 import com.csl.web.CSLHttpServerJetty;
@@ -23,7 +20,6 @@ import com.ucsl.json.JsonUtil;
 import main.services.*;
 import main.xcom.WebsocketClientEndpoint;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.net.InetAddress;
@@ -41,7 +37,7 @@ import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
 
 public class CSLIDSMainClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(CSLIDSMainClient.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(CSLIDSMainClient.class);
 
     // Server configuration variables
     private static String serverIp = "127.0.0.1";
@@ -170,7 +166,7 @@ public class CSLIDSMainClient {
                     uri = "/" + apiName + "/" + jsonCommand.get("cmd").asString();
                     MDC.put(ENDPOINT, uri);
 
-                    CSLNetworkLogger.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
+                    CSLNetworkLogger.infoInboundRequest((Logger) logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);
@@ -189,7 +185,7 @@ public class CSLIDSMainClient {
 
                 logger.trace("Sending result: {}", resultMessageJson);
                 clientEndPoint.sendMessage("res:" + resultMessageJson);
-                CSLNetworkLogger.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
+                CSLNetworkLogger.infoOutboundResponse((Logger) logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);

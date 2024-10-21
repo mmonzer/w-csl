@@ -2,11 +2,10 @@ package com.csl.intercom.jsoncmd;
 
 import com.csl.intercom.broker.CSLInterModuleCommunicationManager;
 import com.csl.intercom.broker.MosquittoConfig;
+import com.csl.logger.CSLApplicativeLogger;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import main.services.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ import java.util.List;
  */
 public class JServiceLoader {
 
-    private static final Logger logger = LoggerFactory.getLogger(JServiceLoader.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(JServiceLoader.class);
 
     public static CSLInterModuleCommunicationManager cslInterModuleCommunicationManager = null;
     

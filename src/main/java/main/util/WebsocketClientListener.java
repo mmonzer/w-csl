@@ -14,6 +14,10 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
+import com.csl.logger.CSLNetworkLogger;
+import com.csl.logger.LoggerConstants;
+import com.csl.logger.LoggerCustomEndpoints;
+import com.csl.logger.LoggerInterfaces;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +81,6 @@ public class WebsocketClientListener {
 			this.uriName=name;
 			container.connectToServer(this, endpointURI);
 		} catch (Exception e) {
-			System.err.println("Cannot connect to "+endpointURI);
 			logger.error("Cannot connect to "+endpointURI);
 		}
 	}
@@ -89,7 +92,7 @@ public class WebsocketClientListener {
 	 */
 	@OnOpen
 	public void onOpen(Session userSession) {
-		logger.info("Opening websocket listener "+userSession.getRequestURI());
+		CSLNetworkLogger.info(logger, LoggerCustomEndpoints.CONNECT_WS_CSL, LoggerInterfaces.CSL_WS.toString(), "Opening websocket listener "+userSession.getRequestURI());
 		this.userSession = userSession;
 	}
 
@@ -101,7 +104,7 @@ public class WebsocketClientListener {
 	 */
 	@OnClose
 	public void onClose(Session userSession, CloseReason reason) {
-		logger.info("closing websocket listener ");
+		CSLNetworkLogger.info(logger, LoggerCustomEndpoints.CLOSE_WS_CSL, LoggerInterfaces.CSL_WS.toString(), "Closing websocket listener "+userSession.getRequestURI());
 		this.userSession = null;
 
 		remove(uriName);

@@ -17,6 +17,7 @@ import com.csl.intercom.services.*;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLApplicativeLogger;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.util.FileStorageService;
 import com.csl.util.FileUtils;
 import com.csl.util.ThreadUtils;
@@ -736,7 +737,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid,connectionId);
                     Boolean successResponse = (Boolean) response.toJson().get("success").getValue();
                     if(!successResponse){
-                        logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to test HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
+                        logger.error("Failed to test HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
                         // force synchronize and re-test
                         JsonApiResponse SynchronizeResponse = dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
                         response = scanApiHandler.testConnection(deviceUuid, connectionUuid,connectionId);

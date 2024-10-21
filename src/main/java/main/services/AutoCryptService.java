@@ -4,6 +4,7 @@ import com.csl.autocrypt.AutoCrypt;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.status.IStatusProvider;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
@@ -11,8 +12,6 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import main.services.endpoints.AutoCryptEndpoints;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,7 +28,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
     @Getter
     private final AutoCrypt autocrypt;
     private boolean isRemote = false;
-    private static final Logger logger = LoggerFactory.getLogger(AutoCryptService.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(AutoCryptService.class);
     private final int syncFrequency;
 
     /**

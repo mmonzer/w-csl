@@ -7,8 +7,10 @@ public final class LoggerCustomEndpoints {
     public static final String SYNC_DISCOVERED_DEVICES= "synchronize discovered devices";
     public static final String RECONNECT_MQTT= "reconnect mqtt";
     public static final String SCAN_LIST_SANITIZER = "scan list sanitizer";
-    public static final String RECONNECT_WS_CSL = "reconnect ws csl";
-    public static final String KEEP_ALIVE_WS_CSL= "keep alive ws csl";
+    public static final String RECONNECT_WS_CSL = "ws-csl/reconnect";
+    public static final String KEEP_ALIVE_WS_CSL= "ws-csl/keep-alive";
+    public static final String CONNECT_WS_CSL= "ws-csl/connect";
+    public static final String CLOSE_WS_CSL= "ws-csl/close";
     public static final String HANDLE_IMPORT_EXPORT_TASKS= "handle import/export BSON task";
     public static final String START_IMPORT_BSON_TASK= "start import BSON task";
     public static final String TICS_MONITOR= "tics monitor";

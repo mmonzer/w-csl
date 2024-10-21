@@ -46,6 +46,21 @@ public class CSLNetworkLogger {
     }
 
     /**
+     * Logs for error
+     *
+     * @param logger   logger for logging the request
+     * @param endpoint endpoint of the request
+     * @param protocol protocol of the request
+     */
+    public static void error(Logger logger, String endpoint, String protocol, String message) {
+        MDC.put(LoggerConstants.ENDPOINT, endpoint);
+        MDC.put(LoggerConstants.PROTOCOL, protocol);
+        logger.error(message);
+        MDC.remove(LoggerConstants.ENDPOINT);
+        MDC.remove(LoggerConstants.PROTOCOL);
+    }
+
+    /**
      * Logs for outbound requests in the APIHandler
      *
      * @param logger   logger for logging the request

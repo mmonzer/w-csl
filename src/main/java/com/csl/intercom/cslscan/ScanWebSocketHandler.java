@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
@@ -16,7 +17,6 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.messaging.Message;
@@ -46,7 +46,7 @@ import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
  * Handle the WebSocket connections with CSL-Scan.
  */
 public class ScanWebSocketHandler {
-    static private final Logger logger = LoggerFactory.getLogger(ScanWebSocketHandler.class);
+    static private final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(ScanWebSocketHandler.class);
     private final ImportExportBsonService importExportBsonService;
     private final DiscoveryServices discoveryService;
     private final String websocketNotificationsEndpoint = "/discovery/ready";
@@ -325,7 +325,7 @@ public class ScanWebSocketHandler {
 
                 //region Log the notification
                 if (payload != null) {
-                    logger.trace("[STOMP] " + payload.toString());
+                    logger.trace("[STOMP] " + payload);
                 } else {
                     logger.trace("[STOMP] null");
                 }
@@ -375,7 +375,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders headers) {
                 session.subscribe(websocketNotificationsEndpoint, this);
-                CSLNetworkLogger.info(logger, "scanWebsocket/discovery", "WS", "Connected to notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketNotificationsEndpoint);
+                CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/discovery", "WS", "Connected to notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketNotificationsEndpoint);
             }
 
             @Override
@@ -401,7 +401,7 @@ public class ScanWebSocketHandler {
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
-                    logger.trace("[STOMP] " + payload.toString());
+                    logger.trace("[STOMP] " + payload);
                 } else {
                     logger.trace("[STOMP] null");
                     return;
@@ -419,7 +419,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 session.subscribe(websocketImportNotificationsEndpoint, this);
-                CSLNetworkLogger.info(logger, "scanWebsocket/import", "WS", "Connected to import notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketImportNotificationsEndpoint);
+                CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/import", "WS", "Connected to import notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketImportNotificationsEndpoint);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
     }
@@ -433,7 +433,7 @@ public class ScanWebSocketHandler {
                 Json payload = (Json) payloadRaw;
 
                 if (payload != null) {
-                    logger.trace("[STOMP] " + payload.toString());
+                    logger.trace("[STOMP] " + payload);
                 } else {
                     logger.trace("[STOMP] null");
                     return;
@@ -451,7 +451,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 session.subscribe(websocketExportNotificationsEndpoint, this);
-                CSLNetworkLogger.info(logger, "scanWebsocket/export", "WS", "Connected to export notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketExportNotificationsEndpoint);
+                CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/export", "WS", "Connected to export notifications websocket at "+ scanManagerDiscoveryUrl+"/"+websocketExportNotificationsEndpoint);
             }
         }).get(1000, TimeUnit.MILLISECONDS);
     }
@@ -472,7 +472,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onFrame(StompHeaders headers, Object payload) {
                 if (payload != null) {
-                    logger.debug("[STOMP] " + payload.toString());
+                    logger.debug("[STOMP] " + payload);
                     // handle response
                 } else {
                     logger.debug("[STOMP] null");
@@ -482,7 +482,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 purgeScanRequestsQueue();
-                CSLNetworkLogger.info(logger, "scanWebsocket/", "WS", "Connected to requests websocket at "+ scanManagerDiscoveryUrl);
+                CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/", "WS", "Connected to requests websocket at "+ scanManagerDiscoveryUrl);
             }
         }).get(1, TimeUnit.SECONDS);
     }
@@ -494,7 +494,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onFrame(StompHeaders headers, Object payload) {
                 if (payload instanceof Json) {
-                    logger.debug("[STOMP] " + payload.toString());
+                    logger.debug("[STOMP] " + payload);
                     ExternalScan scan = ExternalScan.fromScannerJson((Json) payload);
 //                    externalScansService.createOrUpdateExternalScan(scan);
                     externalScansService.handleScanNotification(scan);
@@ -506,7 +506,7 @@ public class ScanWebSocketHandler {
             @Override
             public void onConnect(StompSession session, StompHeaders connectedHeaders) {
                 session.subscribe(websocketExternalScanEndpoint, this);
-                CSLNetworkLogger.info(logger, "scanWebsocket/external_discovery", "WS", "Connected to external scans notifications websocket at "+ scanManagerDiscoveryUrl+"/"+ websocketExternalScanEndpoint);
+                CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/external_discovery", "WS", "Connected to external scans notifications websocket at "+ scanManagerDiscoveryUrl+"/"+ websocketExternalScanEndpoint);
             }
         }).get(1, TimeUnit.SECONDS);
     }
@@ -568,7 +568,7 @@ public class ScanWebSocketHandler {
         @Override
         protected Object convertToInternal(Object payload, MessageHeaders headers, Object conversionHint) {
             if (payload instanceof Json) {
-                return ((Json) payload).toString().getBytes();
+                return payload.toString().getBytes();
             } else if (payload instanceof String) {
                 return ((String) payload).getBytes();
             } else if (payload instanceof byte[]) {

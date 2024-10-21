@@ -338,7 +338,8 @@ public class ApiHandler implements AutoCloseable {
         try {
             ContentResponse response = createAndSendRequest(method, endpoint, params, body);
             if (!connected) {
-                logger.info("Connection recovered with {} at {}", moduleName, getUrl());
+                CSLNetworkLogger.info(logger, moduleName, "API", "Connection recovered with "+moduleName+" at "+ getUrl());
+//                logger.info("Connection recovered with {} at {}", moduleName, getUrl());
                 connected = true;
             }
             res = parseResponse(response, moduleName);
@@ -349,7 +350,8 @@ public class ApiHandler implements AutoCloseable {
             res = JsonApiResponse.error("exception when sending request to " + moduleName + " : " + e.getMessage());
             if (e.getCause() instanceof ConnectException) {
                 if (connected) {
-                    logger.error("Connection lost with {} at {}", moduleName, getUrl());
+                    CSLNetworkLogger.warn(logger, moduleName, "API", "Connection lost with "+moduleName+" at "+ getUrl());
+//                    logger.error("Connection lost with {} at {}", moduleName, getUrl());
                     connected = false;
                 }
                 res = JsonApiResponse.error("Connection lost with " + moduleName);

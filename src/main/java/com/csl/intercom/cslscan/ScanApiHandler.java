@@ -560,7 +560,7 @@ public class ScanApiHandler extends ApiHandler {
         if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
             EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
             if (createdEntityHttpConnection != null) {
-                logger.info("Created entity http connection {}", createdEntityHttpConnection.getUuid());
+                logger.debug("Created entity http connection {}", createdEntityHttpConnection.getUuid());
                 return JsonApiResponse.result(createdEntityHttpConnection.serializeForDbapi(), response.getExtra());
             } else {
                 logger.error("Could not create the entity http connection (could not parse response from CSL-Scan)");

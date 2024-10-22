@@ -131,20 +131,17 @@ public class JsonCmdHelp {
 	}
 
 	public JsonCmdHelp hide() {
-		// TODO Auto-generated method stub
 		setHidden(true);
 		return this;
 	}
 	
 	public JsonCmdHelp setStatus(String s) {
-		// TODO Auto-generated method stub
 		this.status=s;
 		return this;
 	}
 	
 	
 	public JsonCmdHelp setHelpProvider(ICmdHelpProvider helpProvider) {
-		// TODO Auto-generated method stub
 		this.helpProvider=helpProvider;
 		return this;
 	}

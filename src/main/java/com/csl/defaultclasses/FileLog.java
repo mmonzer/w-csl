@@ -93,7 +93,7 @@ public class FileLog implements Runnable, IFileLog {
 
             writerLogFile = Files.newBufferedWriter(pathLogFile);
         } catch (IOException ex) {
-            CSLContext.instance.printError("This session cannot be logged to disk: " + ex.getMessage());
+            CSLContext.getInstance().printError("This session cannot be logged to disk: " + ex.getMessage());
         }
     }
 

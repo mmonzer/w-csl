@@ -11,7 +11,7 @@ import static com.csl.logger.LoggerConstants.*;
 /**
  * Utils for correlation of threads
  */
-public class ThreadUtils {
+public final class ThreadUtils {
 
     /**
      * Executor for thread running at fixed rate that transfers the X_Correlation_ID from parent thread to child thread.
@@ -199,7 +199,8 @@ public class ThreadUtils {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (ExecutionException | TimeoutException e) {
-                e.printStackTrace(System.err);
+                e.printStackTrace();
+                Thread.currentThread().interrupt();
             } finally {
                 future.cancel(true);
             }

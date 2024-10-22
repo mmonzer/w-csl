@@ -8,7 +8,7 @@ import main.services.AutoCryptService;
 public class TestConfig {
 
     protected AutoCryptService service;
-    protected static final Json configObj = CSLContext.instance.getConfig();
+    protected static final Json configObj = CSLContext.getInstance().getConfig();
     public static final String module = "autocrypt";
 
     static {

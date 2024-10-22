@@ -110,7 +110,6 @@ public class CSLDemo21OpModelIDSTestOnePacket {
 	
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		
 		CSLDemo21OpModelIDSTestOnePacket runner= new CSLDemo21OpModelIDSTestOnePacket();
 		runner.test();

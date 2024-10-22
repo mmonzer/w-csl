@@ -183,7 +183,6 @@ public class CSLDemo22OpModelIDSTestAlerts {
 	
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		CSLDemo22OpModelIDSTestAlerts runner= new CSLDemo22OpModelIDSTestAlerts();
 		runner.test();
 		

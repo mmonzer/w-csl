@@ -39,7 +39,7 @@ public class MonitorService extends Service {
 
 	private void defineServiceEndpoints() {
 		// TODO : duplicated with TapService
-		idsconf = CSLContext.instance.getCslConfDir();
+		idsconf = CSLContext.getInstance().getCslConfDir();
 		Json conf;
 		Tap tap;
 		try {
@@ -70,7 +70,7 @@ public class MonitorService extends Service {
 
 			@Override
 			public Json exec(Json params) {
-				ModuleIDS ids = (ModuleIDS) CSLContext.instance.getModuleContext("module_ids").getModule();
+				ModuleIDS ids = (ModuleIDS) CSLContext.getInstance().getModuleContext("module_ids").getModule();
 				ActivityMonitor activityMonitor = ids.getActivityMonitor();
 				Json j=Json.object();
 				j.set("all", 103);

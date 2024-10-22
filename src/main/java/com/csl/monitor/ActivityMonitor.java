@@ -85,7 +85,7 @@ public class ActivityMonitor implements IStatusProvider {
 
 			Json conf;
 			ArrayList<Json> configuredTaps;
-			String idsconf = CSLContext.instance.getCslConfDir();
+			String idsconf = CSLContext.getInstance().getCslConfDir();
 			try {
 				conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
 				if (conf.isArray()) {

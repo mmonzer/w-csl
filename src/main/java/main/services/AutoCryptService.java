@@ -67,7 +67,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
             autocrypt.syncAll();
         }
 
-        CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
+        CSLContext.getInstance().getStatusNotifier().registerStatusProvider(name, this);
 
         createEndpoints();
 

@@ -80,7 +80,7 @@ public class TestAutoCryptService {
 
     @Test
     public void testBDConnection() throws Exception {
-        Json configObj = CSLContext.instance.getConfig();
+        Json configObj = CSLContext.getInstance().getConfig();
 
         Json globalConfig = configObj.get("global");
         globalConfig.delAt("ip_server_remote");

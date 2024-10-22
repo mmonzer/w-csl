@@ -40,7 +40,7 @@ public class AlertsServiceTest {
         String result = alertsService.addCmd(name, new IJsonCmd(){
             @Override
             public Json exec(Json params) {
-                return CSLContext.instance.getCSLAlertManager().getListOfCurrentAlertsAsJson();
+                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
             }
 
         }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
@@ -55,7 +55,7 @@ public class AlertsServiceTest {
         String resultCmd1 = alertsService.addCmd(name, new IJsonCmd(){
             @Override
             public Json exec(Json params) {
-                return CSLContext.instance.getCSLAlertManager().getListOfCurrentAlertsAsJson();
+                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
             }
 
         }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
@@ -63,7 +63,7 @@ public class AlertsServiceTest {
         String resultCmd2 = alertsService.addCmd(name, new IJsonCmd(){
             @Override
             public Json exec(Json params) {
-                return CSLContext.instance.getCSLAlertManager().getListOfCurrentAlertsAsJson();
+                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
             }
 
         }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));

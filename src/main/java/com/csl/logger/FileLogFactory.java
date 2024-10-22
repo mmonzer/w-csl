@@ -10,13 +10,11 @@ public class FileLogFactory implements IFileLogFactory {
 
 	@Override
 	public IFileLog createFileLog(String traceDir, String string, LongSupplier getSystemCurrentTimeMillis) {
-		// TODO Auto-generated method stub
 		
 		return new FileLog(traceDir, string, getSystemCurrentTimeMillis);
 	}
 	@Override
 	public IFileLog createFileLog(String dir, String filename, long max_size, LongSupplier getSystemCurrentTimeMillis) {
-		// TODO Auto-generated method stub
 		return new FileLog(dir, filename,max_size, getSystemCurrentTimeMillis);
 	}
 	

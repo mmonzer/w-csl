@@ -135,7 +135,6 @@ public class CSLdemo04ConfigFileManager {
 	}
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 
 		testSaveConfigFile();
 		testLoadConfigFile();

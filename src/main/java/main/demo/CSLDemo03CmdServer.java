@@ -76,7 +76,6 @@ public class CSLDemo03CmdServer {
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		testCmd();
 	}
 

@@ -4,7 +4,6 @@ import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.defaultclasses.FileLog;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
-import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.interfaces.IAlertLevel;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -62,25 +61,14 @@ public class CSLAlertManager {
     private String datadir;
     private String filename;
     private long max_size;
-    private FileLog fileLog = null;
     ;
     private InetAddress iNetAddress = null;
-    private boolean alert_to_web = true;
-    private String alert_json_tag = "alert";
-    private boolean alert_to_udp = true;
-    private boolean showAlert;
-    /**
-     * If the alert must be stocked into the DB
-     */
-    private boolean alertToDb = true;
-    private String filename_current_alerts = "";
-    private Json jConfig = null;
+
     private Config.AlertViewer config = null;
     List<AlertDescriptor> listOfCurrentAlerts = new ArrayList<>();
     // if >0 , after this duration, the alert is cleared
     private int durationOfAlert = 5000;
     private boolean doNotResendSameAlert = false;
-    private String subdir_backup_alerts = "alerts";
     private DbapiHandlerForAlerts dbapiHandler;
 
     public CSLAlertManager(IDSMainProcessor x, Config.AlertViewer config) {
@@ -96,10 +84,6 @@ public class CSLAlertManager {
         return this;
     }
 
-    public Json getConfig() {
-        return jConfig;
-    }
-
     private void init(Config.AlertViewer config) {
         this.config = config;
 
@@ -113,17 +97,7 @@ public class CSLAlertManager {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-        this.alert_to_web = config.getAlertToWeb();
-        this.alert_json_tag = config.getAlertJsonTag();
-        this.alert_to_udp = config.getAlertToUdp();
-        this.alertToDb = config.getAlertToDb();
-        this.showAlert = config.getShowAlerts();
-
         this.loggerName = config.getName();
-
-        this.filename_current_alerts = config.getFilenameCurrentAlerts(); //j.get("name")
-        this.subdir_backup_alerts = config.getSubdirBackupAlerts();
 
         this.logToFile = config.getLogToFile();
         if (logToFile) {
@@ -136,10 +110,10 @@ public class CSLAlertManager {
 
     private void initFileLog() {
         if (config != null) {
-            this.datadir = CSLContext.instance.buildFullPathInUserDir(config.getLogDir());
+            this.datadir = CSLContext.getInstance().buildFullPathInUserDir(config.getLogDir());
             this.filename = config.getPrefixFilename();
             this.max_size = config.getMaxSizeOfLogFiles();
-            this.fileLog = new FileLog(datadir, filename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+            new FileLog(datadir, filename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
         }
     }
 
@@ -147,24 +121,19 @@ public class CSLAlertManager {
         return listOfCurrentAlerts;
     }
 
-    public void sendAlert(AlertDescriptor alertDescriptor) {
-        sendAlert(alertDescriptor, true, false);
-    }
-
     /**
      * Checks if the alert is ok and calls the send function to forward it
      *
      * @param alertDescriptor alert in {@link AlertDescriptor} format
-     * @param toViewer        if the alert will be sent to the viewer
-     * @param toLog           if the alert will be logged
      */
-    public void sendAlert(AlertDescriptor alertDescriptor, boolean toViewer, boolean toLog) {
-        if (findAlert(alertDescriptor) != null) return;
-
-        if (showAlert) System.out.println("ALERT=" + alertDescriptor);
+    public void sendAlert(AlertDescriptor alertDescriptor) {
+        if (findAlert(alertDescriptor) != null) {
+            return;
+        }
 
         listOfCurrentAlerts.add(alertDescriptor);
-        send(alertDescriptor, toViewer, toLog);
+
+        this.dbapiHandler.insertAlert(alertDescriptor);
     }
 
     /**
@@ -178,7 +147,7 @@ public class CSLAlertManager {
 
         if (NO_ALERT_FILTERING) return null;
 
-        long t = CSLContext.instance.getSystemCurrentTimeMillis();
+        long t = CSLContext.getInstance().getSystemCurrentTimeMillis();
 
         for (AlertDescriptor a : listOfCurrentAlerts) {
             if (a.alertEqualTo(alert)) {
@@ -188,44 +157,6 @@ public class CSLAlertManager {
             }
         }
         return null;
-    }
-
-    /**
-     * Send the alert to a UDP viewer, to logs and to Web viewer if respective flags are true
-     *
-     * @param alert    alert ot forward
-     * @param toViewer if alert must be forwarded to viewer
-     * @param toFile   if alert must be logged
-     */
-    private void send(AlertDescriptor alert, boolean toViewer, boolean toFile) {
-
-
-        // Send to DB
-        if (this.alertToDb) {
-            this.dbapiHandler.insertAlert(alert);
-        }
-
-        if ((!toFile) && (!toViewer)) return;
-
-        // Save to file
-        if (toFile | logToFile) {
-
-            if (fileLog == null) initFileLog();
-            if (fileLog == null) {
-                logger.error("Cannot log CSLAlert to file ");
-                return;
-            }
-            if (alert.hasProps())
-                fileLog.send("[" + alert.getLevelAsString() + "] " + alert.getMsg() + "  " + alert.getPropsList());
-            else fileLog.send("[" + alert.getLevelAsString() + "] " + alert.getMsg());
-        }
-
-        // Send to viewer
-        if (toViewer) {
-            if (this.alert_to_web) {
-                this.sendAlertToViewerWeb(alert);
-            }
-        }
     }
 
     public void registerAlertForwarder(IAlertForwarder af) {
@@ -268,27 +199,6 @@ public class CSLAlertManager {
                 e.printStackTrace();
             }
             // endregion -- forward alerts to the Alert Listener
-        }
-    }
-
-    /**
-     * Send the alert either to web socket
-     *
-     * @param alert alert in format {@link AlertDescriptor}
-     */
-    private void sendAlertToViewerWeb(AlertDescriptor alert) {
-
-
-        Json jAlert = Json.object();
-        jAlert.set("type", "newAlert");
-        Json jAlertInfo = alertToJsonForHmi(alert); //Json.object();
-        jAlert.set("alertInfo", jAlertInfo);
-
-
-        CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_ALERT, jAlert);
-
-        if (FDEBUG) {
-            System.out.println("SENDING TO WEB SOCKET:" + jAlert);
         }
     }
 

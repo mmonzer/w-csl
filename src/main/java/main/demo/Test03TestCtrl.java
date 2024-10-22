@@ -46,12 +46,12 @@ public class Test03TestCtrl {
 
 		public static Json encapsulateObject(String targetID, int n,Json j,boolean acquit) {
 			Json obj =Json.object();
-			obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUDP());
+			obj.at("fromPort",CSLContext.getInstance().getCslUDPServer().getCurrentPortForUDP());
 			obj.at("idOfTarget", targetID);
 			obj.at("flowNumber", ""+n);
 			//obj.at("nameOfVariable", varName);
 
-			if (acquit) obj.at("fromPort",CSLContext.instance.getCslUDPServer().getCurrentPortForUDP());
+			if (acquit) obj.at("fromPort",CSLContext.getInstance().getCslUDPServer().getCurrentPortForUDP());
 
 			obj.at("data",j);
 

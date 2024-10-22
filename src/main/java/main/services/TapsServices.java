@@ -932,7 +932,7 @@ public class TapsServices extends Service {
     @Override
     public boolean init() {
         Config.Tap config = Config.instance.TapService;
-        idsconf = CSLContext.instance.getCslConfDir();
+        idsconf = CSLContext.getInstance().getCslConfDir();
         Json conf;
         Tap tap;
         try {

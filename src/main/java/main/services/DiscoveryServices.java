@@ -28,8 +28,6 @@ import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.endpoints.DiscoveryEndpoints;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.FileNotFoundException;
@@ -138,7 +136,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, importExportBsonService, externalScansService);
             externalDiscoveredDevicesSynchronizationService.init(externalScansService);
 
-            mqttBroker = CSLContext.instance.getMqttBroker();
+            mqttBroker = CSLContext.getInstance().getMqttBroker();
             mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             });
@@ -1819,7 +1817,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         });
 
 
-        CSLContext.instance.getStatusNotifier().registerStatusProvider(name, this);
+        CSLContext.getInstance().getStatusNotifier().registerStatusProvider(name, this);
 
         logger.info("Discovery service operational");
         return true;

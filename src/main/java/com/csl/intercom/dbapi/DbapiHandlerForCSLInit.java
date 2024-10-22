@@ -22,7 +22,7 @@ public class DbapiHandlerForCSLInit extends DbapiHandler {
     private static final Logger logger = LoggerFactory.getLogger(DbapiHandlerForCSLInit.class);
 
     public DbapiHandlerForCSLInit() {
-        this("init", CSLContext.instance.getConfig());
+        this("init", CSLContext.getInstance().getConfig());
     }
 
     public DbapiHandlerForCSLInit(String moduleName, Config config) {

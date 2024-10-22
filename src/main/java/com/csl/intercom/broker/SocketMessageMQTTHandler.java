@@ -126,12 +126,10 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 
 	@Override
 	public void connectionLost(Throwable arg0) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
-		// TODO Auto-generated method stub
 	}
 
 	// listen the response to the request
@@ -216,7 +214,6 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 	}
 
 	public void addListener(ISocketMsgListener is) {
-		// TODO Auto-generated method stub
 		listeners.add(is);
 	}
 

@@ -1,6 +1,5 @@
 package main;
 
-import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.core.NoLogging;
@@ -233,12 +232,12 @@ public class CSLIDSMainClient {
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
         Config config = Config.instance;
-        CSLContext.instance.init();
+        CSLContext.getInstance().init();
         configureClientSettings(config);
 
         // Provide the callback method for the
         CSLWebSocket.registerMessageBroadcaster(messageBroadcaster);
-        CSLContext.instance.getCSLAlertManager().registerAlertForwarder(alertForwarder);
+        CSLContext.getInstance().getCSLAlertManager().registerAlertForwarder(alertForwarder);
     }
 
     public static void main(String[] args) {
@@ -263,9 +262,9 @@ public class CSLIDSMainClient {
      */
     private static void startServers() {
         // Start the servers
-        CSLContext.instance.postInit(false);
+        CSLContext.getInstance().postInit(false);
         // Start the UDP Server (To receive IDS Alerts) and the task executor
-        CSLContext.instance.startServers();
+        CSLContext.getInstance().startServers();
     }
 
     /**
@@ -310,12 +309,12 @@ public class CSLIDSMainClient {
      */
     private static void registerServices() {
         boolean forwardToCSLClient = false;
-        CSLContext.instance.registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new DiscoveryServices(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new StatusService(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new AutoCryptService(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new DiscoveryServices(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new StatusService(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new AutoCryptService(), forwardToCSLClient);
     }
 
     /**

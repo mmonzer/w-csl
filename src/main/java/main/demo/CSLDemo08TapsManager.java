@@ -66,7 +66,6 @@ public class CSLDemo08TapsManager {
 
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		Json params=Json.object();
 		execCmd("add", "tap28", Json.object());
 		System.out.println(execCmd("list", "tap28", Json.object()));

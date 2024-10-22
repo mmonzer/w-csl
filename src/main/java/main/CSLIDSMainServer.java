@@ -18,8 +18,6 @@ public class CSLIDSMainServer {
 
     /**
      * Initializes the CSLContext with the provided arguments and sets debug mode.
-     *
-     * @param args Command-line arguments passed to the application.
      */
     private static void initializeContext() {
         CorrelationUtils.setXCorrelationId();
@@ -28,7 +26,7 @@ public class CSLIDSMainServer {
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
-        CSLContext.instance.init();
+        CSLContext.getInstance().init();
     }
 
     /**
@@ -37,21 +35,21 @@ public class CSLIDSMainServer {
     private static void registerServices() {
         boolean forwardToCSLClient = true;
         // concentrator services
-        CSLContext.instance.registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new DiscoveryServices(forwardToCSLClient), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new StatusService(), forwardToCSLClient);
-        CSLContext.instance.registerHttpEndpoint(new AutoCryptService(forwardToCSLClient), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new AlertsService(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new MonitorService(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new TapsServices(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new DiscoveryServices(forwardToCSLClient), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new StatusService(), forwardToCSLClient);
+        CSLContext.getInstance().registerHttpEndpoint(new AutoCryptService(forwardToCSLClient), forwardToCSLClient);
     }
 
     /**
      * Initializes databases, HTTP server, UDP server, and other necessary components, and starts them.
      */
     private static void startServers() {
-        CSLContext.instance.postInit(true);
+        CSLContext.getInstance().postInit(true);
         // Start the HTTP server and the Mqtt broker if enabled (Mqtt broker is not enabled by default)
-        CSLContext.instance.startServers();
+        CSLContext.getInstance().startServers();
     }
 }
 

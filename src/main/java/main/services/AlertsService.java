@@ -27,7 +27,7 @@ public class AlertsService extends Service {
 				System.out.println("start exec <get_list_active_alerts>:"+params);
 
 				params.set("op", "get_list_active");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 			}
 		},
 				new JsonCmdHelp()
@@ -42,7 +42,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "get_number_active_by_level");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 			}
 		},
 				new JsonCmdHelp()
@@ -57,7 +57,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "get_list_acked");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 
 			}
 		},
@@ -73,7 +73,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "get_list_masked");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 			}
 		},
 				new JsonCmdHelp()
@@ -87,7 +87,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "get_list_added_to_model");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 			}
 		},
 				new JsonCmdHelp()
@@ -102,7 +102,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "get_list_inactive");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 
 			}
 		},
@@ -118,7 +118,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "get_list_all");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 
 			}
 		},
@@ -132,7 +132,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "set_acked");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 			}
 		},
 				new JsonCmdHelp()
@@ -148,7 +148,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "set_masked");
-				Json a=CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				Json a=CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 				return a;
 			}
 		},
@@ -167,7 +167,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 				params.set("op", "add_to_model");
-				return CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 			}
 		},
 				new JsonCmdHelp()
@@ -184,7 +184,7 @@ public class AlertsService extends Service {
 
 			@Override
 			public Json exec(Json params) {
-				return CSLContext.instance.getCSLAlertManager().getAlertStats();
+				return CSLContext.getInstance().getCSLAlertManager().getAlertStats();
 
 
 			}
@@ -205,7 +205,7 @@ public class AlertsService extends Service {
 				j.set("value",1);
 
 
-				CSLContext.instance.getCSLAlertManager().resetListOfCurrentAlerts();
+				CSLContext.getInstance().getCSLAlertManager().resetListOfCurrentAlerts();
 
 				return Json.object().set("info", "ok");
 			}
@@ -228,9 +228,9 @@ public class AlertsService extends Service {
 
 
 
-				AlertDescriptor a3= CSLContext.instance.getIDSMainProcessor().getAlertFactory().
+				AlertDescriptor a3= CSLContext.getInstance().getIDSMainProcessor().getAlertFactory().
 						createAlertDescriptor(3, "ALERT 3", System.currentTimeMillis());
-				CSLContext.instance.getCSLAlertManager().sendAlert(a3);
+				CSLContext.getInstance().getCSLAlertManager().sendAlert(a3);
 
 				Json list=Json.array();
 				return list.add(a3.toJson());
@@ -255,7 +255,7 @@ public class AlertsService extends Service {
 
 				params.set("op", "test1");
 
-				CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 
 				return  Json.object();
 			}
@@ -277,7 +277,7 @@ public class AlertsService extends Service {
 
 				params.set("op", "test2");
 
-				CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 
 				return  Json.object();
 			}
@@ -294,7 +294,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				Json j=CSLContext.instance.getCSLAlertManager().getListOfCurrentAlertsAsJson();
+				Json j=CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
 				return j;
 			}
 		},
@@ -309,7 +309,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				Json j=CSLContext.instance.getCSLAlertManager().execOpAlert(params);
+				Json j=CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 				return j;
 			}
 		},
@@ -334,7 +334,6 @@ public class AlertsService extends Service {
 
 	@Override
 	public boolean terminate() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 }

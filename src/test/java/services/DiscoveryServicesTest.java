@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class DiscoveryServicesTest {
-    Config jConfig = CSLContext.instance.getConfig();
+    Config jConfig = CSLContext.getInstance().getConfig();
 
     private DiscoveryServices discoveryServices;
 

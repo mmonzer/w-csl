@@ -10,12 +10,9 @@ import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.interfaces.IResult;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import com.wcsl.ids.IDSMainProcessor;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Map;
 
 public class ModuleIDS {
     @Getter
@@ -38,7 +35,7 @@ public class ModuleIDS {
     }
 
     static {
-        CSLContext.instance.registerModuleClass("ModuleIDS", ModuleIDS.class);
+        CSLContext.getInstance().registerModuleClass("ModuleIDS", ModuleIDS.class);
     }
 
     CSLContext context = null;
@@ -107,16 +104,16 @@ public class ModuleIDS {
 
 //		this.max_size=JsonUtil.getLongFromJson(j, "ids_conf/max_size_of_log_files", 10000000);
         this.max_size = config.getMaxSizeOfLogFiles();
-        packetsLog = new FileLog(datadir, packetsFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-        variablesLog = new FileLog(datadir, variablesFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-        networkLog = new FileLog(datadir, networkFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+        packetsLog = new FileLog(datadir, packetsFilename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
+        variablesLog = new FileLog(datadir, variablesFilename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
+        networkLog = new FileLog(datadir, networkFilename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
     }
 
     public void reOpenLogFiles(String datadir) {
 
-        packetsLog = new FileLog(datadir, packetsFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-        variablesLog = new FileLog(datadir, variablesFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
-        networkLog = new FileLog(datadir, networkFilename, max_size, CSLContext.instance::getSystemCurrentTimeMillis);
+        packetsLog = new FileLog(datadir, packetsFilename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
+        variablesLog = new FileLog(datadir, variablesFilename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
+        networkLog = new FileLog(datadir, networkFilename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
     }
 
     public IResult init(CSLContext context, ModuleContext mcontext) {
@@ -136,16 +133,16 @@ public class ModuleIDS {
 
         activityMonitor.startTicTask();
 
-        CSLContext.instance.getStatusNotifier().registerStatusProvider("taps", activityMonitor);
+        CSLContext.getInstance().getStatusNotifier().registerStatusProvider("taps", activityMonitor);
         {
 
             openLogFiles();
         }
-        idsMainProcessor = CSLContext.instance.getIDSMainProcessor();
+        idsMainProcessor = CSLContext.getInstance().getIDSMainProcessor();
 
 
-        this.sendToBrowser = CSLContext.instance.getIdsParams().isSendToBrowser();
-        this.sendToConsole = CSLContext.instance.getIdsParams().isSendToConsole();
+        this.sendToBrowser = CSLContext.getInstance().getIdsParams().isSendToBrowser();
+        this.sendToConsole = CSLContext.getInstance().getIdsParams().isSendToConsole();
 
 
         boolean on = config.getOn();
@@ -157,41 +154,41 @@ public class ModuleIDS {
                 return "IDS";
             }
 
-            public int newElementOnQueue(Json jj) {
+            public int newElementOnQueue(Json jsonAlert) {
                 if (!running) {
                     return ICSLFlowListener.REMOVE_FROM_QUEUE;
                 }
 
                 try {
-                    if (jj.has("type")) {
-                        String type = jj.get("type").asString();
+                    if (jsonAlert.has("type")) {
+                        String type = jsonAlert.get("type").asString();
                         if (type.compareTo("EVE") == 0) {
-                            EveMessageUtill.reformatTimeStamp(jj);
-                            if (loggingOn) packetsLog.RecordLogMessage(jj.toString());
-                            idsMainProcessor.processSuricataEvent(jj);
+                            EveMessageUtill.reformatTimeStamp(jsonAlert);
+                            if (loggingOn) packetsLog.RecordLogMessage(jsonAlert.toString());
+                            idsMainProcessor.processSuricataEvent(jsonAlert);
                         } else if (type.compareTo("TIC") == 0) {
-                            activityMonitor.processEvent(jj);
+                            activityMonitor.processEvent(jsonAlert);
                         } else {
                             throw new UnsupportedOperationException("Not implemented yet");
                         }
                     } else {
-                        outDisplay(jj);
+                        outDisplay(jsonAlert);
                     }
                 } catch (Exception e) {
-                    System.out.println("Exception while processing " + jj);
+                    System.out.println("Exception while processing " + jsonAlert);
                     System.out.println(e);
                 }
                 return ICSLFlowListener.REMOVE_FROM_QUEUE; // cancel next listeners
             }
         };
 
-        CSLContext.instance.getCslUDPServer().addListener(n_input, listener);
+        CSLContext.getInstance().getCslUDPServer().addListener(n_input, listener);
         return IResult.OK;
     }
 
 
     static {
-        CSLContext.instance.registerModuleClass("ModuleIDS", ModuleIDS.class);
+        CSLContext.getInstance().registerModuleClass("ModuleIDS", ModuleIDS.class);
     }
 }
 

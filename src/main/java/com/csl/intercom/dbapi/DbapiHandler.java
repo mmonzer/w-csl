@@ -13,11 +13,11 @@ public class DbapiHandler extends ApiHandler {
     private static final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
 
     public DbapiHandler() {
-        this(CSLContext.instance.getConfig());
+        this(CSLContext.getInstance().getConfig());
     }
 
     public DbapiHandler(String moduleName) {
-        this(moduleName, CSLContext.instance.getConfig());
+        this(moduleName, CSLContext.getInstance().getConfig());
     }
 
     public DbapiHandler(Config config) {

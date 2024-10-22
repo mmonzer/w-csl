@@ -53,6 +53,7 @@ import static java.lang.System.exit;
  */
 public class CSLHttpServerJetty {
 
+    public static final String PATH_SEPARATOR = "/";
     private Server jettyServer = null;
     private ServletContextHandler context = null;
 
@@ -64,8 +65,7 @@ public class CSLHttpServerJetty {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     // Global configuration constants
-    public static int REFRESH_SOCKET_PERIOD = 280;
-    static boolean ADD_GET_ROUTE = false;
+    public static final int REFRESH_SOCKET_PERIOD = 280;
 
     private final List<String> listOfRemoteApi = new ArrayList<>();
     private final List<String> listOfWebsocketPath = new ArrayList<>();
@@ -111,10 +111,14 @@ public class CSLHttpServerJetty {
         jettyServer.setErrorHandler(new JettyServerErrorHandler());
 
         setupContext();
-        if (isRemote) setupWebSocketPolicy();
-        if (isRemote) registerWebSockets();
+
+        if (isRemote) {
+            setupWebSocketPolicy();
+            registerWebSockets();
+            addCorsOptionsServlet();
+        }
+
         addApiHelpPageServlet();
-        if (isRemote) addCorsOptionsServlet();
         registerApiCommands();
 
         jettyServer.setHandler(context);
@@ -215,7 +219,7 @@ public class CSLHttpServerJetty {
                 String requestUri = req.getRequestURI();  // e.g., /japi/discovery/upload_entity_http_connection_file
 
                 // Split the URI to extract the cmd part
-                String[] urlParts = requestUri.split("/");
+                String[] urlParts = requestUri.split(PATH_SEPARATOR);
 
                 String cmdStr = null;
                 // Ensure there are enough parts to extract endpoint and cmd
@@ -265,7 +269,7 @@ public class CSLHttpServerJetty {
     protected Json handlerMultipartRequest(HttpServletRequest request) throws IOException, ServletException {
         // Enable multi-part configuration
         request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(System.getProperty("java.io.tmpdir"),
-                1024 * 1024 * 100, 1024 * 1024 * 100, 1024 * 1024 * 100));
+                (long) 1024 * 1024 * 100, (long) 1024 * 1024 * 100, 1024 * 1024 * 100));
 
         // Process the uploaded urlParts
         Json body = Json.object();
@@ -293,7 +297,7 @@ public class CSLHttpServerJetty {
      * @return ServletHolder that handles WebSocket requests at the given path.
      */
     public JettyWebSocketServlet addWebSocket(String path, Class<?> handler) {
-        if (!path.startsWith("/")) path = "/" + path;
+        if (!path.startsWith(PATH_SEPARATOR)) path = PATH_SEPARATOR + path;
 
         if (!listOfWebsocketPath.contains(path)) {
             listOfWebsocketPath.add(path);
@@ -348,7 +352,7 @@ public class CSLHttpServerJetty {
      * Configures the server context and sets up basic filters.
      */
     private void setupContext() {
-        context.setContextPath("/");
+        context.setContextPath(PATH_SEPARATOR);
         // Add a common header to all the requests on all the paths
         context.addFilter(JettyFilterServlet.class, "/*", EnumSet.of(DispatcherType.REQUEST));
     }
@@ -430,9 +434,7 @@ public class CSLHttpServerJetty {
         for (ApiCommands api : JServiceLoader.getApiCommandsList()) {
             String path = api.getName();
             logger.info("Registering API: <{}>", path);
-            if (ADD_GET_ROUTE)
-                context.addServlet(new ServletHolder(createGetServlet(api)), "/" + api.getName() + "/*");
-            context.addServlet(new ServletHolder(createPostServlet(api)), "/" + api.getPathFilter());
+            context.addServlet(new ServletHolder(createPostServlet(api)), PATH_SEPARATOR + api.getPathFilter());
         }
     }
 
@@ -444,7 +446,7 @@ public class CSLHttpServerJetty {
      */
     private void handleWebSocketUpgrade(HttpServletRequest req, ApiCommands api) {
         if ("Websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
-            context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), "/" + api.getName());
+            context.addServlet(new ServletHolder(addWebSocket(api.getName(), CSLWebSocketHandler.class)), PATH_SEPARATOR + api.getName());
         }
     }
 
@@ -523,7 +525,7 @@ public class CSLHttpServerJetty {
      * @param resp The HTTP response.
      * @throws IOException If an input or output exception occurred.
      */
-    private void handleCorsOptions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void handleCorsOptions(HttpServletRequest req, HttpServletResponse resp) {
         String accessControlRequestHeaders = req.getHeader("Access-Control-Request-Headers");
         if (accessControlRequestHeaders != null) {
             resp.setHeader("Access-Control-Allow-Headers", accessControlRequestHeaders);
@@ -555,7 +557,7 @@ public class CSLHttpServerJetty {
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 Json cmd = Json.object();
                 Set<String> paramKeys = req.getParameterMap().keySet();
-                List<String> varNames = new ArrayList<String>(paramKeys);
+                List<String> varNames = new ArrayList<>(paramKeys);
 
                 for (String name : varNames) {
                     String[] values = req.getParameterValues(name);

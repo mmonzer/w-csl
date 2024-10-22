@@ -1,6 +1,5 @@
 package com.csl.web.jcmdoversocket;
 
-import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
@@ -78,7 +77,7 @@ public class CSLWebSocketForJcmdHandler {
     		Json j= Json.read(message);
 			logger.warn("deprecated : forward alert to user");
 			logger.debug("deprecated : forward alert to user {}", j);
-    		((CSLAlertManager) CSLContext.instance.getCSLAlertManager()).sendAlertToViewerUDP(j);
+    		CSLContext.getInstance().getCSLAlertManager().sendAlertToViewerUDP(j);
     	}
 		else if (message.compareToIgnoreCase("keep alive") == 0)  {
 			// do nothing

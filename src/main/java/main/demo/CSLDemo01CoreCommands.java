@@ -108,7 +108,6 @@ public class CSLDemo01CoreCommands {
 
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 			testCore1();
 	}
 

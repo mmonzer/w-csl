@@ -34,7 +34,7 @@ public class CSLWebSocketForJcmd {
 
     public static final String WEB_SOCKET_CMD = "/cmd";
 
-    public static long uuidCounter = 0;
+    private static long uuidCounter = 0;
 
     // Concurrent map to manage WebSocket sessions by API name
     static Map<String,Session> sessionMap = new ConcurrentHashMap<>();
@@ -260,11 +260,13 @@ public class CSLWebSocketForJcmd {
         try {
             session.getRemote().sendString(message, new WriteCallback() {
                 @Override
-                public void writeFailed(Throwable x) {
+                public void writeFailed(Throwable throwable) {
+
                 }
 
                 @Override
                 public void writeSuccess() {
+                    
                 }
             });
         } catch (Exception e) {

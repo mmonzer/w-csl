@@ -5,7 +5,6 @@ import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.logger.CSLApplicativeLogger;
-import com.csl.web.ApiHandler;
 import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
@@ -60,7 +59,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     private final FileStorageService fileStorageService = new FileStorageService();
 
     public DbapiHandlerForCSLScan() {
-        this("CSLScan", CSLContext.instance.getConfig());
+        this("CSLScan", CSLContext.getInstance().getConfig());
     }
 
     public DbapiHandlerForCSLScan(String moduleName, Config config) {

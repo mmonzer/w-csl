@@ -56,7 +56,7 @@ public class IDSMainProcessor {
     }
 
     public CSLAlertManager getDefaultAlertManager() {
-        return CSLContext.instance.getCSLAlertManager();
+        return CSLContext.getInstance().getCSLAlertManager();
     }
 
     public void setAlertFactory(CSLAlertFactory alertFactory) {
@@ -189,7 +189,7 @@ public class IDSMainProcessor {
                             .setMetaInfo("suricata_info", getEveInfo(j))
                             .setMetaInfo("base_info", base_info);
 
-            CSLContext.instance.getCSLAlertManager().sendAlert(alert);
+            CSLContext.getInstance().getCSLAlertManager().sendAlert(alert);
         } else {
 
             // System.out.println("Suricata EVE (not an alert)"+evtsInfo);

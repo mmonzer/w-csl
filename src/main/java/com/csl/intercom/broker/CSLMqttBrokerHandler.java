@@ -57,7 +57,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
     /**
      * Create a new {@link CSLMqttBrokerHandler} from the project's configuration.
      *
-     * @param config The configuration of the project. Can be retrieved with <code>CSLContext.instance.getConfig()</code>.
+     * @param config The configuration of the project. Can be retrieved with <code>CSLContext.getInstance().getConfig()</code>.
      */
     public CSLMqttBrokerHandler(Config config) {
         Config.Client clientConfig = config.Client;

@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
  * and to send information to it (CPE Items, a Scan's status, ...).
  */
 public class DbapiHandlerForAlerts extends DbapiHandler {
-    private static final Logger logger = LoggerFactory.getLogger(DbapiHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(DbapiHandlerForAlerts.class);
 
     public DbapiHandlerForAlerts() {
-        this("CSLAlerts", CSLContext.instance.getConfig());
+        this("CSLAlerts", CSLContext.getInstance().getConfig());
     }
 
     public DbapiHandlerForAlerts(String moduleName, Config config) {

@@ -20,7 +20,7 @@ public class NmapServicesTest {
     @Test
     void initTest(){
         //Given
-        Json jConfig = CSLContext.instance.getJConfig();
+        Json jConfig = CSLContext.getInstance().getJConfig();
         String cslDir = "cslDir";
 
         Json tmp = Json.object();

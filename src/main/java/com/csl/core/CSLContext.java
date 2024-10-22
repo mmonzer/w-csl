@@ -29,18 +29,11 @@ public class CSLContext {
      */
     private static final Logger logger = LoggerFactory.getLogger(CSLContext.class);
 
-    /**
-     * Version of {@link CSLContext}.
-     */
-    public static String VERSION = "0.1.0-alpha1";
-
     @Getter
     private String cslConfDir = "";
 
-    /**
-     * Singleton instance of the class.
-     */
-    public static CSLContext instance = new CSLContext();
+
+    private static final CSLContext INSTANCE = new CSLContext();
 
     /**
      * Indicates if the context is running as a server (true), client (false), or uninitialized (null).
@@ -52,7 +45,7 @@ public class CSLContext {
      */
     private CSLAlertManager cslAlertManager = null;
 
-    private static final String configFile = "application.json";
+    private static final String CONFIG_FILE = "application.json";
 
     @Getter
     private IDSParams idsParams = null;
@@ -81,7 +74,6 @@ public class CSLContext {
     @Setter
     private boolean testMode = false;
 
-    private FileStoreService fileUtils;
     private IFileLogFactory fileLogFactory;
     private IDSMainProcessor idsMainProcessor;
 
@@ -91,6 +83,8 @@ public class CSLContext {
     private CSLContext() {
         // Singleton instance
     }
+
+    public static CSLContext getInstance() { return INSTANCE;}
 
     /**
      * Prints an error message to the standard error stream.
@@ -247,7 +241,7 @@ public class CSLContext {
      * Initializes the CSL context with the default running arguments.
      */
     public void init() {
-        setConfigFileName(configFile);
+        setConfigFileName(CONFIG_FILE);
         getConfig();
 
         this.cslConfDir = buildFullPathInUserDir("cslconf");
@@ -258,8 +252,7 @@ public class CSLContext {
                 Config.instance.IdsConf, getCslConfDir());
 
         idsMainProcessor.setFileLogFactory(getFileLogFactory());
-        fileUtils = new FileStoreService(getCslConfDir());
-        idsMainProcessor.setFileStoreServices(fileUtils);
+        idsMainProcessor.setFileStoreServices(new FileStoreService(getCslConfDir()));
 
         cslAlertManager = new CSLAlertManager(idsMainProcessor, getConfig().AlertViewer);
         idsMainProcessor.setAlertManager(cslAlertManager);
@@ -351,54 +344,12 @@ public class CSLContext {
      * Initializes the modules based on the configuration.
      */
     private void initDynamicModules() {
-//        String modulesPackageName = Config.instance.ModuleExec.getModulesPackageName();
         logger.debug("Loading modules");
 
         initInternalModules();
 
         int numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
         logger.debug("Running {} execution loops", numberOfExecLoops);
-
-//        for (Config.Module moduleDescriptor : Config.instance.Modules) {
-//            String mname = moduleDescriptor.getName();
-//
-//            if (modules.get(mname) != null) {
-//                logger.error("A module with this name <{}> has already been declared", mname);
-//            } else {
-//                String type = moduleDescriptor.getType();
-//                Class<?> clazz = getModuleClass(type);
-//
-//                if (clazz == null) {
-//                    logger.error("Cannot find modules of type <{}>", type);
-//                } else {
-//                    try {
-//                        IModule m = (IModule) clazz.getDeclaredConstructor().newInstance();
-//                        com.csl.core.ModuleContext mc = new com.csl.core.ModuleContext();
-//                        mc.setClazz((Class<IModule>) clazz);
-//                        mc.setModule(m);
-//                        mc.setName(mname);
-//                        mc.setConfig(moduleDescriptor.getConfig());
-//
-//                        modules.put(mname, mc);
-//                        logger.info("Initialization of module {}[{}]", mname, type);
-//                    } catch (Exception e) {
-//                        logger.error("Error initializing module {}: {}", mname, e.getMessage(), e);
-//                    }
-//                }
-//            }
-//        }
-
-//        autostart = Config.instance.ModuleExec.getAutostart();
-    }
-
-    /**
-     * Gets the module class by name.
-     *
-     * @param name The name of the module class.
-     * @return The module class.
-     */
-    private Class<?> getModuleClass(String name) {
-        return moduleClassList.get(name);
     }
 
     /**

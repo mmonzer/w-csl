@@ -42,7 +42,7 @@ public class StatusService extends Service {
     @Override
     public boolean init() {
         System.out.println("Initializing status service ...");
-        notifier = CSLContext.instance.getStatusNotifier();
+        notifier = CSLContext.getInstance().getStatusNotifier();
         notifier.setSendNotifications(Config.instance.Status.getSendNotifications());
 
         addCmd("get_status", params -> notifier.getNotification(),

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 @ClientEndpoint(subprotocols = {"xsCrossfire"}, configurator = WebsocketClientEndpoint.Configurator.class)
 public class WebsocketClientEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(WebsocketClientEndpoint.class);
@@ -22,13 +21,12 @@ public class WebsocketClientEndpoint {
     Session userSession = null;
     private MessageHandler messageHandler;
     private URI endpointURI;
-    public static String apiKey = null;
+    private static String apiKey;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
     public static class Configurator extends javax.websocket.ClientEndpointConfig.Configurator {
         @Override
-        public void beforeRequest(Map<String, List<String>> headers)
-        {
+        public void beforeRequest(Map<String, List<String>> headers) {
             if (apiKey != null) {
                 List<String> authvalues = new ArrayList<>();
                 authvalues.add("Api-Key " + apiKey);
@@ -39,22 +37,22 @@ public class WebsocketClientEndpoint {
     }
 
     public WebsocketClientEndpoint(URI endpointURI) {
-       this(endpointURI, null);
-	}
+        this(endpointURI, null);
+    }
 
     public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
-        this.endpointURI=endpointURI;
-        this.apiKey = apiKey;
+        this.endpointURI = endpointURI;
+        WebsocketClientEndpoint.apiKey = apiKey;
         connect();
     }
 
-    synchronized private void connect()  {
-    	 try {
-             this.userSession = container.connectToServer(this, endpointURI);
-         } catch (Exception e) {
-             logger.warn("Error connecting to websocket {}, reason: {}", endpointURI, e.getMessage());
-             logger.debug("Error connecting to websocket {}", endpointURI, e);
-         }
+    private synchronized void connect() {
+        try {
+            this.userSession = container.connectToServer(this, endpointURI);
+        } catch (Exception e) {
+            logger.warn("Error connecting to websocket {}, reason: {}", endpointURI, e.getMessage());
+            logger.debug("Error connecting to websocket {}", endpointURI, e);
+        }
     }
 
     /**
@@ -64,27 +62,26 @@ public class WebsocketClientEndpoint {
      */
     @OnOpen
     public void onOpen(Session userSession) {
-        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opening websocket "+ userSession.getRequestURI());
+        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opening websocket " + userSession.getRequestURI());
         this.userSession = userSession;
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
-        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = "+ userSession.getMaxIdleTimeout());
-        {
-    		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-    		LocalDateTime now = LocalDateTime.now();
-            CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Sending message to websocket "+ dtf.format(now));
-    	}
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout());
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Sending message to websocket " + dtf.format(now));
     }
 
     /**
      * Callback hook for Connection close events.
      *
      * @param userSession the userSession which is getting closed.
-     * @param reason the reason for connection close
+     * @param reason      the reason for connection close
      */
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket "+ userSession.getRequestURI());
-        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket "+ userSession.getRequestURI() + " User session:"+userSession+ " Reason:"+reason.getReasonPhrase());
+        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI());
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI() + " User session:" + userSession + " Reason:" + reason.getReasonPhrase());
         this.userSession = null;
     }
 
@@ -128,9 +125,8 @@ public class WebsocketClientEndpoint {
         public void handleMessage(String message);
     }
 
-	public boolean isOpen() {
-		// TODO Auto-generated method stub
-		if (userSession==null) return false;
-		return userSession.isOpen();
-	}
+    public boolean isOpen() {
+        if (userSession == null) return false;
+        return userSession.isOpen();
+    }
 }

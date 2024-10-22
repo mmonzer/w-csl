@@ -26,7 +26,7 @@ public class CpeServicesTest {
         String result = cpeServices.addCmd(name, new IJsonCmd(){
             @Override
             public Json exec(Json params) {
-                return CSLContext.instance.getCSLAlertManager().getListOfCurrentAlertsAsJson();
+                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
             }
 
         }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
@@ -41,7 +41,7 @@ public class CpeServicesTest {
         String resultCmd1 = cpeServices.addCmd(name, new IJsonCmd(){
             @Override
             public Json exec(Json params) {
-                return CSLContext.instance.getCSLAlertManager().getListOfCurrentAlertsAsJson();
+                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
             }
 
         }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
@@ -49,7 +49,7 @@ public class CpeServicesTest {
         String resultCmd2 = cpeServices.addCmd(name, new IJsonCmd(){
             @Override
             public Json exec(Json params) {
-                return CSLContext.instance.getCSLAlertManager().getListOfCurrentAlertsAsJson();
+                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
             }
 
         }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));

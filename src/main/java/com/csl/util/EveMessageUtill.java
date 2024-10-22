@@ -9,37 +9,31 @@ import java.time.ZoneOffset;
 public class EveMessageUtill {
 
 
-    public static Json reformatTimeStamp(Json jj) {
+    public static Json reformatTimeStamp(Json jsonObject) {
 
-        String s=JsonUtil.getStringFromJson(jj,"timestamp", "");
-        if (!s.isEmpty()) {
-            long ns=convertTimestamp(s);
-            jj.set("timestamp0",s);
-            jj.set("timestamp",ns);
-            if (jj.has("alert")) {
-                Json jalert=jj.get("alert");
-                String sig= JsonUtil.getStringFromJson(jalert, "signature","???");
-            }
-
+        String timeStamp = JsonUtil.getStringFromJson(jsonObject,"timestamp", "");
+        if (!timeStamp.isEmpty()) {
+            jsonObject.set("timestamp0", timeStamp);
+            jsonObject.set("timestamp", convertTimestamp(timeStamp));
         }
-        return jj;
+        return jsonObject;
     }
 
-    private static long convertTimestamp(String s) {
+    private static long convertTimestamp(String timeStamp) {
 
-        int n= s.indexOf('+');
-        if (n<0) n=s.indexOf('-');
+        int n= timeStamp.indexOf('+');
+        if (n<0) n=timeStamp.indexOf('-');
 
         String sz="";
 
         if (n>=0) {
-            sz=s.substring(n, s.length());
-            s=s.substring(0,n);
+            sz=timeStamp.substring(n);
+            timeStamp=timeStamp.substring(0,n);
         }
 
-        if (!s.endsWith("Z")) s=s+"Z";
+        if (!timeStamp.endsWith("Z")) timeStamp=timeStamp+"Z";
 
-        Instant instant = Instant.parse(s);
+        Instant instant = Instant.parse(timeStamp);
 
         long offset=0;
 
@@ -48,9 +42,7 @@ public class EveMessageUtill {
             offset=zoneOffSet.getTotalSeconds();
         }
 
-        long ts=instant.toEpochMilli()-offset*1000;
-
-        return ts;
+        return instant.toEpochMilli()-offset*1000;
 
     }
 

@@ -32,8 +32,8 @@ public class IDSParams {
 	boolean doNotUseCurrentIDSParamsFileName=false;
 
 	Json jCurrentVariables = Json.object();
-    private String dataDir=CSLContext.instance.getUserDir()+ File.separator+"idsdata";
-	private final String defaultDataDir=CSLContext.instance.getUserDir()+File.separator+"idsdata";
+    private String dataDir=CSLContext.getInstance().getUserDir()+ File.separator+"idsdata";
+	private final String defaultDataDir=CSLContext.getInstance().getUserDir()+File.separator+"idsdata";
 
     int idsMode=0;
 

@@ -48,7 +48,6 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
             lastChangeDate = getLastChangeDate();
         } catch (Exception e) {
             getLogger().warn("Could not retrieve last update date from DB-API, retrieving all discovered devices from CSL-Scan");
-            getLogger().debug("Could not retrieve last update date from DB-API", e);
             lastChangeDate = null;
         }
         syncData(lastChangeDate);

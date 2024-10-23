@@ -221,8 +221,6 @@ public class CSLIDSMainClient {
 
     /**
      * Initializes the CSLContext with the provided arguments and sets debug mode.
-     *
-     * @param args Command-line arguments passed to the application.
      */
     private static void initializeContext() {
         CorrelationUtils.setXCorrelationId();

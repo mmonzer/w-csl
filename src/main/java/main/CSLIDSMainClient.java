@@ -162,7 +162,7 @@ public class CSLIDSMainClient {
                     uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
                     MDC.put(ENDPOINT, uri);
 
-                    CSLNetworkLogger.infoInboundRequest((Logger) logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
+                    CSLNetworkLogger.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);
@@ -181,7 +181,7 @@ public class CSLIDSMainClient {
 
                 logger.trace("Sending result: {}", resultMessageJson);
                 clientEndPoint.sendMessage("res:" + resultMessageJson);
-                CSLNetworkLogger.infoOutboundResponse((Logger) logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
+                CSLNetworkLogger.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);

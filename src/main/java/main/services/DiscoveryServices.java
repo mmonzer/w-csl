@@ -640,7 +640,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if (file.get("filename").asString().endsWith(".csv")) {
                             listOfConnections.addAll(FileUtils.parseConnexionsFromCSV(file.get("content")));
                         } else if (file.get("filename").asString().endsWith(".xlsx")) {
-                            listOfConnections.addAll(FileUtils.parseConnexionsFromXLSXFile(file.get("content"))); //TODO
+                            listOfConnections.addAll(FileUtils.parseConnexionsFromXLSXFile(file.get("content")));
                         } else if (file.get("filename").asString().endsWith(".xls")) {
                             listOfConnections.addAll(FileUtils.parseConnexionsFromXLSFile(file.get("content")));
                         }
@@ -653,6 +653,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 } catch (FileNotFoundException ignored) {
                     logger.warn("Failed to create list of connection drafts in CSL-Dbapi : required csv or xlsx");
                     return JsonApiResponse.error("Wrong file format for connections : required csv or xlsx").toJson();
+                } catch (Exception ignored) {
+                    logger.error("Upgraded to 4.2.1 - > 5.3.0");
+                    throw new RuntimeException("Upgraded version : 4.2.1 - > 5.3.0");
                 }
                 List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
                 for (Json connection : listOfConnections) {

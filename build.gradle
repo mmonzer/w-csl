@@ -55,7 +55,7 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
     implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'
     implementation 'org.apache.servicemix.bundles:org.apache.servicemix.bundles.velocity:1.7_6'
-    implementation 'org.eclipse.jetty.aggregate:jetty-all:9.4.54.v20240208'
+    implementation 'org.eclipse.jetty.aggregate:jetty-all:9.4.56.v20240826' // upgrade to 10/11.X breaks everything
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
     implementation 'org.json:json:20240303'
     implementation 'org.jetbrains:annotations:24.1.0'
@@ -64,15 +64,15 @@ dependencies {
     implementation 'org.mongodb:bson:5.1.1'
     implementation 'org.mongodb:mongo-java-driver:3.12.14'
     implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE220'
-    implementation 'org.springframework:spring-messaging:5.3.39'
-    implementation 'org.springframework:spring-websocket:5.3.39'
+    implementation 'org.springframework:spring-messaging:5.3.39' // upgrade to 6.x breaks ws
+    implementation 'org.springframework:spring-websocket:5.3.39' // upgrade to 6.x breaks ws
 
     implementation 'org.slf4j:slf4j-api:1.7.32'
 
 
     // Use Jetty WebSocket dependencies
-    implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.54.v20240208'
-    implementation 'org.eclipse.jetty.websocket:websocket-common:9.4.54.v20240208'
+    implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.56.v20240826'
+    implementation 'org.eclipse.jetty.websocket:websocket-common:9.4.56.v20240826'
 
     // Use javax.websocket-api
     //implementation 'javax.websocket:javax.websocket-api:1.1'
@@ -81,12 +81,18 @@ dependencies {
     implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 
     // excel reading/parsing
-    implementation 'org.apache.poi:poi:4.1.2' // For .xls files (HSSF)
-    implementation 'org.apache.poi:poi-ooxml:4.1.2' // For .xlsx files (XSSF)
-    implementation 'org.apache.poi:poi-ooxml-schemas:4.1.2'
-    implementation 'org.apache.poi:poi-scratchpad:4.1.2' // For additional formats (optional)
+    implementation 'org.apache.poi:poi:5.3.0' // For .xls files (HSSF)
+    implementation 'org.apache.poi:poi-ooxml:5.3.0' // For .xlsx files (XSSF)
+//    implementation 'org.apache.poi:poi-ooxml-schemas:5.2.3'
+    implementation 'org.apache.poi:poi-scratchpad:5.3.0' // For additional formats (optional)
     implementation 'org.apache.commons:commons-collections4:4.5.0-M2' // Latest
     implementation 'commons-io:commons-io:2.16.1'
+
+    implementation 'commons-net:commons-net:3.9.0'
+    implementation 'org.apache.commons:commons-compress:1.27.1'
+
+
+
 }
 sourceSets{
     main{

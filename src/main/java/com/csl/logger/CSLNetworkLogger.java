@@ -78,6 +78,23 @@ public class CSLNetworkLogger {
     }
 
     /**
+     * Logs for outbound requests in the APIHandler
+     *
+     * @param logger   logger for logging the request
+     * @param ip       ip destination of the request
+     * @param port     port destination of the request
+     * @param method   method of the request
+     * @param endpoint endpoint of the request
+     * @param protocol protocol of the request
+     */
+    public static void infoInboundRequest(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, String message) {
+        setVariablesSource(ip, port);
+        String oldEndpoint = setVariables(method, endpoint, protocol, null);
+        logger.info(message);
+        removeVariables(oldEndpoint);
+    }
+
+    /**
      * Logs for inbound responses in the APIHandler
      *
      * @param logger     logger to log
@@ -92,7 +109,29 @@ public class CSLNetworkLogger {
         infoMessage(logger, ip, port, method, endpoint, protocol, statusCode, message);
     }
 
+    /**
+     * Logs for inbound responses in the APIHandler
+     *
+     * @param logger     logger to log
+     * @param ip         ip source of the response
+     * @param port       port source of the response
+     * @param method     method of the response
+     * @param endpoint   endpoint of the response
+     * @param protocol   protocol of the response
+     * @param statusCode HTTP code of the response
+     */
+    public static void infoOutboundResponse(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
+        infoMessage(logger, ip, port, method, endpoint, protocol, statusCode, message);
+    }
+
     private static void infoMessage(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
+        setVariablesDestination(ip, port);
+        String oldEndpoint = setVariables(method, endpoint, protocol, statusCode);
+        logger.info(message);
+        removeVariables(oldEndpoint);
+    }
+
+    private static void infoMessage(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
         setVariablesDestination(ip, port);
         String oldEndpoint = setVariables(method, endpoint, protocol, statusCode);
         logger.info(message);

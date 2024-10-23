@@ -136,6 +136,7 @@ public class CSLUDPServer {
             System.exit(0);
         }
 
+        getFlowManager().init();
         getFlowManager().startListener();
 
         CSLNetworkLogger.info(logger, "TAP", "UDP","UDP server listening at "+ip+":"+ port);

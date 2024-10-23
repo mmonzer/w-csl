@@ -2,7 +2,7 @@ plugins{
     id 'java'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
-//    id 'org.owasp.dependencycheck' version '10.0.4'
+    id 'org.owasp.dependencycheck' version '10.0.4'
 }
 
 apply from : 'build.gradle'
@@ -24,15 +24,12 @@ shadowJar {
     }
 }
 
-//dependencyCheck {
-//
-// Utilisation de la clé d'API NVD
-//
-//    nvd {
-//
-//        apiKey = "e428e235-fa6c-427a-8124-d5a44160790a"
-//    }
-//}
+
+dependencyCheck {
+    nvd {
+        apiKey = System.getenv("NVD_API_KEY")
+    }
+}
 
 
 

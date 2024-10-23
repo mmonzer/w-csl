@@ -2,8 +2,6 @@ package main.services;
 
 import com.csl.core.CSLContext;
 import com.csl.ids.Tap;
-import com.csl.modules.ModuleIDS;
-import com.csl.monitor.ActivityMonitor;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import main.services.endpoints.MonitorEndpoints;
@@ -65,19 +63,6 @@ public class MonitorService extends Service {
 			System.err.println("Unable to parse conf or No tap config found in " + idsconf + "/taps/TapsConfiguration.json");
 			configuredTaps = new ArrayList<Json>();
 		}
-
-		addCmd(MonitorEndpoints.STATS_DEVICES, new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-				ModuleIDS ids = (ModuleIDS) CSLContext.getInstance().getModuleContext("module_ids").getModule();
-				ActivityMonitor activityMonitor = ids.getActivityMonitor();
-				Json j=Json.object();
-				j.set("all", 103);
-				j.set("running",87);
-				return j;
-			}
-		}				);
 
 		addCmd(MonitorEndpoints.STATS_TAPS, new IJsonCmd() {
 

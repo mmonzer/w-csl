@@ -8,7 +8,6 @@ import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.intercom.status.StatusNotifier;
 import com.csl.logger.FileLogFactory;
-import com.csl.modules.ModuleIDS;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
 import com.ucsl.interfaces.IFileLogFactory;
@@ -63,8 +62,6 @@ public class CSLContext {
      * Instance of the UDP server.
      */
     private CSLUDPServer cslUDPServer = null;
-
-    private final Map<String, com.csl.core.ModuleContext> modules = new HashMap<>();
 
     private final Map<String, Class<Module>> moduleClassList = new HashMap<>();
 
@@ -324,29 +321,10 @@ public class CSLContext {
     }
 
     /**
-     * Gets the module context by name.
-     *
-     * @param name The name of the module.
-     * @return The module context.
-     */
-    public ModuleContext getModuleContext(String name) {
-        return modules.get(name);
-    }
-
-    /**
-     * Initializes internal modules, starting with {@link ModuleIDS}.
-     */
-    private void initInternalModules() {
-        new ModuleIDS();
-    }
-
-    /**
      * Initializes the modules based on the configuration.
      */
     private void initDynamicModules() {
         logger.debug("Loading modules");
-
-        initInternalModules();
 
         int numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
         logger.debug("Running {} execution loops", numberOfExecLoops);

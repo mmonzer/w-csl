@@ -66,8 +66,8 @@ dependencies {
     implementation 'org.mongodb:mongo-java-driver:3.12.14'
     implementation 'com.neuronrobotics:nrjavaserial:5.2.1'   // error in import org.apache.commons.net.util.SubnetUtils;
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
-    implementation 'org.springframework:spring-messaging:5.3.37'
-    implementation 'org.springframework:spring-websocket:5.3.37'
+    implementation 'org.springframework:spring-messaging:5.3.39'
+    implementation 'org.springframework:spring-websocket:5.3.39'
     implementation 'org.apache.servicemix.bundles:org.apache.servicemix.bundles.velocity:1.7_6'
     implementation 'org.jetbrains:annotations:24.1.0'
 
@@ -123,6 +123,7 @@ run{
     systemProperty 'javax.net.ssl.trustStore', './cacerts.jks'
     systemProperty 'javax.net.ssl.trustStorePassword', 'changeit'
 }
+
 test{
     useJUnitPlatform()
     onlyIf {

@@ -62,7 +62,7 @@ public class CpeScanService {
                 try {
                     method.invoke(this);
                 } catch (Exception e) {
-                    logger.error("Could not execute post-init method {}", method.getName(), e);
+                    logger.error("Could not execute post-init method {} : {}", method.getName(), e.getMessage());
                 }
             }
         }

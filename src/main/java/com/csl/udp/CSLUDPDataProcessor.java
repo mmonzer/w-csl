@@ -26,7 +26,6 @@ public class CSLUDPDataProcessor implements Runnable {
         try {
             this.messageQueue.put(new CSLUdpUnicastClient.CorrelatedMessage("", "stop".getBytes()));
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -60,9 +59,6 @@ public class CSLUDPDataProcessor implements Runnable {
 
                 try {
                     Json jsonObject = Json.read(msg);
-
-                    if (traceAllMessages) System.out.println(" Json msg:" + jsonObject);
-
                     Json jdata = jsonObject.get("data");
                     String id = "cible";
                     if (jsonObject.has("idOfTarget")) id = jsonObject.get("idOfTarget").asString();

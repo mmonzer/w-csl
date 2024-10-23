@@ -893,10 +893,10 @@ public class TapsServices extends Service {
             request.send(listener);
 
             Response response = listener.get(30, TimeUnit.SECONDS); // Wait for the response
-            if (response.getHeaders().containsKey(CONTENT_TYPE)) {
+            if (response.getHeaders().contains(CONTENT_TYPE)) {
                 responseJson.at(CONTENT_TYPE, response.getHeaders().getField(CONTENT_TYPE).getValue());
             }
-            if (response.getHeaders().containsKey(CONTENT_DISPOSITION)) {
+            if (response.getHeaders().contains(CONTENT_DISPOSITION)) {
                 responseJson.at(CONTENT_DISPOSITION, response.getHeaders().getField(CONTENT_DISPOSITION).getValue());
             }
             String strResponse = "";

@@ -16,9 +16,9 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.MultiPartContentProvider;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,19 +117,21 @@ public class ApiHandler implements AutoCloseable {
         String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
 
         // Ensure the properties are set
+        HttpClient httpClient = new HttpClient();
         if (trustStorePath == null || trustStorePassword == null) {
             CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized HTTP client for "+ moduleName );
-            return new HttpClient();
+            return httpClient;
         }
 
         // Configure SslContextFactory with the retrieved properties
-        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-        sslContextFactory.setTrustStorePath(trustStorePath);
-        sslContextFactory.setTrustStorePassword(trustStorePassword);
-        sslContextFactory.setTrustAll(true);
+//        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+//        httpClient.getSslContextFactory().setTrustStorePath(trustStorePath);
+//        httpClient.getSslContextFactory().setTrustStorePassword(trustStorePassword);
+//        httpClient.getSslContextFactory().setTrustAll(true);
+//        httpClient.setSslContextFactory(sslContextFactory);
 
         CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized self-signed HTTPS client for "+ moduleName );
-        return new HttpClient(sslContextFactory);
+        return httpClient;
     }
 
     // endregion initialize client
@@ -717,10 +719,10 @@ public class ApiHandler implements AutoCloseable {
      */
     private JsonApiResponse parseStreamResponse(Response response, InputStreamResponseListener listener) throws IOException {
         Json responseJson = Json.object();
-        if (response.getHeaders().containsKey(HttpHeader.CONTENT_TYPE.toString())) {
+        if (response.getHeaders().contains(HttpHeader.CONTENT_TYPE.toString())) {
             responseJson.at(HttpHeader.CONTENT_TYPE.toString(), response.getHeaders().getField(HttpHeader.CONTENT_TYPE).getValue());
         }
-        if (response.getHeaders().containsKey(CONTENT_DISPOSITION)) {
+        if (response.getHeaders().contains(CONTENT_DISPOSITION)) {
             responseJson.at(CONTENT_DISPOSITION, response.getHeaders().getField(CONTENT_DISPOSITION).getValue());
         }
         // Check if the response status is OK (200)

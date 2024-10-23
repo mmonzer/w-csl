@@ -4,7 +4,6 @@ import com.csl.logger.LoggerConstants;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
-import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import org.eclipse.jetty.websocket.api.Session;
 
 import static com.csl.logger.CSLNetworkLogger.*;
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -276,8 +276,6 @@ public class CSLWebSocketForJcmd {
 
     /**
      * Delays the broadcast by 1 second to allow reconnection attempts.
-     *
-     * @param name The API name to wait for.
      */
     private static void delayForReconnect() {
         try {

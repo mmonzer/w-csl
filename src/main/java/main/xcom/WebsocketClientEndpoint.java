@@ -3,10 +3,10 @@ package main.xcom;
 import com.csl.core.Config;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.logger.LoggerInterfaces;
+import jakarta.websocket.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.websocket.*;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,7 +24,7 @@ public class WebsocketClientEndpoint {
     private static String apiKey;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
-    public static class Configurator extends javax.websocket.ClientEndpointConfig.Configurator {
+    public static class Configurator extends jakarta.websocket.ClientEndpointConfig.Configurator {
         @Override
         public void beforeRequest(Map<String, List<String>> headers) {
             if (apiKey != null) {

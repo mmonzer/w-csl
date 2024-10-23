@@ -12,29 +12,34 @@ import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmdHandler;
 import com.csl.web.jettyutils.JettyFilterServlet;
 import com.csl.web.jettyutils.JettyServerErrorHandler;
-import com.csl.web.jettyutils.JettyWebSocketServlet;
+import com.csl.web.jettyutils.CustomJettyWebSocketServlet;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.CSLWebSocketHandler;
 import com.ucsl.json.Json;
-import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.websocket.api.WebSocketBehavior;
 import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -113,15 +118,27 @@ public class CSLHttpServerJetty {
         setupContext();
 
         if (isRemote) {
-            setupWebSocketPolicy();
-            registerWebSockets();
+            //setupWebSocketPolicy();
+//            registerWebSockets();
             addCorsOptionsServlet();
         }
 
-        addApiHelpPageServlet();
-        registerApiCommands();
+//        addApiHelpPageServlet();
+//        registerApiCommands();
+        jettyServer.setHandler(new AbstractHandler()
+        {
+            @Override
+            public void handle(String var1, Request var2, HttpServletRequest var3, HttpServletResponse var4)
+            {
+                // Succeed the callback to signal that the
+                // request/response processing is complete.
+                System.out.println("ok");
+            }
+        });
 
+        jettyServer.addConnector(new ServerConnector(jettyServer));
         jettyServer.setHandler(context);
+        JakartaWebSocketServletContainerInitializer.configure(context, null);
     }
 
     /**
@@ -296,7 +313,7 @@ public class CSLHttpServerJetty {
      * @param handler The handler for the WebSocket.
      * @return ServletHolder that handles WebSocket requests at the given path.
      */
-    public JettyWebSocketServlet addWebSocket(String path, Class<?> handler) {
+    public CustomJettyWebSocketServlet addWebSocket(String path, Class<?> handler) {
         if (!path.startsWith(PATH_SEPARATOR)) path = PATH_SEPARATOR + path;
 
         if (!listOfWebsocketPath.contains(path)) {
@@ -305,7 +322,7 @@ public class CSLHttpServerJetty {
             logger.warn("WebSocket path already in use: {}", path);
         }
 
-        return new JettyWebSocketServlet(handler);
+        return new CustomJettyWebSocketServlet(handler);
     }
 
     /**
@@ -361,7 +378,82 @@ public class CSLHttpServerJetty {
      * Sets up the WebSocket policy.
      */
     private void setupWebSocketPolicy() {
-        WebSocketPolicy policy = new WebSocketPolicy(WebSocketBehavior.SERVER);
+        WebSocketPolicy policy = new WebSocketPolicy() {
+            @Override
+            public WebSocketBehavior getBehavior() {
+                return null;
+            }
+
+            @Override
+            public Duration getIdleTimeout() {
+                return null;
+            }
+
+            @Override
+            public int getInputBufferSize() {
+                return 0;
+            }
+
+            @Override
+            public int getOutputBufferSize() {
+                return 0;
+            }
+
+            @Override
+            public long getMaxBinaryMessageSize() {
+                return 0;
+            }
+
+            @Override
+            public long getMaxTextMessageSize() {
+                return 0;
+            }
+
+            @Override
+            public long getMaxFrameSize() {
+                return 0;
+            }
+
+            @Override
+            public boolean isAutoFragment() {
+                return false;
+            }
+
+            @Override
+            public void setIdleTimeout(Duration duration) {
+
+            }
+
+            @Override
+            public void setInputBufferSize(int i) {
+
+            }
+
+            @Override
+            public void setOutputBufferSize(int i) {
+
+            }
+
+            @Override
+            public void setMaxBinaryMessageSize(long l) {
+
+            }
+
+            @Override
+            public void setMaxTextMessageSize(long l) {
+
+            }
+
+            @Override
+            public void setMaxFrameSize(long l) {
+
+            }
+
+            @Override
+            public void setAutoFragment(boolean b) {
+
+            }
+        };
         policy.setMaxTextMessageSize(1024 * 1024);
     }
 

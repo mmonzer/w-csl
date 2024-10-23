@@ -1,25 +1,31 @@
 package com.csl.web.jettyutils;
 
 import com.csl.core.Config;
-import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import jakarta.websocket.Session;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
+import  org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.Duration;
 
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
 
-public class JettyWebSocketServlet extends WebSocketServlet {
+
+public class CustomJettyWebSocketServlet extends JettyWebSocketServlet {
     private final Class<?> handler;
 
-    public JettyWebSocketServlet(Class<?> handler) {
-        super();
+    public CustomJettyWebSocketServlet(Class<?> handler) {
+//        super();
         this.handler = handler;
     }
     @Override
-    public void configure(WebSocketServletFactory factory) {
-        factory.getPolicy().setIdleTimeout(Config.instance.Server.getWebsocketTimeout());
+    public void configure(JettyWebSocketServletFactory factory) {
+        factory.setIdleTimeout(Duration.ofSeconds(Config.instance.Server.getWebsocketTimeout()));
         factory.register(handler);
     }
     @Override

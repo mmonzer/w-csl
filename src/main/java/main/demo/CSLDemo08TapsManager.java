@@ -16,7 +16,11 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import com.ucsl.json.Json;
 
 public class CSLDemo08TapsManager {
-	
+
+	public static final String TAP_28 = "tap28";
+	public static final String TAP_15 = "tap15";
+	public static final String TAP_27 = "tap27";
+
 	public static String getServerURL() {
 		return "http://localhost:8000/";
 	}
@@ -67,28 +71,28 @@ public class CSLDemo08TapsManager {
 	
 	public static void main(String[] args) {
 		Json params=Json.object();
-		execCmd("add", "tap28", Json.object());
-		System.out.println(execCmd("list", "tap28", Json.object()));
-		System.out.println(execCmd("load", "tap28", Json.object().set("type",  5)));
-		System.out.println(execCmd("save", "tap28", Json.object().set("type",  5).set("text","Essai 5")));
+		execCmd("add", TAP_28, Json.object());
+		System.out.println(execCmd("list", TAP_28, Json.object()));
+		System.out.println(execCmd("load", TAP_28, Json.object().set("type",  5)));
+		System.out.println(execCmd("save", TAP_28, Json.object().set("type",  5).set("text","Essai 5")));
 		
 		
-		System.out.println(execCmd("load", "tap28", Json.object().set("type",  5)));
+		System.out.println(execCmd("load", TAP_28, Json.object().set("type",  5)));
 		
 		
-		System.out.println(execCmd("del", "tap15", Json.object().set("type",  5)));
+		System.out.println(execCmd("del", TAP_15, Json.object().set("type",  5)));
 		
-		System.out.println(execCmd("add", "tap27", Json.object().set("type",  5)));
+		System.out.println(execCmd("add", TAP_27, Json.object().set("type",  5)));
 		for (int  i=3;i<7; i++)
-			System.out.println(execCmd("save", "tap27", Json.object().set("type",  i).set("text","Essai "+i)));
+			System.out.println(execCmd("save", TAP_27, Json.object().set("type",  i).set("text","Essai "+i)));
 			
-		System.out.println(execCmd("rename", "tap27", Json.object().set("new_idname",  "tap15")));
-		System.out.println(execCmd("update", "tap15", Json.object().set("ip",  "192.168.0.200")));
-		System.out.println(execCmd("update", "tap15", Json.object().set("username",  "user").set("password",  "pass")));
+		System.out.println(execCmd("rename", TAP_27, Json.object().set("new_idname", TAP_15)));
+		System.out.println(execCmd("update", TAP_15, Json.object().set("ip",  "192.168.0.200")));
+		System.out.println(execCmd("update", TAP_15, Json.object().set("username",  "user").set("password",  "pass")));
 	
-		System.out.println(execCmd("list", "tap28", Json.object()));
+		System.out.println(execCmd("list", TAP_28, Json.object()));
 		
-		System.out.println(execCmd("del", "tap15", Json.object().set("type",  5)));
+		System.out.println(execCmd("del", TAP_15, Json.object().set("type",  5)));
 		
 		
 		System.exit(0);

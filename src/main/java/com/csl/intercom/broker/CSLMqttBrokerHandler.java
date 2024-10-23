@@ -46,7 +46,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         }
     }
 
-    private static final String clientId = "mqtt_agent_concentrator";       // MQTT client id's prefix
+    private static final String CLIENT_ID = "mqtt_agent_concentrator";       // MQTT client id's prefix
     private String organization = "None";                                   // The organization, default id None.
     private MqttClient mqttClient;
     private String brokerUri;
@@ -149,10 +149,9 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
 
     private void connectToMqttClientIfNecessary() {
         if (mqttClient == null || !mqttClient.isConnected()) {
-            try {
+            try (MemoryPersistence persistence = new MemoryPersistence()) {
                 removeLockFiles();
-                MemoryPersistence persistence = new MemoryPersistence();
-                mqttClient = new MqttClient(brokerUri, clientId + UUID.randomUUID(), persistence);
+                mqttClient = new MqttClient(brokerUri, CLIENT_ID + UUID.randomUUID(), persistence);
                 mqttClient.connect(mqttConnectOptions);
                 for (Map.Entry<String, IMqttMessageListener> topic : topics.entrySet()) {
                     mqttClient.subscribe(topic.getKey(), topic.getValue());
@@ -169,7 +168,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      * These should be located in subdirectories of the working directory.
      */
     private static void removeLockFiles() {
-        String regex = clientId + ".*";
+        String regex = CLIENT_ID + ".*";
         try {
             Path workDir = Paths.get("");
             Files.walkFileTree(workDir, new SimpleFileVisitor<Path>() {

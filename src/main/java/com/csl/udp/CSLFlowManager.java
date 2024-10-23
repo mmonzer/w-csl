@@ -10,6 +10,7 @@ import com.ucsl.interfaces.IAlertLevel;
 import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,9 @@ import java.util.concurrent.*;
 
 public class CSLFlowManager {
     private static final Logger logger = LoggerFactory.getLogger(CSLFlowManager.class);
+    public static final String CATEGORY = "category";
+    public static final String SEVERITY = "severity";
+    public static final String TIMESTAMP = "timestamp";
 
     int maxflows = 10;
     int maxsize = 1000;
@@ -160,78 +164,82 @@ public class CSLFlowManager {
      */
     private void generateAlertFromSuricataEvent(Json evtsInfo) {
 
-        // test pour eve event
-
-        boolean verbose = false;
-        if (verbose) System.out.println("IDS Processing Info  " + evtsInfo);
-        String code = "#suricata_alert";
-        String msg = "#undef";
-
         if (evtsInfo.has("alert")) {
 
-            Json j = evtsInfo.get("alert");
-            if (j.has("signature")) {
+            Json alertInfo = evtsInfo.get("alert");
 
-                String s = j.get("signature").asString();
-                if (s.startsWith("#")) {
-                    int p = s.indexOf(" ");
-                    if (p < 0) {
-                        msg = s;
-                    } else {
-                        code = s.substring(1, p);
-                        msg = s.substring(p + 1, s.length());
-                    }
-                } else msg = s;
-            }
-
-            if (j.has("category")) {
-                evtsInfo.set("category", j.get("category").asString());
+            if (alertInfo.has(CATEGORY)) {
+                evtsInfo.set(CATEGORY, alertInfo.get(CATEGORY).asString());
             } else
-                evtsInfo.set("category", "#undef");
+                evtsInfo.set(CATEGORY, "#undef");
 
 
-            if (j.has("severity")) {
-                evtsInfo.set("severity", j.get("severity").asString());
+            if (alertInfo.has(SEVERITY)) {
+                evtsInfo.set(SEVERITY, alertInfo.get(SEVERITY).asString());
             } else
-                evtsInfo.set("severity", "0");
+                evtsInfo.set(SEVERITY, "0");
 
+            String msg =setAlertMessageAndCodeFromSignature(evtsInfo, alertInfo);
 
-            evtsInfo.set("msg", msg);
-            evtsInfo.set("code", code);
-
-            if (verbose) System.out.println("Suricita alert code <" + code + ">:" + msg);
-            if (verbose) System.out.println(JsonUtil.prettyPrint(evtsInfo));
-
-            //if (evtsInfo.has("msg"))
-            Json base_info = Json.object();
-            base_info.set("timestamp", evtsInfo.at("timestamp"));
-            base_info.set("flow_id", evtsInfo.at("flow_id"));
-            base_info.set("in_iface", evtsInfo.at("in_iface"));
-            base_info.set("event_type", evtsInfo.at("event_type"));
-            base_info.set("src_ip", evtsInfo.at("src_ip"));
-            base_info.set("src_port", evtsInfo.at("src_port"));
-            base_info.set("dest_ip", evtsInfo.at("dest_ip"));
-            base_info.set("dest_port", evtsInfo.at("dest_port"));
-            base_info.set("proto", evtsInfo.at("proto"));
-            //ajouter erxtra info for suricata ds alert
-
-            AlertDescriptor alert = new AlertDescriptor().setLevelFromInt(IAlertLevel.INFO.getLevelAsInt()).setMsg(msg).setTime(getIDSCurrentTimeMillis())
-
-                    .setProp("category", evtsInfo.get("category").asString())
-                    .setProp("severity", evtsInfo.get("severity").asString())
-                    .setMetaInfo("suricata_info", getEveInfo(j))
-                    .setMetaInfo("base_info", base_info);
+            Json baseInfo = buildAlertInformation(evtsInfo);
+            // ajouter extra info for suricata ds alert
+            AlertDescriptor alert = new AlertDescriptor()
+                    .setLevelFromInt(IAlertLevel.INFO.getLevelAsInt()).setMsg(msg).setTime(getIDSCurrentTimeMillis())
+                    .setProp(CATEGORY, evtsInfo.get(CATEGORY).asString())
+                    .setProp(SEVERITY, evtsInfo.get(SEVERITY).asString())
+                    .setMetaInfo("suricata_info", getEveInfo(alertInfo))
+                    .setMetaInfo("base_info", baseInfo);
 
             CSLContext.getInstance().getCSLAlertManager().sendAlert(alert);
-        } else {
-
-            // System.out.println("Suricata EVE (not an alert)"+evtsInfo);
         }
+    }
+
+    /**
+     * From Signature of the Alert it detects the message and the code of the event. It addes to the event information
+     * and returns the message.
+     * @param evtsInfo event information object
+     * @param alertInfo alert information
+     * @return message obtained from signature
+     */
+    private static String setAlertMessageAndCodeFromSignature(Json evtsInfo, Json alertInfo) {
+        String code = "#suricata_alert";
+        String msg = "#undef";
+        if (alertInfo.has("signature")) {
+
+            String signatureAlert = alertInfo.get("signature").asString();
+            if (signatureAlert.startsWith("#")) {
+                int firstSpace = signatureAlert.indexOf(" ");
+                if (firstSpace < 0) {
+                    msg = signatureAlert;
+                } else {
+                    code = signatureAlert.substring(1, firstSpace);
+                    msg = signatureAlert.substring(firstSpace + 1);
+                }
+            } else msg = signatureAlert;
+        }
+        evtsInfo.set("msg", msg);
+        evtsInfo.set("code", code);
+
+        return msg;
+    }
+
+    private static @NotNull Json buildAlertInformation(Json evtsInfo) {
+        Json baseInfo = Json.object();
+        baseInfo.set(TIMESTAMP, evtsInfo.at(TIMESTAMP));
+        baseInfo.set("flow_id", evtsInfo.at("flow_id"));
+        baseInfo.set("in_iface", evtsInfo.at("in_iface"));
+        baseInfo.set("event_type", evtsInfo.at("event_type"));
+        baseInfo.set("src_ip", evtsInfo.at("src_ip"));
+        baseInfo.set("src_port", evtsInfo.at("src_port"));
+        baseInfo.set("dest_ip", evtsInfo.at("dest_ip"));
+        baseInfo.set("dest_port", evtsInfo.at("dest_port"));
+        baseInfo.set("proto", evtsInfo.at("proto"));
+        return baseInfo;
     }
 
     private void updateTime(Json j) {
 
-        long t = JsonUtil.getLongFromJson(j, "timestamp", -1); //j.get("timestamp").asLong();  // coorect value of time
+        long t = JsonUtil.getLongFromJson(j, TIMESTAMP, -1); //j.get("timestamp").asLong();  // coorect value of time
         if (t < 0) {
             t = JsonUtil.getLongFromJson(j, "time", -1);
         }
@@ -254,7 +262,7 @@ public class CSLFlowManager {
         Json result = Json.object();
         for (Map.Entry<String, Json> e : jj.asJsonMap().entrySet()) {
             String key = e.getKey();
-            if ((key.compareTo("timestamp") != 0)
+            if ((key.compareTo(TIMESTAMP) != 0)
                     && (key.compareTo("type") != 0))
 
                 result.set(key, e.getValue());

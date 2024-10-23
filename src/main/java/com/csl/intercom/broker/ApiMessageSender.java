@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class ApiMessageSender implements MqttCallback {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiMessageSender.class);
+    public static final String ERROR = "error";
     public static long TIME_OUT = 10000;
 
     int idebug = 0;
@@ -31,10 +32,10 @@ public class ApiMessageSender implements MqttCallback {
 
     private static final String REQ_ID = "reqId";
 
-    public static int request_ctr = 1;
+    private int requestCtr = 1;
 
-    public static String REQUEST_TOPIC = "csl/request/";
-    public static String RESPONSE_TOPIC = "csl/response/";
+    private static final String REQUEST_TOPIC = "csl/request/";
+    private static final String RESPONSE_TOPIC = "csl/response/";
 
     Map<String, Json> pendingMessages = new HashMap<>();
 
@@ -83,9 +84,7 @@ public class ApiMessageSender implements MqttCallback {
         if (isShowInfo()) logger.info("Init sender api:" + api);
         if (subscribed) close();
 
-        MemoryPersistence persistence = new MemoryPersistence();
-
-        try {
+        try (MemoryPersistence persistence = new MemoryPersistence()){
             //We're using eclipse paho library  so we've to go with MqttCallback
             clientToListen = new MqttClient(BROKER_TCP_LOCALHOST_1883, getClientToListenID(), persistence);
             clientToListen.setCallback(this);
@@ -187,9 +186,9 @@ public class ApiMessageSender implements MqttCallback {
 
         Json fullMsg = Json.object();
 
-        String key = "" + request_ctr;
+        String key = "" + requestCtr;
 
-        request_ctr++;
+        requestCtr++;
 
         fullMsg.set(REQ_ID, key);
         fullMsg.set("api", api);
@@ -209,7 +208,7 @@ public class ApiMessageSender implements MqttCallback {
                 if (isDebug()) logger.debug("{}", fullMsg);
             } catch (InterruptedException e) {
                 logger.error("Error while waiting for response", e);
-                return Json.object().set("error", "timeout");
+                return Json.object().set(ERROR, "timeout");
             }
 
             if (fullMsg.has(RESPONSE)) {
@@ -217,7 +216,7 @@ public class ApiMessageSender implements MqttCallback {
                 pendingMessages.remove(key);
                 Json rep = fullMsg.get(RESPONSE);
                 if (rep.has("result")) return rep.get("result");
-                return Json.object().set("error", "no result");
+                return Json.object().set(ERROR, "no result");
             }
         }
     }
@@ -258,7 +257,7 @@ public class ApiMessageSender implements MqttCallback {
             long end_time = start_time + TIME_OUT;
             if (end_time < current_time) {
                 if (isDebug()) logger.debug("Time out: {}", message);
-                message.set(RESPONSE, Json.object().set("error", "TIMEOUT"));
+                message.set(RESPONSE, Json.object().set(ERROR, "TIMEOUT"));
             }
         }
     }

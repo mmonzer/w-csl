@@ -7,10 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.Inet4Address;
-import java.net.SocketException;
+import java.net.*;
 import java.util.concurrent.BlockingQueue;
 
 import static com.csl.logger.LoggerUtils.traceAlertReceived;
@@ -27,7 +24,6 @@ public class CSLUdpUnicastClient implements Runnable {
     DatagramSocket clientSocket = null;
 
     boolean closing = false;
-    private boolean traceAll;
 
     /**
      * Client UDP that listens to the given ip address and port, and adds the received message into the messageQueue.
@@ -42,7 +38,6 @@ public class CSLUdpUnicastClient implements Runnable {
         this.ip = ip;
         this.port = port;
         this.messageQueue = messageQueue;
-        this.traceAll = traceAll;
     }
 
     public void stop() {
@@ -75,18 +70,13 @@ public class CSLUdpUnicastClient implements Runnable {
          */
 
         try {
-            //System.out.println("XXXJMFUDP on "+ip+":"+port);
-
-            clientSocket = new DatagramSocket(port, Inet4Address.getByName(ip));
+            clientSocket = new DatagramSocket(port, InetAddress.getByName(ip));
 
             // Set a timeout of 3000 ms for the client.
-            //clientSocket.setSoTimeout(3000);
-            while (true) {
+            while (!closing) {
                 String xCorrelationId = CorrelationUtils.setXCorrelationId();
                 CorrelationUtils.setEndpoint("/alerts");
 
-
-                //System.out.println("JMF_receive packet");
                 /**
                  * Create a byte array buffer to store incoming data. If the message length
                  * exceeds the length of your buffer, then the message will be truncated. To avoid this,
@@ -108,11 +98,7 @@ public class CSLUdpUnicastClient implements Runnable {
                  * queue.The 'put' method will block if the message queue is full,
                  * until there is space to store the new message.
                  */
-                if (traceAll) {
-                    System.out.println("new message received " + data(datagramPacket.getData()));
-                }
                 this.messageQueue.put(new CorrelatedMessage(xCorrelationId, datagramPacket.getData()));
-                //System.out.println('.');
             }
         } catch (SocketException e) {
             if (!closing) e.printStackTrace();

@@ -22,8 +22,8 @@ import static main.services.TapsServices.readJsonFile;
 
 public class ActivityMonitor implements IStatusProvider {
 
-	static String FIELD_NB_PACKETS="nb_packets";
-	static String FIELD_DATA_SIZE="data_size";
+	static final String FIELD_NB_PACKETS="nb_packets";
+	static final String FIELD_DATA_SIZE="data_size";
 
 	int nb_packets_total=0;
 	long data_size_total=0;
@@ -36,8 +36,8 @@ public class ActivityMonitor implements IStatusProvider {
 
 	ActivityHistory history = new ActivityHistory(60);
 	Map<String, LocalDateTime> tapsLastActivity = new HashMap<>();
-	private static final long inactivityDurationThreshold = 5;
-	private static final long inactivityDurationDeletionThreshold = 300;
+	private static final long INACTIVITY_DURATION_THRESHOLD = 5;
+	private static final long INACTIVITY_DURATION_DELETION_THRESHOLD = 300;
 
 
 	public void addTick(Json j) {
@@ -50,20 +50,19 @@ public class ActivityMonitor implements IStatusProvider {
 		int nb_packets0=0;
 		long data_size0=0;
 		if (desc!=null) {
-			nb_packets0=JsonUtil.getIntFromJson(desc, "nb_packets",0);
-			data_size0=JsonUtil.getLongFromJson(desc, "data_size", 0);
+			nb_packets0=JsonUtil.getIntFromJson(desc, FIELD_NB_PACKETS,0);
+			data_size0=JsonUtil.getLongFromJson(desc, FIELD_DATA_SIZE, 0);
 		} else
 			desc=Json.object();
 
-		int nb_packets=JsonUtil.getIntFromJson(j, "nb_packets",0);
-		long data_size=JsonUtil.getLongFromJson(j, "data_size", 0);
+		int nb_packets=JsonUtil.getIntFromJson(j, FIELD_NB_PACKETS,0);
+		long data_size=JsonUtil.getLongFromJson(j, FIELD_DATA_SIZE, 0);
 
 		desc.set("tap_id", id);
 		desc.set("suricata_running",JsonUtil.getBooleanFromJson(j, "suricata_running",false));
 		desc.set("monitor_running",JsonUtil.getBooleanFromJson(j, "monitor_running",false));
-		desc.set("nb_packets",(nb_packets+nb_packets0));
-		desc.set("nb_packets",(nb_packets+nb_packets0));
-		desc.set("data_size", (data_size+data_size0) );
+		desc.set(FIELD_NB_PACKETS,(nb_packets+nb_packets0));
+		desc.set(FIELD_DATA_SIZE, (data_size+data_size0) );
 
 		nb_packets_total=nb_packets_total+nb_packets;
 		data_size_total=data_size_total+data_size;
@@ -91,24 +90,18 @@ public class ActivityMonitor implements IStatusProvider {
 				if (conf.isArray()) {
 					configuredTaps = (ArrayList<Json>) conf.asJsonList();
 				} else {
-					configuredTaps = new ArrayList<Json>();
+					configuredTaps = new ArrayList<>();
 				}
 				for (Json j : configuredTaps) {
 					if (j.at("idname").asString().equals(tapLastActivity.getKey())) {
-						tap = new Tap(j.at("idname").asString(),
-								j.at("id").asString(),
-								j.at("ip").asString(),
-								j.at("port").asInteger(),
-								j.at("includes").asJsonList()
+						is_http_api_reachable = isTapApiReachable(
+								new Tap(j.at("idname").asString(),
+									j.at("id").asString(),
+									j.at("ip").asString(),
+									j.at("port").asInteger(),
+									j.at("includes").asJsonList()
+								)
 						);
-
-						Tap finalTap = tap;
-						try {
-							is_http_api_reachable = CompletableFuture.supplyAsync(() -> finalTap.sendQuietCmd("/config", "{\"cmd\":\"getConfig\"}"))
-									.get(100, TimeUnit.MILLISECONDS).isSuccess();
-						} catch (TimeoutException|InterruptedException|ExecutionException|CancellationException e) {
-							is_http_api_reachable = false;
-						}
 						break;
 					}
 				}
@@ -117,14 +110,31 @@ public class ActivityMonitor implements IStatusProvider {
 			}
 			activeTaps.add(Json.object(
 				"id", tapLastActivity.getKey(),
-					"is_udp_connected", Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) <= inactivityDurationThreshold,
+					"is_udp_connected", Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) <= INACTIVITY_DURATION_THRESHOLD,
 					"is_http_api_reachable", is_http_api_reachable
 			));
-			if (Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) > inactivityDurationDeletionThreshold) {
+			if (Math.abs(Duration.between(tapLastActivity.getValue(), currentTime).getSeconds()) > INACTIVITY_DURATION_DELETION_THRESHOLD) {
 				tapsLastActivity.remove(tapLastActivity.getKey());
 			}
 		}
 		return Json.object("active_taps", activeTaps);
+	}
+
+	/**
+	 * Check if TAP api is reachable
+	 * @param tap tap
+	 * @return whether it is reachable or not
+	 */
+	private static boolean isTapApiReachable(Tap tap) {
+		boolean is_http_api_reachable;
+		Tap finalTap = tap;
+		try {
+			is_http_api_reachable = CompletableFuture.supplyAsync(() -> finalTap.sendQuietCmd("/config", "{\"cmd\":\"getConfig\"}"))
+					.get(100, TimeUnit.MILLISECONDS).isSuccess();
+		} catch (TimeoutException|InterruptedException|ExecutionException|CancellationException e) {
+			is_http_api_reachable = false;
+		}
+		return is_http_api_reachable;
 	}
 
 	public boolean isShowTicks() {
@@ -190,8 +200,8 @@ public class ActivityMonitor implements IStatusProvider {
 		tick.set("timestamp", System.currentTimeMillis());
 		tick.set("type", "TIC");
 
-		tick.set("nb_packets",nb_packets_total);
-		tick.set("data_size",data_size_total);
+		tick.set(FIELD_NB_PACKETS,nb_packets_total);
+		tick.set(FIELD_DATA_SIZE,data_size_total);
 
 		nb_packets_total=0;
 		data_size_total=0;

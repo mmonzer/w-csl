@@ -52,25 +52,15 @@ public class CSLUDPDataProcessor implements Runnable {
                     break;
                 }
 
-                if (traceAllMessages) System.out.println("UDP received new message");
-
-
-                String msg = new String(rawData, 0, rawData.length);
+                String msg = new String(rawData);
 
                 try {
                     Json jsonObject = Json.read(msg);
                     Json jdata = jsonObject.get("data");
-                    String id = "cible";
-                    if (jsonObject.has("idOfTarget")) id = jsonObject.get("idOfTarget").asString();
 
                     String fn = "1";
                     if (jsonObject.has("flowNumber")) fn = jsonObject.get("flowNumber").asString();
 
-                    String fromPort = "8001";
-                    if (jsonObject.has("fromPort")) fromPort = jsonObject.get("fromPort").asString();
-
-                    if (fromPort != null) {
-                    }
                     int n = Integer.parseInt(fn);
 
                     if (jdata.isArray()) {
@@ -79,17 +69,10 @@ public class CSLUDPDataProcessor implements Runnable {
                         }
                     } else
                         flowManager.addToFlow(n, jdata);
-                } catch (Exception e) {
-                    System.out.println("Received invalid UDP packet " + msg);
-                    System.out.println(e);
+                } finally {
+                    Thread.sleep(3);
                 }
-
-                /**
-                 * Simulate a 3 ms delay
-                 */
-                Thread.sleep(3);
             } catch (InterruptedException e) {
-                System.out.println("Interrupted");
                 interrupted = true;
                 e.printStackTrace();
             }

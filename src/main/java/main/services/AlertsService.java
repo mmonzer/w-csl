@@ -8,6 +8,9 @@ import com.ucsl.json.Json;
 
 public class AlertsService extends Service {
 
+	public static final String UUID = "uuid";
+	public static final String VALUE = "value";
+
 	public AlertsService() {
 		this("alerts","ids_conf");
 	}
@@ -137,8 +140,8 @@ public class AlertsService extends Service {
 		},
 				new JsonCmdHelp()
 				.setDesc("set alert as acked")
-				.setParam("uuid", "uuid of alert", JsonCmdHelp.STR)
-				.setParam("value", "true to set, false to unset", JsonCmdHelp.BOOL)
+				.setParam(UUID, "uuid of alert", JsonCmdHelp.STR)
+				.setParam(VALUE, "true to set, false to unset", JsonCmdHelp.BOOL)
 
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
@@ -154,9 +157,9 @@ public class AlertsService extends Service {
 		},
 				new JsonCmdHelp()
 				.setDesc("set alert as masked")
-				.setParam("uuid", "uuid of alert", JsonCmdHelp.STR)
+				.setParam(UUID, "uuid of alert", JsonCmdHelp.STR)
 				.setParam("time_for_end_of_mask", "time of the end of the mask (ms from January 1, 1970 UTC) ", JsonCmdHelp.LONG)
-				.setParam("value", "true to set, false to unset", JsonCmdHelp.BOOL)
+				.setParam(VALUE, "true to set, false to unset", JsonCmdHelp.BOOL)
 
 				.setStatus(JsonCmdHelp.STATUS_TODO)
 				);
@@ -172,8 +175,8 @@ public class AlertsService extends Service {
 		},
 				new JsonCmdHelp()
 				.setDesc("add alert to model  or remove it")
-				.setParam("uuid", "uuid of alert", JsonCmdHelp.STR)
-				.setParam("value", "true to add, false to remove", JsonCmdHelp.BOOL)
+				.setParam(UUID, "uuid of alert", JsonCmdHelp.STR)
+				.setParam(VALUE, "true to add, false to remove", JsonCmdHelp.BOOL)
 				.setParam("level", "level of alert in the model", JsonCmdHelp.INT)
 
 				.setStatus(JsonCmdHelp.STATUS_TODO)
@@ -202,7 +205,7 @@ public class AlertsService extends Service {
 			public Json exec(Json params) {
 				Json j=Json.object();
 				j.set("result", "ok");
-				j.set("value",1);
+				j.set(VALUE,1);
 
 
 				CSLContext.getInstance().getCSLAlertManager().resetListOfCurrentAlerts();
@@ -224,7 +227,7 @@ public class AlertsService extends Service {
 			public Json exec(Json params) {
 				Json j=Json.object();
 				j.set("result", "ok");
-				j.set("value",1);
+				j.set(VALUE,1);
 
 
 
@@ -251,7 +254,7 @@ public class AlertsService extends Service {
 			public Json exec(Json params) {
 				Json j=Json.object();
 				j.set("result", "ok");
-				j.set("value",1);
+				j.set(VALUE,1);
 
 				params.set("op", "test1");
 

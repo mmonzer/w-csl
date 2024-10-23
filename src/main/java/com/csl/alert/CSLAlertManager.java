@@ -8,6 +8,7 @@ import com.ucsl.interfaces.IAlertLevel;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import com.wcsl.ids.IDSMainProcessor;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /*  CONFIG
@@ -42,6 +44,8 @@ public class CSLAlertManager {
      * Logger instance for this class.
      */
     private static final Logger logger = LoggerFactory.getLogger(CSLAlertManager.class);
+    public static final String ERROR = "error";
+    public static final String VALUE = "value";
 
     public boolean NO_ALERT_FILTERING = true;
     public CSLAlertFactory alertFactory = new CSLAlertFactory();
@@ -185,17 +189,13 @@ public class CSLAlertManager {
             // region -- forward alerts to the Alert Listener
             // TODO: Send the alert directly to DB-API instead of using UDP Socket (This requires the implementation of authentication)
             byte[] data = msg.getBytes();
-            DatagramSocket s;
 
-            try {
-                s = new DatagramSocket();
-                s.connect(this.iNetAddress, port);
+            try (DatagramSocket datagramSocket = new DatagramSocket()){
+                datagramSocket.connect(this.iNetAddress, port);
                 DatagramPacket payload = new DatagramPacket(data, data.length);
-                s.send(payload);
-                s.disconnect();
-                s.close();
+                datagramSocket.send(payload);
+                datagramSocket.disconnect();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             // endregion -- forward alerts to the Alert Listener
@@ -351,83 +351,70 @@ public class CSLAlertManager {
     public Json execOpAlert(Json params) {
 
         Json result = Json.object();
-        String op = JsonUtil.getStringFromJson(params, "op", "");
+        String op = JsonUtil.getStringFromJson(params, "op", "").toLowerCase();
         String alert_id = JsonUtil.getStringFromJson(params, "alert_id", "");
 
-        if (op.compareToIgnoreCase("get_list_active") == 0) {  // msaked=false, added_to_mode= false
-
-            return getListOfCurrentAlertsAsJson();
-        } else if (op.compareToIgnoreCase("get_number_active_by_level") == 0) {  // msaked=false, added_to_mode= false
-
-            return getNumberOfCurrentAlertsAsJsonByLevel();
-        } else if (op.compareToIgnoreCase("get_list_acked") == 0) {  // masked=true or, added_to_mode= true
-
-            return getListOfAckedAlertsAsJson();
-        } else if (op.compareToIgnoreCase("get_list_masked") == 0) {  // masked=true or, added_to_mode= true
-
-            return getListOfMaskedAlertsAsJson();
-        } else if (op.compareToIgnoreCase("get_list_added_to_model") == 0) {  // masked=true or, added_to_mode= true
-
-            return getListOfAddedToModelAlertsAsJson();
-        } else if (op.compareToIgnoreCase("get_list_inactive") == 0) {  // masked=true or, added_to_mode= true
-
-            return getListOfInactiveAlertsAsJson();
-        } else if (op.compareToIgnoreCase("get_list_all") == 0) {
-
-            return getListOfAllAlertsAsJson();
-        } else if (op.compareToIgnoreCase("reset_list") == 0) {
-
-            resetListOfCurrentAlerts();
-        } else if (op.compareToIgnoreCase("dump_list") == 0) {
-
-            Json list = getListOfAllAlertsAsJson();
-            System.out.println(JsonUtil.prettyPrint(list));
-            return list;
-        } else if (op.compareToIgnoreCase("add_to_model") == 0) {
-
-
-            AlertDescriptor a = getAlert(alert_id);
-            if (a == null) return Json.object().set("error", "alert not found (" + alert_id + ")");
-
-            boolean b = JsonUtil.getBooleanFromJson(params, "value", false);
-
-            return alertToJsonForHmi(a);
-        } else if (op.compareToIgnoreCase("set_acked") == 0) {
-
-            boolean b = JsonUtil.getBooleanFromJson(params, "value", false);
-            AlertDescriptor a = getAlert(alert_id);
-            if (a == null) return Json.object().set("error", "alert not found (" + alert_id + ")");
-
-            if (a != null) a.setAcked(b);
-            return alertToJsonForHmi(a);
-        } else if (op.compareToIgnoreCase("set_masked") == 0) {
-            boolean b = JsonUtil.getBooleanFromJson(params, "value", false);
-
-            long time_end = JsonUtil.getLongFromJson(params, "time_for_end_of_mask", 0);
-            AlertDescriptor alert = getAlert(alert_id);
-            AlertDescriptor a = getAlert(alert_id);
-            if (a != null) {
-                a.setMasked(b);
-                a.setTimeForEndOfMask(time_end);
-                return alertToJsonForHmi(a);
-            } else {
-                return Json.object().set("error", "alert not found (" + alert_id + ")");
+        switch (op) {
+            case "get_list_active" -> {
+                return getListOfCurrentAlertsAsJson();   // msaked=false, added_to_mode= false
             }
-        } else if (op.compareToIgnoreCase("test") == 0) {
-            result = test1();
-        } else if (op.compareToIgnoreCase("test1") == 0) {
-            result = test1();
-        } else if (op.compareToIgnoreCase("test2") == 0) {
-            test2();
-        } else if (op.compareToIgnoreCase("debug_alert") == 0) {
-            boolean b = JsonUtil.getBooleanFromJson(params, "value", false);
-
-            FDEBUG = b;
-            System.out.println("DEBUG ALERT:" + FDEBUG);
-        } else {
-            System.out.println("op_alert not found:" + params);
+            case "get_number_active_by_level" -> {
+                return getNumberOfCurrentAlertsAsJsonByLevel();   // msaked=false, added_to_mode= false
+            }
+            case "get_list_acked" -> {
+                return getListOfAckedAlertsAsJson();   // masked=true or, added_to_mode= true
+            }
+            case "get_list_masked" -> {
+                return getListOfMaskedAlertsAsJson();   // masked=true or, added_to_mode= true
+            }
+            case "get_list_added_to_model" -> {
+                return getListOfAddedToModelAlertsAsJson();   // masked=true or, added_to_mode= true
+            }
+            case "get_list_inactive" -> {
+                return getListOfInactiveAlertsAsJson();   // masked=true or, added_to_mode= true
+            }
+            case "get_list_all" -> {
+                return getListOfAllAlertsAsJson();
+            }
+            case "reset_list" -> resetListOfCurrentAlerts();
+            case "dump_list" -> getListOfAllAlertsAsJson();
+            case "add_to_model" -> {
+                AlertDescriptor a = getAlert(alert_id);
+                if (a == null) return Json.object().set(ERROR, getMsgAlertNotFound(alert_id));
+                return alertToJsonForHmi(a);
+            }
+            case "set_acked" -> {
+                boolean b = JsonUtil.getBooleanFromJson(params, VALUE, false);
+                AlertDescriptor a = getAlert(alert_id);
+                if (a == null) return Json.object().set(ERROR, getMsgAlertNotFound(alert_id));
+                a.setAcked(b);
+                return alertToJsonForHmi(a);
+            }
+            case "set_masked" -> {
+                boolean b = JsonUtil.getBooleanFromJson(params, VALUE, false);
+                long time_end = JsonUtil.getLongFromJson(params, "time_for_end_of_mask", 0);
+                AlertDescriptor a = getAlert(alert_id);
+                if (a != null) {
+                    a.setMasked(b);
+                    a.setTimeForEndOfMask(time_end);
+                    return alertToJsonForHmi(a);
+                } else {
+                    return Json.object().set(ERROR, getMsgAlertNotFound(alert_id));
+                }
+            }
+            case "test1" -> result = test1();
+            case "test2" -> test2();
+            case "debug_alert" -> {
+                boolean b = JsonUtil.getBooleanFromJson(params, VALUE, false);
+                FDEBUG = b;
+            }
+            default -> System.out.println("op_alert not found:" + params);
         }
         return result;
+    }
+
+    private static @NotNull String getMsgAlertNotFound(String alert_id) {
+        return "alert not found (" + alert_id + ")";
     }
 
     public Json getAlertStats() {

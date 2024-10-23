@@ -62,9 +62,7 @@ public class ApiMessageReceiver implements  MqttCallback {
 		if (isShowInfo()) logger.info("Init receiver api: {}", api);
 		if (subscribed) close();
 
-		MemoryPersistence persistence = new MemoryPersistence();
-
-		try {
+		try (MemoryPersistence persistence = new MemoryPersistence()){
 			//We're using eclipse paho library  so we've to go with MqttCallback
 			clientToListen = new MqttClient(BROKER_TCP_LOCALHOST_1883,getClientToListenID(),persistence);
 			clientToListen.setCallback(this);

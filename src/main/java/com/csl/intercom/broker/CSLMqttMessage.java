@@ -4,6 +4,9 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
 public class CSLMqttMessage {
+
+    public static final String RESULTS = "results";
+
     /**
      * The error codes available to MQTT messages.
      */
@@ -105,8 +108,8 @@ public class CSLMqttMessage {
         CSLMqttMessage result = new CSLMqttMessage()
                 .setError(Error.fromValue(JsonUtil.getIntFromJson(message, "error", 0)))
                 .setErrorMessage(JsonUtil.getStringFromJson(message, "error_message", null));
-        if (message.has("results")) {
-            Json results = message.get("results");
+        if (message.has(RESULTS)) {
+            Json results = message.get(RESULTS);
             if (results.isString()) {
                 result.setMessage(results.asString());
             } else {
@@ -191,7 +194,7 @@ public class CSLMqttMessage {
             }
             return result.asString();
         } else {
-            return Json.object("results", message).toString();
+            return Json.object(RESULTS, message).toString();
         }
     }
 }

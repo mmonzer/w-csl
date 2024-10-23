@@ -25,6 +25,7 @@ import com.ucsl.json.Json;
 
 public class CSLDemo11ApisJwt {
 
+	public static final String RESULT = "Result =";
 	String token ="";
 	
 	public String getServerURL() {
@@ -149,7 +150,7 @@ public class CSLDemo11ApisJwt {
 		
 		Json result = execCmd("devdb", "get_devices", jparams);
 		
-		System.out.println("Result ="+result);
+		System.out.println(RESULT +result);
 		
 	//	System.out.println("\n\n\n");
 	}
@@ -170,7 +171,7 @@ public class CSLDemo11ApisJwt {
 		
 		Json result = execCmd("ids", "op_alert", jparams);
 		
-		System.out.println("Result ="+result);
+		System.out.println(RESULT +result);
 		
 	//	System.out.println("\n\n\n");
 	}
@@ -189,7 +190,7 @@ public class CSLDemo11ApisJwt {
 		else {
 			token="";
 		}
-		System.out.println("Result ="+result);
+		System.out.println(RESULT +result);
 		
 		
 		

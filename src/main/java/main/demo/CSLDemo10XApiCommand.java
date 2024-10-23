@@ -18,6 +18,7 @@ import com.ucsl.json.Json;
 
 public class CSLDemo10XApiCommand {
 
+	public static final String RESULT = "Result =";
 	String token ="";
 	
 	public String getServerURL() {
@@ -145,7 +146,7 @@ public class CSLDemo10XApiCommand {
 		
 		Json result = execCmd("devdb", "op", jparams);
 		
-		System.out.println("Result ="+result);
+		System.out.println(RESULT +result);
 		
 	//	System.out.println("\n\n\n");
 	}
@@ -166,7 +167,7 @@ public class CSLDemo10XApiCommand {
 		
 		Json result = execCmd("ids", "op_alert", jparams);
 		
-		System.out.println("Result ="+result);
+		System.out.println(RESULT +result);
 		
 	//	System.out.println("\n\n\n");
 	}
@@ -185,7 +186,7 @@ public class CSLDemo10XApiCommand {
 		else {
 			token="";
 		}
-		System.out.println("Result ="+result);
+		System.out.println(RESULT +result);
 		
 		
 		

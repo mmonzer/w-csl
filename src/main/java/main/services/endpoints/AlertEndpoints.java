@@ -37,21 +37,21 @@ public enum AlertEndpoints implements Endpoint {
     SET_ACKED("set_acked",
             new JsonCmdHelp()
                     .setDesc("set alert as acked")
-                    .setParam("uuid", "uuid of alert", JsonCmdHelp.STR)
-                    .setParam("value", "true to set, false to unset", JsonCmdHelp.BOOL)
+                    .setParam(Constants.UUID, "id of alert", JsonCmdHelp.STR)
+                    .setParam(Constants.VALUE, "true to set, false to unset", JsonCmdHelp.BOOL)
                     .setStatus(JsonCmdHelp.STATUS_TODO)),
     SET_MASKED("set_masked",
             new JsonCmdHelp()
                     .setDesc("set alert as masked")
-                    .setParam("uuid", "uuid of alert", JsonCmdHelp.STR)
+                    .setParam(Constants.UUID, "uuid of alert", JsonCmdHelp.STR)
                     .setParam("time_for_end_of_mask", "time of the end of the mask (ms from January 1, 1970 UTC) ", JsonCmdHelp.LONG)
-                    .setParam("value", "true to set, false to unset", JsonCmdHelp.BOOL)
+                    .setParam(Constants.VALUE, "true to set, false to unset", JsonCmdHelp.BOOL)
                     .setStatus(JsonCmdHelp.STATUS_TODO)),
     SET_ADDED_TO_MODEL("set_added_to_model",
             new JsonCmdHelp()
                     .setDesc("add alert to model  or remove it")
-                    .setParam("uuid", "uuid of alert", JsonCmdHelp.STR)
-                    .setParam("value", "true to add, false to remove", JsonCmdHelp.BOOL)
+                    .setParam(Constants.UUID, "uuid of alert", JsonCmdHelp.STR)
+                    .setParam(Constants.VALUE, "true to add, false to remove", JsonCmdHelp.BOOL)
                     .setParam("level", "level of alert in the model", JsonCmdHelp.INT)
                     .setStatus(JsonCmdHelp.STATUS_TODO)),
     STATS("stats",
@@ -107,5 +107,10 @@ public enum AlertEndpoints implements Endpoint {
 
     public JsonCmdHelp help() {
         return help;
+    }
+
+    private static class Constants {
+        public static final String VALUE = "value";
+        public static final String UUID = "uuid";
     }
 }

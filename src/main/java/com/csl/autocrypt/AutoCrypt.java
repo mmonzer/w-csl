@@ -24,6 +24,8 @@ import static main.services.endpoints.AutoCryptEndpoints.*;
  * API client of the module AutoCrypt
  */
 public class AutoCrypt {
+    public static final String FAILED_TO_CREATE_ROLE_AT_PATH = "Failed to create role {} at path {}";
+    public static final String SYNCHRONIZED_ROLES = "synchronized roles";
     @Setter
     @Getter
     private String moduleIp;
@@ -107,7 +109,7 @@ public class AutoCrypt {
             syncIssuers();
             logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized issuers");
         } catch (SynchronizationException e) {
-            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, FAILED_TO_CREATE_ROLE_AT_PATH, name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -141,7 +143,7 @@ public class AutoCrypt {
             syncCertificates();
             logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized issuers and certificates");
         } catch (SynchronizationException e) {
-            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, FAILED_TO_CREATE_ROLE_AT_PATH, name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -255,9 +257,9 @@ public class AutoCrypt {
         // Sync roles
         try {
             syncRoles();
-            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized roles");
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API , SYNCHRONIZED_ROLES);
         } catch (SynchronizationException e) {
-            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to create role {} at path {}", name, params.get(Common.PATH).asString());
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, FAILED_TO_CREATE_ROLE_AT_PATH, name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
         }
 
@@ -298,7 +300,7 @@ public class AutoCrypt {
         // sync roles
         try {
             syncRoles();
-            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized roles");
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API , SYNCHRONIZED_ROLES);
         } catch (SynchronizationException e) {
             logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to delete role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());
@@ -332,7 +334,7 @@ public class AutoCrypt {
         // sync roles
         try {
             syncRoles();
-            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized roles");
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API , SYNCHRONIZED_ROLES);
         } catch (SynchronizationException e) {
             logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"Failed to update role {} at path {}", name, params.get(Common.PATH).asString());
             return JsonApiResponse.error(e.getMessage());

@@ -15,7 +15,6 @@ import com.csl.web.jettyutils.JettyServerErrorHandler;
 import com.csl.web.jettyutils.CustomJettyWebSocketServlet;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.CSLWebSocketHandler;
-import com.csl.web.websockets.WebSocketServlet;
 import com.ucsl.json.Json;
 import jakarta.websocket.server.ServerEndpointConfig;
 import org.eclipse.jetty.server.*;
@@ -32,7 +31,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer;
-import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -121,40 +119,44 @@ public class CSLHttpServerJetty {
         setupContext();
 
         if (isRemote) {
-            //setupWebSocketPolicy();  // TODO : policy
-//            registerWebSockets();
-//            JettyWebSocketServletContainerInitializer.configure(context, null);
-//            ServletHolder wsHolderConsole = new ServletHolder(CSLWebSocket.WEB_SOCKET_CONSOLE, new WebSocketServlet(CSLWebSocketHandler.class));
-//            context.addServlet(wsHolderConsole, CSLWebSocket.WEB_SOCKET_CONSOLE);
-//            ServletHolder wsHolderJCmd = new ServletHolder(CSLWebSocket.WEB_SOCKET_CMD, new WebSocketServlet(CSLWebSocketForJcmdHandler.class));
-//            context.addServlet(wsHolderJCmd, CSLWebSocket.WEB_SOCKET_CMD);
-
-            CSLWebSocket.registerAll();
-            JakartaWebSocketServletContainerInitializer.configure(context, (context, container) ->
-            {
-                // Add echo endpoint to server container
-                if (!listOfWebsocketPath.contains(CSLWebSocket.WEB_SOCKET_CMD)) {
-                    listOfWebsocketPath.add(CSLWebSocket.WEB_SOCKET_CMD);
-                } else {
-                    logger.warn("WebSocket path already in use: {}", CSLWebSocket.WEB_SOCKET_CMD);
-                }
-                ServerEndpointConfig jcmdHandler = ServerEndpointConfig.Builder.create(CSLWebSocketForJcmdHandler.class, CSLWebSocket.WEB_SOCKET_CMD).build();
-                container.addEndpoint(jcmdHandler);if (!listOfWebsocketPath.contains(CSLWebSocket.WEB_SOCKET_CONSOLE)) {
-                listOfWebsocketPath.add(CSLWebSocket.WEB_SOCKET_CONSOLE);
-            } else {
-                logger.warn("WebSocket path already in use: {}", CSLWebSocket.WEB_SOCKET_CONSOLE);
-            }
-                ServerEndpointConfig consoleHandler = ServerEndpointConfig.Builder.create(CSLWebSocketHandler.class, CSLWebSocket.WEB_SOCKET_CONSOLE).build();
-                container.addEndpoint(consoleHandler);
-            });
-
-
-
+            registerWebSockets();
             addCorsOptionsServlet();
         }
 
         addApiHelpPageServlet();
         registerApiCommands();
+    }
+
+    /**
+     * Registers websockets for the IHM and CSL websockets and creates their endpoints.
+     */
+    private void registerWebSockets() {
+        CSLWebSocket.registerAll();
+        JakartaWebSocketServletContainerInitializer.configure(context, (context, container) ->
+        {
+            // Set max size for buffer
+            container.setDefaultMaxTextMessageBufferSize(1024*1024);
+
+            // Add echo endpoint to server container
+
+            container.addEndpoint(createEndpoint(CSLWebSocket.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class));
+            container.addEndpoint(createEndpoint(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class));
+        });
+    }
+
+    /**
+     * Creates and endpoint from the endpoint URI and the handler
+     * @param endpoint endpoint URI to create the endpoint
+     * @param clazz class of the handler for the endpoint
+     * @return the endpoint configuration
+     */
+    private ServerEndpointConfig createEndpoint(String endpoint, Class clazz) {
+        if (!listOfWebsocketPath.contains(endpoint)) {
+            listOfWebsocketPath.add(endpoint);
+        } else {
+            logger.warn("WebSocket path already in use: {}", endpoint);
+        }
+        return ServerEndpointConfig.Builder.create(clazz, endpoint).build();
     }
 
     /**
@@ -476,7 +478,7 @@ public class CSLHttpServerJetty {
     /**
      * Registers the WebSocket servlets based on the server configuration.
      */
-    private void registerWebSockets() {
+    private void registerWebSockets_old() {
         CSLWebSocket.registerAll();
 
         // CSLWebSocketHandler is the WS to the HMI (alerts deprecated?, console used, variables deprecated?, database deprecated?)

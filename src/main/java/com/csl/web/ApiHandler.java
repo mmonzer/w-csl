@@ -14,11 +14,13 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.MultiPartContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,21 +119,22 @@ public class ApiHandler implements AutoCloseable {
         String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
 
         // Ensure the properties are set
-        HttpClient httpClient = new HttpClient();
         if (trustStorePath == null || trustStorePassword == null) {
             CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized HTTP client for "+ moduleName );
-            return httpClient;
+            return new HttpClient();
         }
 
         // Configure SslContextFactory with the retrieved properties
-//        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
-//        httpClient.getSslContextFactory().setTrustStorePath(trustStorePath);
-//        httpClient.getSslContextFactory().setTrustStorePassword(trustStorePassword);
-//        httpClient.getSslContextFactory().setTrustAll(true);
-//        httpClient.setSslContextFactory(sslContextFactory);
+        SslContextFactory.Client sslContextFactory = new SslContextFactory.Client();
+        sslContextFactory.setTrustStorePath(trustStorePath);
+        sslContextFactory.setTrustStorePassword(trustStorePassword);
+        sslContextFactory.setTrustAll(true);
+
+        ClientConnector clientConnector = new ClientConnector();
+        clientConnector.setSslContextFactory(sslContextFactory);
 
         CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized self-signed HTTPS client for "+ moduleName );
-        return httpClient;
+        return new HttpClient(new HttpClientTransportDynamic(clientConnector));
     }
 
     // endregion initialize client

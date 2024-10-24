@@ -1,10 +1,8 @@
 package com.csl.web.websockets;
 
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import jakarta.websocket.*;
+import jakarta.websocket.server.ServerEndpoint;
+import org.eclipse.jetty.websocket.api.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,26 +11,33 @@ import static com.csl.web.websockets.CSLWebSocket.cleanSocketName;
 /**
  * Web socket handler for the HMI. Possible multiple sessions.
  */
-@WebSocket
+
+@ServerEndpoint(CSLWebSocket.WEB_SOCKET_CONSOLE)
 public class CSLWebSocketHandler {
     private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketHandler.class);
+    private Session session;
 
-    @OnWebSocketConnect
-    public void onConnect(Session user) {
-        logger.trace("Connection : {}",user);
-        logger.info("A new user has connected to the CSLWebSocketHandler websocket through path {}", cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath()));
-    	CSLWebSocket.addUser(user);
+    @OnClose
+    public void onWebSocketClose(CloseReason close)
+    {
+        logger.info("Disconnected from User Client websocket though path {}", cleanSocketName(session.getRequestURI().getPath()));
+        CSLWebSocket.removeUser(session);
     }
 
-    @OnWebSocketClose
-    public void onClose(Session user, int statusCode, String reason) {
-        logger.info("Disconnected from User Client websocket though path {}", cleanSocketName(user.getUpgradeRequest().getRequestURI().getPath()));
-        CSLWebSocket.removeUser(user);
+    @OnOpen
+    public void onWebSocketConnect(Session session)
+    {
+        this.session = session;
+        logger.trace("Connection : {}",session);
+        logger.info("A new user has connected to the CSLWebSocketHandler websocket through path {}", cleanSocketName(session.getRequestURI().getPath()));
+    	CSLWebSocket.addUser(session);
     }
 
-    @OnWebSocketMessage
-    public void onMessage(Session user, String message) {
-    	System.out.println("OnMessage user="+user+" message="+message);
+    @OnMessage
+    public void onWebSocketText(String message)
+    {
+        System.out.println("OnMessage user="+session+" message="+message);
+
     }
 
 }

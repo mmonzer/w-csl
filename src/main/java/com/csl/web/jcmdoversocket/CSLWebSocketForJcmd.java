@@ -4,7 +4,7 @@ import com.csl.logger.LoggerConstants;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
-import org.eclipse.jetty.websocket.api.WriteCallback;
+import jakarta.websocket.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import org.eclipse.jetty.websocket.api.Session;
 
 import static com.csl.logger.CSLNetworkLogger.*;
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -37,7 +36,7 @@ public class CSLWebSocketForJcmd {
     private static long uuidCounter = 0;
 
     // Concurrent map to manage WebSocket sessions by API name
-    static Map<String,Session> sessionMap = new ConcurrentHashMap<>();
+    static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
 
     // Map to keep track of pending messages and their status
     static Map<String, Json> pendingMessages = new HashMap<>();
@@ -71,14 +70,12 @@ public class CSLWebSocketForJcmd {
         Session existingSession = sessionMap.get(name);
 
         if (existingSession != null) {
-			try {
-                existingSession.disconnect();
-			} catch (Exception e) {
+            try {
+                existingSession.close();
+            } catch (Exception e) {
                 logger.error("Error disconnecting session", e);
-			}
-            existingSession.close();
-		}
-
+            }
+        }
         sessionMap.put(name, session);
 	}
 
@@ -258,17 +255,7 @@ public class CSLWebSocketForJcmd {
      */
     private static void sendMessage(Session session, String message) {
         try {
-            session.getRemote().sendString(message, new WriteCallback() {
-                @Override
-                public void writeFailed(Throwable throwable) {
-
-                }
-
-                @Override
-                public void writeSuccess() {
-                    
-                }
-            });
+            session.getAsyncRemote().sendText(message);
         } catch (Exception e) {
             logger.error("Error sending message", e);
         }

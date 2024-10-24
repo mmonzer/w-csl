@@ -3,7 +3,7 @@ package com.csl.web.websockets;
 import com.csl.intercom.broker.ISocketMsgListener;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.json.Json;
-import org.eclipse.jetty.websocket.api.Session;
+import jakarta.websocket.Session;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public class CSLWebSocket {
             Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
             socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
                 try {
-                    session.getRemote().sendString(message);
+                    session.getAsyncRemote().sendText(message);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -64,7 +64,7 @@ public class CSLWebSocket {
                 Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
                 socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
                     try {
-                        session.getRemote().sendString(messageString);
+                        session.getAsyncRemote().sendText(messageString);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -98,7 +98,7 @@ public class CSLWebSocket {
                 Map<Session, String> socketUsernameMap = getSocketUsernameMap(websocketName);
                 socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
                     try {
-                        session.getRemote().sendString(message);
+                        session.getAsyncRemote().sendText(message);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -145,7 +145,7 @@ public class CSLWebSocket {
      */
     public static void addUser(Session session) {
         String username = "User" + (nextUserNumber++);
-        String socketName = cleanSocketName(session.getUpgradeRequest().getRequestURI().getPath());
+        String socketName = cleanSocketName(session.getRequestURI().getPath());
 
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.put(session, username);
@@ -157,7 +157,7 @@ public class CSLWebSocket {
      * @param session The user session to remove.
      */
     public static void removeUser(Session session) {
-        String socketName = cleanSocketName(session.getUpgradeRequest().getRequestURI().getPath());
+        String socketName = cleanSocketName(session.getRequestURI().getPath());
 
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.remove(session);
@@ -186,12 +186,8 @@ public class CSLWebSocket {
             String username = socketUsernameMap.get(session);
 
             Json refreshMessage = Json.object().set("refresh", socketName);
-            try {
-                if (session.isOpen()) {
-                    session.getRemote().sendString(refreshMessage.toString());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (session.isOpen()) {
+                    session.getAsyncRemote().sendText(refreshMessage.toString());
             }
         });
     }

@@ -3,40 +3,40 @@ package com.csl.web.jcmdoversocket;
 import com.csl.core.CSLContext;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import jakarta.websocket.*;
+import jakarta.websocket.server.ServerEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Web socket to connect the CSL-Client
  */
-@WebSocket
+@ServerEndpoint(CSLWebSocket.WEB_SOCKET_CMD)
 public class CSLWebSocketForJcmdHandler {
+	private Session session;
 	private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmdHandler.class);
      
-    @OnWebSocketConnect
+    @OnOpen
     public void onConnect(Session session) {
 		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket");
-		logger.trace("Connection : {}",session);
-    }
+		logger.trace("Connection : {}", session);
+		this.session = session;
+//		CSLWebSocketForJcmd.addUser("w", session);
+	}
 
-    @OnWebSocketClose
-    public void onClose(Session session, int statusCode, String reason) {
-		logger.info("Disconnected from CSL-Client websocket ({}) : {}", statusCode, reason);
+    @OnClose
+    public void onClose(CloseReason close) {
+		logger.info("Disconnected from CSL-Client websocket : {}", close.getReasonPhrase());
 		CSLWebSocketForJcmd.removeUser(session);
 
 		}
 
-    @OnWebSocketMessage
-    public void onMessage(Session session, String message) {
+    @OnMessage
+    public void onMessage(String message) {
 		message=message.trim();
     	if (message.startsWith("api:")) {
     		String apiName=message.substring(4);
-    		CSLWebSocketForJcmd.addApi(apiName,session);
+    		CSLWebSocketForJcmd.addApi(apiName, session);
     	}
     	else if (message.startsWith("res:{")&&message.endsWith("}")) {
     		message=message.substring(4);

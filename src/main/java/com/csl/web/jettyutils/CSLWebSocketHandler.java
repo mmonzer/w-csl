@@ -1,5 +1,7 @@
 package com.csl.web.jettyutils;
 
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -8,7 +10,7 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import java.io.IOException;
 
-@WebSocket
+//@WebSocket
 public class CSLWebSocketHandler {
     @OnWebSocketConnect
     public void onOpen(Session session) {

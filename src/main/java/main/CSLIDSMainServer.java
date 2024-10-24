@@ -24,7 +24,7 @@ public class CSLIDSMainServer {
         CorrelationUtils.setEndpoint("mainServer");
 
         // Disable Jetty logging
-        org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
+//        org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
         CSLContext.getInstance().init();
     }

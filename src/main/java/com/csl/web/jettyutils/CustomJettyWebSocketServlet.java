@@ -1,10 +1,6 @@
 package com.csl.web.jettyutils;
 
 import com.csl.core.Config;
-import jakarta.websocket.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 import  org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 

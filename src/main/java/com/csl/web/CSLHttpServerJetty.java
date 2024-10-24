@@ -15,12 +15,12 @@ import com.csl.web.jettyutils.JettyServerErrorHandler;
 import com.csl.web.jettyutils.CustomJettyWebSocketServlet;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.CSLWebSocketHandler;
+import com.csl.web.websockets.WebSocketServlet;
 import com.ucsl.json.Json;
+import jakarta.websocket.server.ServerEndpointConfig;
 import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.websocket.api.WebSocketBehavior;
 import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 
@@ -32,6 +32,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer;
+import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -110,7 +111,9 @@ public class CSLHttpServerJetty {
         }
 
         jettyServer = new Server(inetSocketAddress);
-        context = new ServletContextHandler();
+        context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        context.setContextPath("/");
+        jettyServer.setHandler(context);
         initialized = true;
 
         jettyServer.setErrorHandler(new JettyServerErrorHandler());
@@ -118,27 +121,31 @@ public class CSLHttpServerJetty {
         setupContext();
 
         if (isRemote) {
-            //setupWebSocketPolicy();
+            //setupWebSocketPolicy();  // TODO : policy
 //            registerWebSockets();
+//            JettyWebSocketServletContainerInitializer.configure(context, null);
+//            ServletHolder wsHolderConsole = new ServletHolder(CSLWebSocket.WEB_SOCKET_CONSOLE, new WebSocketServlet(CSLWebSocketHandler.class));
+//            context.addServlet(wsHolderConsole, CSLWebSocket.WEB_SOCKET_CONSOLE);
+//            ServletHolder wsHolderJCmd = new ServletHolder(CSLWebSocket.WEB_SOCKET_CMD, new WebSocketServlet(CSLWebSocketForJcmdHandler.class));
+//            context.addServlet(wsHolderJCmd, CSLWebSocket.WEB_SOCKET_CMD);
+
+            CSLWebSocket.registerAll();
+            JakartaWebSocketServletContainerInitializer.configure(context, (context, container) ->
+            {
+                // Add echo endpoint to server container
+                ServerEndpointConfig jcmdHandler = ServerEndpointConfig.Builder.create(CSLWebSocketForJcmdHandler.class, CSLWebSocket.WEB_SOCKET_CMD).build();
+                container.addEndpoint(jcmdHandler);
+                ServerEndpointConfig consoleHandler = ServerEndpointConfig.Builder.create(CSLWebSocketHandler.class, CSLWebSocket.WEB_SOCKET_CONSOLE).build();
+                container.addEndpoint(consoleHandler);
+            });
+
+
+
             addCorsOptionsServlet();
         }
 
-//        addApiHelpPageServlet();
-//        registerApiCommands();
-        jettyServer.setHandler(new AbstractHandler()
-        {
-            @Override
-            public void handle(String var1, Request var2, HttpServletRequest var3, HttpServletResponse var4)
-            {
-                // Succeed the callback to signal that the
-                // request/response processing is complete.
-                System.out.println("ok");
-            }
-        });
-
-        jettyServer.addConnector(new ServerConnector(jettyServer));
-        jettyServer.setHandler(context);
-        JakartaWebSocketServletContainerInitializer.configure(context, null);
+        addApiHelpPageServlet();
+        registerApiCommands();
     }
 
     /**

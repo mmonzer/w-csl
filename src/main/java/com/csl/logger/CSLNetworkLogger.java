@@ -1,7 +1,10 @@
 package com.csl.logger;
 
+import org.apache.commons.math3.ml.neuralnet.Network;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
+
+import static com.csl.logger.LoggerConstants.*;
 
 /**
  * Logger specialized in logging incoming and outgoing requests/responses.
@@ -40,7 +43,9 @@ public class CSLNetworkLogger {
     public static void warn(Logger logger, String endpoint, String protocol, String message) {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.warn(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.PROTOCOL);
     }
@@ -55,7 +60,9 @@ public class CSLNetworkLogger {
     public static void error(Logger logger, String endpoint, String protocol, String message) {
         MDC.put(LoggerConstants.ENDPOINT, endpoint);
         MDC.put(LoggerConstants.PROTOCOL, protocol);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.error(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         MDC.remove(LoggerConstants.ENDPOINT);
         MDC.remove(LoggerConstants.PROTOCOL);
     }
@@ -73,7 +80,9 @@ public class CSLNetworkLogger {
     public static void infoInboundRequest(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, String message) {
         setVariablesSource(ip, port);
         String oldEndpoint = setVariables(method, endpoint, protocol, null);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.info(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
@@ -90,7 +99,9 @@ public class CSLNetworkLogger {
     public static void infoInboundRequest(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, String message) {
         setVariablesSource(ip, port);
         String oldEndpoint = setVariables(method, endpoint, protocol, null);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.info(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
@@ -127,14 +138,18 @@ public class CSLNetworkLogger {
     private static void infoMessage(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
         setVariablesDestination(ip, port);
         String oldEndpoint = setVariables(method, endpoint, protocol, statusCode);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.info(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
     private static void infoMessage(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
         setVariablesDestination(ip, port);
         String oldEndpoint = setVariables(method, endpoint, protocol, statusCode);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.info(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
@@ -152,7 +167,9 @@ public class CSLNetworkLogger {
     public static void debugInboundResponse(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode, String message) {
         setVariablesSource(ip, port);
         String oldEndpoint = setVariables( method, endpoint,protocol, statusCode);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.debug(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
@@ -184,7 +201,9 @@ public class CSLNetworkLogger {
     public static void debugOutboundRequest(Logger logger, String ip, Integer port, String method, String endpoint, String protocol, String message) {
         setVariablesDestination(ip, port);
         String oldEndpoint = setVariables( method, endpoint,protocol, null);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.debug(message);
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
@@ -216,7 +235,9 @@ public class CSLNetworkLogger {
     public static void debugInboundResponse(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol, Integer statusCode) {
         setVariablesSource(ip, port);
         String oldEndpoint = setVariables(method, endpoint, protocol, statusCode);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.debug("HTTP response received.");
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
@@ -233,7 +254,9 @@ public class CSLNetworkLogger {
     public static void debugOutboundRequest(CSLApplicativeLogger logger, String ip, Integer port, String method, String endpoint, String protocol) {
         setVariablesDestination(ip, port);
         String oldEndpoint = setVariables(method, endpoint, protocol, null);
+        MDC.put(LOG_TYPE, NETWORK);
         logger.debug("HTTP request sent.");
+        MDC.put(LOG_TYPE, APPLICATIVE);
         removeVariables(oldEndpoint);
     }
 
@@ -241,14 +264,14 @@ public class CSLNetworkLogger {
      * Sets the network log label on
      */
     public static void addNetworkLog() {
-        MDC.put(LoggerConstants.LOG_TYPE, LoggerConstants.NETWORK);
+        MDC.put(LOG_TYPE, NETWORK);
     }
 
     /**
      * Sets the network log label off
      */
     public static void removeNetworkLog() {
-        MDC.remove(LoggerConstants.LOG_TYPE);
+        MDC.remove(LOG_TYPE);
     }
 
     /**

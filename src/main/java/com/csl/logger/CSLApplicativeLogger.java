@@ -24,6 +24,36 @@ public class CSLApplicativeLogger {
 
     // region LoggerActions and LoggerInterfaces
 
+    /**
+     * Remove variables from MDC logger environment
+     */
+    private static void removeVariables() {
+        MDC.remove("interface");
+        MDC.remove("action");
+        MDC.remove(LoggerConstants.LOG_TYPE);
+    }
+
+    /**
+     * Add variables to MDC logger environment
+     *
+     * @param action           action variable
+     * @param requestInterface communication interfaces variable
+     */
+    private static void addVariablesToMDC(String action, String requestInterface) {
+        MDC.put("action", action);
+        MDC.put("interface", requestInterface);
+        if (MDC.get(LoggerConstants.LOG_TYPE) == null) {
+            MDC.put(LoggerConstants.LOG_TYPE, LoggerConstants.APPLICATIVE);
+        }
+    }
+
+    /**
+     * Add variables to MDC logger environment
+     */
+    private static void addVariablesToMDC() {
+        addVariablesToMDC(null, null);
+    }
+
     public void trace(LoggerActions action, LoggerInterfaces interfce, String format, Object... objects) {
         this.trace(action.toString(), interfce.toString(), String.format(format, objects));
     }
@@ -52,6 +82,10 @@ public class CSLApplicativeLogger {
         this.debug(action.toString(), interfce.toString(), msg);
     }
 
+    // region quickers LoggerActions and LoggerInterfaces
+
+    // TODO : generalize with a interface string -> void
+
     public void info(LoggerActions action, LoggerInterfaces interfce, String msg) {
         this.info(action.toString(), interfce.toString(), msg);
     }
@@ -63,10 +97,6 @@ public class CSLApplicativeLogger {
     public void error(LoggerActions action, LoggerInterfaces interfce, String msg) {
         this.error(action.toString(), interfce.toString(), msg);
     }
-
-    // region quickers LoggerActions and LoggerInterfaces
-
-    // TODO : generalize with a interface string -> void
 
     public void traceResp(LoggerInterfaces interfce, String format, Object... objects) {
         this.trace(LoggerActions.RESPONSE, interfce, format, objects);
@@ -136,6 +166,10 @@ public class CSLApplicativeLogger {
         this.warn(LoggerActions.RESPONSE, interfce, msg);
     }
 
+    // endregion quickers LoggerActions and LoggerInterfaces
+
+    // region wrappers LoggerActions and LoggerInterfaces
+
     public void warnReq(LoggerInterfaces interfce, String msg) {
         this.warn(LoggerActions.REQUEST, interfce, msg);
     }
@@ -148,10 +182,6 @@ public class CSLApplicativeLogger {
         this.error(LoggerActions.REQUEST, interfce, msg);
     }
 
-    // endregion quickers LoggerActions and LoggerInterfaces
-
-    // region wrappers LoggerActions and LoggerInterfaces
-
     // TODO : generalize with a interface string -> void
     private void trace(String action, String requestInterface, String msg) {
         log(LOG_LEVEL_TRACE, action, requestInterface, msg);
@@ -160,6 +190,12 @@ public class CSLApplicativeLogger {
     private void debug(String action, String requestInterface, String msg) {
         log(LOG_LEVEL_DEBUG, action, requestInterface, msg);
     }
+
+    // endregion wrappers LoggerActions and LoggerInterfaces
+
+    // endregion LoggerActions and LoggerInterfaces
+
+    // region usual level commands
 
     private void info(String action, String requestInterface, String msg) {
         log(LOG_LEVEL_INFO, action, requestInterface, msg);
@@ -172,12 +208,6 @@ public class CSLApplicativeLogger {
     private void error(String action, String requestInterface, String msg) {
         log(LOG_LEVEL_ERROR, action, requestInterface, msg);
     }
-
-    // endregion wrappers LoggerActions and LoggerInterfaces
-
-    // endregion LoggerActions and LoggerInterfaces
-
-    // region usual level commands
 
     public void trace(String format, Object... objects) {
         log(LOG_LEVEL_TRACE, format, objects);
@@ -207,6 +237,8 @@ public class CSLApplicativeLogger {
         log(LOG_LEVEL_DEBUG, format, throwable);
     }
 
+    // endregion usual level commands
+
     public void info(String format, Throwable throwable) {
         log(LOG_LEVEL_INFO, format, throwable);
     }
@@ -218,8 +250,6 @@ public class CSLApplicativeLogger {
     public void error(String format, Throwable throwable) {
         log(LOG_LEVEL_ERROR, format, throwable);
     }
-
-    // endregion usual level commands
 
     private void log(String level, String action, String requestInterface, String message, Object... objects) {
         addVariablesToMDC(action, requestInterface);
@@ -250,7 +280,7 @@ public class CSLApplicativeLogger {
     private void log(String level, String message, Object... objects) {
         addVariablesToMDC();
 
-        switch (level.toLowerCase()) {
+        switch (level.toUpperCase()) {
             case LOG_LEVEL_TRACE:
                 logger.trace(message, objects);
                 break;
@@ -276,7 +306,7 @@ public class CSLApplicativeLogger {
     private void log(String level, String message, Throwable throwable) {
         addVariablesToMDC();
 
-        switch (level.toLowerCase()) {
+        switch (level.toUpperCase()) {
             case LOG_LEVEL_TRACE:
                 logger.trace(message, throwable);
                 break;
@@ -297,33 +327,5 @@ public class CSLApplicativeLogger {
         }
 
         removeVariables();
-    }
-
-    /**
-     * Remove variables from MDC logger environment
-     */
-    private static void removeVariables() {
-        MDC.remove("interface");
-        MDC.remove("action");
-        MDC.remove(LoggerConstants.LOG_TYPE);
-    }
-
-    /**
-     * Add variables to MDC logger environment
-     *
-     * @param action           action variable
-     * @param requestInterface communication interfaces variable
-     */
-    private static void addVariablesToMDC(String action, String requestInterface) {
-        MDC.put("action", action);
-        MDC.put("interface", requestInterface);
-        MDC.put(LoggerConstants.LOG_TYPE, LoggerConstants.APPLICATIVE);
-    }
-
-    /**
-     * Add variables to MDC logger environment
-     */
-    private static void addVariablesToMDC() {
-        addVariablesToMDC(null, null);
     }
 }

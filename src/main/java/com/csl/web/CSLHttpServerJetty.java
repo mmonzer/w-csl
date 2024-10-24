@@ -16,12 +16,11 @@ import com.csl.web.jettyutils.CustomJettyWebSocketServlet;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.CSLWebSocketHandler;
 import com.ucsl.json.Json;
+import jakarta.websocket.server.ServerEndpoint;
 import jakarta.websocket.server.ServerEndpointConfig;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.websocket.api.WebSocketBehavior;
-import org.eclipse.jetty.websocket.api.WebSocketPolicy;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
@@ -38,7 +37,6 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -122,7 +120,6 @@ public class CSLHttpServerJetty {
             registerWebSockets();
             addCorsOptionsServlet();
         }
-
         addApiHelpPageServlet();
         registerApiCommands();
     }
@@ -393,119 +390,6 @@ public class CSLHttpServerJetty {
     }
 
     /**
-     * Sets up the WebSocket policy.
-     */
-    private void setupWebSocketPolicy() {
-        WebSocketPolicy policy = new WebSocketPolicy() {
-            @Override
-            public WebSocketBehavior getBehavior() {
-                return null;
-            }
-
-            @Override
-            public Duration getIdleTimeout() {
-                return null;
-            }
-
-            @Override
-            public int getInputBufferSize() {
-                return 0;
-            }
-
-            @Override
-            public int getOutputBufferSize() {
-                return 0;
-            }
-
-            @Override
-            public long getMaxBinaryMessageSize() {
-                return 0;
-            }
-
-            @Override
-            public long getMaxTextMessageSize() {
-                return 0;
-            }
-
-            @Override
-            public long getMaxFrameSize() {
-                return 0;
-            }
-
-            @Override
-            public boolean isAutoFragment() {
-                return false;
-            }
-
-            @Override
-            public void setIdleTimeout(Duration duration) {
-
-            }
-
-            @Override
-            public void setInputBufferSize(int i) {
-
-            }
-
-            @Override
-            public void setOutputBufferSize(int i) {
-
-            }
-
-            @Override
-            public void setMaxBinaryMessageSize(long l) {
-
-            }
-
-            @Override
-            public void setMaxTextMessageSize(long l) {
-
-            }
-
-            @Override
-            public void setMaxFrameSize(long l) {
-
-            }
-
-            @Override
-            public void setAutoFragment(boolean b) {
-
-            }
-        };
-        policy.setMaxTextMessageSize(1024 * 1024);
-    }
-
-    /**
-     * Registers the WebSocket servlets based on the server configuration.
-     */
-    private void registerWebSockets_old() {
-        CSLWebSocket.registerAll();
-
-        // CSLWebSocketHandler is the WS to the HMI (alerts deprecated?, console used, variables deprecated?, database deprecated?)
-        // CSLWebSocketForJcmd is the WS with CSL-Client
-        if (Config.instance.Server.getSendAlerts()) {
-            context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_ALERT, CSLWebSocketHandler.class)),
-                    CSLWebSocket.WEB_SOCKET_ALERT);
-        }
-        if (Config.instance.Server.getSendConsoleOutput()) {
-            context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class)),
-                    CSLWebSocket.WEB_SOCKET_CONSOLE);
-        }
-        if (Config.instance.Server.getVarsCommands()) {
-            context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_VARIABLES, CSLWebSocketHandler.class)),
-                    CSLWebSocket.WEB_SOCKET_VARIABLES);
-        }
-        if (Config.instance.Server.getDatabaseCommands()) {
-            context.addServlet(new ServletHolder(addWebSocket(CSLWebSocket.WEB_SOCKET_DATABASE, CSLWebSocketHandler.class)),
-                    CSLWebSocket.WEB_SOCKET_DATABASE);
-        }
-        if (Config.instance.Server.getJcmdCommands()) {
-            context.addServlet(new ServletHolder(addWebSocket(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class)),
-                    CSLWebSocketForJcmd.WEB_SOCKET_CMD);
-        }
-    }
-
-    /**
      * Adds a servlet for the API help page.
      */
     private void addApiHelpPageServlet() {
@@ -645,15 +529,6 @@ public class CSLHttpServerJetty {
         if (accessControlRequestMethod != null) {
             resp.setHeader("Access-Control-Allow-Methods", accessControlRequestMethod);
         }
-    }
-
-    /**
-     * Add a remote api
-     *
-     * @param apiname : name of the remote api
-     */
-    public void registerRemoteApi(String apiname) {
-        listOfRemoteApi.add(apiname.toLowerCase());
     }
 
     /**

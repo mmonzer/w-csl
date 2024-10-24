@@ -6,11 +6,9 @@ import com.ucsl.json.Json;
 import jakarta.websocket.Session;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The CSLWebSocket class manages WebSocket connections, broadcasts messages,
@@ -29,6 +27,7 @@ public class CSLWebSocket {
     // Maps for managing WebSocket connections and tags
     private static final HashMap<String, String> websocketTags = new HashMap<>();
     private static final Map<String, Map<Session, String>> allSocketsUsernameMap = new ConcurrentHashMap<>();
+    private static final Set<Session> sessions = new CopyOnWriteArraySet<>();
     private static int nextUserNumber = 1; // Assign to username for the next connecting user
 
     // IMessageBroadcaster instance for broadcasting messages
@@ -61,14 +60,9 @@ public class CSLWebSocket {
             if (VIA_BROKER) {
                 JServiceLoader.getCSLInterModuleCommunicationManager().sendSocketMsg(socketName, messageString);
             } else {
-                Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
-                socketUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
-                    try {
-                        session.getAsyncRemote().sendText(messageString);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
+                for (Session session : sessions)  {
+                    session.getAsyncRemote().sendText(messageString);
+                }
             }
         }
     };
@@ -144,6 +138,7 @@ public class CSLWebSocket {
      * @param session The user session to add.
      */
     public static void addUser(Session session) {
+        sessions.add(session);
         String username = "User" + (nextUserNumber++);
         String socketName = cleanSocketName(session.getRequestURI().getPath());
 
@@ -157,6 +152,7 @@ public class CSLWebSocket {
      * @param session The user session to remove.
      */
     public static void removeUser(Session session) {
+        sessions.remove(session);
         String socketName = cleanSocketName(session.getRequestURI().getPath());
 
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);

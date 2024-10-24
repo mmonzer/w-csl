@@ -133,8 +133,17 @@ public class CSLHttpServerJetty {
             JakartaWebSocketServletContainerInitializer.configure(context, (context, container) ->
             {
                 // Add echo endpoint to server container
+                if (!listOfWebsocketPath.contains(CSLWebSocket.WEB_SOCKET_CMD)) {
+                    listOfWebsocketPath.add(CSLWebSocket.WEB_SOCKET_CMD);
+                } else {
+                    logger.warn("WebSocket path already in use: {}", CSLWebSocket.WEB_SOCKET_CMD);
+                }
                 ServerEndpointConfig jcmdHandler = ServerEndpointConfig.Builder.create(CSLWebSocketForJcmdHandler.class, CSLWebSocket.WEB_SOCKET_CMD).build();
-                container.addEndpoint(jcmdHandler);
+                container.addEndpoint(jcmdHandler);if (!listOfWebsocketPath.contains(CSLWebSocket.WEB_SOCKET_CONSOLE)) {
+                listOfWebsocketPath.add(CSLWebSocket.WEB_SOCKET_CONSOLE);
+            } else {
+                logger.warn("WebSocket path already in use: {}", CSLWebSocket.WEB_SOCKET_CONSOLE);
+            }
                 ServerEndpointConfig consoleHandler = ServerEndpointConfig.Builder.create(CSLWebSocketHandler.class, CSLWebSocket.WEB_SOCKET_CONSOLE).build();
                 container.addEndpoint(consoleHandler);
             });

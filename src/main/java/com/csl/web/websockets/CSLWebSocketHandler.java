@@ -37,7 +37,6 @@ public class CSLWebSocketHandler {
     public void onWebSocketText(String message)
     {
         System.out.println("OnMessage user="+session+" message="+message);
-
     }
 
 }

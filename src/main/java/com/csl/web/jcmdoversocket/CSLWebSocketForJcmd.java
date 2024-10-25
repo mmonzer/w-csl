@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.logger.CSLNetworkLogger.*;
@@ -38,22 +40,7 @@ public class CSLWebSocketForJcmd {
     static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
 
     // Map to keep track of pending messages and their status
-    static Map<String, Json> pendingMessages = new ConcurrentHashMap<>();
-
-    // Debug level for logging
-    private static int debugLevel = 2;
-
-    // Flag to indicate whether the timeout detector is running
-    static boolean timeOutDetectorRunning = false;
-
-    /**
-     * Checks if the debug level is high enough to enable debug logging.
-     *
-     * @return true if debug level is greater than 1.
-     */
-    public static boolean isDebug() {
-        return debugLevel > 1;
-    }
+    static Map<String, CompletableFuture<Json>> pendingMessages = new ConcurrentHashMap<>();
 
     /**
      * Adds a new user session associated with a specific API name.
@@ -151,8 +138,6 @@ public class CSLWebSocketForJcmd {
      * @return The JSON response from the API.
      */
 	public static Json execJCmd(String apiName, Json jsonCmd, String xCorrelationId) {
-		startTimeOutDetector();
-
         Json fullMessage = Json.object();
         String uuid = String.valueOf(getUuid());
 
@@ -162,87 +147,41 @@ public class CSLWebSocketForJcmd {
         fullMessage.set("jsonCommand", jsonCmd);
 
         debugOutboundRequest(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", LoggerConstants.WS_REQUEST_SENT);
-        logger.info("wwwwwwwwww");
-        pendingMessages.put(uuid, fullMessage);
+
+        CompletableFuture<Json> futureResponse = new CompletableFuture<Json>().completeOnTimeout(Json.object(RESPONSE, Json.object(ERROR, "TIMEOUT")), TIME_OUT, TimeUnit.MILLISECONDS);
+        pendingMessages.put(uuid, futureResponse);
         broadcastMessageJson(apiName, fullMessage);
-        fullMessage.set("start_time", System.currentTimeMillis());
 
-
-        Json response = waitForResponse(uuid, fullMessage);
+        Json response;
+        try {
+            response = futureResponse.get().get(RESPONSE);
+        } catch (InterruptedException  | ExecutionException e) {
+            response =Json.object(ERROR, "Interrupted : "+e.getMessage());
+        }
 
         debugInboundResponse(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", 0, LoggerConstants.WS_RESPONSE_RECV);
-        return response;
+        return (response!=null && response.has("result")) ? response.get("result") : Json.object().set(ERROR, "timeout");
     }
-
 
     /**
      * Processes an incoming WebSocket message, matching it to a pending command and storing the response.
      *
      * @param message The incoming WebSocket message as a string.
      */
-    public static void messageArrived(String message) {
+    synchronized public static void messageArrived(String message) {
         try {
             Json jsonMessage = Json.read(message);
-            String uuid = jsonMessage.get("uuid").asString();
+            String uuid = jsonMessage.get(ID).asString();
 
             if (!uuid.isEmpty()) {
-                Json pendingMessage = pendingMessages.get(uuid);
+                CompletableFuture<Json> pendingMessage = pendingMessages.get(uuid);
+                pendingMessages.remove(uuid);
                 if (pendingMessage != null) {
-                    pendingMessage.set(RESPONSE, jsonMessage);
+                    pendingMessage.complete(Json.object(RESPONSE, jsonMessage));
                 }
             }
         } catch (Exception e) {
             logger.error("Error processing message", e);
-        }
-    }
-
-    /**
-     * Starts the timeout detector to monitor pending messages and mark them as timed out if they exceed the timeout limit.
-     */
-    static void startTimeOutDetector() {
-        if (timeOutDetectorRunning) return;
-        timeOutDetectorRunning = true;
-
-        ThreadUtils.correlatedSingleThreadScheduledAtFixedRate(
-            () -> {
-                long currentTime = System.currentTimeMillis();
-
-                for (Map.Entry<String, Json> entry : pendingMessages.entrySet()) {
-                    Json message = entry.getValue();
-                    long startTime = message.get("start_time").asLong();
-                    long endTime = startTime + TIME_OUT;
-
-                    if (endTime < currentTime) {
-                        logger.debug("Timeout: {}", message);
-                        message.set(RESPONSE, Json.object().set(ERROR, "TIMEOUT"));
-                    }
-                }
-            }
-            , 0, 1, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Waits for a response to the given command until it arrives or times out.
-     *
-     * @param uuid        The UUID of the command.
-     * @param fullMessage The full message containing the command.
-     * @return The response JSON object, or a timeout error if the response is not received in time.
-     */
-    private static Json waitForResponse(String uuid, Json fullMessage) {
-        while (true) {
-			try {
-				Thread.sleep(3);
-			} catch (InterruptedException e) {
-                logger.error("Interrupted while waiting for response", e);
-				return Json.object().set(ERROR, "timeout");
-			}
-
-            if (fullMessage.has(RESPONSE)) {
-                logger.trace("Received response: {}", fullMessage);
-                pendingMessages.remove(uuid);
-                Json response = fullMessage.get(RESPONSE);
-                return response.has("result") ? response.get("result") : Json.object().set(ERROR, "timeout");
-            }
         }
     }
 

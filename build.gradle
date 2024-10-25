@@ -67,8 +67,8 @@ dependencies {
     implementation 'org.mongodb:bson:5.1.1'
     implementation 'org.mongodb:mongo-java-driver:3.12.14'
     implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE220'
-    implementation 'org.springframework:spring-messaging:6.0.0'
-    implementation 'org.springframework:spring-websocket:6.0.0'
+    implementation 'org.springframework:spring-messaging:6.0.23'
+    implementation 'org.springframework:spring-websocket:6.0.23'
 //    implementation 'org.springframework:spring-messaging:5.3.39'
 //    implementation 'org.springframework:spring-websocket:5.3.39'
     // TODO : upgrade jetty to 10.x or higher. javax->jakarta. springboot 6.x uses jakarta.
@@ -81,17 +81,17 @@ dependencies {
 //    implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.56.v20240826'
 //    implementation 'org.eclipse.jetty.websocket:websocket-client:9.4.56.v20240826'
 //    implementation 'org.eclipse.jetty.websocket:websocket-common:9.4.56.v20240826'
-    implementation 'org.eclipse.jetty:jetty-server:11.0.15'
-    implementation 'org.eclipse.jetty:jetty-servlet:11.0.15'
-    implementation 'org.eclipse.jetty:jetty-client:11.0.15'
+    implementation 'org.eclipse.jetty:jetty-server:11.0.24'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.24'
+    implementation 'org.eclipse.jetty:jetty-client:11.0.24'
     implementation 'jakarta.websocket:jakarta.websocket-api:2.0.0'
-    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.15' // or the latest 11.x version
-    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-client:11.0.15' // or the latest 11.x version
-    implementation 'org.eclipse.jetty.websocket:websocket-core-client:11.0.15' // or the latest 11.x version
-    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.15' // for client support
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.15' // for server support
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-client:11.0.15' // for server support
-    implementation 'org.eclipse.jetty:jetty-util:11.0.15'
+    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.24' // or the latest 11.x version
+    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-client:11.0.24' // or the latest 11.x version
+    implementation 'org.eclipse.jetty.websocket:websocket-core-client:11.0.24' // or the latest 11.x version
+    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.24' // for client support
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.24' // for server support
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-client:11.0.24' // for server support
+    implementation 'org.eclipse.jetty:jetty-util:11.0.24'
 
     implementation 'jakarta.websocket:jakarta.websocket-api:2.0.0' // Updated for Jakarta EE
 
@@ -173,12 +173,12 @@ task printEnvVariables {
 
 //// Optional: Configuration for the dependencyCheck task (customize as needed)
 //dependencyCheck {
+//    nvd {
+//        apiKey = System.getenv("NVD_API_KEY") ?: System.getProperty("nvd.apiKey")
+//    }
+//}
 //    failBuildOnCVSS = 7.0 // Fail the build if any vulnerability is above this score
 //    format = 'HTML' // Report format (HTML, XML, JUNIT, SARIF, etc.)
 //    outputDirectory = "build/reports" // Where to put the report
 //    // additional configurations can be added here
 //
-//    nvd {
-//        apiKey = System.getenv("NVD_API_KEY") ?: System.getProperty("nvd.apiKey")
-//    }
-//}

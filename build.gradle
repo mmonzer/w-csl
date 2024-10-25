@@ -56,7 +56,6 @@ dependencies {
     implementation 'org.apache.httpcomponents:fluent-hc:4.5.14'
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
     implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'
-    implementation 'org.apache.servicemix.bundles:org.apache.servicemix.bundles.velocity:1.7_6'
 //    implementation 'org.eclipse.jetty.aggregate:jetty-all:9.4.56.v20240826'
 
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
@@ -66,31 +65,24 @@ dependencies {
     implementation 'org.mindrot:jbcrypt:0.4'
     implementation 'org.mongodb:bson:5.1.1'
     implementation 'org.mongodb:mongo-java-driver:3.12.14'
-    implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE220'
-    implementation 'org.springframework:spring-messaging:6.0.23'
+//    implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE230'
+    implementation 'commons-logging:commons-logging:1.3.4'
+    implementation 'org.springframework:spring-messaging:6.0.23'  // ok up to  6.1.2, but 6.0.23 less vulns
     implementation 'org.springframework:spring-websocket:6.0.23'
-//    implementation 'org.springframework:spring-messaging:5.3.39'
-//    implementation 'org.springframework:spring-websocket:5.3.39'
-    // TODO : upgrade jetty to 10.x or higher. javax->jakarta. springboot 6.x uses jakarta.
-
 
     implementation 'org.slf4j:slf4j-api:1.7.32'
 
 
     // Use Jetty WebSocket dependencies
-//    implementation 'org.eclipse.jetty.websocket:websocket-server:9.4.56.v20240826'
-//    implementation 'org.eclipse.jetty.websocket:websocket-client:9.4.56.v20240826'
-//    implementation 'org.eclipse.jetty.websocket:websocket-common:9.4.56.v20240826'
     implementation 'org.eclipse.jetty:jetty-server:11.0.24'
     implementation 'org.eclipse.jetty:jetty-servlet:11.0.24'
     implementation 'org.eclipse.jetty:jetty-client:11.0.24'
-    implementation 'jakarta.websocket:jakarta.websocket-api:2.0.0'
-    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.24' // or the latest 11.x version
-    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-client:11.0.24' // or the latest 11.x version
-    implementation 'org.eclipse.jetty.websocket:websocket-core-client:11.0.24' // or the latest 11.x version
-    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.24' // for client support
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.24' // for server support
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-client:11.0.24' // for server support
+    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.24'
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.24'
+//    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-client:11.0.24'
+//    implementation 'org.eclipse.jetty.websocket:websocket-core-client:11.0.24'
+//    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.24'
+//    implementation 'org.eclipse.jetty.websocket:websocket-jetty-client:11.0.24'
     implementation 'org.eclipse.jetty:jetty-util:11.0.24'
 
     implementation 'jakarta.websocket:jakarta.websocket-api:2.0.0' // Updated for Jakarta EE

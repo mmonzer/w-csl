@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,17 +21,15 @@ public class WebsocketClientEndpoint {
     private MessageHandler messageHandler;
     private URI endpointURI;
     private static String apiKey;
+    private boolean connected = false;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
-    public static class Configurator extends jakarta.websocket.ClientEndpointConfig.Configurator {
+    public static class Configurator extends ClientEndpointConfig.Configurator {
         @Override
         public void beforeRequest(Map<String, List<String>> headers) {
             if (apiKey != null) {
-                List<String> authvalues = new ArrayList<>();
-                authvalues.add("Api-Key " + apiKey);
-                headers.put("Authorization", authvalues);
+                headers.put("Authorization", List.of("Api-Key " + apiKey));
             }
-            super.beforeRequest(headers);
         }
     }
 
@@ -46,12 +43,19 @@ public class WebsocketClientEndpoint {
         connect();
     }
 
-    private synchronized void connect() {
+    public synchronized void connect() {
         try {
             this.userSession = container.connectToServer(this, endpointURI);
+            // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
+            if (!connected) {
+                connected = true;
+                logger.info("Connected to websocket {}", endpointURI);
+            }
         } catch (Exception e) {
-            logger.warn("Error connecting to websocket {}, reason: {}", endpointURI, e.getMessage());
-            logger.debug("Error connecting to websocket {}", endpointURI, e);
+            if (connected) {
+                connected = false;
+                logger.warn("Error connecting to websocket {}", endpointURI);
+            }
         }
     }
 
@@ -126,7 +130,13 @@ public class WebsocketClientEndpoint {
     }
 
     public boolean isOpen() {
-        if (userSession == null) return false;
-        return userSession.isOpen();
+        if (userSession == null) {
+            return false;
+        }
+        try {
+            return userSession.isOpen();
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 }

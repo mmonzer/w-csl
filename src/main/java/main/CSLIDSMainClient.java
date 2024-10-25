@@ -18,8 +18,9 @@ import com.csl.web.websockets.IMessageBroadcaster;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.*;
+import main.xcom.WebSocketClient;
 import main.xcom.WebsocketClientEndpoint;
-import org.slf4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
 import java.net.InetAddress;
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.csl.autocrypt.outils.JsonHelper.getValueStringOrNull;
 import static com.csl.logger.LoggerConstants.*;
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.*;
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.COMMAND;
 
 public class CSLIDSMainClient {
 
@@ -103,12 +104,9 @@ public class CSLIDSMainClient {
      * }
      * NOTE that each message is handled by a new thread
      */
-    public static void connectToServer() {
+    public static void initWebSocketClient() {
         try {
-            String wsProtocol = useSsl ? "wss" : "ws";
-            String webSocketUrl = (serverPort > 0)
-                    ? wsProtocol + "://" + serverIp + ":" + serverPort + serverUrlPrefix + "/cmd"
-                    : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
+            String webSocketUrl = getWebSocketUrl();
 
             logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", webSocketUrl, apiKey);
 
@@ -132,6 +130,45 @@ public class CSLIDSMainClient {
             logger.error("InterruptedException: {}", ex.getMessage(), ex);
         } catch (URISyntaxException ex) {
             logger.error("URISyntaxException: {}", ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * gives the websocket url
+     *
+     * @return the websocket url
+     */
+    private static @NotNull String getWebSocketUrl() {
+        String wsProtocol = useSsl ? "wss" : "ws";
+        return (serverPort > 0)
+                ? wsProtocol + "://" + serverIp + ":" + serverPort + serverUrlPrefix + "/cmd"
+                : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
+    }
+
+    /***
+     * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
+     * The messages received from the server are expected to follow the following format:
+     * {
+     *     api: <the service name>,
+     *     jcmd: {
+     *     		cmd: <command>,
+     *     		params: {
+     *				...
+     *            }
+     *     }
+     * }
+     * NOTE that each message is handled by a new thread
+     */
+    public static void connectToServer() {
+        logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", getWebSocketUrl(), apiKey);
+
+        clientEndPoint.connect();
+
+        if (!clientEndPoint.isOpen()) {
+            logger.warn("Failed to connect to the server, retrying...");
+            return;
+        } else {
+            logger.info("Successfully connected to the server");
         }
     }
 
@@ -195,6 +232,8 @@ public class CSLIDSMainClient {
      */
     public static void openWsConnectionWithCSLServer() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+        initWebSocketClient();
 
         // Reconnect task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(

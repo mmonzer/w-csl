@@ -23,7 +23,6 @@ import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
  * It manages sessions, sends messages, and processes responses with timeout management.
  */
 public class CSLWebSocketForJcmd {
-
     private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmd.class);
     private static final String RESPONSE = "response";
     public static final String ID = "uuid";
@@ -39,7 +38,7 @@ public class CSLWebSocketForJcmd {
     static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
 
     // Map to keep track of pending messages and their status
-    static Map<String, Json> pendingMessages = new HashMap<>();
+    static Map<String, Json> pendingMessages = new ConcurrentHashMap<>();
 
     // Debug level for logging
     private static int debugLevel = 2;
@@ -163,11 +162,11 @@ public class CSLWebSocketForJcmd {
         fullMessage.set("jsonCommand", jsonCmd);
 
         debugOutboundRequest(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", LoggerConstants.WS_REQUEST_SENT);
-
+        logger.info("wwwwwwwwww");
+        pendingMessages.put(uuid, fullMessage);
         broadcastMessageJson(apiName, fullMessage);
         fullMessage.set("start_time", System.currentTimeMillis());
 
-        pendingMessages.put(uuid, fullMessage);
 
         Json response = waitForResponse(uuid, fullMessage);
 

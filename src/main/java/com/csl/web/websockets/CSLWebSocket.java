@@ -22,7 +22,6 @@ public class CSLWebSocket {
     public static final String WEB_SOCKET_CONSOLE = "/console";
     public static final String WEB_SOCKET_DATABASE = "/database";
     public static final String WEB_SOCKET_VARIABLES = "/chat";
-    public static final String WEB_SOCKET_CMD = "/cmd";
 
     // Maps for managing WebSocket connections and tags
     private static final HashMap<String, String> websocketTags = new HashMap<>();

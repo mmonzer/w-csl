@@ -136,7 +136,7 @@ public class CSLHttpServerJetty {
 
             // Add echo endpoint to server container
 
-            container.addEndpoint(createEndpoint(CSLWebSocket.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class));
+            container.addEndpoint(createEndpoint(CSLWebSocketForJcmd.WEB_SOCKET_CMD, CSLWebSocketForJcmdHandler.class));
             container.addEndpoint(createEndpoint(CSLWebSocket.WEB_SOCKET_CONSOLE, CSLWebSocketHandler.class));
         });
     }
@@ -363,7 +363,7 @@ public class CSLHttpServerJetty {
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE);
             if (Config.instance.Server.getJcmdCommands())
                 // Refresh the CSLWebSocketForJcmd
-                CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CMD);
+                CSLWebSocket.refresh(CSLWebSocketForJcmd.WEB_SOCKET_CMD);
         };
 
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(scheduler, refreshTask, interval, interval, TimeUnit.SECONDS, LoggerCustomEndpoints.KEEP_ALIVE_IHM_WS, LoggerInterfaces.CSL_SERVER);

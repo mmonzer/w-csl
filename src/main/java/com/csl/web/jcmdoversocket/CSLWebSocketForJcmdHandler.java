@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Web socket to connect the CSL-Client
  */
-@ServerEndpoint(CSLWebSocket.WEB_SOCKET_CMD)
+@ServerEndpoint(CSLWebSocketForJcmd.WEB_SOCKET_CMD)
 public class CSLWebSocketForJcmdHandler {
 	private Session session;
 	private static final Logger logger = LoggerFactory.getLogger(CSLWebSocketForJcmdHandler.class);
@@ -21,7 +21,6 @@ public class CSLWebSocketForJcmdHandler {
 		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket");
 		logger.trace("Connection : {}", session);
 		this.session = session;
-//		CSLWebSocketForJcmd.addUser("w", session);
 	}
 
     @OnClose

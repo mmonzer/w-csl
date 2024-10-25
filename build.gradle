@@ -46,9 +46,9 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.google.guava:guava:33.3.1-jre'
-    implementation 'com.jcraft:jsch:0.1.55'
+    implementation 'com.jcraft:jsch:0.1.55'   // ssh
     implementation 'com.neuronrobotics:nrjavaserial:5.2.1'   // error in import org.apache.commons.net.util.SubnetUtils;
-    implementation 'com.sun.jna:jna:3.0.9'
+    implementation 'com.sun.jna:jna:3.0.9'   // access to native shared libraries : migrated to 'net.java.dev.jna:jna:3.0.9'
     implementation 'io.jsonwebtoken:jjwt:0.12.6'
     implementation 'io.micrometer:micrometer-commons:1.13.1'
     implementation 'io.micrometer:micrometer-observation:1.13.1'
@@ -56,17 +56,15 @@ dependencies {
     implementation 'org.apache.httpcomponents:fluent-hc:4.5.14'
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
     implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'
-//    implementation 'org.eclipse.jetty.aggregate:jetty-all:9.4.56.v20240826'
 
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
     implementation 'org.json:json:20240303'
     implementation 'org.jetbrains:annotations:24.1.0'
     implementation 'org.lightcouch:lightcouch:0.2.0'
-    implementation 'org.mindrot:jbcrypt:0.4'
+    implementation 'org.mindrot:jbcrypt:0.4'  // psswd hashing
     implementation 'org.mongodb:bson:5.1.1'
     implementation 'org.mongodb:mongo-java-driver:3.12.14'
-//    implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE230'
-    implementation 'commons-logging:commons-logging:1.3.4'
+    implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE230'
     implementation 'org.springframework:spring-messaging:6.0.23'  // ok up to  6.1.2, but 6.0.23 less vulns
     implementation 'org.springframework:spring-websocket:6.0.23'
 

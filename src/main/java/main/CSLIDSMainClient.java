@@ -18,7 +18,6 @@ import com.csl.web.websockets.IMessageBroadcaster;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.*;
-import main.xcom.WebSocketClient;
 import main.xcom.WebsocketClientEndpoint;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
@@ -170,6 +169,9 @@ public class CSLIDSMainClient {
         } else {
             logger.info("Successfully connected to the server");
         }
+
+        // register endpoints
+        apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessage("api:" + apiName));
     }
 
     /**

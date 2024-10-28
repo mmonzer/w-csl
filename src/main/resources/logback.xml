@@ -4,6 +4,15 @@
     <!-- Suppress Logback's internal initialization logs -->
     <logger name="ch.qos.logback" level="ERROR"/>
 
+    <Loggers>
+        <!-- Mute Jetty logs completely -->
+        <Logger name="org.eclipse.jetty.util.ssl.SslContextFactory" level="OFF" additivity="false" />
+        <Logger name="org.eclipse.jetty.websocket" level="OFF" additivity="false" />
+        <Logger name="org.eclipse.jetty.io" level="OFF" additivity="false" />
+        <Logger name="org.eclipse.jetty.util" level="OFF" additivity="false" />
+        <Logger name="org.eclipse.jetty" level="OFF" additivity="false" />
+    </Loggers>
+
     <!-- Local variables -->
     <property name="LOG_PATH" value="${CSL__WCSL__LOGS_PATH:-/var/log/csl/wcsl/}"/>
     <property name="LOG_FILENAME" value="${CSL__WCSL__LOGS_FILENAME:-wcsl}"/>

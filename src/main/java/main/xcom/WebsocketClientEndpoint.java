@@ -33,16 +33,6 @@ public class WebsocketClientEndpoint {
         }
     }
 
-    public WebsocketClientEndpoint(URI endpointURI) {
-        this(endpointURI, null);
-    }
-
-    public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
-        this.endpointURI = endpointURI;
-        WebsocketClientEndpoint.apiKey = apiKey;
-        connect();
-    }
-
     public synchronized void connect() {
         try {
             this.userSession = container.connectToServer(this, endpointURI);
@@ -57,6 +47,16 @@ public class WebsocketClientEndpoint {
                 logger.warn("Error connecting to websocket {}", endpointURI);
             }
         }
+    }
+
+    public WebsocketClientEndpoint(URI endpointURI) {
+        this(endpointURI, null);
+    }
+
+    public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
+        this.endpointURI = endpointURI;
+        WebsocketClientEndpoint.apiKey = apiKey;
+        connect();
     }
 
     /**

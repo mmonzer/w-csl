@@ -25,9 +25,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
     // Test dependencies
-    testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1' // dates 08/2023 . migrated to org.wiremock:wiremock
     testImplementation 'org.mockito:mockito-core:5.12.0'
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'junit:junit:4.13.2' //migrated to org.junit.jupiter:junit-jupiter-api
     implementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
     implementation 'org.junit.jupiter:junit-jupiter-engine:5.11.0-M2'
 
@@ -46,37 +46,37 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.google.guava:guava:33.3.1-jre'
-    implementation 'com.jcraft:jsch:0.1.55'   // ssh
-    implementation 'com.neuronrobotics:nrjavaserial:5.2.1'   // error in import org.apache.commons.net.util.SubnetUtils;
-    implementation 'com.sun.jna:jna:3.0.9'   // access to native shared libraries : migrated to 'net.java.dev.jna:jna:3.0.9'
-    implementation 'io.jsonwebtoken:jjwt:0.12.6'
-    implementation 'io.micrometer:micrometer-commons:1.13.1'
-    implementation 'io.micrometer:micrometer-observation:1.13.1'
+    implementation 'com.jcraft:jsch:0.1.55'   // dates from 2018, needs update=. ssh. migrated to com.github.mwiede:jsch
+    implementation 'com.neuronrobotics:nrjavaserial:5.2.1'   // last update 05/2020. error in import org.apache.commons.net.util.SubnetUtils;
+    implementation 'com.sun.jna:jna:3.0.9'   // dates from 2010, needs updating. access to native shared libraries : migrated to 'net.java.dev.jna:jna:3.0.9'
+    implementation 'io.jsonwebtoken:jjwt:0.12.6'  // migrated to io.jsonwebtoken:jjwt-api
+    implementation 'io.micrometer:micrometer-commons:1.13.6'
+    implementation 'io.micrometer:micrometer-observation:1.13.6'
     implementation 'org.apache.commons:commons-lang3:3.17.0'
-    implementation 'org.apache.httpcomponents:fluent-hc:4.5.14'
-    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
-    implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'
+    implementation 'org.apache.httpcomponents:fluent-hc:4.5.14' // last update 11/2022
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14' // last update 11/2022
+    implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'  // last updated 02/2012
 
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'  //last updated 07/2020
     implementation 'org.json:json:20240303'
     implementation 'org.jetbrains:annotations:24.1.0'
-    implementation 'org.lightcouch:lightcouch:0.2.0'
-    implementation 'org.mindrot:jbcrypt:0.4'  // psswd hashing
+    implementation 'org.lightcouch:lightcouch:0.2.0'  // last update 11/2017
+    implementation 'org.mindrot:jbcrypt:0.4'  // psswd hashing, last update 02/2017
     implementation 'org.mongodb:bson:5.1.1'
-    implementation 'org.mongodb:mongo-java-driver:3.12.14'
+    implementation 'org.mongodb:mongo-java-driver:3.12.14'  // lastest version 5.2.0. migrated to org.mongodb:mongodb-driver-sync
     implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE230'
     implementation 'org.springframework:spring-messaging:6.0.23'  // ok up to  6.1.2, but 6.0.23 less vulns
     implementation 'org.springframework:spring-websocket:6.0.23'
 
-    implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation 'org.slf4j:slf4j-api:1.7.32'   // last update 02/2022
 
 
     // Use Jetty WebSocket dependencies
     implementation 'org.eclipse.jetty:jetty-server:11.0.24'
-    implementation 'org.eclipse.jetty:jetty-servlet:11.0.24'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.24'  // upper versions migrated to org.eclipse.jetty.ee10
     implementation 'org.eclipse.jetty:jetty-client:11.0.24'
-    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.24'
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.24'
+    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.24'   // not 12.x versions?
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.24'   // not 12.x versions?
 //    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-client:11.0.24'
 //    implementation 'org.eclipse.jetty.websocket:websocket-core-client:11.0.24'
 //    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.24'
@@ -160,15 +160,3 @@ task printEnvVariables {
         println "JAVA_HOME: ${System.getenv('JAVA_HOME')}"
     }
 }
-
-//// Optional: Configuration for the dependencyCheck task (customize as needed)
-//dependencyCheck {
-//    nvd {
-//        apiKey = System.getenv("NVD_API_KEY") ?: System.getProperty("nvd.apiKey")
-//    }
-//}
-//    failBuildOnCVSS = 7.0 // Fail the build if any vulnerability is above this score
-//    format = 'HTML' // Report format (HTML, XML, JUNIT, SARIF, etc.)
-//    outputDirectory = "build/reports" // Where to put the report
-//    // additional configurations can be added here
-//

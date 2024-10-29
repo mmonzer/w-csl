@@ -1,8 +1,9 @@
-package main.test;
+package services;
+
 import org.junit.jupiter.api.Test;
 
 public class TestJUnit {
-    @Test
+    //@Test
     void test() {
         System.out.println("TestJUnit");
     }

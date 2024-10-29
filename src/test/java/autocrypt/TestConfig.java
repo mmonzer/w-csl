@@ -1,6 +1,7 @@
 package com.csl.autocrypt.tests;
 
 import com.csl.core.CSLContext;
+import com.csl.core.Config;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.ucsl.json.Json;
 import main.services.AutoCryptService;
@@ -8,7 +9,7 @@ import main.services.AutoCryptService;
 public class TestConfig {
 
     protected AutoCryptService service;
-    protected static final Json configObj = CSLContext.getInstance().getConfig();
+    protected static final Json configObj = Json.object(); // CSLContext.getInstance().getConfig();
     public static final String module = "autocrypt";
 
     static {

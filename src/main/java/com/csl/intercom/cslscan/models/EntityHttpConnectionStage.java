@@ -9,14 +9,16 @@ import org.eclipse.jetty.http.HttpMethod;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSerializable {
+    public static final String KEY = "key";
+    public static final String VALUE = "value";
+    public static final String IS_VISIBLE = "isVisible";
     private String uuid;
     private String name;
     private boolean shouldDoARequest;
     private String url;
-    private String ip_address;
+    private String ipAddress;
     private String port;
     private String username;
     private String password;
@@ -48,7 +50,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
                 EntityHttpConnectionStageField.UUID.scanName(), this.uuid,
                 EntityHttpConnectionStageField.NAME.scanName(), this.name,
                 EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.scanName(), this.shouldDoARequest,
-                EntityHttpConnectionStageField.IP_ADDRESS.scanName(), this.ip_address,
+                EntityHttpConnectionStageField.IP_ADDRESS.scanName(), this.ipAddress,
                 EntityHttpConnectionStageField.URL.scanName(), this.url,
                 EntityHttpConnectionStageField.PORT.scanName(), this.port,
                 EntityHttpConnectionStageField.USERNAME.scanName(), this.username,
@@ -83,7 +85,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
                 EntityHttpConnectionStageField.NAME.dbapiName(), this.name,
                 EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName(), this.shouldDoARequest,
                 EntityHttpConnectionStageField.URL.dbapiName(), this.url,
-                EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), this.ip_address,
+                EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), this.ipAddress,
                 EntityHttpConnectionStageField.PORT.dbapiName(), this.port,
                 EntityHttpConnectionStageField.USERNAME.dbapiName(), this.username,
                 EntityHttpConnectionStageField.PASSWORD.dbapiName(), this.password,
@@ -120,7 +122,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
 
         stage.url = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.URL.dbapiName(), "");
 
-        stage.ip_address = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), "${device.ipAddress}");
+        stage.ipAddress = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), "${device.ipAddress}");
 
         if (json.has(EntityHttpConnectionStageField.PORT.dbapiName()) && json.get(EntityHttpConnectionStageField.PORT.dbapiName()).isString()) {
             stage.port = json.get(EntityHttpConnectionStageField.PORT.dbapiName()).asString();
@@ -154,7 +156,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         }
         stage.headers = headersJson.stream()
                 .map(OptionalInputField::fromDbapiJson)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Json> queryParamsJson = new ArrayList<>();
         if (json.has(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()) && json.get(EntityHttpConnectionStageField.QUERY_PARAMS.dbapiName()).isArray()) {
@@ -162,17 +164,9 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         }
         stage.queryParams = queryParamsJson.stream()
                 .map(OptionalInputField::fromDbapiJson)
-                .collect(Collectors.toList());
+                .toList();
 
         return stage;
-    }
-
-    private static String getString(Json json) {
-        if (json.has(EntityHttpConnectionStageField.PASSWORD.dbapiName()) && json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).isString()) {
-            return json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).asString();
-        } else {
-            return "${connection.password}";
-        }
     }
 
     /**
@@ -187,8 +181,9 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         stage.uuid = json.get(EntityHttpConnectionStageField.UUID.scanName()).asString();
         stage.name = json.get(EntityHttpConnectionStageField.NAME.scanName()).asString();
         stage.url = json.get(EntityHttpConnectionStageField.URL.scanName()).asString();
-        stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.scanName()).asString();
+        stage.ipAddress = json.get(EntityHttpConnectionStageField.IP_ADDRESS.scanName()).asString();
         stage.port = json.get(EntityHttpConnectionStageField.PORT.scanName()).asString();
+
         if (json.get(EntityHttpConnectionStageField.USERNAME.scanName()).isString() && !json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString().equals("")) {
             stage.username = json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString();
         }
@@ -215,12 +210,12 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         List<Json> headersJson = json.get(EntityHttpConnectionStageField.HEADERS.scanName()).asJsonList();
         stage.headers = headersJson.stream()
                 .map(OptionalInputField::fromScannerJson)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Json> queryParamsJson = json.get(EntityHttpConnectionStageField.QUERY_PARAMS.scanName()).asJsonList();
         stage.queryParams = queryParamsJson.stream()
                 .map(OptionalInputField::fromScannerJson)
-                .collect(Collectors.toList());
+                .toList();
 
         return stage;
     }
@@ -250,17 +245,17 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
 
         public Json serializeForScanner() {
             return Json.object(
-                    "key", key,
-                    "value", value,
-                    "isVisible", isVisible
+                    KEY, key,
+                    VALUE, value,
+                    IS_VISIBLE, isVisible
             );
         }
 
         public Json serializeForDbapi() {
             return Json.object(
-                    "key", key,
-                    "value", value,
-                    "isVisible", isVisible
+                    KEY, key,
+                    VALUE, value,
+                    IS_VISIBLE, isVisible
             );
         }
 
@@ -271,9 +266,9 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
          * @return An OptionalInputField instance
          */
         public static OptionalInputField<String, String> fromDbapiJson(Json json) {
-            Json keyJson = json.get("key");
-            Json valueJson = json.get("value");
-            Json isVisibleJson = json.get("isVisible");
+            Json keyJson = json.get(KEY);
+            Json valueJson = json.get(VALUE);
+            Json isVisibleJson = json.get(IS_VISIBLE);
             return new OptionalInputField<>(
                     keyJson != null && keyJson.isString() ? keyJson.asString() : "",
                     valueJson != null && valueJson.isString() ? valueJson.asString() : "",
@@ -289,8 +284,8 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
          */
         public static OptionalInputField<String, String> fromScannerJson(Json json) {
             return new OptionalInputField<>(
-                    json.get("key").asString(),
-                    json.get("value").asString(),
+                    json.get(KEY).asString(),
+                    json.get(VALUE).asString(),
                     json.get("visible").asBoolean()
             );
         }

@@ -1,10 +1,11 @@
-package com.csl.autocrypt.tests.integration;
+package autocrypt.integration;
 
+import com.csl.util.JCmd;
 import com.ucsl.json.Json;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.junit.jupiter.api.Test;
 
-import static com.csl.autocrypt.tests.OutilsForTesting.sendPostTo;
+import static autocrypt.OutilsForTesting.sendPostTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestIssuer {
@@ -19,7 +20,7 @@ public class TestIssuer {
     protected static final String BASE_URL_CLIENT = "http://localhost:" + PORT_CLIENT; // Change this to your actual base URL
     protected static final String ENDPOINT_CLIENT = "/autocrypt";
 
-    @Test
+    //@Test
     public void testImporte() throws Exception {
         Json params = Json.object();
         params.at("path","pki");

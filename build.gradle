@@ -5,18 +5,14 @@
  * For more details on building Java & JVM projects, please refer to https://docs.gradle.org/8.7/userguide/building_java_projects.html in the Gradle documentation.
  */
 
-//plugins {
-//    id 'org.owasp.dependencycheck' version '10.0.3'
-//}
-
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin : 'jacoco'
 
 repositories {
     // Use Maven Central for resolving dependencies.
-    gradlePluginPortal()
     mavenCentral()
+    gradlePluginPortal()
 
 }
 dependencies {
@@ -28,60 +24,90 @@ dependencies {
     testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1' // dates 08/2023 . migrated to org.wiremock:wiremock
     testImplementation 'org.mockito:mockito-core:5.12.0'
 //    testImplementation 'junit:junit:4.13.2' //migrated to org.junit.jupiter:junit-jupiter-api
-    implementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
-    implementation 'org.junit.jupiter:junit-jupiter-engine:5.11.0-M2'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
+    runtimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0-M2'
 
     // JWT dependencies
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'io.jsonwebtoken:jjwt:0.12.6'  // migrated to io.jsonwebtoken:jjwt-api
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
     // Various dependencies
     implementation 'ch.qos.logback:logback-classic:1.5.11'
     implementation 'ch.qos.logback:logback-core:1.5.11'
-    implementation 'commons-codec:commons-codec:1.17.1'
-    implementation 'com.clumd.projects:java-json:1.2.1'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.17.1'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'commons-codec:commons-codec:1.17.1'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'com.clumd.projects:java-json:1.2.1'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'com.fasterxml.jackson.core:jackson-annotations:2.17.1'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.17.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
-    implementation 'com.google.code.gson:gson:2.11.0'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.google.guava:guava:33.3.1-jre'
     implementation 'com.jcraft:jsch:0.1.55'   // dates from 2018, needs update=. ssh. migrated to com.github.mwiede:jsch
-    implementation 'com.neuronrobotics:nrjavaserial:5.2.1'   // last update 05/2020. error in import org.apache.commons.net.util.SubnetUtils;
-    implementation 'com.sun.jna:jna:3.0.9'   // dates from 2010, needs updating. access to native shared libraries : migrated to 'net.java.dev.jna:jna:3.0.9'
-    implementation 'io.jsonwebtoken:jjwt:0.12.6'  // migrated to io.jsonwebtoken:jjwt-api
-    implementation 'io.micrometer:micrometer-commons:1.13.6'
-    implementation 'io.micrometer:micrometer-observation:1.13.6'
-    implementation 'org.apache.commons:commons-lang3:3.17.0'
-    implementation 'org.apache.httpcomponents:fluent-hc:4.5.14' // last update 11/2022
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'com.neuronrobotics:nrjavaserial:5.2.1'   // last update 05/2020. error in import org.apache.commons.net.util.SubnetUtils;
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'com.sun.jna:jna:3.0.9'   // dates from 2010, needs updating. access to native shared libraries : migrated to 'net.java.dev.jna:jna:3.0.9'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'io.micrometer:micrometer-commons:1.13.6'
+    runtimeOnly 'io.micrometer:micrometer-observation:1.13.6'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.apache.commons:commons-lang3:3.17.0'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.apache.httpcomponents:fluent-hc:4.5.14' // last update 11/2022
+    implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.apache.httpcomponents:httpclient:4.5.14' // last update 11/2022
-    implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'  // last updated 02/2012
+    implementation 'org.apache.httpcomponents:httpcore:4.4.16'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.apache.directory.studio:org.apache.httpcomponents.httpcore:4.1.2'  // last updated 02/2012
 
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'  //last updated 07/2020
-    implementation 'org.json:json:20240303'
-    implementation 'org.jetbrains:annotations:24.1.0'
-    implementation 'org.lightcouch:lightcouch:0.2.0'  // last update 11/2017
-    implementation 'org.mindrot:jbcrypt:0.4'  // psswd hashing, last update 02/2017
-    implementation 'org.mongodb:bson:5.1.1'
-    implementation 'org.mongodb:mongo-java-driver:3.12.14'  // dates 06/2023. latest version 5.2.0. migrated to org.mongodb:mongodb-driver-sync
-    implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE230'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.json:json:20240303'
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.lightcouch:lightcouch:0.2.0'  // last update 11/2017
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.mindrot:jbcrypt:0.4'  // psswd hashing, last update 02/2017
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.mongodb:bson:5.1.1'
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.mongodb:mongo-java-driver:3.12.14'  // dates 06/2023. latest version 5.2.0. migrated to org.mongodb:mongodb-driver-sync
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE230'
     implementation 'org.springframework:spring-messaging:6.0.23'  // ok up to  6.1.2, but 6.0.23 less vulns
     implementation 'org.springframework:spring-websocket:6.0.23'
+    implementation 'org.springframework:spring-context:6.0.23'
+    implementation 'org.springframework:spring-core:6.0.23'
+    implementation 'org.springframework:spring-web:6.0.23'
 
     implementation 'org.slf4j:slf4j-api:1.7.32'   // last update 02/2022
 
 
     // Use Jetty WebSocket dependencies
+    implementation 'org.eclipse.jetty:jetty-util:11.0.24'
+    implementation 'org.eclipse.jetty:jetty-http:11.0.24'
+    implementation 'org.eclipse.jetty:jetty-io:11.0.24'
     implementation 'org.eclipse.jetty:jetty-server:11.0.24'
     implementation 'org.eclipse.jetty:jetty-servlet:11.0.24'  // upper versions migrated to org.eclipse.jetty.ee10
     implementation 'org.eclipse.jetty:jetty-client:11.0.24'
     implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.24'   // not 12.x versions?
     implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.24'   // not 12.x versions?
+    implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2'
+    implementation 'org.eclipse.jetty.toolchain:jetty-jakarta-websocket-api:2.0.0'
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-api:11.0.24'
+
 //    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-client:11.0.24'
 //    implementation 'org.eclipse.jetty.websocket:websocket-core-client:11.0.24'
 //    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.24'
 //    implementation 'org.eclipse.jetty.websocket:websocket-jetty-client:11.0.24'
-    implementation 'org.eclipse.jetty:jetty-util:11.0.24'
 
     implementation 'jakarta.websocket:jakarta.websocket-api:2.0.0' // Updated for Jakarta EE
 
@@ -92,15 +118,13 @@ dependencies {
     implementation 'org.apache.poi:poi:5.3.0' // For .xls files (HSSF)
     implementation 'org.apache.poi:poi-ooxml:5.3.0' // For .xlsx files (XSSF)
 //    implementation 'org.apache.poi:poi-ooxml-schemas:5.2.3'
-    implementation 'org.apache.poi:poi-scratchpad:5.3.0' // For additional formats (optional)
-    implementation 'org.apache.commons:commons-collections4:4.5.0-M2' // Latest
+    runtimeOnly 'org.apache.poi:poi-scratchpad:5.3.0' // For additional formats (optional)
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'org.apache.commons:commons-collections4:4.5.0-M2' // Latest
     implementation 'commons-io:commons-io:2.16.1'
 
-    implementation 'commons-net:commons-net:3.9.0'
-
-
-
-
+    // autonomousapp : dependency check flags it as unused.
+    // implementation 'commons-net:commons-net:3.9.0'
 }
 
 sourceSets{

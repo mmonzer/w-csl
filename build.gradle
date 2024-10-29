@@ -27,7 +27,7 @@ dependencies {
     // Test dependencies
     testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1' // dates 08/2023 . migrated to org.wiremock:wiremock
     testImplementation 'org.mockito:mockito-core:5.12.0'
-    testImplementation 'junit:junit:4.13.2' //migrated to org.junit.jupiter:junit-jupiter-api
+//    testImplementation 'junit:junit:4.13.2' //migrated to org.junit.jupiter:junit-jupiter-api
     implementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
     implementation 'org.junit.jupiter:junit-jupiter-engine:5.11.0-M2'
 
@@ -63,7 +63,7 @@ dependencies {
     implementation 'org.lightcouch:lightcouch:0.2.0'  // last update 11/2017
     implementation 'org.mindrot:jbcrypt:0.4'  // psswd hashing, last update 02/2017
     implementation 'org.mongodb:bson:5.1.1'
-    implementation 'org.mongodb:mongo-java-driver:3.12.14'  // lastest version 5.2.0. migrated to org.mongodb:mongodb-driver-sync
+    implementation 'org.mongodb:mongo-java-driver:3.12.14'  // dates 06/2023. latest version 5.2.0. migrated to org.mongodb:mongodb-driver-sync
     implementation 'org.netbeans.external:org-apache-commons-logging:RELEASE230'
     implementation 'org.springframework:spring-messaging:6.0.23'  // ok up to  6.1.2, but 6.0.23 less vulns
     implementation 'org.springframework:spring-websocket:6.0.23'
@@ -97,10 +97,12 @@ dependencies {
     implementation 'commons-io:commons-io:2.16.1'
 
     implementation 'commons-net:commons-net:3.9.0'
-    implementation 'org.apache.commons:commons-compress:1.27.1'
+
+
 
 
 }
+
 sourceSets{
     main{
         java{

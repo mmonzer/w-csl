@@ -18,8 +18,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
-import static com.csl.autocrypt.outils.JsonHelper.*;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
+import static com.ucsl.json.JsonUtil.*;
 
 /**
  * Autocrypt service: managing certificates

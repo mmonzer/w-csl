@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
-import static com.csl.autocrypt.outils.JsonHelper.jsonListToStringListAtJson;
+import static com.ucsl.json.JsonUtil.jsonListToStringListAtJson;
 
 public class ConvertDapiVault {
     static final HashMap<String, String> relationDbApiToVault = new HashMap<>();

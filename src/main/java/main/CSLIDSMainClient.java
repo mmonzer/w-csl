@@ -31,9 +31,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.csl.autocrypt.outils.JsonHelper.getValueStringOrNull;
 import static com.csl.logger.LoggerConstants.*;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.COMMAND;
+import static com.ucsl.json.JsonUtil.getValueStringOrNull;
 
 public class CSLIDSMainClient {
 

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromVaultToDbapi;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
-import static com.csl.autocrypt.outils.JsonHelper.*;
+import static com.ucsl.json.JsonUtil.*;
 
 public class CSLAutocryptUtils {
 

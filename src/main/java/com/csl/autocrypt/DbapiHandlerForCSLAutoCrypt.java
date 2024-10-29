@@ -7,7 +7,7 @@ import main.services.JsonApiResponse;
 
 import static com.csl.autocrypt.CSLAutocryptUtils.*;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
-import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
+import static com.ucsl.json.JsonUtil.mergerJson;
 
 /**
  * Extension of the Api Handler for implementing the specific methods of AutoCrypt that contact the DBAPI

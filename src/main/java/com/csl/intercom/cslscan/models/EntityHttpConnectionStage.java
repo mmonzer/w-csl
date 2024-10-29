@@ -111,35 +111,16 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
      */
     public static EntityHttpConnectionStage fromDbapiJson(Json json) {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
-        if (json.has(EntityHttpConnectionStageField.UUID.dbapiName()) && json.get(EntityHttpConnectionStageField.UUID.dbapiName()).isString()) {
-            stage.uuid = json.get(EntityHttpConnectionStageField.UUID.dbapiName()).asString();
-        } else {
-            stage.uuid = null;
-        }
 
-        if (json.has(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName()) && json.get(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName()).isBoolean()) {
-            stage.shouldDoARequest = json.get(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName()).asBoolean();
-        } else {
-            stage.shouldDoARequest = true;
-        }
+        stage.uuid = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.UUID.dbapiName(), null);
 
-        if (json.has(EntityHttpConnectionStageField.NAME.dbapiName()) && json.get(EntityHttpConnectionStageField.NAME.dbapiName()).isString()) {
-            stage.name = json.get(EntityHttpConnectionStageField.NAME.dbapiName()).asString();
-        } else {
-            stage.name = "";
-        }
+        stage.shouldDoARequest = JsonUtil.getValueBooleanOrDefault(json, EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName(), true);
 
-        if (json.has(EntityHttpConnectionStageField.URL.dbapiName()) && json.get(EntityHttpConnectionStageField.URL.dbapiName()).isString()) {
-            stage.url = json.get(EntityHttpConnectionStageField.URL.dbapiName()).asString();
-        } else {
-            stage.url = "";
-        }
+        stage.name = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.NAME.dbapiName(), "");
 
-        if (json.has(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()) && json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).isString()) {
-            stage.ip_address = json.get(EntityHttpConnectionStageField.IP_ADDRESS.dbapiName()).asString();
-        } else {
-            stage.ip_address = "${device.ipAddress}";
-        }
+        stage.url = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.URL.dbapiName(), "");
+
+        stage.ip_address = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.IP_ADDRESS.dbapiName(), "${device.ipAddress}");
 
         if (json.has(EntityHttpConnectionStageField.PORT.dbapiName()) && json.get(EntityHttpConnectionStageField.PORT.dbapiName()).isString()) {
             stage.port = json.get(EntityHttpConnectionStageField.PORT.dbapiName()).asString();
@@ -149,29 +130,13 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
             stage.port = "${connection.port}";
         }
 
-        if (json.has(EntityHttpConnectionStageField.USERNAME.dbapiName()) && json.get(EntityHttpConnectionStageField.USERNAME.dbapiName()).isString()) {
-            stage.username = json.get(EntityHttpConnectionStageField.USERNAME.dbapiName()).asString();
-        } else {
-            stage.username = "${connection.username}";
-        }
+        stage.username = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.USERNAME.dbapiName(), "${connection.username}");
 
-        if (json.has(EntityHttpConnectionStageField.PASSWORD.dbapiName()) && json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).isString()) {
-            stage.password = json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).asString();
-        } else {
-            stage.password = "${connection.password}";
-        }
+        stage.password = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.PASSWORD.dbapiName(), "${connection.password}");
 
-        if (json.has(EntityHttpConnectionStageField.REALM.dbapiName()) && json.get(EntityHttpConnectionStageField.REALM.dbapiName()).isString()) {
-            stage.realm = json.get(EntityHttpConnectionStageField.REALM.dbapiName()).asString();
-        } else {
-            stage.realm = "${connection.realm}";
-        }
+        stage.realm = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.REALM.dbapiName(), "${connection.realm}");
 
-        if (json.has(EntityHttpConnectionStageField.TOKEN.dbapiName()) && json.get(EntityHttpConnectionStageField.TOKEN.dbapiName()).isString()) {
-            stage.token = JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.TOKEN.dbapiName(), "${connection.token}");
-        } else {
-            stage.token = "${connection.token}";
-        }
+        stage.token = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.TOKEN.dbapiName(), "${connection.token}");
 
         stage.protocol = HttpProtocol.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.PROTOCOL.dbapiName(), "HTTP"));
         stage.method = HttpMethod.valueOf(JsonUtil.getStringFromJson(json, EntityHttpConnectionStageField.METHOD.dbapiName(), "GET"));
@@ -200,6 +165,14 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
                 .collect(Collectors.toList());
 
         return stage;
+    }
+
+    private static String getString(Json json) {
+        if (json.has(EntityHttpConnectionStageField.PASSWORD.dbapiName()) && json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).isString()) {
+            return json.get(EntityHttpConnectionStageField.PASSWORD.dbapiName()).asString();
+        } else {
+            return "${connection.password}";
+        }
     }
 
     /**

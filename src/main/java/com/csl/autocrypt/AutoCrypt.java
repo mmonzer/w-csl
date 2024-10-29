@@ -16,8 +16,8 @@ import org.eclipse.jetty.http.HttpHeader;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
-import static com.csl.autocrypt.outils.JsonHelper.mergerJson;
 import static com.csl.web.HTTPConstants.CONTENT_DISPOSITION;
+import static com.ucsl.json.JsonUtil.mergerJson;
 import static main.services.endpoints.AutoCryptEndpoints.*;
 
 /**

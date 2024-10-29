@@ -46,6 +46,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
+import static com.csl.util.FileUtils.CONTENT;
+import static com.csl.util.FileUtils.FILENAME;
 import static java.lang.System.exit;
 
 /**
@@ -312,7 +314,7 @@ public class CSLHttpServerJetty {
                 String fileName = Paths.get(part.getSubmittedFileName()).getFileName().toString(); // MSIE fix.
                 try (InputStream inputStream = part.getInputStream()) {
                     byte[] fileContent = inputStream.readAllBytes();
-                    files.add(Json.object("filename", fileName, "content", fileContent));
+                    files.add(Json.object(FILENAME, fileName, CONTENT, fileContent));
                 }
             } else {  // It's a form field part
                 body.set(part.getName(), new String(part.getInputStream().readAllBytes(), StandardCharsets.UTF_8));

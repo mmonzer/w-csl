@@ -11,6 +11,8 @@ import org.slf4j.MDC;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static com.csl.util.FileUtils.FILENAME;
+
 /**
  * Represents an export state from CSL-Scan.
  */
@@ -75,8 +77,8 @@ public class ExportQuery {
             return null;
         }
 
-        if (json.has("filename") && json.get("filename").isString()) {
-            filename = json.get("filename").asString();
+        if (json.has(FILENAME) && json.get(FILENAME).isString()) {
+            filename = json.get(FILENAME).asString();
         } else {
             logger.error("ExportQuery.fromScannerJson: filename is not a string");
             return null;

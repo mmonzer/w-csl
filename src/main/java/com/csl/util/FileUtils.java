@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class FileUtils  {
+    public static final String FILENAME = "filename";
+    public static final String CONTENT = "content";
 	/**
 	 * Logger instance for this class.
 	 */

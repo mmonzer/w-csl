@@ -15,6 +15,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
 
+import static com.csl.util.FileUtils.FILENAME;
+
 public class CSLDemo01CoreCommands {
 
 
@@ -64,7 +66,7 @@ public class CSLDemo01CoreCommands {
 		Json j= Json.object();
 	
 		j.set("contents",fileContents );
-		j.set("filename",filename );
+		j.set(FILENAME,filename );
 		
 		j.set("extra_info","more_info");
 

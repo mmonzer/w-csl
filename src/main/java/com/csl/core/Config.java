@@ -103,7 +103,7 @@ public class Config {
             }
             return content.toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             return null;
         }
     }

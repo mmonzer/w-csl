@@ -101,7 +101,7 @@ public class MonitorService extends Service {
 		} 
 		catch (IOException e) 
 		{
-			e.printStackTrace();
+			// e.printStackTrace();
 			return "{\"Error\":\"File not found:"+e.getMessage()+"\"}";
 		}
 

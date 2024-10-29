@@ -102,8 +102,8 @@ public class HelpGenerator {
 			return j2;
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			// e.printStackTrace();
 		}
 
 		return Json.object();

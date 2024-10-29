@@ -98,8 +98,8 @@ public class CSLAlertManager {
             InetAddress iNetAddress = InetAddress.getByName(ip);
             this.iNetAddress = iNetAddress;
         } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            
+            // e.printStackTrace();
         }
         this.loggerName = config.getName();
 
@@ -196,7 +196,7 @@ public class CSLAlertManager {
                 datagramSocket.send(payload);
                 datagramSocket.disconnect();
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
             }
             // endregion -- forward alerts to the Alert Listener
         }

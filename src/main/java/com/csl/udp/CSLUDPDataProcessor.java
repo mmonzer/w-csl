@@ -26,7 +26,7 @@ public class CSLUDPDataProcessor implements Runnable {
         try {
             this.messageQueue.put(new CSLUdpUnicastClient.CorrelatedMessage("", "stop".getBytes()));
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -74,7 +74,7 @@ public class CSLUDPDataProcessor implements Runnable {
                 }
             } catch (InterruptedException e) {
                 interrupted = true;
-                e.printStackTrace();
+                // e.printStackTrace();
             }
         }
     }

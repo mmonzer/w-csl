@@ -879,9 +879,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 Json.object(EXCEPTION, "Missing parameter ip_address, port or stage, of type string, int or object")
                         ).toJson();
                     } else {
-                        logger.debug("Fetching HTTP connection stage from ip:{} port:{} user:{} pwd:{} token:{} entityHttpConnection:{} stageIndex:{} ...", ipAddress, port, username, password.substring(0, 3) + "*****", realm, token, stageIndex);
+                        logger.debug("Fetching HTTP connection stage from ip:{} port:{} user:{} password:{} token:{} entityHttpConnection:{} stageIndex:{} ...", ipAddress, port, username, LoggerUtils.hide(password), realm, token, stageIndex);
                         JsonApiResponse response = scanApiHandler.fetchHttpConnectionStage(ipAddress, port, username, password, realm, token, entityHttpConnection, stageIndex);
-                        logger.debug("Fetched HTTP connection stage from ip:{} port:{} user:{} pwd:{} token:{} entityHttpConnection:{} stageIndex:{} : {}", ipAddress, port, username, password.substring(0, 3) + "*****", realm, token, stageIndex, response);
+                        logger.debug("Fetched HTTP connection stage from ip:{} port:{} user:{} password:{} token:{} entityHttpConnection:{} stageIndex:{} : {}", ipAddress, port, username, LoggerUtils.hide(password), realm, token, stageIndex, response);
 
                         if (response.isSuccess()) {
                             logger.info("Successfully fetched entity HTTP connection stage");

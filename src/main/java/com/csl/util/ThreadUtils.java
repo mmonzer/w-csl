@@ -199,7 +199,7 @@ public final class ThreadUtils {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (ExecutionException | TimeoutException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
                 Thread.currentThread().interrupt();
             } finally {
                 future.cancel(true);

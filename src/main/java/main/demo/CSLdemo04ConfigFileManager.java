@@ -46,8 +46,8 @@ public class CSLdemo04ConfigFileManager {
 			return result;
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			// e.printStackTrace();
 			return e.toString();
 		}
 
@@ -86,8 +86,8 @@ public class CSLdemo04ConfigFileManager {
 			return result;
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			// e.printStackTrace();
 			return e.toString();
 		}
 	}

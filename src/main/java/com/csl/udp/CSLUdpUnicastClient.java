@@ -7,7 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
 import static com.csl.logger.LoggerUtils.traceAlertReceived;
@@ -101,11 +104,13 @@ public class CSLUdpUnicastClient implements Runnable {
                 this.messageQueue.put(new CorrelatedMessage(xCorrelationId, datagramPacket.getData()));
             }
         } catch (SocketException e) {
-            if (!closing) e.printStackTrace();
+            if (!closing) {
+                // e.printStackTrace();
+            }
         } catch (IOException e) {
             logger.info("Timeout. Client is closing.");
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             clientSocket.disconnect();
             clientSocket.close();
         }

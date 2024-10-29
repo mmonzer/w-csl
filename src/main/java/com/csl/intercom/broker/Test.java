@@ -57,7 +57,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
                 System.out.println("loc "+me.getLocalizedMessage());
                 System.out.println("cause "+me.getCause());
                 System.out.println("excep "+me);
-                me.printStackTrace();
+                m// e.printStackTrace();
             }
         }
     }

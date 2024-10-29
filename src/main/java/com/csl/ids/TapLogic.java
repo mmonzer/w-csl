@@ -121,7 +121,7 @@ public class TapLogic {
         try {
             output = ssh.remoteExecNoWait(command);
         } catch (JSchException | IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         ssh.endConnection();
 
@@ -152,7 +152,7 @@ public class TapLogic {
         try {
             output = ssh.remoteExec(command);
         } catch (JSchException | IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         ssh.endConnection();
 
@@ -203,7 +203,7 @@ public class TapLogic {
             basicConf.at("csl_node_port", localPort);
             writeToFile(basicConf.toString(), idsconf + "/taps/" + name + "/tapReseau.json");
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 
         try {
@@ -218,7 +218,7 @@ public class TapLogic {
 
             writeToFile(basicConf.toString(), idsconf + "/taps/" + name + "/tapProcess.json");
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -233,7 +233,7 @@ public class TapLogic {
         try {
             FileUtils.deleteDirectory(new File(idsconf + "/taps/" + name));
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -373,7 +373,7 @@ public class TapLogic {
                             break;
                     }
                 } catch (IOException | JSchException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 ssh.endConnection();
 
@@ -401,7 +401,7 @@ public class TapLogic {
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         return response.body();
     }
@@ -491,7 +491,7 @@ public class TapLogic {
                             break;
                     }
                 } catch (IOException | JSchException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 ssh.endConnection();
 
@@ -545,7 +545,7 @@ public class TapLogic {
                     ssh.sendFile(idsconf + "/taps/" + name + "/includes.yaml", "/home/" + username + "/configSuricata/suricata/includes.yaml");
                     ssh.endConnection();
                 } catch (IOException | JSchException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
             }
         }
@@ -718,7 +718,7 @@ public class TapLogic {
         try {
             output = ssh.remoteExec(command);
         } catch (JSchException | IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         ssh.endConnection();
 

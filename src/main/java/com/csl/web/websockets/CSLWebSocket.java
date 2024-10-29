@@ -39,7 +39,7 @@ public class CSLWebSocket {
                 try {
                     session.getAsyncRemote().sendText(message);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
             });
         }
@@ -93,7 +93,7 @@ public class CSLWebSocket {
                     try {
                         session.getAsyncRemote().sendText(message);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        // e.printStackTrace();
                     }
                 });
             };

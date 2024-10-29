@@ -130,8 +130,8 @@ public class FileLog implements Runnable, IFileLog {
 
             blockingQueue.put(line);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            
+            // e.printStackTrace();
         }
     }
 

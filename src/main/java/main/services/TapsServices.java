@@ -142,7 +142,7 @@ public class TapsServices extends Service {
         try {
             output = ssh.remoteExecNoWait(command);
         } catch (JSchException | IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         ssh.endConnection();
 
@@ -173,7 +173,7 @@ public class TapsServices extends Service {
         try {
             output = ssh.remoteExec(command);
         } catch (JSchException | IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         ssh.endConnection();
 
@@ -224,7 +224,7 @@ public class TapsServices extends Service {
             basicConf.at("csl_node_port", localPort);
             writeToFile(basicConf.toString(), idsconf + "/taps/" + name + "/tapReseau.json");
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 
         try {
@@ -239,7 +239,7 @@ public class TapsServices extends Service {
 
             writeToFile(basicConf.toString(), idsconf + "/taps/" + name + "/tapProcess.json");
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -325,7 +325,7 @@ public class TapsServices extends Service {
         try {
             FileUtils.deleteDirectory(new File(idsconf + "/taps/" + name));
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
     }
 
@@ -477,7 +477,7 @@ public class TapsServices extends Service {
                             break;
                     }
                 } catch (IOException | JSchException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 ssh.endConnection();
             }
@@ -515,7 +515,7 @@ public class TapsServices extends Service {
 //        try {
 //            return readJsonFile(idsconf + "/taps/TapsConfiguration.json");
 //        } catch (IOException e) {
-//            e.printStackTrace();
+//            // e.printStackTrace();
 //        }
 //        return Json.object();
 
@@ -540,7 +540,7 @@ public class TapsServices extends Service {
         try {
             return readJsonFile(idsconf + "/taps/TapsConfiguration.json");
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         return Json.object();
     }
@@ -631,7 +631,7 @@ public class TapsServices extends Service {
                     ssh.sendFile(idsconf + "/taps/" + name + "/includes.yaml", "/home/" + username + "/configSuricata/suricata/includes.yaml");
                     ssh.endConnection();
                 } catch (IOException | JSchException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
             }
         }
@@ -818,7 +818,7 @@ public class TapsServices extends Service {
         try {
             output = ssh.remoteExec(command);
         } catch (JSchException | IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
         ssh.endConnection();
 
@@ -957,7 +957,7 @@ public class TapsServices extends Service {
         } catch (Exception e) {
             System.err.println("Unable to parse conf or No tap config found in " + idsconf + "/taps/TapsConfiguration.json");
             configuredTaps = new ArrayList<Json>();
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 //        knownHostFilePath = jConfig.at("knowHostFilePath").asString();
 //        localIP = jConfig.at("localIpAddr").asString(););
@@ -1019,7 +1019,7 @@ public class TapsServices extends Service {
 //                    try {
 //                        writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
 //                    } catch (IOException e) {
-//                        e.printStackTrace();
+//                        // e.printStackTrace();
 //                    }
 //                    return Json.object();
             }
@@ -1061,7 +1061,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1077,7 +1077,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1092,7 +1092,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1107,7 +1107,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1244,7 +1244,7 @@ public class TapsServices extends Service {
                         try {
                             return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            // e.printStackTrace();
                         }
                         return Json.object();
                     }
@@ -1257,7 +1257,7 @@ public class TapsServices extends Service {
                 try {
                     return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1269,7 +1269,7 @@ public class TapsServices extends Service {
                 try {
                     return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1285,7 +1285,7 @@ public class TapsServices extends Service {
                 return result;
                 // return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
                    /* } catch (IOException e) {
-                        e.printStackTrace();
+                        // e.printStackTrace();
                     }
                     return Json.object();*/
             }
@@ -1297,7 +1297,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(params.at("conf").toString(), idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1309,7 +1309,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(params.at("conf").toString(), idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1321,7 +1321,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(params.at("conf").toString(), idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1333,7 +1333,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(params.at("conf").toString(), idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1511,7 +1511,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1538,7 +1538,7 @@ public class TapsServices extends Service {
                 try {
                     writeToFile(write.at("write").toString(), idsconf + "/taps/TapsConfiguration.json");
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 return Json.object();
             }

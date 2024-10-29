@@ -61,8 +61,8 @@ public class CSLDemo08TapsManager {
 			return j2;
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			// e.printStackTrace();
 		}
 
 		return Json.object();
@@ -88,7 +88,6 @@ public class CSLDemo08TapsManager {
 			
 		System.out.println(execCmd("rename", TAP_27, Json.object().set("new_idname", TAP_15)));
 		System.out.println(execCmd("update", TAP_15, Json.object().set("ip",  "192.168.0.200")));
-		System.out.println(execCmd("update", TAP_15, Json.object().set("username",  "user").set("password",  "pass")));
 	
 		System.out.println(execCmd("list", TAP_28, Json.object()));
 		

@@ -79,8 +79,8 @@ public class FileUtils  {
 		try {
 			content = readFile(f);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			// e.printStackTrace();
 			logger.error("Cannot read Json file :"+f);
 		}
 
@@ -117,8 +117,8 @@ public class FileUtils  {
             String s = FileUtils.readFile(filename);
             result.set("text", s);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            
+            // e.printStackTrace();
             result.set("error", e.getMessage());
         }
         return result;
@@ -133,7 +133,7 @@ public class FileUtils  {
             Files.write(Paths.get(filename), content.getBytes());
             return result;
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
             return result.set("error", e.getMessage());
         }
     }
@@ -194,8 +194,8 @@ public class FileUtils  {
         try {
             createFile(file, strlist);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            
+            // e.printStackTrace();
         }
     }
 

@@ -69,7 +69,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("loc "+me.getLocalizedMessage());
 			System.out.println("cause "+me.getCause());
 			System.out.println("excep "+me);
-			me.printStackTrace();
+			m// e.printStackTrace();
 		}
 		connectClientToSend();
 
@@ -96,7 +96,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("loc "+me.getLocalizedMessage());
 			System.out.println("cause "+me.getCause());
 			System.out.println("excep "+me);
-			me.printStackTrace();
+			m// e.printStackTrace();
 		}
 	}
 
@@ -108,7 +108,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 				clientToListen.close(true);
 				subscribed=false;
 			} catch (MqttException e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 		}
 
@@ -119,7 +119,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 				if (isDebug()) System.out.println("Disconnected");
 				clientToSend.close();
 			} catch (MqttException e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 		}
 	}
@@ -209,7 +209,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("loc "+me.getLocalizedMessage());
 			System.out.println("cause "+me.getCause());
 			System.out.println("excep "+me);
-			me.printStackTrace();
+			m// e.printStackTrace();
 		}
 	}
 

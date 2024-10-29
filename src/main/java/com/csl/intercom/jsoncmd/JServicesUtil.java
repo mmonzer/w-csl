@@ -19,8 +19,8 @@ public class JServicesUtil {
 		try {
 			content = readFile(fileName);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
+			// e.printStackTrace();
 		}
 
 		return Json.read(content);

@@ -86,7 +86,7 @@ public class SuricataServices extends Service {
 		try {
 			output = ssh.remoteExec(command);
 		} catch (JSchException | IOException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		Json out = Json.object();
 		out.at("result", output);
@@ -112,7 +112,7 @@ public class SuricataServices extends Service {
 		try {
 			output = ssh.remoteExec(command);
 		} catch (JSchException | IOException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		Json out = Json.object();
 		out.at("result", output);
@@ -137,7 +137,7 @@ public class SuricataServices extends Service {
 		try {
 			output = ssh.remoteExec(command);
 		} catch (JSchException | IOException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		Json out = Json.object();
 		out.at("result", output);
@@ -158,7 +158,7 @@ public class SuricataServices extends Service {
 				try {
 					ssh.sendFile("./datafile/suricataRules/"+name+".rules","/home/"+username+"/configSuricata/suricata/rules/csl.rules");
 				} catch (IOException | JSchException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 			}
 		}
@@ -181,7 +181,7 @@ public class SuricataServices extends Service {
 					resultat = readFile("./datafile/suricataRules/"+name+".rules");
 
 				} catch (IOException | JSchException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 			}
 		}
@@ -199,7 +199,7 @@ public class SuricataServices extends Service {
 		try {
 			writeToFile("","./datafile/suricataRules/"+name+".rules");
 		} catch (IOException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 
 	}
@@ -242,7 +242,7 @@ public class SuricataServices extends Service {
 					oldRules = readFile("./datafile/suricataRules/"+name+".rules");
 					writeToFile(oldRules, "./datafile/suricataRules/"+newName+".rules");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 
 			}
@@ -308,7 +308,7 @@ public class SuricataServices extends Service {
 				try {
 					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 				return Json.object();
 			}
@@ -323,7 +323,7 @@ public class SuricataServices extends Service {
 				try {
 					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 				return Json.object();
 			}
@@ -338,7 +338,7 @@ public class SuricataServices extends Service {
 				try {
 					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 				return Json.object();
 			}
@@ -353,7 +353,7 @@ public class SuricataServices extends Service {
 				try {
 					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 				return Json.object();
 			}
@@ -368,7 +368,7 @@ public class SuricataServices extends Service {
 				try {
 					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 				return result;
 			}
@@ -383,7 +383,7 @@ public class SuricataServices extends Service {
 				try {
 					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 				return Json.object();
 			}
@@ -395,7 +395,7 @@ public class SuricataServices extends Service {
 				try {
 					return readJsonFile("./datafile/configuredSuricata.json");
 				} catch (IOException e) {
-					e.printStackTrace();
+					// e.printStackTrace();
 				}
 				return Json.object();
 			}

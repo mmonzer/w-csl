@@ -38,4 +38,21 @@ public class LoggerUtils {
         MDC.remove(LoggerConstants.PROTOCOL);
     }
 
+    /**
+     * Shows partially the password
+     *
+     * @param password password to hide
+     * @return hidden password
+     */
+     public static String hide(String password) {
+         String defaultPassword = "********";
+         if (password==null) {
+             return "null";
+         }
+         if (password.length()>3) {
+             return password.substring(0,3)+defaultPassword.substring(0,5);
+         } else {
+             return password+defaultPassword.substring(0,8-password.length());
+         }
+     }
 }

@@ -8,13 +8,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -117,12 +114,18 @@ public class FileUtils  {
 
         result.set("error", "");
         try {
-
-            Files.write(Paths.get(filename), content.getBytes());
+            writeToFile(filename, content);
             return result;
         } catch (IOException e) {
             // e.printStackTrace();
             return result.set("error", e.getMessage());
+        }
+    }
+
+
+    public static void writeToFile(String path, String content) throws IOException {
+        try (FileWriter myWriter = new FileWriter(path)) {
+            myWriter.write(content);
         }
     }
 
@@ -458,4 +461,6 @@ public class FileUtils  {
         return bytes;
     }
 }
+
+
 

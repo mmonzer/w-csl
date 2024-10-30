@@ -51,10 +51,7 @@ public class FileLog implements Runnable, IFileLog {
 
     @Override
     public void run() {
-
-
         try {
-
             while (true) {
                 String buffer = blockingQueue.take();
                 //Check whether end of file has been reached
@@ -72,13 +69,9 @@ public class FileLog implements Runnable, IFileLog {
     }
 
     public void builFileName() {
-        nameFile = prefixFileName;
-        boolean addTimeStampToFilename = true;
-        if (addTimeStampToFilename) {
-            nameFile = nameFile + '_' + Instant.now().atZone(ZoneId.of("Z")).format(DateTimeFormatter.ISO_INSTANT).replaceAll("\\D+", "_");
-            if (nameFile.endsWith("_")) nameFile = nameFile.substring(0, nameFile.length() - 1);
-            nameFile = nameFile + "." + ext;
-        } else nameFile = nameFile + "." + ext;
+        nameFile = prefixFileName + '_' + Instant.now().atZone(ZoneId.of("Z")).format(DateTimeFormatter.ISO_INSTANT).replaceAll("\\D+", "_");
+        if (nameFile.endsWith("_")) nameFile = nameFile.substring(0, nameFile.length() - 1);
+        nameFile = nameFile + "." + ext;
     }
 
     public void InitializeLogging() {
@@ -130,7 +123,7 @@ public class FileLog implements Runnable, IFileLog {
 
             blockingQueue.put(line);
         } catch (InterruptedException e) {
-            
+
             // e.printStackTrace();
         }
     }

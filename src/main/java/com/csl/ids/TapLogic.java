@@ -386,10 +386,11 @@ public class TapLogic {
                 .build();
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.body();
         } catch (Exception e) {
             // e.printStackTrace();
+            return "";
         }
-        return response.body();
     }
 
     /**

@@ -19,19 +19,21 @@ import java.util.Set;
 public class CpeItem implements IDbapiSerializable {
     // The fields to include in the cpeData array
     private static final Logger logger = LoggerFactory.getLogger(CpeItem.class);
-    private static final Set<String> dataFields = new HashSet<>(10) {{
-        add("part");
-        add("vendor");
-        add("product");
-        add("version");
-        add("update");
-        add("edition");
-        add("lang");
-        add("softwareEdition");
-        add("targetSoftware");
-        add("targetHardware");
-        add("others");
-    }};
+    private static final Set<String> dataFields = new HashSet<>(10);
+    static {
+        dataFields.add("part");
+        dataFields.add("vendor");
+        dataFields.add("product");
+        dataFields.add("version");
+        dataFields.add("update");
+        dataFields.add("edition");
+        dataFields.add("lang");
+        dataFields.add("softwareEdition");
+        dataFields.add("targetSoftware");
+        dataFields.add("targetHardware");
+        dataFields.add("others");
+    }
+
     private final Json cpeData;
     @Getter
     private final OffsetDateTime discoveredDate;

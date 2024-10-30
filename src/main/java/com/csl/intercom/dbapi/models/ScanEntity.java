@@ -23,11 +23,12 @@ public class ScanEntity {
         DISCARDED,
         ;
 
-        public static final List<Status> finishedStates = new ArrayList<>() {{
-            add(FINISHED_SUCCESS);
-            add(FINISHED_FAIL);
-            add(DISCARDED);
-        }};
+        public static final List<Status> finishedStates = new ArrayList<>();
+        static {
+            finishedStates.add(FINISHED_SUCCESS);
+            finishedStates.add(FINISHED_FAIL);
+            finishedStates.add(DISCARDED);
+        }
     }
 
     @Setter

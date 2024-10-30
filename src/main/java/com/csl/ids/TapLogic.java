@@ -45,20 +45,6 @@ public class TapLogic {
 
     static String idsconf;
 
-    private static String readFile(String fileName) throws IOException {
-        String jsonRaw = "";
-        File fichierRegles = new File(fileName);
-        InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-        InputStreamReader ipsr = new InputStreamReader(lecteur, StandardCharsets.UTF_8);
-        BufferedReader br = new BufferedReader(ipsr);
-        String ligne;
-        while ((ligne = br.readLine()) != null) {
-            jsonRaw += ligne + "\r\n";
-        }
-        br.close();
-        return jsonRaw;
-    }
-
     public static Json readJsonFile(String fileName) throws IOException {
         String jsonRaw = "";
         File fichierRegles = new File(fileName);

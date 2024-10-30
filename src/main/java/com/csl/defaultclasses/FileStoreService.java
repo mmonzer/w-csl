@@ -19,9 +19,12 @@ public class FileStoreService {
     }
 
     public Json readJsonFromFile(String dir, String fileName) {
-        if (trace) System.out.println("[FILESERVICE] readJson" + dir + " " + fileName);
+        try {
+            return FileUtils.readJsonFromFile(dir, fileName);
+        } catch (IOException e) {
+            return Json.object();
+        }
 
-        return FileUtils.readJsonFromFile(dir, fileName);
     }
 
     public void saveJsonToFile(String dir, String fileName, Json j) {

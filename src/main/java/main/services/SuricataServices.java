@@ -11,427 +11,411 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.ArrayList;
 
+import static com.csl.util.FileUtils.readFile;
+
 public class SuricataServices extends Service {
-	private static final Logger logger = LoggerFactory.getLogger(SuricataServices.class);
-	static ArrayList<Json> configuredSuricata;
-	static String localIP;
-	static Integer localPort;
-	static String knownHostFilePath;
+    private static final Logger logger = LoggerFactory.getLogger(SuricataServices.class);
+    static ArrayList<Json> configuredSuricata;
+    static String localIP;
+    static Integer localPort;
+    static String knownHostFilePath;
 
-	private static final String SURICATA_CONF_DIR = "~/csl/configSuricata";
-	private static final String STOP_SURICATA = "sudo kill -9 `cat "+SURICATA_CONF_DIR+"/suricataPID`";
-	private static final String RELOAD_RULES = "sudo kill -USR2 `cat "+SURICATA_CONF_DIR+"/suricataPID`";
+    private static final String SURICATA_CONF_DIR = "~/csl/configSuricata";
+    private static final String STOP_SURICATA = "sudo kill -9 `cat " + SURICATA_CONF_DIR + "/suricataPID`";
+    private static final String RELOAD_RULES = "sudo kill -USR2 `cat " + SURICATA_CONF_DIR + "/suricataPID`";
 
-	private static String startSuricataCommand(String ip, String port) {
-		return "cd "+SURICATA_CONF_DIR+" && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
-				"sudo suricata -D -c "+SURICATA_CONF_DIR+"/suricata/suricata.yaml -i enp0s3 --pidfile "+SURICATA_CONF_DIR+"/suricataPID";
-	}
+    private static String startSuricataCommand(String ip, String port) {
+        return "cd " + SURICATA_CONF_DIR + " && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket " + localIP + " " + localPort + " & " +
+                "sudo suricata -D -c " + SURICATA_CONF_DIR + "/suricata/suricata.yaml -i enp0s3 --pidfile " + SURICATA_CONF_DIR + "/suricataPID";
+    }
 
-	private static String startSuricataCommand(String ip, Integer port) {
-		return "cd "+SURICATA_CONF_DIR+" && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket "+localIP+" "+localPort+" & "+
-				"sudo suricata -D -c "+SURICATA_CONF_DIR+"/suricata/suricata.yaml -i enp0s3 --pidfile "+SURICATA_CONF_DIR+"/suricataPID";
-	}
+    private static String startSuricataCommand(String ip, Integer port) {
+        return "cd " + SURICATA_CONF_DIR + " && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket " + localIP + " " + localPort + " & " +
+                "sudo suricata -D -c " + SURICATA_CONF_DIR + "/suricata/suricata.yaml -i enp0s3 --pidfile " + SURICATA_CONF_DIR + "/suricataPID";
+    }
 
-	private static Json readJsonFile(String fileName) throws IOException {
-		String jsonRaw = "";
-		File fichierRegles = new File(fileName);
-		InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-		InputStreamReader ipsr =new InputStreamReader(lecteur);
-		BufferedReader br = new BufferedReader(ipsr);
-		String ligne;
-		while ((ligne=br.readLine())!=null){
-			jsonRaw+=ligne+"\n";
-		}
-		br.close();
-		return Json.read(jsonRaw);
-	}
+    private static Json readJsonFile(String fileName) throws IOException {
+        String jsonRaw = "";
+        File fichierRegles = new File(fileName);
+        InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
+        InputStreamReader ipsr = new InputStreamReader(lecteur);
+        BufferedReader br = new BufferedReader(ipsr);
+        String ligne;
+        while ((ligne = br.readLine()) != null) {
+            jsonRaw += ligne + "\n";
+        }
+        br.close();
+        return Json.read(jsonRaw);
+    }
 
-	private static String readFile(String fileName) throws IOException {
-		String jsonRaw = "";
-		File fichierRegles = new File(fileName);
-		InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-		InputStreamReader ipsr =new InputStreamReader(lecteur);
-		BufferedReader br = new BufferedReader(ipsr);
-		String ligne;
-		while ((ligne=br.readLine())!=null){
-			jsonRaw+=ligne+"\n";
-		}
-		br.close();
-		return jsonRaw;
-	}
+    private static void writeToFile(String s, String path) throws IOException {
+        FileWriter myWriter = new FileWriter(path);
+        myWriter.write(s);
+        myWriter.close();
+    }
 
-	private static void writeToFile(String s, String path) throws IOException {
-		FileWriter myWriter = new FileWriter(path);
-		myWriter.write(s);
-		myWriter.close();
-	}
+    // Not used anymore, its TapsServices.java's counterpart is
+    public static Json startSuricata(String id, String password, String name) {
+        String ip = null;
+        int port = 22;
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                ip = j.at("ip").asString();
+                try {
+                    port = j.at("port").asInteger();
+                } catch (NullPointerException e) {
+                    logger.debug("Using default SSH port (22)");
+                }
+            }
+        }
+        SshUtils ssh = new SshUtils(id, password, ip, port/*,knownHostFilePath*/);
+        String command = startSuricataCommand(localIP, localPort);
+        String output = null;
+        try {
+            output = ssh.remoteExec(command);
+        } catch (JSchException | IOException e) {
+            // e.printStackTrace();
+        }
+        Json out = Json.object();
+        out.at("result", output);
+        return out;
+    }
 
-	// Not used anymore, its TapsServices.java's counterpart is
-	public static Json startSuricata(String id, String password, String name) {
-		String ip = null;
-		int port = 22;
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				ip = j.at("ip").asString();
-				try {
-					port = j.at("port").asInteger();
-				} catch (NullPointerException e) {
-					logger.debug("Using default SSH port (22)");
-				}
-			}
-		}
-		SshUtils ssh = new SshUtils(id,password,ip,port/*,knownHostFilePath*/);
-		String command = startSuricataCommand(localIP, localPort);
-		String output = null;
-		try {
-			output = ssh.remoteExec(command);
-		} catch (JSchException | IOException e) {
-			// e.printStackTrace();
-		}
-		Json out = Json.object();
-		out.at("result", output);
-		return out;
-	}
+    public static Json stopSuricata(String id, String password, String name) {
+        String ip = null;
+        int port = 22;
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                ip = j.at("ip").asString();
+                try {
+                    port = j.at("port").asInteger();
+                } catch (NullPointerException e) {
+                    logger.debug("Using default SSH port (22)");
+                }
+            }
+        }
+        SshUtils ssh = new SshUtils(id, password, ip, port);
+        String command = STOP_SURICATA;
+        String output = null;
+        try {
+            output = ssh.remoteExec(command);
+        } catch (JSchException | IOException e) {
+            // e.printStackTrace();
+        }
+        Json out = Json.object();
+        out.at("result", output);
+        return out;
+    }
 
-	public static Json stopSuricata(String id, String password, String name) {
-		String ip = null;
-		int port = 22;
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				ip = j.at("ip").asString();
-				try {
-					port = j.at("port").asInteger();
-				} catch (NullPointerException e) {
-					logger.debug("Using default SSH port (22)");
-				}
-			}
-		}
-		SshUtils ssh = new SshUtils(id,password,ip,port);
-		String command = STOP_SURICATA;
-		String output = null;
-		try {
-			output = ssh.remoteExec(command);
-		} catch (JSchException | IOException e) {
-			// e.printStackTrace();
-		}
-		Json out = Json.object();
-		out.at("result", output);
-		return out;
-	}
-	public static Json reloadRules(String id, String password, String name) {
-		String ip = null;
-		int port = 22;
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				ip = j.at("ip").asString();
-				try {
-					port = j.at("port").asInteger();
-				} catch (NullPointerException e) {
-					logger.debug("Using default SSH port (22)");
-				}
-			}
-		}
-		SshUtils ssh = new SshUtils(id,password,ip,port);
-		String command = RELOAD_RULES;
-		String output = null;
-		try {
-			output = ssh.remoteExec(command);
-		} catch (JSchException | IOException e) {
-			// e.printStackTrace();
-		}
-		Json out = Json.object();
-		out.at("result", output);
-		return out;
-	}
+    public static Json reloadRules(String id, String password, String name) {
+        String ip = null;
+        int port = 22;
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                ip = j.at("ip").asString();
+                try {
+                    port = j.at("port").asInteger();
+                } catch (NullPointerException e) {
+                    logger.debug("Using default SSH port (22)");
+                }
+            }
+        }
+        SshUtils ssh = new SshUtils(id, password, ip, port);
+        String command = RELOAD_RULES;
+        String output = null;
+        try {
+            output = ssh.remoteExec(command);
+        } catch (JSchException | IOException e) {
+            // e.printStackTrace();
+        }
+        Json out = Json.object();
+        out.at("result", output);
+        return out;
+    }
 
-	public static void sendRules(String name, String username, String password) {
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				String ip = j.at("ip").asString();
-				int port = 22;
-				try {
-					port = j.at("port").asInteger();
-				} catch (NullPointerException e) {
-					logger.debug("Using default SSH port (22)");
-				}
-				SshUtils ssh = new SshUtils(username,password,ip,port);
-				try {
-					ssh.sendFile("./datafile/suricataRules/"+name+".rules","/home/"+username+"/configSuricata/suricata/rules/csl.rules");
-				} catch (IOException | JSchException e) {
-					// e.printStackTrace();
-				}
-			}
-		}
-	}
+    public static void sendRules(String name, String username, String password) {
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                String ip = j.at("ip").asString();
+                int port = 22;
+                try {
+                    port = j.at("port").asInteger();
+                } catch (NullPointerException e) {
+                    logger.debug("Using default SSH port (22)");
+                }
+                SshUtils ssh = new SshUtils(username, password, ip, port);
+                try {
+                    ssh.sendFile("./datafile/suricataRules/" + name + ".rules", "/home/" + username + "/configSuricata/suricata/rules/csl.rules");
+                } catch (IOException | JSchException e) {
+                    // e.printStackTrace();
+                }
+            }
+        }
+    }
 
-	public static Json getRules(String name, String username, String password) {
-		String resultat = "";
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				String ip = j.at("ip").asString();
-				int port = 22;
-				try {
-					port = j.at("port").asInteger();
-				} catch (NullPointerException e) {
-					logger.debug("Using default SSH port (22)");
-				}
-				SshUtils ssh = new SshUtils(username,password,ip,port);
-				try {
-					ssh.getFile("/home/"+username+"/configSuricata/suricata/rules/csl.rules","./datafile/suricataRules/"+name+".rules");
-					resultat = readFile("./datafile/suricataRules/"+name+".rules");
+    public static Json getRules(String name, String username, String password) {
+        String resultat = "";
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                String ip = j.at("ip").asString();
+                int port = 22;
+                try {
+                    port = j.at("port").asInteger();
+                } catch (NullPointerException e) {
+                    logger.debug("Using default SSH port (22)");
+                }
+                SshUtils ssh = new SshUtils(username, password, ip, port);
+                try {
+                    ssh.getFile("/home/" + username + "/configSuricata/suricata/rules/csl.rules", "./datafile/suricataRules/" + name + ".rules");
+                    resultat = readFile("./datafile/suricataRules/" + name + ".rules");
+                } catch (IOException | JSchException e) {
+                    // e.printStackTrace();
+                }
+            }
+        }
+        Json result = Json.object();
+        result.at("result", resultat);
+        return result;
+    }
 
-				} catch (IOException | JSchException e) {
-					// e.printStackTrace();
-				}
-			}
-		}
-		Json result = Json.object();
-		result.at("result",resultat);
-		return result;
-	}
+    public static void newSuricata(String name) {
+        Json j = Json.object();
+        j.at("id", name);
+        j.at("rules_file", "./datafile/suricataRules/" + name + ".rules");
 
-	public static void newSuricata(String name) {
-		Json j = Json.object();
-		j.at("id",name);
-		j.at("rules_file","./datafile/suricataRules/"+name+".rules");
+        configuredSuricata.add(j);
+        try {
+            writeToFile("", "./datafile/suricataRules/" + name + ".rules");
+        } catch (IOException e) {
+            // e.printStackTrace();
+        }
+    }
 
-		configuredSuricata.add(j);
-		try {
-			writeToFile("","./datafile/suricataRules/"+name+".rules");
-		} catch (IOException e) {
-			// e.printStackTrace();
-		}
+    public static void deleteSuricata(String name) {
+        ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                suricataClone.remove(j);
+            }
+        }
+        configuredSuricata = suricataClone;
+    }
 
-	}
+    public static void setIp(String name, String ip) {
+        ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                suricataClone.remove(j);
+                j.at("ip", ip);
+                suricataClone.add(j);
+            }
+        }
+        configuredSuricata = suricataClone;
+    }
 
-	public static void deleteSuricata(String name) {
-		ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				suricataClone.remove(j);
-			}
-		}
-		configuredSuricata = suricataClone;
-	}
+    public static void renameSuricata(String name, String newName) {
+        ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
+        for (Json j : configuredSuricata) {
+            if (j.at("id").asString().contentEquals(name)) {
+                suricataClone.remove(j);
+                j.delAt("id");
+                j.delAt("rules_file");
+                j.at("id", newName);
+                j.at("rules_file", "./datafile/suricataRules/" + newName + ".rules");
+                suricataClone.add(j);
+                String oldRules = "";
+                try {
+                    oldRules = readFile("./datafile/suricataRules/" + name + ".rules");
+                    writeToFile(oldRules, "./datafile/suricataRules/" + newName + ".rules");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+            }
+        }
+        configuredSuricata = suricataClone;
+    }
 
-	public static void setIp(String name, String ip) {
-		ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				suricataClone.remove(j);
-				j.at("ip",ip);
-				suricataClone.add(j);
-			}
-		}
-		configuredSuricata = suricataClone;
+    /**
+     * Default constructor of the Suricata service. Name, description and configuration file are given here.
+     */
+    public SuricataServices() {
+        this("suricata",
+                "Service for dealing with suricata configuration.",
+                "ssh_service");
+    }
 
-	}
+    /**
+     * Generic constructor of the Suricata service.
+     */
+    public SuricataServices(String name, String description, String configFileSectionName) {
+        super(name, description, configFileSectionName);
+    }
 
-	public static void renameSuricata(String name, String newName) {
-		ArrayList<Json> suricataClone = (ArrayList<Json>) configuredSuricata.clone();
-		for(Json j : configuredSuricata) {
-			if(j.at("id").asString().contentEquals(name)) {
-				suricataClone.remove(j);
-				j.delAt("id");
-				j.delAt("rules_file");
-				j.at("id",newName);
-				j.at("rules_file","./datafile/suricataRules/"+newName+".rules");
-				suricataClone.add(j);
-				String oldRules = "";
-				try {
-					oldRules = readFile("./datafile/suricataRules/"+name+".rules");
-					writeToFile(oldRules, "./datafile/suricataRules/"+newName+".rules");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
+    @Override
+    public boolean init() {
+        defineServiceEndpoints();
+        return true;
+    }
 
-			}
-		}
-		configuredSuricata = suricataClone;
-	}
+    /**
+     * Initialization of the Suricata commands
+     *
+     * @return true if the initialization happened with no problems, false otherwise.
+     */
+    public void defineServiceEndpoints() {
+        Config.Tap config = Config.instance.TapService;
+        logger.debug("Initializing SSH suricata commands ..");
+        try {
+            Json conf = readJsonFile("./datafile/configuredSuricata.json");
+            if (conf.isArray())
+                configuredSuricata = (ArrayList<Json>) conf.asJsonList();
+            else
+                configuredSuricata = new ArrayList<Json>();
+        } catch (IOException e1) {
+            System.err.println("No tap config found");
+            configuredSuricata = new ArrayList<Json>();
+        }
 
-	/**
-	 * Default constructor of the Suricata service. Name, description and configuration file are given here.
-	 */
-	public SuricataServices() {
-		this("suricata",
-				"Service for dealing with suricata configuration.",
-				"ssh_service");
-	}
-
-	/**
-	 * Generic constructor of the Suricata service.
-	 */
-	public SuricataServices(String name, String description, String configFileSectionName) {
-		super(name, description, configFileSectionName);
-	}
-
-	@Override
-	public boolean init() {
-		defineServiceEndpoints();
-		return true;
-	}
-
-	/**
-	 * Initialization of the Suricata commands
-	 * @return true if the initialization happened with no problems, false otherwise.
-	 */
-	public void defineServiceEndpoints() {
-		Config.Tap config = Config.instance.TapService;
-		logger.debug("Initializing SSH suricata commands ..");
-		try {
-			Json conf = readJsonFile("./datafile/configuredSuricata.json");
-			if(conf.isArray())
-				configuredSuricata = (ArrayList<Json>) conf.asJsonList();
-			else
-				configuredSuricata =  new ArrayList<Json>();
-		} catch (IOException e1) {
-			System.err.println("No tap config found");
-			configuredSuricata =  new ArrayList<Json>();
-		}
-
-		knownHostFilePath = config.getKnowHostFilePath();
-		localIP = config.getLocalIpAddress();
-		localPort = config.getLocalPort();
+        knownHostFilePath = config.getKnowHostFilePath();
+        localIP = config.getLocalIpAddress();
+        localPort = config.getLocalPort();
 
 
+        addCmd("newSuricata", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                logger.debug("paramètres de newSuricata :" + params.toString());
+                logger.debug("nom utilisé :" + params.at("name").asString());
 
-		addCmd("newSuricata", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				logger.debug("paramètres de newSuricata :"+params.toString());
-				logger.debug("nom utilisé :"+params.at("name").asString());
+                newSuricata(params.at("name").asString());
+                Json write = Json.object();
+                write.at("write", configuredSuricata);
+                try {
+                    writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                return Json.object();
+            }
+        });
 
-				newSuricata(params.at("name").asString());
-				Json write = Json.object();
-				write.at("write",configuredSuricata);
-				try {
-					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-				return Json.object();
-			}
-		});
+        addCmd("renameSuricata", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                renameSuricata(params.at("name").asString(), params.at("newName").asString());
+                Json write = Json.object();
+                write.at("write", configuredSuricata);
+                try {
+                    writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                return Json.object();
+            }
+        });
 
-		addCmd("renameSuricata", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				renameSuricata(params.at("name").asString(),params.at("newName").asString() );
-				Json write = Json.object();
-				write.at("write",configuredSuricata);
-				try {
-					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-				return Json.object();
-			}
-		});
+        addCmd("deleteSuricata", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                deleteSuricata(params.at("name").asString());
+                Json write = Json.object();
+                write.at("write", configuredSuricata);
+                try {
+                    writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                return Json.object();
+            }
+        });
 
-		addCmd("deleteSuricata", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				deleteSuricata(params.at("name").asString());
-				Json write = Json.object();
-				write.at("write",configuredSuricata);
-				try {
-					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-				return Json.object();
-			}
-		});
+        addCmd("setSuricataIp", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                setIp(params.at("name").asString(), params.at("ip").asString());
+                Json write = Json.object();
+                write.at("write", configuredSuricata);
+                try {
+                    writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                return Json.object();
+            }
+        });
 
-		addCmd("setSuricataIp", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				setIp(params.at("name").asString(), params.at("ip").asString());
-				Json write = Json.object();
-				write.at("write",configuredSuricata);
-				try {
-					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-				return Json.object();
-			}
-		});
+        addCmd("getSuricataRules", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                Json result = getRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
+                Json write = Json.object();
+                write.at("write", configuredSuricata);
+                try {
+                    writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                return result;
+            }
+        });
 
-		addCmd("getSuricataRules", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				Json result = getRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
-				Json write = Json.object();
-				write.at("write",configuredSuricata);
-				try {
-					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-				return result;
-			}
-		});
+        addCmd("sendSuricataRules", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                sendRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
+                Json write = Json.object();
+                write.at("write", configuredSuricata);
+                try {
+                    writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                return Json.object();
+            }
+        });
 
-		addCmd("sendSuricataRules", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				sendRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
-				Json write = Json.object();
-				write.at("write",configuredSuricata);
-				try {
-					writeToFile(write.at("write").toString(), "./datafile/configuredSuricata.json");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-				return Json.object();
-			}
-		});
+        addCmd("getConfiguredSuricata", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                try {
+                    return readJsonFile("./datafile/configuredSuricata.json");
+                } catch (IOException e) {
+                    // e.printStackTrace();
+                }
+                return Json.object();
+            }
+        });
 
-		addCmd("getConfiguredSuricata", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				try {
-					return readJsonFile("./datafile/configuredSuricata.json");
-				} catch (IOException e) {
-					// e.printStackTrace();
-				}
-				return Json.object();
-			}
-		});
-
-		addCmd("getSuricataState", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				Json j = Json.object();
-				j.at("state","IDLE");
-				return j;
-			}
-		});
-
+        addCmd("getSuricataState", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                Json j = Json.object();
+                j.at("state", "IDLE");
+                return j;
+            }
+        });
 
 
-		addCmd("startSuricata", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				return startSuricata(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
-			}
-		});
+        addCmd("startSuricata", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                return startSuricata(params.at("username").asString(), params.at("password").asString(), params.at("name").asString());
+            }
+        });
 
-		addCmd("stopSuricata", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				return stopSuricata(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
-			}
-		});
+        addCmd("stopSuricata", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                return stopSuricata(params.at("username").asString(), params.at("password").asString(), params.at("name").asString());
+            }
+        });
 
-		addCmd("reloadRules", new IJsonCmd() {
-			@Override
-			public Json exec(Json params) {
-				return reloadRules(params.at("username").asString(),params.at("password").asString(),params.at("name").asString());
-			}
-		});
-		logger.debug("SSH commands operationnal");
-	}
+        addCmd("reloadRules", new IJsonCmd() {
+            @Override
+            public Json exec(Json params) {
+                return reloadRules(params.at("username").asString(), params.at("password").asString(), params.at("name").asString());
+            }
+        });
+        logger.debug("SSH commands operationnal");
+    }
 }

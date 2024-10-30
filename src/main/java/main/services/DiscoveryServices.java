@@ -841,7 +841,6 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     String password = JsonUtil.getStringFromJson(params, "password", null);
                     String realm = JsonUtil.getStringFromJson(params, "realm", null);
                     String token = JsonUtil.getStringFromJson(params, "token", null);
-                    logger.trace("Starting fetching HTTP connection stage: ipAddress={} port={} username={} password={} realm={} token={}", ipAddress, port, username, LoggerUtils.hide(password), realm, token);
 
                     Json templateJson = params.get("entity_http_connection");
                     // Use the default values for the headers and query params, thus mark them as usable for CSL-Scan

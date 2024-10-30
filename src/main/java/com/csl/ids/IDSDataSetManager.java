@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.stream.Stream;
 
 public class IDSDataSetManager {
 	/**
@@ -159,16 +160,18 @@ public class IDSDataSetManager {
 			throws IOException {
 
 		System.out.println("COPY "+sourceDirectoryLocation+" to "+destinationDirectoryLocation);
-		Files.walk(Paths.get(sourceDirectoryLocation))
-		.forEach(source -> {
-			Path destination = Paths.get(destinationDirectoryLocation, source.toString()
-					.substring(sourceDirectoryLocation.length()));
-			try {
-				Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-			} catch (IOException e) {
-				// e.printStackTrace();
-			}
-		});
+		try (Stream<Path> paths = Files.walk(Paths.get(sourceDirectoryLocation))) {
+
+			paths.forEach(source -> {
+				Path destination = Paths.get(destinationDirectoryLocation, source.toString()
+						.substring(sourceDirectoryLocation.length()));
+				try {
+					Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+				} catch (IOException e) {
+					// e.printStackTrace();
+				}
+			});
+		}
 	}
 
 	public String copyDataSet(int category, String name, int targetCategory, String targetName,boolean overwrite) {

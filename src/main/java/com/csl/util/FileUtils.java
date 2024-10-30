@@ -69,32 +69,19 @@ public class FileUtils  {
         return file.getPath().toString();
     }
 
-    public static Json readJsonFromFile(String dir, String fileName) {
+    public static Json readJsonFromFile(String dir, String fileName) throws IOException {
 
         if (dir.isEmpty()) dir = ".";
 
         String f = dir + File.separator + fileName;
 
-		String content="{}";
-		try {
-			content = readFile(f);
-		} catch (IOException e) {
-			
-			// e.printStackTrace();
-			logger.error("Cannot read Json file :"+f);
-		}
+		String content = readFile(f);
 
-        Json j = Json.read(content);
-        return j;
+        return Json.read(content);
     }
 
     public static String readFile(String filename) throws IOException {
-        BufferedReader br = null;
-        FileReader fr = null;
-
-        try {
-            fr = new FileReader(filename);
-            br = new BufferedReader(fr);
+        try (FileReader fr = new FileReader(filename); BufferedReader br = new BufferedReader(fr)){
             String nextLine = "";
             StringBuilder sb = new StringBuilder();
             while ((nextLine = br.readLine()) != null) {
@@ -103,9 +90,6 @@ public class FileUtils  {
                 sb.append(EOL);
             }
             return sb.toString();
-        } finally {
-            if (br != null) br.close();
-            if (fr != null) fr.close();
         }
     }
 
@@ -174,15 +158,15 @@ public class FileUtils  {
     }
 
     private static void createFile(String file, List<String> arrData) throws IOException {
-        FileWriter writer = new FileWriter(file);
-        int size = arrData.size();
-        for (int i = 0; i < size; i++) {
-            String str = arrData.get(i).toString();
-            writer.write(str);
-            if (i < size - 1) //This prevent creating a blank like at the end of the file**
-                writer.write("\n");
+        try (FileWriter writer = new FileWriter(file)) {
+            int size = arrData.size();
+            for (int i = 0; i < size; i++) {
+                String str = arrData.get(i).toString();
+                writer.write(str);
+                if (i < size - 1) //This prevent creating a blank like at the end of the file**
+                    writer.write("\n");
+            }
         }
-        writer.close();
     }
 
     public static void saveJsonToFile(String dir, String fileName, Json j) {

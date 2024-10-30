@@ -69,7 +69,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("loc "+me.getLocalizedMessage());
 			System.out.println("cause "+me.getCause());
 			System.out.println("excep "+me);
-			m// e.printStackTrace();
+			// e.printStackTrace();
 		}
 		connectClientToSend();
 
@@ -96,7 +96,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("loc "+me.getLocalizedMessage());
 			System.out.println("cause "+me.getCause());
 			System.out.println("excep "+me);
-			m// e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 
@@ -209,7 +209,7 @@ public class SocketMessageMQTTHandler implements  MqttCallback {
 			System.out.println("loc "+me.getLocalizedMessage());
 			System.out.println("cause "+me.getCause());
 			System.out.println("excep "+me);
-			m// e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 

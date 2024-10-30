@@ -54,20 +54,6 @@ public class TapsServices extends Service {
 
     static String idsconf;
 
-    private static String readFile(String fileName) throws IOException {
-        String jsonRaw = "";
-        File fichierRegles = new File(fileName);
-        InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-        InputStreamReader ipsr = new InputStreamReader(lecteur, StandardCharsets.UTF_8);
-        BufferedReader br = new BufferedReader(ipsr);
-        String ligne;
-        while ((ligne = br.readLine()) != null) {
-            jsonRaw += ligne + "\r\n";
-        }
-        br.close();
-        return jsonRaw;
-    }
-
     public static Json readJsonFile(String fileName) throws IOException {
         String jsonRaw = "";
         File fichierRegles = new File(fileName);
@@ -1572,7 +1558,7 @@ public class TapsServices extends Service {
 
                     return includes;
                 } catch (IOException e1) {
-                    e1.printStackTrace();
+                    // e1.printStackTrace();
                 }
                 return Json.object();
             }
@@ -1607,7 +1593,7 @@ public class TapsServices extends Service {
 
                     return includes;
                 } catch (IOException e1) {
-                    e1.printStackTrace();
+                    // e1.printStackTrace();
                 }
                 return Json.object();
             }

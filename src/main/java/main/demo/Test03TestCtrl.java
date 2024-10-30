@@ -27,9 +27,9 @@ public class Test03TestCtrl {
 					address, port);
 
 			// Create a datagram socket, send the packet through it, close it.
-			DatagramSocket dsocket = new DatagramSocket();
-			dsocket.send(packet);
-			dsocket.close();
+			try (DatagramSocket dsocket = new DatagramSocket()) {
+				dsocket.send(packet);
+			}
 		} catch (Exception e) {
 		}
 	}

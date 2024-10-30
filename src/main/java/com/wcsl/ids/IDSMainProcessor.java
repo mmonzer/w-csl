@@ -101,12 +101,6 @@ public class IDSMainProcessor {
         getFileStoreServices().saveJsonToFile(dir, fileName, j);
     }
 
-    public Json readJsonFromModelDir(String dir, String fileName) {
-        if (!dir.isEmpty())
-            dir = idsMainProcessorParams.getIdsModelDir() + File.separator + dir;
-        return getFileStoreServices().readJsonFromFile(dir, fileName);
-    }
-
     public FileStoreService getFileStoreServices() {
        return fileStoreServices;
     }

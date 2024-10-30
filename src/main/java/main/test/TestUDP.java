@@ -9,30 +9,29 @@ public class TestUDP {
     public static void main(String[] args) throws IOException
     {
         // Step 1 : Create a socket to listen at port 1234
-        DatagramSocket ds = new DatagramSocket(8001);
-        byte[] receive = new byte[65535];
-  
-        DatagramPacket DpReceive = null;
-        while (true)
-        {
-  
-            // Step 2 : create a DatgramPacket to receive the data.
-            DpReceive = new DatagramPacket(receive, receive.length);
-  
-            // Step 3 : revieve the data in byte buffer.
-            ds.receive(DpReceive);
-  
-            System.out.println("Client:-" + data(receive));
-  
-            // Exit the server if the client sends "bye"
-            if (data(receive).toString().equals("bye"))
-            {
-                System.out.println("Client sent bye.....EXITING");
-                break;
+        try (DatagramSocket ds = new DatagramSocket(8001)) {
+            byte[] receive = new byte[65535];
+
+            DatagramPacket DpReceive = null;
+            while (true) {
+
+                // Step 2 : create a DatgramPacket to receive the data.
+                DpReceive = new DatagramPacket(receive, receive.length);
+
+                // Step 3 : revieve the data in byte buffer.
+                ds.receive(DpReceive);
+
+                System.out.println("Client:-" + data(receive));
+
+                // Exit the server if the client sends "bye"
+                if (data(receive).toString().equals("bye")) {
+                    System.out.println("Client sent bye.....EXITING");
+                    break;
+                }
+
+                // Clear the buffer after every message.
+                receive = new byte[65535];
             }
-  
-            // Clear the buffer after every message.
-            receive = new byte[65535];
         }
     }
   

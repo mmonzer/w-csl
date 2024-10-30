@@ -3,6 +3,8 @@ package com.csl.defaultclasses;
 import com.csl.core.CSLContext;
 import com.ucsl.interfaces.IFileLog;
 import com.ucsl.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,7 +20,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.function.LongSupplier;
 
 public class FileLog implements Runnable, IFileLog {
-
+    private static final Logger logger = LoggerFactory.getLogger(FileLog.class);
     private boolean running = false;
 
     public static int DEFAULT_MAX_SIZE = 10000000;
@@ -55,14 +57,14 @@ public class FileLog implements Runnable, IFileLog {
             while (true) {
                 String buffer = blockingQueue.take();
                 //Check whether end of file has been reached
-
                 if (buffer.equals("EOF")) {
                     break;
                 }
                 SendLogMessageToFile(buffer);
             }
         } catch (InterruptedException e) {
-
+            logger.warn("Interrupted file logging : {}", e.getMessage());
+            Thread.currentThread().interrupt();
         } finally {
             TerminateLogging();
         }
@@ -101,8 +103,9 @@ public class FileLog implements Runnable, IFileLog {
             try {
                 writerLogFile.flush();
                 writerLogFile.close();
-            } catch (final Exception ex) {
-                System.err.println("Error shutting down logging subsystem: " + ex.getMessage());
+            } catch (final Exception e) {
+                logger.warn("Interrupted file log writer flusher : {}", e.getMessage());
+                Thread.currentThread().interrupt();
             } finally {
                 writerLogFile = null;
             }
@@ -123,8 +126,8 @@ public class FileLog implements Runnable, IFileLog {
 
             blockingQueue.put(line);
         } catch (InterruptedException e) {
+            logger.warn("Interrupted file log recording messages : {}", e.getMessage());
 
-            // e.printStackTrace();
         }
     }
 

@@ -295,7 +295,7 @@ public class FileUtils  {
                 continue;
             }
 
-            // otherwise string
+            // otherwise string-
             tmp.set(toCamelCase(headers[i]), values[i]);
         }
         return tmp;

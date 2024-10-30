@@ -1,6 +1,5 @@
 package com.csl.util;
 
-import com.csl.intercom.cslscan.ScanApiHandler;
 import com.ucsl.json.Json;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -8,37 +7,24 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
 public class FileUtils  {
     public static final String FILENAME = "filename";
     public static final String CONTENT = "content";
-	/**
-	 * Logger instance for this class.
-	 */
-    private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
-
-    public static String fileSeparator = File.separator;
 
     public static final String EOL = System.getProperty("line.separator");
 
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-
     public static boolean fileExists(String dir, String filename) {
         if (dir.isEmpty()) dir = ".";
-        File file = new File(dir + File.separator + filename);
-        return file.exists();
+        return fileExists(dir + File.separator + filename);
     }
 
     public static boolean fileExists(String filename) {
-        File file = new File(filename);
-        return file.exists();
+        return new File(filename).exists();
     }
 
     public static boolean dirExists(String f) {
@@ -190,12 +176,6 @@ public class FileUtils  {
         }
     }
 
-    public static String getTimeStamp() {
-        Date date = new Date();
-
-        return sdf.format(date.getTime());
-    }
-
     public static String sanitize(String filename) {
         if (filename == null) return null;
         if (filename.contains("/")) filename = filename.replace("/", "_");
@@ -310,7 +290,7 @@ public class FileUtils  {
             } catch (NumberFormatException ignored) {
             }
             // check if boolean
-            if (values[i]=="true" || values[i]=="false") {
+            if ("true".equals(values[i]) || "false".equals(values[i])) {
                 tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
                 continue;
             }

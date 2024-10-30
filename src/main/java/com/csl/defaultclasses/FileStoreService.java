@@ -78,7 +78,7 @@ public class FileStoreService {
     }
 
     public void createSubDir(String rootDir, String subDir) {
-        File file = new File(rootDir + FileUtils.fileSeparator + subDir);
+        File file = new File(rootDir + File.separator + subDir);
         if (!file.exists()) file.mkdirs();
     }
 

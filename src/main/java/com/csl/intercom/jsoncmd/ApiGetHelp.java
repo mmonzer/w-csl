@@ -174,7 +174,7 @@ public class ApiGetHelp {
                     String ex_result = "";
                     if (jrow.has("ex_result")) ex_result = formatJson(jrow.get("ex_result"), full, url);
 
-                    boolean empty = ex_params.isEmpty() && ex_params.isEmpty();
+                    boolean empty = ex_params.isEmpty();
 
                     if (empty) {
                         row = row + "<td style=\"text-align: right; font-size: small;\"> </td>";

@@ -21,7 +21,6 @@ public class FileStorageService {
     private final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
     private final Path rootLocation;
     private final Map<Path, OffsetDateTime> deleteSchedule = new ConcurrentHashMap<>();
-    private final long defaultDeleteDelaySec = 6 * 3600;
     private final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
 
     public FileStorageService(String downloadPath) {
@@ -46,7 +45,7 @@ public class FileStorageService {
     public Path saveFile(InputStream inputStream, String fileName) throws IOException {
         Path filePath = rootLocation.resolve(fileName);
         Files.copy(inputStream, filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        deleteSchedule.put(filePath, OffsetDateTime.now().plusSeconds(defaultDeleteDelaySec));
+        deleteSchedule.put(filePath, OffsetDateTime.now().plusSeconds(6 * 3600L));
         return filePath;
     }
 

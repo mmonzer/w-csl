@@ -12,6 +12,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 import static com.csl.util.FileUtils.readFile;
+import static com.csl.util.FileUtils.readJsonFromFile;
 
 public class SuricataServices extends Service {
     private static final Logger logger = LoggerFactory.getLogger(SuricataServices.class);
@@ -32,20 +33,6 @@ public class SuricataServices extends Service {
     private static String startSuricataCommand(String ip, Integer port) {
         return "cd " + SURICATA_CONF_DIR + " && sudo java -jar ProxyUnixStream.jar /etc/suricata/log/socket " + localIP + " " + localPort + " & " +
                 "sudo suricata -D -c " + SURICATA_CONF_DIR + "/suricata/suricata.yaml -i enp0s3 --pidfile " + SURICATA_CONF_DIR + "/suricataPID";
-    }
-
-    private static Json readJsonFile(String fileName) throws IOException {
-        String jsonRaw = "";
-        File fichierRegles = new File(fileName);
-        InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-        InputStreamReader ipsr = new InputStreamReader(lecteur);
-        BufferedReader br = new BufferedReader(ipsr);
-        String ligne;
-        while ((ligne = br.readLine()) != null) {
-            jsonRaw += ligne + "\n";
-        }
-        br.close();
-        return Json.read(jsonRaw);
     }
 
     private static void writeToFile(String s, String path) throws IOException {
@@ -266,7 +253,7 @@ public class SuricataServices extends Service {
         Config.Tap config = Config.instance.TapService;
         logger.debug("Initializing SSH suricata commands ..");
         try {
-            Json conf = readJsonFile("./datafile/configuredSuricata.json");
+            Json conf = readJsonFromFile("./datafile/configuredSuricata.json");
             if (conf.isArray())
                 configuredSuricata = (ArrayList<Json>) conf.asJsonList();
             else
@@ -378,7 +365,7 @@ public class SuricataServices extends Service {
             @Override
             public Json exec(Json params) {
                 try {
-                    return readJsonFile("./datafile/configuredSuricata.json");
+                    return readJsonFromFile("./datafile/configuredSuricata.json");
                 } catch (IOException e) {
                     // e.printStackTrace();
                 }

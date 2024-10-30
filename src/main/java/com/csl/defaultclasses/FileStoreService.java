@@ -57,12 +57,6 @@ public class FileStoreService {
         return FileUtils.readFileInAJsonText(filename);
     }
 
-    public String readFile(String filename) throws IOException {
-        if (trace) System.out.println("[FILESERVICE] read file :" + filename);
-
-        return FileUtils.readFile(filename);
-    }
-
     public String checkAndCreateDir(String s) {
         return FileUtils.checkAndCreateDir(s);
     }

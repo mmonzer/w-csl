@@ -1,5 +1,6 @@
 package com.csl.core;
 
+import com.csl.util.FileUtils;
 import com.ucsl.json.Json;
 
 import java.io.BufferedReader;
@@ -96,12 +97,7 @@ public class Config {
                 throw new IllegalArgumentException("Resource not found: " + filename);
             }
 
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            return content.toString();
+            return FileUtils.readFile(reader);
         } catch (Exception e) {
             // e.printStackTrace();
             return null;

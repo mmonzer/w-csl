@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,27 +71,30 @@ public class FileUtils  {
     }
 
     public static Json readJsonFromFile(String dir, String fileName) throws IOException {
-
         if (dir.isEmpty()) dir = ".";
+        String filePath = dir + File.separator + fileName;
 
-        String f = dir + File.separator + fileName;
+        return readJsonFromFile(filePath);
+    }
 
-		String content = readFile(f);
-
-        return Json.read(content);
+    public static Json readJsonFromFile(String filePath) throws IOException {
+        return Json.read(readFile(filePath));
     }
 
     public static String readFile(String filename) throws IOException {
-        try (FileReader fr = new FileReader(filename); BufferedReader br = new BufferedReader(fr)){
-            String nextLine = "";
-            StringBuilder sb = new StringBuilder();
-            while ((nextLine = br.readLine()) != null) {
-                sb.append(nextLine); // note: BufferedReader strips the EOL character
-                //   so we add a new one!
-                sb.append(EOL);
-            }
-            return sb.toString();
+        try (FileReader fileReader = new FileReader(filename); BufferedReader bufferedReader = new BufferedReader(fileReader)){
+            return readFile(bufferedReader);
         }
+    }
+
+    public static String readFile(BufferedReader bufferedReader) throws IOException {
+        String nextLine = "";
+        StringBuilder stringBuilder = new StringBuilder();
+        while ((nextLine = bufferedReader.readLine()) != null) {
+            stringBuilder.append(nextLine); // note: BufferedReader strips the EOL character
+            stringBuilder.append(EOL);
+        }
+        return stringBuilder.toString();
     }
 
     public static Json readFileInAJsonText(String filename) {

@@ -2822,7 +2822,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	                token = factory().bool(Boolean.FALSE);
 	                break;
 	            case 'n':
-	                if (c != 'u' || next() != 'l')
+	                if (c != 'u' || next() != 'l' || next() != 'l')
 	                	throw new MalformedJsonException("Invalid JSON token: expected 'null' keyword.");
 	                next();
 	                token = nil();

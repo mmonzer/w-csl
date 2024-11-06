@@ -430,8 +430,8 @@ public class JsonUtil {
      * @param key the key inside the json obj
      */
     public static String getValueStringOrDefault(Json obj, String key, String defaultValue) {
-        if (obj.has(key) && obj.get(key).isString()) {
-            return obj.get(key).asString();
+        if (obj.has(key) && !obj.get(key).isNull() && obj.get(key).isString()) {
+            return obj.get(key).isNull()?null:obj.get(key).asString();
         } else {
             return defaultValue;
         }

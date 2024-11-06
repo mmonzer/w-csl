@@ -21,6 +21,7 @@ public abstract class Connection implements IScannerSerializable {
     private StaticConnectionProtocol protocol;
     @Getter
     private Boolean isSimulated;
+
     protected Connection(String name, String uuid, List<String> devicesIds, StaticConnectionProtocol protocol) {
         this.name  = name;
         this.uuid = uuid;

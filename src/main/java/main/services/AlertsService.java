@@ -221,32 +221,6 @@ public class AlertsService extends Service {
 
 
 
-		addCmd("test_alert0", new IJsonCmd() {
-
-			@Override
-			public Json exec(Json params) {
-				Json j=Json.object();
-				j.set("result", "ok");
-				j.set(VALUE,1);
-
-
-
-				AlertDescriptor a3= CSLContext.getInstance().getIDSMainProcessor().getAlertFactory().
-						createAlertDescriptor(3, "ALERT 3", System.currentTimeMillis());
-				CSLContext.getInstance().getCSLAlertManager().sendAlert(a3);
-
-				Json list=Json.array();
-				return list.add(a3.toJson());
-			}
-		},
-				new JsonCmdHelp()
-				.setDesc("send test alerts (1 alert)")
-
-				.setStatus(JsonCmdHelp.STATUS_OK)
-				);
-
-
-
 
 		addCmd("test_alert1", new IJsonCmd() {
 

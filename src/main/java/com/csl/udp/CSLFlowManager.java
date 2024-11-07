@@ -121,14 +121,14 @@ public class CSLFlowManager {
 
         listener = () -> {
             try {
-                d(inputflows.take());
+                filterJsonAlert(inputflows.take());
             } catch (InterruptedException e) {
                 // exception handling
             }
         };
     }
 
-    private void d(Json jsonAlert) {
+    private void filterJsonAlert(Json jsonAlert) {
         try {
             if (jsonAlert.has("type")) {
                 String type = jsonAlert.get("type").asString();

@@ -18,7 +18,7 @@ import com.csl.web.websockets.IMessageBroadcaster;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.*;
-import main.xcom.WebsocketClientEndpoint;
+import com.csl.web.WebsocketClientEndpoint;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 

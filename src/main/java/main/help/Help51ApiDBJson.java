@@ -3,7 +3,7 @@ package main.help;
 import com.csl.util.JCmd;
 import com.csl.web.HTTPConstants;
 import com.ucsl.json.Json;
-import main.xcom.WebsocketClientEndpoint;
+import com.csl.web.WebsocketClientEndpoint;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;

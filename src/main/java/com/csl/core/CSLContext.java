@@ -1,18 +1,12 @@
 package com.csl.core;
 
-import com.csl.alert.CSLAlertFactory;
 import com.csl.alert.CSLAlertManager;
 import com.csl.defaultclasses.FileStoreService;
-import com.csl.ids.IDSParams;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.intercom.status.StatusNotifier;
-import com.csl.logger.FileLogFactory;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.CSLUDPServer;
-import com.ucsl.interfaces.IFileLogFactory;
-import com.wcsl.ids.IDSMainProcessor;
-import com.wcsl.ids.IDSMainProcessorFactory;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.Service;
@@ -46,9 +40,6 @@ public class CSLContext {
 
     private static final String CONFIG_FILE = "application.json";
 
-    @Getter
-    private IDSParams idsParams = null;
-
     private CSLMqttBrokerHandler mqttBroker = null;
 
     private StatusNotifier statusNotifier = null;
@@ -71,8 +62,7 @@ public class CSLContext {
     @Setter
     private boolean testMode = false;
 
-    private IFileLogFactory fileLogFactory;
-    private IDSMainProcessor idsMainProcessor;
+    FileStoreService fileStoreService;
 
     /**
      * Private constructor for singleton pattern.
@@ -111,18 +101,6 @@ public class CSLContext {
             logger.warn("Warning, no alertManager registered");
         }
         return cslAlertManager;
-    }
-
-    /**
-     * Gets the file log factory instance.
-     *
-     * @return The file log factory instance.
-     */
-    public IFileLogFactory getFileLogFactory() {
-        if (fileLogFactory == null) {
-            fileLogFactory = new FileLogFactory();
-        }
-        return fileLogFactory;
     }
 
     /**
@@ -245,15 +223,7 @@ public class CSLContext {
 
         org.eclipse.jetty.util.log.Log.setLog(new com.csl.core.NoLogging());
 
-        this.idsMainProcessor = IDSMainProcessorFactory.instance.createIDSMainProcessor(
-                Config.instance.IdsConf, getCslConfDir());
-
-        idsMainProcessor.setFileLogFactory(getFileLogFactory());
-        idsMainProcessor.setFileStoreServices(new FileStoreService(getCslConfDir()));
-
-        cslAlertManager = new CSLAlertManager(idsMainProcessor, getConfig().AlertViewer);
-        idsMainProcessor.setAlertManager(cslAlertManager);
-        idsMainProcessor.setAlertFactory(new CSLAlertFactory());
+        cslAlertManager = new CSLAlertManager(getConfig().AlertViewer);
 
         setCslHttpServer(new CSLHttpServerJetty());
         setCslUDPServer(new CSLUDPServer());
@@ -331,15 +301,6 @@ public class CSLContext {
     }
 
     /**
-     * Gets the IDS main processor.
-     *
-     * @return The IDS main processor.
-     */
-    public IDSMainProcessor getIDSMainProcessor() {
-        return idsMainProcessor;
-    }
-
-    /**
      * Gets the MQTT broker handler.
      *
      * @return The MQTT broker handler.
@@ -361,5 +322,16 @@ public class CSLContext {
             statusNotifier = new StatusNotifier(false);
         }
         return statusNotifier;
+    }
+
+    /**
+     * Gets the file storage service
+     * @return file storage service
+     */
+    public FileStoreService getFileStoreService() {
+        if (fileStoreService == null) {
+            fileStoreService = new FileStoreService(getCslConfDir());
+        }
+        return fileStoreService;
     }
 }

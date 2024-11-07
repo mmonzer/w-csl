@@ -7,7 +7,6 @@ import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.ucsl.interfaces.IAlertLevel;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import com.wcsl.ids.IDSMainProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /*  CONFIG
@@ -49,7 +47,6 @@ public class CSLAlertManager {
 
     public boolean NO_ALERT_FILTERING = true;
     public CSLAlertFactory alertFactory = new CSLAlertFactory();
-    private IDSMainProcessor idsMainProcessor = null;
     boolean FDEBUG = false;
 
     // id client, send over udp use sockets
@@ -75,9 +72,7 @@ public class CSLAlertManager {
     private boolean doNotResendSameAlert = false;
     private DbapiHandlerForAlerts dbapiHandler;
 
-    public CSLAlertManager(IDSMainProcessor x, Config.AlertViewer config) {
-        this.idsMainProcessor = x;
-        this.idsMainProcessor.setAlertFactory(alertFactory);
+    public CSLAlertManager(Config.AlertViewer config) {
         dbapiHandler = new DbapiHandlerForAlerts();
         init(config);
     }

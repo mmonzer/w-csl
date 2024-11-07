@@ -48,13 +48,36 @@ import static com.csl.util.FileUtils.FILENAME;
  * It also allows to know the current status of the requested scans.
  */
 public class DiscoveryServices extends Service implements IStatusProvider {
-    static private final String defaultConfigFileSectionName = "discovery";
-    static private final String defaultName = "discovery";
+    static private final String DEFAULT_CONFIG_FILE_SECTION_NAME = "discovery";
+    static private final String DEFAULT_NAME = "discovery";
 
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DiscoveryServices.class);
     public static final String CONNECTION_INFO = "connection_info";
     public static final String FREQUENCY_OPTION = "frequencyOption";
     public static final String EXCEPTION = "exception";
+    public static final String FAILED_TO_FETCH_ENTITY_HTTP_CONNECTIONS_FROM_CSL_SCAN = "Failed to fetch entity HTTP connections from CSL-Scan";
+    public static final String FAILED_TO_DROP_COLLECTIONS = "Failed to drop collections";
+    public static final String FAILED_TO_FETCH_DISCOVERY_PROTOCOLS = "Failed to fetch discovery protocols";
+    public static final String FAILED_TO_TEST_ENTITY_HTTP_CONNECTION = "Failed to test entity HTTP connection";
+    public static final String FAILED_TO_FETCH_DISCOVERY_CRON = "Failed to fetch discovery cron";
+    public static final String FAILED_TO_PARSE_CONNECTION_INFO = "Failed to parse connection_info";
+    public static final String FAILED_TO_FETCH_ENTITY_HTTP_CONNECTION_FROM_CSL_SCAN = "Failed to fetch entity HTTP connection from CSL-Scan";
+    public static final String FAILED_TO_PARSE_CONNECTION = "Failed to parse connection";
+    public static final String FAILED_TO_SYNCHRONIZE_DELETED_CPE_ITEMS = "Failed to synchronize deleted CPE Items";
+    public static final String ENTITY_HTTP_CONNECTION = "entity_http_connection";
+    public static final String IS_ACTIVE = "isActive";
+    public static final String DISCOVERY_PROTOCOL_NAME = "discovery_protocol_name";
+    public static final String CONNECTION = "connection";
+    public static final String ENTITIES = "entities";
+    public static final String DEVICE_UUID = "device_uuid";
+    public static final String CONNECTION_ID = "connection_id";
+    public static final String CONNECTION_UUID = "connection_uuid";
+    public static final String IP_ADDRESS = "ip_address";
+    public static final String CONNECTION_INFO_UUID = "connection_info_uuid";
+    public static final String HEADERS = "headers";
+    public static final String QUERY_PARAMS = "queryParams";
+    public static final String STAGES = "stages";
+    public static final String STAGE_INDEX = "stageIndex";
 
     private final boolean isRemote;
     private ScanWebSocketHandler scanWebSocketHandler = null;
@@ -101,14 +124,14 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * Constructor of the Discovery service with Concentration
      */
     public DiscoveryServices() {
-        this(defaultName, defaultConfigFileSectionName, false);
+        this(DEFAULT_NAME, DEFAULT_CONFIG_FILE_SECTION_NAME, false);
     }
 
     /**
      * Constructor of the Discovery service with custom concentration
      */
     public DiscoveryServices(boolean isRemote) {
-        this(defaultName, defaultConfigFileSectionName, isRemote);
+        this(DEFAULT_NAME, DEFAULT_CONFIG_FILE_SECTION_NAME, isRemote);
     }
 
     /**
@@ -233,7 +256,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         return response.toJson();
                     } else {
                         logger.error("Failed to fetch scan status ({}): {}", id, response.getError());
-                        return JsonApiResponse.error("Failed to drop collections",
+                        return JsonApiResponse.error(FAILED_TO_DROP_COLLECTIONS,
                                 Json.object(EXCEPTION, response.getError())).toJson();
                     }
                 },
@@ -247,8 +270,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     logger.trace("Starting the scan : params= {}", params);
 
                     List<String> entities = new ArrayList<>();
-                    if (params.has("entities")) {
-                        for (Json entity : params.get("entities").asJsonList()) {
+                    if (params.has(ENTITIES)) {
+                        for (Json entity : params.get(ENTITIES).asJsonList()) {
                             if (entity.isString()) {
                                 entities.add(entity.asString());
                             }
@@ -263,12 +286,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         return response.toJson();
                     } else {
                         logger.error("Failed to start the scan : {}", response.getError());
-                        return JsonApiResponse.error("Failed to drop collections",
+                        return JsonApiResponse.error(FAILED_TO_DROP_COLLECTIONS,
                                 Json.object(EXCEPTION, response.getError())).toJson();
                     }
                 },
                 new JsonCmdHelp().setDesc("Start a scan from CSL-Scan")
-                        .setParam("entities", "An array of strings with the uuids of the entities to scan. May be omitted or null, resulting in scanning all entities.", JsonCmdHelp.JSON)
+                        .setParam(ENTITIES, "An array of strings with the uuids of the entities to scan. May be omitted or null, resulting in scanning all entities.", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the scan was started successfully", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
@@ -305,7 +328,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         return response.toJson();
                     } else {
                         logger.error("Failed to synchronize all devices : {}", response.getError());
-                        return JsonApiResponse.error("Failed to drop collections",
+                        return JsonApiResponse.error(FAILED_TO_DROP_COLLECTIONS,
                                 Json.object(EXCEPTION, response.getError())).toJson();
                     }
                 },
@@ -326,7 +349,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         return JsonApiResponse.success().toJson();
                     } catch (Exception e) {
                         logger.error("Failed to drop all collections", e);
-                        return JsonApiResponse.error("Failed to drop collections",
+                        return JsonApiResponse.error(FAILED_TO_DROP_COLLECTIONS,
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
@@ -346,8 +369,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (entityHttpConnections == null) {
                         logger.error("Failed to get list of entities to HTTP connections : entityHttpConnections={}", entityHttpConnections);
-                        return JsonApiResponse.error("Failed to fetch entity HTTP connections from CSL-Scan",
-                                Json.object(EXCEPTION, "Failed to fetch entity HTTP connections from CSL-Scan")
+                        return JsonApiResponse.error(FAILED_TO_FETCH_ENTITY_HTTP_CONNECTIONS_FROM_CSL_SCAN,
+                                Json.object(EXCEPTION, FAILED_TO_FETCH_ENTITY_HTTP_CONNECTIONS_FROM_CSL_SCAN)
                         ).toJson();
                     } else {
                         logger.info("Successfully got the list of entities to HTTP connections (only visible)");
@@ -367,8 +390,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (entityHttpConnections == null) {
                         logger.error("Failed to get the list of entities to HTTP connections full : entityHttpConnections={}", entityHttpConnections);
-                        return JsonApiResponse.error("Failed to fetch entity HTTP connections from CSL-Scan",
-                                Json.object(EXCEPTION, "Failed to fetch entity HTTP connections from CSL-Scan")
+                        return JsonApiResponse.error(FAILED_TO_FETCH_ENTITY_HTTP_CONNECTIONS_FROM_CSL_SCAN,
+                                Json.object(EXCEPTION, FAILED_TO_FETCH_ENTITY_HTTP_CONNECTIONS_FROM_CSL_SCAN)
                         ).toJson();
                     } else {
                         logger.info("Successfully got the list of entities to HTTP connections full (visible and hidden)");
@@ -410,8 +433,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (entityHttpConnection == null) {
                         logger.error("Failed to get entity to HTTP connection: uuid={}", uuid);
-                        return JsonApiResponse.error("Failed to fetch entity HTTP connection from CSL-Scan",
-                                Json.object(EXCEPTION, "Failed to fetch entity HTTP connection from CSL-Scan")
+                        return JsonApiResponse.error(FAILED_TO_FETCH_ENTITY_HTTP_CONNECTION_FROM_CSL_SCAN,
+                                Json.object(EXCEPTION, FAILED_TO_FETCH_ENTITY_HTTP_CONNECTION_FROM_CSL_SCAN)
                         ).toJson();
                     } else {
                         logger.info("Successfully got entity to HTTP connection: uuid={}", uuid);
@@ -452,8 +475,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     logger.debug("Getting entity to HTTP connection full from Scan API with uuid={}: {}", uuid, entityHttpConnection);
                     if (entityHttpConnection == null) {
                         logger.error("Failed to get entity to HTTP connection full: uuid={}", uuid);
-                        return JsonApiResponse.error("Failed to fetch entity HTTP connection from CSL-Scan",
-                                Json.object(EXCEPTION, "Failed to fetch entity HTTP connection from CSL-Scan")
+                        return JsonApiResponse.error(FAILED_TO_FETCH_ENTITY_HTTP_CONNECTION_FROM_CSL_SCAN,
+                                Json.object(EXCEPTION, FAILED_TO_FETCH_ENTITY_HTTP_CONNECTION_FROM_CSL_SCAN)
                         ).toJson();
                     } else {
                         logger.info("Successfully got entity to HTTP connection full (visible and hidden): uuid={}", uuid);
@@ -524,7 +547,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     logger.debug("Adding entity to HTTP connection ...");
                     logger.trace("Adding entity to HTTP connection with params={} ...", params);
 
-                    Json entityHttpConnectionJson = params.get("entity_http_connection");
+                    Json entityHttpConnectionJson = params.get(ENTITY_HTTP_CONNECTION);
                     EntityHttpConnection entityHttpConnection = EntityHttpConnection.fromDbapiJson(entityHttpConnectionJson);
                     logger.trace("Adding entity to HTTP connection : entityHttpConnection={}", entityHttpConnection);
                     if (entityHttpConnection == null) {
@@ -593,7 +616,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
-                        .setParam("entity_http_connection", "The EntityHttpConnection to add", JsonCmdHelp.JSON)
+                        .setParam(ENTITY_HTTP_CONNECTION, "The EntityHttpConnection to add", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
@@ -664,7 +687,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
-                        .setParam("entity_http_connection", "The EntityHttpConnection to add", JsonCmdHelp.JSON)
+                        .setParam(ENTITY_HTTP_CONNECTION, "The EntityHttpConnection to add", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
@@ -673,13 +696,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("test_connection", params -> {
                     logger.debug("Testing HTTP connection ...");
 
-                    String deviceUuid = JsonUtil.getStringFromJson(params, "device_uuid", null);
+                    String deviceUuid = JsonUtil.getStringFromJson(params, DEVICE_UUID, null);
                     logger.trace("Testing HTTP connection : deviceUuid={}", deviceUuid);
 
                     String connectionId;
                     String connectionUuid;
-                    Json connectionUuidJson = params.get("connection_uuid");
-                    Json connectionIdJson = params.get("connection_id");
+                    Json connectionUuidJson = params.get(CONNECTION_UUID);
+                    Json connectionIdJson = params.get(CONNECTION_ID);
                     logger.trace("Testing HTTP connection : deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
                     if (connectionIdJson != null && connectionIdJson.isString()) {
                         connectionId = connectionIdJson.asString();
@@ -716,8 +739,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Test if an existing connection is valid")
-                        .setParam("device_uuid", "The uuid of the device to test the connection on", JsonCmdHelp.STR)
-                        .setParam("connection_id", "The id of the connection to test", JsonCmdHelp.STR)
+                        .setParam(DEVICE_UUID, "The uuid of the device to test the connection on", JsonCmdHelp.STR)
+                        .setParam(CONNECTION_ID, "The id of the connection to test", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
                                 "where result contains \"true\" (as a String) if the connection is valid," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
@@ -835,22 +858,22 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("fetch_http_connection_stage", params -> {
                     logger.debug("Starting fetching HTTP connection stage ...");
 
-                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
+                    String ipAddress = JsonUtil.getStringFromJson(params, IP_ADDRESS, null);
                     String port = JsonUtil.getStringFromJson(params, "port", null);
                     String username = JsonUtil.getStringFromJson(params, "username", null);
                     String password = JsonUtil.getStringFromJson(params, "password", null);
                     String realm = JsonUtil.getStringFromJson(params, "realm", null);
                     String token = JsonUtil.getStringFromJson(params, "token", null);
 
-                    Json templateJson = params.get("entity_http_connection");
+                    Json templateJson = params.get(ENTITY_HTTP_CONNECTION);
                     // Use the default values for the headers and query params, thus mark them as usable for CSL-Scan
-                    if (templateJson != null && templateJson.has("stages") && templateJson.get("stages").isArray()) {
-                        for (Json stage : templateJson.get("stages").asJsonList()) {
-                            if (stage.has("headers") && stage.get("headers").isArray()) {
-                                stage.get("headers").asJsonList().forEach(header -> header.set("isInput", false));
+                    if (templateJson != null && templateJson.has(STAGES) && templateJson.get(STAGES).isArray()) {
+                        for (Json stage : templateJson.get(STAGES).asJsonList()) {
+                            if (stage.has(HEADERS) && stage.get(HEADERS).isArray()) {
+                                stage.get(HEADERS).asJsonList().forEach(header -> header.set("isInput", false));
                             }
-                            if (stage.has("queryParams") && stage.get("queryParams").isArray()) {
-                                stage.get("queryParams").asJsonList().forEach(header -> header.set("isInput", false));
+                            if (stage.has(QUERY_PARAMS) && stage.get(QUERY_PARAMS).isArray()) {
+                                stage.get(QUERY_PARAMS).asJsonList().forEach(header -> header.set("isInput", false));
                             }
                         }
                     }
@@ -858,10 +881,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     logger.trace("Parsing entity HTTP connection : {}", entityHttpConnection);
 
                     Integer stageIndex;
-                    if (params.has("stageIndex")) {
-                        Json stageIndexJson = params.get("stageIndex");
+                    if (params.has(STAGE_INDEX)) {
+                        Json stageIndexJson = params.get(STAGE_INDEX);
                         if (stageIndexJson.isNumber()) {
-                            stageIndex = params.get("stageIndex").asInteger();
+                            stageIndex = params.get(STAGE_INDEX).asInteger();
                         } else if (stageIndexJson.isString()) {
                             stageIndex = Integer.parseInt(stageIndexJson.asString());
                         } else {
@@ -892,7 +915,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Try to fetch the contents of a stage in the Http Connection API")
                         .setParam("stage", "The stage to fetch", JsonCmdHelp.JSON)
-                        .setParam("ip_address", "The IP address to test", JsonCmdHelp.STR)
+                        .setParam(IP_ADDRESS, "The IP address to test", JsonCmdHelp.STR)
                         .setParam("port", "The port to test", JsonCmdHelp.INT)
                         .setParam("username", "The username to test. Optional.", JsonCmdHelp.STR)
                         .setParam("password", "The password to test. Optional.", JsonCmdHelp.STR)
@@ -944,10 +967,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("test_http_template", params -> {
                     logger.debug("Testing HTTP template ...");
 //                region -- Get Body params from the request
-                    String deviceId = JsonUtil.getStringFromJson(params, "device_uuid", null);
+                    String deviceId = JsonUtil.getStringFromJson(params, DEVICE_UUID, null);
                     String connectionId = null;
-                    if (params.has("connection_id")) {
-                        Json connectionIdJson = params.get("connection_id");
+                    if (params.has(CONNECTION_ID)) {
+                        Json connectionIdJson = params.get(CONNECTION_ID);
                         if (connectionIdJson.isNumber()) {
                             connectionId = String.valueOf(connectionIdJson.asInteger());
                         } else if (connectionIdJson.isString()) {
@@ -955,8 +978,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         }
                     }
                     String templateId = JsonUtil.getStringFromJson(params, "template_uuid", null);
-                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
-                    Json connectionJson = params.get("connection");
+                    String ipAddress = JsonUtil.getStringFromJson(params, IP_ADDRESS, null);
+                    Json connectionJson = params.get(CONNECTION);
                     Json templateJson = params.get("template");
                     logger.trace(templateId, ipAddress, connectionJson, templateJson);
 //                endregion -- Get Body params
@@ -973,7 +996,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         dbapiDiscoveryProtocols = dbapiHandler.fetchDiscoveryProtocols();
                         logger.debug("Fetched discovery protocols from dbapi for testing entity HTTP connection : {}", dbapiDiscoveryProtocols);
                     } catch (Exception e) {
-                        logger.error("Failed to fetch discovery protocols", e);
+                        logger.error(FAILED_TO_FETCH_DISCOVERY_PROTOCOLS, e);
                         return JsonApiResponse.error("Failed to fetch discovery protocols from DB-API",
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
@@ -1053,15 +1076,15 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
                         logger.debug("Tested entity HTTP connection : {}", result);
                     } catch (Exception e) {
-                        logger.error("Failed to test entity HTTP connection", e);
-                        return JsonApiResponse.error("Failed to test entity HTTP connection",
+                        logger.error(FAILED_TO_TEST_ENTITY_HTTP_CONNECTION, e);
+                        return JsonApiResponse.error(FAILED_TO_TEST_ENTITY_HTTP_CONNECTION,
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
                     if (result == null) {
-                        logger.error("Failed to test entity HTTP connection");
-                        return JsonApiResponse.error("Failed to test entity HTTP connection",
-                                Json.object(EXCEPTION, "Failed to test entity HTTP connection")
+                        logger.error(FAILED_TO_TEST_ENTITY_HTTP_CONNECTION);
+                        return JsonApiResponse.error(FAILED_TO_TEST_ENTITY_HTTP_CONNECTION,
+                                Json.object(EXCEPTION, FAILED_TO_TEST_ENTITY_HTTP_CONNECTION)
                         ).toJson();
                     } else {
                         logger.info("Tested entity HTTP connection successfully");
@@ -1069,10 +1092,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Test an HTTP template")
-                        .setParam("ip_address", "The IP address to test the connection on - optional", JsonCmdHelp.STR)
-                        .setParam("device_uuid", "The uuid of the device to test the connection on - optional", JsonCmdHelp.STR)
-                        .setParam("connection_id", "The id of the connection to test - optional", JsonCmdHelp.INT)
-                        .setParam("connection", "The connection to test - optional", JsonCmdHelp.JSON)
+                        .setParam(IP_ADDRESS, "The IP address to test the connection on - optional", JsonCmdHelp.STR)
+                        .setParam(DEVICE_UUID, "The uuid of the device to test the connection on - optional", JsonCmdHelp.STR)
+                        .setParam(CONNECTION_ID, "The id of the connection to test - optional", JsonCmdHelp.INT)
+                        .setParam(CONNECTION, "The connection to test - optional", JsonCmdHelp.JSON)
                         .setParam("template_uuid", "The uuid of the template to test", JsonCmdHelp.STR)
                         .setParam("template", "The template to test - optional", JsonCmdHelp.JSON)
                         .setResult("<code>{ \"success\": true, \"result\": { \"success\": \"true/false\" }</code> if the operation went without error, " +
@@ -1089,13 +1112,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                         if (cron == null) {
                             logger.error("Failed to get discovery cron");
-                            throw new Exception("Failed to fetch discovery cron");
+                            throw new Exception(FAILED_TO_FETCH_DISCOVERY_CRON);
                         }
                         logger.info("Got discovery cron successfully");
                         return JsonApiResponse.result(cron).toJson();
                     } catch (Exception e) {
-                        logger.error("Failed to fetch discovery cron", e);
-                        return JsonApiResponse.error("Failed to fetch discovery cron",
+                        logger.error(FAILED_TO_FETCH_DISCOVERY_CRON, e);
+                        return JsonApiResponse.error(FAILED_TO_FETCH_DISCOVERY_CRON,
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
@@ -1148,7 +1171,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     try {
                         boolean isActive = scanApiHandler.isDiscoveryCronActive();
                         logger.info("Checking discovery cron status : {}", isActive);
-                        return JsonApiResponse.result(Json.object("isActive", isActive)).toJson();
+                        return JsonApiResponse.result(Json.object(IS_ACTIVE, isActive)).toJson();
                     } catch (Exception e) {
                         logger.error("Failed to fetch discovery cron status", e);
                         return JsonApiResponse.error("Failed to fetch discovery cron status",
@@ -1163,8 +1186,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("set_discovery_cron_active", params -> {
                     logger.debug("Setting discovery cron status ...");
                     Boolean isActive = null;
-                    if (params.has("isActive") && params.get("isActive").isBoolean()) {
-                        isActive = params.get("isActive").asBoolean();
+                    if (params.has(IS_ACTIVE) && params.get(IS_ACTIVE).isBoolean()) {
+                        isActive = params.get(IS_ACTIVE).asBoolean();
                     }
                     if (isActive == null) {
                         logger.warn("Failed to set the discovery cron because the required parameter isActive is missing");
@@ -1187,7 +1210,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Set the status of the discovery cron")
-                        .setParam("isActive", "The status to set", JsonCmdHelp.BOOL)
+                        .setParam(IS_ACTIVE, "The status to set", JsonCmdHelp.BOOL)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
@@ -1267,8 +1290,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (connectionInfo == null) {
                         logger.warn("Failed to serialize external connection information with connexion info {} for creating", params.get(CONNECTION_INFO));
-                        return JsonApiResponse.error("Failed to parse connection_info",
-                                Json.object(EXCEPTION, "Failed to parse connection_info")
+                        return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION_INFO,
+                                Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION_INFO)
                         ).toJson();
                     } else {
                         logger.debug("Creating external connection information with connexion info {} ...", params.get(CONNECTION_INFO));
@@ -1306,8 +1329,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     logger.trace("Serialized external connection information with connexion info {} for updating: {}", params.get(CONNECTION_INFO), connectionInfo);
                     if (connectionInfo == null) {
                         logger.warn("Failed to serialize external connection information with connexion info {} for updating", params.get(CONNECTION_INFO));
-                        return JsonApiResponse.error("Failed to parse connection_info",
-                                Json.object(EXCEPTION, "Failed to parse connection_info")
+                        return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION_INFO,
+                                Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION_INFO)
                         ).toJson();
                     }
 
@@ -1336,13 +1359,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("delete_external_connection_info", params -> {
                     logger.debug("Deleting external connection info ...");
 
-                    if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
+                    if (!params.has(CONNECTION_INFO_UUID) || !params.get(CONNECTION_INFO_UUID).isString()) {
                         logger.warn("Missing required parameter connection_info_uuid for deleting external connection info");
                         return JsonApiResponse.error("Missing required parameter connection_info_uuid",
                                 Json.object(EXCEPTION, "Missing parameter connection_info_uuid")
                         ).toJson();
                     }
-                    String connectionInfoId = params.get("connection_info_uuid").asString();
+                    String connectionInfoId = params.get(CONNECTION_INFO_UUID).asString();
 
                     logger.debug("Deleting external connection information with connexion info id {} from CSL-Scan ...", connectionInfoId);
                     JsonApiResponse response = scanApiHandler.deleteExternalConnectionInfo(connectionInfoId, false);
@@ -1359,7 +1382,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                     return response.toJson();
                 }, new JsonCmdHelp().setDesc("Remove a device discovery connection info")
-                        .setParam("connection_info_uuid", "The id of the connection info to remove", JsonCmdHelp.STR)
+                        .setParam(CONNECTION_INFO_UUID, "The id of the connection info to remove", JsonCmdHelp.STR)
                         .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
@@ -1413,13 +1436,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("start_external_scan", params -> {
                     logger.debug("Starting external scan ...");
 
-                    if (!params.has("connection_info_uuid") || !params.get("connection_info_uuid").isString()) {
+                    if (!params.has(CONNECTION_INFO_UUID) || !params.get(CONNECTION_INFO_UUID).isString()) {
                         logger.warn("Missing required parameter connection_info_uuid for device discovery (external) scan");
                         return JsonApiResponse.error("Missing required parameter connection_info_uuid",
                                 Json.object(EXCEPTION, "Missing parameter connection_info_uuid")
                         ).toJson();
                     }
-                    String connectionInfoId = params.get("connection_info_uuid").asString();
+                    String connectionInfoId = params.get(CONNECTION_INFO_UUID).asString();
 
                     logger.debug("Starting device discovery (external) scan with info uuid {} in CSL-Scan ...", connectionInfoId);
                     ExternalScan scan = externalScansService.startExternalDiscoveryScan(connectionInfoId);
@@ -1436,7 +1459,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Start a device discovery scan")
-                        .setParam("connection_info_uuid", "The id of the connection info to use", JsonCmdHelp.INT)
+                        .setParam(CONNECTION_INFO_UUID, "The id of the connection info to use", JsonCmdHelp.INT)
                         .setResult("<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error," +
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
@@ -1446,20 +1469,20 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd(DiscoveryEndpoints.ADD_CONNECTION, params -> {
             logger.debug("Adding new connection ...");
 
-            Json connectionJson = params.get("connection");
+            Json connectionJson = params.get(CONNECTION);
             Connection connection = null;
             try {
                 connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
             } catch (ExecutionException | InterruptedException | TimeoutException e) {
                 logger.error("Failed to fetch discovery protocols : {}", e.getMessage(), e);
-                return JsonApiResponse.error("Failed to fetch discovery protocols",
+                return JsonApiResponse.error(FAILED_TO_FETCH_DISCOVERY_PROTOCOLS,
                         Json.object(EXCEPTION, e.getMessage())
                 ).toJson();
             }
             if (connection == null) {
                 logger.error("Failed to fetch discovery protocols : connection not found");
-                return JsonApiResponse.error("Failed to parse connection",
-                        Json.object(EXCEPTION, "Failed to parse connection")
+                return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION,
+                        Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION)
                 ).toJson();
             }
             JsonApiResponse response;
@@ -1471,8 +1494,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         String connectionUuid = response.getResult().get("uuid").asString();
                         connection.setUuid(connectionUuid);
                         String discoveryProtocolName = null;
-                        if (connectionJson.get("discovery_protocol_name") != null && connectionJson.get("discovery_protocol_name").getValue() != null) {
-                            discoveryProtocolName = (String) connectionJson.get("discovery_protocol_name").getValue();
+                        if (connectionJson.get(DISCOVERY_PROTOCOL_NAME) != null && connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue() != null) {
+                            discoveryProtocolName = (String) connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue();
                         }
                         dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
                         logger.info("Successfully added a new connection.");
@@ -1598,20 +1621,20 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd(DiscoveryEndpoints.UPDATE_CONNECTION, params -> {
             logger.debug("Updating a connection ...");
 
-            Json connectionJson = params.get("connection");
+            Json connectionJson = params.get(CONNECTION);
             Connection connection = null;
             try {
                 connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
             } catch (ExecutionException | InterruptedException | TimeoutException e) {
                 logger.error("Failed to fetch discovery protocols from CSL-Dbapi : {}", e.getMessage(), e);
-                return JsonApiResponse.error("Failed to fetch discovery protocols",
+                return JsonApiResponse.error(FAILED_TO_FETCH_DISCOVERY_PROTOCOLS,
                         Json.object(EXCEPTION, e.getMessage())
                 ).toJson();
             }
             if (connection == null) {
                 logger.error("Failed to fetch discovery protocols from CSL-Dbapi : connection not found");
-                return JsonApiResponse.error("Failed to parse connection",
-                        Json.object(EXCEPTION, "Failed to parse connection")
+                return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION,
+                        Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION)
                 ).toJson();
             }
 
@@ -1812,7 +1835,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             try {
                 deletedCpeItemsSynchronizationService.syncData();
             } catch (SynchronizationException e) {
-                logger.trace("Failed to synchronize deleted CPE Items", e);
+                logger.trace(FAILED_TO_SYNCHRONIZE_DELETED_CPE_ITEMS, e);
             }
         });
         mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.FILE_ACTION_STATUS, message -> {
@@ -1999,9 +2022,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             deletedCpeItemsSynchronizationService.syncData();
             logger.debug("Synchronization of deleted CPE items before scan finished");
         } catch (SynchronizationException e) {
-            logger.error("Failed to synchronize deleted CPE Items", e);
+            logger.error(FAILED_TO_SYNCHRONIZE_DELETED_CPE_ITEMS, e);
             cpeDeletionResult = JsonApiResponse.error(
-                    "Failed to synchronize deleted CPE Items",
+                    FAILED_TO_SYNCHRONIZE_DELETED_CPE_ITEMS,
                     Json.object(EXCEPTION, e.getMessage())
             );
         }

@@ -202,7 +202,7 @@ public class CSLAlertManager {
 
         for (AlertDescriptor alert : getListOfCurrentAlerts()) {
 
-            if ((!alert.isMasked()) && (!alert.isAdded_to_model())) jarray.add(alertToJsonForHmi(alert));
+            if ((!alert.isMasked()) && (!alert.isAddedToModel())) jarray.add(alertToJsonForHmi(alert));
         }
 
 
@@ -216,7 +216,7 @@ public class CSLAlertManager {
 
         for (AlertDescriptor alert : getListOfCurrentAlerts()) {
 
-            if ((!alert.isMasked()) && (!alert.isAdded_to_model())) {
+            if ((!alert.isMasked()) && (!alert.isAddedToModel())) {
 
                 int l = alert.getLevelAsInt();
                 if (l < 0) l = 0;
@@ -239,7 +239,7 @@ public class CSLAlertManager {
 
         for (AlertDescriptor alert : getListOfCurrentAlerts()) {
 
-            if ((alert.isMasked()) || (alert.isAdded_to_model())) jarray.add(alertToJsonForHmi(alert));
+            if ((alert.isMasked()) || (alert.isAddedToModel())) jarray.add(alertToJsonForHmi(alert));
         }
 
 
@@ -274,7 +274,7 @@ public class CSLAlertManager {
         Json jarray = Json.array();
 
         for (AlertDescriptor alert : getListOfCurrentAlerts()) {
-            if (alert.isAdded_to_model()) jarray.add(alertToJsonForHmi(alert));
+            if (alert.isAddedToModel()) jarray.add(alertToJsonForHmi(alert));
         }
 
 
@@ -302,7 +302,7 @@ public class CSLAlertManager {
 
         jAlertInfo.set("message", alert.getMsg());
         jAlertInfo.set("masked", alert.isMasked());
-        jAlertInfo.set("added_to_model", alert.isAdded_to_model());
+        jAlertInfo.set("added_to_model", alert.isAddedToModel());
         jAlertInfo.set("model_level", alert.getLevelForModel());
 
         jAlertInfo.set("moreInfoIT", alert.getMetaInfo(AlertDescriptor.ALERT_INFO_FROM_IDS));

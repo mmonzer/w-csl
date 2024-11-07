@@ -23,24 +23,15 @@ public abstract class Connection implements IScannerSerializable {
     private Boolean isSimulated;
 
     protected Connection(String name, String uuid, List<String> devicesIds, StaticConnectionProtocol protocol) {
-        this.name  = name;
-        this.uuid = uuid;
-        this.devicesIds = devicesIds;
-        this.protocol = protocol;
+        this(name, uuid, devicesIds, protocol, null);
     }
 
     protected Connection(String uuid, List<String> devicesIds, StaticConnectionProtocol protocol) {
-        this.uuid = uuid;
-        this.devicesIds = devicesIds;
-        this.protocol = protocol;
-        this.isSimulated = false;
+        this(null, uuid, devicesIds, protocol, false);
     }
 
     protected Connection(String uuid, List<String> devicesIds, StaticConnectionProtocol protocol, boolean isSimulated) {
-        this.uuid = uuid;
-        this.devicesIds = devicesIds;
-        this.protocol = protocol;
-        this.isSimulated = isSimulated;
+        this(null, uuid, devicesIds, protocol, isSimulated);
     }
 
     public Connection(String name, String id, List<String> devices, StaticConnectionProtocol staticConnectionProtocol, Boolean isSimulated) {

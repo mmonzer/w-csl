@@ -19,18 +19,16 @@ public class AlertDescriptor {
     String uuid = "";
     private boolean acked = false;
     private boolean masked = false;
-    private boolean added_to_model = false;
+    private boolean addedToModel = false;
     private int levelForModel = -1;
 
     public static final String ALERT_INFO_FROM_SYSLEARNER = "AlertInfoFromSysLearner";
     public static final String ALERT_INFO_FROM_IDS = "AlertInfoFromIDS";
 
-    long time_for_end_of_mask = 0;
-    ;  // (<=0 if no end )
-
+    long timeForEndOfMask = 0;
     Map<String, String> propsList = null;
 
-    Map<String, Json> metaInfos = new HashMap<String, Json>();
+    Map<String, Json> metaInfos = new HashMap<>();
 
     public Json toJson() {
 
@@ -39,11 +37,11 @@ public class AlertDescriptor {
         j.set("msg", msg);
         j.set("uuid", uuid);
         j.set("time", time);
-        j.set("time_for_end_of_mask", time_for_end_of_mask);
+        j.set("time_for_end_of_mask", timeForEndOfMask);
 
         j.set("acked", acked);
         j.set("masked", masked);
-        j.set("added_to_model", added_to_model);
+        j.set("added_to_model", addedToModel);
 
 
         if (hasProps()) j.set("props", propsToJson());
@@ -63,8 +61,7 @@ public class AlertDescriptor {
         if (level.getLevelAsInt() != a.getLevelAsInt()) return false;
 
 
-        if (getPropsAsString().compareToIgnoreCase(a.getPropsAsString()) != 0) return false;
-        return true;
+        return getPropsAsString().compareToIgnoreCase(a.getPropsAsString()) == 0;
     }
 
     public AlertDescriptor setMsg(String msg) {
@@ -73,13 +70,13 @@ public class AlertDescriptor {
     }
 
     public Map<String, String> getPropsList() {
-        if (propsList == null) propsList = new HashMap<String, String>();
+        if (propsList == null) propsList = new HashMap<>();
 
         return propsList;
     }
 
     public Map<String, Json> getMetaInfos() {
-        if (metaInfos == null) metaInfos = new HashMap<String, Json>();
+        if (metaInfos == null) metaInfos = new HashMap<>();
 
         return metaInfos;
     }
@@ -96,38 +93,38 @@ public class AlertDescriptor {
 
         if (propsList == null) return "";
 
-        String s = "";
+        StringBuilder s = new StringBuilder();
 
         for (Map.Entry<String, String> entry : getPropsList().entrySet()) {
-            //System.out.println(" Prop:"+entry.getKey() + "=" + entry.getValue());
             String key = entry.getKey();
             String value = entry.getValue();
-            if (!s.isEmpty()) s = s + ";";
-            s = s + key + "=" + value;
+            if (!s.isEmpty()) {
+                s.append(";");
+            }            s.append(key).append("=").append(value);
+
         }
 
-        return s;
+        return s.toString();
     }
 
     public long getTimeForEndOfMask() {
-        return time_for_end_of_mask;
+        return timeForEndOfMask;
     }
 
-    public AlertDescriptor setTimeForEndOfMask(long time_for_end_of_mask) {
-        this.time_for_end_of_mask = time_for_end_of_mask;
+    public AlertDescriptor setTimeForEndOfMask(long timeForEndOfMask) {
+        this.timeForEndOfMask = timeForEndOfMask;
         return this;
     }
 
     public boolean hasProps() {
         if (propsList == null) return false;
-        return (propsList.size() > 0);
+        return (!propsList.isEmpty());
     }
 
     public Json propsToJson() {
         Json jarray = Json.array();
 
         for (Map.Entry<String, String> entry : getPropsList().entrySet()) {
-            //System.out.println(entry.getKey() + "/" + entry.getValue());
             String key = entry.getKey();
             String value = entry.getValue();
             jarray.add(Json.object().set("key", key).set("value", value));
@@ -140,7 +137,6 @@ public class AlertDescriptor {
         Json jarray = Json.array();
 
         for (Map.Entry<String, Json> entry : metaInfos.entrySet()) {
-            //System.out.println(entry.getKey() + "/" + entry.getValue());
             String key = entry.getKey();
             Json value = entry.getValue();
             jarray.add(Json.object().set("key", key).set("value", value));

@@ -51,7 +51,7 @@ public class RemotePowershellConnection extends Connection {
             } else {
                 uuid = getValueStringOrNull(connectionJson, MONGO_ENTITY_ID );
             }
-            Integer port = getValueIntegerOrNull(connectionJson,RemotePowershellConnectionField.PORT.dbapiName());
+            Integer port = connectionJson.get(RemotePowershellConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices = connectionJson.get(CONNECTED_DEVICES).asJsonList().stream()
                     .map(Json::asString)
                     .toList();
@@ -73,7 +73,7 @@ public class RemotePowershellConnection extends Connection {
             } else {
                 uuid = getValueStringOrNull(connectionJson, MONGO_ENTITY_ID );
             }
-            Integer port = getValueIntegerOrNull(connectionJson,RemotePowershellConnectionField.PORT.dbapiName());
+            Integer port = connectionJson.get(RemotePowershellConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices;
             if (connectionJson.has(CONNECTED_DEVICES) && connectionJson.get(CONNECTED_DEVICES).isArray()) {
                 devices = connectionJson.get(CONNECTED_DEVICES).asJsonList().stream()
@@ -88,7 +88,7 @@ public class RemotePowershellConnection extends Connection {
             // check if password is present in the json
             if (connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
                 String password = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.PASSWORD.dbapiName());
-                return new RemotePowershellConnection(name, uuid, port, devices, username, password);
+                return new RemotePowershellConnection(name, uuid, port, devices, username, password, certificate);
             } else {
                 return new RemotePowershellConnection(name, uuid, port, devices, username, null, true, certificate);
             }
@@ -100,7 +100,7 @@ public class RemotePowershellConnection extends Connection {
     public static RemotePowershellConnection fromScannerJson(Json connectionJson) {
         try {
             String uuid = getValueStringOrNull(connectionJson, UUID);
-            Integer port = getValueIntegerOrNull(connectionJson,RemotePowershellConnectionField.PORT.dbapiName());
+            Integer port = connectionJson.get(RemotePowershellConnectionField.PORT.dbapiName()).asInteger();
             String name = getValueStringOrNull(connectionJson, NAME);
             String username = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.USERNAME.dbapiName());
             String certificate = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.CERTIFICATE.dbapiName());

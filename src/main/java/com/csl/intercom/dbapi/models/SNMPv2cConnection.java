@@ -7,6 +7,8 @@ import com.ucsl.json.Json;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.ucsl.json.JsonUtil.getValueStringOrNull;
+
 /**
  * Model to represent a SNMPv2c connection.
  */
@@ -15,18 +17,19 @@ public class SNMPv2cConnection extends Connection {
     private final String community;
 
     protected SNMPv2cConnection(String id, int port, List<String> devices, String community) {
-        super(id, devices, StaticConnectionProtocol.SNMPv2c);
-        this.port = port;
-        this.community = community;
+        this(null, id, port, devices, community);
     }
+
     protected SNMPv2cConnection(String name, String id, int port, List<String> devices, String community) {
         super(name, id, devices, StaticConnectionProtocol.SNMPv2c);
         this.port = port;
         this.community = community;
     }
+
     public int getPort() {
         return port;
     }
+
     /**
      * Parse the JSON serialization received from DB-API.
      *
@@ -39,14 +42,11 @@ public class SNMPv2cConnection extends Connection {
             if (connectionJson.has("uuid")) {
                 uuid = connectionJson.get("uuid").asString();
             } else {
-                if(connectionJson.has("mongo_entity_id") && !connectionJson.get("mongo_entity_id").isNull())
-                    uuid = connectionJson.get("mongo_entity_id").asString();
-                else
-                    uuid = null;
+                uuid = getValueStringOrNull(connectionJson, "mongo_entity_id");
             }
             int port = connectionJson.get(SNMPv2cConnectionField.PORT.dbapiName()).asInteger();
             List<String> devices = new ArrayList<>();
-            for (Json device: connectionJson.get("connected_devices").asJsonList()) {
+            for (Json device : connectionJson.get("connected_devices").asJsonList()) {
                 devices.add(device.asString());
             }
             Json otherData = connectionJson.get("other_data");
@@ -63,6 +63,7 @@ public class SNMPv2cConnection extends Connection {
             return null;
         }
     }
+
     public static SNMPv2cConnection fromScannerJson(Json connectionJson) {
         try {
             String uuid = null;

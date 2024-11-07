@@ -8,6 +8,8 @@ import com.ucsl.json.Json;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.ucsl.json.JsonUtil.getValueStringOrNull;
+
 /**
  * Model to represent a SNMPv2c connection.
  */
@@ -16,19 +18,14 @@ public class SNMPv1Connection extends Connection {
     private final String community;
 
     protected SNMPv1Connection(String uuid, int port, List<String> devices, String community) {
-        super(uuid, devices, StaticConnectionProtocol.SNMPv1);
-        this.port = port;
-        this.community = community;
+        this(null, uuid, port, devices, community);
     }
+
     protected SNMPv1Connection(String name, String uuid, int port, List<String> devices, String community) {
         super(name, uuid, devices, StaticConnectionProtocol.SNMPv1);
         this.port = port;
         this.community = community;
     }
-    public int getPort() {
-        return port;
-    }
-
     /**
      * Parse the JSON serialization received from DB-API.
      *
@@ -42,10 +39,7 @@ public class SNMPv1Connection extends Connection {
             if (connectionJson.has("uuid")) {
                 uuid = connectionJson.get("uuid").asString();
             } else {
-                if(connectionJson.has("mongo_entity_id") && !connectionJson.get("mongo_entity_id").isNull())
-                    uuid = connectionJson.get("mongo_entity_id").asString();
-                else
-                    uuid = null;
+                uuid = getValueStringOrNull(connectionJson, "mongo_entity_id");
             }
 
             int port = connectionJson.get(SNMPv1ConnectionField.PORT.dbapiName()).asInteger();
@@ -93,4 +87,8 @@ public class SNMPv1Connection extends Connection {
     public String getCommunity() {
         return community;
     }
+    public int getPort() {
+        return port;
+    }
+
 }

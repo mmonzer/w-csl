@@ -6,27 +6,27 @@ package com.csl.autocrypt.enums;
 public enum ApiEndpointForCSLAutocrypt {
 
     ISSUER_URI("/api/issuer"),
-    ISSUER_URI_(ISSUER_URI+"/"),
-    ISSUER_URI_IMPORT(ISSUER_URI_+"import"),
+    ISSUER_URI_SLASH(ISSUER_URI+"/"),
+    ISSUER_URI_IMPORT(ISSUER_URI_SLASH +"import"),
 
     ROLE_URI("/api/role"),
-    ROLE_URI_(ROLE_URI+"/"),
+    ROLE_URI_SLASH(ROLE_URI+"/"),
 
     MISC_URI("/api/general"),
     MISC_URI_ACTIVATE_OCSP(MISC_URI+"/activate-ocsp"),
     MISC_URI_IS_ALIVE(MISC_URI+"/health-check"),
 
     CERT_URI("/api/certificate"),
-    CERT_URI_(CERT_URI+"/"),
-    CERT_URI_NOT_REVOKED(CERT_URI_+"not-revoked"),
-    CERT_URI_REVOKED(CERT_URI_+"revoked"),
-    CERT_URI_TEMPLATE(CERT_URI_+"validate-template"),
-    CERT_URI_DOWNLOAD_(CERT_URI_+"download/"),  // No QA
-    CERT_URI_GET_WO_PK_(CERT_URI_+"raw/"),
-    CERT_URI_GET_WITH_PK_(CERT_URI_+"raw-with-private-key/"),
-    CERT_URI_ISSUE(CERT_URI_+"issue"),
-    CERT_URI_REVOKE_(CERT_URI_+"revoke/"),
-    CERT_URI_DEPLOY_CERTIFICATE(CERT_URI_+"deploy-certificate"),
+    CERT_URI_SLASH(CERT_URI+"/"),
+    CERT_URI_NOT_REVOKED(CERT_URI_SLASH +"not-revoked"),
+    CERT_URI_REVOKED(CERT_URI_SLASH +"revoked"),
+    CERT_URI_TEMPLATE(CERT_URI_SLASH +"validate-template"),
+    CERT_URI_DOWNLOAD(CERT_URI_SLASH +"download/"),
+    CERT_URI_GET_WO_PK(CERT_URI_SLASH +"raw/"),
+    CERT_URI_GET_WITH_PK(CERT_URI_SLASH +"raw-with-private-key/"),
+    CERT_URI_ISSUE(CERT_URI_SLASH +"issue"),
+    CERT_URI_REVOKE(CERT_URI_SLASH +"revoke/"),
+    CERT_URI_DEPLOY_CERTIFICATE(CERT_URI_SLASH +"deploy-certificate"),
 
     CA_URI("/api/ca"),
     CA_URI_GENERATE_INTER(CA_URI+"/generate-intermediate"),

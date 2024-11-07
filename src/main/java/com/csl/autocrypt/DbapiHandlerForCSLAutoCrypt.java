@@ -98,7 +98,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
         input.at(Common.PATH, path);
         input.at(Issuer.CA_JSON, mergerJson(body, input));
         return this.sendPut(
-                DbapiEndpointForCSLAutocrypt.ISSUER_UPT_BY_REF_.endpoint() + issuerRef,
+                DbapiEndpointForCSLAutocrypt.ISSUER_UPT_BY_REF.endpoint() + issuerRef,
                 input);
     }
 
@@ -127,7 +127,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      */
     public JsonApiResponse deleteIssuer(String issuerRef, Json body) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.ISSUER_DEL_BY_REF_.endpoint() + issuerRef,
+                DbapiEndpointForCSLAutocrypt.ISSUER_DEL_BY_REF.endpoint() + issuerRef,
                 null);
     }
 
@@ -273,7 +273,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
      */
     public JsonApiResponse revokeCertificate(String serialNumber, Json params) {
         return this.sendDelete(
-                DbapiEndpointForCSLAutocrypt.CERTIFICATES_DEL_BY_SERIAL_NUMBER_.endpoint() + serialNumber,
+                DbapiEndpointForCSLAutocrypt.CERTIFICATES_DEL_BY_SERIAL_NUMBER.endpoint() + serialNumber,
                 params);
     }
 

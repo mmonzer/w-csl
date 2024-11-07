@@ -60,7 +60,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse getIssuerInfo(String issuerRef, Json body) {
         return this.sendGet(
-                ApiEndpointForCSLAutocrypt.ISSUER_URI_ + issuerRef,
+                ApiEndpointForCSLAutocrypt.ISSUER_URI_SLASH + issuerRef,
                 body
         );
     }
@@ -74,7 +74,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse updateIssuerInfo(String issuerRef, Json body, Json params) {
         return this.sendPut(
-                ApiEndpointForCSLAutocrypt.ISSUER_URI_ + issuerRef,
+                ApiEndpointForCSLAutocrypt.ISSUER_URI_SLASH + issuerRef,
                 params,
                 body
         );
@@ -87,7 +87,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse deleteIssuer(String issuerRef, Json body, Json params) {
         return this.sendDelete(
-                ApiEndpointForCSLAutocrypt.ISSUER_URI_ + issuerRef,
+                ApiEndpointForCSLAutocrypt.ISSUER_URI_SLASH + issuerRef,
                 params.set(Common.DELETE, true).set(AutocryptConstants.Certificate.REVOKE, true),
                 body
         );
@@ -155,7 +155,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse getRole(String name, Json params) {
         return this.sendGet(
-                ApiEndpointForCSLAutocrypt.ROLE_URI_ + name,
+                ApiEndpointForCSLAutocrypt.ROLE_URI_SLASH + name,
                 params
         );
     }
@@ -167,7 +167,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse deleteRole(String name, Json body, Json params) {
         return this.sendDelete(
-                ApiEndpointForCSLAutocrypt.ROLE_URI_ + name,
+                ApiEndpointForCSLAutocrypt.ROLE_URI_SLASH + name,
                 params,
                 body
         );
@@ -180,7 +180,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse updateRole(String name, Json body, Json params) {
         return this.sendPut(
-                ApiEndpointForCSLAutocrypt.ROLE_URI_ + name,
+                ApiEndpointForCSLAutocrypt.ROLE_URI_SLASH + name,
                 params,
                 body
         );
@@ -270,7 +270,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse getCertificateInfo(String serialNumber, Json params) {
         return this.sendGet(
-                ApiEndpointForCSLAutocrypt.CERT_URI_ + serialNumber,
+                ApiEndpointForCSLAutocrypt.CERT_URI_SLASH + serialNumber,
                 params
         );
     }
@@ -283,7 +283,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse getCertificateWithoutPrivateKey(String serialNumber, Json params) {
             return this.sendGet(
-                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WO_PK_ + serialNumber,
+                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WO_PK + serialNumber,
                     params
             );
     }
@@ -296,7 +296,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse getCertificateWithPrivateKey(String serialNumber, Json params) {
         return this.sendGet(
-                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WITH_PK_ + serialNumber,
+                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WITH_PK + serialNumber,
                     params
             );
     }
@@ -310,7 +310,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     public JsonApiResponse downloadCertificate(String serialNumber, Json params) {
         try {
             return this.downloadFileGet(
-                    ApiEndpointForCSLAutocrypt.CERT_URI_DOWNLOAD_ + serialNumber,
+                    ApiEndpointForCSLAutocrypt.CERT_URI_DOWNLOAD + serialNumber,
                     params
             );
         } catch (Exception e) {
@@ -326,7 +326,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse revokeCertificate(String serialNumber, Json params) {
         return this.sendDelete(
-                ApiEndpointForCSLAutocrypt.CERT_URI_REVOKE_ + serialNumber,
+                ApiEndpointForCSLAutocrypt.CERT_URI_REVOKE + serialNumber,
                 params
         );
     }

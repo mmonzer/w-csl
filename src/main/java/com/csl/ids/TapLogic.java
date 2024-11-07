@@ -23,15 +23,10 @@ import java.util.List;
 
 public class TapLogic {
     private static final String SCRIPTS_DIR = "~/csl/scripts";
-    private static final String START_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./launchTap.sh & exit";
-    private static final String STOP_TAPS = "cd " + SCRIPTS_DIR + " && sudo ./killTaps.sh";
 
     private static final String REPLAY = "cd " + SCRIPTS_DIR + " && sudo ./replay.sh ";
 
-    private static final String STOP_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./killSuricata.sh";
-    private static final String START_SURICATA = "cd " + SCRIPTS_DIR + " && sudo ./launchSuricata.sh";
     private static final String CLEAR_SURICATA_LOG = "sudo rm /var/log/suricata/suricata.log";
-    private static final String SURICATA_CONF_DIR = "/opt/csl/configSuricata";
     private static final String REMOVE_ADDITIONAL_RULES = "cd " + SCRIPTS_DIR + " && sudo ./removeAdditionnalRules.sh";
     private static final String RELOAD_RULES = "cd " + SCRIPTS_DIR + " && sudo ./reloadSuricataRules.sh";
 
@@ -39,7 +34,6 @@ public class TapLogic {
     static HashMap<String, Tap> activeTaps = new HashMap<>();
     static String localIP;
     static String localPort;
-    static String knownHostFilePath;
 
     private final ApiHandler apiHandler;
 

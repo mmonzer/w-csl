@@ -27,7 +27,7 @@ public class CSLInterModuleCommunicationManager {
 
     private String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
 
-	Map<String,ApiCommands> listOfRegisteredAPI= new HashMap<String, ApiCommands>();
+	Map<String,ApiCommands> listOfRegisteredAPI= new HashMap<>();
 	Map<String,ApiMessageReceiver> listOfReceivers= new HashMap<>();
 	Map<String,ApiMessageSender> listOfSenders= new HashMap<>();
 	
@@ -37,7 +37,7 @@ public class CSLInterModuleCommunicationManager {
 		this.moduleName=moduleName;
 		setConfig(config);
 		
-		socketMessageMQTTHandler=new SocketMessageMQTTHandler(moduleName,BROKER_TCP_LOCALHOST_1883, useBroker, getDebugLevel());
+		socketMessageMQTTHandler=new SocketMessageMQTTHandler(useBroker, getDebugLevel());
 	}
 	
 	public boolean isDebug() {return idebug>1;}
@@ -47,10 +47,6 @@ public class CSLInterModuleCommunicationManager {
 	public int getDebugLevel() { return idebug; }
 
 	public void setConfig(MosquittoConfig config) {
-
-        String mosquittoCmd = config.getMosquittoCmd();
-        String mosquittoDir = config.getMosquittoDir();
-
 		BROKER_TCP_LOCALHOST_1883=config.getBrokerURL();
 		
 		useBroker=config.isUseBroker();
@@ -58,7 +54,7 @@ public class CSLInterModuleCommunicationManager {
 	}
 
     public void registerAPI(ApiCommands api) {
-		logger.trace("REGISTERING API FOR BROKER :"+api.getName());
+		logger.trace("REGISTERING API FOR BROKER : {}", api.getName());
 		listOfRegisteredAPI.put(api.getName(), api);
 	}
 	
@@ -94,7 +90,7 @@ public class CSLInterModuleCommunicationManager {
 
 	// create the sender if not found and use it
 	public Json executeExternalCommand(String apiName, Json jCmd) {
-		if (!useBroker) System.err.println("Warning : external communication not started");
+		if (!useBroker) {logger.warn("External communication not started");}
 		
 		ApiMessageSender sender =listOfSenders.get(apiName);
 		if (sender==null) {
@@ -109,20 +105,18 @@ public class CSLInterModuleCommunicationManager {
 		ApiCommands api = listOfRegisteredAPI.get(apiName);
 		
 		if (api!=null) {
-			Json r=api.execJcmd(jCmd);
-			return r;
+			return api.execJcmd(jCmd);
 		}
 
 		// try as external command
 		
 		ApiMessageSender sender =listOfSenders.get(apiName);
-		if (sender==null) {
-			if (!mustDeclareApi) {
+		if (sender==null && !mustDeclareApi) {
 				sender = new ApiMessageSender(moduleName,apiName, getDebugLevel());
 				listOfSenders.put(apiName,sender);
 			}
-		}
-		
+
+
 		if (sender!=null){
 			return sender.execCmd(jCmd);
 		}

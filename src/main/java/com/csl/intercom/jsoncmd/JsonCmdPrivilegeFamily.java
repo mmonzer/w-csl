@@ -9,6 +9,10 @@ public enum JsonCmdPrivilegeFamily {
     UPDATE_EXTERNAL_CONNECTION_INFO("change_externalconnectioninfo"),
     DELETE_EXTERNAL_CONNECTION_INFO("delete_externalconnectioninfo"),
     DELETE_EXTERNAL_DISCOVERED_DEVICE("delete_devicediscoveredcpevulnerability"),
+    CREATE_CONNECTION_CERTIFICATE("create_connection_certificate"),
+    READ_CONNECTION_CERTIFICATE("read_connection_certificate"),
+    UPDATE_CONNECTION_CERTIFICATE("update_connection_certificate"),
+    DELETE_CONNECTION_CERTIFICATE("delete_connection_certificate"),
     ;
 
     private final String privilegeFamily;

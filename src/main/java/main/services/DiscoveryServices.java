@@ -7,6 +7,7 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.ScanUtils;
 import com.csl.intercom.cslscan.ScanWebSocketHandler;
 import com.csl.intercom.cslscan.enums.DynamicDiscoveryFrequencyOption;
+import com.csl.intercom.cslscan.enums.EntityConnectionCertificateField;
 import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.cslscan.services.ImportExportBsonService;
@@ -48,8 +49,8 @@ import static com.csl.util.FileUtils.FILENAME;
  * It also allows to know the current status of the requested scans.
  */
 public class DiscoveryServices extends Service implements IStatusProvider {
-    static private final String DEFAULT_CONFIG_FILE_SECTION_NAME = "discovery";
-    static private final String DEFAULT_NAME = "discovery";
+    private static final String DEFAULT_CONFIG_FILE_SECTION_NAME = "discovery";
+    private static final String DEFAULT_NAME = "discovery";
 
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DiscoveryServices.class);
     public static final String CONNECTION_INFO = "connection_info";
@@ -355,8 +356,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Drop all collections in DB-API")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_SCAN_DB
         );
@@ -538,8 +538,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Delete an EntityHttpConnection from CSL-Scan")
                         .setParam("uuid", "The uuid of the EntityHttpConnection to delete", JsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
@@ -617,8 +616,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
                         .setParam(ENTITY_HTTP_CONNECTION, "The EntityHttpConnection to add", JsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
@@ -688,8 +686,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
                         .setParam(ENTITY_HTTP_CONNECTION, "The EntityHttpConnection to add", JsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
@@ -731,7 +728,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     if (!successResponse) {
                         logger.error("Failed to test HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
                         // force synchronize and re-test
-                        JsonApiResponse SynchronizeResponse = dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+                        dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
                         response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
                     }
                     logger.debug("Tested HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
@@ -1161,8 +1158,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Set the discovery cron")
                         .setParam("cron", "The cron to set", JsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
@@ -1211,8 +1207,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Set the status of the discovery cron")
                         .setParam(IS_ACTIVE, "The status to set", JsonCmdHelp.BOOL)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_CPE_SCAN
         );
@@ -1237,8 +1232,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Import HTTP templates from a BSON file")
                         .setParam("file", "The BSON file to import", JsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
         );
         addCmd("export_http_templates_bson", params -> {
                     logger.debug("Exporting HTTP templates from bson file ...");
@@ -1256,8 +1250,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Request to export HTTP templates to a BSON file")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error, " +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
         );
         addCmd("get_external_connection_info_templates", params -> {
                     logger.debug("Getting external connection info templates ...");
@@ -1311,8 +1304,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 }, new JsonCmdHelp().setDesc("Create a device discovery connection info")
                         .setParam(CONNECTION_INFO, "The connection info to create", JsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.CREATE_EXTERNAL_CONNECTION_INFO
         );
@@ -1351,8 +1343,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Update a device discovery connection info")
                         .setParam(CONNECTION_INFO, "The connection info to update", JsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.UPDATE_EXTERNAL_CONNECTION_INFO
         );
@@ -1383,8 +1374,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 }, new JsonCmdHelp().setDesc("Remove a device discovery connection info")
                         .setParam(CONNECTION_INFO_UUID, "The id of the connection info to remove", JsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_EXTERNAL_CONNECTION_INFO
         );
@@ -1405,8 +1395,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Clear the collection of device discovery connection infos")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_EXTERNAL_CONNECTION_INFO
         );
@@ -1428,8 +1417,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 },
                 new JsonCmdHelp().setDesc("Clear the collection of discovered devices")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_EXTERNAL_DISCOVERED_DEVICE
         );
@@ -1802,6 +1790,145 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             return response.toJson();
         });
 
+        // region - Connection certificates
+        addCmd("add_connection_certificate", (params, files) -> {
+                    logger.debug("Adding certificate for connection ...");
+
+                    if (files == null || files.asJsonList().isEmpty()) {
+                        return JsonApiResponse.error("Certificate is missing").toJson();
+                    }
+
+                    EntityConnectionCertificate entityConnectionCertificate = EntityConnectionCertificate.fromDbapiJson(files.asJsonList().get(0));
+                    logger.trace("Adding entity to connection certificate : entityConnectionCertificate={}", entityConnectionCertificate);
+                    if (entityConnectionCertificate == null) {
+                        logger.error("Failed to add entity to Connection Certificate : could not parse entity_http_connection : {}", files);
+                        return JsonApiResponse.error(DiscoveryMessages.FAILED_TO_PARSE_ENTITY_CERTIFICATE_CONNECTION).toJson();
+                    }
+
+                    if (params.has(EntityConnectionCertificateField.UUID.dbapiName()) && params.get(EntityConnectionCertificateField.UUID.dbapiName()).isString()) {
+                        entityConnectionCertificate.setUuid(params.get(EntityConnectionCertificateField.UUID.dbapiName()).asString());
+                    }
+
+                    JsonApiResponse response = scanApiHandler.createConnectionCertificate(entityConnectionCertificate);
+
+                    if (response.isSuccess()) {
+                        logger.info("Successfully created certificate for connection in CSL-Scan");
+                    } else {
+                        logger.error("Failed to create certificate for connection in CSL-Scan");
+                    }
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Add a Connection certificate to CSL-Scan")
+                        .setParam("content", "The certificate base 64  content", JsonCmdHelp.JSON)
+                        .setParam("filename", "The certificate filename", JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.CREATE_CONNECTION_CERTIFICATE
+        );
+        addCmd("get_connection_certificate", (params, files) -> {
+                    logger.debug("Fetching single certificate for connection ...");
+
+                    if (params == null || !params.has(EntityConnectionCertificateField.UUID.dbapiName()) || !params.get(EntityConnectionCertificateField.UUID.dbapiName()).isString()) {
+                        return JsonApiResponse.error(DiscoveryMessages.MISSING_CERTIFICATE_UUID).toJson();
+                    }
+
+                    String uuid = params.get(EntityConnectionCertificateField.UUID.dbapiName()).asString();
+
+                    JsonApiResponse response = scanApiHandler.getConnectionCertificate(uuid);
+
+                    if (response.isSuccess()) {
+                        logger.info("Successfully fetched certificate for connection in CSL-Scan");
+                    } else {
+                        logger.error("Failed to fetch certificate for connection in CSL-Scan");
+                    }
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Fetch an Connection certificate to CSL-Scan")
+                        .setParam("uuid", DiscoveryMessages.CERTIFICATE_UUID, JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.READ_CONNECTION_CERTIFICATE
+        );
+        addCmd("get_all_connection_certificates", (params, files) -> {
+                    logger.debug("Fetching all certificates for connection ...");
+
+                    JsonApiResponse response = scanApiHandler.getAllConnectionCertificates();
+
+                    if (response.isSuccess()) {
+                        logger.info("Successfully fetched all certificates for connection in CSL-Scan");
+                    } else {
+                        logger.error("Failed to fetch certificates for connection in CSL-Scan");
+                    }
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Fetch all the Connection certificates to CSL-Scan")
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.READ_CONNECTION_CERTIFICATE
+        );
+        addCmd("update_connection_certificate", (params, files) -> {
+                    logger.debug("Updating certificate for connection ...");
+
+                    if (files == null || files.asJsonList().isEmpty()) {
+                        return JsonApiResponse.error("Certificate is missing").toJson();
+                    }
+
+                    if (params == null || !params.has(EntityConnectionCertificateField.UUID.dbapiName()) || !params.get(EntityConnectionCertificateField.UUID.dbapiName()).isString()) {
+                        return JsonApiResponse.error(DiscoveryMessages.MISSING_CERTIFICATE_UUID).toJson();
+                    }
+
+                    EntityConnectionCertificate entityConnectionCertificate = EntityConnectionCertificate.fromDbapiJson(files.asJsonList().get(0));
+                    logger.trace("Updating entity to connection certificate : entityConnectionCertificate={}", entityConnectionCertificate);
+                    if (entityConnectionCertificate == null) {
+                        logger.error("Failed to update entity to Connection Certificate : could not parse entity_http_connection : {}", files);
+                        return JsonApiResponse.error(DiscoveryMessages.FAILED_TO_PARSE_ENTITY_CERTIFICATE_CONNECTION).toJson();
+                    }
+
+                    entityConnectionCertificate.setUuid(params.get(EntityConnectionCertificateField.UUID.dbapiName()).asString());
+
+                    JsonApiResponse response = scanApiHandler.createConnectionCertificate(entityConnectionCertificate);
+
+                    if (response.isSuccess()) {
+                        logger.info("Successfully created certificate for connection in CSL-Scan");
+                    } else {
+                        logger.error("Failed to create certificate for connection in CSL-Scan");
+                    }
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Update an Connection certificate to CSL-Scan")
+                        .setParam("content", "The certificate base 64  content", JsonCmdHelp.JSON)
+                        .setParam("filename", "The certificate filename", JsonCmdHelp.JSON)
+                        .setParam("uuid", DiscoveryMessages.CERTIFICATE_UUID, JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.UPDATE_CONNECTION_CERTIFICATE
+        );
+        addCmd("delete_connection_certificate", (params, files) -> {
+                    logger.debug("Deleting certificate for connection ...");
+
+                    if (params == null || !params.has(EntityConnectionCertificateField.UUID.dbapiName()) || !params.get(EntityConnectionCertificateField.UUID.dbapiName()).isString()) {
+                        return JsonApiResponse.error(DiscoveryMessages.MISSING_CERTIFICATE_UUID).toJson();
+                    }
+
+                    String uuid = params.get(EntityConnectionCertificateField.UUID.dbapiName()).asString();
+
+                    JsonApiResponse response = scanApiHandler.deleteConnectionCertificate(uuid);
+
+                    if (response.isSuccess()) {
+                        logger.info("Successfully deleted certificate for connection in CSL-Scan");
+                    } else {
+                        logger.error("Failed to delete certificate for connection in CSL-Scan");
+                    }
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Delete an Connection certificate to CSL-Scan")
+                        .setParam("uuid", DiscoveryMessages.CERTIFICATE_UUID, JsonCmdHelp.JSON)
+                        .setResult(DiscoveryMessages.GENERIC_JSON_API_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.DELETE_CONNECTION_CERTIFICATE
+        );
+        // endregion - Connection certificates
+
 
         CSLContext.getInstance().getStatusNotifier().registerStatusProvider(name, this);
 
@@ -1864,11 +1991,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 dbapiHandler.close();
             }
             scanApiHandler.close();
+            return true;
         } catch (Exception e) {
             logger.warn("Failed to stop the service", e);
             return false;
         }
-        return false;
     }
 
     /**
@@ -1952,18 +2079,15 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public Json getStatus() {
         Json status = Json.object();
 
-        if (scanApiHandler.getStatus().isSuccess()) {
-            status.set("is_http_api_reachable", true);
-        } else {
-            status.set("is_http_api_reachable", false);
-        }
+        status.set("is_http_api_reachable", scanApiHandler.getStatus().isSuccess());
+
         if (!isRemote) {
             Json websocketStatus = scanWebSocketHandler.getStatus();
             ///logger.debug("Scan websocket check status : {}", websocketStatus);
-            boolean requests_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
-            boolean notifications_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
+            boolean requestWebsocketStatus = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
+            boolean notificationWebsocketStatus = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
             /// logger.debug("Scan websocket check status : {}", websocketStatus);
-            status.set("is_websocket_connected", requests_ws_status && notifications_ws_status);
+            status.set("is_websocket_connected", requestWebsocketStatus && notificationWebsocketStatus);
         }
 
         logger.trace("CSL-Scan status : {}", status);
@@ -2041,5 +2165,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         } else {
             return JsonApiResponse.error("Scan WebSocket not in use");
         }
+    }
+
+    class DiscoveryMessages {
+        public static final String MISSING_CERTIFICATE_UUID = "Certificate uuid is missing";
+        public static final String CERTIFICATE_UUID = "The certificate uuid";
+        public static final String FAILED_TO_PARSE_ENTITY_CERTIFICATE_CONNECTION = "Failed to parse entity_certificate_connection";
+        public static final String GENERIC_JSON_API_RESPONSE = "<code>{ \"success\": true }</code> if the operation went without error," +
+                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.";
     }
 }

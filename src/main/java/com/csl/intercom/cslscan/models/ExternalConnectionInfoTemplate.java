@@ -5,39 +5,51 @@ import com.ucsl.json.Json;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
+import static com.ucsl.json.JsonUtil.getValueBooleanOrNull;
+import static com.ucsl.json.JsonUtil.getValueStringOrNull;
 
 public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
-    private String name;
+    public static final String KEY = "key";
+    public static final String NAME_EN = "name_en";
+    public static final String NAME_FR = "name_fr";
+    public static final String REQUIRED = "required";
+    public static final String SECRET = "secret";
+    public static final String TYPE = "type";
+    public static final String QUERY_PROTOCOL = "queryProtocol";
+    public static final String QUERY_PROTOCOL_ID = "queryProtocolId";
+    public static final String NAME = "name";
+    public static final String FIELDS = "fields";
+    private String connectionName;
     private String queryProtocol;
     private int queryProtocolId;
-    private List<Field> fields;
+    private List<Field> connectionFields;
 
     public static ExternalConnectionInfoTemplate fromScannerJson(Json json) {
         ExternalConnectionInfoTemplate template = new ExternalConnectionInfoTemplate();
-        if (json.has("name") && json.get("name").isString()) {
-            template.name = json.get("name").asString();
+        if (json.has(NAME) && json.get(NAME).isString()) {
+            template.connectionName = json.get(NAME).asString();
         } else {
             return null;
         }
 
-        if (json.has("queryProtocol") && json.get("queryProtocol").isString()) {
-            template.queryProtocol = json.get("queryProtocol").asString();
+        if (json.has(QUERY_PROTOCOL) && json.get(QUERY_PROTOCOL).isString()) {
+            template.queryProtocol = json.get(QUERY_PROTOCOL).asString();
         } else {
             return null;
         }
 
-        if (json.has("queryProtocolId") && json.get("queryProtocolId").isNumber()) {
-            template.queryProtocolId = json.get("queryProtocolId").asInteger();
+        if (json.has(QUERY_PROTOCOL_ID) && json.get(QUERY_PROTOCOL_ID).isNumber()) {
+            template.queryProtocolId = json.get(QUERY_PROTOCOL_ID).asInteger();
         } else {
             return null;
         }
 
-        if (json.has("fields") && json.get("fields").isArray()) {
-            template.fields = json.get("fields").asJsonList().stream()
+        if (json.has(FIELDS) && json.get(FIELDS).isArray()) {
+            template.connectionFields = json.get(FIELDS).asJsonList().stream()
                     .map(Field::fromScannerJson)
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                    .toList();
         } else {
             return null;
         }
@@ -47,26 +59,26 @@ public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
 
     @Override
     public Json serializeForDbapi() {
-        Json fieldsJson = Json.array(this.fields.stream().map(Field::serializeForDbapi).toArray());
+        Json fieldsJson = Json.array(this.connectionFields.stream().map(Field::serializeForDbapi).toArray());
         return Json.object(
-                "name", name,
-                "queryProtocol", queryProtocol,
-                "queryProtocolId", queryProtocolId,
-                "fields", fieldsJson
+                NAME, connectionName,
+                QUERY_PROTOCOL, queryProtocol,
+                QUERY_PROTOCOL_ID, queryProtocolId,
+                FIELDS, fieldsJson
         );
     }
 
     public static class Field implements IDbapiSerializable {
-        private String name_en;
-        private String name_fr;
+        private final String nameEn;
+        private String nameFr;
         String key;
         private boolean isRequired;
         private boolean isSecret;
         private Type type;
 
-        public Field(String name_en, String name_fr, String key, boolean isRequired, boolean isSecret, Type type) {
-            this.name_en = name_en;
-            this.name_fr = name_fr;
+        public Field(String nameEn, String nameFr, String key, boolean isRequired, boolean isSecret, Type type) {
+            this.nameEn = nameEn;
+            this.nameFr = nameFr;
             this.key = key;
             this.isRequired = isRequired;
             this.isSecret = isSecret;
@@ -74,77 +86,30 @@ public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
         }
 
         public static Field fromScannerJson(Json json) {
-            String name_fr;
-            if (json.has("name_fr") && json.get("name_fr").isString()) {
-                name_fr = json.get("name_fr").asString();
-            } else {
+            String nameFr = getValueStringOrNull(json, NAME_FR);
+            String nameEn = getValueStringOrNull(json, NAME_EN);
+            String key = getValueStringOrNull(json, KEY);
+            Boolean isRequired = getValueBooleanOrNull(json, REQUIRED);
+            Boolean isSecret = getValueBooleanOrNull(json, SECRET);
+            String type = getValueStringOrNull(json, TYPE);
+
+            if (nameFr == null || nameEn == null || key == null || isRequired == null || isSecret == null || type == null) {
                 return null;
             }
 
-            String name_en;
-            if (json.has("name_en") && json.get("name_en").isString()) {
-                name_en = json.get("name_en").asString();
-            } else {
-                return null;
-            }
-
-            String key;
-            if (json.has("key") && json.get("key").isString()) {
-                key = json.get("key").asString();
-            } else {
-                return null;
-            }
-
-            boolean isRequired;
-            if (json.has("required") && json.get("required").isBoolean()) {
-                isRequired = json.get("required").asBoolean();
-            } else {
-                return null;
-            }
-
-            boolean isSecret;
-            if (json.has("secret") && json.get("secret").isBoolean()) {
-                isSecret = json.get("secret").asBoolean();
-            } else {
-                return null;
-            }
-
-            Type type;
-            if (json.has("type") && json.get("type").isString()) {
-                type = Type.valueOf(json.get("type").asString());
-            } else {
-                return null;
-            }
-
-            return new Field(name_en, name_fr, key, isRequired, isSecret, type);
+            return new Field(nameEn, nameFr, key, isRequired, isSecret, Type.valueOf(type));
         }
 
         @Override
         public Json serializeForDbapi() {
             return Json.object(
-                    "key", key,
-                "name_en", name_en,
-                "name_fr", name_fr,
-                "required", isRequired,
-                "secret", isSecret,
-                "type", type.toString()
+                    KEY, key,
+                    NAME_EN, nameEn,
+                    NAME_FR, nameFr,
+                    REQUIRED, isRequired,
+                    SECRET, isSecret,
+                    TYPE, type.toString()
             );
-        }
-
-        public String getName_en() {
-            return name_en;
-        }
-
-        public String getName_fr() {
-            return name_fr;
-        }
-
-        public boolean isRequired() {
-            return isRequired;
-        }
-
-        public boolean isSecret() {
-            return isSecret;
         }
 
         public Type getType() {

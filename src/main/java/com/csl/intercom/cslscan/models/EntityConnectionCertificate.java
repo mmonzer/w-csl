@@ -15,16 +15,16 @@ public class EntityConnectionCertificate implements IScannerSerializable, IDbapi
     @Setter
     @Getter
     private String uuid;
-    private String content;
+    private byte[] content;
     private String certificateFileName;
     private String updatedAt;
 
     public static EntityConnectionCertificate fromDbapiJson(Json json) {
         EntityConnectionCertificate entityConnectionCertificate = new EntityConnectionCertificate();
         try {
-            entityConnectionCertificate.uuid = JsonUtil.getStringFromJson(json, EntityConnectionCertificateField.UUID.dbapiName(), null);
-            entityConnectionCertificate.content = JsonUtil.getStringFromJson(json, EntityConnectionCertificateField.CONTENT.dbapiName(), null);
-            entityConnectionCertificate.certificateFileName = JsonUtil.getStringFromJson(json, EntityConnectionCertificateField.FILENAME.dbapiName(), null);
+            entityConnectionCertificate.uuid = JsonUtil.getValueStringOrNull(json, EntityConnectionCertificateField.UUID.dbapiName());
+            entityConnectionCertificate.content = JsonUtil.jsonListToByteArray(json.get(EntityConnectionCertificateField.CONTENT.dbapiName()));
+            entityConnectionCertificate.certificateFileName = JsonUtil.getValueStringOrNull(json, EntityConnectionCertificateField.FILENAME.dbapiName());
 
             return entityConnectionCertificate;
         } catch (Throwable e) {
@@ -37,7 +37,7 @@ public class EntityConnectionCertificate implements IScannerSerializable, IDbapi
         EntityConnectionCertificate entityConnectionCertificate = new EntityConnectionCertificate();
         try {
             entityConnectionCertificate.uuid = json.get(EntityConnectionCertificateField.UUID.scanName()).asString();
-            entityConnectionCertificate.content = json.get(EntityConnectionCertificateField.CONTENT.scanName()).asString();
+            entityConnectionCertificate.content = JsonUtil.jsonListToByteArray(json.get(EntityConnectionCertificateField.CONTENT.scanName()));
             entityConnectionCertificate.certificateFileName = json.get(EntityConnectionCertificateField.FILENAME.scanName()).asString();
 
             return entityConnectionCertificate;

@@ -632,4 +632,27 @@ public class JsonUtil {
             }
         }
     }
+
+    /**
+     * JsonArray to byteArray
+     * @param obj array to convert in bytearray
+     */
+    public static byte[] jsonListToByteArray(Json obj) throws IllegalArgumentException {
+        if (!obj.isArray()) {
+            throw new IllegalArgumentException("Not array");
+        }
+
+        List<Json> list = obj.asJsonList();
+        byte[] byteArray = new byte[list.size()];
+
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).isNull() || !list.get(i).isNumber() ) {
+                throw new IllegalArgumentException("Element is not a number");
+            }
+            byteArray[i] = list.get(i).asByte();
+        }
+        return byteArray;
+    }
+
+
 }

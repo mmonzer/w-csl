@@ -320,6 +320,15 @@ public class CSLHttpServerJetty {
                 body.set(part.getName(), new String(part.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
             }
         }
+
+        // Fix params parsing
+        if (body.has(JCmd.PARAMETERS) && body.get(JCmd.PARAMETERS).isString()){
+            try {
+                body.set(JCmd.PARAMETERS, Json.read(body.get(JCmd.PARAMETERS).asString()));
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
         return body.set("files", files);
     }
 

@@ -1886,7 +1886,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     entityConnectionCertificate.setUuid(params.get(EntityConnectionCertificateField.UUID.dbapiName()).asString());
 
-                    JsonApiResponse response = scanApiHandler.createConnectionCertificate(entityConnectionCertificate);
+                    JsonApiResponse response = scanApiHandler.updateConnectionCertificate(entityConnectionCertificate);
 
                     if (response.isSuccess()) {
                         logger.info("Successfully created certificate for connection in CSL-Scan");

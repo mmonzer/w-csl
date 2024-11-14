@@ -45,24 +45,14 @@ public class CSLAlertManager {
     public static final String ERROR = "error";
     public static final String VALUE = "value";
 
-    public boolean NO_ALERT_FILTERING = true;
-    public CSLAlertFactory alertFactory = new CSLAlertFactory();
+    public static final boolean NO_ALERT_FILTERING = true;
+    private CSLAlertFactory alertFactory = new CSLAlertFactory();
     boolean FDEBUG = false;
 
     // id client, send over udp use sockets
     IAlertForwarder alertForwarder = null;
-    public static String INFO = "INFO";
-    public static String TOLERABLE = "TOLERABLE";
-    public static String MODERATE = "MODERATE";
-    public static String HIGH = "HIGH";
-    public static String CRITICAL = "CRITICAL";  // RED
-    private String loggerName;
     private int port;
-    private boolean logToFile;
-    private String datadir;
-    private String filename;
-    private long max_size;
-    ;
+
     private InetAddress iNetAddress = null;
 
     private Config.AlertViewer config = null;
@@ -77,12 +67,6 @@ public class CSLAlertManager {
         init(config);
     }
 
-    public CSLAlertManager setname(String loggerName) {
-        if (loggerName.isEmpty()) return this;
-        this.loggerName = loggerName;
-        return this;
-    }
-
     private void init(Config.AlertViewer config) {
         this.config = config;
 
@@ -90,15 +74,13 @@ public class CSLAlertManager {
         String ip = config.getIp();
 
         try {
-            InetAddress iNetAddress = InetAddress.getByName(ip);
-            this.iNetAddress = iNetAddress;
+            this.iNetAddress = InetAddress.getByName(ip);
         } catch (UnknownHostException e) {
             
             // e.printStackTrace();
         }
-        this.loggerName = config.getName();
 
-        this.logToFile = config.getLogToFile();
+        boolean logToFile = config.getLogToFile();
         if (logToFile) {
             initFileLog();
         }
@@ -109,9 +91,9 @@ public class CSLAlertManager {
 
     private void initFileLog() {
         if (config != null) {
-            this.datadir = CSLContext.getInstance().buildFullPathInUserDir(config.getLogDir());
-            this.filename = config.getPrefixFilename();
-            this.max_size = config.getMaxSizeOfLogFiles();
+            String datadir = CSLContext.getInstance().buildFullPathInUserDir(config.getLogDir());
+            String filename = config.getPrefixFilename();
+            long max_size = config.getMaxSizeOfLogFiles();
             new FileLog(datadir, filename, max_size, CSLContext.getInstance()::getSystemCurrentTimeMillis);
         }
     }
@@ -317,8 +299,6 @@ public class CSLAlertManager {
         Map<String, String> props = alert.getPropsList();
 
         if (props != null) {
-            String s = "";
-            String z;
             for (String key : props.keySet()) {
                 jAlertInfo.set(key, props.get(key));
             }
@@ -399,10 +379,7 @@ public class CSLAlertManager {
             }
             case "test1" -> result = test1();
             case "test2" -> test2();
-            case "debug_alert" -> {
-                boolean b = JsonUtil.getBooleanFromJson(params, VALUE, false);
-                FDEBUG = b;
-            }
+            case "debug_alert" -> FDEBUG = JsonUtil.getBooleanFromJson(params, VALUE, false);
             default -> System.out.println("op_alert not found:" + params);
         }
         return result;

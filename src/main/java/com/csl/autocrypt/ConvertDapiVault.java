@@ -9,6 +9,8 @@ import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.ucsl.json.JsonUtil.jsonListToStringListAtJson;
 
 public class ConvertDapiVault {
+    private ConvertDapiVault() {}
+
     static final HashMap<String, String> relationDbApiToVault = new HashMap<>();
     static final HashMap<String, String> relationVaultToDbApi = new HashMap<>();
     static final String[] fieldsListToString = {Common.CRL_DISTRIBUTION_POINTS, Issuer.OCSP_SERVERS};

@@ -9,6 +9,7 @@ import static com.csl.autocrypt.enums.AutocryptConstants.*;
 import static com.ucsl.json.JsonUtil.*;
 
 public class CSLAutocryptUtils {
+    private CSLAutocryptUtils() {}
 
     /**
      * Reformats the AutoCrypt error to resend only the user-friendly error

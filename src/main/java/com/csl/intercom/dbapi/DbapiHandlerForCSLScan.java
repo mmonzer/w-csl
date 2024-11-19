@@ -848,11 +848,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     private Request createDbApiRequestWithCustomContentType(String method, String endpoint, String contentType) {
-        Request request = initRequest(method, createUriFrom(endpoint), httpClient);
+        Request request =  initRequest(method, createUriFrom(endpoint), httpClient);
 
         addHeadersToRequest(headers, request);
-        request.header(HttpHeader.CONTENT_TYPE, contentType);
-
+        // remove the json content type from header
+        request.headers(httpFields -> httpFields.remove(HttpHeader.CONTENT_TYPE));
+        request.headers(httpFields -> httpFields.put(HttpHeader.CONTENT_TYPE, contentType));
         return request;
     }
 

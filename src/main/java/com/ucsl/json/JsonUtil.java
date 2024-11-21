@@ -1,5 +1,7 @@
 package com.ucsl.json;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -407,10 +409,9 @@ public class JsonUtil {
             return bool;
         } else if (obj.has(key) && obj.get(key).isNull()) {
             obj.delAt(key);
-            return null;
-        } else {
-            return null;
         }
+        return null;
+
     }
 
     /**
@@ -429,9 +430,9 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static String getValueStringOrDefault(Json obj, String key, String defaultValue) {
-        if (obj.has(key) && !obj.get(key).isNull() && obj.get(key).isString()) {
-            return obj.get(key).isNull()?null:obj.get(key).asString();
+    public static String getValueStringOrDefault(@NotNull Json obj, String key, String defaultValue) {
+        if (key!=null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isString()) {
+            return obj.get(key).asString();
         } else {
             return defaultValue;
         }
@@ -443,8 +444,8 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static boolean getValueBooleanOrDefault(Json obj, String key, boolean defaultValue) {
-        if (obj.has(key) && obj.get(key).isBoolean()) {
+    public static boolean getValueBooleanOrDefault(@NotNull Json obj, String key, boolean defaultValue) {
+        if (key!=null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isBoolean()) {
             return obj.get(key).asBoolean();
         } else {
             return defaultValue;
@@ -486,10 +487,19 @@ public class JsonUtil {
      * @param key the key inside the json obj
      */
     public static Integer getValueIntegerOrNull(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isNumber()) {
+        return getValueIntegerOrDefault(obj, key, null);
+    }
+    /**
+     * Checks if a key exists in a json and return its value if it is a Integer
+     *
+     * @param obj the json object to check
+     * @param key the key inside the json obj
+     */
+    public static Integer getValueIntegerOrDefault(@NotNull Json obj, String key, Integer defaultValue) {
+        if (key!=null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isNumber()) {
             return obj.get(key).asInteger();
         } else {
-            return null;
+            return defaultValue;
         }
     }
 

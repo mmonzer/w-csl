@@ -1,6 +1,7 @@
 package com.ucsl.json;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -284,7 +285,7 @@ public class JsonUtil {
      * @throws IllegalArgumentException if argument missing of wrong format
      */
     public static String getValueString(Json obj, String key) throws IllegalArgumentException {
-        if (obj.has(key) && obj.get(key).isString()) {
+        if (hasExistingKeyAndNotNull(obj, key) && obj.get(key).isString()) {
             return obj.get(key).asString();
         } else {
             throw new IllegalArgumentException(key);
@@ -314,7 +315,7 @@ public class JsonUtil {
      */
     public static String transferValueString(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         String value = getValueString(objOrigin, key);
-        if (objOrigin.has(key)) {
+        if (key !=null && objOrigin.has(key)) {
             objOrigin.delAt(key);
         }
         objDest.set(key, value);
@@ -343,7 +344,7 @@ public class JsonUtil {
      */
     public static String transferValueStringOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         String value = getValueStringOrNull(objOrigin, key);
-        if (objOrigin.has(key)) {
+        if (key !=null && objOrigin.has(key)) {
             objOrigin.delAt(key);
         }
         objDest.set(key, value);
@@ -368,9 +369,9 @@ public class JsonUtil {
      * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
      * @param key       the key inside the json obj
      */
-    public static Integer transferValueIntegerOrNull(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
+    public static Integer transferValueIntegerOrNull(@NotNull Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
         Integer value = getValueIntegerOrNull(objOrigin, key);
-        if (objOrigin.has(key)) {
+        if (key !=null && objOrigin.has(key)) {
             objOrigin.delAt(key);
         }
         objDest.set(key, value);
@@ -384,7 +385,7 @@ public class JsonUtil {
      * @param key the key inside the json obj
      */
     public static String extractValueStringOrNull(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isString()) {
+        if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isString()) {
             String str = obj.get(key).asString();
             obj.delAt(key);
             return str;
@@ -403,7 +404,7 @@ public class JsonUtil {
      * @param key the key inside the json obj
      */
     public static Boolean extractValueBooleanOrNull(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isBoolean()) {
+        if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isBoolean()) {
             Boolean bool = obj.get(key).asBoolean();
             obj.delAt(key);
             return bool;
@@ -420,7 +421,7 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static String getValueStringOrNull(Json obj, String key) {
+    public static String getValueStringOrNull(@NotNull Json obj, String key) {
         return getValueStringOrDefault(obj, key, null);
     }
 
@@ -430,8 +431,8 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static String getValueStringOrDefault(@NotNull Json obj, String key, String defaultValue) {
-        if (key!=null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isString()) {
+    public static String getValueStringOrDefault(@NotNull Json obj, @Nullable String key, @NotNull String defaultValue) {
+        if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isString()) {
             return obj.get(key).asString();
         } else {
             return defaultValue;
@@ -444,8 +445,8 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static boolean getValueBooleanOrDefault(@NotNull Json obj, String key, boolean defaultValue) {
-        if (key!=null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isBoolean()) {
+    public static boolean getValueBooleanOrDefault(@NotNull Json obj, @Nullable String key, boolean defaultValue) {
+        if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isBoolean()) {
             return obj.get(key).asBoolean();
         } else {
             return defaultValue;
@@ -458,12 +459,22 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static Integer getValueInteger(Json obj, String key) throws IllegalArgumentException {
-        if (obj.has(key) && obj.get(key).isNumber()) {
+    public static Integer getValueInteger(@NotNull Json obj, @Nullable String key) throws IllegalArgumentException {
+        if (hasExistingKeyAndNotNull(obj, key) && obj.get(key).isNumber()) {
             return obj.get(key).asInteger();
         } else {
             throw new IllegalArgumentException(key);
         }
+    }
+
+    /**
+     * Checks whether the json object and key are not null and whether the key has non null value
+     * @param obj json object
+     * @param key key value
+     * @return whether there is a non-null value
+     */
+    public static boolean hasExistingKeyAndNotNull(@Nullable Json obj, @Nullable String key) {
+        return obj != null && key != null && obj.has(key) && !obj.get(key).isNull();
     }
 
     /**
@@ -486,17 +497,18 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static Integer getValueIntegerOrNull(Json obj, String key) {
+    public static Integer getValueIntegerOrNull(@NotNull Json obj, @Nullable String key) {
         return getValueIntegerOrDefault(obj, key, null);
     }
+
     /**
      * Checks if a key exists in a json and return its value if it is a Integer
      *
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static Integer getValueIntegerOrDefault(@NotNull Json obj, String key, Integer defaultValue) {
-        if (key!=null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isNumber()) {
+    public static Integer getValueIntegerOrDefault(@NotNull Json obj, @Nullable String key, @NotNull Integer defaultValue) {
+        if (hasExistingKeyAndNotNull(obj, key) && obj.get(key).isNumber()) {
             return obj.get(key).asInteger();
         } else {
             return defaultValue;
@@ -509,8 +521,8 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static Boolean getValueBooleanOrNull(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isBoolean()) {
+    public static Boolean getValueBooleanOrNull(@NotNull Json obj, @Nullable String key) {
+        if (hasExistingKeyAndNotNull(obj, key) && obj.get(key).isBoolean()) {
             return obj.get(key).asBoolean();
         } else {
             return null;
@@ -524,7 +536,7 @@ public class JsonUtil {
      * @param key the key inside the json obj
      */
     public static List<String> getValueListStrOrNull(Json obj, String key) {
-        if (obj.has(key) && obj.get(key).isArray()) {
+        if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isArray()) {
             List<String> list = new ArrayList<>();
             for (Json e : obj.get(key).asJsonList()) {
                 if (e.isString()) {
@@ -647,7 +659,7 @@ public class JsonUtil {
      * JsonArray to byteArray
      * @param obj array to convert in bytearray
      */
-    public static byte[] jsonListToByteArray(Json obj) throws IllegalArgumentException {
+    public static byte[] jsonListToByteArray(@NotNull Json obj) throws IllegalArgumentException {
         if (!obj.isArray()) {
             throw new IllegalArgumentException("Not array");
         }

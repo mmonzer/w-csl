@@ -37,6 +37,7 @@ dependencies {
 //    testImplementation "junit:junit:4.13.2" //migrated to org.junit.jupiter:junit-jupiter-api
     // autonomousapp : dependency check flags it as unused.
      implementation "org.junit.jupiter:junit-jupiter-api:5.11.0-M2"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.11.0-M2"
     runtimeOnly "org.junit.jupiter:junit-jupiter-engine:5.11.0-M2"
 
     // JWT dependencies

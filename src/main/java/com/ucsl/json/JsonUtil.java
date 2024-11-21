@@ -444,7 +444,7 @@ public class JsonUtil {
      * @param key the key inside the json obj
      */
     public static boolean getValueBooleanOrDefault(Json obj, String key, boolean defaultValue) {
-        if (obj.has(key) && obj.get(key).isString()) {
+        if (obj.has(key) && obj.get(key).isBoolean()) {
             return obj.get(key).asBoolean();
         } else {
             return defaultValue;

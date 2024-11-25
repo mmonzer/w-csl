@@ -14,24 +14,35 @@ public class RemotePowershellConnection extends Connection {
     public static final String MONGO_ENTITY_ID = "mongo_entity_id";
     public static final String CONNECTED_DEVICES = "connected_devices";
     public static final String NAME = "name";
+    public static final String USE_SSL = "use_ssl";
     public static final String UUID = "uuid";
     private final int port;
     private final String username;
     private final String password;
     private Boolean isKeepPassword;
+    private boolean useSSL = false;
     private String certificate;
 
-    protected RemotePowershellConnection(String name, String id, int port, List<String> devices, String username, String password, Boolean isKeepPassword, String certificate) {
+    protected RemotePowershellConnection(String name, String id, int port, List<String> devices, String username, String password, Boolean isKeepPassword, String certificate, boolean useSSL) {
         super(name, id, devices, StaticConnectionProtocol.RemotePowershell);
         this.port = port;
         this.username = username;
         this.password = password;
         this.isKeepPassword = isKeepPassword;
         this.certificate = certificate;
+        this.useSSL = useSSL;
+    }
+
+    protected RemotePowershellConnection(String name, String id, int port, List<String> devices, String username, String password, Boolean isKeepPassword, String certificate) {
+        this(name, id, port, devices, username, password, isKeepPassword, certificate, true);
     }
 
     protected RemotePowershellConnection(String name, String id, Integer port, List<String> devices, String username, String password, String certificate) {
         this(name, id, port, devices, username, password, true, certificate);
+    }
+
+    protected RemotePowershellConnection(String name, String id, Integer port, List<String> devices, String username, String password, String certificate, boolean useSSL) {
+        this(name, id, port, devices, username, password, true, certificate, useSSL);
     }
 
     protected RemotePowershellConnection(String name, String id, Integer port, List<String> devices, String username, String password) {
@@ -58,7 +69,8 @@ public class RemotePowershellConnection extends Connection {
             String password = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.PASSWORD.dbapiName());
             String certificate = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.CERTIFICATE.dbapiName());
             String name = getValueStringOrNull(connectionJson, NAME);
-            return new RemotePowershellConnection(name, uuid, port, devices, username, password, certificate);
+            boolean useSSL = getValueBooleanOrDefault(connectionJson, RemotePowershellConnectionField.USE_SSL.dbapiName(), false);
+            return new RemotePowershellConnection(name, uuid, port, devices, username, password, certificate, useSSL);
         } catch (NullPointerException | UnsupportedOperationException e) {
             return null;
         }
@@ -84,12 +96,13 @@ public class RemotePowershellConnection extends Connection {
             String name = getValueStringOrNull(connectionJson, NAME);
             String username = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.USERNAME.dbapiName());
             String certificate = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.CERTIFICATE.dbapiName());
+            boolean useSSL = getValueBooleanOrDefault(connectionJson, RemotePowershellConnectionField.USE_SSL.dbapiName(), false);
             // check if password is present in the json
             if (connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
                 String password = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.PASSWORD.dbapiName());
-                return new RemotePowershellConnection(name, uuid, port, devices, username, password, certificate);
+                return new RemotePowershellConnection(name, uuid, port, devices, username, password, certificate, useSSL);
             } else {
-                return new RemotePowershellConnection(name, uuid, port, devices, username, null, true, certificate);
+                return new RemotePowershellConnection(name, uuid, port, devices, username, null, true, certificate, useSSL);
             }
         } catch (NullPointerException | UnsupportedOperationException e) {
             return null;
@@ -103,7 +116,8 @@ public class RemotePowershellConnection extends Connection {
             String name = getValueStringOrNull(connectionJson, NAME);
             String username = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.USERNAME.dbapiName());
             String certificate = getValueStringOrNull(connectionJson, RemotePowershellConnectionField.CERTIFICATE.dbapiName());
-            return new RemotePowershellConnection(name, uuid, port, null, username, null, certificate);
+            boolean useSSL = getValueBooleanOrDefault(connectionJson, RemotePowershellConnectionField.USE_SSL.dbapiName(), false);
+            return new RemotePowershellConnection(name, uuid, port, null, username, null, certificate, useSSL);
         } catch (NullPointerException e) {
             return null;
         }
@@ -117,6 +131,7 @@ public class RemotePowershellConnection extends Connection {
         result.set(RemotePowershellConnectionField.PASSWORD.scanName(), this.password);
         result.set(RemotePowershellConnectionField.IS_KEEP_PASSWORD.scanName(), this.isKeepPassword);
         result.set(RemotePowershellConnectionField.CERTIFICATE.scanName(), this.certificate);
+        result.set(RemotePowershellConnectionField.USE_SSL.scanName(), this.useSSL);
         return result;
     }
 

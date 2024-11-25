@@ -5,7 +5,8 @@ public enum RemotePowershellConnectionField {
     USERNAME("username", "username"),
     PASSWORD("password", "password"),
     CERTIFICATE("certificate", "certificate"),
-    IS_KEEP_PASSWORD("is_keep_password", "isKeepPassword")
+    IS_KEEP_PASSWORD("is_keep_password", "isKeepPassword"),
+    USE_SSL("use_ssl", "useSSL")
     ;
 
     private final String dbapiName;

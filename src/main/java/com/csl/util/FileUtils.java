@@ -420,7 +420,7 @@ public class FileUtils  {
             }
         }
         if (!Objects.equals(sheetName, "snmp_powershell")) {
-            tmp.set("protocol", "HTTP");
+            tmp.set("protocol", sheetName);
             tmp.set("discoveryProtocolNameRelatedToHttpCnx", sheetName);
         }
 //        if (allEmpty) {

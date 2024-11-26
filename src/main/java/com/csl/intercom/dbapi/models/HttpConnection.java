@@ -147,7 +147,10 @@ public class HttpConnection extends Connection {
                 }
             }
 
-            String name = connectionJson.get("name").asString();
+            String name = "";
+            if (connectionJson.has("name")) {
+                name = connectionJson.get("name").asString();
+            }
 
             return new HttpConnection(name, uuid, port, devices, entityHttpConnectionUuid, authenticationMethod, username, password, realm, token, stagesConfig, isSimulated, inputs);
         } catch (Throwable e) {

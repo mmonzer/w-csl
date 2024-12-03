@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static main.services.TapsServices.configureTaps;
 import static main.services.TapsServices.readJsonFile;
 
 public class MonitorService extends Service {
@@ -36,33 +37,7 @@ public class MonitorService extends Service {
 	}
 
 	private void defineServiceEndpoints() {
-		// TODO : duplicated with TapService
-		idsconf = CSLContext.getInstance().getCslConfDir();
-		Json conf;
-		Tap tap;
-		try {
-			conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
-			if (conf.isArray()) {
-				configuredTaps = (ArrayList<Json>) conf.asJsonList();
-			} else {
-				configuredTaps = new ArrayList<Json>();
-			}
-			for (Json j : configuredTaps) {
-				tap = new Tap(j.at("idname").asString(),
-						j.at("tap_id").asString(),
-						j.at("ip").asString(),
-						j.at("port").asInteger(),
-						j.at("includes").asJsonList()
-				);
-				activeTaps.put(tap.getId(), tap);
-			}
-		} catch (IOException e1) {
-			System.err.println("No tap config found");
-			configuredTaps = new ArrayList<Json>();
-		} catch (Exception e) {
-			System.err.println("Unable to parse conf or No tap config found in " + idsconf + "/taps/TapsConfiguration.json");
-			configuredTaps = new ArrayList<Json>();
-		}
+		activeTaps = configureTaps();
 
 		addCmd(MonitorEndpoints.STATS_TAPS, new IJsonCmd() {
 

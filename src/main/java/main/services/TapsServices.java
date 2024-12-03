@@ -911,22 +911,21 @@ public class TapsServices extends Service {
     }
 
     /**
-     * Initialization of the TAPs commands
-     *
-     * @return true if the initialization happened with no problems, false otherwise.
+     * Configures the TAP entities from file. It saves the information in a configuredTaps json list (DEPRECATED) and
+     * in a activeTaps hashmap.
+     * @return the active Taps hashmap
      */
-    @Override
-    public boolean init() {
-        Config.Tap config = Config.instance.TapService;
+    public static HashMap<String, Tap> configureTaps() {
         idsconf = CSLContext.getInstance().getCslConfDir();
         Json conf;
         Tap tap;
+        HashMap<String, Tap> activeTaps = new HashMap<>();
         try {
             conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
             if (conf.isArray()) {
                 configuredTaps = (ArrayList<Json>) conf.asJsonList();
             } else {
-                configuredTaps = new ArrayList<Json>();
+                configuredTaps = new ArrayList<>();
             }
             for (Json j : configuredTaps) {
                 tap = new Tap(j.at("idname").asString(),
@@ -939,12 +938,23 @@ public class TapsServices extends Service {
             }
         } catch (IOException e1) {
             System.err.println("No tap config found");
-            configuredTaps = new ArrayList<Json>();
+            configuredTaps = new ArrayList<>();
         } catch (Exception e) {
             System.err.println("Unable to parse conf or No tap config found in " + idsconf + "/taps/TapsConfiguration.json");
-            configuredTaps = new ArrayList<Json>();
-            // e.printStackTrace();
+            configuredTaps = new ArrayList<>();
         }
+        return activeTaps;
+    }
+
+    /**
+     * Initialization of the TAPs commands
+     *
+     * @return true if the initialization happened with no problems, false otherwise.
+     */
+    @Override
+    public boolean init() {
+        Config.Tap config = Config.instance.TapService;
+        activeTaps = configureTaps();
 //        knownHostFilePath = jConfig.at("knowHostFilePath").asString();
 //        localIP = jConfig.at("localIpAddr").asString(););
         localIP = config.getLocalIpAddress();

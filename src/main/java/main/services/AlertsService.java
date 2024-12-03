@@ -271,8 +271,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				Json j=CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
-				return j;
+				return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
 			}
 		},
 				new JsonCmdHelp()
@@ -286,8 +285,7 @@ public class AlertsService extends Service {
 			@Override
 			public Json exec(Json params) {
 
-				Json j=CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
-				return j;
+				return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
 			}
 		},
 				new JsonCmdHelp().setDesc("Operations on alerts").hide()

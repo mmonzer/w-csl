@@ -178,17 +178,12 @@ public class FileUtils  {
 
     public static String sanitize(String filename) {
         if (filename == null) return null;
-        if (filename.contains("/")) filename = filename.replace("/", "_");
-        if (filename.contains(":")) filename = filename.replace(":", "_");
-        if (filename.contains("*")) filename = filename.replace("*", "_");
-        if (filename.contains("?")) filename = filename.replace("?", "_");
-        if (filename.contains("\"")) filename = filename.replace("\"", "_");
-        if (filename.contains("<")) filename = filename.replace("<", "_");
-        if (filename.contains(">")) filename = filename.replace(">", "_");
-        if (filename.contains("|")) filename = filename.replace("|", "_");
-        if (filename.contains("\\")) filename = filename.replace("\\", "_");
-        if (filename.contains("&")) filename = filename.replace("&", "_");
 
+        String[] charsToEscape = {"/", ":","*","?","\"","<",">","|","\\","&"};
+        for (String character : charsToEscape) {
+            filename = filename.replaceAll(character, "_");
+        }
+        
         return filename;
     }
 

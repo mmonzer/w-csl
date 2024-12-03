@@ -8,7 +8,7 @@ import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
-import main.extensions.SshUtils;
+import com.csl.util.SshUtils;
 import main.services.endpoints.TapsEndpoints;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jetty.client.HttpClient;

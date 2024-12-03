@@ -4,7 +4,7 @@ import com.csl.core.Config;
 import com.jcraft.jsch.JSchException;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
-import main.extensions.SshUtils;
+import com.csl.util.SshUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

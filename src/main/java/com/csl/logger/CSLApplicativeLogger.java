@@ -254,25 +254,7 @@ public class CSLApplicativeLogger {
     private void log(String level, String action, String requestInterface, String message, Object... objects) {
         addVariablesToMDC(action, requestInterface);
 
-        switch (level.toUpperCase()) {
-            case LOG_LEVEL_TRACE:
-                logger.trace(message, objects);
-                break;
-            case LOG_LEVEL_DEBUG:
-                logger.debug(message, objects);
-                break;
-            case LOG_LEVEL_INFO:
-                logger.info(message, objects);
-                break;
-            case LOG_LEVEL_WARN:
-                logger.warn(message, objects);
-                break;
-            case LOG_LEVEL_ERROR:
-                logger.error(message, objects);
-                break;
-            default:
-                break;
-        }
+        logWithLevel(level, message, objects);
 
         removeVariables();
     }
@@ -280,6 +262,18 @@ public class CSLApplicativeLogger {
     private void log(String level, String message, Object... objects) {
         addVariablesToMDC();
 
+        logWithLevel(level, message, objects);
+
+        removeVariables();
+    }
+
+    /**
+     * Log in the right log level the given message and given objects
+     * @param level log level
+     * @param message message to log
+     * @param objects eventual objects to print
+     */
+    private void logWithLevel(String level, String message, Object[] objects) {
         switch (level.toUpperCase()) {
             case LOG_LEVEL_TRACE:
                 logger.trace(message, objects);
@@ -299,8 +293,6 @@ public class CSLApplicativeLogger {
             default:
                 break;
         }
-
-        removeVariables();
     }
 
     private void log(String level, String message, Throwable throwable) {

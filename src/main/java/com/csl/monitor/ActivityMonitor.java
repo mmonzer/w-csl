@@ -18,7 +18,7 @@ import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 
-import static main.services.TapsServices.readJsonFile;
+import static com.csl.util.FileUtils.readJsonFromFile;
 
 public class ActivityMonitor implements IStatusProvider {
 
@@ -86,7 +86,7 @@ public class ActivityMonitor implements IStatusProvider {
 			ArrayList<Json> configuredTaps;
 			String idsconf = CSLContext.getInstance().getCslConfDir();
 			try {
-				conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+				conf = readJsonFromFile(idsconf + "/taps/TapsConfiguration.json");
 				if (conf.isArray()) {
 					configuredTaps = (ArrayList<Json>) conf.asJsonList();
 				} else {

@@ -22,12 +22,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.NoRouteToHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.csl.util.FileUtils.readJsonFromFile;
 import static com.csl.web.HTTPConstants.*;
 
 public class TapsServices extends Service {
@@ -53,20 +53,6 @@ public class TapsServices extends Service {
     private final ApiHandler apiHandler;
 
     static String idsconf;
-
-    public static Json readJsonFile(String fileName) throws IOException {
-        String jsonRaw = "";
-        File fichierRegles = new File(fileName);
-        InputStream lecteur = new BufferedInputStream(new FileInputStream(fichierRegles));
-        InputStreamReader ipsr = new InputStreamReader(lecteur);
-        BufferedReader br = new BufferedReader(ipsr);
-        String ligne;
-        while ((ligne = br.readLine()) != null) {
-            jsonRaw += ligne + "\n";
-        }
-        br.close();
-        return Json.read(jsonRaw);
-    }
 
     public Json stopTap(Json params) {
         if (!params.has("name") || !params.get("name").isString()) {
@@ -204,7 +190,7 @@ public class TapsServices extends Service {
 
         Json basicConf = null;
         try {
-            basicConf = readJsonFile(idsconf + "/taps/basicNetworkConf.json");
+            basicConf = readJsonFromFile(idsconf + "/taps/basicNetworkConf.json");
             basicConf.at("id", name);
             basicConf.at("csl_node_ip", localIP);
             basicConf.at("csl_node_port", localPort);
@@ -214,7 +200,7 @@ public class TapsServices extends Service {
         }
 
         try {
-            basicConf = readJsonFile(idsconf + "/taps/basicProcessConf.json");
+            basicConf = readJsonFromFile(idsconf + "/taps/basicProcessConf.json");
             basicConf.at("id", name);
             for (Json jj : basicConf.at("modules").asJsonList()) {
                 if (jj.at("name").asString().contentEquals("module2")) {
@@ -499,7 +485,7 @@ public class TapsServices extends Service {
      */
     public Json getTapConf(Json params) {
 //        try {
-//            return readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+//            return readJsonFromFile(idsconf + "/taps/TapsConfiguration.json");
 //        } catch (IOException e) {
 //            // e.printStackTrace();
 //        }
@@ -524,7 +510,7 @@ public class TapsServices extends Service {
      */
     public Json getTapConf_old(Json params) {
         try {
-            return readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+            return readJsonFromFile(idsconf + "/taps/TapsConfiguration.json");
         } catch (IOException e) {
             // e.printStackTrace();
         }
@@ -589,7 +575,7 @@ public class TapsServices extends Service {
                 try {
                     Json includes = j.at("includes");
                     ArrayList<String> ruleFiles = new ArrayList<String>();
-                    Json includesRaw = readJsonFile(idsconf + "/taps/includesConfiguration.json");
+                    Json includesRaw = readJsonFromFile(idsconf + "/taps/includesConfiguration.json");
                     for (Json jj : includesRaw.asJsonList()) {
                         for (Json jjj : includes.asJsonList()) {
                             if (jjj.asInteger() == jj.at("id").asInteger()) {
@@ -921,7 +907,7 @@ public class TapsServices extends Service {
         Tap tap;
         HashMap<String, Tap> activeTaps = new HashMap<>();
         try {
-            conf = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+            conf = readJsonFromFile(idsconf + "/taps/TapsConfiguration.json");
             if (conf.isArray()) {
                 configuredTaps = (ArrayList<Json>) conf.asJsonList();
             } else {
@@ -1238,7 +1224,7 @@ public class TapsServices extends Service {
                     @Override
                     public Json exec(Json params) {
                         try {
-                            return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
+                            return readJsonFromFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
                         } catch (IOException e) {
                             // e.printStackTrace();
                         }
@@ -1251,7 +1237,7 @@ public class TapsServices extends Service {
             @Override
             public Json exec(Json params) {
                 try {
-                    return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
+                    return readJsonFromFile(idsconf + "/taps/" + params.at("name").asString() + "/tapProcess.json");
                 } catch (IOException e) {
                     // e.printStackTrace();
                 }
@@ -1263,7 +1249,7 @@ public class TapsServices extends Service {
             @Override
             public Json exec(Json params) {
                 try {
-                    return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
+                    return readJsonFromFile(idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
                 } catch (IOException e) {
                     // e.printStackTrace();
                 }
@@ -1279,7 +1265,7 @@ public class TapsServices extends Service {
                 Json result = getSuricataConf(params);
                 result.set("result", result.at("result").asString().substring(0, 63550));
                 return result;
-                // return readJsonFile(idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
+                // return readJsonFromFile(idsconf + "/taps/" + params.at("name").asString() + "/tapReseau.json");
                    /* } catch (IOException e) {
                         // e.printStackTrace();
                     }
@@ -1545,12 +1531,12 @@ public class TapsServices extends Service {
             public Json exec(Json params) {
                 try {
                     Json includes = Json.object();
-                    Json taps = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+                    Json taps = readJsonFromFile(idsconf + "/taps/TapsConfiguration.json");
 
                     for (Json k : taps.asJsonList()) {
                         Json includesRaw = Json.object();
                         ArrayList<Json> includesRawClone = new ArrayList<Json>();
-                        includesRaw = readJsonFile(idsconf + "/taps/includesConfiguration.json");
+                        includesRaw = readJsonFromFile(idsconf + "/taps/includesConfiguration.json");
                         for (Json j : includesRaw.asJsonList()) {
                             for (Json r : k.at("includes").asJsonList()) {
                                 if (j.at("id").asInteger() == r.asInteger()) {
@@ -1579,12 +1565,12 @@ public class TapsServices extends Service {
             public Json exec(Json params) {
                 try {
                     Json includes = Json.object();
-                    Json taps = readJsonFile(idsconf + "/taps/TapsConfiguration.json");
+                    Json taps = readJsonFromFile(idsconf + "/taps/TapsConfiguration.json");
 
                     for (Json k : taps.asJsonList()) {
                         Json includesRaw = Json.object();
                         ArrayList<Json> includesRawClone = new ArrayList<Json>();
-                        includesRaw = readJsonFile(idsconf + "/taps/includesConfiguration.json");
+                        includesRaw = readJsonFromFile(idsconf + "/taps/includesConfiguration.json");
                         for (Json j : includesRaw.asJsonList()) {
                             for (Json r : k.at("includes").asJsonList()) {
                                 if (j.at("id").asInteger() == r.asInteger()) {
@@ -1613,7 +1599,7 @@ public class TapsServices extends Service {
             @Override
             public Json exec(Json params) {
                 try {
-                    return readJsonFile("./datafile/world.json");
+                    return readJsonFromFile("./datafile/world.json");
                 } catch (IOException e) {
                 }
                 return Json.object();

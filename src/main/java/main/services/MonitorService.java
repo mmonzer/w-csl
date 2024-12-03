@@ -1,6 +1,5 @@
 package main.services;
 
-import com.csl.core.CSLContext;
 import com.csl.ids.Tap;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
@@ -9,16 +8,12 @@ import main.services.endpoints.MonitorEndpoints;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import static main.services.TapsServices.configureTaps;
-import static main.services.TapsServices.readJsonFile;
 
 public class MonitorService extends Service {
-	static ArrayList<Json> configuredTaps;
 	static HashMap<String, Tap> activeTaps = new HashMap<>();
-	static String idsconf;
 
 	/**
 	 * Default constructor of the Monitor service.

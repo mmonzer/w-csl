@@ -95,7 +95,7 @@ public class Help51ApiDBJson {
             final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(s));
 
             // add listener
-            clientEndPoint.addMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
+            clientEndPoint.setMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
                 public void handleMessage(String message) {
                     Json j = Json.read(message);
                     System.out.println("Database:" + j);

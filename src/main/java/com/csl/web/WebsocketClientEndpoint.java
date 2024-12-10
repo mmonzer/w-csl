@@ -56,7 +56,6 @@ public class WebsocketClientEndpoint {
     public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
         this.endpointURI = endpointURI;
         WebsocketClientEndpoint.apiKey = apiKey;
-        connect();
     }
 
     /**
@@ -106,7 +105,7 @@ public class WebsocketClientEndpoint {
      *
      * @param msgHandler
      */
-    public void addMessageHandler(MessageHandler msgHandler) {
+    public void setMessageHandler(MessageHandler msgHandler) {
         this.messageHandler = msgHandler;
     }
 

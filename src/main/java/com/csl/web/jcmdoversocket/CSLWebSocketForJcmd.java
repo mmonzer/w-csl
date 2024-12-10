@@ -2,14 +2,12 @@ package com.csl.web.jcmdoversocket;
 
 import com.csl.logger.LoggerConstants;
 import com.csl.logger.LoggerInterfaces;
-import com.csl.util.ThreadUtils;
 import com.ucsl.json.Json;
 import jakarta.websocket.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -168,7 +166,7 @@ public class CSLWebSocketForJcmd {
      *
      * @param message The incoming WebSocket message as a string.
      */
-    synchronized public static void messageArrived(String message) {
+    public static synchronized void messageArrived(String message) {
         try {
             Json jsonMessage = Json.read(message);
             String uuid = jsonMessage.get(ID).asString();

@@ -5,8 +5,11 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
+import com.csl.web.ApiHandler;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -53,6 +56,8 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
     private final Map<String, IMqttMessageListener> topics = new HashMap<>();     // The topic we should subscribe to, together with callbacks to execute when a message is received on that topic
     private final MqttConnectOptions mqttConnectOptions;
     private final ScheduledExecutorService mqttConnectionAttempts;
+
+    private static final Logger logger = LoggerFactory.getLogger(CSLMqttBrokerHandler.class);
 
     /**
      * Create a new {@link CSLMqttBrokerHandler} from the project's configuration.
@@ -124,7 +129,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
     private void publish(String topic, String message) throws MqttException {
         String fullTopic = genFullTopic(topic);
         if (mqttClient != null && mqttClient.isConnected()) {
-            mqttClient.publish(fullTopic, new MqttMessage(message.getBytes()));
+             mqttClient.publish(fullTopic, new MqttMessage(message.getBytes()));
         }
     }
 
@@ -158,7 +163,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
                 }
             } catch (MqttException e) {
                 mqttClient = null;
-                System.err.println("Could not connect to MQTT Broker at " + brokerUri);
+                logger.warn("Could not connect to MQTT Broker at " + brokerUri);
             }
         }
     }
@@ -189,7 +194,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
                 }
             });
         } catch (IOException e) {
-            System.err.println("Could not delete MQTT lock files");
+            logger.error("Could not delete MQTT lock files");
         }
     }
 }

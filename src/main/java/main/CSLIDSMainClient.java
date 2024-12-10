@@ -89,7 +89,7 @@ public class CSLIDSMainClient {
         }
     }
 
-    /***
+    /**
      * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
      * The messages received from the server are expected to follow the following format:
      * {
@@ -107,26 +107,11 @@ public class CSLIDSMainClient {
         try {
             String webSocketUrl = getWebSocketUrl();
 
-            logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", webSocketUrl, apiKey);
-
             clientEndPoint = new WebsocketClientEndpoint(new URI(webSocketUrl), apiKey);
 
-            if (!clientEndPoint.isOpen()) {
-                logger.warn("Failed to connect to the server, retrying...");
-                return;
-            } else {
-                logger.info("Successfully connected to the server");
-            }
-
             // Add message handler
-            clientEndPoint.addMessageHandler(messageString -> handleServerMessage(messageString.trim()));
-
-            // Register available APIs with the server
-            apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessage("api:" + apiName));
-
-            Thread.sleep(100);
-        } catch (InterruptedException ex) {
-            logger.error("InterruptedException: {}", ex.getMessage(), ex);
+            clientEndPoint.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
+            connectToServer();
         } catch (URISyntaxException ex) {
             logger.error("URISyntaxException: {}", ex.getMessage(), ex);
         }
@@ -144,7 +129,7 @@ public class CSLIDSMainClient {
                 : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
     }
 
-    /***
+    /**
      * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
      * The messages received from the server are expected to follow the following format:
      * {

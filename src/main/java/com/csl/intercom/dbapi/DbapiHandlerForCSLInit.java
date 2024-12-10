@@ -2,6 +2,7 @@ package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
+import com.csl.exceptions.ServiceNotReadyException;
 import com.csl.intercom.dbapi.enums.DbapiEndpointForCSLScan;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.util.Pair;
@@ -29,7 +30,7 @@ public class DbapiHandlerForCSLInit extends DbapiHandler {
         super(moduleName, config);
     }
 
-    public void sendCommandsList(List<ApiCommands> apiCommandsList) throws Exception {
+    public void sendCommandsList(List<ApiCommands> apiCommandsList) throws ServiceNotReadyException {
         Json requestContents = Json.object();
         apiCommandsList.stream()
                 .map(apiCommands -> new Pair<>(apiCommands.getName(), apiCommands.getListOfCommandPrivileges()))
@@ -40,16 +41,10 @@ public class DbapiHandlerForCSLInit extends DbapiHandler {
                     return new Pair<>(name, result);
                 }))
                 .forEach(pair -> requestContents.set(pair.getFirst(), pair.getSecond()));
-        logger.debug("Sending commands to DB-API: " + requestContents.toString());
-//        Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.JAVACOMM_SEND_COMMANDS)
-//                .content(new StringContentProvider(requestContents.toString()), JSON_FORMAT);
-//        ContentResponse response = request.send();
-//        if (response.getStatus() != 200) {
-//            throw new Exception("Error sending commands to dbapi: got unexpected status " + response.getStatus());
-//        }
+        logger.debug("Sending commands to DB-API: {}", requestContents.toString());
         JsonApiResponse response = sendPost(DbapiEndpointForCSLScan.JAVACOMM_SEND_COMMANDS.getEndpoint(), requestContents);
         if (!response.isSuccess()) {
-            throw new Exception("Error sending commands to dbapi: got unexpected status " + response.getError());
+            throw new ServiceNotReadyException("Error sending commands to dbapi: got unexpected status " + response.getError());
         }
     }
 }

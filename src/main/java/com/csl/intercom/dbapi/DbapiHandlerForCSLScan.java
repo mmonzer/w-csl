@@ -821,7 +821,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public String getMqttTopicPrefix() {
         try {
             ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_MQTT_TOPIC_PREFIX.getEndpoint(), null, null);
-
+            if (response.getStatus()>=400) {
+                return "None";
+            }
             String result = response.getContentAsString();
             if (result == null || result.isEmpty()) {
                 return "None";

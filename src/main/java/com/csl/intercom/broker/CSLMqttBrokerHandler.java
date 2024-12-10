@@ -5,7 +5,6 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
-import com.csl.web.ApiHandler;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
@@ -97,8 +96,9 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
             try {
                 mqttConnectionAttempts.shutdown();
                 mqttClient.disconnect();
+                logger.info("MQTT client disconnected");
             } catch (MqttException e) {
-                e.printStackTrace(System.err);
+                logger.error(e.getMessage());
             }
         }
     }
@@ -109,8 +109,9 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         if (mqttClient != null && mqttClient.isConnected()) {
             try {
                 mqttClient.subscribe(fullTopic, callback);
+                logger.info("MQTT client subscribed to {}", topic);
             } catch (MqttException e) {
-                e.printStackTrace(System.err);
+                logger.error(e.getMessage());
             }
         }
     }
@@ -124,28 +125,6 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      */
     public void subscribeToTopic(Topic topic, Consumer<CSLMqttMessage> callback) {
         subscribeToTopic(topic.toString(), (s, message) -> callback.accept(CSLMqttMessage.parse(new String(message.getPayload()))));
-    }
-
-    private void publish(String topic, String message) throws MqttException {
-        String fullTopic = genFullTopic(topic);
-        if (mqttClient != null && mqttClient.isConnected()) {
-             mqttClient.publish(fullTopic, new MqttMessage(message.getBytes()));
-        }
-    }
-
-    /**
-     * Publish a message to a topic.
-     *
-     * @param topic   The {@link Topic} on which to send the message.
-     * @param message The contents of the message.
-     * @throws MqttException If the sending failed.
-     */
-    public void publish(Topic topic, CSLMqttMessage message) throws Exception {
-        try {
-            publish(topic.toString(), message.toString());
-        } catch (MqttException e) {
-            throw new Exception("MQTT error: " + e.getMessage());
-        }
     }
 
     private String genFullTopic(String topic) {
@@ -162,8 +141,10 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
                     mqttClient.subscribe(topic.getKey(), topic.getValue());
                 }
             } catch (MqttException e) {
-                mqttClient = null;
-                logger.warn("Could not connect to MQTT Broker at " + brokerUri);
+                if (!"MqttException (0) - java.io.IOException: Already connected".equals(e.toString())) {
+                    mqttClient = null;
+                    logger.warn("Could not connect to MQTT Broker at {}", brokerUri);
+                }
             }
         }
     }

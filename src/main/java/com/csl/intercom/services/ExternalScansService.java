@@ -76,9 +76,9 @@ public class ExternalScansService {
         try {
             dbapiHandler.createOrUpdateExternalConnectionInfoTemplates(externalConnectionInfoTemplates);
         } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
-            logger.error("Error while handling external connection info templates", e);
+            logger.error("Error while handling external connection info templates : {}", e.getMessage());
         } catch (Exception e) {
-            logger.error("Unexpected error when handling established connection", e);
+            logger.error("Unexpected error when handling established connection : {}", e.getMessage());
         }
     }
 

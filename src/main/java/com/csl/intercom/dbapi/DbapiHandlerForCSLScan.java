@@ -293,6 +293,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 .map(Device::fromJson)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        // Note: although recommended to use .toList() instead of .collect(Collectors.toList()) the first one creates
+        // an immutable list, whereas the second one is not immutable, allowing adding connections afterwords (needed).
         return devices;
     }
 
@@ -311,6 +313,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             params.set("updated_at__gt", dateUtc.toString());
         }
         ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), params, null);
+        if (response.getStatus() >=400 ){
+            return new ArrayList<>();
+        }
         Json responseJson = Json.read(response.getContentAsString());
         return responseJson.asJsonList().stream()
                 .map(json -> Connection.fromDbapiJson(json, protocols))
@@ -464,6 +469,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         List<Connection> connections = new ArrayList<>();
         for (String id : ids) {
             ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.CONNECTIONS.getEndpoint(), object("id", String.valueOf(id)), null);
+
+            if (response.getStatus()>=400) {
+                continue;
+            }
+
             Json responseJson = Json.read(response.getContentAsString());
             Connection connection;
             if (responseJson.isArray()) {
@@ -489,6 +499,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public List<ConnectionProtocol> fetchDiscoveryProtocols() throws ExecutionException, InterruptedException, TimeoutException {
 
         ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DISCOVERY_PROTOCOLS.getEndpoint(), null, null);
+        if (response.getStatus()>=400){
+            return new ArrayList<>();
+        }
+
         return Json.read(response.getContentAsString()).asJsonList().stream()
                 .map(ConnectionProtocol::fromJson)
                 .collect(Collectors.toList());

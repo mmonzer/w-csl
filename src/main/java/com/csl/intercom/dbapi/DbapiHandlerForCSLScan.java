@@ -287,6 +287,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             params.set("updated_at__gt", dateUtc.toString());
         }
         ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DEVICES.getEndpoint(), params, null);
+
+        if (response.getStatus()>=400){
+            return new ArrayList<>();
+        }
+
         Json responseJson = Json.read(response.getContentAsString());
 
         List<Device> devices = responseJson.asJsonList().stream()

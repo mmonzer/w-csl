@@ -74,7 +74,7 @@ public class CSLIDSMainClient {
     private static final IAlertForwarder alertForwarder = alert -> {
         logger.debug("Forwarding alert:\n{}", alert);
         if (clientEndPoint != null && clientEndPoint.isOpen()) {
-            clientEndPoint.sendMessage("alert:" + alert);
+             clientEndPoint.sendMessage("alert:" + alert);
         }
     };
 
@@ -111,7 +111,7 @@ public class CSLIDSMainClient {
 
             // Add message handler
             clientEndPoint.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
-            connectToServer();
+             connectToServer();
         } catch (URISyntaxException ex) {
             logger.error("URISyntaxException: {}", ex.getMessage(), ex);
         }
@@ -151,8 +151,6 @@ public class CSLIDSMainClient {
         if (!clientEndPoint.isOpen()) {
             logger.warn("Failed to connect to the server, retrying...");
             return;
-        } else {
-            logger.info("Successfully connected to the server");
         }
 
         // register endpoints
@@ -231,7 +229,7 @@ public class CSLIDSMainClient {
                         connectToServer();
                     }
                 },
-                0, 1, TimeUnit.SECONDS,
+                1, 5, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
 
         // Keep-alive task
@@ -346,6 +344,7 @@ public class CSLIDSMainClient {
      */
     private static void sendApiCommandsToServer() {
         try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
+            //dbapiHandler.waitForDbapi(30, 2);
             dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
         } catch (Exception e) {
             logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);
@@ -364,4 +363,7 @@ public class CSLIDSMainClient {
             server.start();
         }
     }
+
+
+
 }

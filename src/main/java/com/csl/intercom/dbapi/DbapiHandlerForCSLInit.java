@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
@@ -45,6 +46,29 @@ public class DbapiHandlerForCSLInit extends DbapiHandler {
         JsonApiResponse response = sendPost(DbapiEndpointForCSLScan.JAVACOMM_SEND_COMMANDS.getEndpoint(), requestContents);
         if (!response.isSuccess()) {
             throw new ServiceNotReadyException("Error sending commands to dbapi: got unexpected status " + response.getError());
+        }
+    }
+
+    public boolean isDbapiConnected() {
+        String uri = "/auth/test_connection_with_apikey";
+        JsonApiResponse response = sendGet(uri, Json.object());
+         return response.isSuccess();
+    }
+
+    public void waitForDbapi(int timeoutSeconds, int retryIntervalSeconds) throws InterruptedException {
+        long startTime = System.currentTimeMillis();
+
+        try {
+            while (System.currentTimeMillis() - startTime < TimeUnit.SECONDS.toMillis(timeoutSeconds) && !this.isDbapiConnected()) {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(retryIntervalSeconds)); // Wait before retrying
+            }
+        } catch (InterruptedException e) {
+            logger.error("Dbapi did not start within {} seconds.", timeoutSeconds);
+            throw new InterruptedException("Dbapi did not start within "+timeoutSeconds+" seconds.");
+        }
+
+        if (!this.isDbapiConnected()) {
+            throw new IllegalStateException("Dbapi service did not start within " + timeoutSeconds + " seconds");
         }
     }
 }

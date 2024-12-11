@@ -7,6 +7,7 @@ import jakarta.websocket.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,7 +40,7 @@ public class WebsocketClientEndpoint {
             // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
             if (!connected) {
                 connected = true;
-                logger.info("Connected to websocket {}", endpointURI);
+                logger.info("Connected to WCSL websocket {}", endpointURI);
             }
         } catch (Exception e) {
             if (connected) {
@@ -65,10 +66,10 @@ public class WebsocketClientEndpoint {
      */
     @OnOpen
     public void onOpen(Session userSession) {
-        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opening websocket " + userSession.getRequestURI());
+        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opened websocket " + userSession.getRequestURI() +" : "+ userSession);
         this.userSession = userSession;
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
-        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout());
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() +" : "+ userSession);
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
@@ -83,8 +84,7 @@ public class WebsocketClientEndpoint {
      */
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI());
-        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI() + " User session:" + userSession + " Reason:" + reason.getReasonPhrase());
+        CSLNetworkLogger.warn(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI()+ " Reason:" + reason.getReasonPhrase() +" : "+ userSession);
         this.userSession = null;
     }
 
@@ -115,15 +115,31 @@ public class WebsocketClientEndpoint {
      * @param message
      */
     public void sendMessage(String message) {
+//        if (this.userSession == null) {
+//            throw new ConnectException("WCSL websocket not connected yet");
+//        }
         this.userSession.getAsyncRemote().sendText(message);
     }
+
+//    /**
+//     * Send a message.
+//     *
+//     * @param message
+//     */
+//    public void sendMessage(String message) {
+//        try {
+//            this.sendMessage(message);
+//        } catch (ConnectException e){
+//            logger.warn("Could not send message over websocket : {}", e.getMessage());
+//        }
+//    }
 
     /**
      * Message handler.
      *
      * @author Jiji_Sasidharan
      */
-    public static interface MessageHandler {
+    public interface MessageHandler {
 
         public void handleMessage(String message);
     }

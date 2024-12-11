@@ -207,4 +207,12 @@ public class CSLWebSocketForJcmd {
             logger.error("Interrupted while waiting for reconnection", e);
         }
 	}
+
+    public static String printSessionMap() {
+        return sessionMap.toString();
+    }
+
+    public static void clearSession() {
+        sessionMap.clear();
+    }
 }

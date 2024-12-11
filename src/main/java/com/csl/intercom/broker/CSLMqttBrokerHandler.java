@@ -131,20 +131,33 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         return organization + "/" + topic;
     }
 
+    /**
+     * Initializes the MQTT client with the configured server URI and the client ID
+     */
+    private void initializeMQTTClient() {
+        try (MemoryPersistence persistence = new MemoryPersistence()) {
+            removeLockFiles();
+            mqttClient = new MqttClient(brokerUri, CLIENT_ID + UUID.randomUUID(), persistence);
+        } catch (MqttException e) {
+            logger.warn("Could not initialize MQTT Client at {}", brokerUri);
+        }
+    }
+
+    /**
+     * Connects to MQTT server and initializes the client if needed.
+     */
     private void connectToMqttClientIfNecessary() {
-        if (mqttClient == null || !mqttClient.isConnected()) {
-            try (MemoryPersistence persistence = new MemoryPersistence()) {
-                removeLockFiles();
-                mqttClient = new MqttClient(brokerUri, CLIENT_ID + UUID.randomUUID(), persistence);
+        if (mqttClient == null) {
+            initializeMQTTClient();
+        }
+        if (mqttClient != null && !mqttClient.isConnected()) {
+            try {
                 mqttClient.connect(mqttConnectOptions);
                 for (Map.Entry<String, IMqttMessageListener> topic : topics.entrySet()) {
                     mqttClient.subscribe(topic.getKey(), topic.getValue());
                 }
             } catch (MqttException e) {
-                if (!"MqttException (0) - java.io.IOException: Already connected".equals(e.toString())) {
-                    mqttClient = null;
-                    logger.warn("Could not connect to MQTT Broker at {}", brokerUri);
-                }
+                logger.warn("Could not connect to MQTT Broker at {}", brokerUri);
             }
         }
     }

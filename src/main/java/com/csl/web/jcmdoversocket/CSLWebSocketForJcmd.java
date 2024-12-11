@@ -7,13 +7,13 @@ import jakarta.websocket.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.csl.logger.CSLNetworkLogger.*;
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -36,6 +36,7 @@ public class CSLWebSocketForJcmd {
 
     // Concurrent map to manage WebSocket sessions by API name
     static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
+    private static final AtomicBoolean connected = new AtomicBoolean(false);
 
     // Map to keep track of pending messages and their status
     static Map<String, CompletableFuture<Json>> pendingMessages = new ConcurrentHashMap<>();
@@ -214,5 +215,24 @@ public class CSLWebSocketForJcmd {
 
     public static void clearSession() {
         sessionMap.clear();
+    }
+
+    public static void startKeepAlive() {
+        connected.set(true);
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> {
+            if (connected.get()) {
+                for (Session session : new HashSet<>(sessionMap.values())) {
+                    if (session.isOpen()) {
+                        sendMessage(session, "keepalive");
+                    }
+                }
+            }
+
+        }, 0, 30, TimeUnit.SECONDS);
+    }
+
+    public static void stopKeepAlive() {
+        connected.set(false);
     }
 }

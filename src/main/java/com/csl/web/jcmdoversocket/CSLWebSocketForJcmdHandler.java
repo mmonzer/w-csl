@@ -27,6 +27,8 @@ public class CSLWebSocketForJcmdHandler {
 
 		this.session = session;
 
+		CSLWebSocketForJcmd.startKeepAlive();
+
 	}
 
     @OnClose
@@ -35,6 +37,7 @@ public class CSLWebSocketForJcmdHandler {
 		CSLWebSocketForJcmd.removeUser(session);
 
 		logger.error("MAP SESSION ON CLOSE : {}", CSLWebSocketForJcmd.printSessionMap());
+		CSLWebSocketForJcmd.stopKeepAlive();
 	}
 
     @OnMessage

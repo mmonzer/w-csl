@@ -2116,7 +2116,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 deletedMicrosoftKbsSynchronizationService.syncData();
                 logger.info("Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
             } catch (SynchronizationException e) {
-                logger.warn("Failed to synchronize CPE Items : {}", e.getMessage(), e);
+                logger.warn("Failed to synchronize CPE Items : {}", e.getMessage());
             }
         }
     }

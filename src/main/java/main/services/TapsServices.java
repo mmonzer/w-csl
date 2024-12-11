@@ -1618,8 +1618,6 @@ public class TapsServices extends Service {
                     Json.read("{\"cmd\":\"suricataGetLogFile\"}"));
         });
 
-        System.out.println("API commands operationnals");
-
         return true;
     }
 

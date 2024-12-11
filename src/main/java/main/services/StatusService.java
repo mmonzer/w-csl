@@ -41,7 +41,6 @@ public class StatusService extends Service {
      */
     @Override
     public boolean init() {
-        System.out.println("Initializing status service ...");
         notifier = CSLContext.getInstance().getStatusNotifier();
         notifier.setSendNotifications(Config.instance.Status.getSendNotifications());
 
@@ -61,7 +60,6 @@ public class StatusService extends Service {
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
 
-        System.out.println("Status service operational");
         return true;
     }
 }

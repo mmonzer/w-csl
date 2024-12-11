@@ -61,12 +61,12 @@ public class ExternalConnectionInfoSynchronizationService {
                     dbapiHandler.deleteExternalConnectionInfo(deletedConnectionInfo.getId());
                     scanApiHandler.deleteExternalConnectionInfo(deletedConnectionInfo.getId(), true);
                 } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
-                    logger.error("Error while deleting external connection info", e);
+                    logger.error("Error while deleting external connection info: {}", e.getMessage());
                 }
 
             });
         } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
-            logger.error("Error while synchronizing external connection infos", e);
+            logger.error("Error while synchronizing external connection infos: {}", e.getMessage());
         }
     }
 

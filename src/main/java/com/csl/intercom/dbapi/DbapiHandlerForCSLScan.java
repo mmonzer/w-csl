@@ -1440,7 +1440,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         try {
             logger.info("........uploadHttpTemplatesBsonFile...................");
             Path filePath = fileStorageService.getFilePath(exportQuery.getFilename());
+            logger.info("file name is : " + exportQuery.getFilename());
             if(filePath==null){
+                logger.info("File path is null");
                 notifyExportFinished(id, exportQuery);
             } else{
                 multiPart.addFilePart("file", exportQuery.getFilename(), new PathContentProvider(filePath), null);

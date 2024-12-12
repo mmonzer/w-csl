@@ -11,6 +11,7 @@ import com.csl.util.CorrelationUtils;
 import com.csl.util.JCmd;
 import com.csl.util.ThreadUtils;
 import com.csl.web.CSLHttpServerJetty;
+import com.csl.web.WebsocketClientEndpoint;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
@@ -18,7 +19,6 @@ import com.csl.web.websockets.IMessageBroadcaster;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.*;
-import com.csl.web.WebsocketClientEndpoint;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
@@ -74,7 +74,7 @@ public class CSLIDSMainClient {
     private static final IAlertForwarder alertForwarder = alert -> {
         logger.debug("Forwarding alert:\n{}", alert);
         if (clientEndPoint != null) {
-             clientEndPoint.sendMessageIfOpen("alert:" + alert);
+            clientEndPoint.sendMessageIfOpen("alert:" + alert);
         }
     };
 
@@ -93,13 +93,13 @@ public class CSLIDSMainClient {
      * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
      * The messages received from the server are expected to follow the following format:
      * {
-     *     api: <the service name>,
-     *     jcmd: {
-     *     		cmd: <command>,
-     *     		params: {
-     *				...
-     *            }
-     *     }
+     * api: <the service name>,
+     * jcmd: {
+     * cmd: <command>,
+     * params: {
+     * ...
+     * }
+     * }
      * }
      * NOTE that each message is handled by a new thread
      */
@@ -111,7 +111,7 @@ public class CSLIDSMainClient {
 
             // Add message handler
             clientEndPoint.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
-             connectToServer();
+            connectToServer();
         } catch (URISyntaxException ex) {
             logger.error("URISyntaxException: {}", ex.getMessage(), ex);
         }
@@ -133,13 +133,13 @@ public class CSLIDSMainClient {
      * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
      * The messages received from the server are expected to follow the following format:
      * {
-     *     api: <the service name>,
-     *     jcmd: {
-     *     		cmd: <command>,
-     *     		params: {
-     *				...
-     *            }
-     *     }
+     * api: <the service name>,
+     * jcmd: {
+     * cmd: <command>,
+     * params: {
+     * ...
+     * }
+     * }
      * }
      * NOTE that each message is handled by a new thread
      */
@@ -340,15 +340,35 @@ public class CSLIDSMainClient {
     }
 
     /**
-     * Sends the API commands to the server using the DbapiHandler.
+     * Sends the API commands to the server using the DbapiHandler. It retries to send the Commands every 5 seconds till
+     * the service is reachable. This method creates a thread that finishes when the command list is sent to the DBapi.
      */
-    private static void sendApiCommandsToServer() {
-        try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
-            //dbapiHandler.waitForDbapi(30, 2);
-            dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
-        } catch (Exception e) {
-            logger.error("Error while sending API commands to the server: {}", e.getMessage(), e);
-        }
+    private static synchronized void sendApiCommandsToServer() {
+        Object monitorObj = new Object(); // in static methods we need an object that works as lock for the synchronized thread block.
+
+        Executors.newSingleThreadExecutor().submit(() -> {
+            boolean areCommandSent = false;
+
+            while (!areCommandSent) {
+                // Try to send the commands
+                try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
+                    dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
+                    areCommandSent = true;
+                } catch (Exception e) {
+                    logger.error("Error while sending API commands to the server, retrying ...");
+                }
+
+                // Wait
+                synchronized (monitorObj) {
+                    try {
+                        monitorObj.wait(5);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -363,7 +383,4 @@ public class CSLIDSMainClient {
             server.start();
         }
     }
-
-
-
 }

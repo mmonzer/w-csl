@@ -346,6 +346,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 params.set(DELETED_DATE_GT, dateUtc.toString());
             }
             ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DELETED_DEVICES.getEndpoint(), params, null);
+            if (response.getStatus()>=400) {
+                return deletedDevices;
+            }
+
             Json responseJson = Json.read(response.getContentAsString());
             for (Json deletedDevice : responseJson.get(RESULTS).asJsonList()) {
                 String uuid = deletedDevice.get("object_id").asString();

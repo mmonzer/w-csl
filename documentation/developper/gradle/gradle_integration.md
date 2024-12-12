@@ -98,10 +98,10 @@ Le fichier **cacerts.jks** doit se trouver dans le répertoire `App`
 
 1. Créer un fichier **properties.gradle**, et y ajouter le code suivant pour réduire le temps de compilation :
     
-    ```Groovy
+    ```
     org.gradle.caching=true
     
-    org.gradle.jvmargs = -Dlogback.configurationFile=./src/main/resources/logback.xml -Djavax.net.ssl.trustStore=./cacerts.jks -Djavax.net.ssl.trustStorePassword=changeit
+    org.gradle.jvmargs=-Dlogback.configurationFile=./src/main/resources/logback.xml -Djavax.net.ssl.trustStore=./cacerts.jks -Djavax.net.ssl.trustStorePassword=changeit
     ```
     La deuxième commande est neccesaire si cette configuration est déjà faite dans la configuration de IntelliJ.
 

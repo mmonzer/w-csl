@@ -232,7 +232,7 @@ public enum DiscoveryEndpoints implements Endpoint {
      */
     DiscoveryEndpoints(String command, JsonCmdHelp help) {
         this.command = command;
-        this.help = (JsonCmdHelp) help;
+        this.help = help;
     }
 
     public String cmd() {

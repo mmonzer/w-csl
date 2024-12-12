@@ -79,11 +79,11 @@ public class RulesUtil {
                 if (e.getValue().isString()) value = e.getValue().asString();
                 else value = e.getValue().toString();
 
-                xtraOptions = xtraOptions + e.getKey().toString() + ":" + value;
+                xtraOptions = xtraOptions + e.getKey() + ":" + value;
             }
         }
 
-        if (xtraOptions.length() > 0) {
+        if (!xtraOptions.isEmpty()) {
             xtraOptions = SPACE + xtraOptions + SEMI_COL;
         }
 

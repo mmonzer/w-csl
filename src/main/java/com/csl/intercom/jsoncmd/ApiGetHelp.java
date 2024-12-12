@@ -63,8 +63,7 @@ public class ApiGetHelp {
                 "<body>\n" +
                 sbody +
                 "</body>\n" +
-                "</html>\n" +
-                "";
+                "</html>\n" ;
         return ns;
     }
 
@@ -149,7 +148,7 @@ public class ApiGetHelp {
 
                     //for (Json jp:jrow.get(JCmd.PARAMETERS).asJsonList()) {
                     for (Entry<String, Json> entry : jrow.get(JCmd.PARAMETERS).asJsonMap().entrySet()) {
-                        sx = sx + "&bull; " + entry.getKey() + " : " + "" + entry.getValue().asString() + "<br>";
+                        sx = sx + "&bull; " + entry.getKey() + " : " + entry.getValue().asString() + "<br>";
                     }
                     row = row + "<td>" + sx + "</td>";
                 } else {
@@ -267,14 +266,12 @@ public class ApiGetHelp {
                         "  background-color: #90D26D;\n" +
                         "  font-size: 150%; text-align:center;" +
                         "}\n" +
-                        "" +
                         ".helptable td.apidescription {\n" +
                         "  border: 1px solid #ddd;\n" +
                         "  padding: 8px;\n" +
                         "  background-color: #D9EDBF;\n" +
                         "  font-size: 100%; text-align:center;" +
                         "}\n" +
-                        "" +
                         ".helptable th {\n" +
                         "  padding-top: 12px;\n" +
                         "  padding-bottom: 12px;\n" +

@@ -89,7 +89,7 @@ public class HelpGenerator {
 			BufferedReader in = new BufferedReader(new InputStreamReader(response
 					.getEntity().getContent()));
 
-			StringBuffer sb = new StringBuffer("");
+			StringBuffer sb = new StringBuffer();
 			String line = "";
 			String NL = System.getProperty("line.separator");
 			while ((line = in.readLine()) != null) {

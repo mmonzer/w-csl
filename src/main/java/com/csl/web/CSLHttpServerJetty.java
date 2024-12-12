@@ -268,8 +268,8 @@ public class CSLHttpServerJetty {
                 Json params = data.get(JCmd.PARAMETERS);
 
                 if (cmd == null) {
-                    logger.warn("Invalid command: {}", cmd);
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid command: " + cmd);
+                    logger.warn("Invalid command: null");
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid command: null");
                     return;
                 }
 

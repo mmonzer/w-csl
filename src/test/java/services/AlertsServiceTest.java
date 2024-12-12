@@ -83,7 +83,7 @@ public class AlertsServiceTest {
                 "test_alert0", "test_alert1", "test_alert2", "op_alert", "get_list_added_to_model_alerts");
         //When
         boolean reussite = alertsService.init();
-        List<String> listOfCommands = ((ApiCommands) alertsService.getApiCommands()).getListOfCommands();
+        List<String> listOfCommands = alertsService.getApiCommands().getListOfCommands();
         //then
         assert(reussite);
         assert(listOfCommands.equals(listOfCommandsExpected));

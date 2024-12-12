@@ -50,7 +50,7 @@ public class FileUtils  {
             n++;
         }
         if (!file.exists()) file.mkdirs();
-        return file.getPath().toString();
+        return file.getPath();
     }
 
     public static Json readJsonFromFile(String dir, String fileName) throws IOException {
@@ -154,7 +154,7 @@ public class FileUtils  {
         try (FileWriter writer = new FileWriter(file)) {
             int size = arrData.size();
             for (int i = 0; i < size; i++) {
-                String str = arrData.get(i).toString();
+                String str = arrData.get(i);
                 writer.write(str);
                 if (i < size - 1) //This prevent creating a blank like at the end of the file**
                     writer.write("\n");

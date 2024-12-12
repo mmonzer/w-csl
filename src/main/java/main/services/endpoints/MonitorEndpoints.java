@@ -45,7 +45,7 @@ public enum MonitorEndpoints implements Endpoint {
      */
     MonitorEndpoints(String command, JsonCmdHelp help) {
         this.command = command;
-        this.help = (JsonCmdHelp) help;
+        this.help = help;
     }
 
     public String cmd() {

@@ -1,4 +1,4 @@
-package com.csl.autocrypt.tests;
+package autocrypt;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.ucsl.json.Json;

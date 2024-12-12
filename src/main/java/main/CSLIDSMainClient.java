@@ -343,7 +343,7 @@ public class CSLIDSMainClient {
      * Sends the API commands to the server using the DbapiHandler. It retries to send the Commands every 5 seconds till
      * the service is reachable. This method creates a thread that finishes when the command list is sent to the DBapi.
      */
-    private static synchronized void sendApiCommandsToServer() {
+    private static void sendApiCommandsToServer() {
         Object monitorObj = new Object(); // in static methods we need an object that works as lock for the synchronized thread block.
 
         Executors.newSingleThreadExecutor().submit(() -> {

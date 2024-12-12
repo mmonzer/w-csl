@@ -856,7 +856,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 return result;
             }
         } catch (Exception e) {
-            logger.warn("Could not get the MQTT topic prefix from DB-API :{}", e.getMessage());
+            logger.warn("Could not get the MQTT topic prefix from DB-API : {}", e.getMessage());
             return "None";
         }
     }

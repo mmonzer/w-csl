@@ -21,22 +21,17 @@ public class CSLWebSocketForJcmdHandler {
 		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket  : {}", session);
 		logger.trace("Connection : {}", session);
 
-
-		logger.error("MAP SESSION ON CONNECT : {}", CSLWebSocketForJcmd.printSessionMap());
 		CSLWebSocketForJcmd.clearSession();
 
 		this.session = session;
 
 		CSLWebSocketForJcmd.startKeepAlive();
-
 	}
 
     @OnClose
     public void onClose(CloseReason close) {
-		logger.info("Disconnected from CSL-Client websocket : {}", close.getReasonPhrase()+"  : "+ session);
+		logger.info("Disconnected from CSL-Client websocket : {}", close.getReasonPhrase());
 		CSLWebSocketForJcmd.removeUser(session);
-
-		logger.error("MAP SESSION ON CLOSE : {}", CSLWebSocketForJcmd.printSessionMap());
 		CSLWebSocketForJcmd.stopKeepAlive();
 	}
 

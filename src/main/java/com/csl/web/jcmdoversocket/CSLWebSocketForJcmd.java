@@ -38,6 +38,10 @@ public class CSLWebSocketForJcmd {
     static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
     private static final AtomicBoolean connected = new AtomicBoolean(false);
 
+    static {
+        startKeepAliveThread();
+    }
+
     // Map to keep track of pending messages and their status
     static Map<String, CompletableFuture<Json>> pendingMessages = new ConcurrentHashMap<>();
 
@@ -209,16 +213,31 @@ public class CSLWebSocketForJcmd {
         }
     }
 
-    public static String printSessionMap() {
-        return sessionMap.toString();
-    }
-
+    /**
+     * Clears the session map for the websocket. It may cause the conflict when rebooting CSL
+     */
     public static void clearSession() {
         sessionMap.clear();
     }
 
+    /**
+     * Sets the keep alive thread to send keep alive messages
+     */
     public static void startKeepAlive() {
         connected.set(true);
+    }
+
+    /**
+     * Unsets the keep alive thread to send keep alive messages
+     */
+    public static void stopKeepAlive() {
+        connected.set(false);
+    }
+
+    /**
+     * Starting keep alive thread in the server-side
+     */
+    private static void startKeepAliveThread() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() -> {
             if (connected.get()) {
@@ -228,10 +247,6 @@ public class CSLWebSocketForJcmd {
                     }
                 }
             }
-        }, 0, 30, TimeUnit.SECONDS);
-    }
-
-    public static void stopKeepAlive() {
-        connected.set(false);
+        }, 0, 5, TimeUnit.SECONDS);
     }
 }

@@ -81,7 +81,6 @@ public class FileStorageService {
      * @return The path for the given filename.
      */
     public Path getFilePath(String filename) {
-        logger.info("...........Getting file path for:........." + filename);
         Path filepath = rootLocation.resolve(filename);
         if (Files.exists(filepath)) {
             return filepath;

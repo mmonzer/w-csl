@@ -1435,10 +1435,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     synchronized public void uploadHttpTemplatesBsonFile(int id, ExportQuery exportQuery) {
-        logger.info("..........................................uploadHttpTemplatesBsonFile..........................................");
         MultiPartContentProvider multiPart = new MultiPartContentProvider();
         try {
-            logger.info("........uploadHttpTemplatesBsonFile...................");
             Path filePath = fileStorageService.getFilePath(exportQuery.getFilename());
             logger.info("file name is : " + exportQuery.getFilename());
             if(filePath==null){
@@ -1455,19 +1453,15 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             throw new RuntimeException(e);
         }
         multiPart.close();
-        logger.info("........Preparing to send file to DB-API................");
         Request request = createDbApiRequestWithCustomContentType("POST", DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint(), multiPart.getContentType());
         request.content(multiPart);
         // TODO : this multipart request must be sent with a synchronized method, because the x-correlation-id may cause problems
         try {
-            logger.info("........Sending file to DB-API................");
             ContentResponse response = request.send();
             if (response.getStatus() >= 400) {
-                logger.info("I am in error block of uploadHttpTemplatesBsonFile method.");
                 logger.warn("Unexpected status code: {}", response.getStatus());
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            logger.info("I am in error block of uploadHttpTemplatesBsonFile method.");
             logger.error("Error sending file to DB-API", e);
         }
     }

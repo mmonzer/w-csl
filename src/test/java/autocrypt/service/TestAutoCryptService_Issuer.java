@@ -118,9 +118,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
     public void testImportIssuer_file500kB() throws Exception {
         // Define expected input/output of the mocked module
         StringBuilder file = new StringBuilder("This is a file.");
-        for (int i=0; i<15; i++) {
-            file.append(file);
-        }
+        file.append(String.valueOf(file).repeat(15));
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -180,9 +178,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
         StringBuilder file = new StringBuilder("This is a file.");
-        for (int i=0; i<16; i++) {
-            file.append(file);
-        }
+        file.append(String.valueOf(file).repeat(16));
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);

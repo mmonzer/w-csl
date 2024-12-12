@@ -7,7 +7,6 @@ import jakarta.websocket.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.ConnectException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,7 +21,7 @@ public class WebsocketClientEndpoint {
     private MessageHandler messageHandler;
     private URI endpointURI;
     private static String apiKey;
-    private boolean connected = false;
+    private boolean connectedFlagForLogs = false;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
     public static class Configurator extends ClientEndpointConfig.Configurator {
@@ -37,17 +36,9 @@ public class WebsocketClientEndpoint {
     public synchronized void connect() {
         try {
             this.userSession = container.connectToServer(this, endpointURI);
-
             // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
-            if (!connected) {
-                connected = true;
-                logger.info("Connected to WCSL websocket {}", endpointURI);
-            }
         } catch (Exception e) {
-            if (connected) {
-                connected = false;
-                logger.warn("Error connecting to websocket {}", endpointURI);
-            }
+            logger.warn("Exception occurred when connecting to websocket {} : {}", endpointURI, e.getMessage());
         }
     }
 
@@ -68,13 +59,16 @@ public class WebsocketClientEndpoint {
     @OnOpen
     public void onOpen(Session userSession) {
         CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opened websocket " + userSession.getRequestURI() +" : "+ userSession);
+        logger.info("Connected to WCSL websocket {}", endpointURI);
         this.userSession = userSession;
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
         CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() +" : "+ userSession);
 
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Sending message to websocket " + dtf.format(now));
+
+
+//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+//        LocalDateTime now = LocalDateTime.now();
+//        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Sending message to websocket " + dtf.format(now));
     }
 
     /**
@@ -87,6 +81,17 @@ public class WebsocketClientEndpoint {
     public void onClose(Session userSession, CloseReason reason) {
         CSLNetworkLogger.warn(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI()+ " Reason:" + reason.getReasonPhrase() +" : "+ userSession);
         this.userSession = null;
+    }
+
+    /**
+     * Callback hook for Connection close events.
+     *
+     * @param session the userSession that got an error.
+     * @param error      throwable
+     */
+    @OnError
+    public void onError(Session session, Throwable error) {
+        logger.error("Error on websocket {} : {}", session, error.getMessage());
     }
 
     /**

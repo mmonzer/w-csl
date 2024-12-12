@@ -46,6 +46,9 @@ public class CSLIDSMainClient {
     private static int serverPort = 8000;
     private static boolean useSsl = false;
 
+    private static final Object lock1 = new Object();
+    private static final Object lock2 = new Object();
+
     // WebSocket client endpoint
     private static WebsocketClientEndpoint clientEndPoint = null;
 
@@ -217,16 +220,18 @@ public class CSLIDSMainClient {
      */
     public static void openWsConnectionWithCSLServer() {
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-
         initWebSocketClient();
 
         // Reconnect task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 executorService,
-                () -> {
-                    boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
-                    if (reconnect) {
-                        connectToServer();
+                () ->  {
+                    synchronized (lock1) {
+                        boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
+
+                        if (reconnect) {
+                            connectToServer();
+                        }
                     }
                 },
                 0, 5, TimeUnit.SECONDS,
@@ -235,8 +240,10 @@ public class CSLIDSMainClient {
         // Keep-alive task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
                 () -> {
-                    if (clientEndPoint != null) {
-                        clientEndPoint.sendMessageIfOpen("keep alive");
+                    synchronized(lock2) {
+                        if (clientEndPoint != null) {
+                            clientEndPoint.sendMessageIfOpen("keep alive");
+                        }
                     }
                 },
                 1, 5, TimeUnit.SECONDS,

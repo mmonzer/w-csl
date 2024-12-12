@@ -35,6 +35,11 @@ public class CSLWebSocketForJcmdHandler {
 		CSLWebSocketForJcmd.stopKeepAlive();
 	}
 
+	@OnError
+	public void onError(Session session, Throwable error) {
+		logger.error("Error on websocket {} : {}", session, error.getMessage());
+	}
+
     @OnMessage
     public void onMessage(String message) {
 		message=message.trim();

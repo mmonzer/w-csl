@@ -192,6 +192,8 @@ public class ImportExportBsonService {
         }
 
         ExportQuery exportQuery = exportTasks.get(id);
+        logger.info("exportQuery: {}", exportQuery);
+        logger.info("exportQuery status: {}", exportQuery.getStatus());
         MDC.put(LoggerConstants.X_CORRELATION_ID, exportQuery.getXCorrelationId()); // TODO: cleaning
         if (ExportQueryStatus.IN_PROGRESS_STATUSES.contains(exportQuery.getStatus())) {
             logger.debug("handleExportTask: export in progress: {}", exportQuery.getStatus());
@@ -211,8 +213,10 @@ public class ImportExportBsonService {
                 this.dbapiHandler.notifyExportFinished(id, exportQuery);
                 this.fileStorageService.deleteFile(exportQuery.getFilename());
             } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                logger.info("............ Error downloading file: ............");
                 logger.error("handleExportTask: error downloading file: {}", exportQuery.getFilename(), e);
             } catch (Exception e) {
+                logger.info("............ Error uploading file: ............");
                 logger.error("handleExportTask: error uploading file: {}", exportQuery.getFilename(), e);
             }
             this.exportTasks.remove(id);

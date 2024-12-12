@@ -11,13 +11,11 @@ import java.util.concurrent.BlockingQueue;
 public class CSLUDPDataProcessor implements Runnable {
     private final BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue;
     CSLFlowManager flowManager;
-    private boolean traceAllMessages = false;
     boolean interrupted = false;
 
-    public CSLUDPDataProcessor(CSLFlowManager fw, BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue, boolean traceAllMessages) {
+    public CSLUDPDataProcessor(CSLFlowManager fw, BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue) {
         this.messageQueue = messageQueue;
         this.flowManager = fw;
-        this.traceAllMessages = traceAllMessages;
     }
 
     public void stop() {

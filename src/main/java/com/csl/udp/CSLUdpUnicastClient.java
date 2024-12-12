@@ -37,7 +37,7 @@ public class CSLUdpUnicastClient implements Runnable {
      * @param messageQueue list to add the incoming messages
      * @param traceAll     true if we want to have the incoming messages written on the terminal.
      */
-    public CSLUdpUnicastClient(String ip, int port, BlockingQueue<CorrelatedMessage> messageQueue, boolean traceAll) {
+    public CSLUdpUnicastClient(String ip, int port, BlockingQueue<CorrelatedMessage> messageQueue) {
         this.ip = ip;
         this.port = port;
         this.messageQueue = messageQueue;

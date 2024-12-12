@@ -53,11 +53,6 @@ public class CSLUDPServer {
     private boolean started = false;
 
     /**
-     * Whether the server should trace all messages
-     */
-    private boolean traceAllMessages = false;
-
-    /**
      * Datagram socket
      */
     DatagramSocket dsocket = null;
@@ -80,8 +75,6 @@ public class CSLUDPServer {
         }
 
         if (!config.getOn()) return;
-
-        traceAllMessages = config.getTraceAllMessages();
 
         initialized = true;
 
@@ -167,7 +160,7 @@ public class CSLUDPServer {
 
         if (flowManager == null) {
 
-            flowManager = new CSLFlowManager(maxflows, maxsize, traceAllMessages);
+            flowManager = new CSLFlowManager(maxflows, maxsize);
         }
         return flowManager;
     }

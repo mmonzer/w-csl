@@ -27,7 +27,6 @@ public class CSLFlowManager {
 
     int maxflows = 10;
     int maxsize = 1000;
-    boolean traceAllMessages = true;
     CSLUDPDataProcessor dataProcessor = null;
     ExecutorService executorService = null;
     ActivityMonitor activityMonitor = new ActivityMonitor();
@@ -40,10 +39,9 @@ public class CSLFlowManager {
     LinkedBlockingQueue<Json> inputflows;
     List<List<ICSLFlowListener>> listeners = new ArrayList<>();
 
-    public CSLFlowManager(int maxflows, int maxsize, boolean trace) {
+    public CSLFlowManager(int maxflows, int maxsize) {
         this.maxflows = maxflows;
         this.maxsize = maxsize;
-        this.traceAllMessages = trace;
 
         inputflows = new LinkedBlockingQueue<>();
     }
@@ -82,8 +80,8 @@ public class CSLFlowManager {
         BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue = new ArrayBlockingQueue<>(1200);
 
         // message queue is shared between UDP client and Data Processor
-        client = new CSLUdpUnicastClient(ip, port, messageQueue, traceAllMessages);
-        dataProcessor = new CSLUDPDataProcessor(this, messageQueue, traceAllMessages);
+        client = new CSLUdpUnicastClient(ip, port, messageQueue);
+        dataProcessor = new CSLUDPDataProcessor(this, messageQueue);
 
         /**
          * Execute the components as 3 different threads

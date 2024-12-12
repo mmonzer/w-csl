@@ -6,7 +6,7 @@ CACERTS_PATH=cacerts.jks
 PASS=changeit
 CERT_ALIAS=CSL_HMI
 
-rm $CACERT
+rm "$CACERT"
 
 echo "yes" | keytool -import -v -trustcacerts \
 -alias $CERT_ALIAS -file $CERT_FILE \

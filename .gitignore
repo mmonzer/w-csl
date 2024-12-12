@@ -24,7 +24,6 @@ mqtt_agent_concentrator*
 idslogs/
 cslconf/taps/
 
-CurrentIDSParams.json
 idsdata/
 
 # IntelliJ project manager ( deprecated? )

@@ -217,7 +217,7 @@ public class CSLWebSocketForJcmd {
      * Clears the session map for the websocket. It may cause the conflict when rebooting CSL
      */
     public static void clearSession() {
-        sessionMap.clear();
+        // sessionMap.clear();
     }
 
     /**

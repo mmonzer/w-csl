@@ -24,8 +24,7 @@ public class Test04InterProcessCommunicationA {
 		api.registerCmd("test", params -> {
             // TODO Auto-generated method stub
             int x=params.get("x").asInteger();
-            Json result=Json.object().set("value",x/2);
-            return result;
+            return Json.object().set("value",x/2);
         });
 		
 		imcm.registerAPI(api);

@@ -140,10 +140,9 @@ public class TapsServices extends Service {
             }
         }
         SshUtils ssh = new SshUtils(id, password, ip, port/*,knownHostFilePath*/);
-        String command = CLEAR_SURICATA_LOG;
         String output = null;
         try {
-            output = ssh.remoteExec(command);
+            output = ssh.remoteExec(CLEAR_SURICATA_LOG);
         } catch (JSchException | IOException e) {
             // e.printStackTrace();
         }
@@ -785,10 +784,9 @@ public class TapsServices extends Service {
             }
         }
         SshUtils ssh = new SshUtils(id, password, ip, port/*,knownHostFilePath*/);
-        String command = RELOAD_RULES;
         String output = null;
         try {
-            output = ssh.remoteExec(command);
+            output = ssh.remoteExec(RELOAD_RULES);
         } catch (JSchException | IOException e) {
             // e.printStackTrace();
         }
@@ -816,8 +814,7 @@ public class TapsServices extends Service {
 
     public String getTapName(Json j) {
 
-        String n = JsonUtil.getStringFromJson(j, "name", "");
-        return n;
+        return JsonUtil.getStringFromJson(j, "name", "");
     }
 
     public String tapNameHasError(Json j) {

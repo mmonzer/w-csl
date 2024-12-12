@@ -47,8 +47,7 @@ public class JsonUtil {
     }
 
     public static Json getJson(Json j, String propName) {
-        Json v = findChild(j, propName);
-        return v;
+        return findChild(j, propName);
     }
 
     public static Json findChild(Json j, String path) {

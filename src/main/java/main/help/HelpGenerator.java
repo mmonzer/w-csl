@@ -89,24 +89,21 @@ public class HelpGenerator {
 			BufferedReader in = new BufferedReader(new InputStreamReader(response
 					.getEntity().getContent()));
 
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			String line = "";
-			String NL = System.getProperty("line.separator");
+			String lineSeparator = System.lineSeparator();
 			while ((line = in.readLine()) != null) {
-				sb.append(line + NL);
+				sb.append(line).append(lineSeparator);
 			}
 			in.close();
 
 			String  result = sb.toString();
-			Json j2=Json.read(result);
-			return j2;
+			return Json.read(result);
 
 		} catch (IOException e) {
-			
-			// e.printStackTrace();
+			return Json.object();
 		}
 
-		return Json.object();
 	}
 
 	public Json readObjectFromDatabase(String name) {

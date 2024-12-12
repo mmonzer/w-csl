@@ -78,8 +78,7 @@ public class Help51ApiDBJson {
 
             String result = sb.toString();
             System.out.println("Result:" + result);
-            Json j2 = Json.read(result);
-            return j2;
+            return Json.read(result);
         } catch (IOException e) {
             
             // e.printStackTrace();

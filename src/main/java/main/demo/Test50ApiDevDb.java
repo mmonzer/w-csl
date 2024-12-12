@@ -30,10 +30,7 @@ public class Test50ApiDevDb {
 	public Json exec(String cmd, Json params) {
 		params.set("user", "user1");
 
-		Json r=imcm.executeCommand("devdb", Json.object().set(JCmd.CMD, cmd).set(JCmd.PARAMETERS, params));
-
-
-		return r;
+		return imcm.executeCommand("devdb", Json.object().set(JCmd.CMD, cmd).set(JCmd.PARAMETERS, params));
 		
 	}
 	public Json exec(String cmd) {

@@ -46,8 +46,7 @@ public class CSLDemo01CoreCommands {
 			}
 			in.close();
 
-			String  result = sb.toString();
-			return result;
+            return sb.toString();
 			
 		} catch (IOException e) {
 			
@@ -80,16 +79,15 @@ public class CSLDemo01CoreCommands {
 			BufferedReader in = new BufferedReader(new InputStreamReader(response
 					.getEntity().getContent()));
 
-			StringBuffer sb = new StringBuffer("");
+			StringBuilder sb = new StringBuilder();
 			String line = "";
-			String NL = System.getProperty("line.separator");
+			String lineSeparator = System.lineSeparator();
 			while ((line = in.readLine()) != null) {
-				sb.append(line + NL);
+				sb.append(line).append(lineSeparator);
 			}
 			in.close();
 
-			String  result = sb.toString();
-		return result;
+            return sb.toString();
 
 		} catch (IOException e) {
 			

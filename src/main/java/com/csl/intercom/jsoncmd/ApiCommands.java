@@ -168,10 +168,9 @@ public class ApiCommands {
 
 //    @Override
     public Json execJcmd(Json jCmd) {
-        Json data = jCmd;
-        Json cmd = data.get(JCmd.CMD);
-        Json params = data.get(JCmd.PARAMETERS);
-        Json files = data.get("files");
+        Json cmd = jCmd.get(JCmd.CMD);
+        Json params = jCmd.get(JCmd.PARAMETERS);
+        Json files = jCmd.get("files");
 
         if (cmd == null) {
             logger.warn("Invalid JSON command: null");

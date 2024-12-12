@@ -172,7 +172,6 @@ public class SshUtils {
      * @throws JSchException
      */
     public void sendFile(String localFilePath, String distantFilePath) throws IOException, JSchException {
-        String lfile = localFilePath;
         String rfile = distantFilePath;
         boolean ptimestamp = false;
 
@@ -191,13 +190,13 @@ public class SshUtils {
             ////System.exit(0);
         }
 
-        File _lfile = new File(lfile);
+        File _lfile = new File(localFilePath);
         long filesize = _lfile.length();
         command = "C0644 " + filesize + " ";
-        if (lfile.lastIndexOf('/') > 0) {
-            command += lfile.substring(lfile.lastIndexOf('/') + 1);
+        if (localFilePath.lastIndexOf('/') > 0) {
+            command += localFilePath.substring(localFilePath.lastIndexOf('/') + 1);
         } else {
-            command += lfile;
+            command += localFilePath;
         }
         command += "\n";
         out.write(command.getBytes());
@@ -208,7 +207,7 @@ public class SshUtils {
 
         // send a content of lfile
         FileInputStream fis = null;
-        fis = new FileInputStream(lfile);
+        fis = new FileInputStream(localFilePath);
         byte[] buf = new byte[1024];
         while (true) {
             int len = fis.read(buf, 0, buf.length);
@@ -238,9 +237,7 @@ public class SshUtils {
      * @throws JSchException
      */
     public void getFile(String distantFilePath, String localFilePath) throws IOException, JSchException {
-        String lfile = localFilePath;
         String rfile = distantFilePath;
-        boolean ptimestamp = false;
         String prefix = null;
         FileOutputStream fos = null;
         // exec 'scp -f rfile' remotely
@@ -297,7 +294,7 @@ public class SshUtils {
             out.flush();
 
             // read a content of lfile
-            fos = new FileOutputStream(prefix == null ? lfile : prefix + file);
+            fos = new FileOutputStream(prefix == null ? localFilePath : prefix + file);
             int foo;
             while (true) {
                 if (buf.length < filesize) foo = buf.length;

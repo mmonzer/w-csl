@@ -80,8 +80,7 @@ public class JsonSelector extends ArrayList<JsonSelectorElement> {
             return -1;
         }
         try {
-            int d = Integer.parseInt(strNum);
-            return d;
+            return Integer.parseInt(strNum);
         } catch (NumberFormatException nfe) {
             return -1;
         }

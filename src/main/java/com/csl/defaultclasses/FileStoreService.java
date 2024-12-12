@@ -86,7 +86,6 @@ public class FileStoreService {
         String fdst = rootDir + ddst;
 
         File fileToMove = new File(fsrc);
-        boolean isMoved = fileToMove.renameTo(new File(fdst));
-        return isMoved;
+        return fileToMove.renameTo(new File(fdst));
     }
 }

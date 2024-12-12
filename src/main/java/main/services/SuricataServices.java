@@ -75,10 +75,9 @@ public class SuricataServices extends Service {
             }
         }
         SshUtils ssh = new SshUtils(id, password, ip, port);
-        String command = STOP_SURICATA;
         String output = null;
         try {
-            output = ssh.remoteExec(command);
+            output = ssh.remoteExec(STOP_SURICATA);
         } catch (JSchException | IOException e) {
             // e.printStackTrace();
         }
@@ -101,10 +100,9 @@ public class SuricataServices extends Service {
             }
         }
         SshUtils ssh = new SshUtils(id, password, ip, port);
-        String command = RELOAD_RULES;
         String output = null;
         try {
-            output = ssh.remoteExec(command);
+            output = ssh.remoteExec(RELOAD_RULES);
         } catch (JSchException | IOException e) {
             // e.printStackTrace();
         }

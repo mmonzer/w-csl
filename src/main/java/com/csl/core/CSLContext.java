@@ -54,8 +54,6 @@ public class CSLContext {
      */
     private CSLUDPServer cslUDPServer = null;
 
-    private final Map<String, Class<Module>> moduleClassList = new HashMap<>();
-
     private long initialTime = 0;
 
     @Getter
@@ -153,29 +151,6 @@ public class CSLContext {
      */
     public String buildFullPathInUserDir(String dir) {
         return JServiceLoader.buildFullPathInUserDir(dir);
-    }
-
-    /**
-     * Registers a module class with the given name.
-     *
-     * @param name The name of the module.
-     * @param c    The class of the module.
-     */
-    public void registerModuleClass(String name, Class<?> c) {
-        if (moduleClassList.get(name) != null) {
-            logger.error("Module {} already registered", name);
-            return;
-        }
-        moduleClassList.put(name, (Class<Module>) c);
-    }
-
-    /**
-     * Gets the time elapsed since the context was started.
-     *
-     * @return The time in milliseconds.
-     */
-    public long getTimeFromStartingTime() {
-        return getSystemCurrentTimeMillis() - initialTime;
     }
 
     /**

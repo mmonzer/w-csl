@@ -297,13 +297,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
         Json responseJson = Json.read(response.getContentAsString());
 
-        List<Device> devices = responseJson.asJsonList().stream()
+        // Note: although recommended to use .toList() instead of .collect(Collectors.toList()) the first one creates
+        // an immutable list, whereas the second one is not immutable, allowing adding connections afterwords (needed).
+        return responseJson.asJsonList().stream()
                 .map(Device::fromJson)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        // Note: although recommended to use .toList() instead of .collect(Collectors.toList()) the first one creates
-        // an immutable list, whereas the second one is not immutable, allowing adding connections afterwords (needed).
-        return devices;
     }
 
     /**

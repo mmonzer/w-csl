@@ -52,7 +52,7 @@ public class ApiGetHelp {
      */
     private String generatePage(String sbody, Json params) {
 
-        String ns = "<!DOCTYPE html>\n" +
+        return "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
                 "<style>\n" +
@@ -64,7 +64,6 @@ public class ApiGetHelp {
                 sbody +
                 "</body>\n" +
                 "</html>\n" ;
-        return ns;
     }
 
     /**
@@ -212,14 +211,8 @@ public class ApiGetHelp {
     }
 
     private Json getHelpInfoAsJson(String apiName, Json jparams) {
-        //Json jparams= Json.object();
         jparams.set("user", "user1");
-        //jparams.set("op", "LST_DEVICES");
-
-        Json r = JServiceLoader.getCSLInterModuleCommunicationManager().executeCommand(apiName, Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
-        //System.out.println(JsonUtil.prettyPrint(r));
-
-        return r;
+        return JServiceLoader.getCSLInterModuleCommunicationManager().executeCommand(apiName, Json.object().set(JCmd.CMD, "help").set(JCmd.PARAMETERS, jparams));
     }
 
     /**
@@ -243,8 +236,7 @@ public class ApiGetHelp {
         String sw = "width: 100%;";
         if (fixedWidth) sw = "width:170mm; table-layout:fixed";
 
-        String style2 =
-                ".helptable {\n" +
+        return ".helptable {\n" +
                         "  font-family: Arial, Helvetica, sans-serif; " + //font-size: 80%;\n" +
                         "  border-collapse: collapse;\n" +
                         //"  width: 100%;\n" +
@@ -279,8 +271,5 @@ public class ApiGetHelp {
                         "  background-color:  #2C7865;\n" +
                         "  color: white;\n" +
                         "}";
-
-
-        return style2;
     }
 }

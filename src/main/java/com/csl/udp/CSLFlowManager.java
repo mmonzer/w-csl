@@ -50,7 +50,7 @@ public class CSLFlowManager {
 
     public void addListener(int n, ICSLFlowListener l) {
         if ((n < 0) | (n >= maxflows)) {
-            logger.error("Invalid flow number " + n + " (max=" + maxflows + ")");
+            logger.error("Invalid flow number {} (max={})",n, maxflows );
         }
         listeners.get(n).add(l);
     }
@@ -244,10 +244,10 @@ public class CSLFlowManager {
             t = JsonUtil.getLongFromJson(j, "time", -1);
         }
         if (t < 0) {
-            logger.error("Invalid time in  :" + j);
+            logger.error("Invalid time in : {}",  j);
         } else {
             if (this.currentTime > t) {
-                logger.error("Invalid time in  :" + j + " t=" + t + "  before last time:" + currentTime);
+                logger.error("Invalid time in : {}, t={}  before last time : {}",j,t, currentTime);
             }
             this.currentTime = t;
         }

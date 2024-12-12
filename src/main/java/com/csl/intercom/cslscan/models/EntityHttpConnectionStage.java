@@ -184,16 +184,16 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
         stage.ipAddress = json.get(EntityHttpConnectionStageField.IP_ADDRESS.scanName()).asString();
         stage.port = json.get(EntityHttpConnectionStageField.PORT.scanName()).asString();
 
-        if (json.get(EntityHttpConnectionStageField.USERNAME.scanName()).isString() && !json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString().equals("")) {
+        if (json.get(EntityHttpConnectionStageField.USERNAME.scanName()).isString() && !json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString().isEmpty()) {
             stage.username = json.get(EntityHttpConnectionStageField.USERNAME.scanName()).asString();
         }
-        if (json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).isString() && !json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).asString().equals("")) {
+        if (json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).isString() && !json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).asString().isEmpty()) {
             stage.password = json.get(EntityHttpConnectionStageField.PASSWORD.scanName()).asString();
         }
-        if (json.get(EntityHttpConnectionStageField.REALM.scanName()).isString() && !json.get(EntityHttpConnectionStageField.REALM.scanName()).asString().equals("")) {
+        if (json.get(EntityHttpConnectionStageField.REALM.scanName()).isString() && !json.get(EntityHttpConnectionStageField.REALM.scanName()).asString().isEmpty()) {
             stage.realm = json.get(EntityHttpConnectionStageField.REALM.scanName()).asString();
         }
-        if (json.get(EntityHttpConnectionStageField.TOKEN.scanName()).isString() && !json.get(EntityHttpConnectionStageField.TOKEN.scanName()).asString().equals("")) {
+        if (json.get(EntityHttpConnectionStageField.TOKEN.scanName()).isString() && !json.get(EntityHttpConnectionStageField.TOKEN.scanName()).asString().isEmpty()) {
             stage.token = json.get(EntityHttpConnectionStageField.TOKEN.scanName()).asString();
         }
         stage.shouldDoARequest = json.get(EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.scanName()).asBoolean();

@@ -85,7 +85,7 @@ public class ImportExportBsonService {
      */
     public void startNewImportTask(HttpTemplateImportNotification query) {
         if (this.importTasks.containsKey(query.getId())) {
-            logger.debug("startNewImportTask: uuid already exists: " + query.getId());
+            logger.debug("startNewImportTask: uuid already exists: {}", query.getId());
             return;
         }
 
@@ -97,7 +97,7 @@ public class ImportExportBsonService {
             downloadedPath = this.dbapiHandler.downloadHttpTemplatesBsonFile(query);
             logger.debug("startNewImportTask: downloaded file: {}", query.getFileName());
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            logger.error("startNewImportTask: error downloading file: {}", query.getFileName(), e);
+            logger.error("startNewImportTask: error downloading file {} : {}", query.getFileName(), e.getMessage());
             return;
         }
         try {
@@ -233,7 +233,7 @@ public class ImportExportBsonService {
             importQuery.setStatus(status);
             handleImportTask(id);
         } else {
-            logger.debug("updateQueryStatus: uuid not found: " + uuid);
+            logger.debug("updateQueryStatus: uuid not found: {}", uuid);
         }
     }
 
@@ -250,7 +250,7 @@ public class ImportExportBsonService {
             exportQuery.setStatus(status);
             handleExportTask(id);
         } else {
-            logger.debug("updateExportQueryStatus: uuid not found: " + uuid);
+            logger.debug("updateExportQueryStatus: uuid not found: {}", uuid);
         }
     }
 

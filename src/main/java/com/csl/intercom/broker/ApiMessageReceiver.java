@@ -155,7 +155,7 @@ public class ApiMessageReceiver implements  MqttCallback {
 			if (isDebug()) logger.debug("message sent");
 		}
 		catch (Exception e) {
-			logger.error("Error while parsing message {}", payloadString, e);
+			logger.error("Error while parsing message {} : {}", payloadString, e.getMessage());
 		}
 	}
 
@@ -167,15 +167,15 @@ public class ApiMessageReceiver implements  MqttCallback {
 				connectClientToSend();
 			}
 
-			if (isDebug()) logger.debug("topic:"+topic);
+			if (isDebug()) logger.debug("topic : {}", topic);
 			String content = JsonUtil.prettyPrint(j);
 			MqttMessage message = new MqttMessage(content.getBytes());
 			message.setQos(qos);
 			clientToSend.publish(topic, message);
-			if (isDebug()) logger.debug("Message published "+content);
+			if (isDebug()) logger.debug("Message published : {}", content);
 
 		} catch(Exception me) {
-			logger.warn("Error while sending MQTT message", me);
+			logger.warn("Error while sending MQTT message : {}", me.getMessage());
 		}
 	}
 }

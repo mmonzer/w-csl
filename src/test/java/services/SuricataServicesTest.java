@@ -3,7 +3,6 @@ package services;
 import com.ucsl.json.Json;
 import main.services.SuricataServices;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 public class SuricataServicesTest {
     private SuricataServices suricataServices;

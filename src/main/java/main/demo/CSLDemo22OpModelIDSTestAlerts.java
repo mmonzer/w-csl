@@ -15,8 +15,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.ucsl.json.Json;
 
-import static com.csl.web.HTTPConstants.JSON_FORMAT;
-
 public class CSLDemo22OpModelIDSTestAlerts {
 
 	public static String getServerURL() {

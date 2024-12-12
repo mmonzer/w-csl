@@ -5,7 +5,6 @@ import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.ucsl.json.Json;
 import jakarta.websocket.Session;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;

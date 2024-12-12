@@ -81,7 +81,7 @@ public class ApiMessageSender implements MqttCallback {
 
     public void init() {
 
-        if (isShowInfo()) logger.info("Init sender api:" + api);
+        if (isShowInfo()) logger.info("Init sender api : {}", api);
         if (subscribed) close();
 
         try (MemoryPersistence persistence = new MemoryPersistence()){
@@ -110,9 +110,9 @@ public class ApiMessageSender implements MqttCallback {
                 clientToSend = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, new MemoryPersistence());
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
-            if (isDebug()) logger.debug("Connecting to broker: " + BROKER_TCP_LOCALHOST_1883);
+            if (isDebug()) logger.debug("Connecting to broker : {}", BROKER_TCP_LOCALHOST_1883);
             clientToSend.connect(connOpts);
-            if (isDebug()) logger.debug("Connected, topic=" + REQUEST_TOPIC + api);
+            if (isDebug()) logger.debug("Connected, topic : {}", REQUEST_TOPIC + api);
         } catch (MqttException me) {
             logger.error("Error while connecting to broker, reason {}, msg {}, loc {}, cause {}", me.getReasonCode(), me.getMessage(), me.getLocalizedMessage(), me.getCause(), me);
         }
@@ -160,7 +160,7 @@ public class ApiMessageSender implements MqttCallback {
     // listen the response to the request
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-        if (isDebug()) logger.debug("*************  message is : " + message);
+        if (isDebug()) logger.debug("*************  message is : {}",  message);
 
         String s = new String(message.getPayload());
 
@@ -212,7 +212,7 @@ public class ApiMessageSender implements MqttCallback {
             }
 
             if (fullMsg.has(RESPONSE)) {
-                if (isDebug()) logger.debug("*** " + fullMsg);
+                if (isDebug()) logger.debug("***  : {}",  fullMsg);
                 pendingMessages.remove(key);
                 Json rep = fullMsg.get(RESPONSE);
                 if (rep.has("result")) return rep.get("result");

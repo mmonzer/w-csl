@@ -264,8 +264,8 @@ public class SuricataServices extends Service {
         addCmd("newSuricata", new IJsonCmd() {
             @Override
             public Json exec(Json params) {
-                logger.debug("paramètres de newSuricata :" + params.toString());
-                logger.debug("nom utilisé :" + params.at("name").asString());
+                logger.debug("paramètres de newSuricata : {}", params.toString());
+                logger.debug("nom utilisé : {}", params.at("name").asString());
 
                 newSuricata(params.at("name").asString());
                 Json write = Json.object();

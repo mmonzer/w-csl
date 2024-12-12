@@ -8,7 +8,6 @@ import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import main.services.AlertsService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;

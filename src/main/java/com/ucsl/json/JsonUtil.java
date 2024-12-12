@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static com.csl.autocrypt.enums.AutocryptConstants.LIST_DELIMITER;
 

@@ -58,8 +58,8 @@ public class JsonUtil {
         path = path.replace(".", "/");
 
         String[] paths = path.split("/");
-        for (int i = 0; i < paths.length; i++) {
-            j = j.get(paths[i]);
+        for (String s : paths) {
+            j = j.get(s);
             if (j == null) return null;
         }
         return j;

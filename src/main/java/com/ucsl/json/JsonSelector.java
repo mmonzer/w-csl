@@ -51,12 +51,12 @@ public class JsonSelector extends ArrayList<JsonSelectorElement> {
     public JsonSelector parse(String s) {
 
         String[] tokens = s.split("\\.");
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i].trim();
+        for (String string : tokens) {
+            String token = string.trim();
             if (isNumeric(token)) {
-                this.add((getIntegerValue(tokens[i])));
+                this.add((getIntegerValue(string)));
             } else {
-                this.add(((tokens[i])));
+                this.add(string);
             }
         }
 

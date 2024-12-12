@@ -191,14 +191,13 @@ public class FileUtils  {
 
         String[] x = path.split(File.separator);
 
-        boolean absolute = false;
+        boolean absolute = path.startsWith(File.separator);
 
-        if (path.startsWith(File.separator)) absolute = true;
         String s = "";
-        for (int i = 0; i < x.length; i++) {
-            if (x[i].compareTo("..") != 0) {
+        for (String string : x) {
+            if (string.compareTo("..") != 0) {
                 if (!s.isEmpty()) s = s + File.separator;
-                s = s + sanitize(x[i]);
+                s = s + sanitize(string);
             }
         }
         if (absolute) s = File.separator + s;

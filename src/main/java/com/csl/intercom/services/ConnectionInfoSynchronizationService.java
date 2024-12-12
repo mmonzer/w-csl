@@ -48,7 +48,7 @@ public class ConnectionInfoSynchronizationService extends PaginatedSynchronizati
         try {
             this.protocols = dbapiHandler.fetchDiscoveryProtocols();
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            logger.error("Could not fetch discovery protocols", e);
+            logger.error("Could not fetch discovery protocols : {}", e.getMessage());
             this.protocols = null;
         }
     }

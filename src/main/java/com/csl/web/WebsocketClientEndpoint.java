@@ -37,6 +37,7 @@ public class WebsocketClientEndpoint {
     public synchronized void connect() {
         try {
             this.userSession = container.connectToServer(this, endpointURI);
+
             // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
             if (!connected) {
                 connected = true;
@@ -112,27 +113,22 @@ public class WebsocketClientEndpoint {
     /**
      * Send a message.
      *
-     * @param message
+     * @param message message to send
      */
     public void sendMessage(String message) {
-//        if (this.userSession == null) {
-//            throw new ConnectException("WCSL websocket not connected yet");
-//        }
         this.userSession.getAsyncRemote().sendText(message);
     }
 
-//    /**
-//     * Send a message.
-//     *
-//     * @param message
-//     */
-//    public void sendMessage(String message) {
-//        try {
-//            this.sendMessage(message);
-//        } catch (ConnectException e){
-//            logger.warn("Could not send message over websocket : {}", e.getMessage());
-//        }
-//    }
+    /**
+     * Send a message if the websocket is open
+     *
+     * @param message to send
+     */
+    public void sendMessageIfOpen(String message) {
+        if (isOpen()) {
+            this.sendMessage(message);
+        }
+    }
 
     /**
      * Message handler.

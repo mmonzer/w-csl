@@ -57,15 +57,15 @@ public class CSLIDSMainClient {
 
         @Override
         public void broadcastMessageString(String socketName, String message) {
-            if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                clientEndPoint.sendMessage("wss:" + socketName + ":" + message);
+            if (clientEndPoint != null) {
+                clientEndPoint.sendMessageIfOpen("wss:" + socketName + ":" + message);
             }
         }
 
         @Override
         public void broadcastMessageJson(String socketName, Json jsonMessage) {
-            if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                clientEndPoint.sendMessage("wsj:" + socketName + ":" + jsonMessage);
+            if (clientEndPoint != null) {
+                clientEndPoint.sendMessageIfOpen("wsj:" + socketName + ":" + jsonMessage);
             }
         }
     };
@@ -73,8 +73,8 @@ public class CSLIDSMainClient {
     // Alert forwarder for handling alerts
     private static final IAlertForwarder alertForwarder = alert -> {
         logger.debug("Forwarding alert:\n{}", alert);
-        if (clientEndPoint != null && clientEndPoint.isOpen()) {
-             clientEndPoint.sendMessage("alert:" + alert);
+        if (clientEndPoint != null) {
+             clientEndPoint.sendMessageIfOpen("alert:" + alert);
         }
     };
 
@@ -154,7 +154,7 @@ public class CSLIDSMainClient {
         }
 
         // register endpoints
-        apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessage("api:" + apiName));
+        apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessageIfOpen("api:" + apiName));
     }
 
     /**
@@ -202,7 +202,7 @@ public class CSLIDSMainClient {
                         .set("result", result);
 
                 logger.trace("Sending result: {}", resultMessageJson);
-                clientEndPoint.sendMessage("res:" + resultMessageJson);
+                clientEndPoint.sendMessageIfOpen("res:" + resultMessageJson);
                 CSLNetworkLogger.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
@@ -235,8 +235,8 @@ public class CSLIDSMainClient {
         // Keep-alive task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
                 () -> {
-                    if (clientEndPoint != null && clientEndPoint.isOpen()) {
-                        clientEndPoint.sendMessage("keep alive");
+                    if (clientEndPoint != null) {
+                        clientEndPoint.sendMessageIfOpen("keep alive");
                     }
                 },
                 1, 5, TimeUnit.SECONDS,

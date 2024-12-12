@@ -7,7 +7,6 @@ import jakarta.websocket.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +14,8 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.csl.logger.CSLNetworkLogger.*;
+import static com.csl.logger.CSLNetworkLogger.debugInboundResponse;
+import static com.csl.logger.CSLNetworkLogger.debugOutboundRequest;
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
 /**
@@ -62,7 +62,7 @@ public class CSLWebSocketForJcmd {
             }
         }
         sessionMap.put(name, session);
-	}
+    }
 
     /**
      * Broadcasts a JSON message from one user to all connected users.
@@ -80,8 +80,8 @@ public class CSLWebSocketForJcmd {
             if (session == null) {
                 logger.error("Invalid API name: {}. Client not connected", name);
                 return;
-			}
-		}
+            }
+        }
 
         json.set("api", name);
         String message = json.toString();
@@ -94,11 +94,11 @@ public class CSLWebSocketForJcmd {
      *
      * @return A unique UUID as a long value.
      */
-	public static long getUuid() {
+    public static long getUuid() {
         uuidCounter++;
         if (uuidCounter > Long.MAX_VALUE - 10) uuidCounter = 0;
         return uuidCounter;
-	}
+    }
 
     /**
      * Adds an API to the session map, associating it with a user session.
@@ -106,22 +106,22 @@ public class CSLWebSocketForJcmd {
      * @param apiName The API name to add.
      * @param user    The session associated with the API name.
      */
-	public static void addApi(String apiName, Session user) {
-		addUser(apiName, user);
-	}
+    public static void addApi(String apiName, Session user) {
+        addUser(apiName, user);
+    }
 
     /**
      * Removes a user session from the session map.
      *
      * @param user The session to be removed.
      */
-	public static void removeUser(Session user) {
+    public static void removeUser(Session user) {
         List<String> keysToRemove = new ArrayList<>();
         for (Map.Entry<String, Session> entry : sessionMap.entrySet()) {
             if (user.equals(entry.getValue())) {
                 keysToRemove.add(entry.getKey());
                 logger.info("Remove session: {}", entry.getKey());
-			}
+            }
         }
 
         for (String key : keysToRemove) {
@@ -133,10 +133,10 @@ public class CSLWebSocketForJcmd {
      * Executes a Jcmd command, sending the command to the appropriate API and waiting for the response.
      *
      * @param apiName The API name to send the command to.
-     * @param jsonCmd    The JSON command to execute.
+     * @param jsonCmd The JSON command to execute.
      * @return The JSON response from the API.
      */
-	public static Json execJCmd(String apiName, Json jsonCmd, String xCorrelationId) {
+    public static Json execJCmd(String apiName, Json jsonCmd, String xCorrelationId) {
         Json fullMessage = Json.object();
         String uuid = String.valueOf(getUuid());
 
@@ -154,12 +154,12 @@ public class CSLWebSocketForJcmd {
         Json response;
         try {
             response = futureResponse.get().get(RESPONSE);
-        } catch (InterruptedException  | ExecutionException e) {
-            response =Json.object(ERROR, "Interrupted : "+e.getMessage());
+        } catch (InterruptedException | ExecutionException e) {
+            response = Json.object(ERROR, "Interrupted : " + e.getMessage());
         }
 
         debugInboundResponse(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", 0, LoggerConstants.WS_RESPONSE_RECV);
-        return (response!=null && response.has("result")) ? response.get("result") : Json.object().set(ERROR, "timeout");
+        return (response != null && response.has("result")) ? response.get("result") : Json.object().set(ERROR, "timeout");
     }
 
     /**
@@ -207,7 +207,7 @@ public class CSLWebSocketForJcmd {
         } catch (InterruptedException e) {
             logger.error("Interrupted while waiting for reconnection", e);
         }
-	}
+    }
 
     public static String printSessionMap() {
         return sessionMap.toString();
@@ -228,7 +228,6 @@ public class CSLWebSocketForJcmd {
                     }
                 }
             }
-
         }, 0, 30, TimeUnit.SECONDS);
     }
 

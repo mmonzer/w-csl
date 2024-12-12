@@ -852,7 +852,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 return result;
             }
         } catch (Exception e) {
-            logger.warn("Could not get the MQTT topic prefix from DB-API.", e);
+            logger.warn("Could not get the MQTT topic prefix from DB-API :{}", e.getMessage());
             return "None";
         }
     }
@@ -1142,7 +1142,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
             deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
         } catch (Exception e) {
-            logger.error("Could not get changes from DB-API.", e);
+            logger.error("Could not get changes from DB-API : {}", e.getMessage());
             return JsonApiResponse.error("Could not get changes from DBAPI");
         }
         //endregion Get changes from DB-API

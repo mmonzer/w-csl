@@ -34,17 +34,13 @@ public class MonitorService extends Service {
 	private void defineServiceEndpoints() {
 		activeTaps = configureTaps();
 
-		addCmd(MonitorEndpoints.STATS_TAPS, new IJsonCmd() {
+		addCmd(MonitorEndpoints.STATS_TAPS, params -> {
+            Json j=Json.object();
+            j.set("all", 5);
+            j.set("running",4);
 
-			@Override
-			public Json exec(Json params) {
-				Json j=Json.object();
-				j.set("all", 5);
-				j.set("running",4);
-
-				return j;
-			}
-		}		);
+            return j;
+        });
 
 		addCmd(MonitorEndpoints.SET_INTERFACES_MONITOR_TAP, this::setInterfaces		);
 

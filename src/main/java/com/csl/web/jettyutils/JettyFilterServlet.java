@@ -2,10 +2,6 @@ package com.csl.web.jettyutils;
 
 import com.csl.logger.LoggerConstants;
 import com.csl.web.HTTPConstants;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;

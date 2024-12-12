@@ -38,14 +38,14 @@ public class CSLFlowManager {
 
     // queues
     LinkedBlockingQueue<Json> inputflows;
-    List<List<ICSLFlowListener>> listeners = new ArrayList<List<ICSLFlowListener>>();
+    List<List<ICSLFlowListener>> listeners = new ArrayList<>();
 
     public CSLFlowManager(int maxflows, int maxsize, boolean trace) {
         this.maxflows = maxflows;
         this.maxsize = maxsize;
         this.traceAllMessages = trace;
 
-        inputflows = new LinkedBlockingQueue<Json>();
+        inputflows = new LinkedBlockingQueue<>();
     }
 
     public void addListener(int n, ICSLFlowListener l) {

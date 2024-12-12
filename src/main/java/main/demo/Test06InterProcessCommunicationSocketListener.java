@@ -22,14 +22,10 @@ public class Test06InterProcessCommunicationSocketListener {
 
         // Execute commande externe (module A)
 
-        ISocketMsgListener is = new ISocketMsgListener() {
-
-            @Override
-            public void messageArrived(String websocketName, String jSocket) {
-                // TODO Auto-generated method stub
-                System.out.println("SOCKET  :" + websocketName);
-                System.out.println("CONTENTS:" + jSocket);
-            }
+        ISocketMsgListener is = (websocketName, jSocket) -> {
+            // TODO Auto-generated method stub
+            System.out.println("SOCKET  :" + websocketName);
+            System.out.println("CONTENTS:" + jSocket);
         };
         Json jparams = Json.object();
         jparams.set("user", "user1");

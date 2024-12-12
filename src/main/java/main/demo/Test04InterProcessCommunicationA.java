@@ -21,16 +21,12 @@ public class Test04InterProcessCommunicationA {
 	
 	public void init() {
 		
-		api.registerCmd("test", new IJsonCmd() {
-			
-			@Override
-			public Json exec(Json params) {
-				// TODO Auto-generated method stub
-				int x=params.get("x").asInteger();
-				Json result=Json.object().set("value",x/2);
-				return result;
-			}
-		});
+		api.registerCmd("test", params -> {
+            // TODO Auto-generated method stub
+            int x=params.get("x").asInteger();
+            Json result=Json.object().set("value",x/2);
+            return result;
+        });
 		
 		imcm.registerAPI(api);
 		

@@ -451,7 +451,7 @@ public class Config {
             newLearnedModel = config.get("new_learned_model").asString();
             systemConfiguration = config.get("system_configuration").asString();
             currentIdsParamsFile = config.get("current_idsparams_file").asString();
-            idstraceFlags = config.get("idstrace_flags").asJsonList().stream().map(e->e.asString()).toList();
+            idstraceFlags = config.get("idstrace_flags").asJsonList().stream().map(Json::asString).toList();
             idstraceDir = config.get("idstrace_dir").asString();
             idstraceOn = config.get( "idstrace_on").asBoolean();
             sendToConsole = config.get( "send_to_console").asBoolean();

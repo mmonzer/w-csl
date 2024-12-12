@@ -648,7 +648,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         logger.error("Upgraded to 4.2.1 - > 5.3.0");
                         throw new RuntimeException("Upgraded version : 4.2.1 - > 5.3.0");
                     }
-                    List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
+                    List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<>();
                     for (Json connection : listOfConnections) {
                         EntityConnectionInfoDraft entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIUploadingFile(connection);
                         entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
@@ -2054,9 +2054,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         externalDiscoveredDevicesSynchronizationService.init(externalScansService);
 
         mqttBroker = CSLContext.getInstance().getMqttBroker();
-        mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
-            dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
-        });
+        mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> dbapiHandler.sendNewDevicesToScanner(scanApiHandler));
         mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
             try {
                 deletedCpeItemsSynchronizationService.syncData();

@@ -31,7 +31,7 @@ public class FileLog implements Runnable, IFileLog {
     File fileToLog;
     String nameFile = "";
 
-    protected BlockingQueue<String> blockingQueue = new ArrayBlockingQueue<String>(10);
+    protected BlockingQueue<String> blockingQueue = new ArrayBlockingQueue<>(10);
     private long max_size_of_log_files = DEFAULT_MAX_SIZE;
     String dataDir = ".";
 

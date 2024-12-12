@@ -26,10 +26,10 @@ public class ApiCommands {
     public static final String IS_MISSING_FROM_BODY = " is missing from body";
     static boolean debug = true;
 
-    HashMap<String, IJsonCmd> listOfCommands = new HashMap<String, IJsonCmd>();
-    HashMap<String, IJsonCmdWithFiles> listOfCommandsWithFiles = new HashMap<String, IJsonCmdWithFiles>();
-    HashMap<String, JsonCmdHelp> listOfCommandHelps = new HashMap<String, JsonCmdHelp>();
-    List<String> listOfCommandNames = new ArrayList<String>();
+    HashMap<String, IJsonCmd> listOfCommands = new HashMap<>();
+    HashMap<String, IJsonCmdWithFiles> listOfCommandsWithFiles = new HashMap<>();
+    HashMap<String, JsonCmdHelp> listOfCommandHelps = new HashMap<>();
+    List<String> listOfCommandNames = new ArrayList<>();
     Map<String, JsonCmdPrivilegeFamily> listOfCommandPrivileges = new HashMap<>();
     @Getter
     private String path = "";
@@ -163,7 +163,7 @@ public class ApiCommands {
     }
 
     public List<String> getListOfCommands() {
-        return new ArrayList<String>(listOfCommands.keySet());
+        return new ArrayList<>(listOfCommands.keySet());
     }
 
     public IJsonCmd getJCmd(String name) {

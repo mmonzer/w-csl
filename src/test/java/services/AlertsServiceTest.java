@@ -2,7 +2,6 @@ package services;
 
 import com.csl.alert.CSLAlertManager;
 import com.csl.core.CSLContext;
-import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
@@ -38,13 +37,7 @@ public class AlertsServiceTest {
         //Given
         String name = "get-alert_list";
         //When
-        String result = alertsService.addCmd(name, new IJsonCmd(){
-            @Override
-            public Json exec(Json params) {
-                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
-            }
-
-        }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
+        String result = alertsService.addCmd(name, params -> CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson(), new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
         //Then
         assert(result.equals("ok"));
     }
@@ -53,21 +46,9 @@ public class AlertsServiceTest {
     public void addCmdAlreadyExistsTest(){
         //Given
         String name = "get-alert_list";
-        String resultCmd1 = alertsService.addCmd(name, new IJsonCmd(){
-            @Override
-            public Json exec(Json params) {
-                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
-            }
-
-        }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
+        String resultCmd1 = alertsService.addCmd(name, params -> CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson(), new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
         //When
-        String resultCmd2 = alertsService.addCmd(name, new IJsonCmd(){
-            @Override
-            public Json exec(Json params) {
-                return CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson();
-            }
-
-        }, new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
+        String resultCmd2 = alertsService.addCmd(name, params -> CSLContext.getInstance().getCSLAlertManager().getListOfCurrentAlertsAsJson(), new JsonCmdHelp().setDesc("").setStatus(JsonCmdHelp.STATUS_OK));
         //Then
         assert(resultCmd2.equals("Command with this name already registered :" + name));
     }

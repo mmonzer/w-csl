@@ -31,7 +31,7 @@ public class ActivityMonitor implements IStatusProvider {
 
 	boolean showTicks=true;
 
-	Map<String, Json> taps= new HashMap<String, Json>();
+	Map<String, Json> taps= new HashMap<>();
 	Map<String, Tap> activeTaps;
 
 	ActivityHistory history = new ActivityHistory(60);
@@ -226,17 +226,13 @@ public class ActivityMonitor implements IStatusProvider {
 	public  void startTicTask() {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-		Runnable sendTic = new Runnable() {
+		Runnable sendTic = () -> {
+            //System.out.println("TIC");
+            Json tick = tic2Json();
 
-			@Override
-			public void run() {
-				//System.out.println("TIC");
-				Json tick = tic2Json();
+            sendTickFromIDS(tick);
 
-				sendTickFromIDS(tick);
-
-			}
-		};
+        };
 		ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
 				scheduler,
 				sendTic ,

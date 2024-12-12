@@ -167,7 +167,7 @@ public class FileUtils  {
 
         new File(dir).mkdirs();
         String file = dir + File.separator + fileName;
-        List<String> strlist = jsonToStringList("", j, new ArrayList<String>(), "");
+        List<String> strlist = jsonToStringList("", j, new ArrayList<>(), "");
         try {
             createFile(file, strlist);
         } catch (IOException e) {

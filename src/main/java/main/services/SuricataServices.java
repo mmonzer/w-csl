@@ -261,141 +261,102 @@ public class SuricataServices extends Service {
         localPort = config.getLocalPort();
 
 
-        addCmd("newSuricata", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                logger.debug("paramètres de newSuricata : {}", params.toString());
-                logger.debug("nom utilisé : {}", params.at("name").asString());
+        addCmd("newSuricata", params -> {
+            logger.debug("paramètres de newSuricata : {}", params.toString());
+            logger.debug("nom utilisé : {}", params.at("name").asString());
 
-                newSuricata(params.at("name").asString());
-                Json write = Json.object();
-                write.at("write", configuredSuricata);
-                try {
-                    FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-                return Json.object();
+            newSuricata(params.at("name").asString());
+            Json write = Json.object();
+            write.at("write", configuredSuricata);
+            try {
+                FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
+            } catch (IOException e) {
+                // e.printStackTrace();
             }
+            return Json.object();
         });
 
-        addCmd("renameSuricata", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                renameSuricata(params.at("name").asString(), params.at("newName").asString());
-                Json write = Json.object();
-                write.at("write", configuredSuricata);
-                try {
-                    FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-                return Json.object();
+        addCmd("renameSuricata", params -> {
+            renameSuricata(params.at("name").asString(), params.at("newName").asString());
+            Json write = Json.object();
+            write.at("write", configuredSuricata);
+            try {
+                FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
+            } catch (IOException e) {
+                // e.printStackTrace();
             }
+            return Json.object();
         });
 
-        addCmd("deleteSuricata", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                deleteSuricata(params.at("name").asString());
-                Json write = Json.object();
-                write.at("write", configuredSuricata);
-                try {
-                    FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-                return Json.object();
+        addCmd("deleteSuricata", params -> {
+            deleteSuricata(params.at("name").asString());
+            Json write = Json.object();
+            write.at("write", configuredSuricata);
+            try {
+                FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
+            } catch (IOException e) {
+                // e.printStackTrace();
             }
+            return Json.object();
         });
 
-        addCmd("setSuricataIp", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                setIp(params.at("name").asString(), params.at("ip").asString());
-                Json write = Json.object();
-                write.at("write", configuredSuricata);
-                try {
-                    FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-                return Json.object();
+        addCmd("setSuricataIp", params -> {
+            setIp(params.at("name").asString(), params.at("ip").asString());
+            Json write = Json.object();
+            write.at("write", configuredSuricata);
+            try {
+                FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
+            } catch (IOException e) {
+                // e.printStackTrace();
             }
+            return Json.object();
         });
 
-        addCmd("getSuricataRules", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                Json result = getRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
-                Json write = Json.object();
-                write.at("write", configuredSuricata);
-                try {
-                    FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-                return result;
+        addCmd("getSuricataRules", params -> {
+            Json result = getRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
+            Json write = Json.object();
+            write.at("write", configuredSuricata);
+            try {
+                FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
+            } catch (IOException e) {
+                // e.printStackTrace();
             }
+            return result;
         });
 
-        addCmd("sendSuricataRules", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                sendRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
-                Json write = Json.object();
-                write.at("write", configuredSuricata);
-                try {
-                    FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-                return Json.object();
+        addCmd("sendSuricataRules", params -> {
+            sendRules(params.at("name").asString(), params.at("username").asString(), params.at("password").asString());
+            Json write = Json.object();
+            write.at("write", configuredSuricata);
+            try {
+                FileUtils.writeToFile("./datafile/configuredSuricata.json", write.at("write").toString());
+            } catch (IOException e) {
+                // e.printStackTrace();
             }
+            return Json.object();
         });
 
-        addCmd("getConfiguredSuricata", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                try {
-                    return FileUtils.readJsonFromFile("./datafile/configuredSuricata.json");
-                } catch (IOException e) {
-                    // e.printStackTrace();
-                }
-                return Json.object();
+        addCmd("getConfiguredSuricata", params -> {
+            try {
+                return FileUtils.readJsonFromFile("./datafile/configuredSuricata.json");
+            } catch (IOException e) {
+                // e.printStackTrace();
             }
+            return Json.object();
         });
 
-        addCmd("getSuricataState", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                Json j = Json.object();
-                j.at("state", "IDLE");
-                return j;
-            }
+        addCmd("getSuricataState", params -> {
+            Json j = Json.object();
+            j.at("state", "IDLE");
+            return j;
         });
 
 
-        addCmd("startSuricata", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                return startSuricata(params.at("username").asString(), params.at("password").asString(), params.at("name").asString());
-            }
-        });
+        addCmd("startSuricata", params -> startSuricata(params.at("username").asString(), params.at("password").asString(), params.at("name").asString()));
 
-        addCmd("stopSuricata", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                return stopSuricata(params.at("username").asString(), params.at("password").asString(), params.at("name").asString());
-            }
-        });
+        addCmd("stopSuricata", params -> stopSuricata(params.at("username").asString(), params.at("password").asString(), params.at("name").asString()));
 
-        addCmd("reloadRules", new IJsonCmd() {
-            @Override
-            public Json exec(Json params) {
-                return reloadRules(params.at("username").asString(), params.at("password").asString(), params.at("name").asString());
-            }
-        });
+        addCmd("reloadRules", params -> reloadRules(params.at("username").asString(), params.at("password").asString(), params.at("name").asString()));
         logger.debug("SSH commands operationnal");
     }
 }

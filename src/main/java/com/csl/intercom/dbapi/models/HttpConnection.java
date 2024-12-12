@@ -212,7 +212,7 @@ public class HttpConnection extends Connection {
     public Json serializeForScanner() {
         Json stagesConfigSerialized = Json.object();
         if (this.stagesConfig != null) {
-            this.stagesConfig.entrySet().forEach(entry -> stagesConfigSerialized.set(entry.getKey().toString(), entry.getValue().serializeForScanner()));
+            this.stagesConfig.forEach((key, value) -> stagesConfigSerialized.set(key.toString(), value.serializeForScanner()));
         }
 
         Json result = super.serializeForScanner();

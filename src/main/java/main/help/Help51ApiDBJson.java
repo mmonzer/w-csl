@@ -95,22 +95,20 @@ public class Help51ApiDBJson {
             final WebsocketClientEndpoint clientEndPoint = new WebsocketClientEndpoint(new URI(s));
 
             // add listener
-            clientEndPoint.setMessageHandler(new WebsocketClientEndpoint.MessageHandler() {
-                public void handleMessage(String message) {
-                    Json j = Json.read(message);
-                    System.out.println("Database:" + j);
-                    if (j.get("database") == null) return;
-                    j = j.get("database");
-                    String m_uuid = "";
-                    if (j.get("uuid") != null) {
-                        m_uuid = j.get("uuid").asString();
-                        System.out.println("modifier uuid=" + m_uuid);
-                        if (uuid.compareTo(m_uuid) == 0) return; // this update is from this process
-                    }
-                    if (j.get("name").asString().compareTo(OBJECT_NAME) == 0) {
-                        testObject = readObjectFromDatabase(OBJECT_NAME);
-                        System.out.println("***** Updated to " + testObject);
-                    }
+            clientEndPoint.setMessageHandler(message -> {
+                Json j = Json.read(message);
+                System.out.println("Database:" + j);
+                if (j.get("database") == null) return;
+                j = j.get("database");
+                String m_uuid = "";
+                if (j.get("uuid") != null) {
+                    m_uuid = j.get("uuid").asString();
+                    System.out.println("modifier uuid=" + m_uuid);
+                    if (uuid.compareTo(m_uuid) == 0) return; // this update is from this process
+                }
+                if (j.get("name").asString().compareTo(OBJECT_NAME) == 0) {
+                    testObject = readObjectFromDatabase(OBJECT_NAME);
+                    System.out.println("***** Updated to " + testObject);
                 }
             });
 

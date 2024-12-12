@@ -1235,22 +1235,29 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
     public Json getConnectionDraftOtherData(EntityConnectionInfoDraft connectionInfoDraft) {
         Json otherData = Json.object();
-        if (connectionInfoDraft.getProtocol().equals("SNMPv1")) {
-            String community = connectionInfoDraft.getSnmpCommunity();
-            otherData.set(SNMP_COMMUNITY, community);
-            return otherData;
-        } else if (connectionInfoDraft.getProtocol().equals("SNMPv2c")) {
-            String community = connectionInfoDraft.getSnmpCommunity();
-            otherData.set(SNMP_COMMUNITY, community);
-            return otherData;
-        } else if (connectionInfoDraft.getProtocol().equals("SNMPv3")) {
-            String snmpPrivacyAlgorithm = String.valueOf(connectionInfoDraft.getSnmpPrivacyAlgorithm());
-            String snmpAuthAlgorithm = String.valueOf(connectionInfoDraft.getSnmpAuthenticationAlgorithm());
-            otherData.set("snmp_privacy_algorithm", snmpPrivacyAlgorithm);
-            otherData.set("snmp_authentication_algorithm", snmpAuthAlgorithm);
-        } else if (connectionInfoDraft.getProtocol().equals("SSH")) {
-            String sshKey = connectionInfoDraft.getSshKey();
-            otherData.set("ssh_key", sshKey);
+        switch (connectionInfoDraft.getProtocol()) {
+            case "SNMPv1" -> {
+                String community = connectionInfoDraft.getSnmpCommunity();
+                otherData.set(SNMP_COMMUNITY, community);
+                break;
+            }
+            case "SNMPv2c" -> {
+                String community = connectionInfoDraft.getSnmpCommunity();
+                otherData.set(SNMP_COMMUNITY, community);
+                break;
+            }
+            case "SNMPv3" -> {
+                String snmpPrivacyAlgorithm = String.valueOf(connectionInfoDraft.getSnmpPrivacyAlgorithm());
+                String snmpAuthAlgorithm = String.valueOf(connectionInfoDraft.getSnmpAuthenticationAlgorithm());
+                otherData.set("snmp_privacy_algorithm", snmpPrivacyAlgorithm);
+                otherData.set("snmp_authentication_algorithm", snmpAuthAlgorithm);
+                break;
+            }
+            case "SSH" -> {
+                String sshKey = connectionInfoDraft.getSshKey();
+                otherData.set("ssh_key", sshKey);
+                break;
+            }
         }
         return otherData;
     }

@@ -23,8 +23,8 @@ public class JsonCmdHelp {
 	String desc="";
 	String result="";
 	String resultType="";
-	Map<String,String> paramsdesc= new HashMap<String, String>();
-	Map<String,String> paramstype= new HashMap<String, String>();
+	Map<String,String> paramsdesc= new HashMap<>();
+	Map<String,String> paramstype= new HashMap<>();
 	
 	String status="";
 	ICmdHelpProvider helpProvider=null;

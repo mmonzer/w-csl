@@ -111,7 +111,7 @@ public class CSLIDSMainClient {
 
             // Add message handler
             clientEndPoint.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
-            connectToServer();
+            // connectToServer();
         } catch (URISyntaxException ex) {
             logger.error("URISyntaxException: {}", ex.getMessage(), ex);
         }
@@ -229,7 +229,7 @@ public class CSLIDSMainClient {
                         connectToServer();
                     }
                 },
-                1, 5, TimeUnit.SECONDS,
+                0, 5, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
 
         // Keep-alive task

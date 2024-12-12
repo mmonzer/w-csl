@@ -6,6 +6,7 @@ import com.ucsl.interfaces.IJsonCmdWithFiles;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
+import lombok.Setter;
 import main.services.JsonApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,15 @@ public class ApiCommands {
     Map<String, JsonCmdPrivilegeFamily> listOfCommandPrivileges = new HashMap<>();
     @Getter
     private String path = "";
+    //    @Override
+    /**
+     * -- GETTER --
+     *  Gives the description of the API service
+     *
+     * @return the description of the service
+     */ //    @Override
+    @Setter
+    @Getter
     private String description = "";
 
     private ApiCommands(String path) {
@@ -143,21 +153,7 @@ public class ApiCommands {
         return getCleanApiName();
     }
 
-    /**
-     * Gives the description of the API service
-     * @return the description of the service
-     */
-//    @Override
-    public String getDescription() {
-        return description;
-    }
-
-//    @Override
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-//    @Override
+    //    @Override
     public void setName(String name) {
         this.path = name;
     }

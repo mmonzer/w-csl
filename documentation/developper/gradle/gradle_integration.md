@@ -97,19 +97,19 @@ b. **Configurer l’environnement SSL**
 Le fichier **cacerts.jks** doit se trouver dans le répertoire `App`
 
 1. Créer un fichier **properties.gradle**, et y ajouter le code suivant pour réduire le temps de compilation :
-
-```Groovy
-org.gradle.caching=true
-
-org.gradle.jvmargs = -Dlogback.configurationFile=./src/main/resources/logback.xml -Djavax.net.ssl.trustStore=./cacerts.jks -Djavax.net.ssl.trustStorePassword=changeit
-```
-La deuxième commande est neccesaire si cette configuration est déjà faite dans la configuration de IntelliJ.
+    
+    ```Groovy
+    org.gradle.caching=true
+    
+    org.gradle.jvmargs = -Dlogback.configurationFile=./src/main/resources/logback.xml -Djavax.net.ssl.trustStore=./cacerts.jks -Djavax.net.ssl.trustStorePassword=changeit
+    ```
+    La deuxième commande est neccesaire si cette configuration est déjà faite dans la configuration de IntelliJ.
 
 2. Configurer les run du Main Client et du Main Server comme vous pouvez le voir dans le dossier annexes, avec les mêmes variables globales que celles passées à Gradle. L’option -x test, permet d’ignorer les tests à la compilation
-
-![Configuration client](figures/clientConfig.png)
-
-![Configuration server](figures/serverConfig.png)
+    
+    ![Configuration client](figures/clientConfig.png)
+    
+    ![Configuration server](figures/serverConfig.png)
 
 ### Annexes
 

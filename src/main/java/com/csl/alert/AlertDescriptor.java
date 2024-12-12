@@ -25,6 +25,7 @@ public class AlertDescriptor {
     public static final String ALERT_INFO_FROM_SYSLEARNER = "AlertInfoFromSysLearner";
     public static final String ALERT_INFO_FROM_IDS = "AlertInfoFromIDS";
 
+    @Getter
     long timeForEndOfMask = 0;
     Map<String, String> propsList = null;
 
@@ -107,13 +108,8 @@ public class AlertDescriptor {
         return s.toString();
     }
 
-    public long getTimeForEndOfMask() {
-        return timeForEndOfMask;
-    }
-
-    public AlertDescriptor setTimeForEndOfMask(long timeForEndOfMask) {
+    public void setTimeForEndOfMask(long timeForEndOfMask) {
         this.timeForEndOfMask = timeForEndOfMask;
-        return this;
     }
 
     public boolean hasProps() {

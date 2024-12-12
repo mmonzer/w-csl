@@ -17,6 +17,7 @@ import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Setter;
 
 import static com.csl.util.FileUtils.readJsonFromFile;
 
@@ -29,7 +30,8 @@ public class ActivityMonitor implements IStatusProvider {
 	long data_size_total=0;
 
 
-	boolean showTicks=true;
+	@Setter
+    boolean showTicks=true;
 
 	Map<String, Json> taps= new HashMap<>();
 	Map<String, Tap> activeTaps;
@@ -135,32 +137,6 @@ public class ActivityMonitor implements IStatusProvider {
 			is_http_api_reachable = false;
 		}
 		return is_http_api_reachable;
-	}
-
-	public boolean isShowTicks() {
-		return showTicks;
-	}
-
-	public void setShowTicks(boolean showTicks) {
-		this.showTicks = showTicks;
-	}
-
-	public int getHistorySize() {
-		/**
-		 * Get the number of elements in the history
-		 *
-		 * @return the number of elements held in the history
-		 */
-		return history.currentHistorySize();
-	}
-
-	public int getMaxHistorySize() {
-		/**
-		 * Get the maximum number of elements in the history
-		 *
-		 * @return the maximum length of the history
-		 */
-		return history.maxHistorySize();
 	}
 
 	public void setMaxHistorySize(int size) {

@@ -17,12 +17,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Config {
-    static String configFileName = "application.json";
+    private static final String CONFIG_FILE = "application.json";
+
     private static final String WRONG_CONFIGURATION = "Wrong configuration";
     Logger logger = LoggerFactory.getLogger(Config.class);
     Json jConfig;
     String separator = "__";
-    private static Config instance = new Config(configFileName);
+    @Getter
+    private static Config instance = Config.load();
 
     public final Client Client;
     public final Config.Scan Scan;
@@ -34,12 +36,8 @@ public class Config {
     public final Config.AlertViewer AlertViewer;
     public final Config.Autocrypt Autocrypt;
 
-    public static Config reload(String configFile) {
-        instance = new Config(configFile);
-        return instance;
-    }
-
-    public static Config getInstance() {
+    private static Config load() {
+        instance = new Config(CONFIG_FILE);
         return instance;
     }
 

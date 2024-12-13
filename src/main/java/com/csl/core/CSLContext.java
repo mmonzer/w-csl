@@ -38,7 +38,7 @@ public class CSLContext {
      */
     private CSLAlertManager cslAlertManager = null;
 
-    private static final String CONFIG_FILE = "application.json";
+
 
     private CSLMqttBrokerHandler mqttBroker = null;
 
@@ -176,22 +176,9 @@ public class CSLContext {
     }
 
     /**
-     * Sets the configuration file name and reloads the configuration.
-     *
-     * @param configFileName The configuration file name.
-     * @return The configuration instance.
-     */
-    private Config setConfigFileName(String configFileName) {
-        logger.debug("Reading configuration from {}", configFileName);
-        Config.reload(configFileName);
-        return getConfig();
-    }
-
-    /**
      * Initializes the CSL context with the default running arguments.
      */
     public void init() {
-        setConfigFileName(CONFIG_FILE);
         getConfig();
 
         this.cslConfDir = buildFullPathInUserDir("cslconf");

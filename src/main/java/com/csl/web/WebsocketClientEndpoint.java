@@ -45,6 +45,7 @@ public class WebsocketClientEndpoint {
         isConnecting.set(true);
         try {
             this.userSession = container.connectToServer(this, endpointURI);
+            logger.info("Opening websocket at {}", endpointURI);
             // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
         } catch (Exception e) {
             isConnecting.set(false);

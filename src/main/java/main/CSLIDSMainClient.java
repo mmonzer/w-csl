@@ -156,7 +156,7 @@ public class CSLIDSMainClient {
      * }
      * NOTE that each message is handled by a new thread
      */
-    public static void connectToServer() {
+    public static synchronized void connectToServer() {
         logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", getWebSocketUrl(), apiKey);
 
 

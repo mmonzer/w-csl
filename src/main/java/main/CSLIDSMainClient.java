@@ -29,6 +29,7 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.logger.LoggerConstants.*;
@@ -51,6 +52,8 @@ public class CSLIDSMainClient {
 
     // WebSocket client endpoint
     private static WebsocketClientEndpoint clientEndPoint = null;
+    private static final ScheduledExecutorService reconnectWsExecutor = Executors.newSingleThreadScheduledExecutor();
+
 
     // API Command map
     private static final HashMap<String, ApiCommands> apiMap = new HashMap<>();
@@ -156,14 +159,28 @@ public class CSLIDSMainClient {
      * }
      * NOTE that each message is handled by a new thread
      */
-    public static synchronized void connectToServer() {
-        logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", getWebSocketUrl(), apiKey);
-
+    public static synchronized void connectToServerIfRequired() {
+        // Check if clientEndPoint is null and try to reinitialize
+        if (clientEndPoint == null) {
+            logger.warn("WebSocket client endpoint is not initialized. Attempting to reinitialize...");
+            try {
+                clientEndPoint = initWebSocketClient(); // Reinitialize client
+                if (clientEndPoint == null) {
+                    logger.error("Failed to initialize WebSocket client endpoint. Aborting connection attempt.");
+                    return;
+                }
+            } catch (Exception e) {
+                logger.error("Exception occurred during WebSocket client initialization: {}", e.getMessage());
+                return;
+            }
+        }
 
         if (clientEndPoint.isOpen()) {
+            logger.trace("WebSocket is already connected. No action needed.");
             return;
         }
 
+        logger.trace("Connecting to the server at {}", getWebSocketUrl());
         clientEndPoint.connect();
 
         if (!clientEndPoint.isOpen()) {
@@ -171,6 +188,7 @@ public class CSLIDSMainClient {
         }
 
         // register endpoints
+        logger.info("Registering API endpoints with the server");
         apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessageIfOpen("api:" + apiName));
     }
 
@@ -237,10 +255,22 @@ public class CSLIDSMainClient {
 
         // Reconnect task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-                Executors.newSingleThreadScheduledExecutor(),
-                CSLIDSMainClient::connectToServer,
+                reconnectWsExecutor,
+                CSLIDSMainClient::connectToServerIfRequired,
                 0, 5, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
+
+        // Shutdown hook to clean up the executor
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            reconnectWsExecutor.shutdown();
+            try {
+                if (!reconnectWsExecutor.awaitTermination(1, TimeUnit.SECONDS)) {
+                    reconnectWsExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                reconnectWsExecutor.shutdownNow();
+            }
+        }));
 
         // Keep-alive task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),

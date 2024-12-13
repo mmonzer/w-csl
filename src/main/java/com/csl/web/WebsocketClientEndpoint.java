@@ -20,9 +20,8 @@ public class WebsocketClientEndpoint {
     private MessageHandler messageHandler;
     private URI endpointURI;
     private static String apiKey;
-    private boolean connectedFlagForLogs = false;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-    private static boolean isConnecting = false;
+    private static final AtomicBoolean isConnecting = new AtomicBoolean(false);
 
     public static class Configurator extends ClientEndpointConfig.Configurator {
         @Override
@@ -33,23 +32,42 @@ public class WebsocketClientEndpoint {
         }
     }
 
+    public static String maskApiKey(String apiKey) {
+        if (apiKey == null || apiKey.length() < 8) {
+            System.out.println("API Key is too short to mask.");
+            return null;
+        }
+
+        String firstPart = apiKey.substring(0, 4); // First 4 characters
+        String lastPart = apiKey.substring(apiKey.length() - 4); // Last 4 characters
+        String maskedKey = firstPart + "****" + lastPart;
+
+        return maskedKey;
+    }
+
+
     public void connect() {
-        if (isOpen()) {
-            logger.info("WS is already connected, skipping reconnect");
-            return;
-        }
-        if (isConnecting) {
-            logger.info("WS is connecting, skipping reconnect");
-            return;
-        }
-        isConnecting = true;
-        try {
-            logger.info("Opening websocket at {}", endpointURI);
-            this.userSession = container.connectToServer(this, endpointURI);
-            // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
-        } catch (Exception e) {
-            isConnecting = false;
-            logger.warn("Exception occurred when connecting to websocket {} : {}", endpointURI, e.getMessage());
+        synchronized (WebsocketClientEndpoint.class) { // Ensures thread-safety
+            logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", endpointURI, maskApiKey(apiKey));
+
+            if (isOpen()) {
+                logger.info("WS is already connected, skipping reconnect");
+                return;
+            }
+
+            if (!isConnecting.compareAndSet(false, true)) {
+                logger.info("WebSocket connection is already in progress, skipping reconnect.");
+                return;
+            }
+
+            try {
+                logger.info("Attempting to open websocket at {}", endpointURI);
+                this.userSession = container.connectToServer(this, endpointURI);
+                // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
+            } catch (Exception e) {
+                isConnecting.set(false); // Reset the flag regardless of success or failure
+                logger.warn("Exception occurred when connecting to WebSocket {}: {}", endpointURI, e.getMessage());
+            }
         }
     }
 
@@ -75,7 +93,7 @@ public class WebsocketClientEndpoint {
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
         CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() +" : "+ userSession);
 
-        isConnecting = false;
+        isConnecting.set(false);
     }
 
     /**
@@ -88,7 +106,7 @@ public class WebsocketClientEndpoint {
     public synchronized void onClose(Session userSession, CloseReason reason) {
         CSLNetworkLogger.warn(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI()+ " Reason:" + reason.getReasonPhrase() +" : "+ userSession);
         this.userSession = null;
-        isConnecting = false;
+        isConnecting.set(false);
     }
 
     /**
@@ -101,7 +119,7 @@ public class WebsocketClientEndpoint {
     public synchronized void onError(Session session, Throwable error) {
         logger.error("Connection lost in WS with server with error : {}",(error.getMessage()!=null)?error.getMessage(): "unknown");
         this.userSession = null;
-        isConnecting = false;
+        isConnecting.set(false);
     }
 
     /**

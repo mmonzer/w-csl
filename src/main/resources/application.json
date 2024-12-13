@@ -24,7 +24,7 @@
     "log_dir": "./files/server/idslogs/jcmds",
     "log_prefix_filename": "JCMD",
     "max_size_of_log_files": 10000,
-    "websocket_timeout": 10000
+    "websocket_timeout": 0
   },
   "client":{
     "ip_server_remote": "127.0.0.1",

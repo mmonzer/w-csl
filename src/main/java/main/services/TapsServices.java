@@ -936,7 +936,7 @@ public class TapsServices extends Service {
      */
     @Override
     public boolean init() {
-        Config.Tap config = Config.instance.TapService;
+        Config.Tap config = Config.getInstance().TapService;
         activeTaps = configureTaps();
 //        knownHostFilePath = jConfig.at("knowHostFilePath").asString();
 //        localIP = jConfig.at("localIpAddr").asString(););

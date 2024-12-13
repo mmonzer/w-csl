@@ -194,7 +194,7 @@ public class ApiHandler implements AutoCloseable {
          * Add the api key to the headers
          * @param contentType content type of the request
          */
-        String apiKey = Config.instance.Client.getApiKey();
+        String apiKey = Config.getInstance().Client.getApiKey();
         HashMap<HttpHeader, String> customHeaders = new HashMap<>();
         customHeaders.put(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
         customHeaders.put(HttpHeader.CONTENT_TYPE, contentType);

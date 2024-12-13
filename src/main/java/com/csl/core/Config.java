@@ -22,7 +22,7 @@ public class Config {
     Logger logger = LoggerFactory.getLogger(Config.class);
     Json jConfig;
     String separator = "__";
-    public static Config instance = new Config(configFileName);
+    private static Config instance = new Config(configFileName);
 
     public final Client Client;
     public final Config.Scan Scan;
@@ -36,6 +36,10 @@ public class Config {
 
     public static Config reload(String configFile) {
         instance = new Config(configFile);
+        return instance;
+    }
+
+    public static Config getInstance() {
         return instance;
     }
 

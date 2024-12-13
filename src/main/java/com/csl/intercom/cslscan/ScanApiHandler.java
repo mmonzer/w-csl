@@ -50,7 +50,7 @@ public class ScanApiHandler extends ApiHandler {
     private final FileStorageService fileStorageService = new FileStorageService();
 
     public ScanApiHandler() {
-        super("CSL-Scan", Config.instance.Scan.getManagerIp(), Config.instance.Scan.getManagerPort(), Config.instance.Scan.getUseSSL());
+        super("CSL-Scan", Config.getInstance().Scan.getManagerIp(), Config.getInstance().Scan.getManagerPort(), Config.getInstance().Scan.getUseSSL());
         addUriCommonPath("/api");
     }
 

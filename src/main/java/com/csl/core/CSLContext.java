@@ -168,11 +168,11 @@ public class CSLContext {
      * @return The configuration instance.
      */
     public Config getConfig() {
-        if (Config.instance.Server == null) {
+        if (Config.getInstance().Server == null) {
             logger.error("Invalid config file, update to new format");
             System.exit(0);
         }
-        return Config.instance;
+        return Config.getInstance();
     }
 
     /**
@@ -231,10 +231,10 @@ public class CSLContext {
         }
 
         if (isServer) {
-            getCslHttpServer().initServer(Config.instance.Server);
+            getCslHttpServer().initServer(Config.getInstance().Server);
             getStatusNotifier().setSendNotifications(false);
         } else {
-            getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
+            getCslUDPServer().initUDPServer(Config.getInstance().UdpServerConf);
             initTime();
         }
     }

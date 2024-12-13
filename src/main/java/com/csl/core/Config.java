@@ -6,8 +6,6 @@ import com.csl.util.FileUtils;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
@@ -16,9 +14,7 @@ public class Config {
     private static final String CONFIG_FILE = "application.json";
 
     private static final String WRONG_CONFIGURATION = "Wrong configuration";
-    Logger logger = LoggerFactory.getLogger(Config.class);
-    Json jConfig;
-    String separator = "__";
+    private static final String SEPARATOR = "__";
     @Getter
     private static Config instance = Config.load();
 
@@ -38,17 +34,17 @@ public class Config {
     }
 
     private Config(String configFile) {
-        jConfig = readConfig(configFile);
+        Json jsonConfiguration = readConfig(configFile);
 
-        server = new Server(jConfig.get("server"));
-        client = new Client(jConfig.get("client"));
-        status = new Status(jConfig.get("status"));
-        udpServerConf = new UdpServerConf(jConfig.get("udp_server_conf"));
-        idsConf = new IdsConf(jConfig.get("ids_conf"));
-        alertViewer = new AlertViewer(jConfig.get("alert_viewer"));
-        scan = new Scan(jConfig.get("discovery_service"));
-        tapService = new Tap(jConfig.get("tap_service"));
-        autocrypt = new Autocrypt(jConfig.get("autocrypt_service"));
+        server = new Server(jsonConfiguration.get("server"));
+        client = new Client(jsonConfiguration.get("client"));
+        status = new Status(jsonConfiguration.get("status"));
+        udpServerConf = new UdpServerConf(jsonConfiguration.get("udp_server_conf"));
+        idsConf = new IdsConf(jsonConfiguration.get("ids_conf"));
+        alertViewer = new AlertViewer(jsonConfiguration.get("alert_viewer"));
+        scan = new Scan(jsonConfiguration.get("discovery_service"));
+        tapService = new Tap(jsonConfiguration.get("tap_service"));
+        autocrypt = new Autocrypt(jsonConfiguration.get("autocrypt_service"));
     }
 
     private Json readConfig(String f) {
@@ -60,7 +56,7 @@ public class Config {
         for (String section : jsonConfig.asJsonMap().keySet()) {
             if (jsonConfig.at(section).isObject()) {
                 for (String variable : jsonConfig.at(section).asJsonMap().keySet()) {
-                    String envVariable = "CSL" + separator + section.toUpperCase() + separator + variable.toUpperCase();
+                    String envVariable = "CSL" + SEPARATOR + section.toUpperCase() + SEPARATOR + variable.toUpperCase();
                     if (env.containsKey(envVariable)) {
                         jsonConfig.at(section).set(variable, env.get(envVariable));
                     }

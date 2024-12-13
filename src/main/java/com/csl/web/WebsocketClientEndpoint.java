@@ -22,7 +22,7 @@ public class WebsocketClientEndpoint {
     private static String apiKey;
     private boolean connectedFlagForLogs = false;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-    private static final AtomicBoolean isConnecting = new AtomicBoolean(false);
+    private static boolean isConnecting = false;
 
     public static class Configurator extends ClientEndpointConfig.Configurator {
         @Override
@@ -38,17 +38,17 @@ public class WebsocketClientEndpoint {
             logger.info("WS is already connected, skipping reconnect");
             return;
         }
-        if (isConnecting.get()) {
+        if (isConnecting) {
             logger.info("WS is connecting, skipping reconnect");
             return;
         }
-        isConnecting.set(true);
+        isConnecting = true;
         try {
-            this.userSession = container.connectToServer(this, endpointURI);
             logger.info("Opening websocket at {}", endpointURI);
+            this.userSession = container.connectToServer(this, endpointURI);
             // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
         } catch (Exception e) {
-            isConnecting.set(false);
+            isConnecting = false;
             logger.warn("Exception occurred when connecting to websocket {} : {}", endpointURI, e.getMessage());
         }
     }
@@ -75,7 +75,7 @@ public class WebsocketClientEndpoint {
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
         CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() +" : "+ userSession);
 
-        isConnecting.set(false);
+        isConnecting = false;
     }
 
     /**
@@ -88,7 +88,7 @@ public class WebsocketClientEndpoint {
     public synchronized void onClose(Session userSession, CloseReason reason) {
         CSLNetworkLogger.warn(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI()+ " Reason:" + reason.getReasonPhrase() +" : "+ userSession);
         this.userSession = null;
-        isConnecting.set(false);
+        isConnecting = false;
     }
 
     /**
@@ -101,7 +101,7 @@ public class WebsocketClientEndpoint {
     public synchronized void onError(Session session, Throwable error) {
         logger.error("Connection lost in WS with server with error : {}",(error.getMessage()!=null)?error.getMessage(): "unknown");
         this.userSession = null;
-        isConnecting.set(false);
+        isConnecting = false;
     }
 
     /**

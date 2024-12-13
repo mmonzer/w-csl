@@ -8,10 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @ClientEndpoint(subprotocols = {"xsCrossfire"}, configurator = WebsocketClientEndpoint.Configurator.class)
 public class WebsocketClientEndpoint {
@@ -23,6 +22,7 @@ public class WebsocketClientEndpoint {
     private static String apiKey;
     private boolean connectedFlagForLogs = false;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+    private static final AtomicBoolean isConnecting = new AtomicBoolean(false);
 
     public static class Configurator extends ClientEndpointConfig.Configurator {
         @Override
@@ -33,11 +33,21 @@ public class WebsocketClientEndpoint {
         }
     }
 
-    public synchronized void connect() {
+    public void connect() {
+        if (isOpen()) {
+            logger.info("WS is already connected, skipping reconnect");
+            return;
+        }
+        if (isConnecting.get()) {
+            logger.info("WS is connecting, skipping reconnect");
+            return;
+        }
+        isConnecting.set(true);
         try {
             this.userSession = container.connectToServer(this, endpointURI);
             // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
         } catch (Exception e) {
+            isConnecting.set(false);
             logger.warn("Exception occurred when connecting to websocket {} : {}", endpointURI, e.getMessage());
         }
     }
@@ -57,18 +67,14 @@ public class WebsocketClientEndpoint {
      * @param userSession the userSession which is opened.
      */
     @OnOpen
-    public void onOpen(Session userSession) {
+    public synchronized void onOpen(Session userSession) {
         CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opened websocket " + userSession.getRequestURI() +" : "+ userSession);
         logger.info("Connected to WCSL websocket {}", endpointURI);
         this.userSession = userSession;
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
         CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() +" : "+ userSession);
 
-
-
-//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-//        LocalDateTime now = LocalDateTime.now();
-//        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Sending message to websocket " + dtf.format(now));
+        isConnecting.set(false);
     }
 
     /**
@@ -78,9 +84,10 @@ public class WebsocketClientEndpoint {
      * @param reason      the reason for connection close
      */
     @OnClose
-    public void onClose(Session userSession, CloseReason reason) {
+    public synchronized void onClose(Session userSession, CloseReason reason) {
         CSLNetworkLogger.warn(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI()+ " Reason:" + reason.getReasonPhrase() +" : "+ userSession);
         this.userSession = null;
+        isConnecting.set(false);
     }
 
     /**
@@ -90,8 +97,10 @@ public class WebsocketClientEndpoint {
      * @param error      throwable
      */
     @OnError
-    public void onError(Session session, Throwable error) {
-        logger.error("Error on websocket {} : {}", session, error.getMessage());
+    public synchronized void onError(Session session, Throwable error) {
+        logger.error("Connection lost in WS with server with error : {}",(error.getMessage()!=null)?error.getMessage(): "unknown");
+        this.userSession = null;
+        isConnecting.set(false);
     }
 
     /**

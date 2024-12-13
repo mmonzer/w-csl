@@ -28,7 +28,6 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.csl.logger.LoggerConstants.*;
@@ -106,18 +105,10 @@ public class CSLIDSMainClient {
      * }
      * NOTE that each message is handled by a new thread
      */
-    public static void initWebSocketClient() {
-        try {
-            String webSocketUrl = getWebSocketUrl();
-
-            clientEndPoint = new WebsocketClientEndpoint(new URI(webSocketUrl), apiKey);
-
-            // Add message handler
-            clientEndPoint.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
-            // connectToServer();
-        } catch (URISyntaxException ex) {
-            logger.error("URISyntaxException: {}", ex.getMessage(), ex);
-        }
+    public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
+        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(getWebSocketURI(), apiKey);
+        websocketClient.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
+        return websocketClient;
     }
 
     /**
@@ -130,6 +121,24 @@ public class CSLIDSMainClient {
         return (serverPort > 0)
                 ? wsProtocol + "://" + serverIp + ":" + serverPort + serverUrlPrefix + "/cmd"
                 : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
+    }
+
+    /**
+     * gives the websocket URI or default "ws://wrongURI" if syntax error
+     *
+     * @return the websocket URI or default "ws://wrongURI" if syntax error
+     */
+    private static URI getWebSocketURI() {
+        try {
+            return new URI(getWebSocketUrl());
+        } catch (URISyntaxException e) {
+            logger.error("Wrong syntax in socket URI {} : {}", getWebSocketUrl(), e.getMessage());
+            try {
+                return new URI("ws://wrongURI");
+            } catch (URISyntaxException e2) {
+                return null; // never reached
+            }
+        }
     }
 
     /**
@@ -149,10 +158,14 @@ public class CSLIDSMainClient {
     public static void connectToServer() {
         logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", getWebSocketUrl(), apiKey);
 
+
+        if (clientEndPoint.isOpen()) {
+            return;
+        }
+
         clientEndPoint.connect();
 
         if (!clientEndPoint.isOpen()) {
-            logger.warn("Failed to connect to the server, retrying...");
             return;
         }
 
@@ -219,28 +232,19 @@ public class CSLIDSMainClient {
      * Starts tasks for maintaining the connection to the WebSocket server and keeping the connection alive.
      */
     public static void openWsConnectionWithCSLServer() {
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        initWebSocketClient();
+        clientEndPoint = initWebSocketClient();
 
         // Reconnect task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-                executorService,
-                () ->  {
-                    synchronized (lock1) {
-                        boolean reconnect = clientEndPoint == null || !clientEndPoint.isOpen();
-
-                        if (reconnect) {
-                            connectToServer();
-                        }
-                    }
-                },
+                Executors.newSingleThreadScheduledExecutor(),
+                CSLIDSMainClient::connectToServer,
                 0, 5, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
 
         // Keep-alive task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
                 () -> {
-                    synchronized(lock2) {
+                    synchronized (lock2) {
                         if (clientEndPoint != null) {
                             clientEndPoint.sendMessageIfOpen("keep alive");
                         }

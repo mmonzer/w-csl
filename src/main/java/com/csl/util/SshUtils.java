@@ -33,30 +33,6 @@ public class SshUtils {
     }
 
     /**
-     * Initialise une connexion SSH en vérifiant que la signature de l'hote distant est connue dans le fichier knowHost dont le chemin est passé en argument
-     *
-     * @param user           l'username
-     * @param password       le mot de passe (sera remplacé par une authentification par certificat)
-     * @param host           l'adresse ip de l'hote distant
-     * @param port           le port de l'hote distant
-     * @param knownHostsPath Le chemin vers le fichier know Host local (en général ~/.ssh/known_hosts
-     */
-    public SshUtils(String user, String password, String host, int port, String knownHostsPath) {
-        try {
-            JSch jsch = new JSch();
-            jsch.setKnownHosts(knownHostsPath);
-            session = jsch.getSession(user, host, port);
-            Hashtable<String, String> config = new Hashtable<String, String>();
-            config.put("server_host_key", "ecdsa-sha2-nistp256");
-            session.setConfig(config);
-            session.setPassword(password);
-            session.connect();
-        } catch (Exception e) {
-            System.out.println("Le tap " + host + " est innacessible pour le moment (Jsch error)");
-        }
-    }
-
-    /**
      * Permet d'exécuter une commande sur l'hote initialité
      *
      * @param command Chaine de caractères correspondante à la commande à exécuter

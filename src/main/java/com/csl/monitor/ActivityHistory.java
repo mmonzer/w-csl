@@ -51,23 +51,6 @@ public class ActivityHistory {
         addTick(nb_packets, nb_links, time);
     }
 
-    public int currentHistorySize() {
-        /**
-         * Get the number of elements currently in the history
-         *
-         * @return the size of the history
-         */
-        return histogram.size();
-    }
-    public int maxHistorySize() {
-        /**
-         * Get the current maximum size of the history
-         *
-         * @return The current maximum size of the history
-         */
-        return history_size;
-    }
-
     public void setHistorySize(int size) {
         /**
          * Change the maximum history size

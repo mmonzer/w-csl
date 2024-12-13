@@ -81,7 +81,6 @@ public class ActivityMonitor implements IStatusProvider {
 		LocalDateTime currentTime = LocalDateTime.now();
 		Json activeTaps = Json.array();
 		boolean is_http_api_reachable = false;
-		Tap tap;
 		for (Map.Entry<String, LocalDateTime> tapLastActivity: tapsLastActivity.entrySet()) {
 
 			Json conf;
@@ -215,10 +214,6 @@ public class ActivityMonitor implements IStatusProvider {
 				1, 1, TimeUnit.SECONDS,
 				LoggerCustomEndpoints.TICS_MONITOR, LoggerInterfaces.CSL_CLIENT
 		);
-	}
-
-	public Json getHistoryJson() {
-		return history.toJson();
 	}
 
 }

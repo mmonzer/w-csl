@@ -47,10 +47,6 @@ public class SocketMessageMQTTHandler implements MqttCallback {
         return idebug > 1;
     }
 
-    public boolean isShowInfo() {
-        return idebug > 0;
-    }
-
     public void setDebugLevel(int d) {
         idebug = d;
     }

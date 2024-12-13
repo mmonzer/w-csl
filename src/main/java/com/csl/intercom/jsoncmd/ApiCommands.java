@@ -125,14 +125,6 @@ public class ApiCommands {
         return formatPath(path) + "*";
     }
 
-    public String getPathName() {
-        if (path == null)
-            return "";
-        if (path.endsWith("/"))
-            return path.substring(0, path.length() - 1);
-        return path;
-    }
-
     private String getCleanApiName() {
         String s = path;
         if (s == null) s = "";
@@ -160,10 +152,6 @@ public class ApiCommands {
 
     public List<String> getListOfCommands() {
         return new ArrayList<>(listOfCommands.keySet());
-    }
-
-    public IJsonCmd getJCmd(String name) {
-        return listOfCommands.get(name);
     }
 
 //    @Override
@@ -206,27 +194,6 @@ public class ApiCommands {
 
         //ici
         return execCmd(api, "load_jsonfile", p);
-    }
-
-    public Json loadExamples(String apiname) {
-        Json result = readObjectFromDatabase("helpex_" + apiname);
-
-        if (result.has("contents")) return result.get("contents");
-        if (result.has("error")) return Json.array();
-
-        return Json.array();
-
-    }
-
-    public Json findExemple(Json examples, String cmd) {
-        for (Json j : examples) {
-            if (j.has(JCmd.CMD)) {
-                String c = JsonUtil.getStringFromJson(j, JCmd.CMD, "");
-                if (cmd.compareTo(c) == 0) return j;
-            }
-        }
-
-        return null;
     }
 
     public Map<String, JsonCmdPrivilegeFamily> getListOfCommandPrivileges() {

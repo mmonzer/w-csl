@@ -29,13 +29,9 @@ public class Config {
     public final Client Client;
     public final Config.Scan Scan;
     public final Config.Status Status;
-    public final Config.NmapService NmapService;
-    public final Config.CpeService CpeService;
     public final Tap TapService;
     public final Server Server;
     public final Config.UdpServerConf UdpServerConf;
-    public final Config.ModuleExec ModuleExec;
-    public final List<Module> Modules;
     public final Config.IdsConf IdsConf;
     public final Config.AlertViewer AlertViewer;
     public final Config.Autocrypt Autocrypt;
@@ -52,13 +48,9 @@ public class Config {
         Client = new Client(jConfig.get("client"));
         Status = new Status(jConfig.get("status"));
         UdpServerConf = new UdpServerConf(jConfig.get("udp_server_conf"));
-        ModuleExec = new ModuleExec(jConfig.get("module_exec"));
-        Modules = Module.makeList(jConfig.get("modules"));
         IdsConf = new IdsConf(jConfig.get("ids_conf"));
         AlertViewer = new AlertViewer(jConfig.get("alert_viewer"));
         Scan = new Scan(jConfig.get("discovery_service"));
-        NmapService = new NmapService(jConfig.get("nmap_service"));
-        CpeService = new CpeService(jConfig.get("cpe_service"));
         TapService = new Tap(jConfig.get("tap_service"));
         Autocrypt = new Autocrypt(jConfig.get("autocrypt_service"));
     }
@@ -172,38 +164,6 @@ public class Config {
 
     @Setter
     @Getter
-    public static class NmapService {
-        // region define variables
-        Boolean debugMode;
-        String debugDir;
-        Boolean logMode;
-        String logDir;
-        // endregion define variables
-
-        public NmapService(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
-            debugMode = config.get( "debug_mode").asBoolean();
-            debugDir = config.get("debug_dir").asString();
-            logMode = config.get( "log_mode").asBoolean();
-            logDir = config.get("log_dir").asString();
-        }
-    }
-
-    @Setter
-    @Getter
-    public static class CpeService {
-        // region define variables
-        String dictionaryPath;
-        // endregion define variables
-
-        public CpeService(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
-            dictionaryPath = config.get("dictionaryPath").asString();
-        }
-    }
-
-    @Setter
-    @Getter
     public static class Tap {
         // region define variables
         String localIpAddress;
@@ -307,74 +267,6 @@ public class Config {
 
     @Setter
     @Getter
-    public static class ModuleExec {
-        // region define variables
-        Integer samplingTime;
-        String modulesPackageName;
-        Integer numberOfExecLoops;
-        Boolean autostart;
-        // endregion define variables
-
-        public ModuleExec(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
-            modulesPackageName = config.get("modules_package_name").asString();
-            samplingTime = config.get("sampling_time").asInteger();
-            numberOfExecLoops = config.get("number_of_exec_loops").asInteger();
-            autostart = config.get( "autostart").asBoolean();
-        }
-    }
-
-    @Setter
-    @Getter
-    public static class Module {
-        // region define variables
-        String name;
-        String type;
-        CSLModuleConfig config;
-        // endregion define variables
-
-        public Module(Json moduleConfig) {
-            if (moduleConfig ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
-            name = moduleConfig.get("name").asString();
-            type = moduleConfig.get("type").asString();
-            config = new CSLModuleConfig(moduleConfig.get("config"));
-        }
-
-        public static List<Module> makeList(Json list) {
-            if (list == null || list.isNull() || !list.isArray()) {
-                throw new WrongConfigurationException("wrong config");
-            }
-
-            List<Module> moduleList = new ArrayList<>();
-            for (Json json : list.asJsonList()) {
-                moduleList.add(new Module(json));
-            }
-
-            return moduleList;
-        }
-
-        @Setter
-        @Getter
-        public static class CSLModuleConfig {
-            Boolean autostart;
-            Integer execLoopNumber;
-            Integer inputPriority;
-            Integer stepPriority;
-            Integer outputPriority;
-
-            public CSLModuleConfig(Json config) {
-                if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
-                autostart = config.get( "autostart").asBoolean();
-                execLoopNumber = config.get("exec_loop_number").asInteger();
-                inputPriority = config.get("input_priority").asInteger();
-                stepPriority = config.get("step_priority").asInteger();
-                outputPriority = config.get("output_priority").asInteger();
-            }
-        }
-    }
-
-    @Setter
-    @Getter
     public static class IdsConf {
         // region define variables
         Boolean on;
@@ -407,6 +299,327 @@ public class Config {
         String newLearnedModel;
         String systemConfiguration;
         String currentIdsParamsFile;
+
+        public Boolean getOn() {
+            return on;
+        }
+
+        public void setOn(Boolean on) {
+            this.on = on;
+        }
+
+        public Integer getMode() {
+            return mode;
+        }
+
+        public void setMode(Integer mode) {
+            this.mode = mode;
+        }
+
+        public String getHelpMode() {
+            return helpMode;
+        }
+
+        public void setHelpMode(String helpMode) {
+            this.helpMode = helpMode;
+        }
+
+        public Boolean getRelativeToCSLConfigDir() {
+            return relativeToCSLConfigDir;
+        }
+
+        public void setRelativeToCSLConfigDir(Boolean relativeToCSLConfigDir) {
+            this.relativeToCSLConfigDir = relativeToCSLConfigDir;
+        }
+
+        public String getIdsconfDir() {
+            return idsconfDir;
+        }
+
+        public void setIdsconfDir(String idsconfDir) {
+            this.idsconfDir = idsconfDir;
+        }
+
+        public Boolean getIdsconfDirRelativeToDataDir() {
+            return idsconfDirRelativeToDataDir;
+        }
+
+        public void setIdsconfDirRelativeToDataDir(Boolean idsconfDirRelativeToDataDir) {
+            this.idsconfDirRelativeToDataDir = idsconfDirRelativeToDataDir;
+        }
+
+        public String getPacketsDirForDetectionOffline() {
+            return packetsDirForDetectionOffline;
+        }
+
+        public void setPacketsDirForDetectionOffline(String packetsDirForDetectionOffline) {
+            this.packetsDirForDetectionOffline = packetsDirForDetectionOffline;
+        }
+
+        public String getPacketsDirForDetectionOfflineInfo() {
+            return packetsDirForDetectionOfflineInfo;
+        }
+
+        public void setPacketsDirForDetectionOfflineInfo(String packetsDirForDetectionOfflineInfo) {
+            this.packetsDirForDetectionOfflineInfo = packetsDirForDetectionOfflineInfo;
+        }
+
+        public String getPacketsDirForRecording() {
+            return packetsDirForRecording;
+        }
+
+        public void setPacketsDirForRecording(String packetsDirForRecording) {
+            this.packetsDirForRecording = packetsDirForRecording;
+        }
+
+        public String getPacketsDirForRecordingInfo() {
+            return packetsDirForRecordingInfo;
+        }
+
+        public void setPacketsDirForRecordingInfo(String packetsDirForRecordingInfo) {
+            this.packetsDirForRecordingInfo = packetsDirForRecordingInfo;
+        }
+
+        public String getPacketsDirForLearning() {
+            return packetsDirForLearning;
+        }
+
+        public void setPacketsDirForLearning(String packetsDirForLearning) {
+            this.packetsDirForLearning = packetsDirForLearning;
+        }
+
+        public String getPacketsDirForLearningInfo() {
+            return packetsDirForLearningInfo;
+        }
+
+        public void setPacketsDirForLearningInfo(String packetsDirForLearningInfo) {
+            this.packetsDirForLearningInfo = packetsDirForLearningInfo;
+        }
+
+        public Boolean getValidationAfterLearning() {
+            return validationAfterLearning;
+        }
+
+        public void setValidationAfterLearning(Boolean validationAfterLearning) {
+            this.validationAfterLearning = validationAfterLearning;
+        }
+
+        public Boolean getLogToFile() {
+            return logToFile;
+        }
+
+        public void setLogToFile(Boolean logToFile) {
+            this.logToFile = logToFile;
+        }
+
+        public String getVariablesPrefixFilename() {
+            return variablesPrefixFilename;
+        }
+
+        public void setVariablesPrefixFilename(String variablesPrefixFilename) {
+            this.variablesPrefixFilename = variablesPrefixFilename;
+        }
+
+        public String getPacketsPrefixFilename() {
+            return packetsPrefixFilename;
+        }
+
+        public void setPacketsPrefixFilename(String packetsPrefixFilename) {
+            this.packetsPrefixFilename = packetsPrefixFilename;
+        }
+
+        public String getNetworkPrefixFilename() {
+            return networkPrefixFilename;
+        }
+
+        public void setNetworkPrefixFilename(String networkPrefixFilename) {
+            this.networkPrefixFilename = networkPrefixFilename;
+        }
+
+        public Integer getMaxSizeOfLogFiles() {
+            return maxSizeOfLogFiles;
+        }
+
+        public void setMaxSizeOfLogFiles(Integer maxSizeOfLogFiles) {
+            this.maxSizeOfLogFiles = maxSizeOfLogFiles;
+        }
+
+        public String getSubdirLearn() {
+            return subdirLearn;
+        }
+
+        public void setSubdirLearn(String subdirLearn) {
+            this.subdirLearn = subdirLearn;
+        }
+
+        public String getHelpSubdirLearn() {
+            return helpSubdirLearn;
+        }
+
+        public void setHelpSubdirLearn(String helpSubdirLearn) {
+            this.helpSubdirLearn = helpSubdirLearn;
+        }
+
+        public String getSubdirOfflineDetect() {
+            return subdirOfflineDetect;
+        }
+
+        public void setSubdirOfflineDetect(String subdirOfflineDetect) {
+            this.subdirOfflineDetect = subdirOfflineDetect;
+        }
+
+        public String getHelpSubdirDetect() {
+            return helpSubdirDetect;
+        }
+
+        public void setHelpSubdirDetect(String helpSubdirDetect) {
+            this.helpSubdirDetect = helpSubdirDetect;
+        }
+
+        public String getRulesForDetection() {
+            return rulesForDetection;
+        }
+
+        public void setRulesForDetection(String rulesForDetection) {
+            this.rulesForDetection = rulesForDetection;
+        }
+
+        public String getRulesForLearning() {
+            return rulesForLearning;
+        }
+
+        public void setRulesForLearning(String rulesForLearning) {
+            this.rulesForLearning = rulesForLearning;
+        }
+
+        public String getRulesForSuricataBase() {
+            return rulesForSuricataBase;
+        }
+
+        public void setRulesForSuricataBase(String rulesForSuricataBase) {
+            this.rulesForSuricataBase = rulesForSuricataBase;
+        }
+
+        public String getRulesForSuricataLearned() {
+            return rulesForSuricataLearned;
+        }
+
+        public void setRulesForSuricataLearned(String rulesForSuricataLearned) {
+            this.rulesForSuricataLearned = rulesForSuricataLearned;
+        }
+
+        public String getLearnedModel() {
+            return learnedModel;
+        }
+
+        public void setLearnedModel(String learnedModel) {
+            this.learnedModel = learnedModel;
+        }
+
+        public String getNewLearnedModel() {
+            return newLearnedModel;
+        }
+
+        public void setNewLearnedModel(String newLearnedModel) {
+            this.newLearnedModel = newLearnedModel;
+        }
+
+        public String getSystemConfiguration() {
+            return systemConfiguration;
+        }
+
+        public void setSystemConfiguration(String systemConfiguration) {
+            this.systemConfiguration = systemConfiguration;
+        }
+
+        public String getCurrentIdsParamsFile() {
+            return currentIdsParamsFile;
+        }
+
+        public void setCurrentIdsParamsFile(String currentIdsParamsFile) {
+            this.currentIdsParamsFile = currentIdsParamsFile;
+        }
+
+        public List<String> getIdstraceFlags() {
+            return idstraceFlags;
+        }
+
+        public void setIdstraceFlags(List<String> idstraceFlags) {
+            this.idstraceFlags = idstraceFlags;
+        }
+
+        public String getGeneral() {
+            return general;
+        }
+
+        public void setGeneral(String general) {
+            this.general = general;
+        }
+
+        public String getIdstraceDir() {
+            return idstraceDir;
+        }
+
+        public void setIdstraceDir(String idstraceDir) {
+            this.idstraceDir = idstraceDir;
+        }
+
+        public Boolean getIdstraceOn() {
+            return idstraceOn;
+        }
+
+        public void setIdstraceOn(Boolean idstraceOn) {
+            this.idstraceOn = idstraceOn;
+        }
+
+        public Boolean getSendToConsole() {
+            return sendToConsole;
+        }
+
+        public void setSendToConsole(Boolean sendToConsole) {
+            this.sendToConsole = sendToConsole;
+        }
+
+        public Boolean getSendToBrowser() {
+            return sendToBrowser;
+        }
+
+        public void setSendToBrowser(Boolean sendToBrowser) {
+            this.sendToBrowser = sendToBrowser;
+        }
+
+        public Boolean getShowTicks() {
+            return showTicks;
+        }
+
+        public void setShowTicks(Boolean showTicks) {
+            this.showTicks = showTicks;
+        }
+
+        public Boolean getKillPreviousInstance() {
+            return killPreviousInstance;
+        }
+
+        public void setKillPreviousInstance(Boolean killPreviousInstance) {
+            this.killPreviousInstance = killPreviousInstance;
+        }
+
+        public String getTapsDir() {
+            return tapsDir;
+        }
+
+        public void setTapsDir(String tapsDir) {
+            this.tapsDir = tapsDir;
+        }
+
+        public Integer getHistoryLength() {
+            return historyLength;
+        }
+
+        public void setHistoryLength(Integer historyLength) {
+            this.historyLength = historyLength;
+        }
+
         List<String> idstraceFlags;
         String general;
         String idstraceDir;
@@ -463,26 +676,90 @@ public class Config {
         }
     }
 
-    @Setter
-    @Getter
     public static class AlertViewer {
         // region define variables
         String ip;
         Integer port;
+
+        public String getIp() {
+            return ip;
+        }
+
+        public void setIp(String ip) {
+            this.ip = ip;
+        }
+
+        public Integer getPort() {
+            return port;
+        }
+
+        public void setPort(Integer port) {
+            this.port = port;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public Boolean getLogToFile() {
+            return logToFile;
+        }
+
+        public void setLogToFile(Boolean logToFile) {
+            this.logToFile = logToFile;
+        }
+
+        public String getLogDir() {
+            return logDir;
+        }
+
+        public void setLogDir(String logDir) {
+            this.logDir = logDir;
+        }
+
+        public String getPrefixFilename() {
+            return prefixFilename;
+        }
+
+        public void setPrefixFilename(String prefixFilename) {
+            this.prefixFilename = prefixFilename;
+        }
+
+        public Integer getMaxSizeOfLogFiles() {
+            return maxSizeOfLogFiles;
+        }
+
+        public void setMaxSizeOfLogFiles(Integer maxSizeOfLogFiles) {
+            this.maxSizeOfLogFiles = maxSizeOfLogFiles;
+        }
+
+        public Boolean getDoNotResentSameAlert() {
+            return doNotResentSameAlert;
+        }
+
+        public void setDoNotResentSameAlert(Boolean doNotResentSameAlert) {
+            this.doNotResentSameAlert = doNotResentSameAlert;
+        }
+
+        public Integer getAlertDuration() {
+            return alertDuration;
+        }
+
+        public void setAlertDuration(Integer alertDuration) {
+            this.alertDuration = alertDuration;
+        }
+
         String name;
         Boolean logToFile;
         String logDir;
         String prefixFilename;
         Integer maxSizeOfLogFiles;
-        Boolean alertToWeb;
-        String alertJsonTag;
-        Boolean alertToUdp;
-        Boolean alertToDb;
-        Boolean showAlerts;
         Boolean doNotResentSameAlert;
         Integer alertDuration;
-        String filenameCurrentAlerts;
-        String subdirBackupAlerts;
         // endregion define variables
 
         public AlertViewer(Json config) {
@@ -494,23 +771,40 @@ public class Config {
             logDir = config.get("log_dir").asString();
             prefixFilename = config.get("prefix_filename").asString();
             maxSizeOfLogFiles = config.get("max_size_of_log_files").asInteger();
-            alertToWeb = config.get( "alert_to_web").asBoolean();
-            alertJsonTag = config.get("alert_json_tag").asString();
-            alertToUdp = config.get( "alert_to_udp").asBoolean();
-            alertToDb = config.get( "alert_to_db").asBoolean();
-            showAlerts = config.get( "show_alerts").asBoolean();
             doNotResentSameAlert = config.get( "do_not_resent_same_alert").asBoolean();
             alertDuration = config.get("alert_duration").asInteger();
-            filenameCurrentAlerts = config.get("filename_current_alerts").asString();
-            subdirBackupAlerts = config.get("subdir_backup_alerts").asString();
         }
     }
 
-    @Setter
-    @Getter
+
     public static class Autocrypt {
         // region define variables
         String ip;
+
+        public Integer getSyncFrequency() {
+            return syncFrequency;
+        }
+
+        public void setSyncFrequency(Integer syncFrequency) {
+            this.syncFrequency = syncFrequency;
+        }
+
+        public Integer getPort() {
+            return port;
+        }
+
+        public void setPort(Integer port) {
+            this.port = port;
+        }
+
+        public String getIp() {
+            return ip;
+        }
+
+        public void setIp(String ip) {
+            this.ip = ip;
+        }
+
         Integer port;
         Integer syncFrequency;
         // endregion define variables

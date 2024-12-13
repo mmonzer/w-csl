@@ -235,7 +235,6 @@ public class CSLContext {
             getStatusNotifier().setSendNotifications(false);
         } else {
             getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
-            initDynamicModules();
             initTime();
         }
     }
@@ -263,16 +262,6 @@ public class CSLContext {
      */
     private void initTime() {
         initialTime = getSystemCurrentTimeMillis();
-    }
-
-    /**
-     * Initializes the modules based on the configuration.
-     */
-    private void initDynamicModules() {
-        logger.debug("Loading modules");
-
-        int numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
-        logger.debug("Running {} execution loops", numberOfExecLoops);
     }
 
     /**

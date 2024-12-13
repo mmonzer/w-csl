@@ -3,6 +3,7 @@ package main;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.core.NoLogging;
+import com.csl.exceptions.ServiceNotReadyException;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
@@ -360,26 +361,42 @@ public class CSLIDSMainClient {
         Executors.newSingleThreadExecutor().submit(() -> {
             boolean areCommandSent = false;
 
-            while (!areCommandSent) {
-                // Try to send the commands
-                try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
-                    dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
-                    areCommandSent = true;
-                } catch (Exception e) {
-                    logger.error("Error while sending API commands to the server, retrying ...");
-                }
+            // Try to send the commands
+            try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
+                while (!areCommandSent) {
+                    areCommandSent = tryToSendCommandList(dbapiHandler, areCommandSent);
 
-                // Wait
-                synchronized (monitorObj) {
-                    try {
-                        monitorObj.wait(5);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
+                    // Wait
+                    if (wasInterruptedWhileWaiting(5)) return;
                 }
+            } catch (Exception e) {
+                logger.error("Error while sending API commands to the server, retrying ...");
             }
         });
+    }
+
+    private static synchronized boolean wasInterruptedWhileWaiting(int seconds) {
+       return wasInterruptedWhileWaiting(1F*seconds);
+    }
+
+    private static synchronized boolean wasInterruptedWhileWaiting(float seconds) {
+        try {
+            Thread.sleep((long) seconds * 1000L);
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return true;
+        }
+    }
+
+    private static boolean tryToSendCommandList(DbapiHandlerForCSLInit dbapiHandler, boolean areCommandSent) {
+        try {
+            dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
+            areCommandSent = true;
+        } catch (ServiceNotReadyException e) {
+            logger.error("Error while sending API commands to the server, retrying ...");
+        }
+        return areCommandSent;
     }
 
     /**

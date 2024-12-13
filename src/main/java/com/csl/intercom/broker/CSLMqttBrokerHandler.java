@@ -64,7 +64,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      * @param config The configuration of the project. Can be retrieved with <code>CSLContext.getInstance().getConfig()</code>.
      */
     public CSLMqttBrokerHandler(Config config) {
-        Config.Client clientConfig = config.Client;
+        Config.Client clientConfig = config.client;
         brokerUri = clientConfig.getUseSsl() ? "wss://" : "ws://";
         brokerUri += clientConfig.getIpServerRemote();
         brokerUri += "/mqtt";

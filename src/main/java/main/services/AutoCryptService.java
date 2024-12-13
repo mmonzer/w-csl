@@ -55,7 +55,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         super(name, description, configFileSectionName);
         this.isRemote = isRemote;
         autocrypt = new AutoCrypt(name);
-        syncFrequency = Config.getInstance().Autocrypt.getSyncFrequency();
+        syncFrequency = Config.getInstance().autocrypt.getSyncFrequency();
     }
 
     /**

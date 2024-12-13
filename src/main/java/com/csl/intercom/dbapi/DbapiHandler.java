@@ -26,9 +26,9 @@ public class DbapiHandler extends ApiHandler {
 
     public DbapiHandler(String moduleName, Config config) {
         super("DB-API::"+moduleName,
-                config.Client.getIpServerRemote(),
-                config.Client.getUseSsl());
+                config.client.getIpServerRemote(),
+                config.client.getUseSsl());
         addUriCommonPath("/api");
-        setApiKey(config.Client.getApiKey());
+        setApiKey(config.client.getApiKey());
     }
 }

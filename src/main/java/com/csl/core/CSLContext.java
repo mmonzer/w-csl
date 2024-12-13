@@ -13,9 +13,6 @@ import main.services.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class CSLContext {
     /**
      * Logger instance for this class.
@@ -168,7 +165,7 @@ public class CSLContext {
      * @return The configuration instance.
      */
     public Config getConfig() {
-        if (Config.getInstance().Server == null) {
+        if (Config.getInstance().server == null) {
             logger.error("Invalid config file, update to new format");
             System.exit(0);
         }
@@ -185,7 +182,7 @@ public class CSLContext {
 
         org.eclipse.jetty.util.log.Log.setLog(new com.csl.core.NoLogging());
 
-        cslAlertManager = new CSLAlertManager(getConfig().AlertViewer);
+        cslAlertManager = new CSLAlertManager(getConfig().alertViewer);
 
         setCslHttpServer(new CSLHttpServerJetty());
         setCslUDPServer(new CSLUDPServer());
@@ -218,10 +215,10 @@ public class CSLContext {
         }
 
         if (isServer) {
-            getCslHttpServer().initServer(Config.getInstance().Server);
+            getCslHttpServer().initServer(Config.getInstance().server);
             getStatusNotifier().setSendNotifications(false);
         } else {
-            getCslUDPServer().initUDPServer(Config.getInstance().UdpServerConf);
+            getCslUDPServer().initUDPServer(Config.getInstance().udpServerConf);
             initTime();
         }
     }

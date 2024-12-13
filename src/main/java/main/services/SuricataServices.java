@@ -2,7 +2,6 @@ package main.services;
 
 import com.csl.core.Config;
 import com.jcraft.jsch.JSchException;
-import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import com.csl.util.SshUtils;
 import org.slf4j.Logger;
@@ -241,7 +240,7 @@ public class SuricataServices extends Service {
      * @return true if the initialization happened with no problems, false otherwise.
      */
     public void defineServiceEndpoints() {
-        Config.Tap config = Config.getInstance().TapService;
+        Config.Tap config = Config.getInstance().tapService;
         logger.debug("Initializing SSH suricata commands ..");
         try {
             Json conf = FileUtils.readJsonFromFile("./datafile/configuredSuricata.json");

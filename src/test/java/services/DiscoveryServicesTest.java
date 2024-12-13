@@ -44,7 +44,7 @@ class DiscoveryServicesTest {
 
     @BeforeEach
     void setUp() {
-        jConfig.Scan.setManagerIp("localhost");
+        jConfig.scan.setManagerIp("localhost");
 
         MockitoAnnotations.openMocks(this);
         when(scanWebSocketHandler.requestScan(any())).thenReturn(JsonApiResponse.success());

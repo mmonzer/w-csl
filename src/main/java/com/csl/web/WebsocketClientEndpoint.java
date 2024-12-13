@@ -84,7 +84,7 @@ public class WebsocketClientEndpoint {
         CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opened websocket " + userSession.getRequestURI() + " : " + userSession);
         logger.info("Connected to WCSL websocket {}", endpointURI);
         this.userSession = userSession;
-        userSession.setMaxIdleTimeout(Config.getInstance().Server.getWebsocketTimeout());
+        userSession.setMaxIdleTimeout(Config.getInstance().server.getWebsocketTimeout());
         CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout());
 
         isConnecting.set(false);

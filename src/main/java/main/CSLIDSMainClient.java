@@ -43,9 +43,6 @@ public class CSLIDSMainClient {
     // Server configuration variables
     private static String serverIp = "127.0.0.1";
     private static String serverUrlPrefix = "";
-    private static String apiKey = "";
-    private static int serverPort = 8000;
-    private static boolean useSsl = false;
 
     private static final Object lock1 = new Object();
     private static final Object lock2 = new Object();
@@ -104,7 +101,7 @@ public class CSLIDSMainClient {
      * NOTE that each message is handled by a new thread
      */
     public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
-        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(getWebSocketURI(), apiKey);
+        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(getWebSocketURI(), Config.instance.Client.getApiKey());
         websocketClient.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
         return websocketClient;
     }
@@ -115,7 +112,17 @@ public class CSLIDSMainClient {
      * @return the websocket url
      */
     private static @NotNull String getWebSocketUrl() {
+        Boolean useSsl = Config.instance.Client.getUseSsl();
+        useSsl = (useSsl!=null)?useSsl:false;
+        String serverIp = Config.instance.Client.getIpServerRemote();
+        serverIp= resolveHostNameIfRequired(serverIp, Config.instance.Client.getForceHostNameResolution());
+        int serverPort = Config.instance.Client.getPortServerRemote();
+        String serverUrlPrefix = Config.instance.Client.getServerRemoteUrlPrefix();
+        serverUrlPrefix = (serverUrlPrefix!=null)?serverUrlPrefix:"";
+
+
         String wsProtocol = useSsl ? "wss" : "ws";
+        logger.info("useSsl:{}\tserverIp:{}\tserverPort:{}\tserverUrlPrefix:{}",useSsl, serverIp, serverPort, serverUrlPrefix);
         return (serverPort > 0)
                 ? wsProtocol + "://" + serverIp + ":" + serverPort + serverUrlPrefix + "/cmd"
                 : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
@@ -342,11 +349,6 @@ public class CSLIDSMainClient {
         serverUrlPrefix = (serverUrlPrefix == null) ? "" : serverUrlPrefix;
 
         resolveHostNameIfRequired(config);
-
-        serverPort = config.Client.getPortServerRemote();
-        useSsl = config.Client.getUseSsl();
-        apiKey = config.Client.getApiKey();
-        logger.trace("API Key: {}", apiKey);
     }
 
     /**
@@ -362,6 +364,20 @@ public class CSLIDSMainClient {
                 logger.error("Error while resolving host name: {}", e.getMessage(), e);
             }
         }
+    }
+
+    /**
+     * Attempts to resolve the host name if the configuration requires it.
+     */
+    private static String resolveHostNameIfRequired(String ipAddress, boolean shouldForceHostNameResolution) {
+        if (shouldForceHostNameResolution) {
+            try {
+                ipAddress = InetAddress.getByName(ipAddress).getHostAddress();
+            } catch (UnknownHostException e) {
+                logger.error("Error while resolving host name: {}", e.getMessage(), e);
+            }
+        }
+        return ipAddress;
     }
 
     /**

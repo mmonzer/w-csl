@@ -40,7 +40,7 @@ public class WebsocketClientEndpoint {
     public static String maskApiKey(String apiKey) {
         if (apiKey == null || apiKey.length() < 8) {
             System.out.println("API Key is too short to mask.");
-            return null;
+            return "";
         }
 
         String firstPart = apiKey.substring(0, 4); // First 4 characters
@@ -89,6 +89,7 @@ public class WebsocketClientEndpoint {
     public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
         this.endpointURI = endpointURI;
         WebsocketClientEndpoint.apiKey = apiKey;
+        logger.info("API key : {}", maskApiKey(apiKey));
     }
 
     /**

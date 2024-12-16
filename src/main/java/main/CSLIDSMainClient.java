@@ -21,6 +21,8 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.*;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.net.InetAddress;
@@ -39,6 +41,7 @@ import static com.ucsl.json.JsonUtil.getValueStringOrNull;
 public class CSLIDSMainClient {
 
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(CSLIDSMainClient.class);
+    private static final Logger log = LoggerFactory.getLogger(CSLIDSMainClient.class);
 
     // Server configuration variables
     private static String serverIp = "127.0.0.1";
@@ -56,24 +59,23 @@ public class CSLIDSMainClient {
 
         @Override
         public void broadcastMessageString(String socketName, String message) {
-            if (clientEndPoint != null) {
-                clientEndPoint.sendMessageIfOpen("wss:" + socketName + ":" + message);
+            if (WebsocketClientEndpoint.websocketClientInstance != null) {
+                WebsocketClientEndpoint.websocketClientInstance.sendMessageIfOpen("wss:" + socketName + ":" + message);
             }
         }
 
         @Override
         public void broadcastMessageJson(String socketName, Json jsonMessage) {
-            if (clientEndPoint != null) {
-                clientEndPoint.sendMessageIfOpen("wsj:" + socketName + ":" + jsonMessage);
+            if (WebsocketClientEndpoint.websocketClientInstance != null) {
+                WebsocketClientEndpoint.websocketClientInstance.sendMessageIfOpen("wsj:" + socketName + ":" + jsonMessage);
             }
         }
     };
 
     // Alert forwarder for handling alerts
     private static final IAlertForwarder alertForwarder = alert -> {
-        logger.debug("Forwarding alert:\n{}", alert);
-        if (clientEndPoint != null) {
-            clientEndPoint.sendMessageIfOpen("alert:" + alert);
+        if (WebsocketClientEndpoint.websocketClientInstance != null) {
+            WebsocketClientEndpoint.websocketClientInstance.sendMessageIfOpen("alert:" + alert);
         }
     };
 

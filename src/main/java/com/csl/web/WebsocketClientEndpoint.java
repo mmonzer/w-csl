@@ -242,7 +242,7 @@ public class WebsocketClientEndpoint {
     }
 
     private static final ScheduledExecutorService reconnectWsExecutor = Executors.newSingleThreadScheduledExecutor();
-    private static WebsocketClientEndpoint websocketClientInstance = null;
+    public static WebsocketClientEndpoint websocketClientInstance = null;
 
     /**
      * Handles messages received from the WebSocket server.
@@ -308,8 +308,8 @@ public class WebsocketClientEndpoint {
         // Reconnect task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 reconnectWsExecutor,
-                CSLIDSMainClient::connectToServerIfRequired,
-//                ()->websocketClientInstance.connectToServerIfRequired(),
+//                CSLIDSMainClient::connectToServerIfRequired,
+                ()->websocketClientInstance.connectToServerIfRequired(),
                 0, 5, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
 
@@ -354,10 +354,9 @@ public class WebsocketClientEndpoint {
      */
     public void connectToServerIfRequired() {
         if (this.isOpen()) {
-            logger.trace("WebSocket is already connected. No action needed.");
-            return;        }
+            return;
+        }
 
-        logger.trace("Connecting to the server at {}", endpointURI);
         this.connect();
     }
     // endregion - new code

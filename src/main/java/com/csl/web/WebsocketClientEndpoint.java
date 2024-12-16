@@ -5,8 +5,10 @@ import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.logger.LoggerConstants;
+import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.JCmd;
+import com.csl.util.ThreadUtils;
 import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
@@ -17,11 +19,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.csl.logger.LoggerConstants.*;
@@ -61,7 +69,6 @@ public class WebsocketClientEndpoint {
 
         return maskedKey;
     }
-
 
     public void connect() {
         synchronized (WebsocketClientEndpoint.class) { // Ensures thread-safety
@@ -213,6 +220,7 @@ public class WebsocketClientEndpoint {
         }
     }
 
+    // region - new code
     /**
      * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
      * The messages received from the server are expected to follow the following format:
@@ -232,6 +240,9 @@ public class WebsocketClientEndpoint {
         websocketClient.setMessageHandler(messageString -> websocketClient.handleServerMessage(messageString.trim()));
         return websocketClient;
     }
+
+    private static final ScheduledExecutorService reconnectWsExecutor = Executors.newSingleThreadScheduledExecutor();
+    private static WebsocketClientEndpoint websocketClientInstance = null;
 
     /**
      * Handles messages received from the WebSocket server.
@@ -287,4 +298,67 @@ public class WebsocketClientEndpoint {
             }
         }).start();
     }
+
+    /**
+     * Starts tasks for maintaining the connection to the WebSocket server and keeping the connection alive.
+     */
+    public static void openWsConnectionWithCSLServer() {
+        websocketClientInstance = WebsocketClientEndpoint.initWebSocketClient();
+
+        // Reconnect task
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                reconnectWsExecutor,
+                CSLIDSMainClient::connectToServerIfRequired,
+//                ()->websocketClientInstance.connectToServerIfRequired(),
+                0, 5, TimeUnit.SECONDS,
+                LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
+
+        // Shutdown hook to clean up the executor
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            reconnectWsExecutor.shutdown();
+            try {
+                if (!reconnectWsExecutor.awaitTermination(1, TimeUnit.SECONDS)) {
+                    reconnectWsExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                reconnectWsExecutor.shutdownNow();
+            }
+        }));
+
+        // Keep-alive task
+        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
+                () -> {
+                    synchronized (websocketClientInstance) {
+                        if (websocketClientInstance != null) {
+                            websocketClientInstance.sendMessageIfOpen("keep alive");
+                        }
+                    }
+                },
+                1, 5, TimeUnit.SECONDS,
+                LoggerCustomEndpoints.KEEP_ALIVE_WS_CSL, LoggerInterfaces.CSL_CLIENT);
+    }
+
+    /**
+     * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
+     * The messages received from the server are expected to follow the following format:
+     * {
+     * api: <the service name>,
+     * jcmd: {
+     * cmd: <command>,
+     * params: {
+     * ...
+     * }
+     * }
+     * }
+     * NOTE that each message is handled by a new thread
+     */
+    public void connectToServerIfRequired() {
+        if (this.isOpen()) {
+            logger.trace("WebSocket is already connected. No action needed.");
+            return;        }
+
+        logger.trace("Connecting to the server at {}", endpointURI);
+        this.connect();
+    }
+    // endregion - new code
 }

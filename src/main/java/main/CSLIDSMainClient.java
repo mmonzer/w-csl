@@ -87,31 +87,11 @@ public class CSLIDSMainClient {
     }
 
     /**
-     * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
-     * The messages received from the server are expected to follow the following format:
-     * {
-     * api: <the service name>,
-     * jcmd: {
-     * cmd: <command>,
-     * params: {
-     * ...
-     * }
-     * }
-     * }
-     * NOTE that each message is handled by a new thread
-     */
-//    public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
-//        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(getWebSocketURI(), Config.instance.Client.getApiKey());
-//        websocketClient.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
-//        return websocketClient;
-//    }
-
-    /**
      * gives the websocket url
      *
      * @return the websocket url
      */
-    private static @NotNull String getWebSocketUrl() {
+    public static @NotNull String getWebSocketUrl() {
         Boolean useSsl = Config.instance.Client.getUseSsl();
         useSsl = (useSsl!=null)?useSsl:false;
         String serverIp = Config.instance.Client.getIpServerRemote();
@@ -194,44 +174,6 @@ public class CSLIDSMainClient {
     }
 
     /**
-     * Starts tasks for maintaining the connection to the WebSocket server and keeping the connection alive.
-     */
-    public static void openWsConnectionWithCSLServer() {
-        clientEndPoint = WebsocketClientEndpoint.initWebSocketClient();
-
-        // Reconnect task
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-                reconnectWsExecutor,
-                CSLIDSMainClient::connectToServerIfRequired,
-                0, 5, TimeUnit.SECONDS,
-                LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
-
-        // Shutdown hook to clean up the executor
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            reconnectWsExecutor.shutdown();
-            try {
-                if (!reconnectWsExecutor.awaitTermination(1, TimeUnit.SECONDS)) {
-                    reconnectWsExecutor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                reconnectWsExecutor.shutdownNow();
-            }
-        }));
-
-        // Keep-alive task
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(Executors.newSingleThreadScheduledExecutor(),
-                () -> {
-                    synchronized (lock2) {
-                        if (clientEndPoint != null) {
-                            clientEndPoint.sendMessageIfOpen("keep alive");
-                        }
-                    }
-                },
-                1, 5, TimeUnit.SECONDS,
-                LoggerCustomEndpoints.KEEP_ALIVE_WS_CSL, LoggerInterfaces.CSL_CLIENT);
-    }
-
-    /**
      * Initializes the CSLContext with the provided arguments and sets debug mode.
      */
     private static void initializeContext() {
@@ -261,7 +203,7 @@ public class CSLIDSMainClient {
 
 
         // Connect to the server using WebSocket and keep the connection alive
-        openWsConnectionWithCSLServer();
+        WebsocketClientEndpoint.openWsConnectionWithCSLServer();
         // Start the servers and services of the csl_client
         startServers();
 

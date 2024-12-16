@@ -100,11 +100,11 @@ public class CSLIDSMainClient {
      * }
      * NOTE that each message is handled by a new thread
      */
-    public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
-        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(getWebSocketURI(), Config.instance.Client.getApiKey());
-        websocketClient.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
-        return websocketClient;
-    }
+//    public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
+//        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(getWebSocketURI(), Config.instance.Client.getApiKey());
+//        websocketClient.setMessageHandler(messageString -> handleServerMessage(messageString.trim()));
+//        return websocketClient;
+//    }
 
     /**
      * gives the websocket url
@@ -133,7 +133,7 @@ public class CSLIDSMainClient {
      *
      * @return the websocket URI or default "ws://wrongURI" if syntax error
      */
-    private static URI getWebSocketURI() {
+    public static URI getWebSocketURI() {
         try {
             return new URI(getWebSocketUrl());
         } catch (URISyntaxException e) {
@@ -165,7 +165,7 @@ public class CSLIDSMainClient {
         if (clientEndPoint == null) {
             logger.warn("WebSocket client endpoint is not initialized. Attempting to reinitialize...");
             try {
-                clientEndPoint = initWebSocketClient(); // Reinitialize client
+                clientEndPoint = WebsocketClientEndpoint.initWebSocketClient(); // Reinitialize client
                 if (clientEndPoint == null) {
                     logger.error("Failed to initialize WebSocket client endpoint. Aborting connection attempt.");
                     return;
@@ -194,65 +194,10 @@ public class CSLIDSMainClient {
     }
 
     /**
-     * Handles messages received from the WebSocket server.
-     *
-     * @param messageString the raw message string received
-     */
-    private static void handleServerMessage(String messageString) {
-        new Thread(() -> {
-            logger.trace("Received message: {}", messageString);
-
-            if (messageString.startsWith("{") && messageString.endsWith("}")) {
-                Json messageJson = Json.read(messageString);
-                getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
-                String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
-                MDC.put(X_CORRELATION_ID, xCorrelationId);
-                String uri = "";
-
-                String apiName = JsonUtil.getStringFromJson(messageJson, "api", "");
-
-                Json result = Json.object().set("error", "api not found");
-
-                if (!apiName.isEmpty()) {
-                    ApiCommands api = JServiceLoader.apiMap.get(apiName);
-                    MDC.put(ENDPOINT, apiName);
-                    Json jsonCommand = messageJson.get("jsonCommand");
-                    uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
-                    MDC.put(ENDPOINT, uri);
-
-                    CSLNetworkLogger.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
-
-                    if (jsonCommand != null && api != null) {
-                        result = api.execJcmd(jsonCommand);
-                    } else if (jsonCommand == null) {
-                        result.set("error", "jsonCommand not found");
-                    }
-                } else {
-                    logger.warn("API endpoint not found");
-                }
-
-
-                Json resultMessageJson = Json.object()
-                        .set("uuid", messageJson.get("uuid"))
-                        .set(X_CORRELATION_ID, xCorrelationId)
-                        .set("result", result);
-
-                logger.trace("Sending result: {}", resultMessageJson);
-                clientEndPoint.sendMessageIfOpen("res:" + resultMessageJson);
-                CSLNetworkLogger.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
-                MDC.remove(COMMAND);
-                MDC.remove(ENDPOINT);
-                MDC.remove(X_CORRELATION_ID);
-                MDC.remove(PROTOCOL);
-            }
-        }).start();
-    }
-
-    /**
      * Starts tasks for maintaining the connection to the WebSocket server and keeping the connection alive.
      */
     public static void openWsConnectionWithCSLServer() {
-        clientEndPoint = initWebSocketClient();
+        clientEndPoint = WebsocketClientEndpoint.initWebSocketClient();
 
         // Reconnect task
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(

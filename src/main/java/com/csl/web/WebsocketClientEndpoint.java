@@ -1,13 +1,21 @@
 package com.csl.web;
 
 import com.csl.core.Config;
+import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.logger.CSLNetworkLogger;
+import com.csl.logger.LoggerConstants;
 import com.csl.logger.LoggerInterfaces;
+import com.csl.util.JCmd;
+import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
+import com.ucsl.json.Json;
+import com.ucsl.json.JsonUtil;
 import jakarta.websocket.*;
 import main.CSLIDSMainClient;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.net.URI;
 import java.time.Duration;
@@ -15,6 +23,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.csl.logger.LoggerConstants.*;
+import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.COMMAND;
+import static com.ucsl.json.JsonUtil.getValueStringOrNull;
 
 @ClientEndpoint(subprotocols = {"xsCrossfire"}, configurator = WebsocketClientEndpoint.Configurator.class)
 public class WebsocketClientEndpoint {
@@ -199,5 +211,80 @@ public class WebsocketClientEndpoint {
         } catch (Exception ignored) {
             return false;
         }
+    }
+
+    /**
+     * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
+     * The messages received from the server are expected to follow the following format:
+     * {
+     * api: <the service name>,
+     * jcmd: {
+     * cmd: <command>,
+     * params: {
+     * ...
+     * }
+     * }
+     * }
+     * NOTE that each message is handled by a new thread
+     */
+    public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
+        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(CSLIDSMainClient.getWebSocketURI(), Config.instance.Client.getApiKey());
+        websocketClient.setMessageHandler(messageString -> websocketClient.handleServerMessage(messageString.trim()));
+        return websocketClient;
+    }
+
+    /**
+     * Handles messages received from the WebSocket server.
+     *
+     * @param messageString the raw message string received
+     */
+    public void handleServerMessage(String messageString) {
+        new Thread(() -> {
+            logger.trace("Received message: {}", messageString);
+
+            if (messageString.startsWith("{") && messageString.endsWith("}")) {
+                Json messageJson = Json.read(messageString);
+                getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
+                String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
+                MDC.put(X_CORRELATION_ID, xCorrelationId);
+                String uri = "";
+
+                String apiName = JsonUtil.getStringFromJson(messageJson, "api", "");
+
+                Json result = Json.object().set("error", "api not found");
+
+                if (!apiName.isEmpty()) {
+                    ApiCommands api = JServiceLoader.apiMap.get(apiName);
+                    MDC.put(ENDPOINT, apiName);
+                    Json jsonCommand = messageJson.get("jsonCommand");
+                    uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
+                    MDC.put(ENDPOINT, uri);
+
+                    CSLNetworkLogger.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
+
+                    if (jsonCommand != null && api != null) {
+                        result = api.execJcmd(jsonCommand);
+                    } else if (jsonCommand == null) {
+                        result.set("error", "jsonCommand not found");
+                    }
+                } else {
+                    logger.warn("API endpoint not found");
+                }
+
+
+                Json resultMessageJson = Json.object()
+                        .set("uuid", messageJson.get("uuid"))
+                        .set(X_CORRELATION_ID, xCorrelationId)
+                        .set("result", result);
+
+                logger.trace("Sending result: {}", resultMessageJson);
+                this.sendMessageIfOpen("res:" + resultMessageJson);
+                CSLNetworkLogger.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
+                MDC.remove(COMMAND);
+                MDC.remove(ENDPOINT);
+                MDC.remove(X_CORRELATION_ID);
+                MDC.remove(PROTOCOL);
+            }
+        }).start();
     }
 }

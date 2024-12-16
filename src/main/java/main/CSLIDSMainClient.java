@@ -54,10 +54,6 @@ public class CSLIDSMainClient {
     private static WebsocketClientEndpoint clientEndPoint = null;
     private static final ScheduledExecutorService reconnectWsExecutor = Executors.newSingleThreadScheduledExecutor();
 
-
-    // API Command map
-    private static final HashMap<String, ApiCommands> apiMap = new HashMap<>();
-
     // Message broadcaster for WebSocket communication
     private static final IMessageBroadcaster messageBroadcaster = new IMessageBroadcaster() {
 
@@ -89,9 +85,7 @@ public class CSLIDSMainClient {
      */
     public static void initServices() {
         for (ApiCommands api : JServiceLoader.getApiCommandsList()) {
-            String path = api.getName().toLowerCase();
-            logger.info("Registering API: <{}>", path);
-            apiMap.put(path, api);
+            JServiceLoader.registerAPICommands(api);
         }
     }
 
@@ -188,8 +182,8 @@ public class CSLIDSMainClient {
         }
 
         // register endpoints
-        logger.info("Registering API endpoints with the server");
-        apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessageIfOpen("api:" + apiName));
+//        logger.info("Registering API endpoints with the server");
+//        apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessageIfOpen("api:" + apiName));
     }
 
     /**
@@ -213,7 +207,7 @@ public class CSLIDSMainClient {
                 Json result = Json.object().set("error", "api not found");
 
                 if (!apiName.isEmpty()) {
-                    ApiCommands api = apiMap.get(apiName);
+                    ApiCommands api = JServiceLoader.apiMap.get(apiName);
                     MDC.put(ENDPOINT, apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
                     uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
@@ -309,13 +303,15 @@ public class CSLIDSMainClient {
         registerServices();
         initServices();
 
+
+        // Sends the list of supported API commands to the csl-server
+        sendApiCommandsToDbapi();
+
+
         // Connect to the server using WebSocket and keep the connection alive
         openWsConnectionWithCSLServer();
         // Start the servers and services of the csl_client
         startServers();
-
-        // Sends the list of supported API commands to the csl-server
-        sendApiCommandsToServer();
 
         // Launch the Web API server if required by the configuration (for testing purposes)
         launchWebApiServerIfRequired(Config.instance);
@@ -385,24 +381,25 @@ public class CSLIDSMainClient {
      * Sends the API commands to the server using the DbapiHandler. It retries to send the Commands every 5 seconds till
      * the service is reachable. This method creates a thread that finishes when the command list is sent to the DBapi.
      */
-    private static void sendApiCommandsToServer() {
+    private static void sendApiCommandsToDbapi() {
         Object monitorObj = new Object(); // in static methods we need an object that works as lock for the synchronized thread block.
 
-        Executors.newSingleThreadExecutor().submit(() -> {
+//        Executors.newSingleThreadExecutor().submit(() -> {
             boolean areCommandSent = false;
 
             // Try to send the commands
             try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
                 while (!areCommandSent) {
-                    areCommandSent = tryToSendCommandList(dbapiHandler, areCommandSent);
+                    areCommandSent = tryToSendCommandList(dbapiHandler);
 
                     // Wait
                     if (wasInterruptedWhileWaiting(5)) return;
                 }
+                logger.info("Successfully sent API commands to the server.");
             } catch (Exception e) {
                 logger.error("Error while sending API commands to the server, retrying ...");
             }
-        });
+//        });
     }
 
     private static synchronized boolean wasInterruptedWhileWaiting(int seconds) {
@@ -419,7 +416,8 @@ public class CSLIDSMainClient {
         }
     }
 
-    private static boolean tryToSendCommandList(DbapiHandlerForCSLInit dbapiHandler, boolean areCommandSent) {
+    private static boolean tryToSendCommandList(DbapiHandlerForCSLInit dbapiHandler) {
+        boolean areCommandSent = false;
         try {
             dbapiHandler.sendCommandsList(JServiceLoader.getApiCommandsList());
             areCommandSent = true;

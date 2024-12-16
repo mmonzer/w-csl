@@ -1,13 +1,17 @@
 package com.csl.web;
 
 import com.csl.core.Config;
+import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.logger.LoggerInterfaces;
 import jakarta.websocket.*;
+import main.CSLIDSMainClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,6 +26,7 @@ public class WebsocketClientEndpoint {
     private static String apiKey;
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
     private static final AtomicBoolean isConnecting = new AtomicBoolean(false);
+    LocalDateTime lastConnectionDateTime = null;
 
     public static class Configurator extends ClientEndpointConfig.Configurator {
         @Override
@@ -54,6 +59,11 @@ public class WebsocketClientEndpoint {
                 logger.info("WS is already connected, skipping reconnect");
                 return;
             }
+            LocalDateTime currentDateTime =  LocalDateTime.now();
+            if (lastConnectionDateTime!=null && Duration.between(lastConnectionDateTime, currentDateTime).getSeconds()<10) {;
+                logger.info("WebSocket connection cooling down, skipping reconnect.");
+                return;
+            }
 
             if (!isConnecting.compareAndSet(false, true)) {
                 logger.info("WebSocket connection is already in progress, skipping reconnect.");
@@ -62,6 +72,7 @@ public class WebsocketClientEndpoint {
 
             try {
                 logger.info("Attempting to open websocket at {}", endpointURI);
+                lastConnectionDateTime = currentDateTime;
                 this.userSession = container.connectToServer(this, endpointURI);
                 // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
             } catch (Exception e) {
@@ -94,6 +105,11 @@ public class WebsocketClientEndpoint {
         CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() +" : "+ userSession);
 
         isConnecting.set(false);
+
+        // register endpoints
+        logger.info("Registering API endpoints with the server");
+        JServiceLoader.apiMap.keySet().forEach(apiName -> sendMessageIfOpen("api:" + apiName));
+        // TODO : clean  cyclic imports to send api names from here and not from the MainCLient.connectIfNecessary
     }
 
     /**

@@ -368,7 +368,6 @@ public class FileUtils  {
         Json cnxInputFotCnxRelatedToHttp = Json.object();
         Json tmp = Json.object();
         // check if all values of temp are empty strings, return null
-        boolean allEmpty = false;
         // Iterate through cells
         for (int i = 0; i < headers.getLastCellNum(); i++) {
             if(row==null) {
@@ -379,11 +378,9 @@ public class FileUtils  {
 
             if (cell==null) {
                 tmp.set( toCamelCase(headers.getCell(i).getStringCellValue()), "");
-                allEmpty = true;
                 continue;
-            } else{
-                allEmpty = false;
             }
+
             switch (cell.getCellType()) {
                 case STRING:
                     String stringValue = cell.getStringCellValue();

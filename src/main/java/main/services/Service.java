@@ -11,7 +11,7 @@ import main.services.endpoints.Endpoint;
 /**
  * Generic Service with a name, description, a configuration file and an API command.
  */
-public abstract class Service implements ICSLService {
+public abstract class Service {
     /**
      * Name of service
      */
@@ -128,7 +128,7 @@ public abstract class Service implements ICSLService {
      *
      * @return the api command object with the name, description and commands of the service
      */
-    @Override
+//    @Override
     public ApiCommands getApiCommands() {
         return apiCommands;
     }
@@ -138,7 +138,7 @@ public abstract class Service implements ICSLService {
      *
      * @return false as default
      */
-    @Override
+//    @Override
     public boolean terminate() {
         return false;
     }

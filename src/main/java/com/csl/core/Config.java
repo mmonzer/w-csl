@@ -207,8 +207,6 @@ public class Config {
         // region define variables
         @Setter
         Boolean on;
-        @Setter
-        String general;  // TODO
         Boolean showTicks;
         Integer historyLength;
         // endregion define variables

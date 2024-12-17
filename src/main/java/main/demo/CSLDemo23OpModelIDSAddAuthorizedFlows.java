@@ -58,8 +58,7 @@ public class CSLDemo23OpModelIDSAddAuthorizedFlows {
 
             String result = sb.toString();
             System.out.println("RESULT=" + result);
-            Json j2 = Json.read(result);
-            return j2;
+            return Json.read(result);
         } catch (IOException e) {
             
             // e.printStackTrace();
@@ -70,8 +69,7 @@ public class CSLDemo23OpModelIDSAddAuthorizedFlows {
 
     public Json exec(String op, Json params) {
         params.set("op", op);
-        Json result = execCmd("op_model_ids", params);
-        return result;
+        return execCmd("op_model_ids", params);
     }
 
     public void testAdd() {

@@ -106,7 +106,7 @@ public class Device implements IScannerSerializable {
         );
         Json connectionsInfo = Json.array();
         for (Connection connection: this.connections) {
-            if(connection.isSimulated() == false){
+            if(!connection.isSimulated()){
                 connectionsInfo.add(connection.serializeForScanner());
             }
 

@@ -54,8 +54,7 @@ public class CSLDemo20OpModelIDSModifs {
 
 			String  result = sb.toString();
 			System.out.println("RESULT="+result);
-			Json j2=Json.read(result);
-			return j2;
+            return Json.read(result);
 
 		} catch (IOException e) {
 			
@@ -71,9 +70,7 @@ public class CSLDemo20OpModelIDSModifs {
 
 		params.set("op", op);
 
-		Json result = execCmd("op_model_ids", params);
-
-		return result;
+        return execCmd("op_model_ids", params);
 	}
 
 

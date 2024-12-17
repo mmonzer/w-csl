@@ -26,7 +26,6 @@ public class RulesUtil {
         if (s.compareTo("allowed") == 0) return 0;
         if (s.compareTo("allowed_with_alert_low") == 0) return 2;
         if (s.compareTo("allowed_with_alert_high") == 0) return 3;
-        if (s.compareTo("forbidden") == 0) return 4;
 
 
         return 4;

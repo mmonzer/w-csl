@@ -56,8 +56,7 @@ public class CSLDemo10XApiCommand {
 			in.close();
 
 			String  result = sb.toString();
-			Json j2=Json.read(result);
-			return j2;
+            return Json.read(result);
 
 		} catch (IOException e) {
 			
@@ -120,8 +119,7 @@ public class CSLDemo10XApiCommand {
 
 			String  result = sb.toString();
 			System.out.println("Result:"+result);
-			Json j2=Json.read(result);
-			return j2;
+            return Json.read(result);
 
 		} catch (IOException e) {
 			

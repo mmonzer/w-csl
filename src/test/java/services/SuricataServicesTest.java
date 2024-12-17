@@ -5,14 +5,12 @@ import main.services.SuricataServices;
 import org.junit.jupiter.api.BeforeEach;
 
 public class SuricataServicesTest {
-    private SuricataServices suricataServices;
-
 
     /*Test unitaire insuffisant */
     //TODO : A tester en test intégration
     @BeforeEach
     public void setUp(){
-        suricataServices = new SuricataServices();
+        SuricataServices suricataServices = new SuricataServices();
     }
 
     //@Test

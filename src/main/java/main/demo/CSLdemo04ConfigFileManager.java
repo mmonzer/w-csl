@@ -42,8 +42,7 @@ public class CSLdemo04ConfigFileManager {
 			}
 			in.close();
 
-			String  result = sb.toString();
-			return result;
+            return sb.toString();
 			
 		} catch (IOException e) {
 			
@@ -82,8 +81,7 @@ public class CSLdemo04ConfigFileManager {
 			}
 			in.close();
 
-			String result = sb.toString();
-			return result;
+            return sb.toString();
 
 		} catch (IOException e) {
 			

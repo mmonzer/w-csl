@@ -272,7 +272,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
             return new OptionalInputField<>(
                     keyJson != null && keyJson.isString() ? keyJson.asString() : "",
                     valueJson != null && valueJson.isString() ? valueJson.asString() : "",
-                    isVisibleJson != null && isVisibleJson.isBoolean() ? isVisibleJson.asBoolean() : true
+                    isVisibleJson != null && (!isVisibleJson.isBoolean() || isVisibleJson.asBoolean())
             );
         }
 

@@ -114,8 +114,7 @@ public class AlertsService extends Service {
 
 		addCmd("set_masked", params -> {
             params.set("op", "set_masked");
-            Json a=CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
-            return a;
+                    return CSLContext.getInstance().getCSLAlertManager().execOpAlert(params);
         },
 				new JsonCmdHelp()
 				.setDesc("set alert as masked")

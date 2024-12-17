@@ -61,8 +61,7 @@ public class CSLDemo11ApisJwt {
 
 			String  result = sb.toString();
 			System.out.println("result=<"+result+">");
-			Json j2=Json.read(result);
-			return j2;
+            return Json.read(result);
 
 		} catch (IOException e) {
 			
@@ -124,8 +123,7 @@ public class CSLDemo11ApisJwt {
 
 			String  result = sb.toString();
 			System.out.println("Result:"+result);
-			Json j2=Json.read(result);
-			return j2;
+            return Json.read(result);
 
 		} catch (IOException e) {
 			

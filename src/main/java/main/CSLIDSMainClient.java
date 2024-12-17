@@ -7,59 +7,32 @@ import com.csl.exceptions.ServiceNotReadyException;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLInit;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.intercom.jsoncmd.JServiceLoader;
-import com.csl.logger.*;
+import com.csl.logger.CSLApplicativeLogger;
 import com.csl.util.CorrelationUtils;
-import com.csl.util.JCmd;
-import com.csl.util.ThreadUtils;
 import com.csl.web.CSLHttpServerJetty;
 import com.csl.web.WebsocketClientEndpoint;
-import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.csl.web.jcmdoversocket.IAlertForwarder;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.IMessageBroadcaster;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import main.services.*;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import static com.csl.logger.LoggerConstants.*;
-import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.COMMAND;
-import static com.ucsl.json.JsonUtil.getValueStringOrNull;
 
 public class CSLIDSMainClient {
 
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(CSLIDSMainClient.class);
-    private static final Logger log = LoggerFactory.getLogger(CSLIDSMainClient.class);
-
-    // Server configuration variables
-    private static String serverIp = "127.0.0.1";
-    private static String serverUrlPrefix = "";
-
-    private static final Object lock1 = new Object();
-    private static final Object lock2 = new Object();
-
-    // WebSocket client endpoint
-    private static WebsocketClientEndpoint clientEndPoint = null;
-    private static final ScheduledExecutorService reconnectWsExecutor = Executors.newSingleThreadScheduledExecutor();
 
     // Message broadcaster for WebSocket communication
     private static final IMessageBroadcaster messageBroadcaster = new IMessageBroadcaster() {
 
         @Override
         public void broadcastMessageString(String socketName, String message) {
-                WebsocketClientEndpoint.sendMessageIfConnected("wss:" + socketName + ":" + message);
+            WebsocketClientEndpoint.sendMessageIfConnected("wss:" + socketName + ":" + message);
         }
 
         @Override
@@ -69,9 +42,8 @@ public class CSLIDSMainClient {
     };
 
     // Alert forwarder for handling alerts
-    private static final IAlertForwarder alertForwarder = alert -> {
-        WebsocketClientEndpoint.sendMessageIfConnected("alert:" + alert);
-    };
+    private static final IAlertForwarder alertForwarder = alert ->         WebsocketClientEndpoint.sendMessageIfConnected("alert:" + alert);
+
 
     /**
      * Initializes services and registers them to the API command map.
@@ -89,12 +61,12 @@ public class CSLIDSMainClient {
      */
     public static @NotNull String getWebSocketUrl() {
         Boolean useSsl = Config.instance.Client.getUseSsl();
-        useSsl = (useSsl!=null)?useSsl:false;
+        useSsl = (useSsl != null) && useSsl;
         String serverIp = Config.instance.Client.getIpServerRemote();
-        serverIp= resolveHostNameIfRequired(serverIp, Config.instance.Client.getForceHostNameResolution());
+        serverIp = resolveHostNameIfRequired(serverIp, Config.instance.Client.getForceHostNameResolution());
         int serverPort = Config.instance.Client.getPortServerRemote();
         String serverUrlPrefix = Config.instance.Client.getServerRemoteUrlPrefix();
-        serverUrlPrefix = (serverUrlPrefix!=null)?serverUrlPrefix:"";
+        serverUrlPrefix = (serverUrlPrefix != null) ? serverUrlPrefix : "";
 
 
         String wsProtocol = useSsl ? "wss" : "ws";
@@ -178,27 +150,6 @@ public class CSLIDSMainClient {
         // Override server configuration for the client
         config.Server.setOn(false);
         config.UdpServerConf.setOn(true);
-
-        serverIp = config.Client.getIpServerRemote();
-        serverUrlPrefix = config.Client.getServerRemoteUrlPrefix();
-        serverUrlPrefix = (serverUrlPrefix == null) ? "" : serverUrlPrefix;
-
-        resolveHostNameIfRequired(config);
-    }
-
-    /**
-     * Attempts to resolve the host name if the configuration requires it.
-     *
-     * @param config the configuration object
-     */
-    private static void resolveHostNameIfRequired(Config config) {
-        if (config.Client.getForceHostNameResolution()) {
-            try {
-                serverIp = InetAddress.getByName(serverIp).getHostAddress();
-            } catch (UnknownHostException e) {
-                logger.error("Error while resolving host name: {}", e.getMessage(), e);
-            }
-        }
     }
 
     /**
@@ -233,28 +184,24 @@ public class CSLIDSMainClient {
      * the service is reachable. This method creates a thread that finishes when the command list is sent to the DBapi.
      */
     private static void sendApiCommandsToDbapi() {
-        Object monitorObj = new Object(); // in static methods we need an object that works as lock for the synchronized thread block.
+        boolean areCommandSent = false;
 
-//        Executors.newSingleThreadExecutor().submit(() -> {
-            boolean areCommandSent = false;
+        // Try to send the commands
+        try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
+            while (!areCommandSent) {
+                areCommandSent = tryToSendCommandList(dbapiHandler);
 
-            // Try to send the commands
-            try (DbapiHandlerForCSLInit dbapiHandler = new DbapiHandlerForCSLInit()) {
-                while (!areCommandSent) {
-                    areCommandSent = tryToSendCommandList(dbapiHandler);
-
-                    // Wait
-                    if (wasInterruptedWhileWaiting(5)) return;
-                }
-                logger.info("Successfully sent API commands to the server.");
-            } catch (Exception e) {
-                logger.error("Error while sending API commands to the server, retrying ...");
+                // Wait
+                if (wasInterruptedWhileWaiting(5)) return;
             }
-//        });
+            logger.info("Successfully sent API commands to the server.");
+        } catch (Exception e) {
+            logger.error("Error while sending API commands to the server, retrying ...");
+        }
     }
 
     private static synchronized boolean wasInterruptedWhileWaiting(int seconds) {
-       return wasInterruptedWhileWaiting(1F*seconds);
+        return wasInterruptedWhileWaiting(1F * seconds);
     }
 
     private static synchronized boolean wasInterruptedWhileWaiting(float seconds) {

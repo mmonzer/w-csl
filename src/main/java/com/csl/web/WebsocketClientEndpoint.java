@@ -71,10 +71,6 @@ public class WebsocketClientEndpoint {
     }
 
     public WebsocketClientEndpoint(URI endpointURI) {
-        this(endpointURI, null);
-    }
-
-    public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
         this.endpointURI = endpointURI;
     }
 
@@ -85,18 +81,16 @@ public class WebsocketClientEndpoint {
      */
     @OnOpen
     public synchronized void onOpen(Session userSession) {
-        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opened websocket " + userSession.getRequestURI() +" : "+ userSession);
+        CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opened websocket " + userSession.getRequestURI() + " : " + userSession);
         logger.info("Connected to WCSL websocket {}", endpointURI);
         this.userSession = userSession;
         userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
-        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() +" : "+ userSession);
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() + " : " + userSession);
 
         isConnecting.set(false);
 
-        // register endpoints
         logger.info("Registering API endpoints with the server");
         JServiceLoader.apiMap.keySet().forEach(apiName -> sendMessageIfOpen("api:" + apiName));
-        // TODO : clean  cyclic imports to send api names from here and not from the MainCLient.connectIfNecessary
     }
 
     /**
@@ -107,7 +101,7 @@ public class WebsocketClientEndpoint {
      */
     @OnClose
     public synchronized void onClose(Session userSession, CloseReason reason) {
-        CSLNetworkLogger.warn(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI()+ " Reason:" + reason.getReasonPhrase() +" : "+ userSession);
+        CSLNetworkLogger.warn(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Closing websocket " + userSession.getRequestURI() + " Reason:" + reason.getReasonPhrase() + " : " + userSession);
         this.userSession = null;
         isConnecting.set(false);
     }
@@ -116,11 +110,11 @@ public class WebsocketClientEndpoint {
      * Callback hook for Connection close events.
      *
      * @param session the userSession that got an error.
-     * @param error      throwable
+     * @param error   throwable
      */
     @OnError
     public synchronized void onError(Session session, Throwable error) {
-        logger.error("Connection lost in WS with server with error : {}",(error.getMessage()!=null)?error.getMessage(): "unknown");
+        logger.error("Connection lost in WS with server with error : {}", (error.getMessage() != null) ? error.getMessage() : "unknown");
         this.userSession = null;
         isConnecting.set(false);
     }
@@ -158,15 +152,15 @@ public class WebsocketClientEndpoint {
     }
 
     public void connect() {
-        synchronized (WebsocketClientEndpoint.class) { // Ensures thread-safety
+        synchronized (WebsocketClientEndpoint.class) {
             logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", endpointURI, maskApiKey(APIKEY));
 
             if (isOpen()) {
                 logger.info("WS is already connected, skipping reconnect");
                 return;
             }
-            LocalDateTime currentDateTime =  LocalDateTime.now();
-            if (lastConnectionDateTime!=null && Duration.between(lastConnectionDateTime, currentDateTime).getSeconds()<10) {
+            LocalDateTime currentDateTime = LocalDateTime.now();
+            if (lastConnectionDateTime != null && Duration.between(lastConnectionDateTime, currentDateTime).getSeconds() < 10) {
                 logger.info("WebSocket connection cooling down, skipping reconnect.");
                 return;
             }
@@ -181,7 +175,7 @@ public class WebsocketClientEndpoint {
                 lastConnectionDateTime = currentDateTime;
                 this.userSession = container.connectToServer(this, endpointURI);
             } catch (Exception e) {
-                isConnecting.set(false); // Reset the flag regardless of success or failure
+                isConnecting.set(false);
                 logger.warn("Exception occurred when connecting to WebSocket {}: {}", endpointURI, e.getMessage());
             }
         }
@@ -276,6 +270,7 @@ public class WebsocketClientEndpoint {
     }
 
     // region static code : init, launch threads and send message to singleton
+
     /**
      * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
      * The messages received from the server are expected to follow the following format:
@@ -306,7 +301,7 @@ public class WebsocketClientEndpoint {
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 reconnectWsExecutor,
 //                CSLIDSMainClient::connectToServerIfRequired,
-                ()->websocketClientInstance.connectToServerIfRequired(),
+                () -> websocketClientInstance.connectToServerIfRequired(),
                 0, 5, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.RECONNECT_WS_CSL, LoggerInterfaces.CSL_CLIENT);
 
@@ -337,6 +332,7 @@ public class WebsocketClientEndpoint {
 
     /**
      * Sends message to the websocket instance if exists and if opened.
+     *
      * @param message message to send
      */
     public static void sendMessageIfConnected(String message) {
@@ -353,6 +349,6 @@ public class WebsocketClientEndpoint {
      */
     public interface MessageHandler {
 
-        public void handleMessage(String message);
+        void handleMessage(String message);
     }
 }

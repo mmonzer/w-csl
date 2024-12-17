@@ -28,6 +28,8 @@ import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.*;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -64,6 +66,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public static final String USERNAME = "username";
     public static final String EVENT_ID = "event_id";
     public static final String NOT_IMPLEMENTED_YET = "NOT IMPLEMENTED YET.";
+    private static final Logger log = LoggerFactory.getLogger(DbapiHandlerForCSLScan.class);
     private final int maxPageSize = 1000;
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DbapiHandler.class);
     private final FileStorageService fileStorageService = new FileStorageService();
@@ -1447,17 +1450,23 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
     }
 
-    synchronized public void uploadHttpTemplatesBsonFile(ExportQuery exportQuery) {
+    synchronized public void uploadHttpTemplatesBsonFile(int id, ExportQuery exportQuery) {
         MultiPartContentProvider multiPart = new MultiPartContentProvider();
         try {
             Path filePath = fileStorageService.getFilePath(exportQuery.getFilename());
-            logger.info("Preparing to upload file: {}, Path: {}, Size: {} bytes",
-                    exportQuery.getFilename(), filePath, java.nio.file.Files.size(filePath));
-
-            multiPart.addFilePart("file", exportQuery.getFilename(), new PathContentProvider(filePath), null);
+            logger.info("file name is : " + exportQuery.getFilename());
+            if(filePath==null){
+                logger.info("File path is null");
+                notifyExportFinished(id, exportQuery);
+            } else{
+                multiPart.addFilePart("file", exportQuery.getFilename(), new PathContentProvider(filePath), null);
+            }
         } catch (IOException e) {
+            logger.info("I am in error block of uploadHttpTemplatesBsonFile method.");
             logger.error("Error adding file to request", e);
             return;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         multiPart.close();
         Request request = createDbApiRequestWithCustomContentType("POST", DbapiEndpointForCSLScan.UPLOAD_HTTP_TEMPLATES_BSON_FILE.getEndpoint(), multiPart.getContentType());

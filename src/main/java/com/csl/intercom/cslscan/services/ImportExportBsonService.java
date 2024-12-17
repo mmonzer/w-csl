@@ -207,7 +207,7 @@ public class ImportExportBsonService {
             try {
                 this.scanApiHandler.downloadExportFile(exportQuery);
                 this.scanApiHandler.deleteExportFile(exportQuery);
-                this.dbapiHandler.uploadHttpTemplatesBsonFile(exportQuery);
+                this.dbapiHandler.uploadHttpTemplatesBsonFile(id, exportQuery);
                 this.dbapiHandler.notifyExportFinished(id, exportQuery);
                 this.fileStorageService.deleteFile(exportQuery.getFilename());
             } catch (ExecutionException | InterruptedException | TimeoutException e) {

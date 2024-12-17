@@ -15,7 +15,6 @@ public class HttpTemplateImportNotification {
     private String fileName;
     private OffsetDateTime uploadedAt;
     private boolean fileReceived;
-    private FileAction fileAction;
     private Type type;
 
     private HttpTemplateImportNotification(int id, String filePath, String fileName, OffsetDateTime uploadedAt, FileAction fileAction, Type type) {
@@ -23,7 +22,6 @@ public class HttpTemplateImportNotification {
         this.filePath = filePath;
         this.fileName = fileName;
         this.uploadedAt = uploadedAt;
-        this.fileAction = fileAction;
         this.type = type;
     }
 

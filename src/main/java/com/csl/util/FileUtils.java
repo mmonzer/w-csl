@@ -142,8 +142,8 @@ public class FileUtils  {
             }
             strList.add(decal + "]");
         } else {
-            if (name.isEmpty()) strList.add(decal + j.toString());
-            else strList.add(decal + '"' + name + '"' + ":" + j.toString());
+            if (name.isEmpty()) strList.add(decal + j);
+            else strList.add(decal + '"' + name + '"' + ":" + j);
         }
 
 

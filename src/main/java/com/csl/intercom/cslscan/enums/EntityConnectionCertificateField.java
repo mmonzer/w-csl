@@ -7,8 +7,8 @@ public enum EntityConnectionCertificateField {
     CREATED_AT("created_at", "created_at"),
     UPDATED_AT("updated_at", "updated_at");
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     EntityConnectionCertificateField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

@@ -23,8 +23,8 @@ public enum EntityHttpConnectionStageField {
     ENABLED("isEnabled", "enabled"),
     VISIBLE("isVisible", "visible"),
     ;
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     EntityHttpConnectionStageField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

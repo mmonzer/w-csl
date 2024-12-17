@@ -21,7 +21,6 @@ public class FileStorageService {
     private final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
     private final Path rootLocation;
     private final Map<Path, OffsetDateTime> deleteSchedule = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
 
     public FileStorageService(String downloadPath) {
         this.rootLocation = Paths.get(downloadPath);
@@ -31,6 +30,7 @@ public class FileStorageService {
         } catch (Exception e) {
             logger.error("Error creating download directory  {} : {}",  downloadPath, e.getMessage());
         }
+        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 scheduledExecutorService,
                 this::deleteFiles,

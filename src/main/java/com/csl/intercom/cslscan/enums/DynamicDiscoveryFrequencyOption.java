@@ -7,8 +7,8 @@ public enum DynamicDiscoveryFrequencyOption {
     CUSTOM("custom", "CUSTOM")
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private DynamicDiscoveryFrequencyOption(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

@@ -11,10 +11,8 @@ import com.ucsl.json.JsonUtil;
 
 
 public class Test03TestCtrl {
-	private static String str = "{\"type\":\"CTRL\",\"cmd\":\"stop\"}";
 
-	
-	public static void sendEncapsulatedMsg(String host, int port, String msg) {
+    public static void sendEncapsulatedMsg(String host, int port, String msg) {
 		try {
 
 			byte[] message = msg.getBytes();
@@ -60,7 +58,8 @@ public class Test03TestCtrl {
 		}
 
 	public static void main(String[] args) throws IOException {
-		Json j= Json.read(str);
+        String str = "{\"type\":\"CTRL\",\"cmd\":\"stop\"}";
+        Json j= Json.read(str);
 		System.out.println(JsonUtil.prettyPrint(j));
 			String host="localhost";
 			int port=8001;

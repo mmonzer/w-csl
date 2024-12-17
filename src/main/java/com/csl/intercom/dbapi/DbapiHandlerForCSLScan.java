@@ -177,7 +177,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         } catch (Exception e) {
             logger.warn("Error sending CPE Items to DB-API.", e);
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
-            throw new Exception("Error sending the following CPE Items: " + failedItems.toString());
+            throw new Exception("Error sending the following CPE Items: " + failedItems);
         }
     }
 
@@ -1566,7 +1566,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             logger.debug("Got BSON export ID: {}", id);
             return id;
         }
-        throw new Exception("Unexpected response: " + responseContents.toString());
+        throw new Exception("Unexpected response: " + responseContents);
     }
 
     /**

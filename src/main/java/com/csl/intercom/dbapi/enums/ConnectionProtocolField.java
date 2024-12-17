@@ -10,7 +10,7 @@ public enum ConnectionProtocolField {
     CONNECTION_TEMPLATE_DETAILS("template_details"),
     ;
 
-    private String dbapiName;
+    private final String dbapiName;
 
     private ConnectionProtocolField(String dbapiName) {
         this.dbapiName = dbapiName;

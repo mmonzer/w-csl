@@ -80,7 +80,7 @@ public enum ScanApiEndpoint {
     CERTIFICATE_CONNECTION_DETAILS(CERTIFICATE_CONNECTION.endpoint() + "%s"),
     ;
 
-    private String endpoint;
+    private final String endpoint;
 
     private ScanApiEndpoint(String endpoint) {
         this.endpoint = endpoint;

@@ -13,8 +13,8 @@ public enum EntityHttpConnectionTestResultDetailsField {
     URL("url", "url"),
     ;
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private EntityHttpConnectionTestResultDetailsField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

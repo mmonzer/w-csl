@@ -113,7 +113,7 @@ class DiscoveryServicesTest {
         }
         //When
         JsonApiResponse rep = discoveryServices.startScan(cpeNames);
-        System.out.println("CPE names : "+cpeNames.toString());
+        System.out.println("CPE names : "+ cpeNames);
         //Then
         assert(rep.toString().equals(JsonApiResponse.success().toString()));
     }

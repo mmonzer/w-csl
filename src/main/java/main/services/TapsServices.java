@@ -543,7 +543,7 @@ public class TapsServices extends Service {
 
         params.delAt("name");
         Json output = tap.sendCmd("/config",
-                Json.read("{\"cmd\":\"updateConfig\", \"params\":" + params.toString() + "}")).toJson();
+                Json.read("{\"cmd\":\"updateConfig\", \"params\":" + params + "}")).toJson();
         Json result = Json.object();
         result.at("idname", tap.getName());
         result.at("id", tap.getId());
@@ -1845,7 +1845,7 @@ public class TapsServices extends Service {
         params.delAt("name");
 
         JsonApiResponse result = tap.sendCmd("/suricata",
-                Json.read("{\"cmd\":\"suricataSetConfigurationFile\", \"params\":" + params.toString() + "}"));
+                Json.read("{\"cmd\":\"suricataSetConfigurationFile\", \"params\":" + params + "}"));
 
         if (result.isSuccess() && result.getResult().has("Result")) {
             return JsonApiResponse.result(result.getResult().get("Result")).toJson();

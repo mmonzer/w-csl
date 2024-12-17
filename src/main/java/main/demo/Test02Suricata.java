@@ -13,10 +13,8 @@ import com.ucsl.json.JsonUtil;
 public class Test02Suricata {
 	private static DatagramSocket socket;
 	private static InetAddress address;
-	private static String str = "{\"type\":\"EVT\",\"timestamp\":\"2020-12-15T11:45:27.674926+0100\",\"flow_id\":1973389627968426,\"in_iface\":\"enp0s3\",\"event_type\":\"alert\",\"src_ip\":\"192.168.0.150\",\"src_port\":37440,\"dest_ip\":\"192.168.0.1\",\"dest_port\":502,\"proto\":\"TCP\",\"alert\":{\"action\":\"allowed\",\"gid\":1,\"signature_id\":2405007,\"rev\":0,\"signature\":\"#COM xCommunication non autorisee dans la PoC\",\"category\":\"\",\"severity\":3},\"flow\":{\"pkts_toserver\":2,\"pkts_toclient\":1,\"bytes_toserver\":166,\"bytes_toclient\":66,\"start\":\"2020-12-15T11:45:27.674730+0100\"}}";
 
-	
-	public static void sendEncapsulatedMsg(String host, int port, String msg) {
+    public static void sendEncapsulatedMsg(String host, int port, String msg) {
 		try {
 			byte[] message = msg.getBytes();
 
@@ -62,9 +60,10 @@ public class Test02Suricata {
 		}
 
 	public static void main(String[] args) throws IOException {
-		
-		
-		Json j= Json.read(str);
+
+
+        String str = "{\"type\":\"EVT\",\"timestamp\":\"2020-12-15T11:45:27.674926+0100\",\"flow_id\":1973389627968426,\"in_iface\":\"enp0s3\",\"event_type\":\"alert\",\"src_ip\":\"192.168.0.150\",\"src_port\":37440,\"dest_ip\":\"192.168.0.1\",\"dest_port\":502,\"proto\":\"TCP\",\"alert\":{\"action\":\"allowed\",\"gid\":1,\"signature_id\":2405007,\"rev\":0,\"signature\":\"#COM xCommunication non autorisee dans la PoC\",\"category\":\"\",\"severity\":3},\"flow\":{\"pkts_toserver\":2,\"pkts_toclient\":1,\"bytes_toserver\":166,\"bytes_toclient\":66,\"start\":\"2020-12-15T11:45:27.674730+0100\"}}";
+        Json j= Json.read(str);
 		System.out.println(JsonUtil.prettyPrint(j));
 		
 		if(args.length != 2) {

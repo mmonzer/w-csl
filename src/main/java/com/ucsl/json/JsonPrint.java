@@ -35,9 +35,9 @@ public class JsonPrint {
             }
             s.write(indent + "]" + sep);
         } else if (j.isString()) s.write(indent + j.asString() + sep);
-        else if (j.isNumber()) s.write(indent + j.toString() + sep);
-        else if (j.isBoolean()) s.write(indent + j.toString() + sep);
-        else s.write(indent + j.toString() + sep);
+        else if (j.isNumber()) s.write(indent + j + sep);
+        else if (j.isBoolean()) s.write(indent + j + sep);
+        else s.write(indent + j + sep);
     }
 
     public static String toString(Json j) {

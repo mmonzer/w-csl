@@ -42,7 +42,7 @@ public class WebsocketClientEndpoint {
     @Setter
     private MessageHandler messageHandler;
     private final URI endpointURI;
-    private static final String APIKEY = Config.getInstance().Client.getApiKey();
+    private static final String APIKEY = Config.getInstance().client.getApiKey();
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
     private static final AtomicBoolean isConnecting = new AtomicBoolean(false);
     LocalDateTime lastConnectionDateTime = null;
@@ -241,7 +241,7 @@ public class WebsocketClientEndpoint {
                     uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
                     MDC.put(ENDPOINT, uri);
 
-                    CSLNetworkLogger.infoInboundRequest(logger, Config.getInstance().Client.getIpServerRemote(), Config.getInstance().Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
+                    CSLNetworkLogger.infoInboundRequest(logger, Config.getInstance().client.getIpServerRemote(), Config.getInstance().client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);
@@ -260,7 +260,7 @@ public class WebsocketClientEndpoint {
 
                 logger.trace("Sending result: {}", resultMessageJson);
                 this.sendMessageIfOpen("res:" + resultMessageJson);
-                CSLNetworkLogger.infoOutboundResponse(logger, Config.getInstance().Client.getIpServerRemote(), Config.getInstance().Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
+                CSLNetworkLogger.infoOutboundResponse(logger, Config.getInstance().client.getIpServerRemote(), Config.getInstance().client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);

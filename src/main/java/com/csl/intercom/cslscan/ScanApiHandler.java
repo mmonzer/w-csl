@@ -9,7 +9,7 @@ import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
-import com.csl.web.ApiHandler;
+import com.csl.web.apiclient.ApiHandler;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import main.services.JsonApiResponse;

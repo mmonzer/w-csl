@@ -9,6 +9,7 @@ import main.services.Service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -45,6 +46,8 @@ public class JServiceLoader {
     private static final List<String> listOfServiceNames = new ArrayList<>();
     // The list of APIs for the endpoints to register
     private static List<ApiCommands> listOfAPIToRegister = new ArrayList<>();
+    // The map of the api and the api commands
+    public static final HashMap<String, ApiCommands> apiMap = new HashMap<>();
 
     /**
      * Sets the user directory.
@@ -185,5 +188,12 @@ public class JServiceLoader {
             cslInterModuleCommunicationManager.setModuleName(moduleName);
         }
         return cslInterModuleCommunicationManager;
+    }
+
+
+    public static void registerAPICommands(ApiCommands api) {
+        String path = api.getName().toLowerCase();
+        logger.info("Registering API: <{}>", path);
+        apiMap.put(path, api);
     }
 }

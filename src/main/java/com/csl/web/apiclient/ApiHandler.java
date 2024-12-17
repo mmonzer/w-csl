@@ -1,4 +1,4 @@
-package com.csl.web;
+package com.csl.web.apiclient;
 
 import com.csl.autocrypt.IJsonApeResponseToJsonApiResponse;
 import com.csl.core.Config;
@@ -17,9 +17,9 @@ import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.MultiPartContentProvider;
+import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
@@ -68,11 +68,11 @@ public class ApiHandler implements AutoCloseable {
         httpClient = initClient();
 
         try {
-            CSLNetworkLogger.debug(logger, moduleName, LoggerInterfaces.API.toString(), "Connecting with "+moduleName+" at "+getUrl()+" ...");
+            CSLNetworkLogger.debug(logger, moduleName, LoggerInterfaces.API.toString(), "Connecting with " + moduleName + " at " + getUrl() + " ...");
             httpClient.start();
-            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Connection successful with "+moduleName+" at "+getUrl()+".");
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Connection successful with " + moduleName + " at " + getUrl() + ".");
         } catch (Exception e) {
-            CSLNetworkLogger.warn(logger, moduleName, LoggerInterfaces.API.toString(), "Could not start the http client for "+moduleName+" API at "+getUrl()+".");
+            CSLNetworkLogger.warn(logger, moduleName, LoggerInterfaces.API.toString(), "Could not start the http client for " + moduleName + " API at " + getUrl() + ".");
         }
     }
 
@@ -90,9 +90,9 @@ public class ApiHandler implements AutoCloseable {
      */
     public void testConnexion(IVoidToJsonApiResponse testMethod) {
         if (testMethod.apply().isSuccess()) {
-            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Connection successfully established with "+moduleName+" : server is running");
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Connection successfully established with " + moduleName + " : server is running");
         } else {
-            CSLNetworkLogger.warn(logger, moduleName, LoggerInterfaces.API.toString(), "\"Connection could not be established with "+moduleName+" : server is probably not started");
+            CSLNetworkLogger.warn(logger, moduleName, LoggerInterfaces.API.toString(), "\"Connection could not be established with " + moduleName + " : server is probably not started");
         }
     }
 
@@ -105,7 +105,7 @@ public class ApiHandler implements AutoCloseable {
         if (useSSL) {
             return initSSLApiHandler();
         }
-        CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Initialized HTTP client for "+ moduleName);
+        CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Initialized HTTP client for " + moduleName);
         return new HttpClient();
     }
 
@@ -120,7 +120,7 @@ public class ApiHandler implements AutoCloseable {
 
         // Ensure the properties are set
         if (trustStorePath == null || trustStorePassword == null) {
-            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized HTTP client for "+ moduleName );
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Initialized HTTP client for " + moduleName);
             return new HttpClient();
         }
 
@@ -133,7 +133,7 @@ public class ApiHandler implements AutoCloseable {
         ClientConnector clientConnector = new ClientConnector();
         clientConnector.setSslContextFactory(sslContextFactory);
 
-        CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(),"Initialized self-signed HTTPS client for "+ moduleName );
+        CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Initialized self-signed HTTPS client for " + moduleName);
         return new HttpClient(new HttpClientTransportDynamic(clientConnector));
     }
 
@@ -142,11 +142,11 @@ public class ApiHandler implements AutoCloseable {
     @Override
     public void close() throws Exception {
         try {
-            CSLNetworkLogger.debug(logger, moduleName, LoggerInterfaces.API.toString(), "Disconnecting from "+moduleName+" at "+getUrl()+" ...");
+            CSLNetworkLogger.debug(logger, moduleName, LoggerInterfaces.API.toString(), "Disconnecting from " + moduleName + " at " + getUrl() + " ...");
             this.httpClient.stop();
-            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Disconnected successfully from "+moduleName+" at "+getUrl()+".");
+            CSLNetworkLogger.info(logger, moduleName, LoggerInterfaces.API.toString(), "Disconnected successfully from " + moduleName + " at " + getUrl() + ".");
         } catch (Exception e) {
-            CSLNetworkLogger.error(logger, moduleName, LoggerInterfaces.API.toString(), "Could not stop the "+moduleName+" HTTP client at "+getUrl()+".");
+            CSLNetworkLogger.error(logger, moduleName, LoggerInterfaces.API.toString(), "Could not stop the " + moduleName + " HTTP client at " + getUrl() + ".");
         }
     }
 
@@ -342,7 +342,7 @@ public class ApiHandler implements AutoCloseable {
         try {
             ContentResponse response = createAndSendRequest(method, endpoint, params, body);
             if (!connected) {
-                CSLNetworkLogger.info(logger, moduleName, "API", "Connection recovered with "+moduleName+" at "+ getUrl());
+                CSLNetworkLogger.info(logger, moduleName, "API", "Connection recovered with " + moduleName + " at " + getUrl());
                 connected = true;
             }
             res = parseResponse(response, moduleName);
@@ -353,7 +353,7 @@ public class ApiHandler implements AutoCloseable {
             res = JsonApiResponse.error("exception when sending request to " + moduleName + " : " + e.getMessage());
             if (e.getCause() instanceof ConnectException) {
                 if (connected) {
-                    CSLNetworkLogger.warn(logger, moduleName, "API", "Connection lost with "+moduleName+" at "+ getUrl());
+                    CSLNetworkLogger.warn(logger, moduleName, "API", "Connection lost with " + moduleName + " at " + getUrl());
                     connected = false;
                 }
                 res = JsonApiResponse.error("Connection lost with " + moduleName);
@@ -368,14 +368,15 @@ public class ApiHandler implements AutoCloseable {
 
     /**
      * Creates and send a request with the given method, to the given endpoint with the given parameters and body for the configured client
-     * @param method method of the request
+     *
+     * @param method   method of the request
      * @param endpoint endpoint of the request
-     * @param params parameters of the request
-     * @param body body of the request
+     * @param params   parameters of the request
+     * @param body     body of the request
      * @return the raw HTTP response
      * @throws InterruptedException if send thread is interrupted
-     * @throws TimeoutException if send times out
-     * @throws ExecutionException if execution fails
+     * @throws TimeoutException     if send times out
+     * @throws ExecutionException   if execution fails
      */
     protected synchronized ContentResponse createAndSendRequest(String method, String endpoint, Json params, Json body) throws InterruptedException, TimeoutException, ExecutionException {
         Request request = createRequest(method, createUriFrom(endpoint), params, body);
@@ -567,7 +568,7 @@ public class ApiHandler implements AutoCloseable {
      */
     protected static void addHeadersToRequest(HashMap<HttpHeader, String> headers, Request request) {
         // Add correlation ID to request
-        if (MDC.get(X_CORRELATION_ID)!=null) {
+        if (MDC.get(X_CORRELATION_ID) != null) {
             request.header(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
         }
 

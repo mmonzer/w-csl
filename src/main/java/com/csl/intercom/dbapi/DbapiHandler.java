@@ -2,7 +2,7 @@ package com.csl.intercom.dbapi;
 
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
-import com.csl.web.ApiHandler;
+import com.csl.web.apiclient.ApiHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

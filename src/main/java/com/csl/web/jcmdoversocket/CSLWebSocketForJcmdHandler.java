@@ -18,17 +18,27 @@ public class CSLWebSocketForJcmdHandler {
      
     @OnOpen
     public void onConnect(Session session) {
-		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket");
+		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket  : {}", session);
 		logger.trace("Connection : {}", session);
+
+		CSLWebSocketForJcmd.clearSession();
+
 		this.session = session;
+
+		CSLWebSocketForJcmd.startKeepAlive();
 	}
 
     @OnClose
     public void onClose(CloseReason close) {
 		logger.info("Disconnected from CSL-Client websocket : {}", close.getReasonPhrase());
 		CSLWebSocketForJcmd.removeUser(session);
+		CSLWebSocketForJcmd.stopKeepAlive();
+	}
 
-		}
+	@OnError
+	public void onError(Session session, Throwable error) {
+		logger.error("Error on websocket {} : {}", session, error.getMessage());
+	}
 
     @OnMessage
     public void onMessage(String message) {

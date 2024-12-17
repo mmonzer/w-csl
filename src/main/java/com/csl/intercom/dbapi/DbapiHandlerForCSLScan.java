@@ -290,6 +290,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             params.set("updated_at__gt", dateUtc.toString());
         }
         ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DEVICES.getEndpoint(), params, null);
+
+        if (response.getStatus()>=400){
+            return new ArrayList<>();
+        }
+
         Json responseJson = Json.read(response.getContentAsString());
 
         List<Device> devices = responseJson.asJsonList().stream()
@@ -344,6 +349,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 params.set(DELETED_DATE_GT, dateUtc.toString());
             }
             ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.DELETED_DEVICES.getEndpoint(), params, null);
+            if (response.getStatus()>=400) {
+                return deletedDevices;
+            }
+
             Json responseJson = Json.read(response.getContentAsString());
             for (Json deletedDevice : responseJson.get(RESULTS).asJsonList()) {
                 String uuid = deletedDevice.get("object_id").asString();
@@ -850,7 +859,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 return result;
             }
         } catch (Exception e) {
-            logger.warn("Could not get the MQTT topic prefix from DB-API.", e);
+            logger.warn("Could not get the MQTT topic prefix from DB-API : {}", e.getMessage());
             return "None";
         }
     }
@@ -1140,7 +1149,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
             deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
         } catch (Exception e) {
-            logger.error("Could not get changes from DB-API.", e);
+            logger.error("Could not get changes from DB-API : {}", e.getMessage());
             return JsonApiResponse.error("Could not get changes from DBAPI");
         }
         //endregion Get changes from DB-API

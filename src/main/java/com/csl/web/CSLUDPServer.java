@@ -4,7 +4,6 @@ import com.csl.core.Config;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.udp.CSLFlowManager;
 import com.csl.util.NetUtil;
-import com.ucsl.interfaces.ICSLFlowListener;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -163,16 +162,5 @@ public class CSLUDPServer {
             flowManager = new CSLFlowManager(maxflows, maxsize);
         }
         return flowManager;
-    }
-
-    /**
-     * Add listener to UDP server
-     *
-     * @param queueNumber  number of packets to queue
-     * @param flowListener flow listener of the UDP server
-     */
-    public void addListener(int queueNumber, ICSLFlowListener flowListener) {
-
-        getFlowManager().addListener(queueNumber, flowListener);
     }
 }

@@ -7,15 +7,12 @@ import com.csl.core.Config;
 import com.csl.monitor.ActivityMonitor;
 import com.csl.util.EveMessageUtill;
 import com.ucsl.interfaces.IAlertLevel;
-import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -37,20 +34,12 @@ public class CSLFlowManager {
 
     // queues
     LinkedBlockingQueue<Json> inputflows;
-    List<List<ICSLFlowListener>> listeners = new ArrayList<>();
 
     public CSLFlowManager(int maxflows, int maxsize) {
         this.maxflows = maxflows;
         this.maxsize = maxsize;
 
         inputflows = new LinkedBlockingQueue<>();
-    }
-
-    public void addListener(int n, ICSLFlowListener l) {
-        if ((n < 0) | (n >= maxflows)) {
-            logger.error("Invalid flow number {} (max={})",n, maxflows );
-        }
-        listeners.get(n).add(l);
     }
 
     public int getFlowSize(int n) {

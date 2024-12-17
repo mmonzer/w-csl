@@ -59,24 +59,18 @@ public class CSLIDSMainClient {
 
         @Override
         public void broadcastMessageString(String socketName, String message) {
-            if (WebsocketClientEndpoint.websocketClientInstance != null) {
-                WebsocketClientEndpoint.websocketClientInstance.sendMessageIfOpen("wss:" + socketName + ":" + message);
-            }
+                WebsocketClientEndpoint.sendMessageIfConnected("wss:" + socketName + ":" + message);
         }
 
         @Override
         public void broadcastMessageJson(String socketName, Json jsonMessage) {
-            if (WebsocketClientEndpoint.websocketClientInstance != null) {
-                WebsocketClientEndpoint.websocketClientInstance.sendMessageIfOpen("wsj:" + socketName + ":" + jsonMessage);
-            }
+            WebsocketClientEndpoint.sendMessageIfConnected("wsj:" + socketName + ":" + jsonMessage);
         }
     };
 
     // Alert forwarder for handling alerts
     private static final IAlertForwarder alertForwarder = alert -> {
-        if (WebsocketClientEndpoint.websocketClientInstance != null) {
-            WebsocketClientEndpoint.websocketClientInstance.sendMessageIfOpen("alert:" + alert);
-        }
+        WebsocketClientEndpoint.sendMessageIfConnected("alert:" + alert);
     };
 
     /**
@@ -104,7 +98,6 @@ public class CSLIDSMainClient {
 
 
         String wsProtocol = useSsl ? "wss" : "ws";
-        logger.info("useSsl:{}\tserverIp:{}\tserverPort:{}\tserverUrlPrefix:{}",useSsl, serverIp, serverPort, serverUrlPrefix);
         return (serverPort > 0)
                 ? wsProtocol + "://" + serverIp + ":" + serverPort + serverUrlPrefix + "/cmd"
                 : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
@@ -126,53 +119,6 @@ public class CSLIDSMainClient {
                 return null; // never reached
             }
         }
-    }
-
-    /**
-     * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
-     * The messages received from the server are expected to follow the following format:
-     * {
-     * api: <the service name>,
-     * jcmd: {
-     * cmd: <command>,
-     * params: {
-     * ...
-     * }
-     * }
-     * }
-     * NOTE that each message is handled by a new thread
-     */
-    public static synchronized void connectToServerIfRequired() {
-        // Check if clientEndPoint is null and try to reinitialize
-        if (clientEndPoint == null) {
-            logger.warn("WebSocket client endpoint is not initialized. Attempting to reinitialize...");
-            try {
-                clientEndPoint = WebsocketClientEndpoint.initWebSocketClient(); // Reinitialize client
-                if (clientEndPoint == null) {
-                    logger.error("Failed to initialize WebSocket client endpoint. Aborting connection attempt.");
-                    return;
-                }
-            } catch (Exception e) {
-                logger.error("Exception occurred during WebSocket client initialization: {}", e.getMessage());
-                return;
-            }
-        }
-
-        if (clientEndPoint.isOpen()) {
-            logger.trace("WebSocket is already connected. No action needed.");
-            return;
-        }
-
-        logger.trace("Connecting to the server at {}", getWebSocketUrl());
-        clientEndPoint.connect();
-
-        if (!clientEndPoint.isOpen()) {
-            return;
-        }
-
-        // register endpoints
-//        logger.info("Registering API endpoints with the server");
-//        apiMap.keySet().forEach(apiName -> clientEndPoint.sendMessageIfOpen("api:" + apiName));
     }
 
     /**

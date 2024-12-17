@@ -13,16 +13,14 @@ import com.csl.web.jcmdoversocket.CSLWebSocketForJcmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import jakarta.websocket.*;
+import lombok.Setter;
 import main.CSLIDSMainClient;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,64 +39,35 @@ public class WebsocketClientEndpoint {
     private static final Logger logger = LoggerFactory.getLogger(WebsocketClientEndpoint.class);
     public static final String WEBSOCKET_CONNECTION = "websocket/connection";
     Session userSession = null;
+    @Setter
     private MessageHandler messageHandler;
-    private URI endpointURI;
-    private static String apiKey;
+    private final URI endpointURI;
+    private static final String APIKEY = Config.instance.Client.getApiKey();
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
     private static final AtomicBoolean isConnecting = new AtomicBoolean(false);
     LocalDateTime lastConnectionDateTime = null;
 
+    private static final ScheduledExecutorService reconnectWsExecutor = Executors.newSingleThreadScheduledExecutor();
+    private static WebsocketClientEndpoint websocketClientInstance = null;
+
     public static class Configurator extends ClientEndpointConfig.Configurator {
         @Override
         public void beforeRequest(Map<String, List<String>> headers) {
-            if (apiKey != null) {
-                headers.put("Authorization", List.of("Api-Key " + apiKey));
+            if (APIKEY != null) {
+                headers.put("Authorization", List.of("Api-Key " + APIKEY));
             }
         }
     }
 
     public static String maskApiKey(String apiKey) {
         if (apiKey == null || apiKey.length() < 8) {
-            System.out.println("API Key is too short to mask.");
             return "";
         }
 
         String firstPart = apiKey.substring(0, 4); // First 4 characters
         String lastPart = apiKey.substring(apiKey.length() - 4); // Last 4 characters
-        String maskedKey = firstPart + "****" + lastPart;
 
-        return maskedKey;
-    }
-
-    public void connect() {
-        synchronized (WebsocketClientEndpoint.class) { // Ensures thread-safety
-            logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", endpointURI, maskApiKey(apiKey));
-
-            if (isOpen()) {
-                logger.info("WS is already connected, skipping reconnect");
-                return;
-            }
-            LocalDateTime currentDateTime =  LocalDateTime.now();
-            if (lastConnectionDateTime!=null && Duration.between(lastConnectionDateTime, currentDateTime).getSeconds()<10) {;
-                logger.info("WebSocket connection cooling down, skipping reconnect.");
-                return;
-            }
-
-            if (!isConnecting.compareAndSet(false, true)) {
-                logger.info("WebSocket connection is already in progress, skipping reconnect.");
-                return;
-            }
-
-            try {
-                logger.info("Attempting to open websocket at {}", endpointURI);
-                lastConnectionDateTime = currentDateTime;
-                this.userSession = container.connectToServer(this, endpointURI);
-                // TODO : UpgradeWebsocketException thrown but also logged. Need cleaning.
-            } catch (Exception e) {
-                isConnecting.set(false); // Reset the flag regardless of success or failure
-                logger.warn("Exception occurred when connecting to WebSocket {}: {}", endpointURI, e.getMessage());
-            }
-        }
+        return firstPart + "****" + lastPart;
     }
 
     public WebsocketClientEndpoint(URI endpointURI) {
@@ -107,8 +76,6 @@ public class WebsocketClientEndpoint {
 
     public WebsocketClientEndpoint(URI endpointURI, String apiKey) {
         this.endpointURI = endpointURI;
-        WebsocketClientEndpoint.apiKey = apiKey;
-        logger.info("API key : {}", maskApiKey(apiKey));
     }
 
     /**
@@ -171,15 +138,6 @@ public class WebsocketClientEndpoint {
     }
 
     /**
-     * register message handler
-     *
-     * @param msgHandler
-     */
-    public void setMessageHandler(MessageHandler msgHandler) {
-        this.messageHandler = msgHandler;
-    }
-
-    /**
      * Send a message.
      *
      * @param message message to send
@@ -199,28 +157,36 @@ public class WebsocketClientEndpoint {
         }
     }
 
-    /**
-     * Message handler.
-     *
-     * @author Jiji_Sasidharan
-     */
-    public interface MessageHandler {
+    public void connect() {
+        synchronized (WebsocketClientEndpoint.class) { // Ensures thread-safety
+            logger.debug("Attempting to connect to WebSocket server at {} with API Key {}", endpointURI, maskApiKey(APIKEY));
 
-        public void handleMessage(String message);
+            if (isOpen()) {
+                logger.info("WS is already connected, skipping reconnect");
+                return;
+            }
+            LocalDateTime currentDateTime =  LocalDateTime.now();
+            if (lastConnectionDateTime!=null && Duration.between(lastConnectionDateTime, currentDateTime).getSeconds()<10) {
+                logger.info("WebSocket connection cooling down, skipping reconnect.");
+                return;
+            }
+
+            if (!isConnecting.compareAndSet(false, true)) {
+                logger.info("WebSocket connection is already in progress, skipping reconnect.");
+                return;
+            }
+
+            try {
+                logger.info("Attempting to open websocket at {}", endpointURI);
+                lastConnectionDateTime = currentDateTime;
+                this.userSession = container.connectToServer(this, endpointURI);
+            } catch (Exception e) {
+                isConnecting.set(false); // Reset the flag regardless of success or failure
+                logger.warn("Exception occurred when connecting to WebSocket {}: {}", endpointURI, e.getMessage());
+            }
+        }
     }
 
-    public boolean isOpen() {
-        if (userSession == null) {
-            return false;
-        }
-        try {
-            return userSession.isOpen();
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
-    // region - new code
     /**
      * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
      * The messages received from the server are expected to follow the following format:
@@ -235,14 +201,24 @@ public class WebsocketClientEndpoint {
      * }
      * NOTE that each message is handled by a new thread
      */
-    public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
-        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(CSLIDSMainClient.getWebSocketURI(), Config.instance.Client.getApiKey());
-        websocketClient.setMessageHandler(messageString -> websocketClient.handleServerMessage(messageString.trim()));
-        return websocketClient;
+    public void connectToServerIfRequired() {
+        if (this.isOpen()) {
+            return;
+        }
+
+        this.connect();
     }
 
-    private static final ScheduledExecutorService reconnectWsExecutor = Executors.newSingleThreadScheduledExecutor();
-    public static WebsocketClientEndpoint websocketClientInstance = null;
+    public boolean isOpen() {
+        if (userSession == null) {
+            return false;
+        }
+        try {
+            return userSession.isOpen();
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
 
     /**
      * Handles messages received from the WebSocket server.
@@ -299,6 +275,27 @@ public class WebsocketClientEndpoint {
         }).start();
     }
 
+    // region static code : init, launch threads and send message to singleton
+    /**
+     * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
+     * The messages received from the server are expected to follow the following format:
+     * {
+     * api: <the service name>,
+     * jcmd: {
+     * cmd: <command>,
+     * params: {
+     * ...
+     * }
+     * }
+     * }
+     * NOTE that each message is handled by a new thread
+     */
+    public static @NotNull WebsocketClientEndpoint initWebSocketClient() {
+        WebsocketClientEndpoint websocketClient = new WebsocketClientEndpoint(CSLIDSMainClient.getWebSocketURI());
+        websocketClient.setMessageHandler(messageString -> websocketClient.handleServerMessage(messageString.trim()));
+        return websocketClient;
+    }
+
     /**
      * Starts tasks for maintaining the connection to the WebSocket server and keeping the connection alive.
      */
@@ -339,25 +336,23 @@ public class WebsocketClientEndpoint {
     }
 
     /**
-     * Connects to the server at (serverUrl/cmd) TCP Socket, and maps the received commands over socket to the specific registered service
-     * The messages received from the server are expected to follow the following format:
-     * {
-     * api: <the service name>,
-     * jcmd: {
-     * cmd: <command>,
-     * params: {
-     * ...
-     * }
-     * }
-     * }
-     * NOTE that each message is handled by a new thread
+     * Sends message to the websocket instance if exists and if opened.
+     * @param message message to send
      */
-    public void connectToServerIfRequired() {
-        if (this.isOpen()) {
-            return;
+    public static void sendMessageIfConnected(String message) {
+        if (websocketClientInstance != null) {
+            websocketClientInstance.sendMessageIfOpen(message);
         }
-
-        this.connect();
     }
-    // endregion - new code
+    // endregion static code : init, launch threads and send message to singleton
+
+    /**
+     * Message handler.
+     *
+     * @author Jiji_Sasidharan
+     */
+    public interface MessageHandler {
+
+        public void handleMessage(String message);
+    }
 }

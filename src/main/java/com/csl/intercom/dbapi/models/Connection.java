@@ -34,7 +34,7 @@ public abstract class Connection implements IScannerSerializable {
         this(null, uuid, devicesIds, protocol, isSimulated);
     }
 
-    public Connection(String name, String id, List<String> devices, StaticConnectionProtocol staticConnectionProtocol, Boolean isSimulated) {
+    protected Connection(String name, String id, List<String> devices, StaticConnectionProtocol staticConnectionProtocol, Boolean isSimulated) {
         this.name = name;
         this.uuid = id;
         this.devicesIds = devices;
@@ -99,7 +99,6 @@ public abstract class Connection implements IScannerSerializable {
     }
 
     public static Connection fromScannerJson(Json connectionJson, List<ConnectionProtocol> protocols) {
-        ConnectionProtocol connectionProtocol;
         ConnectionProtocol protocol = ConnectionProtocol.getProtocolFromScanConnectionJson(protocols, connectionJson);
         if (protocol == null) {
             return null;

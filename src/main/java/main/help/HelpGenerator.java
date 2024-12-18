@@ -21,6 +21,7 @@ import java.util.UUID;
 
 public class HelpGenerator {
 
+    public static final String CONTENTS = "contents";
     String API_DBJSON = "dbjson";
 
     String URL_BACKEND = "http://localhost:8000/";
@@ -101,7 +102,7 @@ public class HelpGenerator {
 
         Json p = Json.object();
         p.set("name", filename);
-        p.set("contents", contents);
+        p.set(CONTENTS, contents);
 
         return execCmd(API_DBJSON, "save_jsonfile", p);
     }
@@ -146,8 +147,8 @@ public class HelpGenerator {
         Json jData = readObjectFromDatabase("helpex_" + apiname);
 
 
-        if (jData.has("contents") && !jData.has("error")) {
-            return jData.get("contents");
+        if (jData.has(CONTENTS) && !jData.has("error")) {
+            return jData.get(CONTENTS);
         }
         return Json.array();   // not found
     }

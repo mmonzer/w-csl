@@ -7,6 +7,8 @@ import org.slf4j.MDC;
 import java.util.UUID;
 
 public class CorrelationUtils {
+    private CorrelationUtils() {}
+
     /**
      * Creates an X-Correlation-ID.
      *

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ConnectionProtocol {
+    public static final String QUERY_PROTOCOL = "queryProtocol";
     @Getter
     private final int id;
     @Getter
@@ -102,8 +103,8 @@ public class ConnectionProtocol {
     }
     public static ConnectionProtocol getProtocolFromScanConnectionJson(List<ConnectionProtocol> protocols, Json connectionJson) {
         StaticConnectionProtocol staticConnectionProtocol;
-        if (connectionJson.has("queryProtocol") && connectionJson.get("queryProtocol").isString()) {
-            staticConnectionProtocol = StaticConnectionProtocol.fromScanName(connectionJson.get("queryProtocol").asString());
+        if (connectionJson.has(QUERY_PROTOCOL) && connectionJson.get(QUERY_PROTOCOL).isString()) {
+            staticConnectionProtocol = StaticConnectionProtocol.fromScanName(connectionJson.get(QUERY_PROTOCOL).asString());
             if (staticConnectionProtocol == null) {
                 return null;
             }

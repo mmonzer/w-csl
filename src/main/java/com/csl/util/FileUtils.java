@@ -10,48 +10,15 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.util.*;
-import java.util.Map.Entry;
 
 public class FileUtils  {
+    private FileUtils(){}
     public static final String FILENAME = "filename";
     public static final String CONTENT = "content";
 
     public static final String EOL = System.getProperty("line.separator");
-
-    public static boolean fileExists(String dir, String filename) {
-        if (dir.isEmpty()) dir = ".";
-        return fileExists(dir + File.separator + filename);
-    }
-
-    public static boolean fileExists(String filename) {
-        return new File(filename).exists();
-    }
-
-    public static boolean dirExists(String f) {
-        File file = new File(f);
-
-        return file.exists() && file.isDirectory();
-    }
-
-    public static String checkAndCreateDir(String s) {
-
-        File file = new File(s);
-
-        if (file.exists()) {
-            if (file.isDirectory()) return s;
-        }
-
-        s = sanitizeDirPath(s);
-
-        file = new File(s);
-        int n = 2;
-        while (file.exists() && !file.isDirectory()) {
-            file = new File(s + n);
-            n++;
-        }
-        if (!file.exists()) file.mkdirs();
-        return file.getPath();
-    }
+    public static final String ERROR = "error";
+    public static final String SNMP_POWERSHELL = "snmp_powershell";
 
     public static Json readJsonFromFile(String dir, String fileName) throws IOException {
         if (dir.isEmpty()) dir = ".";
@@ -80,129 +47,10 @@ public class FileUtils  {
         return stringBuilder.toString();
     }
 
-    public static Json readFileInAJsonText(String filename) {
-        Json result = Json.object();
-        result.set("text", "");
-        result.set("error", "");
-        try {
-            String s = FileUtils.readFile(filename);
-            result.set("text", s);
-        } catch (IOException e) {
-            
-            // e.printStackTrace();
-            result.set("error", e.getMessage());
-        }
-        return result;
-    }
-
-    public static Json writeFileFromText(String filename, String content) {
-        Json result = Json.object();
-
-        result.set("error", "");
-        try {
-            writeToFile(filename, content);
-            return result;
-        } catch (IOException e) {
-            // e.printStackTrace();
-            return result.set("error", e.getMessage());
-        }
-    }
-
-
     public static void writeToFile(String path, String content) throws IOException {
         try (FileWriter myWriter = new FileWriter(path)) {
             myWriter.write(content);
         }
-    }
-
-    private static void addCommaToLastrString(List<String> strList) {
-        int n = strList.size() - 1;
-        strList.set(n, strList.get(n) + ",");
-    }
-
-    public static List<String> jsonToStringList(String name, Json j, List<String> strList, String decal) {
-        if (j.isObject()) {
-            if (name.isEmpty()) strList.add(decal + "{");
-            else strList.add(decal + '"' + name + '"' + ":{");
-            boolean first = true;
-            for (Entry<String, Json> entry : j.asJsonMap().entrySet()) {
-                if (!first) addCommaToLastrString(strList);
-                first = false;
-                jsonToStringList(entry.getKey(), entry.getValue(), strList, "  " + decal);
-            }
-            strList.add(decal + "}");
-        } else if (j.isArray()) {
-            if (name.isEmpty()) strList.add(decal + "[");
-            else strList.add(decal + '"' + name + '"' + ":[");
-            boolean first = true;
-            for (Json je : j.asJsonList()) {
-                if (!first) addCommaToLastrString(strList);
-                first = false;
-                jsonToStringList("", je, strList, "  " + decal);
-            }
-            strList.add(decal + "]");
-        } else {
-            if (name.isEmpty()) strList.add(decal + j);
-            else strList.add(decal + '"' + name + '"' + ":" + j);
-        }
-
-
-        return strList;
-    }
-
-    private static void createFile(String file, List<String> arrData) throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
-            int size = arrData.size();
-            for (int i = 0; i < size; i++) {
-                String str = arrData.get(i);
-                writer.write(str);
-                if (i < size - 1) //This prevent creating a blank like at the end of the file**
-                    writer.write("\n");
-            }
-        }
-    }
-
-    public static void saveJsonToFile(String dir, String fileName, Json j) {
-        if (dir.isEmpty()) dir = ".";
-
-        new File(dir).mkdirs();
-        String file = dir + File.separator + fileName;
-        List<String> strlist = jsonToStringList("", j, new ArrayList<>(), "");
-        try {
-            createFile(file, strlist);
-        } catch (IOException e) {
-            
-            // e.printStackTrace();
-        }
-    }
-
-    public static String sanitize(String filename) {
-        if (filename == null) return null;
-
-        String[] charsToEscape = {"/", ":","*","?","\"","<",">","|","\\","&"};
-        for (String character : charsToEscape) {
-            filename = filename.replaceAll(character, "_");
-        }
-        
-        return filename;
-    }
-
-    public static String sanitizeDirPath(String path) {
-
-        String[] x = path.split(File.separator);
-
-        boolean absolute = path.startsWith(File.separator);
-
-        String s = "";
-        for (String string : x) {
-            if (string.compareTo("..") != 0) {
-                if (!s.isEmpty()) s = s + File.separator;
-                s = s + sanitize(string);
-            }
-        }
-        if (absolute) s = File.separator + s;
-
-        return s;
     }
 
     public static List<Json> parseConnexionsFromCSV(byte[] fileContent) {
@@ -269,28 +117,26 @@ public class FileUtils  {
             // nto enough values (splits method trims the last empty spaces
             if (values.length <= i) {
                 tmp.set(toCamelCase(headers[i]), "");
-                continue;
-            }
-            // check if integer
-            try {
-                tmp.set(toCamelCase(headers[i]), Integer.parseInt(values[i]));
-                continue;
-            } catch (NumberFormatException ignored) {
-            }
-            // check if double
-            try {
-                tmp.set(toCamelCase(headers[i]), Double.parseDouble(values[i]));
-                continue;
-            } catch (NumberFormatException ignored) {
-            }
-            // check if boolean
-            if ("true".equals(values[i]) || "false".equals(values[i])) {
-                tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
-                continue;
-            }
+            } else {
+                // check if integer
+                try {
+                    tmp.set(toCamelCase(headers[i]), Integer.parseInt(values[i]));
+                } catch (NumberFormatException ignored) {
+                    // check if double
+                    try {
+                        tmp.set(toCamelCase(headers[i]), Double.parseDouble(values[i]));
+                    } catch (NumberFormatException ignored2) {
+                        // check if boolean
+                        if ("true".equals(values[i]) || "false".equals(values[i])) {
+                            tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
+                            continue;
+                        }
 
-            // otherwise string-
-            tmp.set(toCamelCase(headers[i]), values[i]);
+                        // otherwise string-
+                        tmp.set(toCamelCase(headers[i]), values[i]);
+                    }
+                }
+            }
         }
         return tmp;
     }
@@ -384,7 +230,7 @@ public class FileUtils  {
             switch (cell.getCellType()) {
                 case STRING:
                     String stringValue = cell.getStringCellValue();
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey) && !Objects.equals(sheetName, "snmp_powershell")) {
+                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey) && !Objects.equals(sheetName, SNMP_POWERSHELL)) {
                         cnxInputFotCnxRelatedToHttp.set(headerKey, stringValue);
                     } else {
                         tmp.set(headerKey, stringValue);
@@ -392,7 +238,7 @@ public class FileUtils  {
                     break;
                 case NUMERIC:
                     long numericValue = Math.round(cell.getNumericCellValue());
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, "snmp_powershell")) {
+                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, SNMP_POWERSHELL)) {
                         cnxInputFotCnxRelatedToHttp.set(headerKey, numericValue);
                     } else {
                         tmp.set(headerKey, numericValue);
@@ -400,7 +246,7 @@ public class FileUtils  {
                     break;
                 case BOOLEAN:
                     boolean booleanValue = cell.getBooleanCellValue();
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, "snmp_powershell")) {
+                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, SNMP_POWERSHELL)) {
                         cnxInputFotCnxRelatedToHttp.set(headerKey, booleanValue);
                     } else {
                         tmp.set(headerKey, booleanValue);
@@ -410,14 +256,11 @@ public class FileUtils  {
                     break;
             }
         }
-        if (!Objects.equals(sheetName, "snmp_powershell")) {
+        if (!Objects.equals(sheetName, SNMP_POWERSHELL)) {
             tmp.set("protocol", sheetName);
             tmp.set("discoveryProtocolNameRelatedToHttpCnx", sheetName);
         }
-//        if (allEmpty) {
-//            return null;
-//        }
-        // Add cnxInputFotCnxRelatedToHttp JSON to tmp under the key "inputs"
+
         tmp.set("inputs", cnxInputFotCnxRelatedToHttp);
 
         return tmp;

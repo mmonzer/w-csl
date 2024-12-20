@@ -34,7 +34,6 @@ public class ActivityMonitor implements IStatusProvider {
     boolean showTicks=true;
 
 	Map<String, Json> taps= new HashMap<>();
-	Map<String, Tap> activeTaps;
 
 	ActivityHistory history = new ActivityHistory(60);
 	Map<String, LocalDateTime> tapsLastActivity = new HashMap<>();

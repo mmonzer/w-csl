@@ -4,7 +4,6 @@ import com.csl.util.JCmd;
 import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.interfaces.IJsonCmdWithFiles;
 import com.ucsl.json.Json;
-import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.JsonApiResponse;
@@ -21,9 +20,7 @@ import java.util.Map.Entry;
 import static com.csl.web.jcmdoversocket.CSLWebSocketForJcmd.COMMAND;
 
 public class ApiCommands {
-    //    public class ApiCommands implements IApiCommands {
-
-    static private final Logger logger = LoggerFactory.getLogger(ApiCommands.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApiCommands.class);
     public static final String IS_MISSING_FROM_BODY = " is missing from body";
     static boolean debug = true;
 
@@ -31,27 +28,13 @@ public class ApiCommands {
     HashMap<String, IJsonCmdWithFiles> listOfCommandsWithFiles = new HashMap<>();
     HashMap<String, JsonCmdHelp> listOfCommandHelps = new HashMap<>();
     List<String> listOfCommandNames = new ArrayList<>();
+    @Getter
     Map<String, JsonCmdPrivilegeFamily> listOfCommandPrivileges = new HashMap<>();
     @Getter
     private String path = "";
-    //    @Override
-    /**
-     * -- GETTER --
-     *  Gives the description of the API service
-     *
-     * @return the description of the service
-     */ //    @Override
     @Setter
     @Getter
     private String description = "";
-
-    private ApiCommands(String path) {
-        this.path = path;
-    }
-
-    public ApiCommands() {
-
-    }
 
     public Json exec(String name, Json params, Json files) {
         if (listOfCommands.get(name) != null) {
@@ -61,22 +44,18 @@ public class ApiCommands {
         }
     }
 
-//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand) {
         return registerCmd(name, jsonCommand, null, null);
     }
 
-//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand, JsonCmdHelp jsonCommandHelp) {
         return registerCmd(name, jsonCommand, jsonCommandHelp, null);
     }
 
-//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand, JsonCmdPrivilegeFamily privilegeFamily) {
         return registerCmd(name, jsonCommand, null, privilegeFamily);
     }
 
-//    @Override
     public String registerCmd(String name, IJsonCmd jsonCommand, JsonCmdHelp jsonCommandHelp, JsonCmdPrivilegeFamily privilegeFamily) {
         if (listOfCommands.get(name) != null)
             return "Command with this name already registered :" + name;
@@ -91,10 +70,6 @@ public class ApiCommands {
 
     public String registerCmd(String name, IJsonCmdWithFiles jsonCommand) {
         return registerCmd(name, jsonCommand, null, null);
-    }
-
-    public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, JsonCmdHelp jsonCommandHelp) {
-        return registerCmd(name, jsonCommand, jsonCommandHelp, null);
     }
 
     public String registerCmd(String name, IJsonCmdWithFiles jsonCommand, JsonCmdPrivilegeFamily privilegeFamily) {
@@ -136,16 +111,10 @@ public class ApiCommands {
         return s;
     }
 
-    /*
-     * path : /test (for example)
-     */
-
-//    @Override
     public String getName() {
         return getCleanApiName();
     }
 
-    //    @Override
     public void setName(String name) {
         this.path = name;
     }
@@ -154,7 +123,6 @@ public class ApiCommands {
         return new ArrayList<>(listOfCommands.keySet());
     }
 
-//    @Override
     public Json execJcmd(Json jCmd) {
         Json cmd = jCmd.get(JCmd.CMD);
         Json params = jCmd.get(JCmd.PARAMETERS);
@@ -177,40 +145,16 @@ public class ApiCommands {
         }
     }
 
-
-    private Json execCmd(String api, String cmd, Json jparams) {
-        Json j = Json.object();
-
-        j.set(JCmd.CMD, cmd);
-        j.set(JCmd.PARAMETERS, jparams);
-        return JServiceLoader.cslInterModuleCommunicationManager.executeCommand(api, j);
-    }
-
-    public Json readObjectFromDatabase(String name) {
-        Json p = Json.object();
-        p.set("name", name);
-
-        String api = "dbjson";
-
-        //ici
-        return execCmd(api, "load_jsonfile", p);
-    }
-
-    public Map<String, JsonCmdPrivilegeFamily> getListOfCommandPrivileges() {
-        return listOfCommandPrivileges;
-    }
-
     public String toString() {
-        String s = "";
+        StringBuilder s = new StringBuilder();
         for (Entry<String, IJsonCmd> entry : listOfCommands.entrySet()) {
             String name = entry.getKey();
-            if (!s.isEmpty()) s = s + ",";
-            s = s + name;
+            if (!s.isEmpty()) s.append(",");
+            s.append(name);
         }
 
         return getCleanApiName() + ":[" + s + "]";
     }
-
 
     /**
      * Wrapper to catch the exceptions and format a correct answer

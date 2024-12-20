@@ -119,16 +119,8 @@ public class Device implements IScannerSerializable {
         return result;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
     public Device setConnectionsIds(List<String> connectionsIds) {
         this.connectionsIds = connectionsIds;
-        return this;
-    }
-    public Device setConnectionsMongoUuids(List<String> connectionsMongoUuids) {
-        this.connectionsMongoUuids = connectionsMongoUuids;
         return this;
     }
 

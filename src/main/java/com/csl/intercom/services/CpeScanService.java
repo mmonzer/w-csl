@@ -28,14 +28,14 @@ import java.util.function.Function;
  * Should not be created, but accessed through the static instance.
  */
 public class CpeScanService {
-    public static CpeScanService instance = new CpeScanService();
-    static private final Logger logger = LoggerFactory.getLogger(CpeScanService.class);
+    public static final CpeScanService instance = new CpeScanService();
+    private static final Logger logger = LoggerFactory.getLogger(CpeScanService.class);
     // The list of scans, indexed by their id (this list contains all the running scans).
     private final Map<String, ScanEntity> scanEntities = new ConcurrentHashMap<>();
     // The list of scans that have been modified since the last time they were handled --> need to be handled.
-    private Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
-    private ScanApiHandler scanApiHandler = new ScanApiHandler();
-    private DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
+    private final Queue<String> modifiedScans = new ConcurrentLinkedQueue<>();
+    private final ScanApiHandler scanApiHandler = new ScanApiHandler();
+    private final DbapiHandlerForCSLScan dbapiHandler = new DbapiHandlerForCSLScan();
     private DataSynchronizationService cpeItemsSynchronizationService;
     private DataSynchronizationService microsoftKbSynchronizationService;
     private ScheduledExecutorService scansHandlingTask = null;

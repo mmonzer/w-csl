@@ -112,15 +112,6 @@ public class CSLWebSocket {
     }
 
     /**
-     * Gets the list of registered WebSocket paths.
-     *
-     * @return A list of WebSocket paths.
-     */
-    public static List<String> getListOfWebsocketsPath() {
-        return new ArrayList<>(websocketTags.keySet());
-    }
-
-    /**
      * Registers a WebSocket path with an associated tag.
      *
      * @param socketName The WebSocket path name.
@@ -177,8 +168,6 @@ public class CSLWebSocket {
     public static void refresh(String socketName) {
         Map<Session, String> socketUsernameMap = getSocketUsernameMap(socketName);
         socketUsernameMap.keySet().forEach(session -> {
-            String username = socketUsernameMap.get(session);
-
             Json refreshMessage = Json.object().set("refresh", socketName);
             if (session.isOpen()) {
                     session.getAsyncRemote().sendText(refreshMessage.toString());

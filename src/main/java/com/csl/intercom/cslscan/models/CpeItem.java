@@ -109,16 +109,8 @@ public class CpeItem implements IDbapiSerializable {
         return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted, isMain, discoveryConnectionId);
     }
 
-    public Json getCpeData() {
-        return cpeData;
-    }
-
     public boolean isDeleted() {
         return isDeleted;
-    }
-
-    public boolean isMain() {
-        return isMain;
     }
 
     /**

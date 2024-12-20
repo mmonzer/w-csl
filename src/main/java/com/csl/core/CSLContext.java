@@ -50,8 +50,6 @@ public class CSLContext {
      */
     private CSLUDPServer cslUDPServer = null;
 
-    private long initialTime = 0;
-
     @Getter
     @Setter
     private boolean testMode = false;
@@ -216,7 +214,6 @@ public class CSLContext {
             getStatusNotifier().setSendNotifications(false);
         } else {
             getCslUDPServer().initUDPServer(Config.getInstance().udpServerConf);
-            initTime();
         }
     }
 
@@ -236,13 +233,6 @@ public class CSLContext {
         }
 
         JServiceLoader.getCSLInterModuleCommunicationManager().start();
-    }
-
-    /**
-     * Initializes the timing settings for module execution.
-     */
-    private void initTime() {
-        initialTime = getSystemCurrentTimeMillis();
     }
 
     /**

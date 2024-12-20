@@ -11,6 +11,14 @@ import java.util.Map.Entry;
  * Helper class that builds the apihelp HTML page.
  */
 public class ApiGetHelp {
+
+    public static final String STATUS = "status";
+    public static final String TD_FIN = "</td>";
+    public static final String TR_FIN = "</tr>";
+    public static final String PRINT = "print";
+    public static final String TD_INIT = "<td>";
+    public static final String TR_INIT = "<tr>";
+
     /**
      * Method that builds the body of HTML page from the api data.
      *
@@ -21,26 +29,23 @@ public class ApiGetHelp {
      */
     public String getHelp(List<String> apiNames, List<String> apiDescriptions, Json params) {
 
-        String s = "";
-        String api = "";
-        if (params.has("api")) {
-            api = params.get("api").asString();
-        }
+        StringBuilder stringBuilder = new StringBuilder();
+        String api = JsonUtil.getStringFromJson(params, "api", "");
         for (int i = 0; i < apiNames.size(); i++) {
             if (!api.isEmpty()) {
                 if (api.compareTo(apiNames.get(i)) == 0) {
 
-                    s = s + getHelp(apiNames.get(i), apiDescriptions.get(i), params);
+                    stringBuilder.append(getHelp(apiNames.get(i), apiDescriptions.get(i), params));
                 }
             } else {
                 if (!params.has("all")) params.set("all", "");
-                s = s + getHelp(apiNames.get(i), apiDescriptions.get(i), params);
+                stringBuilder.append(getHelp(apiNames.get(i), apiDescriptions.get(i), params));
             }
         }
 
 
-        s = generatePage("<table class=\"helptable\">" + s + "</table>", params);
-        return s;
+        stringBuilder = new StringBuilder(generatePage("<table class=\"helptable\">" + stringBuilder + "</table>", params));
+        return stringBuilder.toString();
     }
 
     /**
@@ -78,118 +83,107 @@ public class ApiGetHelp {
 
         String styletr = " style =\"width:100 mm\" ";
         String size = "3";
-        if (params.has("status")) size = "4";
+        if (params.has(STATUS)) size = "4";
 
+        StringBuilder stringBuildPage;
+        stringBuildPage = new StringBuilder("<tr width=\"100mm\"><td colspan=\"" + size + "\" class=\"apiname\">" + apiName + TD_FIN + TR_FIN);
+        stringBuildPage.append("<tr width=\"100mm\"><td colspan=\"").append(size).append("\" class=\"apidescription\">").append(apiDescription).append(TD_FIN + TR_FIN);
 
-        boolean showExample = params.has("ex");
-
-        String s = "";
-        s = "<tr width=\"100mm\"><td colspan=\"" + size + "\" class=\"apiname\">" + apiName + "</td></tr>";
-        s += "<tr width=\"100mm\"><td colspan=\"" + size + "\" class=\"apidescription\">" + apiDescription + "</td></tr>";
-
-        if (params.has("api") && params.has(JCmd.CMD) & params.has("url")) {
+        if (params.has("api") && params.has(JCmd.CMD) && params.has("url")) {
 
             String urlMain = params.get("url").asString() + "?ex";
-            if (params.has("print")) urlMain = urlMain + "&print";
+            if (params.has(PRINT)) urlMain = urlMain + "&print";
             if (!params.has("all")) urlMain = urlMain + "&api=" + params.get("api").asString();
 
-            s = s + "<tr><td colspan=\"" + size + "\" >" +
-                    "<a href=\"" + urlMain + " \" target=\"_blank\" >main page</a>" + "</td></tr>";
+            stringBuildPage.append("<tr><td colspan=\"").append(size).append("\" >").append("<a href=\"").append(urlMain).append(" \" target=\"_blank\" >main page</a>").append(TD_FIN + TR_FIN);
         }
 
 
-        Json j = getHelpInfoAsJson(apiName, params);
+        Json helpInfoAsJson = getHelpInfoAsJson(apiName, params);
 
-        String cmd = "";
-        if (params.has(JCmd.CMD)) {
-            cmd = params.get(JCmd.CMD).asString();
-        }
+        String cmd = JsonUtil.getStringFromJson(params, JCmd.CMD, "");
 
-        if (!j.isArray()) {
-            if (j.has("error")) {
-                s = s + "<tr width=\"100mm\"><td colspan=\"\"+size+\"\" >" + "Not available</td></tr>";
+        if (!helpInfoAsJson.isArray()) {
+            if (helpInfoAsJson.has("error")) {
+                stringBuildPage.append("<tr width=\"100mm\"><td colspan=\"\"+size+\"\" >").append("Not available" + TD_FIN + TR_FIN);
             } else {
-                s = s + "<tr><td colspan=\"\"+size+\"\" >" + "Not available</td></tr>";
+                stringBuildPage.append("<tr><td colspan=\"\"+size+\"\" >").append("Not available" + TD_FIN + TR_FIN);
             }
         } else {
 
-            s = s + "<tr " + styletr + ">" +
-                    "    <th >Cmd</th>\n" +
+            stringBuildPage.append("<tr ").append(styletr).append(">").append("    <th >Cmd</th>\n").append(
                     //"    <th>Description</th>\n" +
-                    "    <th>Params</th>\n" +
-                    "    <th>Result</th>\n";
-            if (params.has("status")) s = s + "    <th>Status</th>\n";
+                    "    <th>Params</th>\n").append("    <th>Result</th>\n");
+            if (params.has(STATUS)) stringBuildPage.append("    <th>Status</th>\n");
 
-            s = s + "  </tr>";
+            stringBuildPage.append("  </tr>");
 
-            for (Json jrow : j.asJsonList()) {
-
-                boolean okcmd = true;
-                boolean full = false;
-                String url = "";
-                String jcmd = jrow.get(JCmd.CMD).asString();
-                if (params.has("api") && params.has(JCmd.CMD)) {
-                    full = true;
-                } else {
-                    if (params.has("url")) url = params.get("url").asString();
-                    url = url + "?api=" + apiName + "&cmd=" + jcmd + "&ex";
-                    if (params.has("all")) url = url + "&all";
-                    if (params.has("print")) url = url + "&print";
-                }
-                if (!cmd.isEmpty()) okcmd = cmd.compareTo(jcmd) == 0;
-
-                String row = "";
-                //System.out.println(jrow);
-                row = row + "<td><b>" + jrow.get(JCmd.CMD).asString() + "</b><br><i>" + jrow.get("desc").asString() + "</td>";
-                //row=row+"<td>"+jrow.get("desc").asString()+"</td>";
-                if (jrow.has(JCmd.PARAMETERS)) {
-                    String sx = "";
-
-                    //for (Json jp:jrow.get(JCmd.PARAMETERS).asJsonList()) {
-                    for (Entry<String, Json> entry : jrow.get(JCmd.PARAMETERS).asJsonMap().entrySet()) {
-                        sx = sx + "&bull; " + entry.getKey() + " : " + entry.getValue().asString() + "<br>";
-                    }
-                    row = row + "<td>" + sx + "</td>";
-                } else {
-                    row = row + "<td> </td>";
-                }
-                if (jrow.has("result")) {
-                    row = row + "<td>" + jrow.get("result").asString() + "</td>";
-                } else {
-                    row = row + "<td> </td>";
-                }
-                if (jrow.has("status")) {
-                    row = row + "<td>" + jrow.get("status").asString() + "</td>";
-                }
-
-                if (okcmd) s = s + "<tr>" + row + "</tr>";
-
-                if (showExample & okcmd) {
-                    row = "";
-                    String exstyle = "style=\" font-family: 'Courier New', monospace; font-size: small; \"";
-                    String ex_params = "";
-                    if (jrow.has("ex_params")) ex_params = formatJson(jrow.get("ex_params"), true, url);
-                    String ex_result = "";
-                    if (jrow.has("ex_result")) ex_result = formatJson(jrow.get("ex_result"), full, url);
-
-                    boolean empty = ex_params.isEmpty();
-
-                    if (empty) {
-                        row = row + "<td style=\"text-align: right; font-size: small;\"> </td>";
-                    } else {
-                        row = row + "<td style=\"text-align: right; font-size: small;\"><i>Example </td>";
-                    }
-                    row = row + "<td colspan=\"1 \" " + exstyle + ">" + ex_params + "</td>";
-                    row = row + "<td colspan=\"1 \" " + exstyle + ">" + ex_result + "</td>";
-
-                    if (jrow.has("status")) {
-                        row = row + "<td>" + "</td>";
-                    }
-                    s = s + "<tr>" + row + "</tr>";
-                }
+            for (Json jrow : helpInfoAsJson.asJsonList()) {
+                addApiCommandToHelp(apiName, params, jrow, cmd, stringBuildPage);
             }
         }
-        return s;
+        return stringBuildPage.toString();
+    }
+
+    private void addApiCommandToHelp(String apiName, Json params, Json apiCommand, String requestedCommand, StringBuilder stringBuildPage) {
+        boolean okcmd = true;
+        boolean full = false;
+        String url = "";
+        String jcmd = apiCommand.get(JCmd.CMD).asString();
+        if (params.has("api") && params.has(JCmd.CMD)) {
+            full = true;
+        } else {
+            if (params.has("url")) url = params.get("url").asString();
+            url = url + "?api=" + apiName + "&cmd=" + jcmd + "&ex";
+            if (params.has("all")) url = url + "&all";
+            if (params.has(PRINT)) url = url + "&print";
+        }
+        if (!requestedCommand.isEmpty()) okcmd = requestedCommand.compareTo(jcmd) == 0;
+
+        String row = "";
+        row = row + "<td><b>" + apiCommand.get(JCmd.CMD).asString() + "</b><br><i>" + apiCommand.get("desc").asString() + TD_FIN;
+        if (apiCommand.has(JCmd.PARAMETERS)) {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (Entry<String, Json> entry : apiCommand.get(JCmd.PARAMETERS).asJsonMap().entrySet()) {
+                stringBuilder.append("&bull; ").append(entry.getKey()).append(" : ").append(entry.getValue().asString()).append("<br>");
+            }
+            row = row + TD_INIT + stringBuilder + TD_FIN;
+        } else {
+            row = row + TD_INIT + TD_FIN;
+        }
+        if (apiCommand.has("result")) {
+            row = row + TD_INIT + apiCommand.get("result").asString() + TD_FIN;
+        } else {
+            row = row + TD_INIT + TD_FIN;
+        }
+        if (apiCommand.has(STATUS)) {
+            row = row + TD_INIT + apiCommand.get(STATUS).asString() + TD_FIN;
+        }
+
+        if (okcmd) {
+            stringBuildPage.append(TR_INIT).append(row).append(TR_FIN);
+            row = "";
+            String exstyle = "style=\" font-family: 'Courier New', monospace; font-size: small; \"";
+            String ex_params = "";
+            if (apiCommand.has("ex_params")) ex_params = formatJson(apiCommand.get("ex_params"), true, url);
+            String ex_result = "";
+            if (apiCommand.has("ex_result")) ex_result = formatJson(apiCommand.get("ex_result"), full, url);
+
+            boolean empty = ex_params.isEmpty();
+
+            if (empty) {
+                row = row + "<td style=\"text-align: right; font-size: small;\"> " + TD_FIN;
+            } else {
+                row = row + "<td style=\"text-align: right; font-size: small;\"><i>Example " + TD_FIN;
+            }
+            row = row + "<td colspan=\"1 \" " + exstyle + ">" + ex_params + TD_FIN;
+            row = row + "<td colspan=\"1 \" " + exstyle + ">" + ex_result + TD_FIN;
+
+            if (apiCommand.has(STATUS)) {
+                row = row + TD_INIT + TD_FIN;
+            }
+            stringBuildPage.append(TR_INIT).append(row).append(TR_FIN);
+        }
     }
 
     private String formatJson(Json j, boolean full, String url) {
@@ -197,17 +191,17 @@ public class ApiGetHelp {
         boolean addlink = false;
         String s = JsonUtil.prettyPrint(j);
 
-        String z = "";
+        StringBuilder z = new StringBuilder();
         String[] lines = s.split("\n");
         for (int i = 0; i < lines.length; i++) {
             if (!full) {
-                if (i < 8) z = z + lines[i] + "<br>";
+                if (i < 8) z.append(lines[i]).append("<br>");
                 else addlink = true;
             } else
-                z = z + lines[i] + "<br>";
+                z.append(lines[i]).append("<br>");
         }
-        if (addlink) z = z + "<a href=\"" + url + " \" target=\"_blank\" >More ...</a>";
-        return z;
+        if (addlink) z.append("<a href=\"").append(url).append(" \" target=\"_blank\" >More ...</a>");
+        return z.toString();
     }
 
     private Json getHelpInfoAsJson(String apiName, Json jparams) {
@@ -222,7 +216,7 @@ public class ApiGetHelp {
      * @return the style in {@link String} format.
      */
     private String getStyle(Json params) {
-        return getStyle(params.has("print"));
+        return getStyle(params.has(PRINT));
     }
 
     /**

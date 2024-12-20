@@ -60,12 +60,12 @@ public class CSLIDSMainClient {
      * @return the websocket url
      */
     public static @NotNull String getWebSocketUrl() {
-        Boolean useSsl = Config.getInstance().Client.getUseSsl();
+        Boolean useSsl = Config.getInstance().client.getUseSsl();
         useSsl = (useSsl != null) && useSsl;
-        String serverIp = Config.getInstance().Client.getIpServerRemote();
-        serverIp = resolveHostNameIfRequired(serverIp, Config.getInstance().Client.getForceHostNameResolution());
-        int serverPort = Config.getInstance().Client.getPortServerRemote();
-        String serverUrlPrefix = Config.getInstance().Client.getServerRemoteUrlPrefix();
+        String serverIp = Config.getInstance().client.getIpServerRemote();
+        serverIp = resolveHostNameIfRequired(serverIp, Config.getInstance().client.getForceHostNameResolution());
+        int serverPort = Config.getInstance().client.getPortServerRemote();
+        String serverUrlPrefix = Config.getInstance().client.getServerRemoteUrlPrefix();
         serverUrlPrefix = (serverUrlPrefix != null) ? serverUrlPrefix : "";
 
 
@@ -80,7 +80,6 @@ public class CSLIDSMainClient {
      *
      * @return the websocket URI or default "ws://wrongURI" if syntax error
      */
-<<<<<<< HEAD
     public static URI getWebSocketURI() {
         try {
             return new URI(getWebSocketUrl());
@@ -90,54 +89,6 @@ public class CSLIDSMainClient {
                 return new URI("ws://wrongURI");
             } catch (URISyntaxException e2) {
                 return null; // never reached
-=======
-    private static void handleServerMessage(String messageString) {
-        new Thread(() -> {
-            logger.trace("Received message: {}", messageString);
-
-            if (messageString.startsWith("{") && messageString.endsWith("}")) {
-                Json messageJson = Json.read(messageString);
-                getValueStringOrNull(messageJson, CSLWebSocketForJcmd.ID);
-                String xCorrelationId = getValueStringOrNull(messageJson, X_CORRELATION_ID);
-                MDC.put(X_CORRELATION_ID, xCorrelationId);
-                String uri = "";
-
-                String apiName = JsonUtil.getStringFromJson(messageJson, "api", "");
-
-                Json result = Json.object().set("error", "api not found");
-
-                if (!apiName.isEmpty()) {
-                    ApiCommands api = apiMap.get(apiName);
-                    MDC.put(ENDPOINT, apiName);
-                    Json jsonCommand = messageJson.get("jsonCommand");
-                    uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
-                    MDC.put(ENDPOINT, uri);
-
-                    CSLNetworkLogger.infoInboundRequest(logger, Config.getInstance().client.getIpServerRemote(), Config.getInstance().client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
-
-                    if (jsonCommand != null && api != null) {
-                        result = api.execJcmd(jsonCommand);
-                    } else if (jsonCommand == null) {
-                        result.set("error", "jsonCommand not found");
-                    }
-                } else {
-                    logger.warn("API endpoint not found");
-                }
-
-
-                Json resultMessageJson = Json.object()
-                        .set("uuid", messageJson.get("uuid"))
-                        .set(X_CORRELATION_ID, xCorrelationId)
-                        .set("result", result);
-
-                logger.trace("Sending result: {}", resultMessageJson);
-                clientEndPoint.sendMessage("res:" + resultMessageJson);
-                CSLNetworkLogger.infoOutboundResponse(logger, Config.getInstance().client.getIpServerRemote(), Config.getInstance().client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
-                MDC.remove(COMMAND);
-                MDC.remove(ENDPOINT);
-                MDC.remove(X_CORRELATION_ID);
-                MDC.remove(PROTOCOL);
->>>>>>> d4bd20e5 (Clean config file reading)
             }
         }
     }
@@ -197,36 +148,15 @@ public class CSLIDSMainClient {
      */
     private static void configureClientSettings(Config config) {
         // Override server configuration for the client
-<<<<<<< HEAD
-        config.Server.setOn(false);
-        config.UdpServerConf.setOn(true);
-=======
         config.server.setOn(false);
         config.udpServerConf.setOn(true);
-
-        serverIp = config.client.getIpServerRemote();
-        serverUrlPrefix = config.client.getServerRemoteUrlPrefix();
-        serverUrlPrefix = (serverUrlPrefix == null) ? "" : serverUrlPrefix;
-
-        resolveHostNameIfRequired(config);
-
-        serverPort = config.client.getPortServerRemote();
-        useSsl = config.client.getUseSsl();
-        apiKey = config.client.getApiKey();
-        logger.trace("API Key: {}", apiKey);
->>>>>>> d4bd20e5 (Clean config file reading)
     }
 
     /**
      * Attempts to resolve the host name if the configuration requires it.
      */
-<<<<<<< HEAD
     private static String resolveHostNameIfRequired(String ipAddress, boolean shouldForceHostNameResolution) {
         if (shouldForceHostNameResolution) {
-=======
-    private static void resolveHostNameIfRequired(Config config) {
-        if (config.client.getForceHostNameResolution()) {
->>>>>>> d4bd20e5 (Clean config file reading)
             try {
                 ipAddress = InetAddress.getByName(ipAddress).getHostAddress();
             } catch (UnknownHostException e) {

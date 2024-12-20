@@ -1,7 +1,6 @@
 package com.csl.core;
 
 import com.csl.alert.CSLAlertManager;
-import com.csl.defaultclasses.FileStoreService;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.intercom.status.StatusNotifier;
@@ -56,8 +55,6 @@ public class CSLContext {
     @Getter
     @Setter
     private boolean testMode = false;
-
-    FileStoreService fileStoreService;
 
     /**
      * Private constructor for singleton pattern.
@@ -270,16 +267,5 @@ public class CSLContext {
             statusNotifier = new StatusNotifier(false);
         }
         return statusNotifier;
-    }
-
-    /**
-     * Gets the file storage service
-     * @return file storage service
-     */
-    public FileStoreService getFileStoreService() {
-        if (fileStoreService == null) {
-            fileStoreService = new FileStoreService(getCslConfDir());
-        }
-        return fileStoreService;
     }
 }

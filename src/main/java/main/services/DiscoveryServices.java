@@ -12,6 +12,7 @@ import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
+import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
@@ -36,7 +37,9 @@ import org.slf4j.MDC;
 import java.io.FileNotFoundException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -1066,11 +1069,28 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         logger.trace("Parsed entity HTTP connection : {}", entityHttpConnection);
                     }
                     //  endregion -- Get Connection Template & Connection Obj (create from data or get by id)
-
+                    HttpConnection httpConnection = null;
+                    Map<Integer, HttpConnection.StageConfig> stagesConfig = new HashMap<>();
+                    Map<String, String> inputs = new HashMap<>();
+                    if (connectionJson!=null) {
+                        Json readOnlyOtherData = connectionJson.get("read_only_other_data");
+                        readOnlyOtherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), HttpConnection.StageConfig.fromJson(value)));
+                        if (readOnlyOtherData.has("inputs")) {
+                            for (String key : readOnlyOtherData.get("inputs").asJsonMap().keySet()) {
+                                inputs.put(key, readOnlyOtherData.get("inputs").get(key).asString());
+                            }
+                        }
+                        httpConnection = new HttpConnection(
+                                null,
+                                connectionJson.get("port_number").toString(),
+                                stagesConfig, inputs
+                        );
+                    }
                     EntityHttpConnectionTestResult result = null;
                     try {
                         logger.debug("Testing entity HTTP connection ...");
-                        result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId);
+
+                        result = scanApiHandler.testEntityHttpConnection(templateId, entityHttpConnection, deviceId, device, connectionId, (HttpConnection) httpConnection);
                         logger.debug("Tested entity HTTP connection : {}", result);
                     } catch (Exception e) {
                         logger.error(FAILED_TO_TEST_ENTITY_HTTP_CONNECTION, e);

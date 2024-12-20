@@ -31,6 +31,20 @@ public class HttpConnection extends Connection {
 
     public HttpConnection(String id,
                           String port,
+                          Map<Integer, StageConfig> stagesConfig,
+                          Map<String, String> inputs) {
+        super(id, null, StaticConnectionProtocol.HTTP, false);
+        this.entityHttpConnectionUuid = null;
+        this.port = port;
+        this.authenticationMethod = null;
+        this.realm = null;
+        this.token = null;
+        this.inputs = inputs;
+        this.stagesConfig = stagesConfig;
+
+    }
+    public HttpConnection(String id,
+                          String port,
                           List<String> devices,
                           String entityHttpConnectionUuid,
                           EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod,
@@ -86,7 +100,7 @@ public class HttpConnection extends Connection {
     public static HttpConnection fromJson(Json connectionJson, ConnectionProtocol protocol) {
         try {
             String uuid;
-            if (connectionJson.has("uuid")) {
+            if (connectionJson.has("uuid") && connectionJson.get("uuid").isString()) {
                 uuid = connectionJson.get("uuid").asString();
             } else {
                 if(connectionJson.has("mongo_entity_id") && !connectionJson.get("mongo_entity_id").isNull())
@@ -143,7 +157,14 @@ public class HttpConnection extends Connection {
             // check if otherData has inputs key
             if (otherData.has("inputs")) {
                 for (String key : otherData.get("inputs").asJsonMap().keySet()) {
-                    inputs.put(key, otherData.get("inputs").get(key).get("value").asString());
+                    if (otherData.get("inputs").has(key)) {
+                        var input = otherData.get("inputs").get(key);
+                        if (input.isObject() && input.has("value")) {
+                            inputs.put(key, input.get("value").asString());
+                        } else {
+                            inputs.put(key, input.toString());
+                        }
+                    }
                 }
             }
 

@@ -838,7 +838,9 @@ public class ScanApiHandler extends ApiHandler {
             EntityHttpConnection entityHttpConnection,
             String deviceId,
             Device device,
-            String connectionId) throws Exception {
+            String connectionId,
+            HttpConnection connection
+            ) throws Exception {
         Json requestBody = Json.object();
         if (entityHttpConnectionId != null) {
             requestBody.set("entityHttpConnectionId", entityHttpConnectionId);
@@ -848,12 +850,16 @@ public class ScanApiHandler extends ApiHandler {
         }
         if (deviceId != null) {
             requestBody.set("deviceId", deviceId);
+            requestBody.set("entityId", deviceId);
         }
         if (device != null) {
             requestBody.set("entity", device.serializeForScanner());
         }
         if (connectionId != null) {
             requestBody.set("connectionInfoId", String.valueOf(connectionId));
+        }
+        if (connection != null) {
+            requestBody.set("connectionInfo", connection.serializeForScanner());
         }
         JsonApiResponse response = sendPost(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_TEST, requestBody);
         if (!response.isSuccess()) {

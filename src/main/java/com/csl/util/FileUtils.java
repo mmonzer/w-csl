@@ -9,10 +9,15 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
-public class FileUtils  {
-    private FileUtils(){}
+public class FileUtils {
+    private FileUtils() {
+    }
+
     public static final String FILENAME = "filename";
     public static final String CONTENT = "content";
 
@@ -32,7 +37,7 @@ public class FileUtils  {
     }
 
     public static String readFile(String filename) throws IOException {
-        try (FileReader fileReader = new FileReader(filename); BufferedReader bufferedReader = new BufferedReader(fileReader)){
+        try (FileReader fileReader = new FileReader(filename); BufferedReader bufferedReader = new BufferedReader(fileReader)) {
             return readFile(bufferedReader);
         }
     }
@@ -83,11 +88,12 @@ public class FileUtils  {
     /**
      * This method converts a string to camel case.
      * For example, "hello world" becomes "helloWorld".
+     *
      * @param input The string to convert to camel case.
      *              Must not be null.
      *              Must not be empty.
      * @return The input string converted to camel case.
-     * **/
+     **/
     public static String toCamelCase(String input) {
         // Split the input string by spaces
         String[] words = input.split(" ");
@@ -119,26 +125,49 @@ public class FileUtils  {
                 tmp.set(toCamelCase(headers[i]), "");
             } else {
                 // check if integer
-                try {
-                    tmp.set(toCamelCase(headers[i]), Integer.parseInt(values[i]));
-                } catch (NumberFormatException ignored) {
-                    // check if double
-                    try {
-                        tmp.set(toCamelCase(headers[i]), Double.parseDouble(values[i]));
-                    } catch (NumberFormatException ignored2) {
-                        // check if boolean
-                        if ("true".equals(values[i]) || "false".equals(values[i])) {
-                            tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
-                            continue;
-                        }
+                Integer valueInt = tryToGetInteger(values[i]);
 
-                        // otherwise string-
-                        tmp.set(toCamelCase(headers[i]), values[i]);
-                    }
+                if (valueInt != null) {
+                    tmp.set(toCamelCase(headers[i]), valueInt);
+                    continue;
                 }
+                Double valueDouble = tryToGetDouble(values[i]);
+
+                if (valueDouble != null) {
+                    tmp.set(toCamelCase(headers[i]), valueDouble);
+                    continue;
+                }
+
+                if (isBoolean(values[i])) {
+                    tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
+                    continue;
+                }
+
+                // otherwise string
+                tmp.set(toCamelCase(headers[i]), values[i]);
             }
         }
         return tmp;
+    }
+
+    private static Integer tryToGetInteger(String string) {
+        try {
+            return Integer.parseInt(string);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static Double tryToGetDouble(String string) {
+        try {
+            return Double.parseDouble(string);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static boolean isBoolean(String string) {
+        return "true".equals(string) || "false".equals(string);
     }
 
     public static List<Json> parseConnexionsFromXLSFile(Json fileContent) throws FileNotFoundException {
@@ -216,41 +245,28 @@ public class FileUtils  {
         // check if all values of temp are empty strings, return null
         // Iterate through cells
         for (int i = 0; i < headers.getLastCellNum(); i++) {
-            if(row==null) {
+            if (row == null) {
                 return null;
             }
             Cell cell = row.getCell(i);
             String headerKey = toCamelCase(headers.getCell(i).getStringCellValue());
 
-            if (cell==null) {
-                tmp.set( toCamelCase(headers.getCell(i).getStringCellValue()), "");
+            if (cell == null) {
+                tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), "");
                 continue;
             }
 
+            boolean condition = !knowFixedColumnForCnxRelatedToHttp.contains(headerKey) && !Objects.equals(sheetName, SNMP_POWERSHELL);
+
             switch (cell.getCellType()) {
                 case STRING:
-                    String stringValue = cell.getStringCellValue();
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey) && !Objects.equals(sheetName, SNMP_POWERSHELL)) {
-                        cnxInputFotCnxRelatedToHttp.set(headerKey, stringValue);
-                    } else {
-                        tmp.set(headerKey, stringValue);
-                    }
+                    insertIntoDependingOnCondition(condition, cnxInputFotCnxRelatedToHttp, tmp, headerKey, cell.getStringCellValue());
                     break;
                 case NUMERIC:
-                    long numericValue = Math.round(cell.getNumericCellValue());
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, SNMP_POWERSHELL)) {
-                        cnxInputFotCnxRelatedToHttp.set(headerKey, numericValue);
-                    } else {
-                        tmp.set(headerKey, numericValue);
-                    }
+                    insertIntoDependingOnCondition(condition, cnxInputFotCnxRelatedToHttp, tmp, headerKey, Math.round(cell.getNumericCellValue()));
                     break;
                 case BOOLEAN:
-                    boolean booleanValue = cell.getBooleanCellValue();
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, SNMP_POWERSHELL)) {
-                        cnxInputFotCnxRelatedToHttp.set(headerKey, booleanValue);
-                    } else {
-                        tmp.set(headerKey, booleanValue);
-                    }
+                    insertIntoDependingOnCondition(condition, cnxInputFotCnxRelatedToHttp, tmp, headerKey, cell.getBooleanCellValue());
                     break;
                 default:
                     break;
@@ -266,10 +282,61 @@ public class FileUtils  {
         return tmp;
     }
 
+    /**
+     * Inserts the given key and value into a json object. Into the first one if condition is true, otherwise into the second one.
+     *
+     * @param condition condition to insert data into the first object or the second one
+     * @param object1   first object to insert data if condition is true
+     * @param object2   second object to insert data if condition is NOT true
+     * @param key       key of the value to insert
+     * @param value     value of the key to insert
+     */
+    private static void insertIntoDependingOnCondition(boolean condition, Json object1, Json object2, String key, long value) {
+        if (condition) {
+            object1.set(key, value);
+        } else {
+            object2.set(key, value);
+        }
+    }
+
+    /**
+     * Inserts the given key and value into a json object. Into the first one if condition is true, otherwise into the second one.
+     *
+     * @param condition condition to insert data into the first object or the second one
+     * @param object1   first object to insert data if condition is true
+     * @param object2   second object to insert data if condition is NOT true
+     * @param key       key of the value to insert
+     * @param value     value of the key to insert
+     */
+    private static void insertIntoDependingOnCondition(boolean condition, Json object1, Json object2, String key, boolean value) {
+        if (condition) {
+            object1.set(key, value);
+        } else {
+            object2.set(key, value);
+        }
+    }
+
+    /**
+     * Inserts the given key and value into a json object. Into the first one if condition is true, otherwise into the second one.
+     *
+     * @param condition condition to insert data into the first object or the second one
+     * @param object1   first object to insert data if condition is true
+     * @param object2   second object to insert data if condition is NOT true
+     * @param key       key of the value to insert
+     * @param value     value of the key to insert
+     */
+    private static void insertIntoDependingOnCondition(boolean condition, Json object1, Json object2, String key, String value) {
+        if (condition) {
+            object1.set(key, value);
+        } else {
+            object2.set(key, value);
+        }
+    }
+
     public static byte[] parseJsonByteFileToByteArray(Json content) {
         Integer[] fileContent = Arrays.stream(content.asJsonList().stream().map(Json::asInteger).toArray()).toArray(Integer[]::new);
         byte[] bytes = new byte[fileContent.length];
-        for (int i=0;i<fileContent.length;i++) {
+        for (int i = 0; i < fileContent.length; i++) {
             bytes[i] = (byte) (int) (fileContent[i]);
         }
         return bytes;

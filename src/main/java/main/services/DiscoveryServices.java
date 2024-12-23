@@ -1485,11 +1485,20 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if (connectionJson.get(DISCOVERY_PROTOCOL_NAME) != null && connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue() != null) {
                             discoveryProtocolName = (String) connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue();
                         }
-                        dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
-                        logger.info("Successfully added a new connection.");
+                        boolean isCreatedInDbapi = dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
+                        if (isCreatedInDbapi) {
+                            logger.info("Successfully added a new connection.");
+                        } else {
+                            // remove connection info from scan
+                            scanApiHandler.deleteConnectionInfo(connectionUuid);
+                            logger.error("Failed to add connection info to CSL-Dbapi");
+                            return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
+                                    Json.object(EXCEPTION, "Failed to add connection info to CSL-Dbapi")
+                            ).toJson();
+                        }
                     } catch (Exception e) {
                         // remove connection info from scan
-                        scanApiHandler.deleteEntity(connection.getUuid());
+                        scanApiHandler.deleteConnectionInfo(connection.getUuid());
                         logger.error("Failed to add connection info to CSL-DBAPI : {}. Compensated.", e.getMessage(), e);
                         return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
                                 Json.object(EXCEPTION, e.getMessage())

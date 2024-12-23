@@ -37,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -691,50 +692,57 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_connection", params -> {
-                    logger.debug("Testing HTTP connection ...");
+            logger.debug("Testing HTTP connection ...");
 
-                    String deviceUuid = JsonUtil.getStringFromJson(params, DEVICE_UUID, null);
-                    logger.trace("Testing HTTP connection : deviceUuid={}", deviceUuid);
+            String deviceUuid = JsonUtil.getStringFromJson(params, DEVICE_UUID, null);
+            logger.trace("Testing HTTP connection : deviceUuid={}", deviceUuid);
 
-                    String connectionId;
-                    String connectionUuid;
-                    Json connectionUuidJson = params.get(CONNECTION_UUID);
-                    Json connectionIdJson = params.get(CONNECTION_ID);
-                    logger.trace("Testing HTTP connection : deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
-                    if (connectionIdJson != null && connectionIdJson.isString()) {
-                        connectionId = connectionIdJson.asString();
-                    } else if (connectionIdJson != null && connectionIdJson.isNumber()) {
-                        connectionId = String.valueOf(connectionIdJson.asInteger());
-                    } else {
-                        connectionId = null;
-                    }
-                    logger.trace("Testing HTTP connection : parsed connection id : connectionId={}", connectionId);
+            String connectionId;
+            String connectionUuid;
+            Json connectionUuidJson = params.get(CONNECTION_UUID);
+            Json connectionIdJson = params.get(CONNECTION_ID);
+            logger.trace("Testing HTTP connection : deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
+            if (connectionIdJson != null && connectionIdJson.isString()) {
+                connectionId = connectionIdJson.asString();
+            } else if (connectionIdJson != null && connectionIdJson.isNumber()) {
+                connectionId = String.valueOf(connectionIdJson.asInteger());
+            } else {
+                connectionId = null;
+            }
+            logger.trace("Testing HTTP connection : parsed connection id : connectionId={}", connectionId);
 
-                    if (deviceUuid == null || connectionId == null) {
-                        logger.warn("Testing HTTP connection failed: required not null deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
-                        return JsonApiResponse.error("Missing required parameter device_uuid or connection_id",
-                                Json.object(EXCEPTION, "Missing parameter device_uuid or connection_uuid, of type string")
-                        ).toJson();
-                    }
-                    if (connectionUuidJson != null && connectionUuidJson.isString()) {
-                        connectionUuid = connectionUuidJson.asString();
-                    } else {
-                        logger.debug("Testing HTTP connection with deviceUuid={}, connectionId={} ...", deviceUuid, connectionId);
+            if (deviceUuid == null || connectionId == null) {
+                logger.warn("Testing HTTP connection failed: required not null deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
+                return JsonApiResponse.error("Missing required parameter device_uuid or connection_id",
+                        Json.object(EXCEPTION, "Missing parameter device_uuid or connection_uuid, of type string")
+                ).toJson();
+            }
+            if (connectionUuidJson != null && connectionUuidJson.isString()) {
+                connectionUuid = connectionUuidJson.asString();
+            } else {
+                logger.debug("Testing HTTP connection with deviceUuid={}, connectionId={} ...", deviceUuid, connectionId);
 
-                        connectionUuid = null;
-                    }
-                    JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
-                    Boolean successResponse = (Boolean) response.toJson().get("success").getValue();
-                    if (!successResponse) {
-                        logger.error("Failed to test HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
+                connectionUuid = null;
+            }
+
+            JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
+            Boolean successResponse = (Boolean) response.toJson().get("success").getValue();
+            Boolean successResult = (Boolean) response.toJson().get("result").get("success").getValue();
+            if(!successResponse || !successResult) {
+                if (response.toJson().get("result") != null && response.toJson().get("result").get("message").getValue() != null) {
+                    String errorMessage = response.toJson().get("result").get("message").getValue().toString();
+                    if (Objects.equals(errorMessage, "No connection info found")) {
+                        logger.error("Failed to test (No connection info found in csl-scan yet) connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
                         // force synchronize and re-test
                         dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
                         response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
                     }
-                    logger.debug("Tested HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
-                    logger.info("Tested HTTP connection (deviceUuid={}  connectionId={})", deviceUuid, connectionIdJson);
-                    return response.toJson();
-                },
+                }
+            }
+            logger.debug("Tested HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
+            logger.info("Tested HTTP connection (deviceUuid={}  connectionId={})", deviceUuid, connectionIdJson);
+            return response.toJson();
+            },
                 new JsonCmdHelp().setDesc("Test if an existing connection is valid")
                         .setParam(DEVICE_UUID, "The uuid of the device to test the connection on", JsonCmdHelp.STR)
                         .setParam(CONNECTION_ID, "The id of the connection to test", JsonCmdHelp.STR)

@@ -1538,9 +1538,15 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         logger.info("Successfully deleted the connection with uuid={}", connectionUuid);
                     } catch (Exception e) {
                         logger.error("Failed to delete connection info with uuid={} from CSL-DBAPI : ", connectionUuid, e.getMessage(), e);
+                        response = JsonApiResponse.error("Failed to delete connection info",
+                                Json.object(EXCEPTION, e.getMessage())
+                        );
                     }
                 } else {
                     logger.error("Failed to delete connection info with uuid={} from CSL-Scan : {}", connectionUuid, response.getError().toString());
+                    response = JsonApiResponse.error("Failed to delete connection info",
+                            Json.object(EXCEPTION, response.getError().toString())
+                    );
                 }
             } catch (Exception e) {
                 logger.error("Failed to delete connection info : {}", e.getMessage(), e);
@@ -1653,6 +1659,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to update connection info with uuid={} in CSL-Scan : {}", connection.getUuid(), response.getError().toString());
+                    return JsonApiResponse.error("Failed to update connection info",
+                            Json.object(EXCEPTION, response.getError().toString())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to update connection info with uuid={} : {}", connection.getUuid(), e.getMessage(), e);
@@ -1696,6 +1705,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to update connection draft info with uuid={} in CSL-Scan : {}", entityConnectionInfoDraft.getUuid(), response.getError().getReason());
+                    return JsonApiResponse.error("Failed to update connection draft info",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to update connection draft info with uuid={} : {}", entityConnectionInfoDraft.getUuid(), e.getMessage(), e);
@@ -1727,6 +1739,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
+                    return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
@@ -1758,6 +1773,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to clear failed connection drafts from CSL-Scan : {}", response.getError().getReason());
+                    return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Scan",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to clear failed connection draft in CSL-Scan", e);
@@ -1789,6 +1807,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
+                    return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);

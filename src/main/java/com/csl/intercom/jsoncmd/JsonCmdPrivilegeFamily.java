@@ -2,6 +2,8 @@ package com.csl.intercom.jsoncmd;
 
 public enum JsonCmdPrivilegeFamily {
     MANAGE_HTTP_TEMPLATES("manage_http_template"),
+    MANAGE_CONNECTION_INFO("manage_connection_info"),
+    MANAGE_CONNECTION_INFO_DRAFT("manage_connection_info_draft"),
     START_CPE_SCAN("start_cpe_scan"),
     MANAGE_SCAN_DB("manage_scan_db"),
     START_DEVICE_SCAN("start_device_scan"),

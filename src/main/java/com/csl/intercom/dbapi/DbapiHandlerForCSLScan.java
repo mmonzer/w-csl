@@ -1014,7 +1014,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return otherData;
     }
 
-    public void createConnection(Connection connection, String discoveryProtocolName, Json connectionJson) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
+    public Boolean createConnection(Connection connection, String discoveryProtocolName, Json connectionJson) throws ExecutionException, InterruptedException, TimeoutException, JsonProcessingException {
         String name = connection.getName();
         int portNumber = getConnectionPortNumberFromConnection(connection);
         Json requestContents = Json.object(
@@ -1035,18 +1035,23 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         } else if (connection.getProtocol() == SSH) {
             requestContents.set(USERNAME, ((SshConnection) connection).getUsername());
         }
+        boolean isCreated = false;
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CONNECTIONS)
                 .content(new StringContentProvider(requestContents.toString()), JSON_FORMAT);
         try {
             ContentResponse response = request.send();
             if (response.getStatus() != 201) {
+                isCreated = false;
                 logger.error("Could not create connection in DB-API. Got status code " + response.getStatus());
             } else if (response.getStatus() == 201) {
+                isCreated = true;
                 logger.info("Connection created in DB-API.");
             }
         } catch (Exception e) {
+            isCreated = false;
             logger.error("Could not create connection in DB-API.", e);
         }
+        return isCreated;
     }
 
     public void deleteConnection(String connectionUuid) throws ExecutionException, InterruptedException, TimeoutException, DbapiUnexpectedStatusCodeException {

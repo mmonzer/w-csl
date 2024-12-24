@@ -1482,7 +1482,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.START_DEVICE_SCAN
         );
 
-        addCmd(DiscoveryEndpoints.ADD_CONNECTION, params -> {
+        addCmd("add_connection", params -> {
             logger.debug("Adding new connection ...");
 
             Json connectionJson = params.get(CONNECTION);
@@ -1513,11 +1513,20 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if (connectionJson.get(DISCOVERY_PROTOCOL_NAME) != null && connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue() != null) {
                             discoveryProtocolName = (String) connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue();
                         }
-                        dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
-                        logger.info("Successfully added a new connection.");
+                        boolean isCreatedInDbapi = dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
+                        if (isCreatedInDbapi) {
+                            logger.info("Successfully added a new connection.");
+                        } else {
+                            // remove connection info from scan
+                            scanApiHandler.deleteConnectionInfo(connectionUuid);
+                            logger.error("Failed to add connection info to CSL-Dbapi");
+                            return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
+                                    Json.object(EXCEPTION, "Failed to add connection info to CSL-Dbapi")
+                            ).toJson();
+                        }
                     } catch (Exception e) {
                         // remove connection info from scan
-                        scanApiHandler.deleteEntity(connection.getUuid());
+                        scanApiHandler.deleteConnectionInfo(connection.getUuid());
                         logger.error("Failed to add connection info to CSL-DBAPI : {}. Compensated.", e.getMessage(), e);
                         return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
                                 Json.object(EXCEPTION, e.getMessage())
@@ -1533,108 +1542,15 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 );
             }
             return response.toJson();
-        });
+        },
+                new JsonCmdHelp().setDesc("Add a connection to CSL-Scan")
+                .setParam("connection", "The connection to add", JsonCmdHelp.JSON)
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
 
-        addCmd(DiscoveryEndpoints.DELETE_CONNECTION, params -> {
-            logger.debug("Deleting a connection ...");
-
-            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
-            if (connectionUuid == null) {
-                logger.error("Failed to delete a connection : connection_uuid is required");
-                return JsonApiResponse.error("Missing required parameter connection_uuid",
-                        Json.object(EXCEPTION, "Missing parameter connection_uuid")
-                ).toJson();
-            }
-
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.deleteConnectionInfo(connectionUuid);
-                if (response.isSuccess()) {
-                    logger.debug("Deleted the connection with uuid={} from CSL-Scan.", connectionUuid);
-                    // delete connection info from dbapi
-                    try {
-                        dbapiHandler.deleteConnection(connectionUuid);
-                        logger.info("Successfully deleted the connection with uuid={}", connectionUuid);
-                    } catch (Exception e) {
-                        logger.error("Failed to delete connection info with uuid={} from CSL-DBAPI : ", connectionUuid, e.getMessage(), e);
-                    }
-                } else {
-                    logger.error("Failed to delete connection info with uuid={} from CSL-Scan : {}", connectionUuid, response.getError().toString());
-                }
-            } catch (Exception e) {
-                logger.error("Failed to delete connection info : {}", e.getMessage(), e);
-                response = JsonApiResponse.error("Failed to delete connection info",
-                        Json.object(EXCEPTION, e.getMessage())
-                );
-            }
-            return response.toJson();
-        });
-
-        addCmd(DiscoveryEndpoints.CLEAR_ALL_CONNECTIONS, params -> {
-            logger.debug("Clearing all connections ...");
-
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.clearAllEntityConnections();
-                if (response.isSuccess()) {
-                    logger.debug("Cleared all connections from CSL-Scan");
-                    // clear all connections from dbapi
-                    try {
-                        dbapiHandler.clearAllConnections();
-                        logger.info("Successfully cleared all connections.");
-                    } catch (Exception e) {
-                        logger.error("Failed to clear all connections from CSL-Dbapi : {}", e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to clear all connections from CSL-Dbapi",
-                                Json.object(EXCEPTION, e.getMessage())
-                        ).toJson();
-                    }
-                } else {
-                    logger.error("Failed to clear all connections from CSL-Scan : {}", response.getError().toString());
-                }
-            } catch (Exception e) {
-                logger.error("Failed to clear all connections : {}", e.getMessage(), e);
-                return JsonApiResponse.error("Failed to clear all connections",
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-            return response.toJson();
-        });
-
-        addCmd(DiscoveryEndpoints.DELETE_CONNECTION_DRAFT, params -> {
-            logger.debug("Clearing a connection draft ...");
-
-            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
-            if (connectionUuid == null) {
-                logger.error("Failed to delete connection info : connection_uuid required");
-                return JsonApiResponse.error("Missing required parameter connection_uuid",
-                        Json.object(EXCEPTION, "Missing parameter connection_uuid")
-                ).toJson();
-            }
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.deleteConnectionDraft(connectionUuid);
-                logger.debug("Deleted connection info with uuid={} from CSL-Scan.", connectionUuid);
-                if (response.isSuccess()) {
-                    // delete connection info from dbapi
-                    try {
-                        dbapiHandler.deleteConnectionDraft(connectionUuid);
-                        logger.info("Successfully deleted connection info with uuid={}.", connectionUuid);
-                    } catch (Exception e) {
-                        logger.error("Failed to delete connection info from CSL-Dbapi : {}", e.getMessage(), e);
-                    }
-                } else {
-                    logger.error("Failed to delete connection info with uuid={} from CSL-Scan: {}", connectionUuid, response.getError().toString());
-                }
-            } catch (Exception e) {
-                logger.error("Failed to delete connection info with uuid={} : {}", connectionUuid, e.getMessage(), e);
-                response = JsonApiResponse.error("Failed to delete connection info",
-                        Json.object(EXCEPTION, e.getMessage())
-                );
-            }
-            return response.toJson();
-        });
-
-        addCmd(DiscoveryEndpoints.UPDATE_CONNECTION, params -> {
+        addCmd("update_connection", params -> {
             logger.debug("Updating a connection ...");
 
             Json connectionJson = params.get(CONNECTION);
@@ -1672,6 +1588,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to update connection info with uuid={} in CSL-Scan : {}", connection.getUuid(), response.getError().toString());
+                    return JsonApiResponse.error("Failed to update connection info",
+                            Json.object(EXCEPTION, response.getError().toString())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to update connection info with uuid={} : {}", connection.getUuid(), e.getMessage(), e);
@@ -1680,9 +1599,132 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 );
             }
             return response.toJson();
-        });
+        },new JsonCmdHelp().setDesc("Update a connection in CSL-Scan")
+                .setParam("connection", "The connection to update", JsonCmdHelp.JSON)
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
 
-        addCmd(DiscoveryEndpoints.UPDATE_CONNECTION_DRAFT, params -> {
+        addCmd("delete_connection", params -> {
+            logger.debug("Deleting a connection ...");
+
+            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
+            if (connectionUuid == null) {
+                logger.error("Failed to delete a connection : connection_uuid is required");
+                return JsonApiResponse.error("Missing required parameter connection_uuid",
+                        Json.object(EXCEPTION, "Missing parameter connection_uuid")
+                ).toJson();
+            }
+
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.deleteConnectionInfo(connectionUuid);
+                if (response.isSuccess()) {
+                    logger.debug("Deleted the connection with uuid={} from CSL-Scan.", connectionUuid);
+                    // delete connection info from dbapi
+                    try {
+                        dbapiHandler.deleteConnection(connectionUuid);
+                        logger.info("Successfully deleted the connection with uuid={}", connectionUuid);
+                    } catch (Exception e) {
+                        logger.error("Failed to delete connection info with uuid={} from CSL-DBAPI : ", connectionUuid, e.getMessage(), e);
+                        response = JsonApiResponse.error("Failed to delete connection info",
+                                Json.object(EXCEPTION, e.getMessage())
+                        );
+                    }
+                } else {
+                    logger.error("Failed to delete connection info with uuid={} from CSL-Scan : {}", connectionUuid, response.getError().toString());
+                    response = JsonApiResponse.error("Failed to delete connection info",
+                            Json.object(EXCEPTION, response.getError().toString())
+                    );
+                }
+            } catch (Exception e) {
+                logger.error("Failed to delete connection info : {}", e.getMessage(), e);
+                response = JsonApiResponse.error("Failed to delete connection info",
+                        Json.object(EXCEPTION, e.getMessage())
+                );
+            }
+            return response.toJson();
+        },  new JsonCmdHelp().setDesc("Delete a connection from CSL-Scan")
+                .setParam("id", "The uuid of the connection to delete", JsonCmdHelp.STR)
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
+
+        addCmd("clear_all_connections", params -> {
+            logger.debug("Clearing all connections ...");
+
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.clearAllEntityConnections();
+                if (response.isSuccess()) {
+                    logger.debug("Cleared all connections from CSL-Scan");
+                    // clear all connections from dbapi
+                    try {
+                        dbapiHandler.clearAllConnections();
+                        logger.info("Successfully cleared all connections.");
+                    } catch (Exception e) {
+                        logger.error("Failed to clear all connections from CSL-Dbapi : {}", e.getMessage(), e);
+                        return JsonApiResponse.error("Failed to clear all connections from CSL-Dbapi",
+                                Json.object(EXCEPTION, e.getMessage())
+                        ).toJson();
+                    }
+                } else {
+                    logger.error("Failed to clear all connections from CSL-Scan : {}", response.getError().toString());
+                }
+            } catch (Exception e) {
+                logger.error("Failed to clear all connections : {}", e.getMessage(), e);
+                return JsonApiResponse.error("Failed to clear all connections",
+                        Json.object(EXCEPTION, e.getMessage())
+                ).toJson();
+            }
+            return response.toJson();
+        },new JsonCmdHelp().setDesc("Clear all connection from CSL-Scan")
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
+
+        addCmd("delete_connection_draft", params -> {
+            logger.debug("Clearing a connection draft ...");
+
+            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
+            if (connectionUuid == null) {
+                logger.error("Failed to delete connection info : connection_uuid required");
+                return JsonApiResponse.error("Missing required parameter connection_uuid",
+                        Json.object(EXCEPTION, "Missing parameter connection_uuid")
+                ).toJson();
+            }
+            JsonApiResponse response;
+            try {
+                response = scanApiHandler.deleteConnectionDraft(connectionUuid);
+                logger.debug("Deleted connection info with uuid={} from CSL-Scan.", connectionUuid);
+                if (response.isSuccess()) {
+                    // delete connection info from dbapi
+                    try {
+                        dbapiHandler.deleteConnectionDraft(connectionUuid);
+                        logger.info("Successfully deleted connection info with uuid={}.", connectionUuid);
+                    } catch (Exception e) {
+                        logger.error("Failed to delete connection info from CSL-Dbapi : {}", e.getMessage(), e);
+                    }
+                } else {
+                    logger.error("Failed to delete connection info with uuid={} from CSL-Scan: {}", connectionUuid, response.getError().toString());
+                }
+            } catch (Exception e) {
+                logger.error("Failed to delete connection info with uuid={} : {}", connectionUuid, e.getMessage(), e);
+                response = JsonApiResponse.error("Failed to delete connection info",
+                        Json.object(EXCEPTION, e.getMessage())
+                );
+            }
+            return response.toJson();
+        }, new JsonCmdHelp().setDesc("Delete a connection draft from CSL-Scan and secret manager")
+                .setParam("id", "The uuid of the connection draft to delete", JsonCmdHelp.STR)
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
+        addCmd("update_connection_draft", params -> {
             logger.debug("Updating a connection draft ...");
 
             Json connectionJson = params.get("connection_draft");
@@ -1715,6 +1757,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to update connection draft info with uuid={} in CSL-Scan : {}", entityConnectionInfoDraft.getUuid(), response.getError().getReason());
+                    return JsonApiResponse.error("Failed to update connection draft info",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to update connection draft info with uuid={} : {}", entityConnectionInfoDraft.getUuid(), e.getMessage(), e);
@@ -1723,9 +1768,14 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 );
             }
             return response.toJson();
-        });
+        }, new JsonCmdHelp().setDesc("Update a connection draft in CSL-Scan")
+                .setParam("connection", "The connection draft to update", JsonCmdHelp.JSON)
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
-        addCmd(DiscoveryEndpoints.CLEAR_VERIFIED_CONNECTION_DRAFT, params -> {
+        addCmd("clear_verified_connection_draft", params -> {
             logger.debug("Clearing verified connection drafts ...");
 
             JsonApiResponse response;
@@ -1746,6 +1796,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
+                    return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
@@ -1754,9 +1807,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 ).toJson();
             }
             return response.toJson();
-        });
+        }, new JsonCmdHelp().setDesc("Clear all verified connection drafts from CSL-Scan and secret manager")
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
-        addCmd(DiscoveryEndpoints.CLEAR_FAILED_CONNECTION_DRAFT, params -> {
+        addCmd("clear_failed_connection_draft", params -> {
             logger.debug("Clearing failed connection drafts ...");
 
             JsonApiResponse response;
@@ -1777,6 +1834,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to clear failed connection drafts from CSL-Scan : {}", response.getError().getReason());
+                    return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Scan",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to clear failed connection draft in CSL-Scan", e);
@@ -1785,9 +1845,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 ).toJson();
             }
             return response.toJson();
-        });
+        },new JsonCmdHelp().setDesc("Clear all failed connection drafts from CSL-Scan and secret manager")
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
-        addCmd(DiscoveryEndpoints.PUBLISH_ALL_VERIFIED_CONNECTION_DRAFT, params -> {
+        addCmd("publish_all_verified_connection_draft", params -> {
             logger.debug("Publishing all verified connection drafts ...");
 
             JsonApiResponse response;
@@ -1808,6 +1872,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                 } else {
                     logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
+                    return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
+                            Json.object(EXCEPTION, response.getError().getReason())
+                    ).toJson();
                 }
             } catch (Exception e) {
                 logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
@@ -1816,7 +1883,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 ).toJson();
             }
             return response.toJson();
-        });
+        },new JsonCmdHelp().setDesc("publish all verified connection drafts from CSL-Scan and secret manager")
+                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
+                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
         // region - Connection certificates
         addCmd("add_connection_certificate", (params, files) -> {

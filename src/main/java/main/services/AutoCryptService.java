@@ -3,11 +3,14 @@ package main.services;
 import com.csl.autocrypt.AutoCrypt;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
+import com.csl.intercom.jsoncmd.JsonCmdHelp;
+import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
+import com.ucsl.interfaces.IJsonCmd;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -76,7 +79,9 @@ public class AutoCryptService extends Service implements IStatusProvider {
         logger.info("Service autocrypt initialized.");
         return true;
     }
-
+    public String addCmd(String name, IJsonCmd cmd, JsonCmdHelp help, JsonCmdPrivilegeFamily privilegeFamily) {
+        return apiCommands.registerCmd(name, cmd, help, privilegeFamily);
+    }
     /**
      * Creates the endpoints of this service
      */
@@ -96,26 +101,56 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.IMPORT_ISSUER_ROOT, this::importIssuerRoot);
         addCmd(AutoCryptEndpoints.EXPORT_ISSUER, this::exportIssuer);
         // role-controller
-        addCmd(AutoCryptEndpoints.GET_ROLES, this::getRoles);
-        addCmd(AutoCryptEndpoints.CREATE_ROLE, this::createRole);
-        addCmd(AutoCryptEndpoints.GET_ROLE, this::getRole);
-        addCmd(AutoCryptEndpoints.DELETE_ROLE, this::deleteRole);
-        addCmd(AutoCryptEndpoints.UPDATE_ROLE, this::updateRole);
+        addCmd(AutoCryptEndpoints.GET_ROLES.cmd(), this::getRoles,
+                AutoCryptEndpoints.GET_ROLES.help(),
+                JsonCmdPrivilegeFamily.MANAGE_ROLE);
+        addCmd(AutoCryptEndpoints.CREATE_ROLE.cmd(), this::createRole,
+                AutoCryptEndpoints.CREATE_ROLE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_ROLE);
+        addCmd(AutoCryptEndpoints.GET_ROLE.cmd(), this::getRole,
+                AutoCryptEndpoints.GET_ROLE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_ROLE);
+        addCmd(AutoCryptEndpoints.DELETE_ROLE.cmd(), this::deleteRole,
+                AutoCryptEndpoints.DELETE_ROLE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_ROLE);
+        addCmd(AutoCryptEndpoints.UPDATE_ROLE.cmd(), this::updateRole,
+                AutoCryptEndpoints.UPDATE_ROLE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_ROLE);
         // miscellaneous-controller
         addCmd(AutoCryptEndpoints.ACTIVATE_OCSP, this::activateOCSP);
         addCmd(AutoCryptEndpoints.IS_ALIVE, this::getStatus);
         // certificate-controller
         addCmd(AutoCryptEndpoints.VALIDATE_TEMPLATE_CERTIFICATE, this::validateTemplate);
-        addCmd(AutoCryptEndpoints.GENERATE_CERTIFICATE, this::generateCertificate);
-        addCmd(AutoCryptEndpoints.GET_CERTIFICATES, this::getCertificates);
-        addCmd(AutoCryptEndpoints.GET_CERTIFICATE_INFO, this::getCertificateInfo);
-        addCmd(AutoCryptEndpoints.GET_CERTIFICATE, this::getCertificate);
-        addCmd(AutoCryptEndpoints.DOWNLOAD_CERTIFICATE, this::downloadCertificate);
-        addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE, this::revokeCertificate);
-        addCmd(AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE, this::deployCertificate);
+        addCmd(AutoCryptEndpoints.GENERATE_CERTIFICATE.cmd(), this::generateCertificate,
+                AutoCryptEndpoints.GENERATE_CERTIFICATE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.GET_CERTIFICATES.cmd(), this::getCertificates,
+                AutoCryptEndpoints.GET_CERTIFICATES.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.GET_CERTIFICATE_INFO.cmd(), this::getCertificateInfo,
+                AutoCryptEndpoints.GET_CERTIFICATE_INFO.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.GET_CERTIFICATE.cmd(), this::getCertificate,
+                AutoCryptEndpoints.GET_CERTIFICATE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.DOWNLOAD_CERTIFICATE.cmd(), this::downloadCertificate,
+                AutoCryptEndpoints.DOWNLOAD_CERTIFICATE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.REVOKE_CERTIFICATE.cmd(), this::revokeCertificate,
+                AutoCryptEndpoints.REVOKE_CERTIFICATE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE.cmd(), this::deployCertificate,
+                AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
         // ca-controller
-        addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA, this::generateRootCA);
-        addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA, this::generateIntermediateCA);
+        addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA.cmd(),
+                this::generateRootCA,
+                AutoCryptEndpoints.GENERATE_ROOT_CA.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE_AUTHORITY);
+        addCmd(AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA.cmd(),
+                this::generateIntermediateCA,
+                AutoCryptEndpoints.GENERATE_INTERMEDIATE_CA.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE_AUTHORITY);
     }
 
     // region endpoint methods

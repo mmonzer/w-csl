@@ -240,7 +240,7 @@ public class SuricataServices extends Service {
      * @return true if the initialization happened with no problems, false otherwise.
      */
     public void defineServiceEndpoints() {
-        Config.Tap config = Config.getInstance().tapService;
+        Config.Tap config = Config.INSTANCE.tapService;
         logger.debug("Initializing SSH suricata commands ..");
         try {
             Json conf = FileUtils.readJsonFromFile("./datafile/configuredSuricata.json");

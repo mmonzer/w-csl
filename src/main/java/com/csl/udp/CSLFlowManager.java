@@ -92,7 +92,7 @@ public class CSLFlowManager {
     }
 
     public void init() {
-        Config.IdsConf config = Config.getInstance().idsConf;
+        Config.IdsConf config = Config.INSTANCE.idsConf;
 
 
         boolean showTicks = config.getShowTicks();

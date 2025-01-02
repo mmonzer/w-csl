@@ -42,7 +42,7 @@ public class StatusService extends Service {
     @Override
     public boolean init() {
         notifier = CSLContext.getInstance().getStatusNotifier();
-        notifier.setSendNotifications(Config.getInstance().status.getSendNotifications());
+        notifier.setSendNotifications(Config.INSTANCE.status.getSendNotifications());
 
         addCmd("get_status", params -> notifier.getNotification(),
                 new JsonCmdHelp().setDesc("Get a status notification, created for the occasion")

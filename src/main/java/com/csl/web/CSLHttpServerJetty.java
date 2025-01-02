@@ -173,7 +173,7 @@ public class CSLHttpServerJetty {
             // keep the web sockets alive
             if (isRemote) startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
 
-            logger.debug("Web server started on port {} ", Config.getInstance().server.getWebserverPort());
+            logger.debug("Web server started on port {} ", Config.INSTANCE.server.getWebserverPort());
         } catch (Exception e) {
             logger.error("Error starting server", e);
             exit(0);
@@ -359,19 +359,19 @@ public class CSLHttpServerJetty {
         if (interval <= 0) return;
 
         Runnable refreshTask = () -> {
-            if (Config.getInstance().server.getSendAlerts())
+            if (Config.INSTANCE.server.getSendAlerts())
                 // Refresh the CSLWebSocketForAlert
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT);
-            if (Config.getInstance().server.getSendConsoleOutput())
+            if (Config.INSTANCE.server.getSendConsoleOutput())
                 // Refresh the CSLWebSocketForConsole
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE);
-            if (Config.getInstance().server.getVarsCommands())
+            if (Config.INSTANCE.server.getVarsCommands())
                 // Refresh the CSLWebSocketForVariables
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES);
-            if (Config.getInstance().server.getDatabaseCommands())
+            if (Config.INSTANCE.server.getDatabaseCommands())
                 // Refresh the CSLWebSocketForDatabase
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE);
-            if (Config.getInstance().server.getJcmdCommands())
+            if (Config.INSTANCE.server.getJcmdCommands())
                 // Refresh the CSLWebSocketForJcmd
                 CSLWebSocket.refresh(CSLWebSocketForJcmd.WEB_SOCKET_CMD);
         };

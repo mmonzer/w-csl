@@ -1,7 +1,6 @@
 package com.csl.core;
 
 import com.csl.exceptions.WrongConfigurationException;
-import com.csl.exceptions.WrongConfigurationException;
 import com.csl.util.FileUtils;
 import com.ucsl.json.Json;
 import lombok.Getter;
@@ -15,8 +14,7 @@ public class Config {
 
     private static final String WRONG_CONFIGURATION = "Wrong configuration";
     private static final String SEPARATOR = "__";
-    @Getter
-    private static Config instance = Config.load();
+    public static final Config INSTANCE = new Config(CONFIG_FILE);
 
     public final Client client;
     public final Config.Scan scan;
@@ -28,23 +26,25 @@ public class Config {
     public final Config.AlertViewer alertViewer;
     public final Config.Autocrypt autocrypt;
 
-    private static Config load() {
-        instance = new Config(CONFIG_FILE);
-        return instance;
-    }
-
     private Config(String configFile) {
         Json jsonConfiguration = readConfig(configFile);
 
-        server = new Server(jsonConfiguration.get("server"));
-        client = new Client(jsonConfiguration.get("client"));
-        status = new Status(jsonConfiguration.get("status"));
-        udpServerConf = new UdpServerConf(jsonConfiguration.get("udp_server_conf"));
-        idsConf = new IdsConf(jsonConfiguration.get("ids_conf"));
-        alertViewer = new AlertViewer(jsonConfiguration.get("alert_viewer"));
-        scan = new Scan(jsonConfiguration.get("discovery_service"));
-        tapService = new Tap(jsonConfiguration.get("tap_service"));
-        autocrypt = new Autocrypt(jsonConfiguration.get("autocrypt_service"));
+        server = new Server(assertAndGetFrom(jsonConfiguration, "server"));
+        client = new Client(assertAndGetFrom(jsonConfiguration,"client"));
+        status = new Status(assertAndGetFrom(jsonConfiguration,"status"));
+        udpServerConf = new UdpServerConf(assertAndGetFrom(jsonConfiguration,"udp_server_conf"));
+        idsConf = new IdsConf(assertAndGetFrom(jsonConfiguration,"ids_conf"));
+        alertViewer = new AlertViewer(assertAndGetFrom(jsonConfiguration,"alert_viewer"));
+        scan = new Scan(assertAndGetFrom(jsonConfiguration,"discovery_service"));
+        tapService = new Tap(assertAndGetFrom(jsonConfiguration,"tap_service"));
+        autocrypt = new Autocrypt(assertAndGetFrom(jsonConfiguration,"autocrypt_service"));
+    }
+
+    private static Json assertAndGetFrom(Json jsonConfiguration, String property) {
+        assert jsonConfiguration!=null;
+        assert jsonConfiguration.has(property);
+        assert jsonConfiguration.get(property)!=null;
+        return jsonConfiguration.get(property);
     }
 
     private Json readConfig(String f) {
@@ -68,7 +68,7 @@ public class Config {
 
     private static String readFile(String filename) {
         try {
-            return FileUtils.readFile(filename);
+            return FileUtils.readFile(Config.class.getClassLoader().getResource(filename).getPath());
         } catch (IOException e) {
             return null;
         }

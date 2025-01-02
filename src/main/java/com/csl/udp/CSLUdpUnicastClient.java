@@ -93,7 +93,7 @@ public class CSLUdpUnicastClient implements Runnable {
                  * After that, the client will throw a timeout exception.
                  */
                 clientSocket.receive(datagramPacket);
-                traceAlertReceived(logger, Config.getInstance().tapService.getLocalIpAddress(), Config.getInstance().tapService.getLocalPort(), "/alerts", "UDP");
+                traceAlertReceived(logger, Config.INSTANCE.tapService.getLocalIpAddress(), Config.INSTANCE.tapService.getLocalPort(), "/alerts", "UDP");
 
                 /**
                  * Add the data contained in the datagram packet to the message

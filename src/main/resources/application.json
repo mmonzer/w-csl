@@ -26,6 +26,10 @@
     "manager_protocol": "http",
     "use_ssl": false
   },
+  "status": {
+    "send_notifications": true,
+    "notifications_period": 1
+  },
   "tap_service": {
     "localIpAddr": "16.0.0.1",
     "localPort": 8001,

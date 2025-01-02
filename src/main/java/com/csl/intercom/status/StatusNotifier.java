@@ -57,7 +57,7 @@ public class StatusNotifier implements AutoCloseable {
      * @param sendNotifications true if we should send notifications periodically, false if we shouldn't.
      */
     public StatusNotifier(boolean sendNotifications) {
-        this(sendNotifications, Config.getInstance().status.getNotificationsPeriod());
+        this(sendNotifications, Config.INSTANCE.status.getNotificationsPeriod());
     }
 
     /**

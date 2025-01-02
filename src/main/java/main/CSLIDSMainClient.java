@@ -60,12 +60,12 @@ public class CSLIDSMainClient {
      * @return the websocket url
      */
     public static @NotNull String getWebSocketUrl() {
-        Boolean useSsl = Config.getInstance().client.getUseSsl();
+        Boolean useSsl = Config.INSTANCE.client.getUseSsl();
         useSsl = (useSsl != null) && useSsl;
-        String serverIp = Config.getInstance().client.getIpServerRemote();
-        serverIp = resolveHostNameIfRequired(serverIp, Config.getInstance().client.getForceHostNameResolution());
-        int serverPort = Config.getInstance().client.getPortServerRemote();
-        String serverUrlPrefix = Config.getInstance().client.getServerRemoteUrlPrefix();
+        String serverIp = Config.INSTANCE.client.getIpServerRemote();
+        serverIp = resolveHostNameIfRequired(serverIp, Config.INSTANCE.client.getForceHostNameResolution());
+        int serverPort = Config.INSTANCE.client.getPortServerRemote();
+        String serverUrlPrefix = Config.INSTANCE.client.getServerRemoteUrlPrefix();
         serverUrlPrefix = (serverUrlPrefix != null) ? serverUrlPrefix : "";
 
 
@@ -103,7 +103,7 @@ public class CSLIDSMainClient {
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
-        Config config = Config.getInstance();
+        Config config = Config.INSTANCE;
         CSLContext.getInstance().init();
         configureClientSettings(config);
 
@@ -128,7 +128,7 @@ public class CSLIDSMainClient {
         startServers();
 
         // Launch the Web API server if required by the configuration (for testing purposes)
-        launchWebApiServerIfRequired(Config.getInstance());
+        launchWebApiServerIfRequired(Config.INSTANCE);
     }
 
     /**

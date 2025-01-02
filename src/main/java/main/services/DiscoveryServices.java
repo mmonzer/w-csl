@@ -149,7 +149,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public boolean init() {
         logger.info("Initializing Discovery service ..");
 
-        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(Config.getInstance().scan);
+        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(Config.INSTANCE.scan);
 
         dbapiHandler = new DbapiHandlerForCSLScan();
         scanApiHandler = new ScanApiHandler();

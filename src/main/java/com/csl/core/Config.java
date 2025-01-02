@@ -1,10 +1,11 @@
 package com.csl.core;
 
-import com.csl.exceptions.WrongConfigurationException;
 import com.csl.util.FileUtils;
 import com.ucsl.json.Json;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Map;
@@ -30,20 +31,21 @@ public class Config {
         Json jsonConfiguration = readConfig(configFile);
 
         server = new Server(assertAndGetFrom(jsonConfiguration, "server"));
-        client = new Client(assertAndGetFrom(jsonConfiguration,"client"));
-        status = new Status(assertAndGetFrom(jsonConfiguration,"status"));
-        udpServerConf = new UdpServerConf(assertAndGetFrom(jsonConfiguration,"udp_server_conf"));
-        idsConf = new IdsConf(assertAndGetFrom(jsonConfiguration,"ids_conf"));
-        alertViewer = new AlertViewer(assertAndGetFrom(jsonConfiguration,"alert_viewer"));
-        scan = new Scan(assertAndGetFrom(jsonConfiguration,"discovery_service"));
-        tapService = new Tap(assertAndGetFrom(jsonConfiguration,"tap_service"));
-        autocrypt = new Autocrypt(assertAndGetFrom(jsonConfiguration,"autocrypt_service"));
+        client = new Client(assertAndGetFrom(jsonConfiguration, "client"));
+        status = new Status(assertAndGetFrom(jsonConfiguration, "status"));
+        udpServerConf = new UdpServerConf(assertAndGetFrom(jsonConfiguration, "udp_server_conf"));
+        idsConf = new IdsConf(assertAndGetFrom(jsonConfiguration, "ids_conf"));
+        alertViewer = new AlertViewer(assertAndGetFrom(jsonConfiguration, "alert_viewer"));
+        scan = new Scan(assertAndGetFrom(jsonConfiguration, "discovery_service"));
+        tapService = new Tap(assertAndGetFrom(jsonConfiguration, "tap_service"));
+        autocrypt = new Autocrypt(assertAndGetFrom(jsonConfiguration, "autocrypt_service"));
     }
 
-    private static Json assertAndGetFrom(Json jsonConfiguration, String property) {
-        assert jsonConfiguration!=null;
-        assert jsonConfiguration.has(property);
-        assert jsonConfiguration.get(property)!=null;
+    private static @NotNull Json assertAndGetFrom(@Nullable Json jsonConfiguration, @NotNull String property) {
+        assert jsonConfiguration != null : WRONG_CONFIGURATION;
+        assert jsonConfiguration.has(property) : WRONG_CONFIGURATION;
+        assert jsonConfiguration.get(property) != null : WRONG_CONFIGURATION;
+
         return jsonConfiguration.get(property);
     }
 
@@ -88,7 +90,6 @@ public class Config {
         // endregion define variables
 
         public Client(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
             ipServerRemote = config.get("ip_server_remote").asString();
             portServerRemote = config.get("port_server_remote").asInteger();
             serverRemoteUrlPrefix = config.get("server_remote_url_prefix").asString();
@@ -111,7 +112,6 @@ public class Config {
         // endregion define variables
 
         public Scan(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
             managerIp = config.get("manager_ip").asString();
             managerPort = config.get("manager_port").asInteger();
             managerProtocol = config.get("manager_protocol").asString();
@@ -127,8 +127,7 @@ public class Config {
         // endregion define variables
 
         public Status(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
-            sendNotifications = config.get( "send_notifications").asBoolean();
+            sendNotifications = config.get("send_notifications").asBoolean();
             notificationsPeriod = config.get("notifications_period").asInteger();
         }
     }
@@ -142,7 +141,6 @@ public class Config {
         // endregion define variables
 
         public Tap(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
             localIpAddress = config.get("localIpAddr").asString();
             localPort = config.get("localPort").asInteger();
             knowHostFilePath = config.get("knowHostFilePath").asString();
@@ -166,9 +164,8 @@ public class Config {
         // endregion define variables
 
         public Server(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
-            on = config.get( "on").asBoolean();
-            debug = config.get( "debug").asBoolean();
+            on = config.get("on").asBoolean();
+            debug = config.get("debug").asBoolean();
             webserverPort = config.get("webserver_port").asInteger();
             varsCommands = config.get("vars_commands").asBoolean();
             jcmdCommands = config.get("jcmd_commands").asBoolean();
@@ -193,7 +190,6 @@ public class Config {
         // endregion define variables
 
         public UdpServerConf(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
             on = config.get("on").asBoolean();
             ip = config.get("ip").asString();
             port = config.get("port").asInteger();
@@ -212,7 +208,6 @@ public class Config {
         // endregion define variables
 
         public IdsConf(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
             on = config.get("on").asBoolean();
             showTicks = config.get("show_ticks").asBoolean();
             historyLength = config.get("history_length").asInteger();
@@ -237,7 +232,6 @@ public class Config {
         // endregion define variables
 
         public AlertViewer(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
             ip = config.get("ip").asString();
             port = config.get("port").asInteger();
             name = config.get("name").asString();
@@ -261,7 +255,6 @@ public class Config {
         // endregion define variables
 
         public Autocrypt(Json config) {
-            if (config ==null) { throw new WrongConfigurationException(WRONG_CONFIGURATION); }
             ip = config.get("ip").asString();
             port = config.get("port").asInteger();
             syncFrequency = config.get("sync_frequency").asInteger();

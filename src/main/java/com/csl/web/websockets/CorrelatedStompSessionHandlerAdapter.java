@@ -17,7 +17,8 @@ import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
  * Class that modifies @link{StompSessionHandlerAdapter} to transfer the X_CORRELATION_ID from headers of message
  * to MDC environment (thread local)..
  */
-public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAdapter {
+public abstract class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAdapter {
+    public static final String DESTINATION = "destination";
     Logger logger = LoggerFactory.getLogger("WS filter");
 
     /**
@@ -25,7 +26,7 @@ public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAda
      * @param headers headers of the message
      * @param payloadRaw payload of the message
      */
-    public void onFrame(StompHeaders headers, Object payloadRaw) {}
+    abstract void onFrame(StompHeaders headers, Object payloadRaw);
 
     /**
      * Native method called at the reception of a message.
@@ -133,11 +134,11 @@ public class CorrelatedStompSessionHandlerAdapter extends StompSessionHandlerAda
      * @param message message to print
      */
     private static void logMessage(Logger logger, String level, StompHeaders headers, String message) {
-        if (headers.get("destination") != null && !headers.get("destination").isEmpty()) {
-            MDC.put(LoggerConstants.ENDPOINT, headers.get("destination").get(0));
+        if (headers.get(DESTINATION) != null && !headers.get(DESTINATION).isEmpty()) {
+            MDC.put(LoggerConstants.ENDPOINT, headers.get(DESTINATION).get(0));
         }
         MDC.put(LoggerConstants.PROTOCOL, "WS");
-        LoggerUtils.log(logger,"debug", message);
+        LoggerUtils.log(logger,level, message);
         MDC.remove(LoggerConstants.PROTOCOL);
         MDC.remove(LoggerConstants.ENDPOINT);
     }

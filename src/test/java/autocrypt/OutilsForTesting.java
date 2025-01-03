@@ -9,6 +9,8 @@ import org.eclipse.jetty.http.HttpMethod;
 
 import static com.csl.web.HTTPConstants.CONTENT_TYPE;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
+import static com.csl.web.apiclient.ApiHandler.addBodyTo;
+import static com.csl.web.apiclient.ApiHandler.addHeaderTo;
 
 public class OutilsForTesting {
 
@@ -20,9 +22,9 @@ public class OutilsForTesting {
         HttpClient httpClient = new HttpClient();
         httpClient.start();
         Request request = httpClient.newRequest(uri);
-        request.header(CONTENT_TYPE, JSON_FORMAT);
+        addHeaderTo(request, CONTENT_TYPE, JSON_FORMAT);
         request.method(HttpMethod.POST);
-        request.content(new StringContentProvider(content), JSON_FORMAT);
+        addBodyTo(request, content, JSON_FORMAT);
         return request.send();
     }
     public static ContentResponse sendPostTo(String uri, Json content) throws Exception {

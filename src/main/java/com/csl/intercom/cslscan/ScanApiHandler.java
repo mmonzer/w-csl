@@ -16,9 +16,7 @@ import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.MultiPartContentProvider;
-import org.eclipse.jetty.client.util.PathContentProvider;
+import org.eclipse.jetty.client.util.*;
 import org.eclipse.jetty.http.HttpMethod;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -29,10 +27,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -1152,25 +1147,23 @@ public class ScanApiHandler extends ApiHandler {
 //        String uri = url + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
         String uri = createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint());
         Request request = httpClient.newRequest(uri);
-        request.header(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
-        request.param("drop", String.valueOf(shouldDrop));
         request.method(HttpMethod.POST);
-        MultiPartContentProvider multiPart = new MultiPartContentProvider();
-        try {
-            multiPart.addFilePart("file", bsonFilePath.getFileName().toString(), new PathContentProvider(bsonFilePath), null);
-        } catch (IOException e) {
-            logger.error("Could not add bson file to multipart content provider", e);
-            return null;
+        addHeaderTo(request, X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
+        request.param("drop", String.valueOf(shouldDrop));
+
+
+        try (MultiPartRequestContent multiPart = new MultiPartRequestContent()) {
+                multiPart.addFieldPart("file", new PathRequestContent(bsonFilePath), null);
+            addBodyTo(request, multiPart);
         }
-        multiPart.close();
-        request.content(multiPart);
+
+
         try {
             ContentResponse contentResponse = request.send();
             if (contentResponse.getStatus() >= 400) {
                 logger.warn("Error while sending request to CSL-Scan: {}", contentResponse.getContentAsString());
                 throw new Exception("Error while sending request to CSL-Scan: unexpected status code " + contentResponse.getStatus());
             }
-//            return UUID.fromString(contentResponse.getContentAsString().replace("\"", ""));
             return ImportQuery.fromScannerJson(Json.read(contentResponse.getContentAsString()));
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.error("Error while sending request to CSL-Scan", e);

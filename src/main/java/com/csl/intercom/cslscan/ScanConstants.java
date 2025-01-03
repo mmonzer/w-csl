@@ -15,7 +15,7 @@ public class ScanConstants {
     public static final String COMMUNITY = "community";
     public static final String USER = "user";
     public static final String PASS = "pass";
-    public static final String PRIV_PASS_PHRASE = "privPassPhrase"; ad
+    public static final String PRIV_PASS_PHRASE = "privPassPhrase";
     public static final String SECURITY_LEVEL = "securityLevel";
     public static final String AUTH_PROTOCOL_NAME = "authProtocolName";
     public static final String PRIV_PROTOCOL_NAME = "privProtocolName";

@@ -22,7 +22,7 @@ public class JettyFilterServlet implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-
+        // Still to be implemented if needed
     }
 
     @Override
@@ -50,6 +50,7 @@ public class JettyFilterServlet implements Filter {
 
     @Override
     public void destroy() {
+        // Still to be implemented if needed
     }
 
     /**

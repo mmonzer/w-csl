@@ -90,7 +90,7 @@ public class WebsocketClientEndpoint {
         isConnecting.set(false);
 
         logger.info("Registering API endpoints with the server");
-        JServiceLoader.apiMap.keySet().forEach(apiName -> sendMessageIfOpen("api:" + apiName));
+        JServiceLoader.getApiMap().keySet().forEach(apiName -> sendMessageIfOpen("api:" + apiName));
     }
 
     /**
@@ -235,7 +235,7 @@ public class WebsocketClientEndpoint {
                 Json result = Json.object().set("error", "api not found");
 
                 if (!apiName.isEmpty()) {
-                    ApiCommands api = JServiceLoader.apiMap.get(apiName);
+                    ApiCommands api = JServiceLoader.getApiMap().get(apiName);
                     MDC.put(ENDPOINT, apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
                     uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();

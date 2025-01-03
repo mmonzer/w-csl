@@ -496,8 +496,8 @@ public class ScanWebSocketHandler {
 
             ImportQuery importQuery = ImportQuery.fromScannerJson(payload);
             if (importQuery != null) {
-                logger.trace("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getStatus());
-                importExportBsonService.updateImportQueryStatus(importQuery.getId(), importQuery.getStatus());
+                logger.trace("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getImportQueryStatus());
+                importExportBsonService.updateImportQueryStatus(importQuery.getId(), importQuery.getImportQueryStatus());
             } else {
                 logger.trace("Received import notification from CSL-Scan that could not be parsed: {}", payload.toString());
             }

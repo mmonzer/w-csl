@@ -159,8 +159,8 @@ public class ImportExportBsonService {
 
         ImportQuery importQuery = importTasks.get(id);
         MDC.put(LoggerConstants.X_CORRELATION_ID, importQuery.getXCorrelationId()); // TODO: cleaning
-        if (ImportQueryStatus.IN_PROGRESS_STATUSES.contains(importTasks.get(id).getStatus())) {
-            logger.debug("handleImportTask: import in progress: {}", importQuery.getStatus());
+        if (ImportQueryStatus.IN_PROGRESS_STATUSES.contains(importTasks.get(id).getImportQueryStatus())) {
+            logger.debug("handleImportTask: import in progress: {}", importQuery.getImportQueryStatus());
             ImportQuery updatedImportQuery = this.scanApiHandler.getImportTaskStatus(importQuery.getId());
             if (updatedImportQuery != null) {
                 importTasks.put(id, updatedImportQuery);
@@ -168,8 +168,8 @@ public class ImportExportBsonService {
             }
         }
 
-        if (ImportQueryStatus.FINISHED_STATUSES.contains(importQuery.getStatus())) {
-            logger.info("Import of file finished: {}", importQuery.getStatus());
+        if (ImportQueryStatus.FINISHED_STATUSES.contains(importQuery.getImportQueryStatus())) {
+            logger.info("Import of file finished: {}", importQuery.getImportQueryStatus());
             this.dbapiHandler.notifyImportFinished(id, importQuery);
             List<EntityHttpConnection> entityHttpConnectionsToSync = this.scanApiHandler.getEntityHttpConnectionsToSync();
             entityHttpConnectionsToSync.forEach(template -> {
@@ -230,7 +230,7 @@ public class ImportExportBsonService {
         Integer id = getImportTaskByUuid(uuid);
         if (id != null) {
             ImportQuery importQuery = importTasks.get(id);
-            importQuery.setStatus(status);
+            importQuery.setImportQueryStatus(status);
             handleImportTask(id);
         } else {
             logger.debug("updateQueryStatus: uuid not found: {}", uuid);

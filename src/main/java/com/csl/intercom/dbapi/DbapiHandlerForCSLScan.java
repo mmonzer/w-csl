@@ -1483,7 +1483,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
     public void notifyImportFinished(int id, ImportQuery importQuery) {
         Json contents;
-        switch (importQuery.getStatus()) {
+        switch (importQuery.getImportQueryStatus()) {
             case SUCCESS:
                 contents = object(STATUS, FileActionStatus.SUCCEEDED.getValue());
                 break;
@@ -1492,7 +1492,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 contents = object(STATUS, FileActionStatus.FAILED.getValue());
                 break;
             default:
-                logger.warn("Unknown import status: {}", importQuery.getStatus());
+                logger.warn("Unknown import status: {}", importQuery.getImportQueryStatus());
                 return;
         }
         try {

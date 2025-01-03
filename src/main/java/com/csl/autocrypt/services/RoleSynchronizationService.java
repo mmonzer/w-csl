@@ -20,13 +20,11 @@ public class RoleSynchronizationService extends AutocryptTemplateSynchronization
 
     @Override
     public List<Json> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
-//        return super.retrieveData(apiHandlerForCSLAutoCrypt::getRoles, since, limit, offset);
         return super.retrieveData(apiHandlerForCSLAutoCrypt::getDeletedRoles, apiHandlerForCSLAutoCrypt::getRoles, since, limit, offset);
     }
 
     @Override
     public void sendData(List<Json> items) throws SynchronizationException {
-//        super.sendData(dbapiHandlerForCSLAutoCrypt::upsertRoles, Json.make(items));
         super.sendData(dbapiHandlerForCSLAutoCrypt::deleteRoles, dbapiHandlerForCSLAutoCrypt::upsertRoles, items);
     }
 

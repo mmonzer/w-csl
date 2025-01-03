@@ -11,6 +11,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * JServiceLoader is responsible for loading services offered by CSL-Client.
@@ -28,7 +29,8 @@ public class JServiceLoader {
 
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(JServiceLoader.class);
 
-    public static CSLInterModuleCommunicationManager cslInterModuleCommunicationManager = null;
+    @Getter
+    private static CSLInterModuleCommunicationManager cslInterModuleCommunicationManager = null;
     
     // TODO: The mosquitto configuration is not used in this version of the code
     // TODO: Add an option in the application.properties that decides whether to use the mosquitto broker
@@ -47,7 +49,8 @@ public class JServiceLoader {
     // The list of APIs for the endpoints to register
     private static List<ApiCommands> listOfAPIToRegister = new ArrayList<>();
     // The map of the api and the api commands
-    public static final HashMap<String, ApiCommands> apiMap = new HashMap<>();
+    @Getter
+    private static final Map<String, ApiCommands> apiMap = new HashMap<>();
 
     /**
      * Sets the user directory.

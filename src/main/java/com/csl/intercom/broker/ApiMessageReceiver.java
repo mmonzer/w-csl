@@ -14,12 +14,12 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 	String moduleName="XRECEIVER";
 	
-	private static  String BROKER_TCP_LOCALHOST_1883 = "tcp://localhost:1883";
+	private String brokerTcpLocalhost1883 = "tcp://localhost:1883";
 
-	public static String REQUEST_TOPIC="csl/request/";
-	public static String RESPONSE_TOPIC="csl/response/";
+	public static final String REQUEST_TOPIC="csl/request/";
+	public static final String RESPONSE_TOPIC="csl/response/";
 
-	public String api="";
+	private String api="";
 
 	private final ApiCommands apiCommands;
 	MqttClient clientToListen=null;
@@ -28,7 +28,7 @@ public class ApiMessageReceiver implements  MqttCallback {
 	MqttClient clientToSend=null;
 	
 	public ApiMessageReceiver(String moduleName,String apiName,ApiCommands apiCommands,String brokerUrl, int debugLevel) {
-		if (!brokerUrl.isEmpty()) BROKER_TCP_LOCALHOST_1883=brokerUrl;
+		if (!brokerUrl.isEmpty()) brokerTcpLocalhost1883 = brokerUrl;
 		
 		this.moduleName=moduleName;
 		this.apiCommands=apiCommands;
@@ -64,7 +64,7 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 		try (MemoryPersistence persistence = new MemoryPersistence()){
 			//We're using eclipse paho library  so we've to go with MqttCallback
-			clientToListen = new MqttClient(BROKER_TCP_LOCALHOST_1883,getClientToListenID(),persistence);
+			clientToListen = new MqttClient(brokerTcpLocalhost1883,getClientToListenID(),persistence);
 			clientToListen.setCallback(this);
 			MqttConnectOptions mqOptions=new MqttConnectOptions();
 			mqOptions.setCleanSession(true);
@@ -74,7 +74,7 @@ public class ApiMessageReceiver implements  MqttCallback {
 			subscribed=true;
 			
 		} catch(MqttException me) {
-			logger.warn("Error while connecting to MQTT broker: {}", BROKER_TCP_LOCALHOST_1883, me);
+			logger.warn("Error while connecting to MQTT broker: {}", brokerTcpLocalhost1883, me);
 		}
 		
 		connectClientToSend();
@@ -84,14 +84,14 @@ public class ApiMessageReceiver implements  MqttCallback {
 		try {
 			String clientId     = getClientToSendID();
 
-			if (clientToSend==null)	clientToSend = new MqttClient(BROKER_TCP_LOCALHOST_1883, clientId, new MemoryPersistence());
+			if (clientToSend==null)	clientToSend = new MqttClient(brokerTcpLocalhost1883, clientId, new MemoryPersistence());
 			MqttConnectOptions connOpts = new MqttConnectOptions();
 			connOpts.setCleanSession(true);
-			if (isDebug())System.out.println("Connecting to broker: "+BROKER_TCP_LOCALHOST_1883);
+			if (isDebug())logger.debug("Connecting to broker: {}", brokerTcpLocalhost1883);
 			clientToSend.connect(connOpts);
-			if (isDebug())System.out.println("Connected");
+			if (isDebug()) logger.debug("Connected");
 		} catch(Exception me) {
-			logger.warn("Error while connecting to MQTT broker: {}", BROKER_TCP_LOCALHOST_1883, me);
+			logger.warn("Error while connecting to MQTT broker: {}", brokerTcpLocalhost1883, me);
 		}
 	}
 
@@ -107,7 +107,7 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 		try {
 			clientToSend.disconnect();
-			if (isDebug())System.out.println("Disconnected");
+			if (isDebug()) logger.debug("Disconnected");
 			clientToSend.close();
 
 		} catch(Exception me) {
@@ -117,11 +117,12 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 	@Override
 	public void connectionLost(Throwable arg0) {
-
+	   // TODO : add logs
 	}
 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken arg0) {
+		// TODO : add logs
 	}
 
 	@Override
@@ -132,12 +133,12 @@ public class ApiMessageReceiver implements  MqttCallback {
 
 		try {
 			Json payload = Json.read(payloadString);
-			if (isDebug())System.out.println("JSON:"+payload);
+			if (isDebug()) logger.debug("JSON:{}",payload);
 
-			String api="";
-			if (payload.has("api")) api=payload.get("api").asString();
+			String apiName="";
+			if (payload.has("api")) apiName=payload.get("api").asString();
 
-			if (!api.isEmpty()) {
+			if (!apiName.isEmpty()) {
 				Json response=Json.object();
 				response.set("reqId",payload.get("reqId"));
 				

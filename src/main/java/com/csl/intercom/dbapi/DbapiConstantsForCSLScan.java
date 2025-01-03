@@ -4,39 +4,39 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DbapiConstantsForCSLScan {
-    public static final Map<String, String> connectionFieldsDbapiToLocal = new HashMap<>();
+    private static final Map<String, String> CONNECTION_FIELDS_DBAPI_TO_LOCAL = new HashMap<>();
 
     static {
-        connectionFieldsDbapiToLocal.put("discovery_protocol", "protocol");
-        connectionFieldsDbapiToLocal.put("port_number", "port");
-        connectionFieldsDbapiToLocal.put("connected_devices", "devices");
-        connectionFieldsDbapiToLocal.put("snmp_community", "community");
-        connectionFieldsDbapiToLocal.put("username", "user");
-        connectionFieldsDbapiToLocal.put("read_only_password", "pass");
-        connectionFieldsDbapiToLocal.put("snmp_privacy_key", "privPassPhrase");
-        connectionFieldsDbapiToLocal.put("authentication_algorithm", "authProtocolName");
-        connectionFieldsDbapiToLocal.put("privacy_algorithm", "privProtocolName");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("discovery_protocol", "protocol");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("port_number", "port");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("connected_devices", "devices");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("snmp_community", "community");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("username", "user");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("read_only_password", "pass");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("snmp_privacy_key", "privPassPhrase");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("authentication_algorithm", "authProtocolName");
+        CONNECTION_FIELDS_DBAPI_TO_LOCAL.put("privacy_algorithm", "privProtocolName");
     }
 
-    public static final Map<String, String> authAlgorithmDbapiToScan = new HashMap<>();
+    private static final Map<String, String> AUTH_ALGORITHM_DBAPI_TO_SCAN = new HashMap<>();
 
     static {
-        authAlgorithmDbapiToScan.put("SHA-224", "AuthHMAC128SHA224");
-        authAlgorithmDbapiToScan.put("SHA-256", "AuthHMAC192SHA256");
-        authAlgorithmDbapiToScan.put("SHA-384", "AuthHMAC256SHA384");
-        authAlgorithmDbapiToScan.put("SHA-512", "AuthHMAC384SHA512");
-        authAlgorithmDbapiToScan.put("SHA", "AuthSHA");
-        authAlgorithmDbapiToScan.put("SHA2", "AuthSHA2");
-        authAlgorithmDbapiToScan.put("MD5", "AuthMD5");
+        AUTH_ALGORITHM_DBAPI_TO_SCAN.put("SHA-224", "AuthHMAC128SHA224");
+        AUTH_ALGORITHM_DBAPI_TO_SCAN.put("SHA-256", "AuthHMAC192SHA256");
+        AUTH_ALGORITHM_DBAPI_TO_SCAN.put("SHA-384", "AuthHMAC256SHA384");
+        AUTH_ALGORITHM_DBAPI_TO_SCAN.put("SHA-512", "AuthHMAC384SHA512");
+        AUTH_ALGORITHM_DBAPI_TO_SCAN.put("SHA", "AuthSHA");
+        AUTH_ALGORITHM_DBAPI_TO_SCAN.put("SHA2", "AuthSHA2");
+        AUTH_ALGORITHM_DBAPI_TO_SCAN.put("MD5", "AuthMD5");
     }
 
-    public static final Map<String, String> privAlgorithmeDbapiToScan = new HashMap<>();
+    private static final Map<String, String> PRIV_ALGORITHME_DBAPI_TO_SCAN = new HashMap<>();
 
     static {
-        privAlgorithmeDbapiToScan.put("AES", "PrivAES127");
-        privAlgorithmeDbapiToScan.put("AES-128", "PrivAES128");
-        privAlgorithmeDbapiToScan.put("AES-192", "PrivAES192");
-        privAlgorithmeDbapiToScan.put("AES-256", "PrivAES256");
-        privAlgorithmeDbapiToScan.put("DES", "PrivDES");
+        PRIV_ALGORITHME_DBAPI_TO_SCAN.put("AES", "PrivAES127");
+        PRIV_ALGORITHME_DBAPI_TO_SCAN.put("AES-128", "PrivAES128");
+        PRIV_ALGORITHME_DBAPI_TO_SCAN.put("AES-192", "PrivAES192");
+        PRIV_ALGORITHME_DBAPI_TO_SCAN.put("AES-256", "PrivAES256");
+        PRIV_ALGORITHME_DBAPI_TO_SCAN.put("DES", "PrivDES");
     }
 }

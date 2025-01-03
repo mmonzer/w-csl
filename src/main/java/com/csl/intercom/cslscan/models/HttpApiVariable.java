@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * Needed because representations are different between DB-API and scanner.
  */
 public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable {
-    public static final String VALUE = "value";
+    public static final String VALUE_STR = "value";
     private Json value;
     private Map<String, HttpApiVariable> childrenMap;
     private List<HttpApiVariable> childrenList;
@@ -62,7 +62,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
      */
     public static HttpApiVariable fromScannerJson(Json json) {
         HttpApiVariable httpApiVariable = new HttpApiVariable();
-        Json value = json.get(VALUE);
+        Json value = json.get(VALUE_STR);
         if (value.isObject()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = value.asJsonMap().entrySet().stream()
@@ -84,13 +84,13 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         if (this.childrenMap != null) {
             Json childrenSerialized = Json.object();
             this.childrenMap.forEach((name, child) -> childrenSerialized.set(name, child.serializeForScanner()));
-            return Json.object(VALUE, childrenSerialized);
+            return Json.object(VALUE_STR, childrenSerialized);
         } else if (this.childrenList != null) {
             Json childrenSerialized = Json.array();
             this.childrenList.forEach(child -> childrenSerialized.add(child.serializeForScanner()));
-            return Json.object(VALUE, childrenSerialized);
+            return Json.object(VALUE_STR, childrenSerialized);
         } else {
-            return Json.object(VALUE, this.value);
+            return Json.object(VALUE_STR, this.value);
         }
     }
 

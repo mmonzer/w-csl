@@ -7,6 +7,7 @@ import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.logger.CSLApplicativeLogger;
 import com.csl.logger.LoggerCustomEndpoints;
+import com.csl.util.ListUtils;
 import com.csl.util.ThreadUtils;
 import main.services.JsonApiResponse;
 
@@ -15,7 +16,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 public class ExternalConnectionInfoSynchronizationService {
     private CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(ExternalConnectionInfoSynchronizationService.class);
@@ -45,14 +45,14 @@ public class ExternalConnectionInfoSynchronizationService {
         this(scanApiHandler, dbapiHandler, 3600);
     }
 
-    synchronized public void synchronizeExternalConnectionInfos() {
+    public synchronized void synchronizeExternalConnectionInfos() {
         logger.info("Synchronizing external connection infos");
         List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(true);
         if (connectionInfos == null) {
             logger.warn("Error while getting external connection infos");
             return;
         }
-        List<ExternalConnectionInfo> deletedConnectionInfos = connectionInfos.stream().filter(ExternalConnectionInfo::isDeleted).collect(Collectors.toList());
+        List<ExternalConnectionInfo> deletedConnectionInfos = ListUtils.filter(connectionInfos, ExternalConnectionInfo::isDeleted);
         connectionInfos.removeAll(deletedConnectionInfos);
         try {
             dbapiHandler.createOrUpdateExternalConnectionInfos(connectionInfos);

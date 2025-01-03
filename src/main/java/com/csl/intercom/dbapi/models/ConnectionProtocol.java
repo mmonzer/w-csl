@@ -2,6 +2,7 @@ package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.dbapi.enums.ConnectionProtocolField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
+import com.csl.util.ListUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -111,9 +112,7 @@ public class ConnectionProtocol {
         } else {
             return null;
         }
-        List<ConnectionProtocol> possibleProtocols = protocols.stream()
-                .filter(p -> p.staticConnectionProtocol == staticConnectionProtocol)
-                .collect(Collectors.toList());
+        List<ConnectionProtocol> possibleProtocols = ListUtils.filter(protocols, p -> p.staticConnectionProtocol == staticConnectionProtocol);
         if (possibleProtocols.size() == 1) {
             return possibleProtocols.get(0);
         } else {

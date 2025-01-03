@@ -2,11 +2,11 @@ package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.dbapi.enums.SshConnectionField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
+import com.csl.util.ListUtils;
 import com.ucsl.json.Json;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SshConnection extends Connection {
     @Getter
@@ -72,9 +72,7 @@ public class SshConnection extends Connection {
 
             List<String> devices = null;
             if (connectionJson.has("connected_devices") && connectionJson.get("connected_devices").isArray()) {
-                devices = connectionJson.get("connected_devices").asJsonList().stream()
-                        .map(Json::asString)
-                        .collect(Collectors.toList());
+                devices = ListUtils.map(connectionJson.get("connected_devices").asJsonList(), Json::asString);
             }
 
             String username = null;

@@ -16,6 +16,7 @@ import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.logger.CSLApplicativeLogger;
 import com.csl.util.FileStorageService;
 import com.csl.util.Pair;
+import com.csl.util.ListUtils;
 import com.csl.web.HTTPConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ucsl.json.Json;
@@ -37,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
@@ -161,8 +161,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      */
     public void sendCpeItems(List<CpeItem> cpeItems, ScanEntity scan, boolean hasMore) throws Exception {
         Json failedItems = Json.array();
-        List<CpeItem> newItems = cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)).collect(Collectors.toList());
-        List<CpeItem> deletedItems = cpeItems.stream().filter(CpeItem::isDeleted).collect(Collectors.toList());
+        List<CpeItem> newItems = ListUtils.filter(cpeItems, Predicate.not(CpeItem::isDeleted));
+        List<CpeItem> deletedItems = ListUtils.filter(cpeItems, CpeItem::isDeleted);
 
         try {
             if (!deletedItems.isEmpty()) {
@@ -208,8 +208,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
     public void sendMicrosoftKbs(List<MicrosoftKB> KBs, ScanEntity scan) throws Exception {
         Json failedItems = Json.array();
-        List<MicrosoftKB> newItems = KBs.stream().filter(Predicate.not(MicrosoftKB::isDeleted)).collect(Collectors.toList());
-        List<MicrosoftKB> deletedItems = KBs.stream().filter(MicrosoftKB::isDeleted).collect(Collectors.toList());
+        List<MicrosoftKB> newItems = ListUtils.filter(KBs, Predicate.not(MicrosoftKB::isDeleted));
+        List<MicrosoftKB> deletedItems = ListUtils.filter(KBs, MicrosoftKB::isDeleted);
 
         try {
             if (!deletedItems.isEmpty()) {
@@ -289,12 +289,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
         Json responseJson = Json.read(response.getContentAsString());
 
-        // Note: although recommended to use .toList() instead of .collect(Collectors.toList()) the first one creates
-        // an immutable list, whereas the second one is not immutable, allowing adding connections afterwords (needed).
-        return responseJson.asJsonList().stream()
-                .map(Device::fromJson)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return ListUtils.mapAndFilter(responseJson.asJsonList(), Device::fromJson, Objects::nonNull);
     }
 
     /**
@@ -316,10 +311,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return new ArrayList<>();
         }
         Json responseJson = Json.read(response.getContentAsString());
-        return responseJson.asJsonList().stream()
-                .map(json -> Connection.fromDbapiJson(json, protocols))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return ListUtils.mapAndFilter(responseJson.asJsonList(), (Function<Json, Connection>) json -> Connection.fromDbapiJson(json, protocols), Objects::nonNull);
     }
 
     /**
@@ -506,9 +498,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return new ArrayList<>();
         }
 
-        return Json.read(response.getContentAsString()).asJsonList().stream()
-                .map(ConnectionProtocol::fromJson)
-                .collect(Collectors.toList());
+        return ListUtils.map(Json.read(response.getContentAsString()).asJsonList(), ConnectionProtocol::fromJson);
     }
 
     public ConnectionProtocol fetchDiscoveryProtocol(String protocolName) throws ExecutionException, InterruptedException, TimeoutException {
@@ -1412,11 +1402,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 logger.warn("Unable to fetch available import tasks from DB-API: Unexpected status code: {}", response.getStatus());
                 return new ArrayList<>();
             }
-            return Json.read(response.getContentAsString()).asJsonList().stream()
-                    .map(HttpTemplateImportNotification::fromDbapiJson)
-                    .filter(Objects::nonNull)
-                    .filter(query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED)
-                    .collect(Collectors.toList());
+            return ListUtils.mapAndFilter(Json.read(response.getContentAsString()).asJsonList(),
+                            HttpTemplateImportNotification::fromDbapiJson,
+                            Objects::nonNull,
+                            query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             logger.warn("Error fetching available import tasks");
             logger.debug("Error fetching available import tasks", e);

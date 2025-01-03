@@ -3,6 +3,7 @@ package com.csl.intercom.cslscan.models;
 import com.csl.intercom.cslscan.enums.EntityHttpConnectionField;
 import com.csl.interfaces.models.IDbapiSerializable;
 import com.csl.interfaces.models.IScannerSerializable;
+import com.csl.util.ListUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.slf4j.Logger;
@@ -75,13 +76,11 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         try {
             entityHttpConnection.uuid = JsonUtil.getStringFromJson(json, EntityHttpConnectionField.UUID.dbapiName(), null);
             entityHttpConnection.name = JsonUtil.getStringFromJson(json, EntityHttpConnectionField.NAME.dbapiName(), null);
-            entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList().stream()
-                    .map(EntityHttpConnectionStage::fromDbapiJson)
-                    .collect(Collectors.toList());
+            entityHttpConnection.stages = ListUtils.map(json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList(),
+                    EntityHttpConnectionStage::fromDbapiJson);
             if (json.has(EntityHttpConnectionField.INPUTS.dbapiName()) && json.get(EntityHttpConnectionField.INPUTS.dbapiName()).isArray()) {
-                entityHttpConnection.inputs = json.get(EntityHttpConnectionField.INPUTS.dbapiName()).asJsonList().stream()
-                        .map(EntityHttpConnectionInput::fromDbapiJson)
-                        .collect(Collectors.toList());
+                entityHttpConnection.inputs = ListUtils.map(json.get(EntityHttpConnectionField.INPUTS.dbapiName()).asJsonList(),
+                                EntityHttpConnectionInput::fromDbapiJson);
             }
             if (json.has(EntityHttpConnectionField.VARIABLES.dbapiName()) && json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).asJsonMap().entrySet().stream()
@@ -90,9 +89,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 entityHttpConnection.variables = new HashMap<>();
             }
             if (json.has("vendors") && json.get("vendors").isArray()) {
-                entityHttpConnection.vendors = json.get("vendors").asJsonList().stream()
-                        .map(Json::asString)
-                        .collect(Collectors.toList());
+                entityHttpConnection.vendors = ListUtils.map(json.get("vendors").asJsonList(), Json::asString);
             }
             return entityHttpConnection;
         } catch (Throwable e) {
@@ -106,13 +103,11 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         try {
             entityHttpConnection.uuid = json.get(EntityHttpConnectionField.UUID.scanName()).asString();
             entityHttpConnection.name = json.get(EntityHttpConnectionField.NAME.scanName()).asString();
-            entityHttpConnection.stages = json.get(EntityHttpConnectionField.STAGES.scanName()).asJsonList().stream()
-                    .map(EntityHttpConnectionStage::fromScannerJson)
-                    .collect(Collectors.toList());
+            entityHttpConnection.stages = ListUtils.map(json.get(EntityHttpConnectionField.STAGES.scanName()).asJsonList(),
+                            EntityHttpConnectionStage::fromScannerJson);
             if (json.has(EntityHttpConnectionField.INPUTS.scanName()) && json.get(EntityHttpConnectionField.INPUTS.scanName()).isArray()) {
-                entityHttpConnection.inputs = json.get(EntityHttpConnectionField.INPUTS.scanName()).asJsonList().stream()
-                        .map(EntityHttpConnectionInput::fromScannerJson)
-                        .collect(Collectors.toList());
+                entityHttpConnection.inputs = ListUtils.map(json.get(EntityHttpConnectionField.INPUTS.scanName()).asJsonList(),
+                                EntityHttpConnectionInput::fromScannerJson);
             }
             if (json.has(EntityHttpConnectionField.VARIABLES.scanName()) && json.get(EntityHttpConnectionField.VARIABLES.scanName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.scanName()).asJsonMap().entrySet().stream()
@@ -121,9 +116,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 entityHttpConnection.variables = new HashMap<>();
             }
             if (json.has("vendors") && json.get("vendors").isArray()) {
-                entityHttpConnection.vendors = json.get("vendors").asJsonList().stream()
-                        .map(Json::asString)
-                        .collect(Collectors.toList());
+                entityHttpConnection.vendors = ListUtils.map(json.get("vendors").asJsonList(), Json::asString);
             }
             return entityHttpConnection;
         } catch (Throwable e) {

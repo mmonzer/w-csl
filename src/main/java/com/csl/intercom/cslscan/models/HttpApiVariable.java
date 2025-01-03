@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan.models;
 
 import com.csl.interfaces.models.IDbapiSerializable;
 import com.csl.interfaces.models.IScannerSerializable;
+import com.csl.util.ListUtils;
 import com.ucsl.json.Json;
 
 import java.util.List;
@@ -37,9 +38,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         } else if (json.isArray()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = null;
-            httpApiVariable.childrenList = json.asJsonList().stream()
-                    .map(HttpApiVariable::fromDbapiJson)
-                    .collect(Collectors.toList());
+            httpApiVariable.childrenList = ListUtils.map(json.asJsonList(), HttpApiVariable::fromDbapiJson);
         } else {
             httpApiVariable.value = json;
             httpApiVariable.childrenMap = null;
@@ -71,9 +70,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         } else if (value.isArray()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = null;
-            httpApiVariable.childrenList = value.asJsonList().stream()
-                    .map(HttpApiVariable::fromScannerJson)
-                    .collect(Collectors.toList());
+            httpApiVariable.childrenList = ListUtils.map(value.asJsonList(), HttpApiVariable::fromScannerJson);
         } else {
             httpApiVariable.value = value;
             httpApiVariable.childrenMap = null;

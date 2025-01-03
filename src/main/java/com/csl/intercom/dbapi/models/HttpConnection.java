@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionStage;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
+import com.csl.util.ListUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -147,9 +148,7 @@ public class HttpConnection extends Connection {
             Map<Integer, StageConfig> stagesConfig = new HashMap<>();
             otherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), StageConfig.fromJson(value)));
 
-            List<String> devices = connectionJson.get("connected_devices").asJsonList().stream()
-                    .map(Json::asString)
-                    .collect(java.util.stream.Collectors.toList());
+            List<String> devices = ListUtils.map(connectionJson.get("connected_devices").asJsonList(), Json::asString);
 
             Map<String, String> inputs = new HashMap<>();
             // otherData.has("inputs") is like this forexample : {"cameraUsername":{"value":"service","is_secret":false},"camerPassword":{"value":"agd-fb3-M13-aqh","is_secret":true}}

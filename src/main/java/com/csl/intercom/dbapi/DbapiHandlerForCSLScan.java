@@ -943,11 +943,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
     public int getConnectionPortNumberFromConnection(Connection connection) {
         int port = 0;
-        if (connection.getProtocol() == SNMPv1) {
+        if (connection.getProtocol() == SNMP_V1) {
             port = ((SNMPv1Connection) connection).getPort();
-        } else if (connection.getProtocol() == SNMPv2c) {
+        } else if (connection.getProtocol() == SNMP_V2C) {
             port = ((SNMPv2cConnection) connection).getPort();
-        } else if (connection.getProtocol() == SNMPv3) {
+        } else if (connection.getProtocol() == SNMP_V3) {
             port = ((SNMPv3Connection) connection).getPort();
         } else if (connection.getProtocol() == SSH) {
             port = ((SshConnection) connection).getPort();
@@ -961,15 +961,15 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
     public Json getConnectionOtherData(Connection connection, Json connectionJson) throws JsonProcessingException {
         Json otherData = Json.object();
-        if (connection.getProtocol() == SNMPv1) {
+        if (connection.getProtocol() == SNMP_V1) {
             String community = ((SNMPv1Connection) connection).getCommunity();
             otherData.set(SNMP_COMMUNITY, community);
             return otherData;
-        } else if (connection.getProtocol() == SNMPv2c) {
+        } else if (connection.getProtocol() == SNMP_V2C) {
             String community = ((SNMPv2cConnection) connection).getCommunity();
             otherData.set(SNMP_COMMUNITY, community);
             return otherData;
-        } else if (connection.getProtocol() == SNMPv3) {
+        } else if (connection.getProtocol() == SNMP_V3) {
             String snmpPrivacyAlgorithm = String.valueOf(((SNMPv3Connection) connection).getPrivacyAlgorithm());
             String snmpAuthAlgorithm = String.valueOf(((SNMPv3Connection) connection).getAuthenticationAlgorithm());
             otherData.set("snmp_privacy_algorithm", snmpPrivacyAlgorithm);
@@ -1006,7 +1006,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         if (connection.getProtocol() == HTTP) {
             requestContents.set(DISCOVERY_PROTOCOL_NAME, discoveryProtocolName);
         }
-        if (connection.getProtocol() == SNMPv3) {
+        if (connection.getProtocol() == SNMP_V3) {
             requestContents.set(USERNAME, ((SNMPv3Connection) connection).getUsername());
         } else if (connection.getProtocol() == REMOTE_POWERSHELL) {
             requestContents.set(USERNAME, ((RemotePowershellConnection) connection).getUsername());
@@ -1094,7 +1094,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 OTHER_DATA, getConnectionOtherData(connection, connectionJson),
                 "connected_devices", connection.getDevicesIds()
         );
-        if (connection.getProtocol() == SNMPv3) {
+        if (connection.getProtocol() == SNMP_V3) {
             requestContents.set(USERNAME, ((SNMPv3Connection) connection).getUsername());
         } else if (connection.getProtocol() == REMOTE_POWERSHELL) {
             requestContents.set(USERNAME, ((RemotePowershellConnection) connection).getUsername());

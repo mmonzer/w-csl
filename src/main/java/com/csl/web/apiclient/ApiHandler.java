@@ -5,7 +5,6 @@ import com.csl.core.Config;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.logger.LoggerConstants;
 import com.csl.logger.LoggerInterfaces;
-import com.csl.web.HTTPConstants;
 import com.ucsl.interfaces.IVoidToJsonApiResponse;
 import com.ucsl.json.Json;
 import lombok.Getter;
@@ -28,7 +27,7 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -46,7 +45,7 @@ public class ApiHandler implements AutoCloseable {
     private final String moduleName;
     @Getter
     @Setter
-    protected HashMap<HttpHeader, String> headers = new HashMap<>();
+    protected EnumMap<HttpHeader, String> headers = new EnumMap<>(HttpHeader.class);
     protected HttpClient httpClient;
     private IJsonApeResponseToJsonApiResponse outputReformer = e -> e;
     private boolean useSSL = false;
@@ -188,13 +187,13 @@ public class ApiHandler implements AutoCloseable {
         return getUrl() + endpoint.replace(" ", "%20").replace(":", "%3A");
     }
 
+    /**
+     * Add the api key to the headers
+     * @param contentType content type of the request
+     */
     public void setCustomHeaders(String contentType) {
-        /**
-         * Add the api key to the headers
-         * @param contentType content type of the request
-         */
         String apiKey = Config.INSTANCE.client.getApiKey();
-        HashMap<HttpHeader, String> customHeaders = new HashMap<>();
+        EnumMap<HttpHeader, String> customHeaders = new EnumMap<>(HttpHeader.class);
         customHeaders.put(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
         customHeaders.put(HttpHeader.CONTENT_TYPE, contentType);
         setHeaders(customHeaders);
@@ -565,7 +564,7 @@ public class ApiHandler implements AutoCloseable {
      * @param headers headers to add
      * @param request request to add parameters
      */
-    protected static void addHeadersToRequest(HashMap<HttpHeader, String> headers, Request request) {
+    protected static void addHeadersToRequest(EnumMap<HttpHeader, String> headers, Request request) {
         // Add correlation ID to request
         if (MDC.get(X_CORRELATION_ID) != null) {
             addHeaderTo(request, X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));

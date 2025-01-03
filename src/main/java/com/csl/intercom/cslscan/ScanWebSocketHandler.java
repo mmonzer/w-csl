@@ -165,10 +165,8 @@ public class ScanWebSocketHandler {
         stompHeaders.add(StompHeaders.DESTINATION, WEBSOCKET_START_DISCOVERY_ENDPOINT);
         stompHeaders.add(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
         if (uuids == null || uuids.isEmpty()) {
-//            stompRequestsSession.send(websocketStartDiscoveryEndpoint, "");
             stompRequestsSession.send(stompHeaders, "");
         } else {
-//            stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(uuids.toArray()));
             stompRequestsSession.send(stompHeaders, Json.array(uuids.toArray()));
         }
     }
@@ -561,12 +559,12 @@ public class ScanWebSocketHandler {
 
             //region Update the scan's info (status, progress)
             String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
-            if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
+            if (ScanConstants.getFinishedScanStatuses().contains(scanStatus)) {
                 logger.info("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
                         payload.get("entitiesUuid").asJsonList().size(), payload.get("entitiesInError").asJsonList().size());
                 // Put the end date in the scan information and notify DB-API the scan ended.
                 OffsetDateTime endDate = OffsetDateTime.now();
-                if (ScanConstants.successScanStatuses.contains(scanStatus)) {
+                if (ScanConstants.getSuccessScanStatuses().contains(scanStatus)) {
                     scan.setFinishedSuccess(endDate);
                 } else if (scanStatus.equals("DISCARDED")) {
                     scan.setDiscarded(endDate);

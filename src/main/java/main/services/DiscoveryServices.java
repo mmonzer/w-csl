@@ -31,16 +31,11 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
-import main.services.endpoints.DiscoveryEndpoints;
 import org.slf4j.MDC;
 
 import java.io.FileNotFoundException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -83,6 +78,14 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public static final String QUERY_PARAMS = "queryParams";
     public static final String STAGES = "stages";
     public static final String STAGE_INDEX = "stageIndex";
+    public static final String RESULT = "result";
+    public static final String FAILED_TO_DELETE_CONNECTION_INFO = "Failed to delete connection info";
+    public static final String INPUTS = "inputs";
+    public static final String FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear verified connection draft in CSL-Scan";
+    public static final String DEFAULT_JSON_CMD_RESPONSE = "<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error,<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.";
+    public static final String FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI = "Failed to add connection info to CSL-Dbapi";
+    public static final String CONNECTION1 = "connection";
+    public static final String FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear failed connection draft in CSL-Scan";
 
     private final boolean isRemote;
     private ScanWebSocketHandler scanWebSocketHandler = null;
@@ -696,57 +699,56 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.MANAGE_HTTP_TEMPLATES
         );
         addCmd("test_connection", params -> {
-            logger.debug("Testing HTTP connection ...");
+                    logger.debug("Testing HTTP connection ...");
 
-            String deviceUuid = JsonUtil.getStringFromJson(params, DEVICE_UUID, null);
-            logger.trace("Testing HTTP connection : deviceUuid={}", deviceUuid);
+                    String deviceUuid = JsonUtil.getStringFromJson(params, DEVICE_UUID, null);
+                    logger.trace("Testing HTTP connection : deviceUuid={}", deviceUuid);
 
-            String connectionId;
-            String connectionUuid;
-            Json connectionUuidJson = params.get(CONNECTION_UUID);
-            Json connectionIdJson = params.get(CONNECTION_ID);
-            logger.trace("Testing HTTP connection : deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
-            if (connectionIdJson != null && connectionIdJson.isString()) {
-                connectionId = connectionIdJson.asString();
-            } else if (connectionIdJson != null && connectionIdJson.isNumber()) {
-                connectionId = String.valueOf(connectionIdJson.asInteger());
-            } else {
-                connectionId = null;
-            }
-            logger.trace("Testing HTTP connection : parsed connection id : connectionId={}", connectionId);
-
-            if (deviceUuid == null || connectionId == null) {
-                logger.warn("Testing HTTP connection failed: required not null deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
-                return JsonApiResponse.error("Missing required parameter device_uuid or connection_id",
-                        Json.object(EXCEPTION, "Missing parameter device_uuid or connection_uuid, of type string")
-                ).toJson();
-            }
-            if (connectionUuidJson != null && connectionUuidJson.isString()) {
-                connectionUuid = connectionUuidJson.asString();
-            } else {
-                logger.debug("Testing HTTP connection with deviceUuid={}, connectionId={} ...", deviceUuid, connectionId);
-
-                connectionUuid = null;
-            }
-
-            JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
-            Boolean successResponse = (Boolean) response.toJson().get("success").getValue();
-            Boolean successResult = (Boolean) response.toJson().get("result").get("success").getValue();
-            if(!successResponse || !successResult) {
-                if (response.toJson().get("result") != null && response.toJson().get("result").get("message").getValue() != null) {
-                    String errorMessage = response.toJson().get("result").get("message").getValue().toString();
-                    if (Objects.equals(errorMessage, "No connection info found")) {
-                        logger.error("Failed to test (No connection info found in csl-scan yet) connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
-                        // force synchronize and re-test
-                        dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
-                        response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
+                    String connectionId;
+                    String connectionUuid;
+                    Json connectionUuidJson = params.get(CONNECTION_UUID);
+                    Json connectionIdJson = params.get(CONNECTION_ID);
+                    logger.trace("Testing HTTP connection : deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
+                    if (connectionIdJson != null && connectionIdJson.isString()) {
+                        connectionId = connectionIdJson.asString();
+                    } else if (connectionIdJson != null && connectionIdJson.isNumber()) {
+                        connectionId = String.valueOf(connectionIdJson.asInteger());
+                    } else {
+                        connectionId = null;
                     }
-                }
-            }
-            logger.debug("Tested HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
-            logger.info("Tested HTTP connection (deviceUuid={}  connectionId={})", deviceUuid, connectionIdJson);
-            return response.toJson();
-            },
+                    logger.trace("Testing HTTP connection : parsed connection id : connectionId={}", connectionId);
+
+                    if (deviceUuid == null || connectionId == null) {
+                        logger.warn("Testing HTTP connection failed: required not null deviceUuid={}  connectionId={}", deviceUuid, connectionIdJson);
+                        return JsonApiResponse.error("Missing required parameter device_uuid or connection_id",
+                                Json.object(EXCEPTION, "Missing parameter device_uuid or connection_uuid, of type string")
+                        ).toJson();
+                    }
+                    if (connectionUuidJson != null && connectionUuidJson.isString()) {
+                        connectionUuid = connectionUuidJson.asString();
+                    } else {
+                        logger.debug("Testing HTTP connection with deviceUuid={}, connectionId={} ...", deviceUuid, connectionId);
+
+                        connectionUuid = null;
+                    }
+
+                    JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
+                    Boolean successResponse = (Boolean) response.toJson().get("success").getValue();
+                    Boolean successResult = (Boolean) response.toJson().get(RESULT).get("success").getValue();
+                    if ((!successResponse || !successResult) && response.toJson().get(RESULT) != null && response.toJson().get(RESULT).get("message").getValue() != null) {
+                        String errorMessage = response.toJson().get(RESULT).get("message").getValue().toString();
+                        if (Objects.equals(errorMessage, "No connection info found")) {
+                            logger.error("Failed to test (No connection info found in csl-scan yet) connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
+                            // force synchronize and re-test
+                            dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+                            response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
+                        }
+                    }
+
+                    logger.debug("Tested HTTP connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
+                    logger.info("Tested HTTP connection (deviceUuid={}  connectionId={})", deviceUuid, connectionIdJson);
+                    return response.toJson();
+                },
                 new JsonCmdHelp().setDesc("Test if an existing connection is valid")
                         .setParam(DEVICE_UUID, "The uuid of the device to test the connection on", JsonCmdHelp.STR)
                         .setParam(CONNECTION_ID, "The id of the connection to test", JsonCmdHelp.STR)
@@ -1081,12 +1083,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     HttpConnection httpConnection = null;
                     Map<Integer, HttpConnection.StageConfig> stagesConfig = new HashMap<>();
                     Map<String, String> inputs = new HashMap<>();
-                    if (connectionJson!=null) {
+                    if (connectionJson != null) {
                         Json readOnlyOtherData = connectionJson.get("read_only_other_data");
                         readOnlyOtherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), HttpConnection.StageConfig.fromJson(value)));
-                        if (readOnlyOtherData.has("inputs")) {
-                            for (String key : readOnlyOtherData.get("inputs").asJsonMap().keySet()) {
-                                inputs.put(key, readOnlyOtherData.get("inputs").get(key).asString());
+                        if (readOnlyOtherData.has(INPUTS)) {
+                            for (String key : readOnlyOtherData.get(INPUTS).asJsonMap().keySet()) {
+                                inputs.put(key, readOnlyOtherData.get(INPUTS).get(key).asString());
                             }
                         }
                         httpConnection = new HttpConnection(
@@ -1477,417 +1479,407 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 },
                 new JsonCmdHelp().setDesc("Start a device discovery scan")
                         .setParam(CONNECTION_INFO_UUID, "The id of the connection info to use", JsonCmdHelp.INT)
-                        .setResult("<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_DEVICE_SCAN
         );
 
         addCmd("add_connection", params -> {
-            logger.debug("Adding new connection ...");
+                    logger.debug("Adding new connection ...");
 
-            Json connectionJson = params.get(CONNECTION);
-            Connection connection = null;
-            try {
-                connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
-            } catch (ExecutionException | InterruptedException | TimeoutException e) {
-                logger.error("Failed to fetch discovery protocols : {}", e.getMessage(), e);
-                return JsonApiResponse.error(FAILED_TO_FETCH_DISCOVERY_PROTOCOLS,
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-            if (connection == null) {
-                logger.error("Failed to fetch discovery protocols : connection not found");
-                return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION,
-                        Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION)
-                ).toJson();
-            }
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.addConnectionInfo(connection);
-                if (response.isSuccess()) {
-                    // add connection info to dbapi
+                    Json connectionJson = params.get(CONNECTION);
+                    Connection connection = null;
                     try {
-                        String connectionUuid = response.getResult().get("uuid").asString();
-                        connection.setUuid(connectionUuid);
-                        String discoveryProtocolName = null;
-                        if (connectionJson.get(DISCOVERY_PROTOCOL_NAME) != null && connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue() != null) {
-                            discoveryProtocolName = (String) connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue();
-                        }
-                        boolean isCreatedInDbapi = dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
-                        if (isCreatedInDbapi) {
-                            logger.info("Successfully added a new connection.");
+                        connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
+                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                        logger.error("Failed to fetch discovery protocols : {}", e.getMessage(), e);
+                        return JsonApiResponse.error(FAILED_TO_FETCH_DISCOVERY_PROTOCOLS,
+                                Json.object(EXCEPTION, e.getMessage())
+                        ).toJson();
+                    }
+                    if (connection == null) {
+                        logger.error("Failed to fetch discovery protocols : connection not found");
+                        return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION,
+                                Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION)
+                        ).toJson();
+                    }
+                    JsonApiResponse response;
+                    try {
+                        response = scanApiHandler.addConnectionInfo(connection);
+                        if (response.isSuccess()) {
+                            // add connection info to dbapi
+                            try {
+                                String connectionUuid = response.getResult().get("uuid").asString();
+                                connection.setUuid(connectionUuid);
+                                String discoveryProtocolName = null;
+                                if (connectionJson.get(DISCOVERY_PROTOCOL_NAME) != null && connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue() != null) {
+                                    discoveryProtocolName = (String) connectionJson.get(DISCOVERY_PROTOCOL_NAME).getValue();
+                                }
+                                boolean isCreatedInDbapi = dbapiHandler.createConnection(connection, discoveryProtocolName, connectionJson);
+                                if (isCreatedInDbapi) {
+                                    logger.info("Successfully added a new connection.");
+                                } else {
+                                    // remove connection info from scan
+                                    scanApiHandler.deleteConnectionInfo(connectionUuid);
+                                    logger.error(FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI);
+                                    return JsonApiResponse.error(FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI,
+                                            Json.object(EXCEPTION, FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI)
+                                    ).toJson();
+                                }
+                            } catch (Exception e) {
+                                // remove connection info from scan
+                                scanApiHandler.deleteConnectionInfo(connection.getUuid());
+                                logger.error("Failed to add connection info to CSL-DBAPI : {}. Compensated.", e.getMessage(), e);
+                                return JsonApiResponse.error(FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI,
+                                        Json.object(EXCEPTION, e.getMessage())
+                                ).toJson();
+                            }
                         } else {
-                            // remove connection info from scan
-                            scanApiHandler.deleteConnectionInfo(connectionUuid);
-                            logger.error("Failed to add connection info to CSL-Dbapi");
-                            return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
-                                    Json.object(EXCEPTION, "Failed to add connection info to CSL-Dbapi")
-                            ).toJson();
+                            logger.error("Failed to add connection info : {}", response.getError().toString());
                         }
                     } catch (Exception e) {
-                        // remove connection info from scan
-                        scanApiHandler.deleteConnectionInfo(connection.getUuid());
-                        logger.error("Failed to add connection info to CSL-DBAPI : {}. Compensated.", e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
-                                Json.object(EXCEPTION, e.getMessage())
-                        ).toJson();
-                    }
-                } else {
-                    logger.error("Failed to add connection info : {}", response.getError().toString());
-                }
-            } catch (Exception e) {
-                logger.error("Failed to add connection info", e);
-                response = JsonApiResponse.error("Failed to add connection info",
-                        Json.object(EXCEPTION, e.getMessage())
-                );
-            }
-            return response.toJson();
-        },
-                new JsonCmdHelp().setDesc("Add a connection to CSL-Scan")
-                .setParam("connection", "The connection to add", JsonCmdHelp.JSON)
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
-                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
-
-        addCmd("update_connection", params -> {
-            logger.debug("Updating a connection ...");
-
-            Json connectionJson = params.get(CONNECTION);
-            Connection connection = null;
-            try {
-                connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
-            } catch (ExecutionException | InterruptedException | TimeoutException e) {
-                logger.error("Failed to fetch discovery protocols from CSL-Dbapi : {}", e.getMessage(), e);
-                return JsonApiResponse.error(FAILED_TO_FETCH_DISCOVERY_PROTOCOLS,
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-            if (connection == null) {
-                logger.error("Failed to fetch discovery protocols from CSL-Dbapi : connection not found");
-                return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION,
-                        Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION)
-                ).toJson();
-            }
-
-            // Modify CSL-Scan and then CSL-Dbapi
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.updateConnectionInfo(connection);
-                if (response.isSuccess()) {
-                    logger.debug("Updated connection information with uuid={} in CSL-Scan.", connection.getUuid());
-                    // update connection info in dbapi
-                    try {
-                        dbapiHandler.updateConnection(connection, connectionJson);
-                        logger.info("Updated connection information with uuid={}.", connection.getUuid());
-                    } catch (Exception e) {
-                        logger.error("Failed to update connection info with uuid={} in CSL-Dbapi : {}", connection.getUuid(), e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to update connection info in CSL-Dbapi",
-                                Json.object(EXCEPTION, e.getMessage())
-                        ).toJson();
-                    }
-                } else {
-                    logger.error("Failed to update connection info with uuid={} in CSL-Scan : {}", connection.getUuid(), response.getError().toString());
-                    return JsonApiResponse.error("Failed to update connection info",
-                            Json.object(EXCEPTION, response.getError().toString())
-                    ).toJson();
-                }
-            } catch (Exception e) {
-                logger.error("Failed to update connection info with uuid={} : {}", connection.getUuid(), e.getMessage(), e);
-                response = JsonApiResponse.error("Failed to update connection info",
-                        Json.object(EXCEPTION, e.getMessage())
-                );
-            }
-            return response.toJson();
-        },new JsonCmdHelp().setDesc("Update a connection in CSL-Scan")
-                .setParam("connection", "The connection to update", JsonCmdHelp.JSON)
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
-                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
-
-        addCmd("delete_connection", params -> {
-            logger.debug("Deleting a connection ...");
-
-            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
-            if (connectionUuid == null) {
-                logger.error("Failed to delete a connection : connection_uuid is required");
-                return JsonApiResponse.error("Missing required parameter connection_uuid",
-                        Json.object(EXCEPTION, "Missing parameter connection_uuid")
-                ).toJson();
-            }
-
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.deleteConnectionInfo(connectionUuid);
-                if (response.isSuccess()) {
-                    logger.debug("Deleted the connection with uuid={} from CSL-Scan.", connectionUuid);
-                    // delete connection info from dbapi
-                    try {
-                        dbapiHandler.deleteConnection(connectionUuid);
-                        logger.info("Successfully deleted the connection with uuid={}", connectionUuid);
-                    } catch (Exception e) {
-                        logger.error("Failed to delete connection info with uuid={} from CSL-DBAPI : ", connectionUuid, e.getMessage(), e);
-                        response = JsonApiResponse.error("Failed to delete connection info",
+                        logger.error("Failed to add connection info", e);
+                        response = JsonApiResponse.error("Failed to add connection info",
                                 Json.object(EXCEPTION, e.getMessage())
                         );
                     }
-                } else {
-                    logger.error("Failed to delete connection info with uuid={} from CSL-Scan : {}", connectionUuid, response.getError().toString());
-                    response = JsonApiResponse.error("Failed to delete connection info",
-                            Json.object(EXCEPTION, response.getError().toString())
-                    );
-                }
-            } catch (Exception e) {
-                logger.error("Failed to delete connection info : {}", e.getMessage(), e);
-                response = JsonApiResponse.error("Failed to delete connection info",
-                        Json.object(EXCEPTION, e.getMessage())
-                );
-            }
-            return response.toJson();
-        },  new JsonCmdHelp().setDesc("Delete a connection from CSL-Scan")
-                .setParam("id", "The uuid of the connection to delete", JsonCmdHelp.STR)
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
+                    return response.toJson();
+                },
+                new JsonCmdHelp().setDesc("Add a connection to CSL-Scan")
+                        .setParam(CONNECTION, "The connection to add", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
+
+        addCmd("update_connection", params -> {
+                    logger.debug("Updating a connection ...");
+
+                    Json connectionJson = params.get(CONNECTION);
+                    Connection connection = null;
+                    try {
+                        connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
+                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                        logger.error("Failed to fetch discovery protocols from CSL-Dbapi : {}", e.getMessage(), e);
+                        return JsonApiResponse.error(FAILED_TO_FETCH_DISCOVERY_PROTOCOLS,
+                                Json.object(EXCEPTION, e.getMessage())
+                        ).toJson();
+                    }
+                    if (connection == null) {
+                        logger.error("Failed to fetch discovery protocols from CSL-Dbapi : connection not found");
+                        return JsonApiResponse.error(FAILED_TO_PARSE_CONNECTION,
+                                Json.object(EXCEPTION, FAILED_TO_PARSE_CONNECTION)
+                        ).toJson();
+                    }
+
+                    // Modify CSL-Scan and then CSL-Dbapi
+                    JsonApiResponse response;
+                    try {
+                        response = scanApiHandler.updateConnectionInfo(connection);
+                        if (response.isSuccess()) {
+                            logger.debug("Updated connection information with uuid={} in CSL-Scan.", connection.getUuid());
+                            // update connection info in dbapi
+                            try {
+                                dbapiHandler.updateConnection(connection, connectionJson);
+                                logger.info("Updated connection information with uuid={}.", connection.getUuid());
+                            } catch (Exception e) {
+                                logger.error("Failed to update connection info with uuid={} in CSL-Dbapi : {}", connection.getUuid(), e.getMessage(), e);
+                                return JsonApiResponse.error("Failed to update connection info in CSL-Dbapi",
+                                        Json.object(EXCEPTION, e.getMessage())
+                                ).toJson();
+                            }
+                        } else {
+                            logger.error("Failed to update connection info with uuid={} in CSL-Scan : {}", connection.getUuid(), response.getError().toString());
+                            return JsonApiResponse.error("Failed to update connection info",
+                                    Json.object(EXCEPTION, response.getError().toString())
+                            ).toJson();
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to update connection info with uuid={} : {}", connection.getUuid(), e.getMessage(), e);
+                        response = JsonApiResponse.error("Failed to update connection info",
+                                Json.object(EXCEPTION, e.getMessage())
+                        );
+                    }
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("Update a connection in CSL-Scan")
+                        .setParam(CONNECTION1, "The connection to update", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
+
+        addCmd("delete_connection", params -> {
+                    logger.debug("Deleting a connection ...");
+
+                    String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
+                    if (connectionUuid == null) {
+                        logger.error("Failed to delete a connection : connection_uuid is required");
+                        return JsonApiResponse.error("Missing required parameter connection_uuid",
+                                Json.object(EXCEPTION, "Missing parameter connection_uuid")
+                        ).toJson();
+                    }
+
+                    JsonApiResponse response;
+                    try {
+                        response = scanApiHandler.deleteConnectionInfo(connectionUuid);
+                        if (response.isSuccess()) {
+                            logger.debug("Deleted the connection with uuid={} from CSL-Scan.", connectionUuid);
+                            // delete connection info from dbapi
+                            try {
+                                dbapiHandler.deleteConnection(connectionUuid);
+                                logger.info("Successfully deleted the connection with uuid={}", connectionUuid);
+                            } catch (Exception e) {
+                                logger.error("Failed to delete connection info with uuid={} from CSL-DBAPI : ", connectionUuid, e.getMessage(), e);
+                                response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
+                                        Json.object(EXCEPTION, e.getMessage())
+                                );
+                            }
+                        } else {
+                            logger.error("Failed to delete connection info with uuid={} from CSL-Scan : {}", connectionUuid, response.getError().toString());
+                            response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
+                                    Json.object(EXCEPTION, response.getError().toString())
+                            );
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to delete connection info : {}", e.getMessage(), e);
+                        response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
+                                Json.object(EXCEPTION, e.getMessage())
+                        );
+                    }
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("Delete a connection from CSL-Scan")
+                        .setParam("id", "The uuid of the connection to delete", JsonCmdHelp.STR)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
 
         addCmd("clear_all_connections", params -> {
-            logger.debug("Clearing all connections ...");
+                    logger.debug("Clearing all connections ...");
 
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.clearAllEntityConnections();
-                if (response.isSuccess()) {
-                    logger.debug("Cleared all connections from CSL-Scan");
-                    // clear all connections from dbapi
+                    JsonApiResponse response;
                     try {
-                        dbapiHandler.clearAllConnections();
-                        logger.info("Successfully cleared all connections.");
+                        response = scanApiHandler.clearAllEntityConnections();
+                        if (response.isSuccess()) {
+                            logger.debug("Cleared all connections from CSL-Scan");
+                            // clear all connections from dbapi
+                            try {
+                                dbapiHandler.clearAllConnections();
+                                logger.info("Successfully cleared all connections.");
+                            } catch (Exception e) {
+                                logger.error("Failed to clear all connections from CSL-Dbapi : {}", e.getMessage(), e);
+                                return JsonApiResponse.error("Failed to clear all connections from CSL-Dbapi",
+                                        Json.object(EXCEPTION, e.getMessage())
+                                ).toJson();
+                            }
+                        } else {
+                            logger.error("Failed to clear all connections from CSL-Scan : {}", response.getError().toString());
+                        }
                     } catch (Exception e) {
-                        logger.error("Failed to clear all connections from CSL-Dbapi : {}", e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to clear all connections from CSL-Dbapi",
+                        logger.error("Failed to clear all connections : {}", e.getMessage(), e);
+                        return JsonApiResponse.error("Failed to clear all connections",
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
-                } else {
-                    logger.error("Failed to clear all connections from CSL-Scan : {}", response.getError().toString());
-                }
-            } catch (Exception e) {
-                logger.error("Failed to clear all connections : {}", e.getMessage(), e);
-                return JsonApiResponse.error("Failed to clear all connections",
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-            return response.toJson();
-        },new JsonCmdHelp().setDesc("Clear all connection from CSL-Scan")
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("Clear all connection from CSL-Scan")
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO);
 
         addCmd("delete_connection_draft", params -> {
-            logger.debug("Clearing a connection draft ...");
+                    logger.debug("Clearing a connection draft ...");
 
-            String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
-            if (connectionUuid == null) {
-                logger.error("Failed to delete connection info : connection_uuid required");
-                return JsonApiResponse.error("Missing required parameter connection_uuid",
-                        Json.object(EXCEPTION, "Missing parameter connection_uuid")
-                ).toJson();
-            }
-            JsonApiResponse response;
-            try {
-                response = scanApiHandler.deleteConnectionDraft(connectionUuid);
-                logger.debug("Deleted connection info with uuid={} from CSL-Scan.", connectionUuid);
-                if (response.isSuccess()) {
-                    // delete connection info from dbapi
-                    try {
-                        dbapiHandler.deleteConnectionDraft(connectionUuid);
-                        logger.info("Successfully deleted connection info with uuid={}.", connectionUuid);
-                    } catch (Exception e) {
-                        logger.error("Failed to delete connection info from CSL-Dbapi : {}", e.getMessage(), e);
+                    String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
+                    if (connectionUuid == null) {
+                        logger.error("Failed to delete connection info : connection_uuid required");
+                        return JsonApiResponse.error("Missing required parameter connection_uuid",
+                                Json.object(EXCEPTION, "Missing parameter connection_uuid")
+                        ).toJson();
                     }
-                } else {
-                    logger.error("Failed to delete connection info with uuid={} from CSL-Scan: {}", connectionUuid, response.getError().toString());
-                }
-            } catch (Exception e) {
-                logger.error("Failed to delete connection info with uuid={} : {}", connectionUuid, e.getMessage(), e);
-                response = JsonApiResponse.error("Failed to delete connection info",
-                        Json.object(EXCEPTION, e.getMessage())
-                );
-            }
-            return response.toJson();
-        }, new JsonCmdHelp().setDesc("Delete a connection draft from CSL-Scan and secret manager")
-                .setParam("id", "The uuid of the connection draft to delete", JsonCmdHelp.STR)
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
+                    JsonApiResponse response;
+                    try {
+                        response = scanApiHandler.deleteConnectionDraft(connectionUuid);
+                        logger.debug("Deleted connection info with uuid={} from CSL-Scan.", connectionUuid);
+                        if (response.isSuccess()) {
+                            // delete connection info from dbapi
+                            try {
+                                dbapiHandler.deleteConnectionDraft(connectionUuid);
+                                logger.info("Successfully deleted connection info with uuid={}.", connectionUuid);
+                            } catch (Exception e) {
+                                logger.error("Failed to delete connection info from CSL-Dbapi : {}", e.getMessage(), e);
+                            }
+                        } else {
+                            logger.error("Failed to delete connection info with uuid={} from CSL-Scan: {}", connectionUuid, response.getError().toString());
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to delete connection info with uuid={} : {}", connectionUuid, e.getMessage(), e);
+                        response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
+                                Json.object(EXCEPTION, e.getMessage())
+                        );
+                    }
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("Delete a connection draft from CSL-Scan and secret manager")
+                        .setParam("id", "The uuid of the connection draft to delete", JsonCmdHelp.STR)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
         addCmd("update_connection_draft", params -> {
-            logger.debug("Updating a connection draft ...");
+                    logger.debug("Updating a connection draft ...");
 
-            Json connectionJson = params.get("connection_draft");
-            EntityConnectionInfoDraft entityConnectionInfoDraft = null;
-            try {
-                entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIJson(connectionJson);
-            } catch (Exception e) {
-                logger.error("Failed to parse connection draft : {}", e.getMessage(), e);
-                return JsonApiResponse.error("Failed to parse connection draft",
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-
-            // Update data in services
-            JsonApiResponse response;
-            try {
-                // update connection info in CSL-Scan
-                response = scanApiHandler.updateConnectionDraft(entityConnectionInfoDraft);
-                if (response.isSuccess()) {
-                    logger.debug("Updated connection draft with uuid={} in CSL-Scan.", entityConnectionInfoDraft.getUuid());
-                    // update connection info in dbapi
+                    Json connectionJson = params.get("connection_draft");
+                    EntityConnectionInfoDraft entityConnectionInfoDraft = null;
                     try {
-                        dbapiHandler.updateConnectionDraft(entityConnectionInfoDraft, entityConnectionInfoDraft.getUuid());
-                        logger.debug("Successfully updated connection draft with uuid={}.", entityConnectionInfoDraft.getUuid());
+                        entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIJson(connectionJson);
                     } catch (Exception e) {
-                        logger.error("Failed to update connection draft info with uuid={} in CSL-Dbapi : {}", entityConnectionInfoDraft.getUuid(), e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to update connection info in CSL-Dbapi",
+                        logger.error("Failed to parse connection draft : {}", e.getMessage(), e);
+                        return JsonApiResponse.error("Failed to parse connection draft",
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
-                } else {
-                    logger.error("Failed to update connection draft info with uuid={} in CSL-Scan : {}", entityConnectionInfoDraft.getUuid(), response.getError().getReason());
-                    return JsonApiResponse.error("Failed to update connection draft info",
-                            Json.object(EXCEPTION, response.getError().getReason())
-                    ).toJson();
-                }
-            } catch (Exception e) {
-                logger.error("Failed to update connection draft info with uuid={} : {}", entityConnectionInfoDraft.getUuid(), e.getMessage(), e);
-                response = JsonApiResponse.error("Failed to update connection draft info",
-                        Json.object(EXCEPTION, e.getMessage())
-                );
-            }
-            return response.toJson();
-        }, new JsonCmdHelp().setDesc("Update a connection draft in CSL-Scan")
-                .setParam("connection", "The connection draft to update", JsonCmdHelp.JSON)
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
+
+                    // Update data in services
+                    JsonApiResponse response;
+                    try {
+                        // update connection info in CSL-Scan
+                        response = scanApiHandler.updateConnectionDraft(entityConnectionInfoDraft);
+                        if (response.isSuccess()) {
+                            logger.debug("Updated connection draft with uuid={} in CSL-Scan.", entityConnectionInfoDraft.getUuid());
+                            // update connection info in dbapi
+                            try {
+                                dbapiHandler.updateConnectionDraft(entityConnectionInfoDraft, entityConnectionInfoDraft.getUuid());
+                                logger.debug("Successfully updated connection draft with uuid={}.", entityConnectionInfoDraft.getUuid());
+                            } catch (Exception e) {
+                                logger.error("Failed to update connection draft info with uuid={} in CSL-Dbapi : {}", entityConnectionInfoDraft.getUuid(), e.getMessage(), e);
+                                return JsonApiResponse.error("Failed to update connection info in CSL-Dbapi",
+                                        Json.object(EXCEPTION, e.getMessage())
+                                ).toJson();
+                            }
+                        } else {
+                            logger.error("Failed to update connection draft info with uuid={} in CSL-Scan : {}", entityConnectionInfoDraft.getUuid(), response.getError().getReason());
+                            return JsonApiResponse.error("Failed to update connection draft info",
+                                    Json.object(EXCEPTION, response.getError().getReason())
+                            ).toJson();
+                        }
+                    } catch (Exception e) {
+                        logger.error("Failed to update connection draft info with uuid={} : {}", entityConnectionInfoDraft.getUuid(), e.getMessage(), e);
+                        response = JsonApiResponse.error("Failed to update connection draft info",
+                                Json.object(EXCEPTION, e.getMessage())
+                        );
+                    }
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("Update a connection draft in CSL-Scan")
+                        .setParam(CONNECTION1, "The connection draft to update", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
         addCmd("clear_verified_connection_draft", params -> {
-            logger.debug("Clearing verified connection drafts ...");
+                    logger.debug("Clearing verified connection drafts ...");
 
-            JsonApiResponse response;
-            try {
-                // CLEAR FROM SCAN AND SECRET MANAGER FIRST
-                response = scanApiHandler.clearVerifiedConnectionsDraft();
-                if (response.isSuccess()) {
-                    logger.debug("Cleared verified connection drafts from CSL-Scan.");
-                    // clear from dbapi
+                    JsonApiResponse response;
                     try {
-                        dbapiHandler.clearVerifiedConnectionsDraft();
-                        logger.info("Successfully cleared verified connection drafts.");
+                        // CLEAR FROM SCAN AND SECRET MANAGER FIRST
+                        response = scanApiHandler.clearVerifiedConnectionsDraft();
+                        if (response.isSuccess()) {
+                            logger.debug("Cleared verified connection drafts from CSL-Scan.");
+                            // clear from dbapi
+                            try {
+                                dbapiHandler.clearVerifiedConnectionsDraft();
+                                logger.info("Successfully cleared verified connection drafts.");
+                            } catch (Exception e) {
+                                logger.error("Failed to clear verified connection drafts from CSL-Dbapi : {}", e.getMessage(), e);
+                                return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Dbapi",
+                                        Json.object(EXCEPTION, e.getMessage())
+                                ).toJson();
+                            }
+                        } else {
+                            logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
+                            return JsonApiResponse.error(FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN,
+                                    Json.object(EXCEPTION, response.getError().getReason())
+                            ).toJson();
+                        }
                     } catch (Exception e) {
-                        logger.error("Failed to clear verified connection drafts from CSL-Dbapi : {}", e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Dbapi",
+                        logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
+                        return JsonApiResponse.error(FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN,
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
-                } else {
-                    logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
-                    return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
-                            Json.object(EXCEPTION, response.getError().getReason())
-                    ).toJson();
-                }
-            } catch (Exception e) {
-                logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
-                return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-            return response.toJson();
-        }, new JsonCmdHelp().setDesc("Clear all verified connection drafts from CSL-Scan and secret manager")
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("Clear all verified connection drafts from CSL-Scan and secret manager")
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
         addCmd("clear_failed_connection_draft", params -> {
-            logger.debug("Clearing failed connection drafts ...");
+                    logger.debug("Clearing failed connection drafts ...");
 
-            JsonApiResponse response;
-            try {
-                // CLEAR FROM SCAN AND SECRET MANAGER FIRST
-                response = scanApiHandler.clearFailedConnectionsDraft();
-                if (response.isSuccess()) {
-                    logger.debug("Cleared failed connection drafts from CSL-Scan.");
-                    // clear from dbapi
+                    JsonApiResponse response;
                     try {
-                        dbapiHandler.clearFailedConnectionsDraft();
-                        logger.info("Successfully cleared failed connection drafts.");
+                        // CLEAR FROM SCAN AND SECRET MANAGER FIRST
+                        response = scanApiHandler.clearFailedConnectionsDraft();
+                        if (response.isSuccess()) {
+                            logger.debug("Cleared failed connection drafts from CSL-Scan.");
+                            // clear from dbapi
+                            try {
+                                dbapiHandler.clearFailedConnectionsDraft();
+                                logger.info("Successfully cleared failed connection drafts.");
+                            } catch (Exception e) {
+                                logger.error("Failed to clear failed connection drafts from CSL-Dbapi : {}", e.getMessage(), e);
+                                return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Dbapi",
+                                        Json.object(EXCEPTION, e.getMessage())
+                                ).toJson();
+                            }
+                        } else {
+                            logger.error("Failed to clear failed connection drafts from CSL-Scan : {}", response.getError().getReason());
+                            return JsonApiResponse.error(FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN,
+                                    Json.object(EXCEPTION, response.getError().getReason())
+                            ).toJson();
+                        }
                     } catch (Exception e) {
-                        logger.error("Failed to clear failed connection drafts from CSL-Dbapi : {}", e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Dbapi",
+                        logger.error(FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN, e);
+                        return JsonApiResponse.error(FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN,
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
-                } else {
-                    logger.error("Failed to clear failed connection drafts from CSL-Scan : {}", response.getError().getReason());
-                    return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Scan",
-                            Json.object(EXCEPTION, response.getError().getReason())
-                    ).toJson();
-                }
-            } catch (Exception e) {
-                logger.error("Failed to clear failed connection draft in CSL-Scan", e);
-                return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Scan",
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-            return response.toJson();
-        },new JsonCmdHelp().setDesc("Clear all failed connection drafts from CSL-Scan and secret manager")
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("Clear all failed connection drafts from CSL-Scan and secret manager")
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
         addCmd("publish_all_verified_connection_draft", params -> {
-            logger.debug("Publishing all verified connection drafts ...");
+                    logger.debug("Publishing all verified connection drafts ...");
 
-            JsonApiResponse response;
-            try {
-                // CLEAR FROM SCAN AND SECRET MANAGER FIRST
-                response = scanApiHandler.publishAllVerifiedConnectionsDraft();
-                if (response.isSuccess()) {
-                    logger.debug("Cleared verified connection drafts from CSL-Scan.");
-                    // clear from dbapi
+                    JsonApiResponse response;
                     try {
-                        dbapiHandler.publishVerifiedConnectionsDraft();
-                        logger.info("Successfully cleared verified connection drafts.");
+                        // CLEAR FROM SCAN AND SECRET MANAGER FIRST
+                        response = scanApiHandler.publishAllVerifiedConnectionsDraft();
+                        if (response.isSuccess()) {
+                            logger.debug("Cleared verified connection drafts from CSL-Scan.");
+                            // clear from dbapi
+                            try {
+                                dbapiHandler.publishVerifiedConnectionsDraft();
+                                logger.info("Successfully cleared verified connection drafts.");
+                            } catch (Exception e) {
+                                logger.error("Failed to clear verified connection drafts from CSL-Dbapi : {}", e.getMessage(), e);
+                                return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Dbapi",
+                                        Json.object(EXCEPTION, e.getMessage())
+                                ).toJson();
+                            }
+                        } else {
+                            logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
+                            return JsonApiResponse.error(FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN,
+                                    Json.object(EXCEPTION, response.getError().getReason())
+                            ).toJson();
+                        }
                     } catch (Exception e) {
-                        logger.error("Failed to clear verified connection drafts from CSL-Dbapi : {}", e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Dbapi",
+                        logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
+                        return JsonApiResponse.error("Failed to publish verified connection draft in CSL-Scan",
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
-                } else {
-                    logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
-                    return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
-                            Json.object(EXCEPTION, response.getError().getReason())
-                    ).toJson();
-                }
-            } catch (Exception e) {
-                logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
-                return JsonApiResponse.error("Failed to publish verified connection draft in CSL-Scan",
-                        Json.object(EXCEPTION, e.getMessage())
-                ).toJson();
-            }
-            return response.toJson();
-        },new JsonCmdHelp().setDesc("publish all verified connection drafts from CSL-Scan and secret manager")
-                .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                        "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-                .setStatus(JsonCmdHelp.STATUS_OK),
+                    return response.toJson();
+                }, new JsonCmdHelp().setDesc("publish all verified connection drafts from CSL-Scan and secret manager")
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.MANAGE_CONNECTION_INFO_DRAFT);
 
         // region - Connection certificates

@@ -38,7 +38,7 @@ public abstract class Service {
      * @param description           description of the service
      * @param configFileSectionName name of corresponding configuration file
      */
-    public Service(String name, String description, String configFileSectionName) {
+    protected Service(String name, String description, String configFileSectionName) {
         this(name, description, configFileSectionName, "");
     }
 
@@ -51,7 +51,7 @@ public abstract class Service {
      * @param configFileSectionName name of corresponding configuration file
      * @param rootAPI               root for the api commands
      */
-    public Service(String name, String description, String configFileSectionName, String rootAPI) {
+    protected Service(String name, String description, String configFileSectionName, String rootAPI) {
         this.name = name;
         this.description = description;
         this.configFileSectionName = configFileSectionName;
@@ -66,7 +66,7 @@ public abstract class Service {
      * @param name                  name of the service
      * @param configFileSectionName name of corresponding configuration file
      */
-    public Service(String name, String configFileSectionName) {
+    protected Service(String name, String configFileSectionName) {
         this(name, name + " description", configFileSectionName);
     }
 

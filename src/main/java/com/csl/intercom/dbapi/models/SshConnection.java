@@ -9,6 +9,8 @@ import lombok.Getter;
 import java.util.List;
 
 public class SshConnection extends Connection {
+    public static final String MONGO_ENTITY_ID = "mongo_entity_id";
+    public static final String CONNECTED_DEVICES = "connected_devices";
     @Getter
     private final int port;
     @Getter
@@ -60,8 +62,8 @@ public class SshConnection extends Connection {
             if (connectionJson.has("uuid") && connectionJson.get("uuid").isNumber()) {
                 uuid = String.valueOf(connectionJson.get("uuid").asInteger());
             } else {
-                if(connectionJson.has("mongo_entity_id") && !connectionJson.get("mongo_entity_id").isNull())
-                    uuid = connectionJson.get("mongo_entity_id").asString();
+                if(connectionJson.has(MONGO_ENTITY_ID) && !connectionJson.get(MONGO_ENTITY_ID).isNull())
+                    uuid = connectionJson.get(MONGO_ENTITY_ID).asString();
             }
             int port = 0;
             if (connectionJson.has(SshConnectionField.PORT.dbapiName()) && connectionJson.get(SshConnectionField.PORT.dbapiName()).isNumber()) {
@@ -71,8 +73,8 @@ public class SshConnection extends Connection {
             }
 
             List<String> devices = null;
-            if (connectionJson.has("connected_devices") && connectionJson.get("connected_devices").isArray()) {
-                devices = ListUtils.map(connectionJson.get("connected_devices").asJsonList(), Json::asString);
+            if (connectionJson.has(CONNECTED_DEVICES) && connectionJson.get(CONNECTED_DEVICES).isArray()) {
+                devices = ListUtils.map(connectionJson.get(CONNECTED_DEVICES).asJsonList(), Json::asString);
             }
 
             String username = null;

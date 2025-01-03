@@ -66,7 +66,7 @@ public abstract class Connection implements IScannerSerializable {
             case SNMPv1 -> SNMPv1Connection.fromJson(connectionJson);
             case SNMPv2c -> SNMPv2cConnection.fromJson(connectionJson);
             case SNMPv3 -> SNMPv3Connection.fromJson(connectionJson);
-            case RemotePowershell -> RemotePowershellConnection.fromJson(connectionJson);
+            case REMOTE_POWERSHELL -> RemotePowershellConnection.fromJson(connectionJson);
             case HTTP -> HttpConnection.fromJson(connectionJson, connectionProtocol);
             case SSH -> SshConnection.fromJson(connectionJson);
             default -> null;
@@ -91,7 +91,7 @@ public abstract class Connection implements IScannerSerializable {
             case SNMPv1 -> SNMPv1Connection.fromJson(connectionJson);
             case SNMPv2c -> SNMPv2cConnection.fromJson(connectionJson);
             case SNMPv3 -> SNMPv3Connection.fromJson(connectionJson);
-            case RemotePowershell -> RemotePowershellConnection.fromHMIJson(connectionJson);
+            case REMOTE_POWERSHELL -> RemotePowershellConnection.fromHMIJson(connectionJson);
             case HTTP -> HttpConnection.fromJson(connectionJson, connectionProtocol);
             case SSH -> SshConnection.fromJson(connectionJson);
             default -> null;
@@ -107,7 +107,7 @@ public abstract class Connection implements IScannerSerializable {
             case SNMPv1 -> SNMPv1Connection.fromScannerJson(connectionJson);
             case SNMPv2c -> SNMPv2cConnection.fromScannerJson(connectionJson);
             case SNMPv3 -> SNMPv3Connection.fromScannerJson(connectionJson);
-            case RemotePowershell -> RemotePowershellConnection.fromScannerJson(connectionJson);
+            case REMOTE_POWERSHELL -> RemotePowershellConnection.fromScannerJson(connectionJson);
             case HTTP -> HttpConnection.fromScannerJson(connectionJson);
             case SSH -> SshConnection.fromScannerJson(connectionJson);
             default -> null;

@@ -951,7 +951,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             port = ((SNMPv3Connection) connection).getPort();
         } else if (connection.getProtocol() == SSH) {
             port = ((SshConnection) connection).getPort();
-        } else if (connection.getProtocol() == RemotePowershell) {
+        } else if (connection.getProtocol() == REMOTE_POWERSHELL) {
             port = ((RemotePowershellConnection) connection).getPort();
         } else if (connection.getProtocol() == HTTP) {
             port = Integer.parseInt(((HttpConnection) connection).getPort());
@@ -1008,7 +1008,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
         if (connection.getProtocol() == SNMPv3) {
             requestContents.set(USERNAME, ((SNMPv3Connection) connection).getUsername());
-        } else if (connection.getProtocol() == RemotePowershell) {
+        } else if (connection.getProtocol() == REMOTE_POWERSHELL) {
             requestContents.set(USERNAME, ((RemotePowershellConnection) connection).getUsername());
         } else if (connection.getProtocol() == SSH) {
             requestContents.set(USERNAME, ((SshConnection) connection).getUsername());
@@ -1096,7 +1096,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         );
         if (connection.getProtocol() == SNMPv3) {
             requestContents.set(USERNAME, ((SNMPv3Connection) connection).getUsername());
-        } else if (connection.getProtocol() == RemotePowershell) {
+        } else if (connection.getProtocol() == REMOTE_POWERSHELL) {
             requestContents.set(USERNAME, ((RemotePowershellConnection) connection).getUsername());
         }
         request.body(new StringRequestContent(JSON_FORMAT, requestContents.toString()));

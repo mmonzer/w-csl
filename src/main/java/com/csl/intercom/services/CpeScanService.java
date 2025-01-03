@@ -154,9 +154,9 @@ public class CpeScanService {
         for (ScanEntity scan : scanEntities.values()) {
             Json status = getScanStatus(scan.getScanId());
             String statusString = getStatusStringFromStatus(status);
-            if (ScanConstants.finishedScanStatuses.contains(statusString)) {
+            if (ScanConstants.getFinishedScanStatuses().contains(statusString)) {
                 //region Set correct status for the scan
-                if (ScanConstants.successScanStatuses.contains(statusString)) {
+                if (ScanConstants.getSuccessScanStatuses().contains(statusString)) {
                     scan.setFinishedSuccess();
                 } else if ("DISCARDED".equals(statusString)) {
                     scan.setDiscarded();

@@ -4,7 +4,7 @@ public enum StaticConnectionProtocol {
     SNMPv1("SNMPv1", "SNMPV1"),
     SNMPv2c("SNMPv2c", "SNMPV2c"),
     SNMPv3("SNMPv3", "SNMPV3"),
-    RemotePowershell("Powershell", "POWERSHELL"),
+    REMOTE_POWERSHELL("Powershell", "POWERSHELL"),
     HTTP("HTTP", "HTTP"),
     SSH("SSH", "SSH"),
     ;

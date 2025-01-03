@@ -11,6 +11,8 @@ import java.time.OffsetDateTime;
  * Class containing static functions for various tasks related to CSL-Scan.
  */
 public class ScanUtils {
+    private ScanUtils(){}
+
     /**
      * Translate local date to UTC, as used by CSL-Scan.
      *
@@ -29,7 +31,6 @@ public class ScanUtils {
      */
     public static OffsetDateTime scanTimeToLocal(OffsetDateTime scanDateTime) {
         return scanDateTime;
-//        return scanDateTime.atOffset(ZoneOffset.UTC);
     }
 
     /**

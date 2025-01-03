@@ -11,36 +11,33 @@ import java.util.List;
 import static com.csl.autocrypt.enums.AutocryptConstants.LIST_DELIMITER;
 
 public class JsonUtil {
+    private JsonUtil() {}
+
     public static String getStringFromJson(Json j, String propName, String defaultValue) {
-        //Json v=j.get(propName);
         Json v = findChild(j, propName);
         if (v == null) return defaultValue;
         return v.asString();
     }
 
     public static Boolean getBooleanFromJson(Json j, String propName, Boolean defaultValue) {
-        //Json v=j.get(propName);
         Json v = findChild(j, propName);
         if (v == null) return defaultValue;
         return v.asBoolean();
     }
 
     public static Long getLongFromJson(Json j, String propName, long defaultValue) {
-        //Json v=j.get(propName);
         Json v = findChild(j, propName);
         if (v == null) return defaultValue;
         return v.asLong();
     }
 
     public static Integer getIntFromJson(Json j, String propName, Integer defaultValue) {
-        //Json v=j.get(propName);
         Json v = findChild(j, propName);
         if (v == null) return defaultValue;
         return v.asInteger();
     }
 
     public static Double getDoubleFromJson(Json j, String propName, Double defaultValue) {
-        //Json v=j.get(propName);
         Json v = findChild(j, propName);
         if (v == null) return defaultValue;
         return v.asDouble();
@@ -117,9 +114,9 @@ public class JsonUtil {
      * @param objDest   the json object destination where the new value is insert (overwritten if already exists)
      * @param key       the key inside the json obj
      */
-    public static String transferValueString(Json objOrigin, Json objDest, String key) throws IllegalArgumentException {
+    public static String transferValueString(@Nullable Json objOrigin, Json objDest, @NotNull String key) throws IllegalArgumentException {
         String value = getValueString(objOrigin, key);
-        if (key !=null && objOrigin.has(key)) {
+        if (objOrigin!=null && objOrigin.has(key)) {
             objOrigin.delAt(key);
         }
         objDest.set(key, value);
@@ -193,7 +190,7 @@ public class JsonUtil {
             String str = obj.get(key).asString();
             obj.delAt(key);
             return str;
-        } else if (obj.has(key) && obj.get(key).isNull()) {
+        } else if (obj != null && obj.has(key) && obj.get(key).isNull()) {
             obj.delAt(key);
             return null;
         } else {
@@ -207,12 +204,12 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static Boolean extractValueBooleanOrNull(Json obj, String key) {
+    public static @Nullable Boolean extractValueBooleanOrNull(Json obj, String key) {
         if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isBoolean()) {
             Boolean bool = obj.get(key).asBoolean();
             obj.delAt(key);
             return bool;
-        } else if (obj.has(key) && obj.get(key).isNull()) {
+        } else if (obj!=null && obj.has(key) && obj.get(key).isNull()) {
             obj.delAt(key);
         }
         return null;
@@ -235,7 +232,7 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static String getValueStringOrDefault(@NotNull Json obj, @Nullable String key, @NotNull String defaultValue) {
+    public static String getValueStringOrDefault(@NotNull Json obj, @Nullable String key, @Nullable String defaultValue) {
         if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isString()) {
             return obj.get(key).asString();
         } else {
@@ -311,7 +308,7 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static Integer getValueIntegerOrDefault(@NotNull Json obj, @Nullable String key, @NotNull Integer defaultValue) {
+    public static Integer getValueIntegerOrDefault(@NotNull Json obj, @Nullable String key, @Nullable Integer defaultValue) {
         if (hasExistingKeyAndNotNull(obj, key) && obj.get(key).isNumber()) {
             return obj.get(key).asInteger();
         } else {
@@ -325,7 +322,7 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static Boolean getValueBooleanOrNull(@NotNull Json obj, @Nullable String key) {
+    public static @Nullable Boolean getValueBooleanOrNull(@NotNull Json obj, @Nullable String key) {
         if (hasExistingKeyAndNotNull(obj, key) && obj.get(key).isBoolean()) {
             return obj.get(key).asBoolean();
         } else {
@@ -339,7 +336,7 @@ public class JsonUtil {
      * @param obj the json object to check
      * @param key the key inside the json obj
      */
-    public static List<String> getValueListStrOrNull(Json obj, String key) {
+    public static @Nullable List<String> getValueListStrOrNull(Json obj, String key) {
         if (hasExistingKeyAndNotNull(obj, key)  && obj.get(key).isArray()) {
             List<String> list = new ArrayList<>();
             for (Json e : obj.get(key).asJsonList()) {
@@ -423,23 +420,6 @@ public class JsonUtil {
         }
     }
 
-    public static String jsonListToString(Json array, String delimiter) {
-        if (array == null) {
-            return null;
-        }
-        if (array.isArray()) {
-            if (array.asJsonList().isEmpty()) {
-                return "";
-            }
-            String str = "";
-            for (Json e : array.asJsonList()) {
-                str += ',' + (e.isString() ? e.asString() : e.toString());
-            }
-            return str.substring(1);
-        }
-        return array.toString();
-    }
-
     public static void jsonListToStringListAtJson(Json obj, String key) {
         jsonListToStringListAtJson(obj, key, LIST_DELIMITER);
     }
@@ -447,14 +427,14 @@ public class JsonUtil {
     public static void jsonListToStringListAtJson(Json obj, String key, String delimiter) {
         if (obj != null && obj.has(key) && !obj.get(key).isNull() && obj.get(key).isArray()) {
             List<Json> array = obj.get(key).asJsonList();
-            String str = "";
+            StringBuilder str = new StringBuilder();
             if (!array.isEmpty()) {
                 for (Json e : array) {
-                    str += delimiter + (e.isString() ? e.asString() : e.toString());
+                    str.append(delimiter).append(e.isString() ? e.asString() : e.toString());
                 }
                 obj.set(key, str.substring(1));
             } else {
-                obj.set(key, str);
+                obj.set(key, str.toString());
             }
         }
     }

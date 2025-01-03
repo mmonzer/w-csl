@@ -15,6 +15,11 @@ public enum ExportQueryStatus {
     private final String name;
 
     ExportQueryStatus(String name) {
-        this.name = name();
+        this.name = name;
+    }
+
+    @Override
+    public String toString(){
+        return name;
     }
 }

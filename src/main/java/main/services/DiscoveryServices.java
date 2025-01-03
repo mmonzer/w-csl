@@ -1473,8 +1473,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 Json.object(EXCEPTION, "Failed to start device discovery scan")
                         ).toJson();
                     } else {
-                        logger.info("Started device discovery (external) scan with uuid {}", scan.getUuid());
-                        return JsonApiResponse.result(Json.object("scan_uuid", scan.getUuid())).toJson();
+                        logger.info("Started device discovery (external) scan with uuid {}", scan.getScanUuid());
+                        return JsonApiResponse.result(Json.object("scan_uuid", scan.getScanUuid())).toJson();
                     }
                 },
                 new JsonCmdHelp().setDesc("Start a device discovery scan")

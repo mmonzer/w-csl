@@ -49,23 +49,23 @@ public class ExternalScansService {
         } catch (DbapiUnexpectedStatusCodeException e) {
             logger.error("Unexpected status code while creating external device scan event", e);
         }
-        externalScans.put(scan.getUuid(), scan);
+        externalScans.put(scan.getScanUuid(), scan);
         return scan;
     }
 
     public void createOrUpdateExternalScan(ExternalScan scan) {
-        if (externalScans.containsKey(scan.getUuid())) {
-            scan.setDbapiId(externalScans.get(scan.getUuid()).getDbapiId());
+        if (externalScans.containsKey(scan.getScanUuid())) {
+            scan.setDbapiId(externalScans.get(scan.getScanUuid()).getDbapiId());
         }
-        externalScans.put(scan.getUuid(), scan);
+        externalScans.put(scan.getScanUuid(), scan);
     }
 
     private void purgeOldScans() {
-        externalScans.entrySet().removeIf(entry -> ExternalScan.Status.finishedStatuses.contains(entry.getValue().getStatus()));
+        externalScans.entrySet().removeIf(entry -> ExternalScan.Status.finishedStatuses.contains(entry.getValue().getScanStatus()));
         OffsetDateTime limitDate = OffsetDateTime.now().minusHours(6);
         externalScans.entrySet().stream().filter(entry -> entry.getValue().getCreatedAt().isBefore(limitDate)).forEach(entry -> {
             ExternalScan scan = entry.getValue();
-            scan.setStatus(ExternalScan.Status.FAILED);
+            scan.setScanStatus(ExternalScan.Status.FAILED);
 //          dbapiHandler.notifyExternalScanFinished(scan);
             externalScans.remove(entry.getKey());
         });

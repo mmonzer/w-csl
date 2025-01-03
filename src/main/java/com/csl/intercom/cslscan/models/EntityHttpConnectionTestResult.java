@@ -8,6 +8,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class EntityHttpConnectionTestResult implements IDbapiSerializable {
+
+    private static class Constants {
+        public static final String SUCCESS = "success";
+        public static final String DETAILS = "details";
+        public static final String DEVICE = "device";
+        public static final String CONNECTION = "connection";
+        public static final String CUSTOM_VARIABLES = "customVariables";
+    }
     private boolean success;
 
     private Details details = null;
@@ -18,18 +26,18 @@ public class EntityHttpConnectionTestResult implements IDbapiSerializable {
             detailsSerialized = details.serializeForDbapi();
         }
         return Json.object(
-                "success", success,
-                "details", detailsSerialized
+                Constants.SUCCESS, success,
+                Constants.DETAILS, detailsSerialized
         );
     }
 
     public static EntityHttpConnectionTestResult fromScannerJson(Json json) {
         EntityHttpConnectionTestResult entityHttpConnectionTestResult = new EntityHttpConnectionTestResult();
-        if (json.has("success") && json.get("success").isBoolean()) {
-            entityHttpConnectionTestResult.success = json.get("success").asBoolean();
+        if (json.has(Constants.SUCCESS) && json.get(Constants.SUCCESS).isBoolean()) {
+            entityHttpConnectionTestResult.success = json.get(Constants.SUCCESS).asBoolean();
         }
-        if (json.has("details") && json.get("details").isObject()) {
-            entityHttpConnectionTestResult.details = Details.fromScannerJson(json.get("details"));
+        if (json.has(Constants.DETAILS) && json.get(Constants.DETAILS).isObject()) {
+            entityHttpConnectionTestResult.details = Details.fromScannerJson(json.get(Constants.DETAILS));
         }
         return entityHttpConnectionTestResult;
     }
@@ -53,12 +61,12 @@ public class EntityHttpConnectionTestResult implements IDbapiSerializable {
             if (this.deviceVariables != null) {
                 Json deviceVariablesSerialized = Json.object();
                 this.deviceVariables.forEach((name, variable) -> deviceVariablesSerialized.set(name, variable.serializeForDbapi()));
-                variablesSerialized.set("device", deviceVariablesSerialized);
+                variablesSerialized.set(Constants.DEVICE, deviceVariablesSerialized);
             }
             if (this.connectionVariables != null) {
                 Json connectionVariablesSerialized = Json.object();
                 this.connectionVariables.forEach((name, variable) -> connectionVariablesSerialized.set(name, variable.serializeForDbapi()));
-                variablesSerialized.set("connection", connectionVariablesSerialized);
+                variablesSerialized.set(Constants.CONNECTION, connectionVariablesSerialized);
             }
             if (this.customVariables != null) {
                 Json customVariablesSerialized = Json.object();
@@ -123,16 +131,16 @@ public class EntityHttpConnectionTestResult implements IDbapiSerializable {
             }
             if (json.has(EntityHttpConnectionTestResultDetailsField.VARIABLES.scanName()) && json.get(EntityHttpConnectionTestResultDetailsField.VARIABLES.scanName()).isObject()) {
                 Json variables = json.get(EntityHttpConnectionTestResultDetailsField.VARIABLES.scanName());
-                if (variables.has("device") && variables.get("device").isObject()) {
-                    details.deviceVariables = variables.get("device").asJsonMap().entrySet().stream()
+                if (variables.has(Constants.DEVICE) && variables.get(Constants.DEVICE).isObject()) {
+                    details.deviceVariables = variables.get(Constants.DEVICE).asJsonMap().entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey, e -> HttpApiVariable.fromScannerJson(e.getValue())));
                 }
-                if (variables.has("connection") && variables.get("connection").isObject()) {
-                    details.connectionVariables = variables.get("connection").asJsonMap().entrySet().stream()
+                if (variables.has(Constants.CONNECTION) && variables.get(Constants.CONNECTION).isObject()) {
+                    details.connectionVariables = variables.get(Constants.CONNECTION).asJsonMap().entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey, e -> HttpApiVariable.fromScannerJson(e.getValue())));
                 }
-                if (variables.has("customVariables") && variables.get("customVariables").isObject()) {
-                    details.customVariables = variables.get("customVariables").asJsonMap().entrySet().stream()
+                if (variables.has(Constants.CUSTOM_VARIABLES) && variables.get(Constants.CUSTOM_VARIABLES).isObject()) {
+                    details.customVariables = variables.get(Constants.CUSTOM_VARIABLES).asJsonMap().entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey, e -> HttpApiVariable.fromScannerJson(e.getValue())));
                 }
             }

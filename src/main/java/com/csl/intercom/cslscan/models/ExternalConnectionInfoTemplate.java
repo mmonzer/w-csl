@@ -131,6 +131,7 @@ public class ExternalConnectionInfoTemplate implements IDbapiSerializable {
             this.name = name;
         }
 
+        @Override
         public String toString() {
             return name;
         }

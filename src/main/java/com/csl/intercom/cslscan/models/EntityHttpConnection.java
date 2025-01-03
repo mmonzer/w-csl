@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 public class EntityHttpConnection implements IScannerSerializable, IDbapiSerializable {
     private static final Logger logger = LoggerFactory.getLogger(EntityHttpConnection.class);
+    public static final String VENDORS_STR = "vendors";
     private String uuid;
     private String name;
     private Map<String, HttpApiVariable> variables;
@@ -30,7 +31,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 .collect(Json::array, Json::add, Json::add);
 
         Json variablesSerialized = Json.object();
-        this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForScanner()));
+        this.variables.forEach((variableName, variable) -> variablesSerialized.set(variableName, variable.serializeForScanner()));
 
         Json inputsSerialized = Json.array();
         if (this.inputs != null) {
@@ -44,7 +45,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 EntityHttpConnectionField.VARIABLES.scanName(), variablesSerialized,
                 EntityHttpConnectionField.INPUTS.scanName(), inputsSerialized,
                 EntityHttpConnectionField.STAGES.scanName(), stagesSerialized,
-                "vendors", vendors // TODO: USE ENUM FOR VENDORS
+                VENDORS_STR, vendors // TODO: USE ENUM FOR VENDORS
         );
     }
 
@@ -54,7 +55,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 .collect(Json::array, Json::add, Json::add);
 
         Json variablesSerialized = Json.object();
-        this.variables.forEach((name, variable) -> variablesSerialized.set(name, variable.serializeForDbapi()));
+        this.variables.forEach((variableName, variable) -> variablesSerialized.set(variableName, variable.serializeForDbapi()));
 
         Json inputsSerialized = Json.array();
         if (this.inputs != null) {
@@ -67,7 +68,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 EntityHttpConnectionField.VARIABLES.dbapiName(), variablesSerialized,
                 EntityHttpConnectionField.INPUTS.dbapiName(), inputsSerialized,
                 EntityHttpConnectionField.STAGES.dbapiName(), stagesSerialized,
-                "vendors", vendors // TODO: USE ENUM FOR VENDORS
+                VENDORS_STR, vendors // TODO: USE ENUM FOR VENDORS
         );
     }
 
@@ -88,8 +89,8 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
             } else {
                 entityHttpConnection.variables = new HashMap<>();
             }
-            if (json.has("vendors") && json.get("vendors").isArray()) {
-                entityHttpConnection.vendors = ListUtils.map(json.get("vendors").asJsonList(), Json::asString);
+            if (json.has(VENDORS_STR) && json.get(VENDORS_STR).isArray()) {
+                entityHttpConnection.vendors = ListUtils.map(json.get(VENDORS_STR).asJsonList(), Json::asString);
             }
             return entityHttpConnection;
         } catch (Throwable e) {
@@ -115,8 +116,8 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
             } else {
                 entityHttpConnection.variables = new HashMap<>();
             }
-            if (json.has("vendors") && json.get("vendors").isArray()) {
-                entityHttpConnection.vendors = ListUtils.map(json.get("vendors").asJsonList(), Json::asString);
+            if (json.has(VENDORS_STR) && json.get(VENDORS_STR).isArray()) {
+                entityHttpConnection.vendors = ListUtils.map(json.get(VENDORS_STR).asJsonList(), Json::asString);
             }
             return entityHttpConnection;
         } catch (Throwable e) {

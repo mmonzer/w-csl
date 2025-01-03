@@ -47,6 +47,7 @@ public class ScanApiHandler extends ApiHandler {
     public static final String LIMIT = "limit";
     public static final String VALUE = "value";
     public static final String COULD_NOT_GET_THE_DISCOVERY_CRON_STATUS = "Could not get the discovery cron status: ";
+    public static final String FREQUENCY = "frequency";
     private final FileStorageService fileStorageService = new FileStorageService();
 
     public ScanApiHandler() {
@@ -882,8 +883,8 @@ public class ScanApiHandler extends ApiHandler {
                 return null;
             }
 
-            if (result.has("frequency") && result.get("frequency").isString()) {
-                frequencyOption = DynamicDiscoveryFrequencyOption.fromScanName(result.get("frequency").asString());
+            if (result.has(FREQUENCY) && result.get(FREQUENCY).isString()) {
+                frequencyOption = DynamicDiscoveryFrequencyOption.fromScanName(result.get(FREQUENCY).asString());
             }
             return Json.object("cron", cron, "frequencyOption", frequencyOption.dbapiName());
         } else {

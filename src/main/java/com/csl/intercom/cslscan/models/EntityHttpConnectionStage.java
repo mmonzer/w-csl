@@ -114,7 +114,7 @@ public class EntityHttpConnectionStage implements IScannerSerializable, IDbapiSe
     public static EntityHttpConnectionStage fromDbapiJson(Json json) {
         EntityHttpConnectionStage stage = new EntityHttpConnectionStage();
 
-        stage.uuid = JsonUtil.getValueStringOrDefault(json, EntityHttpConnectionStageField.UUID.dbapiName(), null);
+        stage.uuid = JsonUtil.getValueStringOrNull(json, EntityHttpConnectionStageField.UUID.dbapiName());
 
         stage.shouldDoARequest = JsonUtil.getValueBooleanOrDefault(json, EntityHttpConnectionStageField.SHOULD_DO_A_REQUEST.dbapiName(), true);
 

@@ -8,6 +8,14 @@ import com.ucsl.json.Json;
 import java.time.OffsetDateTime;
 
 public class ExternalDiscoveredDevice {
+    public static final String CREATED_AT = "createdAt";
+    public static final String UPDATED_AT = "updatedAt";
+    public static final String DELETED = "deleted";
+    public static final String CONNECTION_INFO_UUID = "connectionInfoUuid";
+    public static final String IP_ADDRESS = "ipAddress";
+    public static final String DEVICE_NAME = "name";
+    public static final String DISCOVERED_DEVICE_UUID = "uuid";
+    public static final String GENERATED_CONNECTION_FOR_DISCOVERED_DEVICE = "generatedConnectionForDiscoveredDevice";
     private String id;
     private String name;
     private String ipAddress;
@@ -44,53 +52,54 @@ public class ExternalDiscoveredDevice {
         boolean isDeleted;
         ExternalGeneratedConnectionRelatesDevice externalGeneratedConnectionRelatesDevice = null;
 
-        if (json.has("uuid") && json.get("uuid").isString()) {
-            id = json.get("uuid").asString();
+        if (json.has(DISCOVERED_DEVICE_UUID) && json.get(DISCOVERED_DEVICE_UUID).isString()) {
+            id = json.get(DISCOVERED_DEVICE_UUID).asString();
         } else {
             return null;
         }
 
-        if (json.has("name") && json.get("name").isString()) {
-            name = json.get("name").asString();
+        if (json.has(DEVICE_NAME) && json.get(DEVICE_NAME).isString()) {
+            name = json.get(DEVICE_NAME).asString();
         } else {
             return null;
         }
 
-        if (json.has("ipAddress") && json.get("ipAddress").isString()) {
-            ipAddress = json.get("ipAddress").asString();
+        if (json.has(IP_ADDRESS) && json.get(IP_ADDRESS).isString()) {
+            ipAddress = json.get(IP_ADDRESS).asString();
         } else {
             return null;
         }
 
-        if (json.has("connectionInfoUuid") && json.get("connectionInfoUuid").isString()) {
-            connectionInfoUuid = json.get("connectionInfoUuid").asString();
+        if (json.has(CONNECTION_INFO_UUID) && json.get(CONNECTION_INFO_UUID).isString()) {
+            connectionInfoUuid = json.get(CONNECTION_INFO_UUID).asString();
         } else {
             return null;
         }
 
-        if (json.has("createdAt") && json.get("createdAt").isString()) {
-            createdAt = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(json.get("createdAt").asString()));
+        if (json.has(CREATED_AT) && json.get(CREATED_AT).isString()) {
+            createdAt = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(json.get(CREATED_AT).asString()));
         } else {
             createdAt = null;
         }
 
-        if (json.has("updatedAt") && json.get("updatedAt").isString()) {
-            updatedAt = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(json.get("updatedAt").asString()));
+        if (json.has(UPDATED_AT) && json.get(UPDATED_AT).isString()) {
+            updatedAt = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(json.get(UPDATED_AT).asString()));
         } else {
             return null;
         }
 
-        if (json.has("deleted") && json.get("deleted").isBoolean()) {
-            isDeleted = json.get("deleted").asBoolean();
+        if (json.has(DELETED) && json.get(DELETED).isBoolean()) {
+            isDeleted = json.get(DELETED).asBoolean();
         } else {
             return null;
         }
-        if (json.has("generatedConnectionForDiscoveredDevice")) {
-            String username = json.get("generatedConnectionForDiscoveredDevice").get("username").getValue().toString();
-            String password = json.get("generatedConnectionForDiscoveredDevice").get("password").getValue().toString();
-            String connectionName = json.get("generatedConnectionForDiscoveredDevice").get("name").getValue().toString();
-            int connectionPortNumber = Integer.parseInt(json.get("generatedConnectionForDiscoveredDevice").get("portNumber").toString());
-            String vendor = json.get("generatedConnectionForDiscoveredDevice").get("vendor").getValue().toString();
+        if (json.has(GENERATED_CONNECTION_FOR_DISCOVERED_DEVICE)) {
+            Json generatedConnectionForDiscoveredDevice = json.get(GENERATED_CONNECTION_FOR_DISCOVERED_DEVICE);
+            String username = generatedConnectionForDiscoveredDevice.get("username").getValue().toString();
+            String password = generatedConnectionForDiscoveredDevice.get("password").getValue().toString();
+            String connectionName = generatedConnectionForDiscoveredDevice.get(DEVICE_NAME).getValue().toString();
+            int connectionPortNumber = Integer.parseInt(generatedConnectionForDiscoveredDevice.get("portNumber").toString());
+            String vendor = generatedConnectionForDiscoveredDevice.get("vendor").getValue().toString();
             externalGeneratedConnectionRelatesDevice = new ExternalGeneratedConnectionRelatesDevice();
             externalGeneratedConnectionRelatesDevice.setName(connectionName);
             externalGeneratedConnectionRelatesDevice.setPassword(password);
@@ -104,19 +113,19 @@ public class ExternalDiscoveredDevice {
 
     public Json serializeForDbapi() {
         Json result = Json.object(
-                "uuid", id,
-                "name", name,
-                "ipAddress", ipAddress,
-                "connectionInfoUuid", connectionInfoUuid,
-                "deleted", isDeleted,
-                "generatedConnectionForDiscoveredDevice", externalGeneratedConnectionRelatesDevice.serializeForDbapi()
+                DISCOVERED_DEVICE_UUID, id,
+                DEVICE_NAME, name,
+                IP_ADDRESS, ipAddress,
+                CONNECTION_INFO_UUID, connectionInfoUuid,
+                DELETED, isDeleted,
+                GENERATED_CONNECTION_FOR_DISCOVERED_DEVICE, externalGeneratedConnectionRelatesDevice.serializeForDbapi()
         );
         if (createdAt != null) {
-            result.set("createdAt", DbapiUtilsForCSLScan.localDateToDbapi(createdAt).toString());
+            result.set(CREATED_AT, DbapiUtilsForCSLScan.localDateToDbapi(createdAt).toString());
         }
 
         if (updatedAt != null) {
-            result.set("updatedAt", DbapiUtilsForCSLScan.localDateToDbapi(updatedAt).toString());
+            result.set(UPDATED_AT, DbapiUtilsForCSLScan.localDateToDbapi(updatedAt).toString());
         }
 
         return result;

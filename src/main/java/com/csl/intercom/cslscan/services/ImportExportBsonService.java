@@ -28,10 +28,10 @@ import java.util.concurrent.*;
  * Should be able to handle multiple imports at the same time *via* scheduled tasks.
  */
 public class ImportExportBsonService {
-    static private final Logger logger = LoggerFactory.getLogger(ImportExportBsonService.class);
-    static private ImportExportBsonService instance = null;
-    private Map<Integer, ImportQuery> importTasks = new ConcurrentHashMap<>();
-    private Map<Integer, ExportQuery> exportTasks = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(ImportExportBsonService.class);
+    private static ImportExportBsonService instance = null;
+    private final Map<Integer, ImportQuery> importTasks = new ConcurrentHashMap<>();
+    private final Map<Integer, ExportQuery> exportTasks = new ConcurrentHashMap<>();
     private DbapiHandlerForCSLScan dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
     private FileStorageService fileStorageService = null;
@@ -261,9 +261,9 @@ public class ImportExportBsonService {
      * @return The ID of the import task, or null if the UUID is not found.
      */
     private Integer getImportTaskByUuid(UUID uuid) {
-        for (int id : importTasks.keySet()) {
-            if (importTasks.get(id).getId().equals(uuid)) {
-                return id;
+        for (Map.Entry<Integer, ImportQuery> entry : importTasks.entrySet()) {
+            if (entry.getValue().getId().equals(uuid)) {
+                return entry.getKey();
             }
         }
         return null;

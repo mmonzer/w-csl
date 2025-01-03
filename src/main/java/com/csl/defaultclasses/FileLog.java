@@ -23,7 +23,7 @@ public class FileLog implements Runnable, IFileLog {
     private static final Logger logger = LoggerFactory.getLogger(FileLog.class);
     private boolean running = false;
 
-    public static int DEFAULT_MAX_SIZE = 10000000;
+    public static final int DEFAULT_MAX_SIZE = 10000000;
     private BufferedWriter writerLogFile = null;
     String prefixFileName = "";
     String ext = "txt";

@@ -65,7 +65,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      */
     public CSLMqttBrokerHandler(Config config) {
         Config.Client clientConfig = config.client;
-        brokerUri = clientConfig.getUseSsl() ? "wss://" : "ws://";
+        brokerUri = clientConfig.isUseSsl() ? "wss://" : "ws://";
         brokerUri += clientConfig.getIpServerRemote();
         brokerUri += "/mqtt";
         // The API key to include in each message

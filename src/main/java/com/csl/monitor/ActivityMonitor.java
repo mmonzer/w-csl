@@ -148,19 +148,14 @@ public class ActivityMonitor implements IStatusProvider {
 
 
 	public void sendTickFromIDS(Json jj) {
-
-		//System.out.println("send tick to hmi:"+jj);
 		Json j=Json.object();
 		j.set("line", jj.toString());
 		j.set("type", "tick_ids");
-//			CSLWebSocketForConsole.broadcastMessageJson("log", j);
 		CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j );
 
 	}
 
 	public void processEvent(Json jj) {
-
-
 		if (showTicks) System.out.println("Process tick:"+jj);
 		addTick(jj);
 	}
@@ -168,9 +163,7 @@ public class ActivityMonitor implements IStatusProvider {
 
 	// build tic json
 	synchronized Json tic2Json() {
-
 		Json tick = Json.object();
-		// j.set("source", p.getSource().toString());
 		tick.set("timestamp", System.currentTimeMillis());
 		tick.set("type", "TIC");
 
@@ -183,7 +176,6 @@ public class ActivityMonitor implements IStatusProvider {
 
 		Json jtaps=Json.array();
 		for (Map.Entry<String, Json> entry : taps.entrySet()) {
-			//   String key = entry.getKey();
 			Json value = entry.getValue();
 			jtaps.add(value);
 		}
@@ -201,9 +193,7 @@ public class ActivityMonitor implements IStatusProvider {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 		Runnable sendTic = () -> {
-            //System.out.println("TIC");
             Json tick = tic2Json();
-
             sendTickFromIDS(tick);
 
         };

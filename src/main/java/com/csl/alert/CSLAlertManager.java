@@ -80,13 +80,13 @@ public class CSLAlertManager {
             // e.printStackTrace();
         }
 
-        boolean logToFile = config.getLogToFile();
+        boolean logToFile = config.isLogToFile();
         if (logToFile) {
             initFileLog();
         }
 
         this.durationOfAlert = config.getAlertDuration();
-        this.doNotResendSameAlert = config.getDoNotResentSameAlert();
+        this.doNotResendSameAlert = config.isDoNotResentSameAlert();
     }
 
     private void initFileLog() {

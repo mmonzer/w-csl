@@ -95,7 +95,7 @@ public class CSLFlowManager {
         Config.IdsConf config = Config.INSTANCE.idsConf;
 
 
-        boolean showTicks = config.getShowTicks();
+        boolean showTicks = config.isShowTicks();
 
         activityMonitor.setShowTicks(showTicks);
 

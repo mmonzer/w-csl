@@ -79,7 +79,7 @@ public class CSLHttpServerJetty {
      * @param config The server configuration object.
      */
     public void initServer(Config.Server config) {
-        boolean isEnabled = config.getOn();
+        boolean isEnabled = config.isOn();
         if (!isEnabled) return;
 
         isRemote = true;
@@ -359,19 +359,19 @@ public class CSLHttpServerJetty {
         if (interval <= 0) return;
 
         Runnable refreshTask = () -> {
-            if (Config.INSTANCE.server.getSendAlerts())
+            if (Config.INSTANCE.server.isSendAlerts())
                 // Refresh the CSLWebSocketForAlert
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT);
-            if (Config.INSTANCE.server.getSendConsoleOutput())
+            if (Config.INSTANCE.server.isSendConsoleOutput())
                 // Refresh the CSLWebSocketForConsole
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE);
-            if (Config.INSTANCE.server.getVarsCommands())
+            if (Config.INSTANCE.server.isVarsCommands())
                 // Refresh the CSLWebSocketForVariables
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES);
-            if (Config.INSTANCE.server.getDatabaseCommands())
+            if (Config.INSTANCE.server.isDatabaseCommands())
                 // Refresh the CSLWebSocketForDatabase
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE);
-            if (Config.INSTANCE.server.getJcmdCommands())
+            if (Config.INSTANCE.server.isJcmdCommands())
                 // Refresh the CSLWebSocketForJcmd
                 CSLWebSocket.refresh(CSLWebSocketForJcmd.WEB_SOCKET_CMD);
         };

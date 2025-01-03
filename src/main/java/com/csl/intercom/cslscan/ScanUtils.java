@@ -78,14 +78,9 @@ public class ScanUtils {
     }
 
     public static String generateScanDiscoveryUrlFromConfig(Config.Scan config) {
-//        String scanManagerProtocol = JsonUtil.getStringFromJson(discoveryConfig, "manager_protocol", "http");
-        String scanManagerProtocol = config.getManagerProtocol();
-//        String scanManagerIp = JsonUtil.getStringFromJson(discoveryConfig, "manager_ip", "localhost");
         String scanManagerIp = config.getManagerIp();
-//        int scanManagerPort = JsonUtil.getIntFromJson(discoveryConfig, "manager_port", 8010);
         int scanManagerPort = config.getManagerPort();
-//        String websocketProtocol = "https".equals(scanManagerProtocol) ? "wss" : "ws";
-        String websocketProtocol = config.getUseSSL() ? "wss" : "ws";
+        String websocketProtocol = config.isUseSsl() ? "wss" : "ws";
 
         return  websocketProtocol + "://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
     }

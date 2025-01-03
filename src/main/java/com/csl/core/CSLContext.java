@@ -201,13 +201,8 @@ public class CSLContext {
      *
      * @param isServer Indicates if the context should operate as a server (true), client (false), or uninitialized (null).
      */
-    public void postInit(Boolean isServer) {
+    public void postInit(boolean isServer) {
         this.isServer = isServer;
-
-        if (isServer == null) {
-            logger.error("CSLContext not initialized as server or client");
-            return;
-        }
 
         if (isServer) {
             getCslHttpServer().initServer(Config.INSTANCE.server);
@@ -221,11 +216,6 @@ public class CSLContext {
      * Starts the HTTP and UDP servers.
      */
     public void startServers() {
-        if (isServer == null) {
-            logger.error("CSLContext not initialized as server or client, cannot start servers");
-            return;
-        }
-
         if (isServer) {
             getCslHttpServer().start();
         } else {

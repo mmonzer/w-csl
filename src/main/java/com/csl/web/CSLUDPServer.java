@@ -64,7 +64,7 @@ public class CSLUDPServer {
     public void initUDPServer(Config.UdpServerConf config) {
         if (config == null) return;
 
-        boolean on = config.getOn();
+        boolean on = config.isOn();
         if (!on) return;
 
 
@@ -73,7 +73,7 @@ public class CSLUDPServer {
             System.exit(0);
         }
 
-        if (!config.getOn()) return;
+        if (!config.isOn()) return;
 
         initialized = true;
 

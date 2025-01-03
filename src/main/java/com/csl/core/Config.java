@@ -82,10 +82,10 @@ public class Config {
         String ipServerRemote;
         Integer portServerRemote;
         String serverRemoteUrlPrefix;
-        Boolean forceHostNameResolution;
+        boolean forceHostNameResolution;
         String apiKey;
-        Boolean useSsl;
-        Boolean launchWebApiServer;
+        boolean useSsl;
+        boolean launchWebApiServer;
         Integer webApiServerPort;
         // endregion define variables
 
@@ -108,21 +108,21 @@ public class Config {
         String managerIp;
         Integer managerPort;
         String managerProtocol;
-        Boolean useSSL;
+        boolean useSsl;
         // endregion define variables
 
         public Scan(Json config) {
             managerIp = config.get("manager_ip").asString();
             managerPort = config.get("manager_port").asInteger();
             managerProtocol = config.get("manager_protocol").asString();
-            useSSL = config.get("use_ssl").asBoolean();
+            useSsl = config.get("use_ssl").asBoolean();
         }
     }
 
     @Getter
     public static class Status {
         // region define variables
-        Boolean sendNotifications;
+        boolean sendNotifications;
         Integer notificationsPeriod;
         // endregion define variables
 
@@ -151,15 +151,15 @@ public class Config {
     public static class Server {
         // region define variables
         @Setter
-        Boolean on;
+        boolean on;
         @Setter
-        Boolean debug;
+        boolean debug;
         Integer webserverPort;
-        Boolean varsCommands;
-        Boolean jcmdCommands;
-        Boolean databaseCommands;
-        Boolean sendAlerts;
-        Boolean sendConsoleOutput;
+        boolean varsCommands;
+        boolean jcmdCommands;
+        boolean databaseCommands;
+        boolean sendAlerts;
+        boolean sendConsoleOutput;
         Integer websocketTimeout;
         // endregion define variables
 
@@ -180,7 +180,7 @@ public class Config {
     public static class UdpServerConf {
         // region define variables
         @Setter
-        Boolean on;
+        boolean on;
         @Setter
         String ip;
         @Setter
@@ -202,8 +202,8 @@ public class Config {
     public static class IdsConf {
         // region define variables
         @Setter
-        Boolean on;
-        Boolean showTicks;
+        boolean on;
+        boolean showTicks;
         Integer historyLength;
         // endregion define variables
 
@@ -223,11 +223,11 @@ public class Config {
         Integer port;
         @Setter
         String name;
-        Boolean logToFile;
+        boolean logToFile;
         String logDir;
         String prefixFilename;
         Integer maxSizeOfLogFiles;
-        Boolean doNotResentSameAlert;
+        boolean doNotResentSameAlert;
         Integer alertDuration;
         // endregion define variables
 

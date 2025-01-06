@@ -178,108 +178,152 @@ public class ScanWebSocketHandler {
         boolean newNotificationConnection = false;
         logger.trace("connectStompSessionsIfNecessary : {}", stompNotificationChannel);
         if (!StompChannel.isConnected(stompNotificationChannel)) {
-            try {
-                logger.trace("Connecting to notifications websocket ...");
-                stompNotificationChannel = subscribeToNotifications();
-                logger.trace("stompNotificationSession connected : {}", stompNotificationChannel.getSession());
-                newNotificationConnection = true;
-                reconnect(stompNotificationChannel.getSession(), "notifications");
-            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
-                if (disconnect(e, "notifications")) {
-                    logger.warn("Error while connecting to notifications websocket, retrying");
-                    logger.trace("Error while connecting to notifications websocket, retrying", e);
-                }
-                if (stompNotificationChannel != null) {
-                    stompNotificationChannel.setSession(null);
-                }
-            } catch (Throwable e) {
-                disconnect(new Exception(e), REQUEST);
-                logger.error("Unexpected exception at stompNotificationSession", new Exception(e));
-                if (stompNotificationChannel != null) {
-                    stompNotificationChannel.setSession(null);
-                }
-            }
+            newNotificationConnection = reconnectToNotificationsChannel(newNotificationConnection);
         }
 
         boolean newRequestConnection = false;
         if (!StompChannel.isConnected(stompRequestChannel)) {
-            try {
-                logger.trace("Connecting to requests websocket ...");
-                stompRequestChannel = connectToRequestsWebSocket();
-                logger.trace("stompRequestsSession connected : {}", stompRequestChannel);
-                newRequestConnection = true;
-                reconnect(stompRequestChannel.getSession(), REQUEST);
-            } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
-                if (disconnect(e, REQUEST)) {
-                    StompChannel.setSessionNull(stompRequestChannel);
-                }
-                StompChannel.setSessionNull(stompRequestChannel);
-            } catch (Throwable e) {
-                disconnect(new Exception(e), REQUEST);
-                logger.error("Unexpected exception at stompRequestsSession", new Exception(e));
-                StompChannel.setSessionNull(stompRequestChannel);
-            }
+            newRequestConnection = reconnectToRequestChannel(newRequestConnection);
         }
 
         if (!StompChannel.isConnected(stompImportNotificationChannel)) {
-            try {
-                logger.trace("stompImportNotificationSession connecting ...");
-                stompImportNotificationChannel = subscribeToImportNotifications();
-                logger.trace("stompImportNotificationSession connected : {}", stompImportNotificationChannel);
-                reconnect(stompImportNotificationChannel.getSession(), IMPORT_NOTIFICATIONS);
-            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
-                if (disconnect(e, IMPORT_NOTIFICATIONS)) {
-                    logger.warn("Error while connecting to import notifications websocket, retrying");
-                    logger.trace("Error while connecting to import notifications websocket, retrying", e);
-                }
-                StompChannel.setSessionNull(stompImportNotificationChannel);
-            } catch (Throwable e) {
-                disconnect(new Exception(e), IMPORT_NOTIFICATIONS);
-                logger.error("Unexpected exception at stompImportNotificationSession", new Exception(e));
-                StompChannel.setSessionNull(stompImportNotificationChannel);
-            }
+            reconnectToImportNotificationChannel();
         }
 
         if (!StompChannel.isConnected(stompExportNotificationChannel)) {
-            try {
-                logger.trace("stompExportNotificationSession connecting ...");
-                stompExportNotificationChannel = subscribeToExportNotifications();
-                logger.trace("stompExportNotificationSession connected : {}", stompExportNotificationChannel);
-                reconnect(stompExportNotificationChannel.getSession(), EXPORT_NOTIFICATIONS);
-            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
-                if (disconnect(e, EXPORT_NOTIFICATIONS)) {
-                    logger.warn("Error while connecting to export notifications websocket, retrying");
-                    logger.trace("Error while connecting to export notifications websocket, retrying", e);
-                }
-                StompChannel.setSessionNull(stompExportNotificationChannel);
-            } catch (Throwable e) {
-                disconnect(new Exception(e), EXPORT_NOTIFICATIONS);
-                logger.error("Unexpected exception at stompExportNotificationSession", new Exception(e));
-                StompChannel.setSessionNull(stompExportNotificationChannel);
-            }
+            reconnectToExportNotificationChannel();
         }
 
         boolean newExternalScanConnection = false;
-        if (StompChannel.isConnected(stompExternalScanChannel)) {
-            try {
-                logger.trace("Connecting to external scans notifications websocket");
-                stompExternalScanChannel = connectToExternalScansNotificationsWebSocket();
-                newExternalScanConnection = true;
-                logger.trace("stompExternalScanSession connected : {}", stompExternalScanChannel);
-                reconnect(stompExternalScanChannel.getSession(), EXTERNAL_SCANS);
-            } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
-                disconnect(e, EXTERNAL_SCANS);
-                StompChannel.setSessionNull(stompExternalScanChannel);
-            } catch (Throwable e) {
-                disconnect(new Exception(e), EXTERNAL_SCANS);
-                logger.error("Unexpected exception at stompExternalScanSession", new Exception(e));
-                StompChannel.setSessionNull(stompExternalScanChannel);
-            }
+        if (!StompChannel.isConnected(stompExternalScanChannel)) {
+            newExternalScanConnection = reconnectToExternalScanChannel(newExternalScanConnection);
         }
 
         if (newNotificationConnection || newRequestConnection || newExternalScanConnection) {
             externalScansService.handleConnectionEstablishedWithScanner();
         }
+    }
+
+    /**
+     * Try to reconnect to the external scan channel for stomp notifications
+     * @param newExternalScanConnection whether it's a new connection
+     * @return whether the connection was successful
+     */
+    private boolean reconnectToExternalScanChannel(boolean newExternalScanConnection) {
+        try {
+            logger.trace("Connecting to external scans notifications websocket");
+            stompExternalScanChannel = connectToExternalScansNotificationsWebSocket();
+            newExternalScanConnection = true;
+            logger.trace("stompExternalScanSession connected : {}", stompExternalScanChannel);
+            reconnect(stompExternalScanChannel.getSession(), EXTERNAL_SCANS);
+        } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
+            disconnect(e, EXTERNAL_SCANS);
+            StompChannel.setSessionNull(stompExternalScanChannel);
+        } catch (Throwable e) {
+            disconnect(new Exception(e), EXTERNAL_SCANS);
+            logger.error("Unexpected exception at stompExternalScanSession", new Exception(e));
+            StompChannel.setSessionNull(stompExternalScanChannel);
+        }
+        return newExternalScanConnection;
+    }
+
+    /**
+     * Try to reconnect to the export notification channel for stomp notifications
+     */
+    private void reconnectToExportNotificationChannel() {
+        try {
+            logger.trace("stompExportNotificationSession connecting ...");
+            stompExportNotificationChannel = subscribeToExportNotifications();
+            logger.trace("stompExportNotificationSession connected : {}", stompExportNotificationChannel);
+            reconnect(stompExportNotificationChannel.getSession(), EXPORT_NOTIFICATIONS);
+        } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
+            if (disconnect(e, EXPORT_NOTIFICATIONS)) {
+                logger.warn("Error while connecting to export notifications websocket, retrying");
+                logger.trace("Error while connecting to export notifications websocket, retrying", e);
+            }
+            StompChannel.setSessionNull(stompExportNotificationChannel);
+        } catch (Throwable e) {
+            disconnect(new Exception(e), EXPORT_NOTIFICATIONS);
+            logger.error("Unexpected exception at stompExportNotificationSession", new Exception(e));
+            StompChannel.setSessionNull(stompExportNotificationChannel);
+        }
+    }
+
+    /**
+     * Try to reconnect to the import notification channel for stomp notifications
+     */
+    private void reconnectToImportNotificationChannel() {
+        try {
+            logger.trace("stompImportNotificationSession connecting ...");
+            stompImportNotificationChannel = subscribeToImportNotifications();
+            logger.trace("stompImportNotificationSession connected : {}", stompImportNotificationChannel);
+            reconnect(stompImportNotificationChannel.getSession(), IMPORT_NOTIFICATIONS);
+        } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
+            if (disconnect(e, IMPORT_NOTIFICATIONS)) {
+                logger.warn("Error while connecting to import notifications websocket, retrying");
+                logger.trace("Error while connecting to import notifications websocket, retrying", e);
+            }
+            StompChannel.setSessionNull(stompImportNotificationChannel);
+        } catch (Throwable e) {
+            disconnect(new Exception(e), IMPORT_NOTIFICATIONS);
+            logger.error("Unexpected exception at stompImportNotificationSession", new Exception(e));
+            StompChannel.setSessionNull(stompImportNotificationChannel);
+        }
+    }
+
+    /**
+     * Try to reconnect to the request channel for stomp notifications
+     * @param newRequestConnection whether it's a new connection
+     * @return whether the connection was successful
+     */
+    private boolean reconnectToRequestChannel(boolean newRequestConnection) {
+        try {
+            logger.trace("Connecting to requests websocket ...");
+            stompRequestChannel = connectToRequestsWebSocket();
+            logger.trace("stompRequestsSession connected : {}", stompRequestChannel);
+            newRequestConnection = true;
+            reconnect(stompRequestChannel.getSession(), REQUEST);
+        } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
+            if (disconnect(e, REQUEST)) {
+                StompChannel.setSessionNull(stompRequestChannel);
+            }
+            StompChannel.setSessionNull(stompRequestChannel);
+        } catch (Throwable e) {
+            disconnect(new Exception(e), REQUEST);
+            logger.error("Unexpected exception at stompRequestsSession", new Exception(e));
+            StompChannel.setSessionNull(stompRequestChannel);
+        }
+        return newRequestConnection;
+    }
+
+    /**
+     * Manages the reconnection of notification channel
+     * @param newNotificationConnection whether it's a new connection or not
+     * @return whether the connection was successful
+     */
+    private boolean reconnectToNotificationsChannel(boolean newNotificationConnection) {
+        try {
+            logger.trace("Connecting to notifications websocket ...");
+            stompNotificationChannel = subscribeToNotifications();
+            logger.trace("stompNotificationSession connected : {}", stompNotificationChannel.getSession());
+            newNotificationConnection = true;
+            reconnect(stompNotificationChannel.getSession(), "notifications");
+        } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
+            if (disconnect(e, "notifications")) {
+                logger.warn("Error while connecting to notifications websocket, retrying");
+                logger.trace("Error while connecting to notifications websocket, retrying", e);
+            }
+            if (stompNotificationChannel != null) {
+                stompNotificationChannel.setSession(null);
+            }
+        } catch (Throwable e) {
+            disconnect(new Exception(e), REQUEST);
+            logger.error("Unexpected exception at stompNotificationSession", new Exception(e));
+            if (stompNotificationChannel != null) {
+                stompNotificationChannel.setSession(null);
+            }
+        }
+        return newNotificationConnection;
     }
 
     /**

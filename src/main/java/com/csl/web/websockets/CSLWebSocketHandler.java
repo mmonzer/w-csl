@@ -35,7 +35,7 @@ public class CSLWebSocketHandler {
     @OnMessage
     public void onWebSocketText(String message)
     {
-        System.out.println("OnMessage user="+session+" message="+message);
+         // Should not receive any message. This socket should only send.
     }
 
 }

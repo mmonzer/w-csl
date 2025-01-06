@@ -27,6 +27,7 @@ import org.springframework.messaging.converter.AbstractMessageConverter;
 import org.springframework.messaging.simp.stomp.ConnectionLostException;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandler;
 import org.springframework.scheduling.concurrent.DefaultManagedTaskScheduler;
 import org.springframework.util.MimeType;
 import org.springframework.web.client.ResourceAccessException;
@@ -65,12 +66,11 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private ExternalScansService externalScansService;
     private CpeScanService cpeScanService;
-    private StompSession stompRequestsSession = null;
-    private StompSession stompNotificationSession = null;
     private StompChannel stompNotificationChannel = null;
-    private StompSession stompExternalScanSession = null;
-    private StompSession stompImportNotificationSession = null;
-    private StompSession stompExportNotificationSession = null;
+    private StompChannel stompRequestChannel = null;
+    private StompChannel stompExternalScanChannel = null;
+    private StompChannel stompImportNotificationChannel = null;
+    private StompChannel stompExportNotificationChannel = null;
     private boolean moduleConnected = false;
 
     /**
@@ -100,17 +100,11 @@ public class ScanWebSocketHandler {
      */
     public void stop() {
         webSocketsConnectionAttempts.shutdown();
-        if (stompRequestsSession != null) {
-            stompRequestsSession.disconnect();
-        }
-        StompChannel.disconnectIfHasSession(stompNotificationChannel);
 
-        if (stompImportNotificationSession != null) {
-            stompImportNotificationSession.disconnect();
-        }
-        if (stompExportNotificationSession != null) {
-            stompExportNotificationSession.disconnect();
-        }
+        StompChannel.disconnectIfHasSession(stompRequestChannel);
+        StompChannel.disconnectIfHasSession(stompNotificationChannel);
+        StompChannel.disconnectIfHasSession(stompImportNotificationChannel);
+        StompChannel.disconnectIfHasSession(stompExportNotificationChannel);
 
         logger.info("CSL-Scan websocket disconnected at {}", scanManagerDiscoveryUrl);
     }
@@ -126,10 +120,10 @@ public class ScanWebSocketHandler {
     public Json getStatus() {
         Json status = Json.object();
 
-        status.set("is_requests_websocket_connected", stompRequestsSession != null && stompRequestsSession.isConnected());
+        status.set("is_requests_websocket_connected", StompChannel.isConnected(stompRequestChannel));
         status.set("is_notifications_websocket_connected", StompChannel.isConnected(stompNotificationChannel));
-        status.set("is_import_notifications_websocket_connected", stompImportNotificationSession != null && stompImportNotificationSession.isConnected());
-        status.set("is_export_notifications_websocket_connected", stompExportNotificationSession != null && stompExportNotificationSession.isConnected());
+        status.set("is_import_notifications_websocket_connected", StompChannel.isConnected(stompImportNotificationChannel));
+        status.set("is_export_notifications_websocket_connected", StompChannel.isConnected(stompExportNotificationChannel));
         status.set("scan_requests_queue", scanRequestsQueue.size());
 
         return status;
@@ -144,7 +138,7 @@ public class ScanWebSocketHandler {
     public JsonApiResponse requestScan(List<String> entities) {
         // Check if ws to csl-scan is already connected
         connectStompSessionsIfNecessary();
-        if ((stompRequestsSession == null || !stompRequestsSession.isConnected())) {
+        if (!StompChannel.isConnected(stompRequestChannel)) {
             // not connected to csl-scan --> add this request to the queue
             scanRequestsQueue.add(entities);
             logger.debug("Scan service unavailable, added scan request to queue");
@@ -167,10 +161,12 @@ public class ScanWebSocketHandler {
         StompHeaders stompHeaders = new StompHeaders();
         stompHeaders.add(StompHeaders.DESTINATION, WEBSOCKET_START_DISCOVERY_ENDPOINT);
         stompHeaders.add(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
-        if (uuids == null || uuids.isEmpty()) {
-            stompRequestsSession.send(stompHeaders, "");
-        } else {
-            stompRequestsSession.send(stompHeaders, Json.array(uuids.toArray()));
+        if (StompChannel.isConnected(stompRequestChannel)) {
+            if (uuids == null || uuids.isEmpty()) {
+                stompRequestChannel.getSession().send(stompHeaders, "");
+            } else {
+                stompRequestChannel.getSession().send(stompHeaders, Json.array(uuids.toArray()));
+            }
         }
     }
 
@@ -206,77 +202,78 @@ public class ScanWebSocketHandler {
         }
 
         boolean newRequestConnection = false;
-        if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
+        if (!StompChannel.isConnected(stompRequestChannel)) {
             try {
                 logger.trace("Connecting to requests websocket ...");
-                stompRequestsSession = connectToRequestsWebSocket();
-                logger.trace("stompRequestsSession connected : {}", stompRequestsSession);
+                stompRequestChannel = connectToRequestsWebSocket();
+                logger.trace("stompRequestsSession connected : {}", stompRequestChannel);
                 newRequestConnection = true;
-                reconnect(stompRequestsSession, REQUEST);
+                reconnect(stompRequestChannel.getSession(), REQUEST);
             } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
                 if (disconnect(e, REQUEST)) {
-                    stompRequestsSession = null;
+                    StompChannel.setSessionNull(stompRequestChannel);
                 }
+                StompChannel.setSessionNull(stompRequestChannel);
             } catch (Throwable e) {
                 disconnect(new Exception(e), REQUEST);
                 logger.error("Unexpected exception at stompRequestsSession", new Exception(e));
-                stompRequestsSession = null;
+                StompChannel.setSessionNull(stompRequestChannel);
             }
         }
 
-        if (stompImportNotificationSession == null || !stompImportNotificationSession.isConnected()) {
+        if (!StompChannel.isConnected(stompImportNotificationChannel)) {
             try {
                 logger.trace("stompImportNotificationSession connecting ...");
-                stompImportNotificationSession = subscribeToImportNotifications();
-                logger.trace("stompImportNotificationSession connected : {}", stompImportNotificationSession);
-                reconnect(stompImportNotificationSession, IMPORT_NOTIFICATIONS);
+                stompImportNotificationChannel = subscribeToImportNotifications();
+                logger.trace("stompImportNotificationSession connected : {}", stompImportNotificationChannel);
+                reconnect(stompImportNotificationChannel.getSession(), IMPORT_NOTIFICATIONS);
             } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
                 if (disconnect(e, IMPORT_NOTIFICATIONS)) {
                     logger.warn("Error while connecting to import notifications websocket, retrying");
                     logger.trace("Error while connecting to import notifications websocket, retrying", e);
                 }
-                stompImportNotificationSession = null;
+                StompChannel.setSessionNull(stompImportNotificationChannel);
             } catch (Throwable e) {
                 disconnect(new Exception(e), IMPORT_NOTIFICATIONS);
                 logger.error("Unexpected exception at stompImportNotificationSession", new Exception(e));
-                stompImportNotificationSession = null;
+                StompChannel.setSessionNull(stompImportNotificationChannel);
             }
         }
 
-        if (stompExportNotificationSession == null || !stompExportNotificationSession.isConnected()) {
+        if (!StompChannel.isConnected(stompExportNotificationChannel)) {
             try {
                 logger.trace("stompExportNotificationSession connecting ...");
-                stompExportNotificationSession = subscribeToExportNotifications();
-                logger.trace("stompExportNotificationSession connected : {}", stompExportNotificationSession);
-                reconnect(stompExportNotificationSession, EXPORT_NOTIFICATIONS);
+                stompExportNotificationChannel = subscribeToExportNotifications();
+                logger.trace("stompExportNotificationSession connected : {}", stompExportNotificationChannel);
+                reconnect(stompExportNotificationChannel.getSession(), EXPORT_NOTIFICATIONS);
             } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
                 if (disconnect(e, EXPORT_NOTIFICATIONS)) {
                     logger.warn("Error while connecting to export notifications websocket, retrying");
                     logger.trace("Error while connecting to export notifications websocket, retrying", e);
                 }
-                stompExportNotificationSession = null;
+                StompChannel.setSessionNull(stompExportNotificationChannel);
             } catch (Throwable e) {
                 disconnect(new Exception(e), EXPORT_NOTIFICATIONS);
                 logger.error("Unexpected exception at stompExportNotificationSession", new Exception(e));
-                stompExportNotificationSession = null;
+                StompChannel.setSessionNull(stompExportNotificationChannel);
             }
         }
 
         boolean newExternalScanConnection = false;
-        if (stompExternalScanSession == null || !stompExternalScanSession.isConnected()) {
+        if (StompChannel.isConnected(stompExternalScanChannel)) {
             try {
                 logger.trace("Connecting to external scans notifications websocket");
-                stompExternalScanSession = connectToExternalScansNotificationsWebSocket();
+                stompExternalScanChannel = connectToExternalScansNotificationsWebSocket();
                 newExternalScanConnection = true;
-                logger.trace("stompExternalScanSession connected : {}", stompExternalScanSession);
-                reconnect(stompExternalScanSession, EXTERNAL_SCANS);
+                logger.trace("stompExternalScanSession connected : {}", stompExternalScanChannel);
+                reconnect(stompExternalScanChannel.getSession(), EXTERNAL_SCANS);
             } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
                 disconnect(e, EXTERNAL_SCANS);
-                stompExternalScanSession = null;
+                StompChannel.setSessionNull(stompExternalScanChannel);
             } catch (Throwable e) {
                 disconnect(new Exception(e), EXTERNAL_SCANS);
                 logger.error("Unexpected exception at stompExternalScanSession", new Exception(e));
-                stompExternalScanSession = null;
+                StompChannel.setSessionNull(stompExternalScanChannel);
             }
         }
 
@@ -314,11 +311,33 @@ public class ScanWebSocketHandler {
         return moduleConnected;
     }
 
-    WebSocketStompClient notificationsStompClientGlobal;
-    WebSocketStompClient importNotificationsStompClientGlobal;
-    WebSocketStompClient exportNotificationsStompClientGlobal;
-    WebSocketStompClient externalStompClientGlobal;
-    WebSocketStompClient requestStompClientGlobal;
+    /**
+     * Generic method to connect a channel in the web socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
+     * Blocks so should be called asynchronously.
+     *
+     * @param channel channel of the websocket uri
+     * @param uri uri of the channel
+     * @param handler handler for the channel connection
+     * @return The session we just created.
+     * @throws ExecutionException   if connection failed.
+     * @throws InterruptedException if connection was interrupted.
+     * @throws TimeoutException if connection timed out.
+     */
+    private StompChannel subscribeToChannel(StompChannel channel, String uri, StompSessionHandler handler) throws ExecutionException, InterruptedException, TimeoutException {
+        if (channel == null) {
+            channel = new StompChannel(createStompClient());
+        }
+
+        try {
+            channel.setSession(channel.getClient().connectAsync(uri, handler).get(1000, TimeUnit.MILLISECONDS));
+            return channel;
+        } catch (Exception e) {
+            if (e.getCause() instanceof ConnectException) {
+                throw new ConnectionLostException("");
+            }
+            throw e;
+        }
+    }
 
     /**
      * Connect the notification socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
@@ -329,50 +348,15 @@ public class ScanWebSocketHandler {
      * @throws InterruptedException if connection was interrupted.
      */
     private StompChannel subscribeToNotifications() throws ExecutionException, InterruptedException, TimeoutException {
-        if (notificationsStompClientGlobal == null) {
-            notificationsStompClientGlobal = createStompClient();
-        }
-        StompChannel notificationChannel = new StompChannel(notificationsStompClientGlobal);
-        // Define the callbacks and return the future when it is realized.
-        try {
-            notificationChannel.setSession(notificationsStompClientGlobal.connectAsync(this.scanManagerDiscoveryUrl, new NotificationsStompSessionHandler()).get(1000, TimeUnit.MILLISECONDS));
-            return notificationChannel;
-        } catch (Exception e) {
-            if (e.getCause() instanceof ConnectException) {
-                throw new ConnectionLostException("");
-            }
-            throw e;
-        }
+        return subscribeToChannel(stompNotificationChannel, this.scanManagerDiscoveryUrl, new NotificationsStompSessionHandler());
     }
 
-    private StompSession subscribeToImportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
-        if (importNotificationsStompClientGlobal == null) {
-            importNotificationsStompClientGlobal = createStompClient();
-        }
-
-        try {
-            return importNotificationsStompClientGlobal.connectAsync(this.scanManagerDiscoveryUrl, new ImportStompSessionHandler()).get(1000, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            if (!(e.getCause() instanceof ConnectException)) {
-                throw e;
-            }
-            throw new ConnectionLostException("");
-        }
+    private StompChannel subscribeToImportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
+        return subscribeToChannel(stompImportNotificationChannel, this.scanManagerDiscoveryUrl, new ImportStompSessionHandler());
     }
 
-    private StompSession subscribeToExportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
-        if (exportNotificationsStompClientGlobal == null) {
-            exportNotificationsStompClientGlobal = createStompClient();
-        }
-
-        try {
-            return exportNotificationsStompClientGlobal.connectAsync(this.scanManagerDiscoveryUrl, new ExportStompSessionHandler()).get(1000, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            if (!(e.getCause() instanceof ConnectException)) {
-                throw e;
-            }
-            throw new ConnectionLostException("");
-        }
+    private StompChannel subscribeToExportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
+        return subscribeToChannel(stompExportNotificationChannel, this.scanManagerDiscoveryUrl, new ExportStompSessionHandler());
     }
 
     /**
@@ -383,35 +367,12 @@ public class ScanWebSocketHandler {
      * @throws ExecutionException   if connection failed.
      * @throws InterruptedException if connection was interrupted.
      */
-    private StompSession connectToRequestsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
-        if (externalStompClientGlobal == null) {
-            externalStompClientGlobal = createStompClient();
-        }
-        // Define the callbacks and return the future when it is realized.
-
-        try {
-            return externalStompClientGlobal.connectAsync(this.scanManagerDiscoveryUrl, new RequestStompSessionHandler()).get(1, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            if (!(e.getCause() instanceof ConnectException)) {
-                throw e;
-            }
-            throw new ConnectionLostException("");
-        }
+    private StompChannel connectToRequestsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
+        return subscribeToChannel(stompRequestChannel, this.scanManagerDiscoveryUrl, new RequestStompSessionHandler());
     }
 
-    private StompSession connectToExternalScansNotificationsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
-        if (requestStompClientGlobal == null) {
-            requestStompClientGlobal = createStompClient();
-        }
-        // Define the callbacks and return the future when it is realized.
-        try {
-            return requestStompClientGlobal.connectAsync(this.scanManagerDiscoveryUrl, new ExternalScanStompSessionHandler()).get(1, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            if (!(e.getCause() instanceof ConnectException)) {
-                throw e;
-            }
-            throw new ConnectionLostException("");
-        }
+    private StompChannel connectToExternalScansNotificationsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
+        return subscribeToChannel(stompExternalScanChannel, this.scanManagerDiscoveryUrl, new ExternalScanStompSessionHandler());
     }
 
     /**
@@ -512,12 +473,12 @@ public class ScanWebSocketHandler {
         private void purgeScanRequestsQueue() {
             List<String> scanRequest;
             while (moduleConnected && (scanRequest = scanRequestsQueue.poll()) != null) {
-                if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
+                if (!StompChannel.isConnected(stompRequestChannel)) {
                     scanRequestsQueue.add(scanRequest);
                     break;
                 }
                 startScan(scanRequest);
-                if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
+                if (!StompChannel.isConnected(stompRequestChannel)) {
                     scanRequestsQueue.add(scanRequest);
                     break;
                 }
@@ -689,6 +650,12 @@ public class ScanWebSocketHandler {
         public static void disconnectIfHasSession(StompChannel channel) {
             if (channel != null && channel.getSession() != null) {
                 channel.getSession().disconnect();
+            }
+        }
+
+        public static void setSessionNull(StompChannel channel) {
+            if (channel != null) {
+                channel.setSession(null);
             }
         }
     }

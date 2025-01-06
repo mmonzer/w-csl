@@ -26,7 +26,7 @@ public abstract class CorrelatedStompSessionHandlerAdapter extends StompSessionH
      * @param headers headers of the message
      * @param payloadRaw payload of the message
      */
-    abstract void onFrame(StompHeaders headers, Object payloadRaw);
+    public void onFrame(StompHeaders headers, Object payloadRaw){}
 
     /**
      * Native method called at the reception of a message.

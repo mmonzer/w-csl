@@ -29,7 +29,6 @@ public class JServiceLoader {
 
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(JServiceLoader.class);
 
-    @Getter
     private static CSLInterModuleCommunicationManager cslInterModuleCommunicationManager = null;
     
     // TODO: The mosquitto configuration is not used in this version of the code

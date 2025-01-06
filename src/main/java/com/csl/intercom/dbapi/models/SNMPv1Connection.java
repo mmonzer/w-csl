@@ -22,7 +22,7 @@ public class SNMPv1Connection extends Connection {
     }
 
     protected SNMPv1Connection(String name, String uuid, int port, List<String> devices, String community) {
-        super(name, uuid, devices, StaticConnectionProtocol.SNMPv1);
+        super(name, uuid, devices, StaticConnectionProtocol.SNMP_V1);
         this.port = port;
         this.community = community;
     }

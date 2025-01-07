@@ -67,7 +67,7 @@ public abstract class CorrelatedStompSessionHandlerAdapter extends StompSessionH
         // Variables to logger : X-Correlation-ID ...
         setVariablesToMDC(headers);
         // Log connection
-        logMessage("INFO", headers, "Connected to WS");
+        // logMessage("INFO", headers, "Connected to WS");
         // Handles after connection
         super.afterConnected(session, headers);
         onConnect(session, headers);

@@ -90,6 +90,10 @@ public enum ScanApiEndpoint {
         return endpoint;
     }
 
+    public String toString() {
+        return endpoint;
+    }
+
     private static class Constants {
         public static final String CLEAR = "clear";
         public static final String LAST_DELETION = "last_deletion";

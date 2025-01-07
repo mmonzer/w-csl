@@ -37,7 +37,6 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
-import org.springframework.web.socket.sockjs.frame.Jackson2SockJsMessageCodec;
 
 import java.net.ConnectException;
 import java.nio.channels.ClosedChannelException;
@@ -46,7 +45,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
@@ -377,14 +375,25 @@ public class ScanWebSocketHandler {
             channel = new StompChannel(createStompClient());
         }
 
+        // check if API is available
+        if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
+            throw new ConnectionLostException("CSL-Scan disconnected");
+        }
+
         try {
-            channel.setSession(channel.getClient().connectAsync(uri, handler).get(1000, TimeUnit.MILLISECONDS));
+            channel.setSession(channel.getClient().connectAsync(uri, handler).handle((result, ex) -> {
+                if (ex != null) {
+                    System.err.println("Connection failed: " + ex.getCause());
+                    return null; // Handle failure case
+                }
+                return result; // Handle success case
+            }).get(1000, TimeUnit.MILLISECONDS));
             return channel;
         } catch (Exception e) {
             if ((e.getCause() instanceof ConnectException) || (e.getCause() instanceof EofException) || (e.getCause() instanceof ClosedChannelException) || (e.getCause() instanceof TimeoutException)) {
                 throw new ConnectionLostException("");
             }
-             throw e;
+            throw e;
         }
     }
 
@@ -435,9 +444,6 @@ public class ScanWebSocketHandler {
      * @return a {@link WebSocketStompClient} suitable for our needs.
      */
     private WebSocketStompClient createStompClient() {
-        if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
-            throw new ConnectionLostException("CSL-Scan disconnected");
-        }
 
         WebSocketClient client = new StandardWebSocketClient();
         SockJsClient sockJsClient = new SockJsClient(Collections.singletonList(new WebSocketTransport(client)));
@@ -691,7 +697,7 @@ public class ScanWebSocketHandler {
         if (session.isConnected()) {
             session.disconnect();
         }
-        if (exception.getCause()!=null){
+        if (exception.getCause() != null) {
             System.out.println(" >>> transport error cause " + exception.getCause());
         }
     }

@@ -288,7 +288,7 @@ public class ScanApiHandler extends ApiHandler {
      * @return A {@link JsonApiResponse} with CSL-Scan's status as it was received, or with an error in the 'error' field.
      */
     public JsonApiResponse getStatus() {
-        return sendGet(ScanApiEndpoint.DISCOVERY_STATUS, Json.object());
+        return sendGet(ScanApiEndpoint.DISCOVERY_STATUS.endpoint(), Json.object(),true);
     }
 
     /**

@@ -69,11 +69,11 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private ExternalScansService externalScansService;
     private CpeScanService cpeScanService;
-    private StompChannel stompNotificationChannel = null;
-    private StompChannel stompRequestChannel = null;
-    private StompChannel stompExternalScanChannel = null;
-    private StompChannel stompImportNotificationChannel = null;
-    private StompChannel stompExportNotificationChannel = null;
+    private StompChannel stompNotificationChannel = new StompChannel(createStompClient());
+    private StompChannel stompRequestChannel = new StompChannel(createStompClient());
+    private StompChannel stompExternalScanChannel = new StompChannel(createStompClient());
+    private StompChannel stompImportNotificationChannel = new StompChannel(createStompClient());
+    private StompChannel stompExportNotificationChannel = new StompChannel(createStompClient());
     private boolean isScanConnected = false;
 
     /**
@@ -207,6 +207,8 @@ public class ScanWebSocketHandler {
         }
     }
 
+    // region reconnect channels
+
     /**
      * Try to logIfScanWasNotConnected to the external scan channel for stomp notifications
      *
@@ -221,7 +223,7 @@ public class ScanWebSocketHandler {
      * Try to logIfScanWasNotConnected to the export notification channel for stomp notifications
      */
     private void reconnectToExportNotificationChannel() {
-        stompExportNotificationChannel= reconnectToScanWebSocket(stompExportNotificationChannel, "Export Notifications", this.scanManagerDiscoveryUrl, new ExportStompSessionHandler());
+        stompExportNotificationChannel = reconnectToScanWebSocket(stompExportNotificationChannel, "Export Notifications", this.scanManagerDiscoveryUrl, new ExportStompSessionHandler());
     }
 
     /**
@@ -251,15 +253,17 @@ public class ScanWebSocketHandler {
         return StompChannel.isConnected(stompNotificationChannel);
     }
 
+    // endregion reconnect channels
+
     /**
-     * Manages the reconnection of notification channel
+     * Manages the reconnection of a stomp channel channel
      *
-     * @return whether the connection was successful
+     * @return the stomp channel modified
      */
     private StompChannel reconnectToScanWebSocket(StompChannel stompChannel, String channelLabel, String connectionUrl, CorrelatedStompSessionHandlerAdapter handler) {
         try {
             logger.trace("Connecting to {} websocket ...", channelLabel);
-            stompChannel = subscribeToChannel(stompChannel, connectionUrl, handler);
+            stompChannel.setSession(subscribeToChannel(stompChannel.getClient(), connectionUrl, handler));
             logger.trace("Connected to {} websocket : ", channelLabel, stompChannel.getSession());
             logIfScanWasNotConnected(stompChannel.getSession());
             return stompChannel;
@@ -268,15 +272,12 @@ public class ScanWebSocketHandler {
                 logger.warn("Error while connecting to Stomp Websocket, retrying ...");
                 logger.trace("Error while connecting to Stomp Websocket, retrying ...", e);
             }
-            if (stompChannel != null) {
-                stompChannel.setSession(null);
-            }
         } catch (Throwable e) {
             logDisconnectedIfScanWasConnected();
             logger.error("Unexpected exception at {} channel : {}", channelLabel, e.getMessage());
-            StompChannel.setSessionNull(stompChannel);
         }
-        return null;
+        StompChannel.setSessionNull(stompChannel);
+        return stompChannel;
     }
 
     /**
@@ -306,7 +307,7 @@ public class ScanWebSocketHandler {
      * Generic method to connect a channel in the web socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
      * Blocks so should be called asynchronously.
      *
-     * @param channel channel of the websocket uri
+     * @param client  stomp websocket client
      * @param uri     uri of the channel
      * @param handler handler for the channel connection
      * @return The session we just created.
@@ -314,25 +315,14 @@ public class ScanWebSocketHandler {
      * @throws InterruptedException if connection was interrupted.
      * @throws TimeoutException     if connection timed out.
      */
-    private StompChannel subscribeToChannel(StompChannel channel, String uri, StompSessionHandler handler) throws ExecutionException, InterruptedException, TimeoutException {
-        if (channel == null) {
-            channel = new StompChannel(createStompClient());
-        }
-
+    private StompSession subscribeToChannel(WebSocketStompClient client, String uri, StompSessionHandler handler) throws ExecutionException, InterruptedException, TimeoutException {
         // check if API is available
         if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
             throw new ConnectionLostException("CSL-Scan disconnected");
         }
 
         try {
-            channel.setSession(channel.getClient().connectAsync(uri, handler).handle((result, ex) -> {
-                if (ex != null) {
-                    System.err.println("Connection failed: " + ex.getCause());
-                    return null; // Handle failure case
-                }
-                return result; // Handle success case
-            }).get(1000, TimeUnit.MILLISECONDS));
-            return channel;
+            return client.connectAsync(uri, handler).exceptionally(e -> null).get(1000, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             if ((e.getCause() instanceof ConnectException) || (e.getCause() instanceof EofException) || (e.getCause() instanceof ClosedChannelException) || (e.getCause() instanceof TimeoutException)) {
                 throw new ConnectionLostException("");
@@ -404,6 +394,8 @@ public class ScanWebSocketHandler {
             }
         }
     }
+
+    // region Stomp Session Handlers
 
     /**
      * Class handler for the request websocket
@@ -604,6 +596,8 @@ public class ScanWebSocketHandler {
             System.out.println(" >>> transport error cause " + exception.getCause());
         }
     }
+
+    // endregion Stomp Session Handlers
 
     @Getter
     private static class StompChannel {

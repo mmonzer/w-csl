@@ -87,13 +87,13 @@ public class ExternalDiscoveredDevice {
         }
         if (json.has("generatedConnectionForDiscoveredDevice")) {
             String username = json.get("generatedConnectionForDiscoveredDevice").get("username").getValue().toString();
-            String password = json.get("generatedConnectionForDiscoveredDevice").get("password").getValue().toString();
+            // String password = json.get("generatedConnectionForDiscoveredDevice").get("password").getValue().toString();
             String connectionName = json.get("generatedConnectionForDiscoveredDevice").get("name").getValue().toString();
             int connectionPortNumber = Integer.parseInt(json.get("generatedConnectionForDiscoveredDevice").get("portNumber").toString());
             String vendor = json.get("generatedConnectionForDiscoveredDevice").get("vendor").getValue().toString();
             externalGeneratedConnectionRelatesDevice = new ExternalGeneratedConnectionRelatesDevice();
             externalGeneratedConnectionRelatesDevice.setName(connectionName);
-            externalGeneratedConnectionRelatesDevice.setPassword(password);
+            // externalGeneratedConnectionRelatesDevice.setPassword(password);
             externalGeneratedConnectionRelatesDevice.setUsername(username);
             externalGeneratedConnectionRelatesDevice.setPortNumber(connectionPortNumber);
             externalGeneratedConnectionRelatesDevice.setVendor(vendor);

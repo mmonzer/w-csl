@@ -36,11 +36,7 @@ import org.slf4j.MDC;
 
 import java.io.FileNotFoundException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -1482,9 +1478,37 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 JsonCmdPrivilegeFamily.START_DEVICE_SCAN
         );
 
+        addCmd("publish_discovered_devices", params -> {
+                    logger.debug("Publish discovered devices ...");
+
+                    ArrayList<UUID> discoveredDeviceUuids = new ArrayList<>();
+                    if (params.has("discovered_devices_uuids")) {
+                        Json discoveredDevices = params.get("discovered_devices_uuids");
+                        if (discoveredDevices.isArray()) {
+                            for (Json discoveredDevice : discoveredDevices.asJsonList()) {
+                                if (discoveredDevice.isString()) {
+                                    try {
+                                        discoveredDeviceUuids.add(UUID.fromString(discoveredDevice.asString()));
+                                    } catch (IllegalArgumentException e) {
+                                        logger.warn("Failed to parse discovered device uuid {}", discoveredDevice.asString());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    logger.info("discoveredDeviceUuids : {}", discoveredDeviceUuids);
+                    // try catch send to scan publish with list of uuid and then send to dbapi
+
+                    return params;
+                }, new JsonCmdHelp().setDesc("Start a device discovery scan")
+                        .setParam(CONNECTION_INFO_UUID, "The id of the connection info to use", JsonCmdHelp.INT)
+                        .setResult("<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error," +
+                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setStatus(JsonCmdHelp.STATUS_OK),
+                JsonCmdPrivilegeFamily.PUBLISH_DISCOVERED_DEVICES);
+
         addCmd("add_connection", params -> {
                     logger.debug("Adding new connection ...");
-
                     Json connectionJson = params.get(CONNECTION);
                     Connection connection = null;
                     try {

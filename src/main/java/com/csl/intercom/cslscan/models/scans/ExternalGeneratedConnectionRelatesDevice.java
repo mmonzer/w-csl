@@ -25,7 +25,6 @@ public class ExternalGeneratedConnectionRelatesDevice {
         return Json.object(
                 "name", name,
                 "username", username,
-                "password", password,
                 "portNumber", portNumber,
                 "vendor", vendor
         );

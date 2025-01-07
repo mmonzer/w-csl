@@ -13,6 +13,7 @@ public enum JsonCmdPrivilegeFamily {
     START_CPE_SCAN("start_cpe_scan"),
     MANAGE_SCAN_DB("manage_scan_db"),
     START_DEVICE_SCAN("start_device_scan"),
+    PUBLISH_DISCOVERED_DEVICES("publish_discovered_devices"),
     CREATE_EXTERNAL_CONNECTION_INFO("add_externalconnectioninfo"),
     UPDATE_EXTERNAL_CONNECTION_INFO("change_externalconnectioninfo"),
     DELETE_EXTERNAL_CONNECTION_INFO("delete_externalconnectioninfo"),

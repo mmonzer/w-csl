@@ -46,6 +46,7 @@ import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
  */
 public class ScanWebSocketHandler {
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(ScanWebSocketHandler.class);
+    public static final String SCAN_WEBSOCKET = "scanWebsocket";
     private final ImportExportBsonService importExportBsonService;
     private final DiscoveryServices discoveryService;
     private static final String WEBSOCKET_NOTIFICATIONS_ENDPOINT = "/discovery/ready";
@@ -449,7 +450,7 @@ public class ScanWebSocketHandler {
             // Variables to logger : X-Correlation-ID ...
             setVariablesToMDC(headers);
             // Log connection
-            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket", "WS", "Connected to Scan websocket at " + scanManagerDiscoveryUrl);
+            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Connected to Scan websocket at " + scanManagerDiscoveryUrl);
             // Handles after connection
             onConnect(session, headers);
         }
@@ -482,7 +483,7 @@ public class ScanWebSocketHandler {
             // Variables to logger : X-Correlation-ID ...
             setVariablesToMDC(headers);
             // Log exception in message
-            CSLNetworkLogger.warn(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket", "WS", "Exception of Scan websocket at " + scanManagerDiscoveryUrl +" : "+exception.getMessage());
+            CSLNetworkLogger.warn(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Exception of Scan websocket at " + scanManagerDiscoveryUrl +" : "+exception.getMessage());
             // Handles the exception
             onException(session, command, headers, payload, exception);
         }
@@ -506,7 +507,7 @@ public class ScanWebSocketHandler {
          */
         @Override
         public final void handleTransportError(@NotNull StompSession session, @NotNull Throwable exception) {
-            CSLNetworkLogger.warn(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket", "WS", "Transport error on Scan websocket at " + scanManagerDiscoveryUrl +" : "+exception.getMessage());
+            CSLNetworkLogger.warn(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Transport error on Scan websocket at " + scanManagerDiscoveryUrl +" : "+exception.getMessage());
             onTransportError(session, exception);
         }
 
@@ -555,7 +556,7 @@ public class ScanWebSocketHandler {
             // Variables to logger : X-Correlation-ID ...
             setVariablesToMDC(headers);
             // Log info message received
-            CSLNetworkLogger.debug(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket", "WS", "Incoming message from Scan websocket at " + scanManagerDiscoveryUrl);
+            CSLNetworkLogger.debug(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Incoming message from Scan websocket at " + scanManagerDiscoveryUrl);
             // Handle frame
             onFrame(headers, payloadRaw);
         }

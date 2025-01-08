@@ -67,6 +67,7 @@ public enum DbapiEndpointForCSLScan {
     EXTERNAL_DISCOVERED_DEVICES("/device_discovered_items"),
     EXTERNAL_DISCOVERED_DEVICES_CREATE(EXTERNAL_DISCOVERED_DEVICES.getEndpoint() + "/create_discovery_device_entities"),
     EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.getEndpoint() + "/clear"),
+    PUBLISH_EXTERNAL_DISCOVERED_DEVICES_AND_CONNECTIONS(EXTERNAL_DISCOVERED_DEVICES.getEndpoint() + "/publish_discovered_devices_and_connection"),
     JAVACOMM("/javacomm"),
     JAVACOMM_SEND_COMMANDS(JAVACOMM.getEndpoint() + "/create_or_update_japi_commands"),
     DOWNLOAD_HTTP_TEMPLATES_BSON_FILE("/cpecve/download_http_template_bson_file/"),

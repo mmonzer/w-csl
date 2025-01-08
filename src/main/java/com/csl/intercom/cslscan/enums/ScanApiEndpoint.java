@@ -75,6 +75,7 @@ public enum ScanApiEndpoint {
     EXTERNAL_DISCOVERY_START_SCAN(EXTERNAL_DISCOVERY.endpoint() + "/startDiscovery/%s"),
     EXTERNAL_DISCOVERED_DEVICES("/externalDiscoveredDevices/"),
     EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "clear"),
+    EXTERNAL_PUBLISH_DISCOVERED_DEVICES(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "publish"),
 
     CERTIFICATE_CONNECTION("/connexion-certificate/"),
     CERTIFICATE_CONNECTION_DETAILS(CERTIFICATE_CONNECTION.endpoint() + "%s"),

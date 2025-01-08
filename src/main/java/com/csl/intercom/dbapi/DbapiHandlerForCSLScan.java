@@ -721,6 +721,19 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             throw new DbapiUnexpectedStatusCodeException("Could not clear external connection infos.", response.getStatus());
         }
     }
+    public void publishExternalDiscoveredDevicesWithConnections(ArrayList<UUID> discoveredDeviceUuids, Map<String, String> connectionUuidWithDiscoveredDeviceUuid) throws ExecutionException, InterruptedException, TimeoutException {
+        logger.debug("Publishing external discovered devices with connections.");
+        Json requestContents = object(
+                "discovered_device_uuids", Json.array(discoveredDeviceUuids.stream().map(UUID::toString).toArray()),
+                "connection_uuid_with_discovered_device_uuid", Json.array(connectionUuidWithDiscoveredDeviceUuid)
+        );
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.PUBLISH_EXTERNAL_DISCOVERED_DEVICES_AND_CONNECTIONS.getEndpoint(), null, requestContents);
+        if (response.getStatus() != 200) {
+            logger.warn("Could not publish external discovered devices with connections.");
+        } else {
+            logger.debug("Published external discovered devices with connections to DBAPI.");
+        }
+    }
     // endregion External discovery
 
     /**

@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -74,5 +76,12 @@ public class ExternalDiscoveredDevicesSynchronizationService extends PaginatedSy
         } catch (ExecutionException | InterruptedException | TimeoutException | DbapiUnexpectedStatusCodeException e) {
             throw new SynchronizationException("Could not clear discovered devices in DB-API", e);
         }
+    }
+    public JsonApiResponse publish(ArrayList<UUID> discoveredDeviceUuids) throws SynchronizationException {
+        JsonApiResponse response = scanApiHandler.publishExternalDiscoveredDevices(discoveredDeviceUuids);
+        if (!response.isSuccess()) {
+            throw new SynchronizationException("Error while publishing external discovered devices in CSL-Scan");
+        }
+        return response;
     }
 }

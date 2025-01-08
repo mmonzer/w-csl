@@ -1134,6 +1134,10 @@ public class ScanApiHandler extends ApiHandler {
     public JsonApiResponse clearExternalDiscoveredDevices() {
         return sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES_CLEAR, Json.object());
     }
+    public JsonApiResponse publishExternalDiscoveredDevices(ArrayList<UUID> discoveredDeviceUuids) {
+        Json body = Json.array(discoveredDeviceUuids.stream().map(UUID::toString).toArray());
+        return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.EXTERNAL_PUBLISH_DISCOVERED_DEVICES, body);
+    }
 
     public ExternalScan getScanInfo(String uuid) {
         logger.debug("Getting scan info for {}", uuid);

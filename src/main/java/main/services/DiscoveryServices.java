@@ -726,6 +726,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     JsonApiResponse response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
                     Boolean successResponse = (Boolean) response.toJson().get("success").getValue();
+                    if (!successResponse) {
+                        logger.error("Failed to test (success response is false) connection with deviceUuid={}, connectionId={} : {}", deviceUuid, connectionId, response);
+                        dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+                        response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
+                    } else {
                     Boolean successResult = (Boolean) response.toJson().get("result").get("success").getValue();
                     if(!successResponse || !successResult) {
                         if (response.toJson().get("result") != null && response.toJson().get("result").get("message").getValue() != null) {
@@ -735,6 +740,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 // force synchronize and re-test
                                 dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
                                 response = scanApiHandler.testConnection(deviceUuid, connectionUuid, connectionId);
+                                }
                             }
                         }
                     }
@@ -1480,7 +1486,6 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         addCmd("publish_discovered_devices", params -> {
                     logger.debug("Publish discovered devices ...");
-
                     ArrayList<UUID> discoveredDeviceUuids = new ArrayList<>();
                     if (params.has("discovered_devices_uuids")) {
                         Json discoveredDevices = params.get("discovered_devices_uuids");
@@ -1498,7 +1503,36 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                     logger.info("discoveredDeviceUuids : {}", discoveredDeviceUuids);
                     // try catch send to scan publish with list of uuid and then send to dbapi
+                    try {
+                        JsonApiResponse response =  externalDiscoveredDevicesSynchronizationService.publish(discoveredDeviceUuids);
+                        if (response.isSuccess()) {
+                            logger.info("Published discovered devices in csl-scan, now trying to add them in dbapi");
+                            // publish them in dbapi
 
+                            Map<String, Json> rawResult = response.getResult().asJsonMap(); // Cast to a Map
+                            Map<String, String> connectionUuidWithDiscoveredDeviceUuid = new HashMap<>();
+
+                            // Iterate through the map entries
+                            for (Map.Entry<String, Json> entry : rawResult.entrySet()) {
+                                String connectionUuid = entry.getKey();
+                                String discoveredDeviceUuidString = String.valueOf(entry.getValue()).trim();
+                                connectionUuidWithDiscoveredDeviceUuid.put(discoveredDeviceUuidString, connectionUuid); // Convert and store
+                            }
+
+                            dbapiHandler.publishExternalDiscoveredDevicesWithConnections(discoveredDeviceUuids, connectionUuidWithDiscoveredDeviceUuid);
+                            logger.info("Published discovered devices in dbapi");
+                        } else {
+                            logger.error("Failed to publish discovered devices in csl-scan : {}", response.getError());
+                        }
+                        logger.info("Published discovered devices");
+                    } catch (SynchronizationException e) {
+                        logger.warn("Failed to publish discovered devices", e);
+                        return JsonApiResponse.error("Failed to publish discovered devices",
+                                Json.object(EXCEPTION, e.getMessage())
+                        ).toJson();
+                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                        throw new RuntimeException(e);
+                    }
                     return params;
                 }, new JsonCmdHelp().setDesc("Start a device discovery scan")
                         .setParam(CONNECTION_INFO_UUID, "The id of the connection info to use", JsonCmdHelp.INT)

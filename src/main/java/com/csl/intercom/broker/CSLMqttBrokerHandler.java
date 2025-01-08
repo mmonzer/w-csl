@@ -64,8 +64,8 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
      * @param config The configuration of the project. Can be retrieved with <code>CSLContext.getInstance().getConfig()</code>.
      */
     public CSLMqttBrokerHandler(Config config) {
-        Config.Client clientConfig = config.Client;
-        brokerUri = clientConfig.getUseSsl() ? "wss://" : "ws://";
+        Config.Client clientConfig = config.client;
+        brokerUri = clientConfig.isUseSsl() ? "wss://" : "ws://";
         brokerUri += clientConfig.getIpServerRemote();
         brokerUri += "/mqtt";
         // The API key to include in each message
@@ -170,7 +170,7 @@ public class CSLMqttBrokerHandler implements AutoCloseable {
         String regex = CLIENT_ID + ".*";
         try {
             Path workDir = Paths.get("");
-            Files.walkFileTree(workDir, new SimpleFileVisitor<Path>() {
+            Files.walkFileTree(workDir, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     return FileVisitResult.CONTINUE;

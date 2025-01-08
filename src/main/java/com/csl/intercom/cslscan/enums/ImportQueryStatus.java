@@ -15,6 +15,11 @@ public enum ImportQueryStatus {
     private final String name;
 
     ImportQueryStatus(String name) {
-        this.name = name();
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

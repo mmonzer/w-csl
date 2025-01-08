@@ -3,6 +3,7 @@ package com.csl.intercom.dbapi.models;
 import com.csl.intercom.cslscan.models.EntityHttpConnectionStage;
 import com.csl.intercom.dbapi.enums.HttpConnectionField;
 import com.csl.intercom.dbapi.enums.StaticConnectionProtocol;
+import com.csl.util.ListUtils;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
@@ -12,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 
 public class HttpConnection extends Connection {
+    public static final String UUID = "uuid";
+    public static final String MONGO_ENTITY_ID = "mongo_entity_id";
+    public static final String INPUTS = "inputs";
     private final String entityHttpConnectionUuid;
     @Getter
     private String port;
@@ -27,7 +31,7 @@ public class HttpConnection extends Connection {
     @Getter
     private final Map<Integer, StageConfig> stagesConfig;
     @Getter
-    private Map<String, String> inputs;
+    private Map<String, String> inputMap;
 
     public HttpConnection(String id,
                           String port,
@@ -39,7 +43,7 @@ public class HttpConnection extends Connection {
         this.authenticationMethod = null;
         this.realm = null;
         this.token = null;
-        this.inputs = inputs;
+        this.inputMap = inputs;
         this.stagesConfig = stagesConfig;
 
     }
@@ -63,7 +67,7 @@ public class HttpConnection extends Connection {
         this.password = password;
         this.realm = realm;
         this.token = token;
-        this.inputs = inputs;
+        this.inputMap = inputs;
         this.stagesConfig = stagesConfig;
     }
     public HttpConnection(String name, String id,
@@ -86,7 +90,7 @@ public class HttpConnection extends Connection {
         this.password = password;
         this.realm = realm;
         this.token = token;
-        this.inputs = inputs;
+        this.inputMap = inputs;
         this.stagesConfig = stagesConfig;
     }
 
@@ -100,11 +104,11 @@ public class HttpConnection extends Connection {
     public static HttpConnection fromJson(Json connectionJson, ConnectionProtocol protocol) {
         try {
             String uuid;
-            if (connectionJson.has("uuid") && connectionJson.get("uuid").isString()) {
-                uuid = connectionJson.get("uuid").asString();
+            if (connectionJson.has(UUID) && connectionJson.get(UUID).isString()) {
+                uuid = connectionJson.get(UUID).asString();
             } else {
-                if(connectionJson.has("mongo_entity_id") && !connectionJson.get("mongo_entity_id").isNull())
-                    uuid = connectionJson.get("mongo_entity_id").asString();
+                if(connectionJson.has(MONGO_ENTITY_ID) && !connectionJson.get(MONGO_ENTITY_ID).isNull())
+                    uuid = connectionJson.get(MONGO_ENTITY_ID).asString();
                 else
                     uuid = null;
             }
@@ -116,16 +120,8 @@ public class HttpConnection extends Connection {
             } else {
                 port = null;
             }
-            String username = null;
-            try {
-                username = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.USERNAME.dbapiName(), null);
-            } catch (UnsupportedOperationException ignored) {
-            }
-            String password = null;
-            try {
-                password = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.PASSWORD.dbapiName(), null);
-            } catch (UnsupportedOperationException ignored) {
-            }
+            String username = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.USERNAME.dbapiName(), null);
+            String password = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.PASSWORD.dbapiName(), null);
 
             Json otherData = connectionJson.get("other_data");
             Json readOnlyOtherData = connectionJson.get("read_only_other_data");
@@ -140,25 +136,19 @@ public class HttpConnection extends Connection {
             String entityHttpConnectionUuid = protocol.getConnectionTemplateId();
             String token = JsonUtil.getStringFromJson(otherData, HttpConnectionField.TOKEN.dbapiName(), null);
             String realm = JsonUtil.getStringFromJson(otherData, HttpConnectionField.REALM.dbapiName(), null);
-            boolean isSimulated = false;
-            if (connectionJson.has("is_simulated") && !connectionJson.get("is_simulated").isNull()) {
-                isSimulated = connectionJson.get("is_simulated").asBoolean();
-            }
+            boolean isSimulated = JsonUtil.getValueBooleanOrDefault(connectionJson, "is_simulated", false);
+
             Map<Integer, StageConfig> stagesConfig = new HashMap<>();
             otherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), StageConfig.fromJson(value)));
 
-            List<String> devices = connectionJson.get("connected_devices").asJsonList().stream()
-                    .map(Json::asString)
-                    .collect(java.util.stream.Collectors.toList());
+            List<String> devices = ListUtils.map(connectionJson.get("connected_devices").asJsonList(), Json::asString);
 
             Map<String, String> inputs = new HashMap<>();
-            // otherData.has("inputs") is like this forexample : {"cameraUsername":{"value":"service","is_secret":false},"camerPassword":{"value":"agd-fb3-M13-aqh","is_secret":true}}
-            // so we need to parse it as a map and get the value of the key then put it in the inputs map
             // check if otherData has inputs key
-            if (otherData.has("inputs")) {
-                for (String key : otherData.get("inputs").asJsonMap().keySet()) {
-                    if (otherData.get("inputs").has(key)) {
-                        var input = otherData.get("inputs").get(key);
+            if (otherData.has(INPUTS)) {
+                for (String key : otherData.get(INPUTS).asJsonMap().keySet()) {
+                    if (otherData.get(INPUTS).has(key)) {
+                        var input = otherData.get(INPUTS).get(key);
                         if (input.isObject() && input.has("value")) {
                             inputs.put(key, input.get("value").asString());
                         } else {
@@ -183,8 +173,8 @@ public class HttpConnection extends Connection {
     public static HttpConnection fromScannerJson(Json connectionJson) {
         try {
             String uuid = null;
-            if (connectionJson.has("uuid") && connectionJson.get("uuid").isString()) {
-                uuid = connectionJson.get("uuid").asString();
+            if (connectionJson.has(UUID) && connectionJson.get(UUID).isString()) {
+                uuid = connectionJson.get(UUID).asString();
             }
             String port = connectionJson.get(HttpConnectionField.PORT.scanName()).asString();
             String entityHttpConnectionUuid = connectionJson.get(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName()).asString();
@@ -195,8 +185,8 @@ public class HttpConnection extends Connection {
             String token = connectionJson.get(HttpConnectionField.TOKEN.scanName()).asString();
 
             Map<String, String> inputs = new HashMap<>();
-            if (connectionJson.has("inputs")) {
-                connectionJson.get("inputs").asJsonMap().forEach((key, value) -> inputs.put(key, value.asString()));
+            if (connectionJson.has(INPUTS)) {
+                connectionJson.get(INPUTS).asJsonMap().forEach((key, value) -> inputs.put(key, value.asString()));
             }
 
             Map<Integer, StageConfig> stagesConfig = new HashMap<>();
@@ -212,11 +202,11 @@ public class HttpConnection extends Connection {
     public Json serializeForScanner() {
         Json stagesConfigSerialized = Json.object();
         if (this.stagesConfig != null) {
-            this.stagesConfig.entrySet().forEach(entry -> stagesConfigSerialized.set(entry.getKey().toString(), entry.getValue().serializeForScanner()));
+            this.stagesConfig.forEach((key, value) -> stagesConfigSerialized.set(key.toString(), value.serializeForScanner()));
         }
 
         Json result = super.serializeForScanner();
-        result.set("uuid", this.getId());
+        result.set(UUID, this.getId());
         result.set(HttpConnectionField.PORT.scanName(), this.port);
         if (this.entityHttpConnectionUuid != null) {
             result.set(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName(), this.entityHttpConnectionUuid);
@@ -236,8 +226,8 @@ public class HttpConnection extends Connection {
         if (this.token != null) {
             result.set(HttpConnectionField.TOKEN.scanName(), this.token);
         }
-        if (this.inputs != null) {
-            result.set("inputs", this.inputs);
+        if (this.inputMap != null) {
+            result.set(INPUTS, this.inputMap);
         }
         result.set(HttpConnectionField.STAGES_CONFIG.scanName(), stagesConfigSerialized);
 
@@ -268,8 +258,8 @@ public class HttpConnection extends Connection {
         return this;
     }
 
-    public HttpConnection setInputs(Map<String, String> inputs) {
-        this.inputs = inputs;
+    public HttpConnection setInputMap(Map<String, String> inputMap) {
+        this.inputMap = inputMap;
         return this;
     }
 

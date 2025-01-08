@@ -26,7 +26,6 @@ public class RulesUtil {
         if (s.compareTo("allowed") == 0) return 0;
         if (s.compareTo("allowed_with_alert_low") == 0) return 2;
         if (s.compareTo("allowed_with_alert_high") == 0) return 3;
-        if (s.compareTo("forbidden") == 0) return 4;
 
 
         return 4;
@@ -79,11 +78,11 @@ public class RulesUtil {
                 if (e.getValue().isString()) value = e.getValue().asString();
                 else value = e.getValue().toString();
 
-                xtraOptions = xtraOptions + e.getKey().toString() + ":" + value;
+                xtraOptions = xtraOptions + e.getKey() + ":" + value;
             }
         }
 
-        if (xtraOptions.length() > 0) {
+        if (!xtraOptions.isEmpty()) {
             xtraOptions = SPACE + xtraOptions + SEMI_COL;
         }
 

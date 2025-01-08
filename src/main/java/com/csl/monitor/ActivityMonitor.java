@@ -17,6 +17,7 @@ import com.csl.util.ThreadUtils;
 import com.csl.web.websockets.CSLWebSocket;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Setter;
 
 import static com.csl.util.FileUtils.readJsonFromFile;
 
@@ -29,10 +30,10 @@ public class ActivityMonitor implements IStatusProvider {
 	long data_size_total=0;
 
 
-	boolean showTicks=true;
+	@Setter
+    boolean showTicks=true;
 
-	Map<String, Json> taps= new HashMap<String, Json>();
-	Map<String, Tap> activeTaps;
+	Map<String, Json> taps= new HashMap<>();
 
 	ActivityHistory history = new ActivityHistory(60);
 	Map<String, LocalDateTime> tapsLastActivity = new HashMap<>();
@@ -79,7 +80,6 @@ public class ActivityMonitor implements IStatusProvider {
 		LocalDateTime currentTime = LocalDateTime.now();
 		Json activeTaps = Json.array();
 		boolean is_http_api_reachable = false;
-		Tap tap;
 		for (Map.Entry<String, LocalDateTime> tapLastActivity: tapsLastActivity.entrySet()) {
 
 			Json conf;
@@ -137,32 +137,6 @@ public class ActivityMonitor implements IStatusProvider {
 		return is_http_api_reachable;
 	}
 
-	public boolean isShowTicks() {
-		return showTicks;
-	}
-
-	public void setShowTicks(boolean showTicks) {
-		this.showTicks = showTicks;
-	}
-
-	public int getHistorySize() {
-		/**
-		 * Get the number of elements in the history
-		 *
-		 * @return the number of elements held in the history
-		 */
-		return history.currentHistorySize();
-	}
-
-	public int getMaxHistorySize() {
-		/**
-		 * Get the maximum number of elements in the history
-		 *
-		 * @return the maximum length of the history
-		 */
-		return history.maxHistorySize();
-	}
-
 	public void setMaxHistorySize(int size) {
 		/**
 		 * Set the maximum number of elements in the history
@@ -174,19 +148,14 @@ public class ActivityMonitor implements IStatusProvider {
 
 
 	public void sendTickFromIDS(Json jj) {
-
-		//System.out.println("send tick to hmi:"+jj);
 		Json j=Json.object();
 		j.set("line", jj.toString());
 		j.set("type", "tick_ids");
-//			CSLWebSocketForConsole.broadcastMessageJson("log", j);
 		CSLWebSocket.broadcastMessageJson(CSLWebSocket.WEB_SOCKET_CONSOLE,j );
 
 	}
 
 	public void processEvent(Json jj) {
-
-
 		if (showTicks) System.out.println("Process tick:"+jj);
 		addTick(jj);
 	}
@@ -194,9 +163,7 @@ public class ActivityMonitor implements IStatusProvider {
 
 	// build tic json
 	synchronized Json tic2Json() {
-
 		Json tick = Json.object();
-		// j.set("source", p.getSource().toString());
 		tick.set("timestamp", System.currentTimeMillis());
 		tick.set("type", "TIC");
 
@@ -209,7 +176,6 @@ public class ActivityMonitor implements IStatusProvider {
 
 		Json jtaps=Json.array();
 		for (Map.Entry<String, Json> entry : taps.entrySet()) {
-			//   String key = entry.getKey();
 			Json value = entry.getValue();
 			jtaps.add(value);
 		}
@@ -226,27 +192,17 @@ public class ActivityMonitor implements IStatusProvider {
 	public  void startTicTask() {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-		Runnable sendTic = new Runnable() {
+		Runnable sendTic = () -> {
+            Json tick = tic2Json();
+            sendTickFromIDS(tick);
 
-			@Override
-			public void run() {
-				//System.out.println("TIC");
-				Json tick = tic2Json();
-
-				sendTickFromIDS(tick);
-
-			}
-		};
+        };
 		ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
 				scheduler,
 				sendTic ,
 				1, 1, TimeUnit.SECONDS,
 				LoggerCustomEndpoints.TICS_MONITOR, LoggerInterfaces.CSL_CLIENT
 		);
-	}
-
-	public Json getHistoryJson() {
-		return history.toJson();
 	}
 
 }

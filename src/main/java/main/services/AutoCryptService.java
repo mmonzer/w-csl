@@ -55,7 +55,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         super(name, description, configFileSectionName);
         this.isRemote = isRemote;
         autocrypt = new AutoCrypt(name);
-        syncFrequency = Config.instance.Autocrypt.getSyncFrequency();
+        syncFrequency = Config.INSTANCE.autocrypt.getSyncFrequency();
     }
 
     /**
@@ -476,7 +476,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         String roleName = extractValueString(body, Role.VAULT_ROLE_NAME);
         body.set(Role.ROLE_NAME, roleName);
         getValueString(body, Common.TTL);
-//        body.set(Common.NAME, getValueString(body, Role.ROLE_NAME));
 
         // endregion -- Verify required body keys and extract key values
 
@@ -563,7 +562,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         Json params = Json.object();
         transferValueString(body, params, Common.PATH);
-//        getValueString(body, TTL);
         String serialNumber = transferValueString(body, params, Certificate.SERIAL_NUMBER);
 
         // endregion -- Verify required body keys and extract key values

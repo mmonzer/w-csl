@@ -7,8 +7,8 @@ public enum EntityHttpConnectionField {
     INPUTS("inputs", "inputs"),
     STAGES("stages", "stages");
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     EntityHttpConnectionField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

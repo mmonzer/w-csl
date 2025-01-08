@@ -21,7 +21,7 @@ public class SNMPv2cConnection extends Connection {
     }
 
     protected SNMPv2cConnection(String name, String id, int port, List<String> devices, String community) {
-        super(name, id, devices, StaticConnectionProtocol.SNMPv2c);
+        super(name, id, devices, StaticConnectionProtocol.SNMP_V2C);
         this.port = port;
         this.community = community;
     }

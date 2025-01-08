@@ -11,6 +11,10 @@
         <Logger name="org.eclipse.jetty.io" level="OFF" additivity="false" />
         <Logger name="org.eclipse.jetty.util" level="OFF" additivity="false" />
         <Logger name="org.eclipse.jetty" level="OFF" additivity="false" />
+        <logger name="org.springframework.messaging" level="OFF" additivity="false" />
+        <logger name="org.springframework.messaging.simp.stomp" level="OFF" additivity="false" />
+        <logger name="org.springframework.web.socket" level="OFF" additivity="false" />
+        <logger name="org.springframework.web.socket.sockjs" level="OFF" additivity="false" />
     </Loggers>
 
     <!-- Local variables -->

@@ -4,7 +4,6 @@ import com.csl.core.Config;
 import com.csl.logger.CSLNetworkLogger;
 import com.csl.udp.CSLFlowManager;
 import com.csl.util.NetUtil;
-import com.ucsl.interfaces.ICSLFlowListener;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -53,11 +52,6 @@ public class CSLUDPServer {
     private boolean started = false;
 
     /**
-     * Whether the server should trace all messages
-     */
-    private boolean traceAllMessages = false;
-
-    /**
      * Datagram socket
      */
     DatagramSocket dsocket = null;
@@ -70,7 +64,7 @@ public class CSLUDPServer {
     public void initUDPServer(Config.UdpServerConf config) {
         if (config == null) return;
 
-        boolean on = config.getOn();
+        boolean on = config.isOn();
         if (!on) return;
 
 
@@ -79,9 +73,7 @@ public class CSLUDPServer {
             System.exit(0);
         }
 
-        if (!config.getOn()) return;
-
-        traceAllMessages = config.getTraceAllMessages();
+        if (!config.isOn()) return;
 
         initialized = true;
 
@@ -167,19 +159,8 @@ public class CSLUDPServer {
 
         if (flowManager == null) {
 
-            flowManager = new CSLFlowManager(maxflows, maxsize, traceAllMessages);
+            flowManager = new CSLFlowManager(maxflows, maxsize);
         }
         return flowManager;
-    }
-
-    /**
-     * Add listener to UDP server
-     *
-     * @param queueNumber  number of packets to queue
-     * @param flowListener flow listener of the UDP server
-     */
-    public void addListener(int queueNumber, ICSLFlowListener flowListener) {
-
-        getFlowManager().addListener(queueNumber, flowListener);
     }
 }

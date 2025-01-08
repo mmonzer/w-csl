@@ -127,7 +127,7 @@ import java.util.regex.Pattern;
  * 
  * <p>
  * If you want to add properties to an object in bulk or append a sequence of elements to array, 
- * use the {@link #with(Json, Json...opts)} method. When used on an object, this method expects another
+ * use the (Json, Json...opts) method. When used on an object, this method expects another
  * object as its argument and it will copy all properties of that argument into itself. Similarly,
  * when called on array, the method expects another array and it will append all elements of its
  * argument to itself.
@@ -224,8 +224,8 @@ import java.util.regex.Pattern;
  * 
  * <p>
  * Since version 1.3, mJson supports JSON Schema, draft 4. A schema is represented by the internal
- * class {@link mjson.Json.Schema}. To perform a validation, you have a instantiate a <code>Json.Schema</code>
- * using the factory method {@link mjson.Json.Schema} and then call its <code>validate</code> method
+ * class Json.Schema. To perform a validation, you have a instantiate a <code>Json.Schema</code>
+ * using the factory method Json.Schema and then call its <code>validate</code> method
  * on a JSON instance:
  * </p>
  *  
@@ -538,8 +538,6 @@ public class Json implements java.io.Serializable, Iterable<Json>
      * specification, by their referants. 
      * </p>
      * @param json
-     * @param duplicate
-     * @param done
      * @return
      */
 	static Json expandReferences(Json json, 
@@ -1312,7 +1310,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	
 	/**
 	 * <p>
-	 * Exposes some internal methods that are useful for {@link org.sharegov.mjson.Json.Factory} implementations
+	 * Exposes some internal methods that are useful for Json.Factory implementations
 	 * or other extension/layers of the library.
 	 * </p>
 	 * 
@@ -1443,7 +1441,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * Return the specified property of a <code>Json</code> object or <code>null</code>
 	 * if there's no such property. This method applies only to Json objects.  
 	 * </p>
-	 * @param The property name.
+	 * @param property The property name.
 	 * @return The JSON element that is the value of that property.
 	 */
 	public Json at(String property)	{ throw new UnsupportedOperationException(); }

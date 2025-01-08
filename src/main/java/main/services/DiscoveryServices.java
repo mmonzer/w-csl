@@ -31,7 +31,6 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
-import main.services.endpoints.DiscoveryEndpoints;
 import org.slf4j.MDC;
 
 import java.io.FileNotFoundException;
@@ -79,6 +78,14 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public static final String QUERY_PARAMS = "queryParams";
     public static final String STAGES = "stages";
     public static final String STAGE_INDEX = "stageIndex";
+    public static final String RESULT = "result";
+    public static final String FAILED_TO_DELETE_CONNECTION_INFO = "Failed to delete connection info";
+    public static final String INPUTS = "inputs";
+    public static final String FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear verified connection draft in CSL-Scan";
+    public static final String DEFAULT_JSON_CMD_RESPONSE = "<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error,<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.";
+    public static final String FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI = "Failed to add connection info to CSL-Dbapi";
+    public static final String CONNECTION1 = "connection";
+    public static final String FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear failed connection draft in CSL-Scan";
 
     private final boolean isRemote;
     private ScanWebSocketHandler scanWebSocketHandler = null;
@@ -114,9 +121,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      */
     public DiscoveryServices(String name, String configFileSectionName, boolean isRemote) {
         super(name,
-                "Service in charge of the SNMP manager microservice.\n" +
-                        "It should expose an API to request a scan and fetch the database.\n" +
-                        "It also manages CSL-Scan and the scanning.",
+                """
+                        Service in charge of the SNMP manager microservice.
+                        It should expose an API to request a scan and fetch the database.
+                        It also manages CSL-Scan and the scanning.""",
                 configFileSectionName);
         this.isRemote = isRemote;
     }
@@ -144,7 +152,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     public boolean init() {
         logger.info("Initializing Discovery service ..");
 
-        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(Config.instance.Scan);
+        String scanManagerDiscoveryUrl = ScanUtils.generateScanDiscoveryUrlFromConfig(Config.INSTANCE.scan);
 
         dbapiHandler = new DbapiHandlerForCSLScan();
         scanApiHandler = new ScanApiHandler();
@@ -644,7 +652,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         logger.error("Upgraded to 4.2.1 - > 5.3.0");
                         throw new RuntimeException("Upgraded version : 4.2.1 - > 5.3.0");
                     }
-                    List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<EntityConnectionInfoDraft>();
+                    List<EntityConnectionInfoDraft> entityConnectionInfoDrafts = new ArrayList<>();
                     for (Json connection : listOfConnections) {
                         EntityConnectionInfoDraft entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIUploadingFile(connection);
                         entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
@@ -756,115 +764,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK)
         );
-//        addCmd("test_new_connection", params -> {
-//                    String ipAddress = JsonUtil.getStringFromJson(params, "ip_address", null);
-//                    Json connectionJson = params.get("connection");
-//                    Json baseConnectionIdJson = params.get("base_connection_id");
-//
-//                    connectionJson.set("id", 0);
-//                    connectionJson.set("connected_devices", Json.array(0));
-//                    List<ConnectionProtocol> protocols;
-//                    try {
-//                        protocols = dbapiHandler.fetchDiscoveryProtocols();
-//                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
-//                        logger.error("Failed to fetch discovery protocols", e);
-//                        throw new RuntimeException(e);
-//                    }
-//
-//                    // Fetch the password from the base connection if needed
-//                    if (baseConnectionIdJson != null && baseConnectionIdJson.isNumber()) {
-//                        try {
-//                            Connection baseConnection = dbapiHandler.fetchConnections(List.of(baseConnectionIdJson.asString()), protocols).get(0);
-//                            if (!connectionJson.has("read_only_connection_data")) {
-//                                connectionJson.set("read_only_connection_data", Json.object());
-//                            }
-//                            Json otherDataJson = connectionJson.get("read_only_other_data");
-//                            switch (baseConnection.getProtocol()) {
-//                                case SNMPv3:
-//                                    if (!connectionJson.has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
-//                                        connectionJson.set(SNMPv3ConnectionField.PASSWORD.dbapiName(), ((SNMPv3Connection) baseConnection).getPassword());
-//                                    }
-//                                    if (!otherDataJson.has(SNMPv3ConnectionField.PASSPHRASE.dbapiName())) {
-//                                        otherDataJson.set(SNMPv3ConnectionField.PASSPHRASE.dbapiName(), ((SNMPv3Connection) baseConnection).getPassphrase());
-//                                    }
-//                                    break;
-//                                case RemotePowershell:
-//                                    if (!connectionJson.has(RemotePowershellConnectionField.PASSWORD.dbapiName())) {
-//                                        connectionJson.set(RemotePowershellConnectionField.PASSWORD.dbapiName(), ((RemotePowershellConnection) baseConnection).getPassword());
-//                                    }
-//                                    break;
-//                                case SSH:
-//                                    if (!connectionJson.has(SshConnectionField.PASSWORD.dbapiName())) {
-//                                        connectionJson.set(SshConnectionField.PASSWORD.dbapiName(), ((SshConnection) baseConnection).getPassword());
-//                                    }
-//                                    if (!otherDataJson.has(SshConnectionField.PASSPHRASE.dbapiName())) {
-//                                        otherDataJson.set(SshConnectionField.PASSPHRASE.dbapiName(), ((SshConnection) baseConnection).getPassphrase());
-//                                    }
-//                                    if (!otherDataJson.has(SshConnectionField.PRIVATE_KEY.dbapiName())) {
-//                                        otherDataJson.set(SshConnectionField.PRIVATE_KEY.dbapiName(), ((SshConnection) baseConnection).getPrivateKey());
-//                                    }
-//                                    break;
-//                                case HTTP:
-//                                    if (!connectionJson.has(HttpConnectionField.PASSWORD.dbapiName())) {
-//                                        connectionJson.set(HttpConnectionField.PASSWORD.dbapiName(), ((HttpConnection) baseConnection).getPassword());
-//                                    }
-//                                    // Add the password of the base connection to the stages config
-//                                    Map<Integer, HttpConnection.StageConfig> baseStagesConfig = ((HttpConnection) baseConnection).getStagesConfig();
-//                                    for (Map.Entry<String, Json> stageConfig : otherDataJson.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().entrySet()) {
-//                                        try {
-//                                            String stagePassword = baseStagesConfig.get(Integer.parseInt(stageConfig.getKey())).getPassword();
-//                                            if (stagePassword != null) {
-//                                                if (!stageConfig.getValue().has(SNMPv3ConnectionField.PASSWORD.dbapiName())) {
-//                                                    stageConfig.getValue().set(SNMPv3ConnectionField.PASSWORD.dbapiName(), stagePassword);
-//                                                }
-//                                            }
-//                                        } catch (NullPointerException e) {
-//                                            continue;
-//                                        }
-//                                    }
-//                                    // Add the inputs from the base connection
-//                                    Map<String, String> baseInputs = ((HttpConnection) baseConnection).getInputs();
-//                                    if (!otherDataJson.has(HttpConnectionField.INPUTS.dbapiName())) {
-//                                        otherDataJson.set(HttpConnectionField.INPUTS.dbapiName(), Json.object());
-//                                    }
-//                                    Json inputsJson = otherDataJson.get(HttpConnectionField.INPUTS.dbapiName());
-//                                    baseInputs.entrySet().stream()
-//                                            .filter(input -> !inputsJson.has(input.getKey()) || !inputsJson.get(input.getKey()).isString() || !inputsJson.get(input.getKey()).asString().isEmpty())
-//                                            .forEach(input -> inputsJson.set(input.getKey(), input.getValue()));
-//                                    break;
-//                                default:
-//                                    break;
-//
-//                            }
-//                        } catch (ExecutionException | InterruptedException | TimeoutException | IndexOutOfBoundsException |
-//                                 NullPointerException e) {
-//                            logger.error("Failed to fetch base connection", e);
-//                            return JsonApiResponse.error("Failed to fetch base connection",
-//                                    Json.object("exception", e.getMessage())
-//                            ).toJson();
-//                        }
-//                    }
-//
-//                    Connection connection = Connection.fromDbapiJson(connectionJson, protocols);
-//                    if (ipAddress == null || connection == null) {
-//                        return JsonApiResponse.error("Missing required parameter device or connection",
-//                                Json.object("exception", "Missing parameter device or connection, of type object")
-//                        ).toJson();
-//                    } else {
-//                        Device device = Device.fromIpAddress(ipAddress);
-//                        device.setConnections(List.of(connection));
-//                        return scanApiHandler.testConnection(device).toJson();
-//                    }
-//                },
-//                new JsonCmdHelp().setDesc("Test if a new connection is valid")
-//                        .setParam("ip_address", "The IP address to test the connection on", JsonCmdHelp.STR)
-//                        .setParam("connection", "The connection to test", JsonCmdHelp.JSON)
-//                        .setParam("base_connection_id", "The id of the base connection to fetch the password from", JsonCmdHelp.INT)
-//                        .setResult("<code>{ \"success\": true, \"result\": { \"value\": \"true/false\" }</code> if the operation went without error, " +
-//                                "where result contains \"true\" (as a String) if the connection is valid," +
-//                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
-//                        .setStatus(JsonCmdHelp.STATUS_OK)
-//        );
+
         addCmd("fetch_http_connection_stage", params -> {
                     logger.debug("Starting fetching HTTP connection stage ...");
 
@@ -1082,12 +982,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     HttpConnection httpConnection = null;
                     Map<Integer, HttpConnection.StageConfig> stagesConfig = new HashMap<>();
                     Map<String, String> inputs = new HashMap<>();
-                    if (connectionJson!=null) {
+                    if (connectionJson != null) {
                         Json readOnlyOtherData = connectionJson.get("read_only_other_data");
                         readOnlyOtherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), HttpConnection.StageConfig.fromJson(value)));
-                        if (readOnlyOtherData.has("inputs")) {
-                            for (String key : readOnlyOtherData.get("inputs").asJsonMap().keySet()) {
-                                inputs.put(key, readOnlyOtherData.get("inputs").get(key).asString());
+                        if (readOnlyOtherData.has(INPUTS)) {
+                            for (String key : readOnlyOtherData.get(INPUTS).asJsonMap().keySet()) {
+                                inputs.put(key, readOnlyOtherData.get(INPUTS).get(key).asString());
                             }
                         }
                         httpConnection = new HttpConnection(
@@ -1472,14 +1372,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 Json.object(EXCEPTION, "Failed to start device discovery scan")
                         ).toJson();
                     } else {
-                        logger.info("Started device discovery (external) scan with uuid {}", scan.getUuid());
-                        return JsonApiResponse.result(Json.object("scan_uuid", scan.getUuid())).toJson();
+                        logger.info("Started device discovery (external) scan with uuid {}", scan.getScanUuid());
+                        return JsonApiResponse.result(Json.object("scan_uuid", scan.getScanUuid())).toJson();
                     }
                 },
                 new JsonCmdHelp().setDesc("Start a device discovery scan")
                         .setParam(CONNECTION_INFO_UUID, "The id of the connection info to use", JsonCmdHelp.INT)
-                        .setResult("<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.START_DEVICE_SCAN
         );
@@ -1577,16 +1476,16 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 } else {
                                     // remove connection info from scan
                                     scanApiHandler.deleteConnectionInfo(connectionUuid);
-                                    logger.error("Failed to add connection info to CSL-Dbapi");
-                                    return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
-                                            Json.object(EXCEPTION, "Failed to add connection info to CSL-Dbapi")
+                                    logger.error(FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI);
+                                    return JsonApiResponse.error(FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI,
+                                            Json.object(EXCEPTION, FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI)
                                     ).toJson();
                                 }
                             } catch (Exception e) {
                                 // remove connection info from scan
                                 scanApiHandler.deleteConnectionInfo(connection.getUuid());
                                 logger.error("Failed to add connection info to CSL-DBAPI : {}. Compensated.", e.getMessage(), e);
-                                return JsonApiResponse.error("Failed to add connection info to CSL-Dbapi",
+                                return JsonApiResponse.error(FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI,
                                         Json.object(EXCEPTION, e.getMessage())
                                 ).toJson();
                             }
@@ -1602,9 +1501,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     return response.toJson();
                 },
                 new JsonCmdHelp().setDesc("Add a connection to CSL-Scan")
-                        .setParam("connection", "The connection to add", JsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setParam(CONNECTION, "The connection to add", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.CREATE_CONNECTION);
 
@@ -1657,10 +1555,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         );
                     }
                     return response.toJson();
-                },new JsonCmdHelp().setDesc("Update a connection in CSL-Scan")
-                        .setParam("connection", "The connection to update", JsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                }, new JsonCmdHelp().setDesc("Update a connection in CSL-Scan")
+                        .setParam(CONNECTION1, "The connection to update", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.UPDATE_CONNECTION);
 
@@ -1686,27 +1583,26 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 logger.info("Successfully deleted the connection with uuid={}", connectionUuid);
                             } catch (Exception e) {
                                 logger.error("Failed to delete connection info with uuid={} from CSL-DBAPI : ", connectionUuid, e.getMessage(), e);
-                                response = JsonApiResponse.error("Failed to delete connection info",
+                                response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
                                         Json.object(EXCEPTION, e.getMessage())
                                 );
                             }
                         } else {
                             logger.error("Failed to delete connection info with uuid={} from CSL-Scan : {}", connectionUuid, response.getError().toString());
-                            response = JsonApiResponse.error("Failed to delete connection info",
+                            response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
                                     Json.object(EXCEPTION, response.getError().toString())
                             );
                         }
                     } catch (Exception e) {
                         logger.error("Failed to delete connection info : {}", e.getMessage(), e);
-                        response = JsonApiResponse.error("Failed to delete connection info",
+                        response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
                                 Json.object(EXCEPTION, e.getMessage())
                         );
                     }
                     return response.toJson();
-                },  new JsonCmdHelp().setDesc("Delete a connection from CSL-Scan")
+                }, new JsonCmdHelp().setDesc("Delete a connection from CSL-Scan")
                         .setParam("id", "The uuid of the connection to delete", JsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_CONNECTION);
 
@@ -1738,9 +1634,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         ).toJson();
                     }
                     return response.toJson();
-                },new JsonCmdHelp().setDesc("Clear all connection from CSL-Scan")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                }, new JsonCmdHelp().setDesc("Clear all connection from CSL-Scan")
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_CONNECTION);
 
@@ -1771,15 +1666,14 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         }
                     } catch (Exception e) {
                         logger.error("Failed to delete connection info with uuid={} : {}", connectionUuid, e.getMessage(), e);
-                        response = JsonApiResponse.error("Failed to delete connection info",
+                        response = JsonApiResponse.error(FAILED_TO_DELETE_CONNECTION_INFO,
                                 Json.object(EXCEPTION, e.getMessage())
                         );
                     }
                     return response.toJson();
                 }, new JsonCmdHelp().setDesc("Delete a connection draft from CSL-Scan and secret manager")
                         .setParam("id", "The uuid of the connection draft to delete", JsonCmdHelp.STR)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_CONNECTION_DRAFT);
         addCmd("update_connection_draft", params -> {
@@ -1827,9 +1721,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                     return response.toJson();
                 }, new JsonCmdHelp().setDesc("Update a connection draft in CSL-Scan")
-                        .setParam("connection", "The connection draft to update", JsonCmdHelp.JSON)
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setParam(CONNECTION1, "The connection draft to update", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.UPDATE_CONNECTION_DRAFT);
 
@@ -1854,20 +1747,19 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                             }
                         } else {
                             logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
-                            return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
+                            return JsonApiResponse.error(FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN,
                                     Json.object(EXCEPTION, response.getError().getReason())
                             ).toJson();
                         }
                     } catch (Exception e) {
                         logger.error("Failed to clear verified connection draft : {}", e.getMessage(), e);
-                        return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
+                        return JsonApiResponse.error(FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN,
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
                     return response.toJson();
                 }, new JsonCmdHelp().setDesc("Clear all verified connection drafts from CSL-Scan and secret manager")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_CONNECTION_DRAFT);
 
@@ -1892,20 +1784,19 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                             }
                         } else {
                             logger.error("Failed to clear failed connection drafts from CSL-Scan : {}", response.getError().getReason());
-                            return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Scan",
+                            return JsonApiResponse.error(FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN,
                                     Json.object(EXCEPTION, response.getError().getReason())
                             ).toJson();
                         }
                     } catch (Exception e) {
-                        logger.error("Failed to clear failed connection draft in CSL-Scan", e);
-                        return JsonApiResponse.error("Failed to clear failed connection draft in CSL-Scan",
+                        logger.error(FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN, e);
+                        return JsonApiResponse.error(FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN,
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
                     return response.toJson();
-                },new JsonCmdHelp().setDesc("Clear all failed connection drafts from CSL-Scan and secret manager")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                }, new JsonCmdHelp().setDesc("Clear all failed connection drafts from CSL-Scan and secret manager")
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.DELETE_CONNECTION_DRAFT);
 
@@ -1930,7 +1821,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                             }
                         } else {
                             logger.error("Failed to clear verified connection drafts from CSL-Scan : {}", response.getError().getReason());
-                            return JsonApiResponse.error("Failed to clear verified connection draft in CSL-Scan",
+                            return JsonApiResponse.error(FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN,
                                     Json.object(EXCEPTION, response.getError().getReason())
                             ).toJson();
                         }
@@ -1941,9 +1832,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         ).toJson();
                     }
                     return response.toJson();
-                },new JsonCmdHelp().setDesc("publish all verified connection drafts from CSL-Scan and secret manager")
-                        .setResult("<code>{ \"success\": true }</code> if the operation went without error," +
-                                "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.", JsonCmdHelp.JSON)
+                }, new JsonCmdHelp().setDesc("publish all verified connection drafts from CSL-Scan and secret manager")
+                        .setResult(DEFAULT_JSON_CMD_RESPONSE, JsonCmdHelp.JSON)
                         .setStatus(JsonCmdHelp.STATUS_OK),
                 JsonCmdPrivilegeFamily.CREATE_CONNECTION);
 
@@ -2112,9 +2002,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         externalDiscoveredDevicesSynchronizationService.init(externalScansService);
 
         mqttBroker = CSLContext.getInstance().getMqttBroker();
-        mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
-            dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
-        });
+        mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> dbapiHandler.sendNewDevicesToScanner(scanApiHandler));
         mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
             try {
                 deletedCpeItemsSynchronizationService.syncData();
@@ -2240,11 +2128,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         if (!isRemote) {
             Json websocketStatus = scanWebSocketHandler.getStatus();
-            ///logger.debug("Scan websocket check status : {}", websocketStatus);
-            boolean requestWebsocketStatus = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
-            boolean notificationWebsocketStatus = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
-            /// logger.debug("Scan websocket check status : {}", websocketStatus);
-            status.set("is_websocket_connected", requestWebsocketStatus && notificationWebsocketStatus);
+            boolean isWebSocketConnected = JsonUtil.getBooleanFromJson(websocketStatus, "is_websocket_connected", false);
+            status.set("is_websocket_connected", isWebSocketConnected);
         }
 
         logger.trace("CSL-Scan status : {}", status);

@@ -41,7 +41,7 @@ public class SNMPv3Connection extends Connection {
     }
 
     protected SNMPv3Connection(String name, String id, int port, List<String> devices, String username, String password, String passphrase, SNMPv3AuhtenticationAlgorithm authenticationAlgorithm, SNMPv3PrivacyAlgorithm privacyAlgorithm, Boolean isSimulated, Boolean isKeepPassword, Boolean isKeepSnmpPrivacyKey) {
-        super(name, id, devices, StaticConnectionProtocol.SNMPv3);
+        super(name, id, devices, StaticConnectionProtocol.SNMP_V3);
         this.port = port;
         this.username = username;
         this.password = password;

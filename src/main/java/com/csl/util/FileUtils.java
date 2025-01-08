@@ -9,49 +9,21 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
-public class FileUtils  {
+public class FileUtils {
+    private FileUtils() {
+    }
+
     public static final String FILENAME = "filename";
     public static final String CONTENT = "content";
 
     public static final String EOL = System.getProperty("line.separator");
-
-    public static boolean fileExists(String dir, String filename) {
-        if (dir.isEmpty()) dir = ".";
-        return fileExists(dir + File.separator + filename);
-    }
-
-    public static boolean fileExists(String filename) {
-        return new File(filename).exists();
-    }
-
-    public static boolean dirExists(String f) {
-        File file = new File(f);
-
-        return file.exists() && file.isDirectory();
-    }
-
-    public static String checkAndCreateDir(String s) {
-
-        File file = new File(s);
-
-        if (file.exists()) {
-            if (file.isDirectory()) return s;
-        }
-
-        s = sanitizeDirPath(s);
-
-        file = new File(s);
-        int n = 2;
-        while (file.exists() && !file.isDirectory()) {
-            file = new File(s + n);
-            n++;
-        }
-        if (!file.exists()) file.mkdirs();
-        return file.getPath().toString();
-    }
+    public static final String ERROR = "error";
+    public static final String SNMP_POWERSHELL = "snmp_powershell";
 
     public static Json readJsonFromFile(String dir, String fileName) throws IOException {
         if (dir.isEmpty()) dir = ".";
@@ -65,7 +37,7 @@ public class FileUtils  {
     }
 
     public static String readFile(String filename) throws IOException {
-        try (FileReader fileReader = new FileReader(filename); BufferedReader bufferedReader = new BufferedReader(fileReader)){
+        try (FileReader fileReader = new FileReader(filename); BufferedReader bufferedReader = new BufferedReader(fileReader)) {
             return readFile(bufferedReader);
         }
     }
@@ -80,130 +52,10 @@ public class FileUtils  {
         return stringBuilder.toString();
     }
 
-    public static Json readFileInAJsonText(String filename) {
-        Json result = Json.object();
-        result.set("text", "");
-        result.set("error", "");
-        try {
-            String s = FileUtils.readFile(filename);
-            result.set("text", s);
-        } catch (IOException e) {
-            
-            // e.printStackTrace();
-            result.set("error", e.getMessage());
-        }
-        return result;
-    }
-
-    public static Json writeFileFromText(String filename, String content) {
-        Json result = Json.object();
-
-        result.set("error", "");
-        try {
-            writeToFile(filename, content);
-            return result;
-        } catch (IOException e) {
-            // e.printStackTrace();
-            return result.set("error", e.getMessage());
-        }
-    }
-
-
     public static void writeToFile(String path, String content) throws IOException {
         try (FileWriter myWriter = new FileWriter(path)) {
             myWriter.write(content);
         }
-    }
-
-    private static void addCommaToLastrString(List<String> strList) {
-        int n = strList.size() - 1;
-        strList.set(n, strList.get(n) + ",");
-    }
-
-    public static List<String> jsonToStringList(String name, Json j, List<String> strList, String decal) {
-        if (j.isObject()) {
-            if (name.isEmpty()) strList.add(decal + "{");
-            else strList.add(decal + '"' + name + '"' + ":{");
-            boolean first = true;
-            for (Entry<String, Json> entry : j.asJsonMap().entrySet()) {
-                if (!first) addCommaToLastrString(strList);
-                first = false;
-                jsonToStringList(entry.getKey(), entry.getValue(), strList, "  " + decal);
-            }
-            strList.add(decal + "}");
-        } else if (j.isArray()) {
-            if (name.isEmpty()) strList.add(decal + "[");
-            else strList.add(decal + '"' + name + '"' + ":[");
-            boolean first = true;
-            for (Json je : j.asJsonList()) {
-                if (!first) addCommaToLastrString(strList);
-                first = false;
-                jsonToStringList("", je, strList, "  " + decal);
-            }
-            strList.add(decal + "]");
-        } else {
-            if (name.isEmpty()) strList.add(decal + j.toString());
-            else strList.add(decal + '"' + name + '"' + ":" + j.toString());
-        }
-
-
-        return strList;
-    }
-
-    private static void createFile(String file, List<String> arrData) throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
-            int size = arrData.size();
-            for (int i = 0; i < size; i++) {
-                String str = arrData.get(i).toString();
-                writer.write(str);
-                if (i < size - 1) //This prevent creating a blank like at the end of the file**
-                    writer.write("\n");
-            }
-        }
-    }
-
-    public static void saveJsonToFile(String dir, String fileName, Json j) {
-        if (dir.isEmpty()) dir = ".";
-
-        new File(dir).mkdirs();
-        String file = dir + File.separator + fileName;
-        List<String> strlist = jsonToStringList("", j, new ArrayList<String>(), "");
-        try {
-            createFile(file, strlist);
-        } catch (IOException e) {
-            
-            // e.printStackTrace();
-        }
-    }
-
-    public static String sanitize(String filename) {
-        if (filename == null) return null;
-
-        String[] charsToEscape = {"/", ":","*","?","\"","<",">","|","\\","&"};
-        for (String character : charsToEscape) {
-            filename = filename.replaceAll(character, "_");
-        }
-        
-        return filename;
-    }
-
-    public static String sanitizeDirPath(String path) {
-
-        String[] x = path.split(File.separator);
-
-        boolean absolute = false;
-
-        if (path.startsWith(File.separator)) absolute = true;
-        String s = "";
-        for (int i = 0; i < x.length; i++) {
-            if (x[i].compareTo("..") != 0) {
-                if (!s.isEmpty()) s = s + File.separator;
-                s = s + sanitize(x[i]);
-            }
-        }
-        if (absolute) s = File.separator + s;
-
-        return s;
     }
 
     public static List<Json> parseConnexionsFromCSV(byte[] fileContent) {
@@ -236,11 +88,12 @@ public class FileUtils  {
     /**
      * This method converts a string to camel case.
      * For example, "hello world" becomes "helloWorld".
+     *
      * @param input The string to convert to camel case.
      *              Must not be null.
      *              Must not be empty.
      * @return The input string converted to camel case.
-     * **/
+     **/
     public static String toCamelCase(String input) {
         // Split the input string by spaces
         String[] words = input.split(" ");
@@ -270,30 +123,51 @@ public class FileUtils  {
             // nto enough values (splits method trims the last empty spaces
             if (values.length <= i) {
                 tmp.set(toCamelCase(headers[i]), "");
-                continue;
-            }
-            // check if integer
-            try {
-                tmp.set(toCamelCase(headers[i]), Integer.parseInt(values[i]));
-                continue;
-            } catch (NumberFormatException ignored) {
-            }
-            // check if double
-            try {
-                tmp.set(toCamelCase(headers[i]), Double.parseDouble(values[i]));
-                continue;
-            } catch (NumberFormatException ignored) {
-            }
-            // check if boolean
-            if ("true".equals(values[i]) || "false".equals(values[i])) {
-                tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
-                continue;
-            }
+            } else {
+                // check if integer
+                Integer valueInt = tryToGetInteger(values[i]);
 
-            // otherwise string-
-            tmp.set(toCamelCase(headers[i]), values[i]);
+                if (valueInt != null) {
+                    tmp.set(toCamelCase(headers[i]), valueInt);
+                    continue;
+                }
+                Double valueDouble = tryToGetDouble(values[i]);
+
+                if (valueDouble != null) {
+                    tmp.set(toCamelCase(headers[i]), valueDouble);
+                    continue;
+                }
+
+                if (isBoolean(values[i])) {
+                    tmp.set(toCamelCase(headers[i]), Boolean.parseBoolean(values[i]));
+                    continue;
+                }
+
+                // otherwise string
+                tmp.set(toCamelCase(headers[i]), values[i]);
+            }
         }
         return tmp;
+    }
+
+    private static Integer tryToGetInteger(String string) {
+        try {
+            return Integer.parseInt(string);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static Double tryToGetDouble(String string) {
+        try {
+            return Double.parseDouble(string);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static boolean isBoolean(String string) {
+        return "true".equals(string) || "false".equals(string);
     }
 
     public static List<Json> parseConnexionsFromXLSFile(Json fileContent) throws FileNotFoundException {
@@ -369,68 +243,100 @@ public class FileUtils  {
         Json cnxInputFotCnxRelatedToHttp = Json.object();
         Json tmp = Json.object();
         // check if all values of temp are empty strings, return null
-        boolean allEmpty = false;
         // Iterate through cells
         for (int i = 0; i < headers.getLastCellNum(); i++) {
-            if(row==null) {
+            if (row == null) {
                 return null;
             }
             Cell cell = row.getCell(i);
             String headerKey = toCamelCase(headers.getCell(i).getStringCellValue());
 
-            if (cell==null) {
-                tmp.set( toCamelCase(headers.getCell(i).getStringCellValue()), "");
-                allEmpty = true;
+            if (cell == null) {
+                tmp.set(toCamelCase(headers.getCell(i).getStringCellValue()), "");
                 continue;
-            } else{
-                allEmpty = false;
             }
+
+            boolean condition = !knowFixedColumnForCnxRelatedToHttp.contains(headerKey) && !Objects.equals(sheetName, SNMP_POWERSHELL);
+
             switch (cell.getCellType()) {
                 case STRING:
-                    String stringValue = cell.getStringCellValue();
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey) && !Objects.equals(sheetName, "snmp_powershell")) {
-                        cnxInputFotCnxRelatedToHttp.set(headerKey, stringValue);
-                    } else {
-                        tmp.set(headerKey, stringValue);
-                    }
+                    insertIntoDependingOnCondition(condition, cnxInputFotCnxRelatedToHttp, tmp, headerKey, cell.getStringCellValue());
                     break;
                 case NUMERIC:
-                    long numericValue = Math.round(cell.getNumericCellValue());
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, "snmp_powershell")) {
-                        cnxInputFotCnxRelatedToHttp.set(headerKey, numericValue);
-                    } else {
-                        tmp.set(headerKey, numericValue);
-                    }
+                    insertIntoDependingOnCondition(condition, cnxInputFotCnxRelatedToHttp, tmp, headerKey, Math.round(cell.getNumericCellValue()));
                     break;
                 case BOOLEAN:
-                    boolean booleanValue = cell.getBooleanCellValue();
-                    if (!knowFixedColumnForCnxRelatedToHttp.contains(headerKey)  && !Objects.equals(sheetName, "snmp_powershell")) {
-                        cnxInputFotCnxRelatedToHttp.set(headerKey, booleanValue);
-                    } else {
-                        tmp.set(headerKey, booleanValue);
-                    }
+                    insertIntoDependingOnCondition(condition, cnxInputFotCnxRelatedToHttp, tmp, headerKey, cell.getBooleanCellValue());
                     break;
                 default:
                     break;
             }
         }
-        if (!Objects.equals(sheetName, "snmp_powershell")) {
+        if (!Objects.equals(sheetName, SNMP_POWERSHELL)) {
             tmp.set("protocol", sheetName);
             tmp.set("discoveryProtocolNameRelatedToHttpCnx", sheetName);
         }
-//        if (allEmpty) {
-//            return null;
-//        }
-        // Add cnxInputFotCnxRelatedToHttp JSON to tmp under the key "inputs"
+
         tmp.set("inputs", cnxInputFotCnxRelatedToHttp);
 
         return tmp;
     }
 
+    /**
+     * Inserts the given key and value into a json object. Into the first one if condition is true, otherwise into the second one.
+     *
+     * @param condition condition to insert data into the first object or the second one
+     * @param object1   first object to insert data if condition is true
+     * @param object2   second object to insert data if condition is NOT true
+     * @param key       key of the value to insert
+     * @param value     value of the key to insert
+     */
+    private static void insertIntoDependingOnCondition(boolean condition, Json object1, Json object2, String key, long value) {
+        if (condition) {
+            object1.set(key, value);
+        } else {
+            object2.set(key, value);
+        }
+    }
+
+    /**
+     * Inserts the given key and value into a json object. Into the first one if condition is true, otherwise into the second one.
+     *
+     * @param condition condition to insert data into the first object or the second one
+     * @param object1   first object to insert data if condition is true
+     * @param object2   second object to insert data if condition is NOT true
+     * @param key       key of the value to insert
+     * @param value     value of the key to insert
+     */
+    private static void insertIntoDependingOnCondition(boolean condition, Json object1, Json object2, String key, boolean value) {
+        if (condition) {
+            object1.set(key, value);
+        } else {
+            object2.set(key, value);
+        }
+    }
+
+    /**
+     * Inserts the given key and value into a json object. Into the first one if condition is true, otherwise into the second one.
+     *
+     * @param condition condition to insert data into the first object or the second one
+     * @param object1   first object to insert data if condition is true
+     * @param object2   second object to insert data if condition is NOT true
+     * @param key       key of the value to insert
+     * @param value     value of the key to insert
+     */
+    private static void insertIntoDependingOnCondition(boolean condition, Json object1, Json object2, String key, String value) {
+        if (condition) {
+            object1.set(key, value);
+        } else {
+            object2.set(key, value);
+        }
+    }
+
     public static byte[] parseJsonByteFileToByteArray(Json content) {
         Integer[] fileContent = Arrays.stream(content.asJsonList().stream().map(Json::asInteger).toArray()).toArray(Integer[]::new);
         byte[] bytes = new byte[fileContent.length];
-        for (int i=0;i<fileContent.length;i++) {
+        for (int i = 0; i < fileContent.length; i++) {
             bytes[i] = (byte) (int) (fileContent[i]);
         }
         return bytes;

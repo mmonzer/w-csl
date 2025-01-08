@@ -178,8 +178,8 @@ public class EntityHttpConnectionInput implements IScannerSerializable, IDbapiSe
         EN("en", "EN"),
         FR("fr", "FR");
 
-        private String dbapiName;
-        private String scanName;
+        private final String dbapiName;
+        private final String scanName;
 
         private Language(String dbapiName, String scanName) {
             this.dbapiName = dbapiName;

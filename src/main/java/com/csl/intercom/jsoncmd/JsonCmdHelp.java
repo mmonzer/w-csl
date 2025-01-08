@@ -23,8 +23,8 @@ public class JsonCmdHelp {
 	String desc="";
 	String result="";
 	String resultType="";
-	Map<String,String> paramsdesc= new HashMap<String, String>();
-	Map<String,String> paramstype= new HashMap<String, String>();
+	Map<String,String> paramsdesc= new HashMap<>();
+	Map<String,String> paramstype= new HashMap<>();
 	
 	String status="";
 	ICmdHelpProvider helpProvider=null;
@@ -68,7 +68,7 @@ public class JsonCmdHelp {
 	
 	private Json paramsToJson() {
 		
-		if (paramsdesc.size()==0) return Json.object();
+		if (paramsdesc.isEmpty()) return Json.object();
 		
 		Json j=Json.object();
 		for (Map.Entry<String, String> entry : paramsdesc.entrySet()) {
@@ -113,7 +113,7 @@ public class JsonCmdHelp {
 		s=s+"cmd <"+name+">:";
 		if (!desc.isEmpty()) s=s+desc+"\n";
 		
-		if (paramsdesc.size()==0) {
+		if (paramsdesc.isEmpty()) {
 			s=s+"   "+getStrPad("no parameters",16)+"\n";
 		}
 		else {

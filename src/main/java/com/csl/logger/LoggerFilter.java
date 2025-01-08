@@ -17,6 +17,11 @@ public class LoggerFilter extends Filter<ILoggingEvent> {
             return FilterReply.DENY;
         }
 
+        // STOMP websocket too many logs
+        if (event.getMessage().startsWith("ERROR DefaultTransportRequest No more fallback transports after TransportRequest")) {
+            return FilterReply.DENY;
+        }
+
         // Logs created by Jetty in the new version are not silenciables by the setLog(NoLogging).
         if (event.getLoggerName().startsWith("org.eclipse.jetty")) {
             return FilterReply.DENY;

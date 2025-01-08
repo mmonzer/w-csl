@@ -35,9 +35,8 @@ public class CSLUdpUnicastClient implements Runnable {
      * @param ip           ip address for UDP listening
      * @param port         port for UDP listening
      * @param messageQueue list to add the incoming messages
-     * @param traceAll     true if we want to have the incoming messages written on the terminal.
      */
-    public CSLUdpUnicastClient(String ip, int port, BlockingQueue<CorrelatedMessage> messageQueue, boolean traceAll) {
+    public CSLUdpUnicastClient(String ip, int port, BlockingQueue<CorrelatedMessage> messageQueue) {
         this.ip = ip;
         this.port = port;
         this.messageQueue = messageQueue;
@@ -94,7 +93,7 @@ public class CSLUdpUnicastClient implements Runnable {
                  * After that, the client will throw a timeout exception.
                  */
                 clientSocket.receive(datagramPacket);
-                traceAlertReceived(logger, Config.instance.TapService.getLocalIpAddress(), Config.instance.TapService.getLocalPort(), "/alerts", "UDP");
+                traceAlertReceived(logger, Config.INSTANCE.tapService.getLocalIpAddress(), Config.INSTANCE.tapService.getLocalPort(), "/alerts", "UDP");
 
                 /**
                  * Add the data contained in the datagram packet to the message

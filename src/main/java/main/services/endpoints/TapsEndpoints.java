@@ -354,7 +354,7 @@ public enum TapsEndpoints implements Endpoint {
      */
     TapsEndpoints(String command, JsonCmdHelp help) {
         this.command = command;
-        this.help = (JsonCmdHelp) help;
+        this.help = help;
     }
 
     public String cmd() {

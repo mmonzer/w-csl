@@ -28,7 +28,7 @@ public class StatusNotifier implements AutoCloseable {
     @Setter
     private boolean sendNotifications;
     private final ScheduledExecutorService sender;
-    private static final String ticType = "status";
+    private static final String TIC_TYPE = "status";
 
     /**
      * Create a {@link StatusNotifier}.
@@ -57,7 +57,7 @@ public class StatusNotifier implements AutoCloseable {
      * @param sendNotifications true if we should send notifications periodically, false if we shouldn't.
      */
     public StatusNotifier(boolean sendNotifications) {
-        this(sendNotifications, Config.instance.Status.getNotificationsPeriod());
+        this(sendNotifications, Config.INSTANCE.status.getNotificationsPeriod());
     }
 
     /**
@@ -92,7 +92,7 @@ public class StatusNotifier implements AutoCloseable {
                 notification.set(provider.getKey(), provider.getValue().getStatus());
             }
         }
-        return Json.object("line", notification, "type", ticType);
+        return Json.object("line", notification, "type", TIC_TYPE);
     }
 
     /**

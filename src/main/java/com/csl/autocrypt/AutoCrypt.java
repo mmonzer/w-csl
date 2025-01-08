@@ -48,8 +48,8 @@ public class AutoCrypt {
 
     public AutoCrypt(String name) {
         this.name = name;
-        moduleIp = Config.instance.Autocrypt.getIp();
-        modulePort = Config.instance.Autocrypt.getPort();
+        moduleIp = Config.INSTANCE.autocrypt.getIp();
+        modulePort = Config.INSTANCE.autocrypt.getPort();
     }
 
     /**

@@ -94,7 +94,7 @@ public class CSLInterModuleCommunicationManager {
 		
 		ApiMessageSender sender =listOfSenders.get(apiName);
 		if (sender==null) {
-			sender = new ApiMessageSender(moduleName,apiName, getDebugLevel());
+			sender = new ApiMessageSender(apiName, getDebugLevel());
 			listOfSenders.put(apiName,sender);
 		}
 		return sender.execCmd(jCmd);
@@ -112,7 +112,7 @@ public class CSLInterModuleCommunicationManager {
 		
 		ApiMessageSender sender =listOfSenders.get(apiName);
 		if (sender==null && !mustDeclareApi) {
-				sender = new ApiMessageSender(moduleName,apiName, getDebugLevel());
+				sender = new ApiMessageSender(apiName, getDebugLevel());
 				listOfSenders.put(apiName,sender);
 			}
 

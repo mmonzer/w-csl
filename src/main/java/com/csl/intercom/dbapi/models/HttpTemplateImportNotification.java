@@ -1,7 +1,6 @@
 package com.csl.intercom.dbapi.models;
 
 import com.csl.intercom.dbapi.enums.FileAction;
-import com.csl.intercom.dbapi.enums.FileActionStatus;
 import com.ucsl.json.Json;
 
 import java.time.OffsetDateTime;
@@ -10,12 +9,18 @@ import java.time.OffsetDateTime;
  * Holds the information received from the server to notify a file is available for download, either through MQTT or directly from the HMI.
  */
 public class HttpTemplateImportNotification {
+    public static final String FILE_ACTION_STATUS_ID = "file_action_status_id";
+    public static final String FILE_PATH = "file_path";
+    public static final String UPLOADED_AT = "uploaded_at";
+    public static final String FILE_NAME = "file_name";
+    public static final String CLIENT_ACTION_ID = "client_action_id";
+    public static final String CLIENT_ACTION = "client_action";
+    public static final String STATUS = "status";
+    public static final String NEW_FILE_NAME = "new_file_name";
     private int id;
     private String filePath;
     private String fileName;
     private OffsetDateTime uploadedAt;
-    private boolean fileReceived;
-    private FileAction fileAction;
     private Type type;
 
     private HttpTemplateImportNotification(int id, String filePath, String fileName, OffsetDateTime uploadedAt, FileAction fileAction, Type type) {
@@ -23,7 +28,6 @@ public class HttpTemplateImportNotification {
         this.filePath = filePath;
         this.fileName = fileName;
         this.uploadedAt = uploadedAt;
-        this.fileAction = fileAction;
         this.type = type;
     }
 
@@ -52,7 +56,6 @@ public class HttpTemplateImportNotification {
         String filePath = null;
         String fileName = null;
         OffsetDateTime uploadedAt = null;
-        FileActionStatus fileActionStatus = null;
         FileAction fileAction = null;
         Type type = null;
 
@@ -60,28 +63,28 @@ public class HttpTemplateImportNotification {
             return null;
         }
 
-        if (data.has("file_action_status_id")) {
-            if ( data.get("file_action_status_id").isNumber()) {
-                id = data.get("file_action_status_id").asInteger();
-            } else if (data.get("file_action_status_id").isString()) {
-                id = Integer.parseInt(data.get("file_action_status_id").asString());
+        if (data.has(FILE_ACTION_STATUS_ID)) {
+            if ( data.get(FILE_ACTION_STATUS_ID).isNumber()) {
+                id = data.get(FILE_ACTION_STATUS_ID).asInteger();
+            } else if (data.get(FILE_ACTION_STATUS_ID).isString()) {
+                id = Integer.parseInt(data.get(FILE_ACTION_STATUS_ID).asString());
             }
         }
 
-        if (data.has("file_path") && data.get("file_path").isString()) {
-            filePath = data.get("file_path").asString();
+        if (data.has(FILE_PATH) && data.get(FILE_PATH).isString()) {
+            filePath = data.get(FILE_PATH).asString();
         }
 
-        if (data.has("file_name") && data.get("file_name").isString()) {
-            fileName = data.get("file_name").asString();
+        if (data.has(FILE_NAME) && data.get(FILE_NAME).isString()) {
+            fileName = data.get(FILE_NAME).asString();
         }
 
-        if (data.has("uploaded_at") && data.get("uploaded_at").isString()) {
-            uploadedAt = OffsetDateTime.parse(data.get("uploaded_at").asString());
+        if (data.has(UPLOADED_AT) && data.get(UPLOADED_AT).isString()) {
+            uploadedAt = OffsetDateTime.parse(data.get(UPLOADED_AT).asString());
         }
 
-        if (data.has("client_action_id") && data.get("client_action_id").isNumber()) {
-           fileAction = FileAction.fromValue(data.get("client_action_id").asInteger());
+        if (data.has(CLIENT_ACTION_ID) && data.get(CLIENT_ACTION_ID).isNumber()) {
+           fileAction = FileAction.fromValue(data.get(CLIENT_ACTION_ID).asInteger());
         }
 
         for (Type possibleType : Type.values()) {
@@ -114,36 +117,36 @@ public class HttpTemplateImportNotification {
             return null;
         }
 
-        if (data.has("file_path") && data.get("file_path").isString()) {
-            filePath = data.get("file_path").asString();
+        if (data.has(FILE_PATH) && data.get(FILE_PATH).isString()) {
+            filePath = data.get(FILE_PATH).asString();
         } else {
             return null;
         }
 
-        if (data.has("new_file_name") && data.get("new_file_name").isString()) {
-            fileName = data.get("new_file_name").asString();
+        if (data.has(NEW_FILE_NAME) && data.get(NEW_FILE_NAME).isString()) {
+            fileName = data.get(NEW_FILE_NAME).asString();
         } else {
             return null;
         }
 
-        if (data.has("uploaded_at") && data.get("uploaded_at").isString()) {
-            uploadedAt = OffsetDateTime.parse(data.get("uploaded_at").asString());
+        if (data.has(UPLOADED_AT) && data.get(UPLOADED_AT).isString()) {
+            uploadedAt = OffsetDateTime.parse(data.get(UPLOADED_AT).asString());
         } else {
             return null;
         }
 
-        if (data.has("client_action") && data.get("client_action").isNumber()) {
-            fileAction = FileAction.fromValue(data.get("client_action").asInteger());
+        if (data.has(CLIENT_ACTION) && data.get(CLIENT_ACTION).isNumber()) {
+            fileAction = FileAction.fromValue(data.get(CLIENT_ACTION).asInteger());
         } else {
             return null;
         }
 
-        if (data.has("status")) {
+        if (data.has(STATUS)) {
             int status_id;
-            if (data.get("status").isNumber()) {
-                status_id = data.get("status").asInteger();
-            } else if (data.get("status").isString()) {
-                status_id = Integer.parseInt(data.get("status").asString());
+            if (data.get(STATUS).isNumber()) {
+                status_id = data.get(STATUS).asInteger();
+            } else if (data.get(STATUS).isString()) {
+                status_id = Integer.parseInt(data.get(STATUS).asString());
             } else {
                 return null;
             }
@@ -154,8 +157,7 @@ public class HttpTemplateImportNotification {
                 case 1:
                     type = Type.FILE_PROCESSING;
                     break;
-                case 2:
-                case 3:
+                case 2, 3:
                     type = Type.FILE_IMPORTED_FINISHED;
                     break;
                 default:

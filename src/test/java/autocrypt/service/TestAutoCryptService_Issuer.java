@@ -10,11 +10,9 @@ import com.ucsl.json.Json;
 import main.services.AutoCryptService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.csl.web.HTTPConstants.CONTENT_TYPE;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -120,9 +118,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
     public void testImportIssuer_file500kB() throws Exception {
         // Define expected input/output of the mocked module
         StringBuilder file = new StringBuilder("This is a file.");
-        for (int i=0; i<15; i++) {
-            file.append(file);
-        }
+        file.append(String.valueOf(file).repeat(15));
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);
@@ -182,9 +178,7 @@ public class TestAutoCryptService_Issuer extends TestConfig {
         // Define expected input/output of the mocked module
         String path = "/dev/null";
         StringBuilder file = new StringBuilder("This is a file.");
-        for (int i=0; i<16; i++) {
-            file.append(file);
-        }
+        file.append(String.valueOf(file).repeat(16));
 
         Json expectedInput = Json.object();
         expectedInput.at("path", path);

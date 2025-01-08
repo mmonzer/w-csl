@@ -2,6 +2,7 @@ package com.csl.intercom.cslscan.models;
 
 import com.csl.interfaces.models.IDbapiSerializable;
 import com.csl.interfaces.models.IScannerSerializable;
+import com.csl.util.ListUtils;
 import com.ucsl.json.Json;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
  * Needed because representations are different between DB-API and scanner.
  */
 public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable {
+    public static final String VALUE_STR = "value";
     private Json value;
     private Map<String, HttpApiVariable> childrenMap;
     private List<HttpApiVariable> childrenList;
@@ -37,9 +39,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         } else if (json.isArray()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = null;
-            httpApiVariable.childrenList = json.asJsonList().stream()
-                    .map(HttpApiVariable::fromDbapiJson)
-                    .collect(Collectors.toList());
+            httpApiVariable.childrenList = ListUtils.map(json.asJsonList(), HttpApiVariable::fromDbapiJson);
         } else {
             httpApiVariable.value = json;
             httpApiVariable.childrenMap = null;
@@ -62,7 +62,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
      */
     public static HttpApiVariable fromScannerJson(Json json) {
         HttpApiVariable httpApiVariable = new HttpApiVariable();
-        Json value = json.get("value");
+        Json value = json.get(VALUE_STR);
         if (value.isObject()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = value.asJsonMap().entrySet().stream()
@@ -71,9 +71,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         } else if (value.isArray()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = null;
-            httpApiVariable.childrenList = value.asJsonList().stream()
-                    .map(HttpApiVariable::fromScannerJson)
-                    .collect(Collectors.toList());
+            httpApiVariable.childrenList = ListUtils.map(value.asJsonList(), HttpApiVariable::fromScannerJson);
         } else {
             httpApiVariable.value = value;
             httpApiVariable.childrenMap = null;
@@ -86,13 +84,13 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         if (this.childrenMap != null) {
             Json childrenSerialized = Json.object();
             this.childrenMap.forEach((name, child) -> childrenSerialized.set(name, child.serializeForScanner()));
-            return Json.object("value", childrenSerialized);
+            return Json.object(VALUE_STR, childrenSerialized);
         } else if (this.childrenList != null) {
             Json childrenSerialized = Json.array();
             this.childrenList.forEach(child -> childrenSerialized.add(child.serializeForScanner()));
-            return Json.object("value", childrenSerialized);
+            return Json.object(VALUE_STR, childrenSerialized);
         } else {
-            return Json.object("value", this.value);
+            return Json.object(VALUE_STR, this.value);
         }
     }
 

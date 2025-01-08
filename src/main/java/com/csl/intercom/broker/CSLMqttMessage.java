@@ -189,7 +189,7 @@ public class CSLMqttMessage {
     public String toString() {
         if (error.isError()) {
             Json result = Json.object("error", error.getValue());
-            if (errorMsg != null && !errorMsg.equals("")) {
+            if (errorMsg != null && !errorMsg.isEmpty()) {
                 result.set("error_message", errorMsg);
             }
             return result.asString();

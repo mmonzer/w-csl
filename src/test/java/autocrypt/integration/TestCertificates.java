@@ -3,7 +3,6 @@ package autocrypt.integration;
 import com.csl.util.JCmd;
 import com.ucsl.json.Json;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.junit.jupiter.api.Test;
 
 import static autocrypt.OutilsForTesting.sendPostTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;

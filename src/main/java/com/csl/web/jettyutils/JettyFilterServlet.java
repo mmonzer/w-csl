@@ -2,10 +2,6 @@ package com.csl.web.jettyutils;
 
 import com.csl.logger.LoggerConstants;
 import com.csl.web.HTTPConstants;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -26,7 +22,7 @@ public class JettyFilterServlet implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-
+        // Still to be implemented if needed
     }
 
     @Override
@@ -54,6 +50,7 @@ public class JettyFilterServlet implements Filter {
 
     @Override
     public void destroy() {
+        // Still to be implemented if needed
     }
 
     /**

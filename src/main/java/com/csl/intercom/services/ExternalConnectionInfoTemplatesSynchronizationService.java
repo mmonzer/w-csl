@@ -4,7 +4,6 @@ import com.csl.intercom.cslscan.ScanApiHandler;
 import com.csl.intercom.cslscan.models.ExternalDiscoveredDevice;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.logger.LoggerCustomEndpoints;
-import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

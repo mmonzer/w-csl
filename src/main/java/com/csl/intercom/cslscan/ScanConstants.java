@@ -1,12 +1,16 @@
 package com.csl.intercom.cslscan;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ScanConstants {
-    public static final Map<String, String> connectionInfoFields = new HashMap<>();
+    private ScanConstants(){}
+    @Getter
+    private static final Map<String, String> connectionInfoFields = new HashMap<>();
     public static final String QUERY_PROTOCOL = "queryProtocol";
     public static final String COMMUNITY = "community";
     public static final String USER = "user";
@@ -17,14 +21,14 @@ public class ScanConstants {
     public static final String PRIV_PROTOCOL_NAME = "privProtocolName";
 
     static {
-        connectionInfoFields.put(QUERY_PROTOCOL, "queryProtocol");
-        connectionInfoFields.put(COMMUNITY, "community");
-        connectionInfoFields.put(USER, "user");
-        connectionInfoFields.put(PASS, "pass");
-        connectionInfoFields.put(PRIV_PASS_PHRASE, "privPassPhrase");
-        connectionInfoFields.put(SECURITY_LEVEL, "securityLevel");
-        connectionInfoFields.put(AUTH_PROTOCOL_NAME, "authProtocolName");
-        connectionInfoFields.put(PRIV_PROTOCOL_NAME, "privProtocolName");
+        connectionInfoFields.put(QUERY_PROTOCOL, QUERY_PROTOCOL);
+        connectionInfoFields.put(COMMUNITY, COMMUNITY);
+        connectionInfoFields.put(USER, USER);
+        connectionInfoFields.put(PASS, PASS);
+        connectionInfoFields.put(PRIV_PASS_PHRASE, PRIV_PASS_PHRASE);
+        connectionInfoFields.put(SECURITY_LEVEL, SECURITY_LEVEL);
+        connectionInfoFields.put(AUTH_PROTOCOL_NAME, AUTH_PROTOCOL_NAME);
+        connectionInfoFields.put(PRIV_PROTOCOL_NAME, PRIV_PROTOCOL_NAME);
     }
 
     static final List<String> snmpv2cConnectionInfoFields = new ArrayList<>();
@@ -44,7 +48,8 @@ public class ScanConstants {
         snmpv3ConnectionInfoFields.add(PRIV_PROTOCOL_NAME);
     }
 
-    public static final List<String> finishedScanStatuses = new ArrayList<>(5);
+    @Getter
+    private static final List<String> finishedScanStatuses = new ArrayList<>(5);
     static {
         finishedScanStatuses.add("READY_CHANGES");
         finishedScanStatuses.add("READY_NO_CHANGES");
@@ -53,7 +58,8 @@ public class ScanConstants {
         finishedScanStatuses.add("ERROR");
     }
 
-    public static final List<String> successScanStatuses = new ArrayList<>(2);
+    @Getter
+    private static final List<String> successScanStatuses = new ArrayList<>(2);
     static {
         successScanStatuses.add("READY_CHANGES");
         successScanStatuses.add("READY_NO_CHANGES");

@@ -15,9 +15,7 @@ import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
-import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.MultiPartContentProvider;
-import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.client.util.*;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.ClientConnector;
@@ -29,7 +27,7 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -47,7 +45,7 @@ public class ApiHandler implements AutoCloseable {
     private final String moduleName;
     @Getter
     @Setter
-    protected HashMap<HttpHeader, String> headers = new HashMap<>();
+    protected EnumMap<HttpHeader, String> headers = new EnumMap<>(HttpHeader.class);
     protected HttpClient httpClient;
     private IJsonApeResponseToJsonApiResponse outputReformer = e -> e;
     private boolean useSSL = false;
@@ -189,13 +187,13 @@ public class ApiHandler implements AutoCloseable {
         return getUrl() + endpoint.replace(" ", "%20").replace(":", "%3A");
     }
 
+    /**
+     * Add the api key to the headers
+     * @param contentType content type of the request
+     */
     public void setCustomHeaders(String contentType) {
-        /**
-         * Add the api key to the headers
-         * @param contentType content type of the request
-         */
-        String apiKey = Config.instance.Client.getApiKey();
-        HashMap<HttpHeader, String> customHeaders = new HashMap<>();
+        String apiKey = Config.INSTANCE.client.getApiKey();
+        EnumMap<HttpHeader, String> customHeaders = new EnumMap<>(HttpHeader.class);
         customHeaders.put(HttpHeader.AUTHORIZATION, "Api-Key " + apiKey);
         customHeaders.put(HttpHeader.CONTENT_TYPE, contentType);
         setHeaders(customHeaders);
@@ -566,10 +564,10 @@ public class ApiHandler implements AutoCloseable {
      * @param headers headers to add
      * @param request request to add parameters
      */
-    protected static void addHeadersToRequest(HashMap<HttpHeader, String> headers, Request request) {
+    protected static void addHeadersToRequest(EnumMap<HttpHeader, String> headers, Request request) {
         // Add correlation ID to request
         if (MDC.get(X_CORRELATION_ID) != null) {
-            request.header(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
+            addHeaderTo(request, X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
         }
 
         // Add other headers to request
@@ -577,7 +575,7 @@ public class ApiHandler implements AutoCloseable {
             return;
         }
         for (Map.Entry<HttpHeader, String> param : headers.entrySet()) {
-            request.header(param.getKey().toString(), param.getValue());
+            addHeaderTo(request, param.getKey().toString(), param.getValue());
         }
     }
 
@@ -593,7 +591,7 @@ public class ApiHandler implements AutoCloseable {
                     request.getMethod().equals(PATCH) ||
                     request.getMethod().equals(HttpMethod.PUT.toString()) ||
                     request.getMethod().equals(HttpMethod.DELETE.toString())) {
-                request.content(new StringContentProvider(body.toString()), JSON_FORMAT);
+                addBodyTo(request, body);
             } else if (!request.getMethod().equals(HttpMethod.GET.toString())) {
                 throw new UnsupportedOperationException("Unsupported HTTP method: " + request.getMethod());
             }
@@ -608,12 +606,12 @@ public class ApiHandler implements AutoCloseable {
      */
     private static void addBodyToRequestMultipart(Json body, Request request) {
         if (body != null) {
-            MultiPartContentProvider multiPart = new MultiPartContentProvider();
-            for (Map.Entry<String, Json> e : body.asJsonMap().entrySet()) {
-                multiPart.addFieldPart(e.getKey(), new StringContentProvider(e.getValue().toString()), null);
+            try (MultiPartRequestContent multiPart = new MultiPartRequestContent()) {
+                for (Map.Entry<String, Json> e : body.asJsonMap().entrySet()) {
+                    multiPart.addFieldPart(e.getKey(), new StringRequestContent(e.getValue().toString()), null);
+                }
+                addBodyTo(request, multiPart);
             }
-            multiPart.close();
-            request.content(multiPart);
         }
     }
 
@@ -691,7 +689,7 @@ public class ApiHandler implements AutoCloseable {
     public JsonApiResponse downloadFile(HttpMethod method, String endpoint, Json params, Json body) {
         endpoint = endpoint.replace(":", "%3A").replace(" ", "%20");
         Request request = createRequest(method, endpoint, params, body);
-        request.header("Accept", OCTET_STREAM_FORMAT);
+        addHeaderTo(request, "Accept", OCTET_STREAM_FORMAT);
 
         // Send the request and get the response async
         InputStreamResponseListener listener = new InputStreamResponseListener();
@@ -771,5 +769,28 @@ public class ApiHandler implements AutoCloseable {
      */
     public void addOutputReformer(IJsonApeResponseToJsonApiResponse callback) {
         this.outputReformer = callback;
+    }
+
+
+    public static void addBodyTo(Request request, String format, String body) {
+        request.body(new StringRequestContent(format, body));
+    }
+    public static void addBodyTo(Request request, Json body) {
+        addBodyTo(request, JSON_FORMAT, body.toString());
+        addHeaderTo(request, HttpHeader.CONTENT_TYPE, JSON_FORMAT);
+    }
+    public static void addBodyTo(Request request, MultiPartRequestContent body) {
+        addBodyTo(request, body.getContentType(), body.toString());
+        addHeaderTo(request, HttpHeader.CONTENT_TYPE, body.getContentType());
+    }
+
+    public static void addHeaderTo(Request request, String key, String value) {
+        request.headers(fields -> {
+                    fields.add(key, value);
+                }
+        );
+    }
+    public static void addHeaderTo(Request request, HttpHeader key, String value) {
+        addHeaderTo(request, key.toString(), value);
     }
 }

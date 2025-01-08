@@ -1,7 +1,6 @@
 package com.csl.core;
 
 import com.csl.alert.CSLAlertManager;
-import com.csl.defaultclasses.FileStoreService;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
 import com.csl.intercom.jsoncmd.JServiceLoader;
 import com.csl.intercom.status.StatusNotifier;
@@ -12,9 +11,6 @@ import lombok.Setter;
 import main.services.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class CSLContext {
     /**
@@ -38,7 +34,7 @@ public class CSLContext {
      */
     private CSLAlertManager cslAlertManager = null;
 
-    private static final String CONFIG_FILE = "application.json";
+
 
     private CSLMqttBrokerHandler mqttBroker = null;
 
@@ -54,15 +50,9 @@ public class CSLContext {
      */
     private CSLUDPServer cslUDPServer = null;
 
-    private final Map<String, Class<Module>> moduleClassList = new HashMap<>();
-
-    private long initialTime = 0;
-
     @Getter
     @Setter
     private boolean testMode = false;
-
-    FileStoreService fileStoreService;
 
     /**
      * Private constructor for singleton pattern.
@@ -156,29 +146,6 @@ public class CSLContext {
     }
 
     /**
-     * Registers a module class with the given name.
-     *
-     * @param name The name of the module.
-     * @param c    The class of the module.
-     */
-    public void registerModuleClass(String name, Class<?> c) {
-        if (moduleClassList.get(name) != null) {
-            logger.error("Module {} already registered", name);
-            return;
-        }
-        moduleClassList.put(name, (Class<Module>) c);
-    }
-
-    /**
-     * Gets the time elapsed since the context was started.
-     *
-     * @return The time in milliseconds.
-     */
-    public long getTimeFromStartingTime() {
-        return getSystemCurrentTimeMillis() - initialTime;
-    }
-
-    /**
      * Gets the current system time, accounting for replay mode if enabled.
      *
      * @return The current system time in milliseconds.
@@ -193,37 +160,24 @@ public class CSLContext {
      * @return The configuration instance.
      */
     public Config getConfig() {
-        if (Config.instance.Server == null) {
+        if (Config.INSTANCE.server == null) {
             logger.error("Invalid config file, update to new format");
             System.exit(0);
         }
-        return Config.instance;
-    }
-
-    /**
-     * Sets the configuration file name and reloads the configuration.
-     *
-     * @param configFileName The configuration file name.
-     * @return The configuration instance.
-     */
-    private Config setConfigFileName(String configFileName) {
-        logger.debug("Reading configuration from {}", configFileName);
-        Config.reload(configFileName);
-        return getConfig();
+        return Config.INSTANCE;
     }
 
     /**
      * Initializes the CSL context with the default running arguments.
      */
     public void init() {
-        setConfigFileName(CONFIG_FILE);
         getConfig();
 
         this.cslConfDir = buildFullPathInUserDir("cslconf");
 
         org.eclipse.jetty.util.log.Log.setLog(new com.csl.core.NoLogging());
 
-        cslAlertManager = new CSLAlertManager(getConfig().AlertViewer);
+        cslAlertManager = new CSLAlertManager(getConfig().alertViewer);
 
         setCslHttpServer(new CSLHttpServerJetty());
         setCslUDPServer(new CSLUDPServer());
@@ -247,21 +201,14 @@ public class CSLContext {
      *
      * @param isServer Indicates if the context should operate as a server (true), client (false), or uninitialized (null).
      */
-    public void postInit(Boolean isServer) {
+    public void postInit(boolean isServer) {
         this.isServer = isServer;
 
-        if (isServer == null) {
-            logger.error("CSLContext not initialized as server or client");
-            return;
-        }
-
         if (isServer) {
-            getCslHttpServer().initServer(Config.instance.Server);
+            getCslHttpServer().initServer(Config.INSTANCE.server);
             getStatusNotifier().setSendNotifications(false);
         } else {
-            getCslUDPServer().initUDPServer(Config.instance.UdpServerConf);
-            initDynamicModules();
-            initTime();
+            getCslUDPServer().initUDPServer(Config.INSTANCE.udpServerConf);
         }
     }
 
@@ -269,11 +216,6 @@ public class CSLContext {
      * Starts the HTTP and UDP servers.
      */
     public void startServers() {
-        if (isServer == null) {
-            logger.error("CSLContext not initialized as server or client, cannot start servers");
-            return;
-        }
-
         if (isServer) {
             getCslHttpServer().start();
         } else {
@@ -281,23 +223,6 @@ public class CSLContext {
         }
 
         JServiceLoader.getCSLInterModuleCommunicationManager().start();
-    }
-
-    /**
-     * Initializes the timing settings for module execution.
-     */
-    private void initTime() {
-        initialTime = getSystemCurrentTimeMillis();
-    }
-
-    /**
-     * Initializes the modules based on the configuration.
-     */
-    private void initDynamicModules() {
-        logger.debug("Loading modules");
-
-        int numberOfExecLoops = Config.instance.ModuleExec.getNumberOfExecLoops();
-        logger.debug("Running {} execution loops", numberOfExecLoops);
     }
 
     /**
@@ -322,16 +247,5 @@ public class CSLContext {
             statusNotifier = new StatusNotifier(false);
         }
         return statusNotifier;
-    }
-
-    /**
-     * Gets the file storage service
-     * @return file storage service
-     */
-    public FileStoreService getFileStoreService() {
-        if (fileStoreService == null) {
-            fileStoreService = new FileStoreService(getCslConfDir());
-        }
-        return fileStoreService;
     }
 }

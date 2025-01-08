@@ -1,10 +1,10 @@
 package com.csl.intercom.dbapi.enums;
 
 public enum StaticConnectionProtocol {
-    SNMPv1("SNMPv1", "SNMPV1"),
-    SNMPv2c("SNMPv2c", "SNMPV2c"),
-    SNMPv3("SNMPv3", "SNMPV3"),
-    RemotePowershell("Powershell", "POWERSHELL"),
+    SNMP_V1("SNMPv1", "SNMPV1"),
+    SNMP_V2C("SNMPv2c", "SNMPV2c"),
+    SNMP_V3("SNMPv3", "SNMPV3"),
+    REMOTE_POWERSHELL("Powershell", "POWERSHELL"),
     HTTP("HTTP", "HTTP"),
     SSH("SSH", "SSH"),
     ;
@@ -12,7 +12,7 @@ public enum StaticConnectionProtocol {
     private final String dbapiName;
     private final String scanName;
 
-    private StaticConnectionProtocol(String dbapiName, String scanName) {
+    StaticConnectionProtocol(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;
         this.scanName = scanName;
     }

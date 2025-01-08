@@ -1,7 +1,5 @@
-package com.csl.autocrypt.tests;
+package autocrypt;
 
-import com.csl.core.CSLContext;
-import com.csl.core.Config;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.ucsl.json.Json;
 import main.services.AutoCryptService;

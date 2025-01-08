@@ -25,7 +25,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
     protected Logger logger0;
     protected CSLApplicativeLogger logger;
 
-    public AutocryptTemplateSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt, String prefixLogger) {
+    protected AutocryptTemplateSynchronizationService(DbapiHandlerForCSLAutoCrypt dbapiHandlerForCSLAutoCrypt, ApiHandlerForCSLAutoCrypt apiHandlerForCSLAutoCrypt, String prefixLogger) {
         super("CSL-Autocrypt");
         this.dbapiHandlerForCSLAutoCrypt = dbapiHandlerForCSLAutoCrypt;
         this.apiHandlerForCSLAutoCrypt = apiHandlerForCSLAutoCrypt;

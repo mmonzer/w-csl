@@ -11,7 +11,7 @@ public enum ScanCollection {
     SNMP_WALKS("snmp_walk"),
     ;
 
-    private String name;
+    private final String name;
 
     private ScanCollection(String name) {
         this.name = name;

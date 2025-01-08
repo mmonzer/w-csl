@@ -16,7 +16,6 @@ import com.csl.web.jettyutils.CustomJettyWebSocketServlet;
 import com.csl.web.websockets.CSLWebSocket;
 import com.csl.web.websockets.CSLWebSocketHandler;
 import com.ucsl.json.Json;
-import jakarta.websocket.server.ServerEndpoint;
 import jakarta.websocket.server.ServerEndpointConfig;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -80,7 +79,7 @@ public class CSLHttpServerJetty {
      * @param config The server configuration object.
      */
     public void initServer(Config.Server config) {
-        boolean isEnabled = config.getOn();
+        boolean isEnabled = config.isOn();
         if (!isEnabled) return;
 
         isRemote = true;
@@ -174,7 +173,7 @@ public class CSLHttpServerJetty {
             // keep the web sockets alive
             if (isRemote) startRefreshWebSocketTask(REFRESH_SOCKET_PERIOD);
 
-            logger.debug("Web server started on port {} ", Config.instance.Server.getWebserverPort());
+            logger.debug("Web server started on port {} ", Config.INSTANCE.server.getWebserverPort());
         } catch (Exception e) {
             logger.error("Error starting server", e);
             exit(0);
@@ -269,8 +268,8 @@ public class CSLHttpServerJetty {
                 Json params = data.get(JCmd.PARAMETERS);
 
                 if (cmd == null) {
-                    logger.warn("Invalid command: {}", cmd);
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid command: " + cmd);
+                    logger.warn("Invalid command: null");
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid command: null");
                     return;
                 }
 
@@ -360,19 +359,19 @@ public class CSLHttpServerJetty {
         if (interval <= 0) return;
 
         Runnable refreshTask = () -> {
-            if (Config.instance.Server.getSendAlerts())
+            if (Config.INSTANCE.server.isSendAlerts())
                 // Refresh the CSLWebSocketForAlert
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_ALERT);
-            if (Config.instance.Server.getSendConsoleOutput())
+            if (Config.INSTANCE.server.isSendConsoleOutput())
                 // Refresh the CSLWebSocketForConsole
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_CONSOLE);
-            if (Config.instance.Server.getVarsCommands())
+            if (Config.INSTANCE.server.isVarsCommands())
                 // Refresh the CSLWebSocketForVariables
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_VARIABLES);
-            if (Config.instance.Server.getDatabaseCommands())
+            if (Config.INSTANCE.server.isDatabaseCommands())
                 // Refresh the CSLWebSocketForDatabase
                 CSLWebSocket.refresh(CSLWebSocket.WEB_SOCKET_DATABASE);
-            if (Config.instance.Server.getJcmdCommands())
+            if (Config.INSTANCE.server.isJcmdCommands())
                 // Refresh the CSLWebSocketForJcmd
                 CSLWebSocket.refresh(CSLWebSocketForJcmd.WEB_SOCKET_CMD);
         };

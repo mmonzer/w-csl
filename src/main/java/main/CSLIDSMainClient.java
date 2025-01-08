@@ -60,12 +60,11 @@ public class CSLIDSMainClient {
      * @return the websocket url
      */
     public static @NotNull String getWebSocketUrl() {
-        Boolean useSsl = Config.instance.Client.getUseSsl();
-        useSsl = (useSsl != null) && useSsl;
-        String serverIp = Config.instance.Client.getIpServerRemote();
-        serverIp = resolveHostNameIfRequired(serverIp, Config.instance.Client.getForceHostNameResolution());
-        int serverPort = Config.instance.Client.getPortServerRemote();
-        String serverUrlPrefix = Config.instance.Client.getServerRemoteUrlPrefix();
+        boolean useSsl = Config.INSTANCE.client.isUseSsl();
+        String serverIp = Config.INSTANCE.client.getIpServerRemote();
+        serverIp = resolveHostNameIfRequired(serverIp, Config.INSTANCE.client.isForceHostNameResolution());
+        int serverPort = Config.INSTANCE.client.getPortServerRemote();
+        String serverUrlPrefix = Config.INSTANCE.client.getServerRemoteUrlPrefix();
         serverUrlPrefix = (serverUrlPrefix != null) ? serverUrlPrefix : "";
 
 
@@ -103,7 +102,7 @@ public class CSLIDSMainClient {
         // Disable Jetty logging
         org.eclipse.jetty.util.log.Log.setLog(new NoLogging());
 
-        Config config = Config.instance;
+        Config config = Config.INSTANCE;
         CSLContext.getInstance().init();
         configureClientSettings(config);
 
@@ -128,7 +127,7 @@ public class CSLIDSMainClient {
         startServers();
 
         // Launch the Web API server if required by the configuration (for testing purposes)
-        launchWebApiServerIfRequired(Config.instance);
+        launchWebApiServerIfRequired(Config.INSTANCE);
     }
 
     /**
@@ -148,8 +147,8 @@ public class CSLIDSMainClient {
      */
     private static void configureClientSettings(Config config) {
         // Override server configuration for the client
-        config.Server.setOn(false);
-        config.UdpServerConf.setOn(true);
+        config.server.setOn(false);
+        config.udpServerConf.setOn(true);
     }
 
     /**
@@ -231,9 +230,9 @@ public class CSLIDSMainClient {
      * @param config the configuration object
      */
     private static void launchWebApiServerIfRequired(Config config) {
-        if (config.Client.getLaunchWebApiServer()) {
+        if (config.client.isLaunchWebApiServer()) {
             CSLHttpServerJetty server = new CSLHttpServerJetty();
-            server.initServer(config.Client);
+            server.initServer(config.client);
             server.start();
         }
     }

@@ -11,7 +11,7 @@ import main.services.endpoints.Endpoint;
 /**
  * Generic Service with a name, description, a configuration file and an API command.
  */
-public abstract class Service implements ICSLService {
+public abstract class Service {
     /**
      * Name of service
      */
@@ -38,7 +38,7 @@ public abstract class Service implements ICSLService {
      * @param description           description of the service
      * @param configFileSectionName name of corresponding configuration file
      */
-    public Service(String name, String description, String configFileSectionName) {
+    protected Service(String name, String description, String configFileSectionName) {
         this(name, description, configFileSectionName, "");
     }
 
@@ -51,7 +51,7 @@ public abstract class Service implements ICSLService {
      * @param configFileSectionName name of corresponding configuration file
      * @param rootAPI               root for the api commands
      */
-    public Service(String name, String description, String configFileSectionName, String rootAPI) {
+    protected Service(String name, String description, String configFileSectionName, String rootAPI) {
         this.name = name;
         this.description = description;
         this.configFileSectionName = configFileSectionName;
@@ -66,7 +66,7 @@ public abstract class Service implements ICSLService {
      * @param name                  name of the service
      * @param configFileSectionName name of corresponding configuration file
      */
-    public Service(String name, String configFileSectionName) {
+    protected Service(String name, String configFileSectionName) {
         this(name, name + " description", configFileSectionName);
     }
 
@@ -128,7 +128,7 @@ public abstract class Service implements ICSLService {
      *
      * @return the api command object with the name, description and commands of the service
      */
-    @Override
+//    @Override
     public ApiCommands getApiCommands() {
         return apiCommands;
     }
@@ -138,7 +138,7 @@ public abstract class Service implements ICSLService {
      *
      * @return false as default
      */
-    @Override
+//    @Override
     public boolean terminate() {
         return false;
     }

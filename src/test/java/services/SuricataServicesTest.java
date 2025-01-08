@@ -3,17 +3,14 @@ package services;
 import com.ucsl.json.Json;
 import main.services.SuricataServices;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 public class SuricataServicesTest {
-    private SuricataServices suricataServices;
-
 
     /*Test unitaire insuffisant */
     //TODO : A tester en test intégration
     @BeforeEach
     public void setUp(){
-        suricataServices = new SuricataServices();
+        SuricataServices suricataServices = new SuricataServices();
     }
 
     //@Test

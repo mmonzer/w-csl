@@ -4,12 +4,22 @@ import com.csl.logger.CSLApplicativeLogger;
 import lombok.Getter;
 import lombok.Setter;
 import com.ucsl.json.Json;
-import main.services.DiscoveryServices;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class EntityConnectionInfoDraft {
+    public static final String USERNAME_STR = "username";
+    public static final String PASSWORD_STR = "password";
+    public static final String SNMP_COMMUNITY = "snmpCommunity";
+    public static final String SNMP_PRIVACY_KEY = "snmpPrivacyKey";
+    public static final String SNMP_AUTHENTICATION_ALGORITHM = "snmpAuthenticationAlgorithm";
+    public static final String SNMP_PRIVACY_ALGORITHM = "snmpPrivacyAlgorithm";
+    public static final String SSH_KEY = "sshKey";
+    public static final String INPUTS_STR = "inputs";
+    public static final String DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX = "discoveryProtocolNameRelatedToHttpCnx";
+    public static final String PROTOCOL_STR = "protocol";
+    public static final String OTHER_DATA_DRAFT = "other_data_draft";
     @Getter
     @Setter
     private String uuid;
@@ -50,7 +60,7 @@ public class EntityConnectionInfoDraft {
     OffsetDateTime createdAt;
     @Getter @Setter
     OffsetDateTime updatedAt;
-    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DiscoveryServices.class);
+    private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(EntityConnectionInfoDraft.class);
 
     public EntityConnectionInfoDraft(String uuid, String port, String name, String userName, String password, String discoveryProtocol) {
         this.uuid = uuid;
@@ -111,18 +121,18 @@ public class EntityConnectionInfoDraft {
     public Json serializeForScanner() {
         return Json.object(
                 "uuid", this.uuid,
-                "protocol", this.protocol,
+                PROTOCOL_STR, this.protocol,
                 "port", this.port,
                 "name", this.name,
-                "username", this.username,
-                "password", this.password,
-                "snmpCommunity", this.snmpCommunity,
-                "snmpPrivacyKey", this.snmpPrivacyKey,
-                "snmpAuthenticationAlgorithm", this.snmpAuthenticationAlgorithm,
-                "snmpPrivacyAlgorithm", this.snmpPrivacyAlgorithm,
-                "sshKey", this.sshKey,
-                "inputs", this.inputs,
-                "discoveryProtocolNameRelatedToHttpCnx", this.discoveryProtocolNameRelatedToHttpCnx,
+                USERNAME_STR, this.username,
+                PASSWORD_STR, this.password,
+                SNMP_COMMUNITY, this.snmpCommunity,
+                SNMP_PRIVACY_KEY, this.snmpPrivacyKey,
+                SNMP_AUTHENTICATION_ALGORITHM, this.snmpAuthenticationAlgorithm,
+                SNMP_PRIVACY_ALGORITHM, this.snmpPrivacyAlgorithm,
+                SSH_KEY, this.sshKey,
+                INPUTS_STR, this.inputs,
+                DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX, this.discoveryProtocolNameRelatedToHttpCnx,
                 "isKeepPassword", this.isKeepPassword,
                 "isKeepSshKey", this.isKeepSshKey,
                 "isKeepPassphrase", this.isKeepPassphrase,
@@ -133,18 +143,18 @@ public class EntityConnectionInfoDraft {
     public Json serializeForDbapi() {
         return Json.object(
                 "uuid", this.uuid,
-                "protocol", this.protocol,
+                PROTOCOL_STR, this.protocol,
                 "port", this.port,
                 "name", this.name,
-                "username", this.username,
-                "password", this.password,
-                "snmpCommunity", this.snmpCommunity,
-                "snmpPrivacyKey", this.snmpPrivacyKey,
-                "snmpAuthenticationAlgorithm", this.snmpAuthenticationAlgorithm,
-                "snmpPrivacyAlgorithm", this.snmpPrivacyAlgorithm,
-                "sshKey", this.sshKey,
-                "inputs", this.inputs,
-                "discoveryProtocolNameRelatedToHttpCnx", this.discoveryProtocolNameRelatedToHttpCnx
+                USERNAME_STR, this.username,
+                PASSWORD_STR, this.password,
+                SNMP_COMMUNITY, this.snmpCommunity,
+                SNMP_PRIVACY_KEY, this.snmpPrivacyKey,
+                SNMP_AUTHENTICATION_ALGORITHM, this.snmpAuthenticationAlgorithm,
+                SNMP_PRIVACY_ALGORITHM, this.snmpPrivacyAlgorithm,
+                SSH_KEY, this.sshKey,
+                INPUTS_STR, this.inputs,
+                DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX, this.discoveryProtocolNameRelatedToHttpCnx
         );
     }
     public static EntityConnectionInfoDraft fromHMIJson(Json connectionDraftJson) {
@@ -166,31 +176,31 @@ public class EntityConnectionInfoDraft {
             is_keep_snmp_privacy_key = connectionDraftJson.get("is_keep_snmp_privacy_key").asBoolean();
 
         String snmpCommunity = "";
-        if ( connectionDraftJson.get("other_data_draft") !=null && connectionDraftJson.get("other_data_draft").has("snmp_community"))
-            snmpCommunity = connectionDraftJson.get("other_data_draft").get("snmp_community").asString();
+        if ( connectionDraftJson.get(OTHER_DATA_DRAFT) !=null && connectionDraftJson.get(OTHER_DATA_DRAFT).has("snmp_community"))
+            snmpCommunity = connectionDraftJson.get(OTHER_DATA_DRAFT).get("snmp_community").asString();
 
         String snmpPrivacyKey = "";
-        if ( connectionDraftJson.get("other_data_draft") !=null && connectionDraftJson.get("other_data_draft").has("snmp_privacy_key"))
-            snmpPrivacyKey = connectionDraftJson.get("other_data_draft").get("snmp_privacy_key").asString();
+        if ( connectionDraftJson.get(OTHER_DATA_DRAFT) !=null && connectionDraftJson.get(OTHER_DATA_DRAFT).has("snmp_privacy_key"))
+            snmpPrivacyKey = connectionDraftJson.get(OTHER_DATA_DRAFT).get("snmp_privacy_key").asString();
 
         String snmpAuthenticationAlgorithm = "";
-        if ( connectionDraftJson.get("other_data_draft") !=null && connectionDraftJson.get("other_data_draft").has("snmp_authentication_algorithm"))
-            snmpAuthenticationAlgorithm = connectionDraftJson.get("other_data_draft").get("snmp_authentication_algorithm").asString();
+        if ( connectionDraftJson.get(OTHER_DATA_DRAFT) !=null && connectionDraftJson.get(OTHER_DATA_DRAFT).has("snmp_authentication_algorithm"))
+            snmpAuthenticationAlgorithm = connectionDraftJson.get(OTHER_DATA_DRAFT).get("snmp_authentication_algorithm").asString();
 
         String snmpPrivacyAlgorithm = "";
-        if ( connectionDraftJson.get("other_data_draft") !=null && connectionDraftJson.get("other_data_draft").has("snmp_privacy_algorithm"))
-            snmpPrivacyAlgorithm = connectionDraftJson.get("other_data_draft").get("snmp_privacy_algorithm").asString();
+        if ( connectionDraftJson.get(OTHER_DATA_DRAFT) !=null && connectionDraftJson.get(OTHER_DATA_DRAFT).has("snmp_privacy_algorithm"))
+            snmpPrivacyAlgorithm = connectionDraftJson.get(OTHER_DATA_DRAFT).get("snmp_privacy_algorithm").asString();
 
         String sshKey = "";
-        if ( connectionDraftJson.get("other_data_draft") !=null && connectionDraftJson.get("other_data_draft").has("ssh_key"))
-            sshKey = connectionDraftJson.get("other_data_draft").get("ssh_key").asString();
+        if ( connectionDraftJson.get(OTHER_DATA_DRAFT) !=null && connectionDraftJson.get(OTHER_DATA_DRAFT).has("ssh_key"))
+            sshKey = connectionDraftJson.get(OTHER_DATA_DRAFT).get("ssh_key").asString();
 
         return new EntityConnectionInfoDraft(
                 connectionDraftJson.get("mongo_entity_id").asString(),
                 connectionDraftJson.get("port_number").asString(),
                 connectionDraftJson.get("name").asString(),
-                connectionDraftJson.get("username").asString(),
-                connectionDraftJson.get("password")==null ? "" : connectionDraftJson.get("password").asString(),
+                connectionDraftJson.get(USERNAME_STR).asString(),
+                connectionDraftJson.get(PASSWORD_STR)==null ? "" : connectionDraftJson.get(PASSWORD_STR).asString(),
                 connectionDraftJson.get("discovery_protocol_draft").asString(),
                 snmpCommunity,
                 snmpPrivacyKey,
@@ -215,8 +225,8 @@ public class EntityConnectionInfoDraft {
         entityConnectionInfoDraft.setName(name);
 
         String protocol = null;
-        if (connectionDraftJson.get("protocol") != null) {
-            protocol = connectionDraftJson.get("protocol").asString();
+        if (connectionDraftJson.get(PROTOCOL_STR) != null) {
+            protocol = connectionDraftJson.get(PROTOCOL_STR).asString();
         }
         entityConnectionInfoDraft.setProtocol(protocol);
 
@@ -227,56 +237,56 @@ public class EntityConnectionInfoDraft {
         entityConnectionInfoDraft.setPort(port);
 
         String username = null;
-        if (connectionDraftJson.get("username") != null) {
-            username = connectionDraftJson.get("username").asString();
+        if (connectionDraftJson.get(USERNAME_STR) != null) {
+            username = connectionDraftJson.get(USERNAME_STR).asString();
         }
         entityConnectionInfoDraft.setUsername(username);
 
         String password = null;
-        if (connectionDraftJson.get("password") != null) {
-            password = connectionDraftJson.get("password").asString();
+        if (connectionDraftJson.get(PASSWORD_STR) != null) {
+            password = connectionDraftJson.get(PASSWORD_STR).asString();
         }
         entityConnectionInfoDraft.setPassword(password);
 
         String snmpCommunity = null;
-        if (connectionDraftJson.get("snmpCommunity") != null) {
-            snmpCommunity = connectionDraftJson.get("snmpCommunity").asString();
+        if (connectionDraftJson.get(SNMP_COMMUNITY) != null) {
+            snmpCommunity = connectionDraftJson.get(SNMP_COMMUNITY).asString();
         }
         entityConnectionInfoDraft.setSnmpCommunity(snmpCommunity);
 
         String snmpPrivacyKey = null;
-        if (connectionDraftJson.get("snmpPrivacyKey") != null) {
-            snmpPrivacyKey = connectionDraftJson.get("snmpPrivacyKey").asString();
+        if (connectionDraftJson.get(SNMP_PRIVACY_KEY) != null) {
+            snmpPrivacyKey = connectionDraftJson.get(SNMP_PRIVACY_KEY).asString();
         }
         entityConnectionInfoDraft.setSnmpPrivacyKey(snmpPrivacyKey);
 
         String snmpAuthenticationAlgorithm = null;
-        if (connectionDraftJson.get("snmpAuthenticationAlgorithm") != null) {
-            snmpAuthenticationAlgorithm = connectionDraftJson.get("snmpAuthenticationAlgorithm").asString();
+        if (connectionDraftJson.get(SNMP_AUTHENTICATION_ALGORITHM) != null) {
+            snmpAuthenticationAlgorithm = connectionDraftJson.get(SNMP_AUTHENTICATION_ALGORITHM).asString();
         }
         entityConnectionInfoDraft.setSnmpAuthenticationAlgorithm(snmpAuthenticationAlgorithm);
 
         String snmpPrivacyAlgorithm = null;
-        if (connectionDraftJson.get("snmpPrivacyAlgorithm") != null) {
-            snmpPrivacyAlgorithm = connectionDraftJson.get("snmpPrivacyAlgorithm").asString();
+        if (connectionDraftJson.get(SNMP_PRIVACY_ALGORITHM) != null) {
+            snmpPrivacyAlgorithm = connectionDraftJson.get(SNMP_PRIVACY_ALGORITHM).asString();
         }
         entityConnectionInfoDraft.setSnmpPrivacyAlgorithm(snmpPrivacyAlgorithm);
 
         String sshKey = null;
-        if (connectionDraftJson.get("sshKey") != null) {
-            sshKey = connectionDraftJson.get("sshKey").asString();
+        if (connectionDraftJson.get(SSH_KEY) != null) {
+            sshKey = connectionDraftJson.get(SSH_KEY).asString();
         }
         entityConnectionInfoDraft.setSshKey(sshKey);
 
         // manage inputs
         Json cnxInputFotCnxRelatedToHttp = Json.object();
-        if (connectionDraftJson.get("inputs") != null) {
-            cnxInputFotCnxRelatedToHttp = connectionDraftJson.get("inputs");
+        if (connectionDraftJson.get(INPUTS_STR) != null) {
+            cnxInputFotCnxRelatedToHttp = connectionDraftJson.get(INPUTS_STR);
         }
         entityConnectionInfoDraft.setInputs(cnxInputFotCnxRelatedToHttp);
         String discoveryProtocolNameRelatedToHttpCnx = null;
-        if (connectionDraftJson.get("discoveryProtocolNameRelatedToHttpCnx") != null) {
-            discoveryProtocolNameRelatedToHttpCnx = connectionDraftJson.get("discoveryProtocolNameRelatedToHttpCnx").asString();
+        if (connectionDraftJson.get(DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX) != null) {
+            discoveryProtocolNameRelatedToHttpCnx = connectionDraftJson.get(DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX).asString();
         }
         entityConnectionInfoDraft.setDiscoveryProtocolNameRelatedToHttpCnx(discoveryProtocolNameRelatedToHttpCnx);
 

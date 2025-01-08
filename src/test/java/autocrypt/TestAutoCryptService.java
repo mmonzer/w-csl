@@ -1,6 +1,5 @@
 package autocrypt;
 
-import com.csl.core.CSLContext;
 import com.csl.util.JCmd;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -16,11 +15,10 @@ import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-import static com.csl.intercom.jsoncmd.JServiceLoader.getUserDir;
 import static com.csl.web.HTTPConstants.CONTENT_TYPE;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
+import static com.csl.web.apiclient.ApiHandler.addBodyTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -73,7 +71,7 @@ public class TestAutoCryptService {
         httpClient.start();
         Request request = httpClient.newRequest(BASE_URL_MODULE + ENDPOINT_MODULE);
         request.method(HttpMethod.POST);
-        request.content(new StringContentProvider(inputJson), JSON_FORMAT);
+        addBodyTo(request, inputJson , JSON_FORMAT);
         ContentResponse response = request.send();
 
         // assert behavior
@@ -178,7 +176,7 @@ public class TestAutoCryptService {
         httpClient.start();
         Request request = httpClient.newRequest("http://localhost:9900/autocrypt");
         request.method(HttpMethod.POST);
-        request.content(new StringContentProvider(inputJson), JSON_FORMAT);
+        addBodyTo(request, inputJson, JSON_FORMAT);
         ContentResponse response = request.send();
 
         // assert behavior

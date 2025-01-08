@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 
 public class EveMessageUtill {
+    private EveMessageUtill(){}
 
 
     public static Json reformatTimeStamp(Json jsonObject) {

@@ -23,7 +23,7 @@ public class ScanEntity {
         DISCARDED,
         ;
 
-        public static final List<Status> finishedStates = new ArrayList<>();
+        private static final List<Status> finishedStates = new ArrayList<>();
         static {
             finishedStates.add(FINISHED_SUCCESS);
             finishedStates.add(FINISHED_FAIL);

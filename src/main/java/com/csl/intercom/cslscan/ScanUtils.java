@@ -11,6 +11,8 @@ import java.time.OffsetDateTime;
  * Class containing static functions for various tasks related to CSL-Scan.
  */
 public class ScanUtils {
+    private ScanUtils(){}
+
     /**
      * Translate local date to UTC, as used by CSL-Scan.
      *
@@ -29,7 +31,6 @@ public class ScanUtils {
      */
     public static OffsetDateTime scanTimeToLocal(OffsetDateTime scanDateTime) {
         return scanDateTime;
-//        return scanDateTime.atOffset(ZoneOffset.UTC);
     }
 
     /**
@@ -78,14 +79,9 @@ public class ScanUtils {
     }
 
     public static String generateScanDiscoveryUrlFromConfig(Config.Scan config) {
-//        String scanManagerProtocol = JsonUtil.getStringFromJson(discoveryConfig, "manager_protocol", "http");
-        String scanManagerProtocol = config.getManagerProtocol();
-//        String scanManagerIp = JsonUtil.getStringFromJson(discoveryConfig, "manager_ip", "localhost");
         String scanManagerIp = config.getManagerIp();
-//        int scanManagerPort = JsonUtil.getIntFromJson(discoveryConfig, "manager_port", 8010);
         int scanManagerPort = config.getManagerPort();
-//        String websocketProtocol = "https".equals(scanManagerProtocol) ? "wss" : "ws";
-        String websocketProtocol = config.getUseSSL() ? "wss" : "ws";
+        String websocketProtocol = config.isUseSsl() ? "wss" : "ws";
 
         return  websocketProtocol + "://" + scanManagerIp + ":" + scanManagerPort + "/csl-scan/";
     }

@@ -42,7 +42,7 @@ public class WebsocketClientEndpoint {
     @Setter
     private MessageHandler messageHandler;
     private final URI endpointURI;
-    private static final String APIKEY = Config.instance.Client.getApiKey();
+    private static final String APIKEY = Config.INSTANCE.client.getApiKey();
     private static final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
     private static final AtomicBoolean isConnecting = new AtomicBoolean(false);
     LocalDateTime lastConnectionDateTime = null;
@@ -84,13 +84,13 @@ public class WebsocketClientEndpoint {
         CSLNetworkLogger.info(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Opened websocket " + userSession.getRequestURI() + " : " + userSession);
         logger.info("Connected to WCSL websocket {}", endpointURI);
         this.userSession = userSession;
-        userSession.setMaxIdleTimeout(Config.instance.Server.getWebsocketTimeout());
-        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout() + " : " + userSession);
+        userSession.setMaxIdleTimeout(Config.INSTANCE.server.getWebsocketTimeout());
+        CSLNetworkLogger.debug(logger, WEBSOCKET_CONNECTION, LoggerInterfaces.WS.toString(), "Timeout = " + userSession.getMaxIdleTimeout());
 
         isConnecting.set(false);
 
         logger.info("Registering API endpoints with the server");
-        JServiceLoader.apiMap.keySet().forEach(apiName -> sendMessageIfOpen("api:" + apiName));
+        JServiceLoader.getApiMap().keySet().forEach(apiName -> sendMessageIfOpen("api:" + apiName));
     }
 
     /**
@@ -235,13 +235,13 @@ public class WebsocketClientEndpoint {
                 Json result = Json.object().set("error", "api not found");
 
                 if (!apiName.isEmpty()) {
-                    ApiCommands api = JServiceLoader.apiMap.get(apiName);
+                    ApiCommands api = JServiceLoader.getApiMap().get(apiName);
                     MDC.put(ENDPOINT, apiName);
                     Json jsonCommand = messageJson.get("jsonCommand");
                     uri = "/" + apiName + "/" + jsonCommand.get(JCmd.CMD).asString();
                     MDC.put(ENDPOINT, uri);
 
-                    CSLNetworkLogger.infoInboundRequest(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
+                    CSLNetworkLogger.infoInboundRequest(logger, Config.INSTANCE.client.getIpServerRemote(), Config.INSTANCE.client.getPortServerRemote(), "", uri, "WS", LoggerConstants.WS_REQUEST_RECV);
 
                     if (jsonCommand != null && api != null) {
                         result = api.execJcmd(jsonCommand);
@@ -260,7 +260,7 @@ public class WebsocketClientEndpoint {
 
                 logger.trace("Sending result: {}", resultMessageJson);
                 this.sendMessageIfOpen("res:" + resultMessageJson);
-                CSLNetworkLogger.infoOutboundResponse(logger, Config.instance.Client.getIpServerRemote(), Config.instance.Client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
+                CSLNetworkLogger.infoOutboundResponse(logger, Config.INSTANCE.client.getIpServerRemote(), Config.INSTANCE.client.getPortServerRemote(), "", uri, "WS", 0, LoggerConstants.WS_RESPONSE_SENT);
                 MDC.remove(COMMAND);
                 MDC.remove(ENDPOINT);
                 MDC.remove(X_CORRELATION_ID);

@@ -34,7 +34,7 @@ public abstract class Connection implements IScannerSerializable {
         this(null, uuid, devicesIds, protocol, isSimulated);
     }
 
-    public Connection(String name, String id, List<String> devices, StaticConnectionProtocol staticConnectionProtocol, Boolean isSimulated) {
+    protected Connection(String name, String id, List<String> devices, StaticConnectionProtocol staticConnectionProtocol, Boolean isSimulated) {
         this.name = name;
         this.uuid = id;
         this.devicesIds = devices;
@@ -62,27 +62,15 @@ public abstract class Connection implements IScannerSerializable {
         if (protocol == null) {
             return null;
         }
-        switch (protocol) {
-            case SNMPv1:
-                return SNMPv1Connection.fromJson(connectionJson);
-            case SNMPv2c:
-                return SNMPv2cConnection.fromJson(connectionJson);
-
-            case SNMPv3:
-                return SNMPv3Connection.fromJson(connectionJson);
-
-            case RemotePowershell:
-                return RemotePowershellConnection.fromJson(connectionJson);
-
-            case HTTP:
-                return HttpConnection.fromJson(connectionJson, connectionProtocol);
-
-            case SSH:
-                return SshConnection.fromJson(connectionJson);
-
-            default:
-                return null;
-        }
+        return switch (protocol) {
+            case SNMP_V1 -> SNMPv1Connection.fromJson(connectionJson);
+            case SNMP_V2C -> SNMPv2cConnection.fromJson(connectionJson);
+            case SNMP_V3 -> SNMPv3Connection.fromJson(connectionJson);
+            case REMOTE_POWERSHELL -> RemotePowershellConnection.fromJson(connectionJson);
+            case HTTP -> HttpConnection.fromJson(connectionJson, connectionProtocol);
+            case SSH -> SshConnection.fromJson(connectionJson);
+            default -> null;
+        };
     }
 
     public static Connection fromHMIJson(Json connectionJson, List<ConnectionProtocol> protocols) {
@@ -99,56 +87,31 @@ public abstract class Connection implements IScannerSerializable {
         if (protocol == null) {
             return null;
         }
-        switch (protocol) {
-            case SNMPv1:
-                return SNMPv1Connection.fromJson(connectionJson);
-            case SNMPv2c:
-                return SNMPv2cConnection.fromJson(connectionJson);
-
-            case SNMPv3:
-                return SNMPv3Connection.fromJson(connectionJson);
-
-            case RemotePowershell:
-                return RemotePowershellConnection.fromHMIJson(connectionJson);
-
-            case HTTP:
-                return HttpConnection.fromJson(connectionJson, connectionProtocol);
-
-            case SSH:
-                return SshConnection.fromJson(connectionJson);
-
-            default:
-                return null;
-        }
+        return switch (protocol) {
+            case SNMP_V1 -> SNMPv1Connection.fromJson(connectionJson);
+            case SNMP_V2C -> SNMPv2cConnection.fromJson(connectionJson);
+            case SNMP_V3 -> SNMPv3Connection.fromJson(connectionJson);
+            case REMOTE_POWERSHELL -> RemotePowershellConnection.fromHMIJson(connectionJson);
+            case HTTP -> HttpConnection.fromJson(connectionJson, connectionProtocol);
+            case SSH -> SshConnection.fromJson(connectionJson);
+            default -> null;
+        };
     }
 
     public static Connection fromScannerJson(Json connectionJson, List<ConnectionProtocol> protocols) {
-        ConnectionProtocol connectionProtocol;
         ConnectionProtocol protocol = ConnectionProtocol.getProtocolFromScanConnectionJson(protocols, connectionJson);
         if (protocol == null) {
             return null;
         }
-        switch (protocol.getStaticConnectionProtocol()) {
-            case SNMPv1:
-                return SNMPv1Connection.fromScannerJson(connectionJson);
-            case SNMPv2c:
-                return SNMPv2cConnection.fromScannerJson(connectionJson);
-
-            case SNMPv3:
-                return SNMPv3Connection.fromScannerJson(connectionJson);
-
-            case RemotePowershell:
-                return RemotePowershellConnection.fromScannerJson(connectionJson);
-
-            case HTTP:
-                return HttpConnection.fromScannerJson(connectionJson);
-
-            case SSH:
-                return SshConnection.fromScannerJson(connectionJson);
-
-            default:
-                return null;
-        }
+        return switch (protocol.getStaticConnectionProtocol()) {
+            case SNMP_V1 -> SNMPv1Connection.fromScannerJson(connectionJson);
+            case SNMP_V2C -> SNMPv2cConnection.fromScannerJson(connectionJson);
+            case SNMP_V3 -> SNMPv3Connection.fromScannerJson(connectionJson);
+            case REMOTE_POWERSHELL -> RemotePowershellConnection.fromScannerJson(connectionJson);
+            case HTTP -> HttpConnection.fromScannerJson(connectionJson);
+            case SSH -> SshConnection.fromScannerJson(connectionJson);
+            default -> null;
+        };
     }
 
     /**

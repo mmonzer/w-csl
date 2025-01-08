@@ -21,7 +21,7 @@ public class CustomJettyWebSocketServlet extends JettyWebSocketServlet {
     }
     @Override
     public void configure(JettyWebSocketServletFactory factory) {
-        factory.setIdleTimeout(Duration.ofSeconds(Config.instance.Server.getWebsocketTimeout()));
+        factory.setIdleTimeout(Duration.ofSeconds(Config.INSTANCE.server.getWebsocketTimeout()));
         factory.register(handler);
     }
     @Override

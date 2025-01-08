@@ -28,10 +28,10 @@ import java.util.concurrent.*;
  * Should be able to handle multiple imports at the same time *via* scheduled tasks.
  */
 public class ImportExportBsonService {
-    static private final Logger logger = LoggerFactory.getLogger(ImportExportBsonService.class);
-    static private ImportExportBsonService instance = null;
-    private Map<Integer, ImportQuery> importTasks = new ConcurrentHashMap<>();
-    private Map<Integer, ExportQuery> exportTasks = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(ImportExportBsonService.class);
+    private static ImportExportBsonService instance = null;
+    private final Map<Integer, ImportQuery> importTasks = new ConcurrentHashMap<>();
+    private final Map<Integer, ExportQuery> exportTasks = new ConcurrentHashMap<>();
     private DbapiHandlerForCSLScan dbapiHandler = null;
     private ScanApiHandler scanApiHandler = null;
     private FileStorageService fileStorageService = null;
@@ -85,7 +85,7 @@ public class ImportExportBsonService {
      */
     public void startNewImportTask(HttpTemplateImportNotification query) {
         if (this.importTasks.containsKey(query.getId())) {
-            logger.debug("startNewImportTask: uuid already exists: " + query.getId());
+            logger.debug("startNewImportTask: uuid already exists: {}", query.getId());
             return;
         }
 
@@ -97,7 +97,7 @@ public class ImportExportBsonService {
             downloadedPath = this.dbapiHandler.downloadHttpTemplatesBsonFile(query);
             logger.debug("startNewImportTask: downloaded file: {}", query.getFileName());
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            logger.error("startNewImportTask: error downloading file: {}", query.getFileName(), e);
+            logger.error("startNewImportTask: error downloading file {} : {}", query.getFileName(), e.getMessage());
             return;
         }
         try {
@@ -159,8 +159,8 @@ public class ImportExportBsonService {
 
         ImportQuery importQuery = importTasks.get(id);
         MDC.put(LoggerConstants.X_CORRELATION_ID, importQuery.getXCorrelationId()); // TODO: cleaning
-        if (ImportQueryStatus.IN_PROGRESS_STATUSES.contains(importTasks.get(id).getStatus())) {
-            logger.debug("handleImportTask: import in progress: {}", importQuery.getStatus());
+        if (ImportQueryStatus.IN_PROGRESS_STATUSES.contains(importTasks.get(id).getImportQueryStatus())) {
+            logger.debug("handleImportTask: import in progress: {}", importQuery.getImportQueryStatus());
             ImportQuery updatedImportQuery = this.scanApiHandler.getImportTaskStatus(importQuery.getId());
             if (updatedImportQuery != null) {
                 importTasks.put(id, updatedImportQuery);
@@ -168,8 +168,8 @@ public class ImportExportBsonService {
             }
         }
 
-        if (ImportQueryStatus.FINISHED_STATUSES.contains(importQuery.getStatus())) {
-            logger.info("Import of file finished: {}", importQuery.getStatus());
+        if (ImportQueryStatus.FINISHED_STATUSES.contains(importQuery.getImportQueryStatus())) {
+            logger.info("Import of file finished: {}", importQuery.getImportQueryStatus());
             this.dbapiHandler.notifyImportFinished(id, importQuery);
             List<EntityHttpConnection> entityHttpConnectionsToSync = this.scanApiHandler.getEntityHttpConnectionsToSync();
             entityHttpConnectionsToSync.forEach(template -> {
@@ -230,10 +230,10 @@ public class ImportExportBsonService {
         Integer id = getImportTaskByUuid(uuid);
         if (id != null) {
             ImportQuery importQuery = importTasks.get(id);
-            importQuery.setStatus(status);
+            importQuery.setImportQueryStatus(status);
             handleImportTask(id);
         } else {
-            logger.debug("updateQueryStatus: uuid not found: " + uuid);
+            logger.debug("updateQueryStatus: uuid not found: {}", uuid);
         }
     }
 
@@ -250,7 +250,7 @@ public class ImportExportBsonService {
             exportQuery.setStatus(status);
             handleExportTask(id);
         } else {
-            logger.debug("updateExportQueryStatus: uuid not found: " + uuid);
+            logger.debug("updateExportQueryStatus: uuid not found: {}", uuid);
         }
     }
 
@@ -261,9 +261,9 @@ public class ImportExportBsonService {
      * @return The ID of the import task, or null if the UUID is not found.
      */
     private Integer getImportTaskByUuid(UUID uuid) {
-        for (int id : importTasks.keySet()) {
-            if (importTasks.get(id).getId().equals(uuid)) {
-                return id;
+        for (Map.Entry<Integer, ImportQuery> entry : importTasks.entrySet()) {
+            if (entry.getValue().getId().equals(uuid)) {
+                return entry.getKey();
             }
         }
         return null;

@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public class MosquittoConfig {
 
-	private final String mosquittoDir="/usr/local/sbin/";
-	private final String mosquittoCmd="./mosquitto";
+	private static final String MOSQUITTO_DIR ="/usr/local/sbin/";
+	private static final String MOSQUITTO_CMD ="./mosquitto";
 	
 	
 	private int port=1883;

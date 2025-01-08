@@ -7,15 +7,12 @@ import com.csl.core.Config;
 import com.csl.monitor.ActivityMonitor;
 import com.csl.util.EveMessageUtill;
 import com.ucsl.interfaces.IAlertLevel;
-import com.ucsl.interfaces.ICSLFlowListener;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -27,7 +24,6 @@ public class CSLFlowManager {
 
     int maxflows = 10;
     int maxsize = 1000;
-    boolean traceAllMessages = true;
     CSLUDPDataProcessor dataProcessor = null;
     ExecutorService executorService = null;
     ActivityMonitor activityMonitor = new ActivityMonitor();
@@ -38,21 +34,12 @@ public class CSLFlowManager {
 
     // queues
     LinkedBlockingQueue<Json> inputflows;
-    List<List<ICSLFlowListener>> listeners = new ArrayList<List<ICSLFlowListener>>();
 
-    public CSLFlowManager(int maxflows, int maxsize, boolean trace) {
+    public CSLFlowManager(int maxflows, int maxsize) {
         this.maxflows = maxflows;
         this.maxsize = maxsize;
-        this.traceAllMessages = trace;
 
-        inputflows = new LinkedBlockingQueue<Json>();
-    }
-
-    public void addListener(int n, ICSLFlowListener l) {
-        if ((n < 0) | (n >= maxflows)) {
-            logger.error("Invalid flow number " + n + " (max=" + maxflows + ")");
-        }
-        listeners.get(n).add(l);
+        inputflows = new LinkedBlockingQueue<>();
     }
 
     public int getFlowSize(int n) {
@@ -82,8 +69,8 @@ public class CSLFlowManager {
         BlockingQueue<CSLUdpUnicastClient.CorrelatedMessage> messageQueue = new ArrayBlockingQueue<>(1200);
 
         // message queue is shared between UDP client and Data Processor
-        client = new CSLUdpUnicastClient(ip, port, messageQueue, traceAllMessages);
-        dataProcessor = new CSLUDPDataProcessor(this, messageQueue, traceAllMessages);
+        client = new CSLUdpUnicastClient(ip, port, messageQueue);
+        dataProcessor = new CSLUDPDataProcessor(this, messageQueue);
 
         /**
          * Execute the components as 3 different threads
@@ -105,10 +92,10 @@ public class CSLFlowManager {
     }
 
     public void init() {
-        Config.IdsConf config = Config.instance.IdsConf;
+        Config.IdsConf config = Config.INSTANCE.idsConf;
 
 
-        boolean showTicks = config.getShowTicks();
+        boolean showTicks = config.isShowTicks();
 
         activityMonitor.setShowTicks(showTicks);
 
@@ -244,10 +231,10 @@ public class CSLFlowManager {
             t = JsonUtil.getLongFromJson(j, "time", -1);
         }
         if (t < 0) {
-            logger.error("Invalid time in  :" + j);
+            logger.error("Invalid time in : {}",  j);
         } else {
             if (this.currentTime > t) {
-                logger.error("Invalid time in  :" + j + " t=" + t + "  before last time:" + currentTime);
+                logger.error("Invalid time in : {}, t={}  before last time : {}",j,t, currentTime);
             }
             this.currentTime = t;
         }

@@ -106,7 +106,7 @@ public class Device implements IScannerSerializable {
         );
         Json connectionsInfo = Json.array();
         for (Connection connection: this.connections) {
-            if(connection.isSimulated() == false){
+            if(!connection.isSimulated()){
                 connectionsInfo.add(connection.serializeForScanner());
             }
 
@@ -119,16 +119,8 @@ public class Device implements IScannerSerializable {
         return result;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
     public Device setConnectionsIds(List<String> connectionsIds) {
         this.connectionsIds = connectionsIds;
-        return this;
-    }
-    public Device setConnectionsMongoUuids(List<String> connectionsMongoUuids) {
-        this.connectionsMongoUuids = connectionsMongoUuids;
         return this;
     }
 

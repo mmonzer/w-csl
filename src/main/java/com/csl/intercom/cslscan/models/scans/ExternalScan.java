@@ -11,35 +11,38 @@ import java.util.Set;
  * Holds the state of the scan.
  */
 public class ExternalScan {
-    private final String uuid;
+    public static final String STATUS = "status";
+    public static final String CREATED_AT = "createdAt";
+    public static final String UUID = "uuid";
+    private final String scanUuid;
     private int dbapiId = 0;
     private final OffsetDateTime createdAt;
-    private Status status;
+    private Status scanStatus;
 
     public ExternalScan(String uuid, OffsetDateTime createdAt, Status status) {
-        this.uuid = uuid;
+        this.scanUuid = uuid;
         this.createdAt = createdAt;
-        this.status = status;
+        this.scanStatus = status;
     }
 
     public static ExternalScan fromScannerJson(Json json) {
         String uuid;
-        if (json.has("uuid") && json.get("uuid").isString()) {
-            uuid = json.get("uuid").asString();
+        if (json.has(UUID) && json.get(UUID).isString()) {
+            uuid = json.get(UUID).asString();
         } else {
             return null;
         }
 
         Status status;
-        if (json.has("status") && json.get("status").isString()) {
-            status = Status.valueOf(json.get("status").asString());
+        if (json.has(STATUS) && json.get(STATUS).isString()) {
+            status = Status.valueOf(json.get(STATUS).asString());
         } else {
             return null;
         }
 
         OffsetDateTime createdAt;
-        if (json.has("createdAt") && json.get("createdAt").isString()) {
-            createdAt = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(json.get("createdAt").asString()));
+        if (json.has(CREATED_AT) && json.get(CREATED_AT).isString()) {
+            createdAt = ScanUtils.scanTimeToLocal(OffsetDateTime.parse(json.get(CREATED_AT).asString()));
         } else {
             return null;
         }
@@ -47,16 +50,16 @@ public class ExternalScan {
         return new ExternalScan(uuid, createdAt, status);
     }
 
-    public String getUuid() {
-        return uuid;
+    public String getScanUuid() {
+        return scanUuid;
     }
 
-    public Status getStatus() {
-        return status;
+    public Status getScanStatus() {
+        return scanStatus;
     }
 
-    public ExternalScan setStatus(Status status) {
-        this.status = status;
+    public ExternalScan setScanStatus(Status scanStatus) {
+        this.scanStatus = scanStatus;
         return this;
     }
 

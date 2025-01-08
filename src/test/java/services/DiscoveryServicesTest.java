@@ -44,7 +44,7 @@ class DiscoveryServicesTest {
 
     @BeforeEach
     void setUp() {
-        jConfig.Scan.setManagerIp("localhost");
+        jConfig.scan.setManagerIp("localhost");
 
         MockitoAnnotations.openMocks(this);
         when(scanWebSocketHandler.requestScan(any())).thenReturn(JsonApiResponse.success());
@@ -76,7 +76,7 @@ class DiscoveryServicesTest {
         statusExpected.set("is_http_api_reachable", true);
         Json websocketStatus = scanWebSocketHandler.getStatus();
         boolean requests_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
-        boolean notifications_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
+        boolean notifications_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_websocket_connected", false);
         statusExpected.set("is_websocket_connected", requests_ws_status && notifications_ws_status);
 
         //When
@@ -113,7 +113,7 @@ class DiscoveryServicesTest {
         }
         //When
         JsonApiResponse rep = discoveryServices.startScan(cpeNames);
-        System.out.println("CPE names : "+cpeNames.toString());
+        System.out.println("CPE names : "+ cpeNames);
         //Then
         assert(rep.toString().equals(JsonApiResponse.success().toString()));
     }

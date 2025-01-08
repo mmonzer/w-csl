@@ -7,24 +7,22 @@ import com.csl.intercom.cslscan.services.ImportExportBsonService;
 import com.csl.intercom.dbapi.models.ScanEntity;
 import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
-import com.csl.logger.CSLApplicativeLogger;
-import com.csl.logger.CSLNetworkLogger;
-import com.csl.logger.LoggerCustomEndpoints;
-import com.csl.logger.LoggerInterfaces;
+import com.csl.logger.*;
 import com.csl.util.ThreadUtils;
-import com.csl.web.websockets.CorrelatedStompSessionHandlerAdapter;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
+import lombok.Getter;
+import lombok.Setter;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
+import org.eclipse.jetty.io.EofException;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.AbstractMessageConverter;
-import org.springframework.messaging.simp.stomp.ConnectionLostException;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.*;
 import org.springframework.scheduling.concurrent.DefaultManagedTaskScheduler;
 import org.springframework.util.MimeType;
 import org.springframework.web.client.ResourceAccessException;
@@ -34,9 +32,11 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
+import java.lang.reflect.Type;
+import java.net.ConnectException;
+import java.nio.channels.ClosedChannelException;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
@@ -46,10 +46,7 @@ import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
  */
 public class ScanWebSocketHandler {
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(ScanWebSocketHandler.class);
-    public static final String REQUEST = "request";
-    public static final String IMPORT_NOTIFICATIONS = "import notifications";
-    public static final String EXTERNAL_SCANS = "external scans";
-    public static final String EXPORT_NOTIFICATIONS = "export notifications";
+    public static final String SCAN_WEBSOCKET = "scanWebsocket";
     private final ImportExportBsonService importExportBsonService;
     private final DiscoveryServices discoveryService;
     private static final String WEBSOCKET_NOTIFICATIONS_ENDPOINT = "/discovery/ready";
@@ -62,12 +59,8 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private ExternalScansService externalScansService;
     private CpeScanService cpeScanService;
-    private StompSession stompRequestsSession = null;
-    private StompSession stompNotificationSession = null;
-    private StompSession stompExternalScanSession = null;
-    private StompSession stompImportNotificationSession = null;
-    private StompSession stompExportNotificationSession = null;
-    private boolean moduleConnected = false;
+    private final StompChannel stompWebSocketChannel = new StompChannel(createStompClient());
+    private boolean isScanConnected = false;
 
     /**
      * Create a new manager with the correct URL.
@@ -96,18 +89,8 @@ public class ScanWebSocketHandler {
      */
     public void stop() {
         webSocketsConnectionAttempts.shutdown();
-        if (stompRequestsSession != null) {
-            stompRequestsSession.disconnect();
-        }
-        if (stompNotificationSession != null) {
-            stompNotificationSession.disconnect();
-        }
-        if (stompImportNotificationSession != null) {
-            stompImportNotificationSession.disconnect();
-        }
-        if (stompExportNotificationSession != null) {
-            stompExportNotificationSession.disconnect();
-        }
+
+        StompChannel.disconnectIfHasSession(stompWebSocketChannel);
 
         logger.info("CSL-Scan websocket disconnected at {}", scanManagerDiscoveryUrl);
     }
@@ -123,10 +106,7 @@ public class ScanWebSocketHandler {
     public Json getStatus() {
         Json status = Json.object();
 
-        status.set("is_requests_websocket_connected", stompRequestsSession != null && stompRequestsSession.isConnected());
-        status.set("is_notifications_websocket_connected", stompNotificationSession != null && stompNotificationSession.isConnected());
-        status.set("is_import_notifications_websocket_connected", stompImportNotificationSession != null && stompImportNotificationSession.isConnected());
-        status.set("is_export_notifications_websocket_connected", stompExportNotificationSession != null && stompExportNotificationSession.isConnected());
+        status.set("is_websocket_connected", StompChannel.isConnected(stompWebSocketChannel));
         status.set("scan_requests_queue", scanRequestsQueue.size());
 
         return status;
@@ -141,7 +121,7 @@ public class ScanWebSocketHandler {
     public JsonApiResponse requestScan(List<String> entities) {
         // Check if ws to csl-scan is already connected
         connectStompSessionsIfNecessary();
-        if ((stompRequestsSession == null || !stompRequestsSession.isConnected())) {
+        if (!StompChannel.isConnected(stompWebSocketChannel)) {
             // not connected to csl-scan --> add this request to the queue
             scanRequestsQueue.add(entities);
             logger.debug("Scan service unavailable, added scan request to queue");
@@ -164,12 +144,12 @@ public class ScanWebSocketHandler {
         StompHeaders stompHeaders = new StompHeaders();
         stompHeaders.add(StompHeaders.DESTINATION, WEBSOCKET_START_DISCOVERY_ENDPOINT);
         stompHeaders.add(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
-        if (uuids == null || uuids.isEmpty()) {
-//            stompRequestsSession.send(websocketStartDiscoveryEndpoint, "");
-            stompRequestsSession.send(stompHeaders, "");
-        } else {
-//            stompRequestsSession.send(websocketStartDiscoveryEndpoint, Json.array(uuids.toArray()));
-            stompRequestsSession.send(stompHeaders, Json.array(uuids.toArray()));
+        if (StompChannel.isConnected(stompWebSocketChannel)) {
+            if (uuids == null || uuids.isEmpty()) {
+                stompWebSocketChannel.getSession().send(stompHeaders, "");
+            } else {
+                stompWebSocketChannel.getSession().send(stompHeaders, Json.array(uuids.toArray()));
+            }
         }
     }
 
@@ -178,183 +158,100 @@ public class ScanWebSocketHandler {
      * Blocking, should be called asynchronously.
      */
     private void connectStompSessionsIfNecessary() {
-        boolean newNotificationConnection = false;
-        logger.trace("connectStompSessionsIfNecessary : {}", stompNotificationSession);
-        if (stompNotificationSession == null || !stompNotificationSession.isConnected()) {
-            try {
-                logger.trace("Connecting to notifications websocket ...");
-                stompNotificationSession = subscribeToNotifications();
-                logger.trace("stompNotificationSession connected : {}", stompNotificationSession);
-                newNotificationConnection = true;
-                reconnect(stompNotificationSession, "notifications");
-            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
-                if (disconnect(e, "notifications")) {
-                    logger.warn("Error while connecting to notifications websocket, retrying");
-                    logger.trace("Error while connecting to notifications websocket, retrying", e);
-                }
-                stompNotificationSession = null;
-            } catch (Throwable e) {
-                disconnect(new Exception(e), REQUEST);
-                logger.error("Unexpected exception at stompNotificationSession", new Exception(e));
-                stompNotificationSession = null;
-            }
+        logger.trace("connectStompSessionsIfNecessary : {}", stompWebSocketChannel);
+        if (!StompChannel.isConnected(stompWebSocketChannel)) {
+            reconnectToScanWebSocket(stompWebSocketChannel, this.scanManagerDiscoveryUrl);
         }
 
-        boolean newRequestConnection = false;
-        if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
-            try {
-                logger.trace("Connecting to requests websocket ...");
-                stompRequestsSession = connectToRequestsWebSocket();
-                logger.trace("stompRequestsSession connected : {}", stompRequestsSession);
-                newRequestConnection = true;
-                reconnect(stompRequestsSession, REQUEST);
-            } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
-                if (disconnect(e, REQUEST)) {
-                    stompRequestsSession = null;
-                }
-            } catch (Throwable e) {
-                disconnect(new Exception(e), REQUEST);
-                logger.error("Unexpected exception at stompRequestsSession", new Exception(e));
-                stompRequestsSession = null;
-            }
-        }
-
-        if (stompImportNotificationSession == null || !stompImportNotificationSession.isConnected()) {
-            try {
-                logger.trace("stompImportNotificationSession connecting ...");
-                stompImportNotificationSession = subscribeToImportNotifications();
-                logger.trace("stompImportNotificationSession connected : {}", stompImportNotificationSession);
-                reconnect(stompImportNotificationSession, IMPORT_NOTIFICATIONS);
-            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
-                if (disconnect(e, IMPORT_NOTIFICATIONS)) {
-                    logger.warn("Error while connecting to import notifications websocket, retrying");
-                    logger.trace("Error while connecting to import notifications websocket, retrying", e);
-                }
-                stompImportNotificationSession = null;
-            } catch (Throwable e) {
-                disconnect(new Exception(e), IMPORT_NOTIFICATIONS);
-                logger.error("Unexpected exception at stompImportNotificationSession", new Exception(e));
-                stompImportNotificationSession = null;
-            }
-        }
-
-        if (stompExportNotificationSession == null || !stompExportNotificationSession.isConnected()) {
-            try {
-                logger.trace("stompExportNotificationSession connecting ...");
-                stompExportNotificationSession = subscribeToExportNotifications();
-                logger.trace("stompExportNotificationSession connected : {}", stompExportNotificationSession);
-                reconnect(stompExportNotificationSession, EXPORT_NOTIFICATIONS);
-            } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
-                if (disconnect(e, EXPORT_NOTIFICATIONS)) {
-                    logger.warn("Error while connecting to export notifications websocket, retrying");
-                    logger.trace("Error while connecting to export notifications websocket, retrying", e);
-                }
-                stompExportNotificationSession = null;
-            } catch (Throwable e) {
-                disconnect(new Exception(e), EXPORT_NOTIFICATIONS);
-                logger.error("Unexpected exception at stompExportNotificationSession", new Exception(e));
-                stompExportNotificationSession = null;
-            }
-        }
-
-        boolean newExternalScanConnection = false;
-        if (stompExternalScanSession == null || !stompExternalScanSession.isConnected()) {
-            try {
-                logger.trace("Connecting to external scans notifications websocket");
-                stompExternalScanSession = connectToExternalScansNotificationsWebSocket();
-                newExternalScanConnection = true;
-                logger.trace("stompExternalScanSession connected : {}", stompExternalScanSession);
-                reconnect(stompExternalScanSession, EXTERNAL_SCANS);
-            } catch (InterruptedException | ExecutionException | TimeoutException | ConnectionLostException e) {
-                disconnect(e, EXTERNAL_SCANS);
-                stompExternalScanSession = null;
-            } catch (Throwable e) {
-                disconnect(new Exception(e), EXTERNAL_SCANS);
-                logger.error("Unexpected exception at stompExternalScanSession", new Exception(e));
-                stompExternalScanSession = null;
-            }
-        }
-
-        if (newNotificationConnection || newRequestConnection || newExternalScanConnection) {
-            externalScansService.handleConnectionEstablishedWithScanner();
+        if (StompChannel.isConnected(stompWebSocketChannel)) {
+                externalScansService.handleConnectionEstablishedWithScanner();
         }
     }
 
     /**
-     * Verify if the client is reconnected, logs if true and modifies the global variable
+     * Manages the reconnection of the stomp channel (scan websocket)
+     *
+     * @param stompChannel the stomp channel modified and used
+     * @param connectionUrl url to connect the server
+     */
+    private void reconnectToScanWebSocket(StompChannel stompChannel, String connectionUrl) {
+        HashMap<String, StompFrameHandler> subscriptionsMap = new HashMap<>();
+        subscriptionsMap.put(WEBSOCKET_IMPORT_NOTIFICATIONS_ENDPOINT, new ImportTopicHandler());
+        subscriptionsMap.put(WEBSOCKET_EXPORT_NOTIFICATIONS_ENDPOINT, new ExportTopicHandler());
+        subscriptionsMap.put(WEBSOCKET_EXTERNAL_SCAN_ENDPOINT, new ExternalScanTopicHandler());
+        subscriptionsMap.put(WEBSOCKET_NOTIFICATIONS_ENDPOINT, new NotificationsTopicHandler());
+
+        try {
+            logger.trace("Connecting to CSL-Scan websocket ...");
+            stompChannel.setSession(subscribeToChannel(stompChannel.getClient(), connectionUrl, new CorrelatedStompSessionHandler(subscriptionsMap)));
+            logger.trace("Connected to CSL-Scan websocket : ", stompChannel.getSession());
+            if (StompChannel.isConnected(stompChannel)) {
+                logIfScanWasNotConnected(stompChannel.getSession());
+            } else {
+                logDisconnectedIfScanWasConnected();
+            }
+            return ;
+        } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
+            if (logDisconnectedIfScanWasConnected()) {
+                logger.warn("Error while connecting to Stomp Websocket, retrying ...");
+                logger.trace("Error while connecting to Stomp Websocket, retrying ...", e);
+            }
+        } catch (Throwable e) {
+            logDisconnectedIfScanWasConnected();
+            logger.error("Unexpected exception at CSL-Scan websocket : {}", e.getMessage());
+        }
+        StompChannel.setSessionNull(stompChannel);
+    }
+
+    /**
+     * Log reconnection of CSL-Scan.
      *
      * @param session stomp session, verify that is not null
-     * @param msg     the channel to customize the logs
      */
-    private void reconnect(StompSession session, String msg) {
-        if (!moduleConnected && session != null && session.isConnected()) {
-            logger.info("Connection recovered with CSLScan for STOMP - {}", msg);
-            moduleConnected = true;
-        } else {
-            moduleConnected = false;
+    private void logIfScanWasNotConnected(StompSession session) {
+        if (!isScanConnected && session != null && session.isConnected()) {
+            logger.info("Connection recovered with CSLScan for STOMP WebSocket at {}", this.scanManagerDiscoveryUrl);
+            isScanConnected = true;
         }
     }
 
     /**
-     * Verify from the exception if the client is disconnected, logs if true and modifies the global variable
-     *
-     * @param exception exception from the initialisation
-     * @param msg       the channel to customize the logs
+     * Log disconnection of CSL-Scan.
      */
-    private boolean disconnect(Exception exception, String msg) {
-        if (moduleConnected) {
-            logger.warn("Connection lost with CSLScan for STOMP - {}", msg);
-            moduleConnected = false;
+    private boolean logDisconnectedIfScanWasConnected() {
+        if (isScanConnected) {
+            logger.warn("Connection lost with CSLScan for STOMP WebSocket at {}", this.scanManagerDiscoveryUrl);
+            isScanConnected = false;
         }
-        return moduleConnected;
+        return isScanConnected;
     }
 
     /**
-     * Connect the notification socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
+     * Generic method to connect a channel in the web socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
      * Blocks so should be called asynchronously.
      *
+     * @param client  stomp websocket client
+     * @param uri     uri of the channel
+     * @param handler handler for the channel connection
      * @return The session we just created.
      * @throws ExecutionException   if connection failed.
      * @throws InterruptedException if connection was interrupted.
+     * @throws TimeoutException     if connection timed out.
      */
-    private StompSession subscribeToNotifications() throws ExecutionException, InterruptedException, TimeoutException {
-        WebSocketStompClient stompClient = createStompClient();
+    private StompSession subscribeToChannel(WebSocketStompClient client, String uri, StompSessionHandler handler) throws ExecutionException, InterruptedException, TimeoutException {
+//        // check if API is available
+//        if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
+//            throw new ConnectionLostException("CSL-Scan disconnected");
+//        }
 
-        // Define the callbacks and return the future when it is realized.
-        return stompClient.connect(this.scanManagerDiscoveryUrl, new NotificationsStompSessionHandler()).get(1000, TimeUnit.MILLISECONDS);
-    }
-
-    private StompSession subscribeToImportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
-        WebSocketStompClient stompClient = createStompClient();
-
-        return stompClient.connect(this.scanManagerDiscoveryUrl, new ImportStompSessionHandler()).get(1000, TimeUnit.MILLISECONDS);
-    }
-
-    private StompSession subscribeToExportNotifications() throws ExecutionException, InterruptedException, TimeoutException {
-        WebSocketStompClient stompClient = createStompClient();
-
-        return stompClient.connect(this.scanManagerDiscoveryUrl, new ExportStompSessionHandler()).get(1000, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Connect the requests socket to CSL-Scan, and define the necessary callbacks (after connection and on message reception).
-     * Blocks so should be called asynchronously.
-     *
-     * @return The session we just created.
-     * @throws ExecutionException   if connection failed.
-     * @throws InterruptedException if connection was interrupted.
-     */
-    private StompSession connectToRequestsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
-
-        WebSocketStompClient requestStompClient = createStompClient();
-        // Define the callbacks and return the future when it is realized.
-        return requestStompClient.connect(this.scanManagerDiscoveryUrl, new RequestStompSessionHandler()).get(1, TimeUnit.SECONDS);
-    }
-
-    private StompSession connectToExternalScansNotificationsWebSocket() throws ExecutionException, InterruptedException, TimeoutException {
-        WebSocketStompClient requestStompClient = createStompClient();
-        // Define the callbacks and return the future when it is realized.
-        return requestStompClient.connect(this.scanManagerDiscoveryUrl, new ExternalScanStompSessionHandler()).get(1, TimeUnit.SECONDS);
+        try {
+            return client.connectAsync(uri, handler).exceptionally(e -> null).get(1000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            if ((e.getCause() instanceof ConnectException) || (e.getCause() instanceof EofException) || (e.getCause() instanceof ClosedChannelException) || (e.getCause() instanceof TimeoutException)) {
+                throw new ConnectionLostException("");
+            }
+            throw e;
+        }
     }
 
     /**
@@ -363,13 +260,9 @@ public class ScanWebSocketHandler {
      * @return a {@link WebSocketStompClient} suitable for our needs.
      */
     private WebSocketStompClient createStompClient() {
-        if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
-            throw new ConnectionLostException("CSL-Scan disconnected");
-        }
 
         WebSocketClient client = new StandardWebSocketClient();
-        SockJsClient sockJsClient = new SockJsClient(List.of(new WebSocketTransport(client)));
-
+        SockJsClient sockJsClient = new SockJsClient(Collections.singletonList(new WebSocketTransport(client)));
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new JsonMessageConverter());
         stompClient.setTaskScheduler(new DefaultManagedTaskScheduler());
@@ -425,49 +318,12 @@ public class ScanWebSocketHandler {
         }
     }
 
-    /**
-     * Class handler for the request websocket
-     */
-    private class RequestStompSessionHandler extends CorrelatedStompSessionHandlerAdapter {
-        @Override
-        public void onFrame(StompHeaders headers, Object payload) {
-            if (payload != null) {
-                logger.debug("[STOMP] " + payload);
-                // handle response
-            } else {
-                logger.debug("[STOMP] null");
-            }
-        }
-
-        @Override
-        public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-            purgeScanRequestsQueue();
-            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/", "WS", "Connected to requests websocket at " + scanManagerDiscoveryUrl);
-        }
-
-        /**
-         * Try to execute all the scan requests in the queue.
-         */
-        private void purgeScanRequestsQueue() {
-            List<String> scanRequest;
-            while (moduleConnected && (scanRequest = scanRequestsQueue.poll()) != null) {
-                if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
-                    scanRequestsQueue.add(scanRequest);
-                    break;
-                }
-                startScan(scanRequest);
-                if (stompRequestsSession == null || !stompRequestsSession.isConnected()) {
-                    scanRequestsQueue.add(scanRequest);
-                    break;
-                }
-            }
-        }
-    }
+    // region Stomp Frame Handlers for different subscriptions
 
     /**
      * Class handler for the export bson websocket
      */
-    private class ExportStompSessionHandler extends CorrelatedStompSessionHandlerAdapter {
+    private class ExportTopicHandler extends CorrelatedStompFrameHandler {
         @Override
         public void onFrame(StompHeaders headers, Object payloadRaw) {
             Json payload = (Json) payloadRaw;
@@ -480,72 +336,53 @@ public class ScanWebSocketHandler {
                 logger.trace("Received export notification from CSL-Scan that could not be parsed: {}", payload.toString());
             }
         }
-
-        @Override
-        public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-            session.subscribe(WEBSOCKET_EXPORT_NOTIFICATIONS_ENDPOINT, this);
-            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/export", "WS", "Connected to export notifications websocket at " + scanManagerDiscoveryUrl + "/" + WEBSOCKET_EXPORT_NOTIFICATIONS_ENDPOINT);
-        }
     }
 
     /**
      * Class handler for the import bson websocket
      */
-    private class ImportStompSessionHandler extends CorrelatedStompSessionHandlerAdapter {
+    private class ImportTopicHandler extends CorrelatedStompFrameHandler {
         @Override
         public void onFrame(StompHeaders headers, Object payloadRaw) {
             Json payload = (Json) payloadRaw;
 
             ImportQuery importQuery = ImportQuery.fromScannerJson(payload);
             if (importQuery != null) {
-                logger.trace("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getStatus());
-                importExportBsonService.updateImportQueryStatus(importQuery.getId(), importQuery.getStatus());
+                logger.trace("Received import notification from CSL-Scan: {} [{}]", importQuery.getId(), importQuery.getImportQueryStatus());
+                importExportBsonService.updateImportQueryStatus(importQuery.getId(), importQuery.getImportQueryStatus());
             } else {
                 logger.trace("Received import notification from CSL-Scan that could not be parsed: {}", payload.toString());
             }
-        }
-
-        @Override
-        public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-            session.subscribe(WEBSOCKET_IMPORT_NOTIFICATIONS_ENDPOINT, this);
-            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/import", "WS", "Connected to import notifications websocket at " + scanManagerDiscoveryUrl + "/" + WEBSOCKET_IMPORT_NOTIFICATIONS_ENDPOINT);
         }
     }
 
     /**
      * Class handler for the external scan websocket
      */
-    private class ExternalScanStompSessionHandler extends CorrelatedStompSessionHandlerAdapter {
+    private class ExternalScanTopicHandler extends CorrelatedStompFrameHandler {
         @Override
         public void onFrame(StompHeaders headers, Object payload) {
             if (payload instanceof Json jsonPayload) {
                 logger.debug("[STOMP] " + payload);
                 ExternalScan scan = ExternalScan.fromScannerJson(jsonPayload);
-//                    externalScansService.createOrUpdateExternalScan(scan);
                 externalScansService.handleScanNotification(scan);
             } else {
                 logger.debug("[STOMP] null");
             }
-        }
-
-        @Override
-        public void onConnect(StompSession session, StompHeaders connectedHeaders) {
-            session.subscribe(WEBSOCKET_EXTERNAL_SCAN_ENDPOINT, this);
-            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/external_discovery", "WS", "Connected to external scans notifications websocket at " + scanManagerDiscoveryUrl + "/" + WEBSOCKET_EXTERNAL_SCAN_ENDPOINT);
         }
     }
 
     /**
      * Class handler for the notifications scan websocket
      */
-    private class NotificationsStompSessionHandler extends CorrelatedStompSessionHandlerAdapter {
+    private class NotificationsTopicHandler extends CorrelatedStompFrameHandler {
         @Override
         public void onFrame(StompHeaders headers, Object payloadRaw) {
             Json payload = (Json) payloadRaw;
 
             String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
 
-            //region Get or Create Scan Entity
+            // region Get or Create Scan Entity
             // Check if we already know the scan
             ScanEntity scan = cpeScanService.getScanByScanId(scanId);
 
@@ -557,16 +394,16 @@ public class ScanWebSocketHandler {
                 }
                 scan = ScanEntity.fromScanId(scanId, startDate);
             }
-            //endregion Get or Create Scan Entity
+            // endregion Get or Create Scan Entity
 
             //region Update the scan's info (status, progress)
             String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
-            if (ScanConstants.finishedScanStatuses.contains(scanStatus)) {
+            if (ScanConstants.getFinishedScanStatuses().contains(scanStatus)) {
                 logger.info("Discovery scan finished : status {} ({} devices scanned, but {} failed)", payload.get("status").asString(),
                         payload.get("entitiesUuid").asJsonList().size(), payload.get("entitiesInError").asJsonList().size());
                 // Put the end date in the scan information and notify DB-API the scan ended.
                 OffsetDateTime endDate = OffsetDateTime.now();
-                if (ScanConstants.successScanStatuses.contains(scanStatus)) {
+                if (ScanConstants.getSuccessScanStatuses().contains(scanStatus)) {
                     scan.setFinishedSuccess(endDate);
                 } else if (scanStatus.equals("DISCARDED")) {
                     scan.setDiscarded(endDate);
@@ -583,11 +420,200 @@ public class ScanWebSocketHandler {
 
             cpeScanService.createOrUpdate(scan);
         }
+    }
+
+    /**
+     * Class handler for the notifications scan websocket
+     */
+    private class CorrelatedStompSessionHandler extends CorrelatedStompFrameHandler implements StompSessionHandler {
+        private final Map<String, StompFrameHandler> subscriptionMap;
+
+        public CorrelatedStompSessionHandler(Map<String, StompFrameHandler> subscriptionMap){
+            super();
+            this.subscriptionMap = subscriptionMap;
+        }
+
+        public void onConnect(@NotNull StompSession session, @NotNull StompHeaders headers) {
+            purgeScanRequestsQueue();
+            for (Map.Entry<String, StompFrameHandler> subscription : subscriptionMap.entrySet()) {
+                if (subscription.getValue()!=null) {
+                    session.subscribe(subscription.getKey(), subscription.getValue());
+                }
+            }
+            }
+
+        /**
+         * Native method called after connecting.
+         * Should not be used. Use @link{onConnect} instead
+         *
+         * @param session websocket session
+         * @param headers headers of the message
+         */
+        @Override
+        public final void afterConnected(@NotNull StompSession session, @NotNull StompHeaders headers) {
+            // Variables to logger : X-Correlation-ID ...
+            setVariablesToMDC(headers);
+            // Log connection
+            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Connected to Scan websocket at " + scanManagerDiscoveryUrl);
+            // Handles after connection
+            onConnect(session, headers);
+        }
+
+        /**
+         * Native method called when exception happens.
+         *
+         * @param session websocket session
+         * @param command stomp command
+         * @param headers headers of the message
+         * @param payload payload of the message
+         * @param exception exception arose when exception
+         */
+        public void onException(@NotNull StompSession session, StompCommand command, @NotNull StompHeaders headers, byte @NotNull [] payload, @NotNull Throwable exception) {
+            /* TODO : define exception callback. */
+        }
+
+        /**
+         * Native method called when exception happens.
+         * Should not be used. Use @link{onException} instead
+         *
+         * @param session websocket session
+         * @param command stomp command
+         * @param headers headers of the message
+         * @param payload payload of the message
+         * @param exception exception arose when exception
+         */
+        @Override
+        public final void handleException(@NotNull StompSession session, StompCommand command, @NotNull StompHeaders headers, byte @NotNull [] payload, @NotNull Throwable exception) {
+            // Variables to logger : X-Correlation-ID ...
+            setVariablesToMDC(headers);
+            // Log exception in message
+            CSLNetworkLogger.warn(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Exception of Scan websocket at " + scanManagerDiscoveryUrl +" : "+exception.getMessage());
+            // Handles the exception
+            onException(session, command, headers, payload, exception);
+        }
+
+        /**
+         * Native method called when error transport.
+         *
+         * @param session websocket session
+         * @param exception exception arose when transmitting message
+         */
+        public void onTransportError(@NotNull StompSession session, @NotNull Throwable exception) {
+            ScanWebSocketHandler.handleTransportError(session, exception);
+        }
+
+        /**
+         * Native method called when error transport.
+         * Should not be used. Use @link{onTransportError} instead
+         *
+         * @param session websocket session
+         * @param exception exception arose when transmitting message
+         */
+        @Override
+        public final void handleTransportError(@NotNull StompSession session, @NotNull Throwable exception) {
+            CSLNetworkLogger.warn(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Transport error on Scan websocket at " + scanManagerDiscoveryUrl +" : "+exception.getMessage());
+            onTransportError(session, exception);
+        }
 
         @Override
-        public void onConnect(StompSession session, StompHeaders headers) {
-            session.subscribe(WEBSOCKET_NOTIFICATIONS_ENDPOINT, this);
-            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/discovery", "WS", "Connected to notifications websocket at " + scanManagerDiscoveryUrl + "/" + WEBSOCKET_NOTIFICATIONS_ENDPOINT);
+        public void onFrame(StompHeaders headers, Object payloadRaw){
+            /* This is empty because this is the main websocket handler and the onFrame is delegated to subscription handlers */
+        }
+
+        /**
+         * Try to execute all the scan requests in the queue.
+         */
+        private void purgeScanRequestsQueue() {
+            List<String> scanRequest;
+            while (isScanConnected && (scanRequest = scanRequestsQueue.poll()) != null) {
+                if (!StompChannel.isConnected(stompWebSocketChannel)) {
+                    scanRequestsQueue.add(scanRequest);
+                    return;
+                }
+                startScan(scanRequest);
+                if (!StompChannel.isConnected(stompWebSocketChannel)) {
+                    scanRequestsQueue.add(scanRequest);
+                    return;
+                }
+            }
+        }
+    }
+
+    private abstract class CorrelatedStompFrameHandler implements StompFrameHandler {
+
+        /**
+         * Method called at the reception of a message
+         * @param headers headers of the message
+         * @param payloadRaw payload of the message
+         */
+        public abstract void onFrame(StompHeaders headers, Object payloadRaw);
+
+        /**
+         * Native method called at the reception of a message.
+         * Should not be used.  Use @link{onFrame} instead.
+         *
+         * @param headers headers of the message
+         * @param payloadRaw payload of the message
+         */
+        @Override
+        public final void handleFrame(@NotNull StompHeaders headers, Object payloadRaw) {
+            // Variables to logger : X-Correlation-ID ...
+            setVariablesToMDC(headers);
+            // Log info message received
+            CSLNetworkLogger.debug(LoggerFactory.getLogger(ScanWebSocketHandler.class), SCAN_WEBSOCKET, "WS", "Incoming message from Scan websocket at " + scanManagerDiscoveryUrl);
+            // Handle frame
+            onFrame(headers, payloadRaw);
+        }
+
+        @Override
+        public final @NotNull Type getPayloadType(@NotNull StompHeaders headers) {
+            return String.class;
+        }
+
+        /**
+         * Set the logging variables to the thread environment
+         * @param headers headers to fetch the variables
+         */
+        public static void setVariablesToMDC(StompHeaders headers) {
+            if (headers.get(X_CORRELATION_ID)!=null && !headers.get(X_CORRELATION_ID).isEmpty()) {
+                MDC.put(X_CORRELATION_ID, headers.get(X_CORRELATION_ID).get(0));
+            }
+        }
+
+    }
+
+    private static void handleTransportError(StompSession session, Throwable exception) {
+        if (session.isConnected()) {
+            session.disconnect();
+        }
+    }
+
+    // endregion Stomp Frame Handlers for different subscriptions
+
+    @Getter
+    private static class StompChannel {
+        private final WebSocketStompClient client;
+        @Setter
+        private StompSession session;
+
+        public StompChannel(WebSocketStompClient client) {
+            this.client = client;
+        }
+
+        public static boolean isConnected(StompChannel channel) {
+            return channel != null && channel.getSession() != null && channel.getSession().isConnected();
+        }
+
+        public static void disconnectIfHasSession(StompChannel channel) {
+            if (channel != null && channel.getSession() != null) {
+                channel.getSession().disconnect();
+            }
+        }
+
+        public static void setSessionNull(StompChannel channel) {
+            if (channel != null) {
+                channel.setSession(null);
+            }
         }
     }
 }

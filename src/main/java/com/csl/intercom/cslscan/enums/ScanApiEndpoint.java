@@ -4,7 +4,7 @@ public enum ScanApiEndpoint {
     ENTITY("/entity/"),
     ENTITY_DETAILS(ENTITY.endpoint() + "%s"),
     ENTITY_LAST_UPDATE(ENTITY.endpoint() + "last_update"),
-    ENTITY_LAST_DELETION(ENTITY.endpoint() + "last_deletion"),
+    ENTITY_LAST_DELETION(ENTITY.endpoint() + Constants.LAST_DELETION),
     ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection"),
     ENTITY_TEST_EXISTING_CONNECTION(ENTITY_TEST_CONNECTION.endpoint() + "/%s"),
 
@@ -12,7 +12,7 @@ public enum ScanApiEndpoint {
     CREATE_CONNECTIONS(CONNECTIONS.endpoint() + "create_list_of_connections"),
     CONNECTIONS_DETAILS(CONNECTIONS.endpoint() + "%s"),
     CONNECTIONS_LAST_UPDATE(CONNECTIONS.endpoint() + "last-updated"),
-    CLEAR_ALL_ENTITY_CONNECTIONS(CONNECTIONS.endpoint() + "clear"),
+    CLEAR_ALL_ENTITY_CONNECTIONS(CONNECTIONS.endpoint() + Constants.CLEAR),
 
     CONNECTIONS_DRAFT("/entity-connection-info-draft/"),
     CONNECTION_DRAFT_DETAILS(CONNECTIONS_DRAFT.endpoint() + "%s"),
@@ -20,7 +20,7 @@ public enum ScanApiEndpoint {
     CONNECTIONS_DRAFT_LAST_UPDATE(CONNECTIONS_DRAFT.endpoint() + "last-updated"),
     CLEAR_FAILED_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "clear_failed"),
     CLEAR_VERIFIED_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "clear_verified"),
-    CLEAR_ALL_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + "clear"),
+    CLEAR_ALL_CONNECTIONS_DRAFT(CONNECTIONS_DRAFT.endpoint() + Constants.CLEAR),
     PUBLISH_ALL_VERIFIED_CONNECTION_DRAFT(CONNECTIONS_DRAFT.endpoint() + "publish_all_verified"),
 
     CPE_ITEM("/cpeItem/"),
@@ -28,7 +28,7 @@ public enum ScanApiEndpoint {
     CPE_ITEM_DELETE_MANY(CPE_ITEM.endpoint() + "deleteMany"),
     CPE_ITEM_DELETE_MANY_HARD(CPE_ITEM_DELETE_MANY.endpoint() + "?hardDelete=true"),
     CPE_ITEM_HARD_DELETE_BEFORE(CPE_ITEM.endpoint() + "hardDeleteBefore"),
-    CPE_ITEM_LAST_DELETION(CPE_ITEM.endpoint() + "last_deletion"),
+    CPE_ITEM_LAST_DELETION(CPE_ITEM.endpoint() + Constants.LAST_DELETION),
 
     ENTITY_CPE_ITEMS(CPE_ITEM.endpoint() + "entity/%s"),
 
@@ -37,7 +37,7 @@ public enum ScanApiEndpoint {
     MICROSOFT_KB_DELETE_MANY(MICROSOFT_KB.endpoint() + "deleteMany"),
     MICROSOFT_KB_DELETE_MANY_HARD(MICROSOFT_KB_DELETE_MANY.endpoint() + "?hardDelete=true"),
     MICROSOFT_KB_HARD_DELETE_BEFORE(MICROSOFT_KB.endpoint() + "hardDeleteBefore"),
-    MICROSOFT_KB_LAST_DELETION(MICROSOFT_KB.endpoint() + "last_deletion"),
+    MICROSOFT_KB_LAST_DELETION(MICROSOFT_KB.endpoint() + Constants.LAST_DELETION),
     MICROSOFT_KB_LAST_UPDATE(MICROSOFT_KB.endpoint() + "last_update"),
 
     ENTITY_MICROSOFT_KB(MICROSOFT_KB.endpoint() + "entity/%s"),
@@ -74,14 +74,13 @@ public enum ScanApiEndpoint {
     EXTERNAL_CONNECTION_INFO_CLEAR(EXTERNAL_DISCOVERY.endpoint() + "/connectionInfo/clear"),
     EXTERNAL_DISCOVERY_START_SCAN(EXTERNAL_DISCOVERY.endpoint() + "/startDiscovery/%s"),
     EXTERNAL_DISCOVERED_DEVICES("/externalDiscoveredDevices/"),
-    EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "clear"),
-    EXTERNAL_PUBLISH_DISCOVERED_DEVICES(EXTERNAL_DISCOVERED_DEVICES.endpoint() + "publish"),
-
+    EXTERNAL_DISCOVERED_DEVICES_CLEAR(EXTERNAL_DISCOVERED_DEVICES.endpoint() + Constants.CLEAR),
+    EXTERNAL_PUBLISH_DISCOVERED_DEVICES(EXTERNAL_DISCOVERED_DEVICES.endpoint() + Constants.PUBLISH),
     CERTIFICATE_CONNECTION("/connexion-certificate/"),
     CERTIFICATE_CONNECTION_DETAILS(CERTIFICATE_CONNECTION.endpoint() + "%s"),
     ;
 
-    private String endpoint;
+    private final String endpoint;
 
     private ScanApiEndpoint(String endpoint) {
         this.endpoint = endpoint;
@@ -89,5 +88,15 @@ public enum ScanApiEndpoint {
 
     public String endpoint() {
         return endpoint;
+    }
+
+    public String toString() {
+        return endpoint;
+    }
+
+    private static class Constants {
+        public static final String CLEAR = "clear";
+        public static final String LAST_DELETION = "last_deletion";
+        public static final String PUBLISH = "publish";
     }
 }

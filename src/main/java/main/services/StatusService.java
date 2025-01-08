@@ -11,10 +11,6 @@ import com.ucsl.json.JsonUtil;
  * Also provides a command to directly retrieve the status message.
  */
 public class StatusService extends Service {
-    /**
-     * Status of the notifier
-     */
-    private StatusNotifier notifier = null;
 
     /**
      * Default constructor of the Status service
@@ -41,8 +37,8 @@ public class StatusService extends Service {
      */
     @Override
     public boolean init() {
-        notifier = CSLContext.getInstance().getStatusNotifier();
-        notifier.setSendNotifications(Config.instance.Status.getSendNotifications());
+        StatusNotifier notifier = CSLContext.getInstance().getStatusNotifier();
+        notifier.setSendNotifications(Config.INSTANCE.status.isSendNotifications());
 
         addCmd("get_status", params -> notifier.getNotification(),
                 new JsonCmdHelp().setDesc("Get a status notification, created for the occasion")

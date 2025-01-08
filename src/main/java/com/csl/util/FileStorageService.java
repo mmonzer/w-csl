@@ -21,7 +21,6 @@ public class FileStorageService {
     private final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
     private final Path rootLocation;
     private final Map<Path, OffsetDateTime> deleteSchedule = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
 
     public FileStorageService(String downloadPath) {
         this.rootLocation = Paths.get(downloadPath);
@@ -29,8 +28,9 @@ public class FileStorageService {
             Files.createDirectories(this.rootLocation);
             FileUtils.cleanDirectory(this.rootLocation.toFile());
         } catch (Exception e) {
-            logger.error("Error creating download directory: " + downloadPath, e);
+            logger.error("Error creating download directory  {} : {}",  downloadPath, e.getMessage());
         }
+        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
         ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                 scheduledExecutorService,
                 this::deleteFiles,
@@ -53,24 +53,23 @@ public class FileStorageService {
         OffsetDateTime now = OffsetDateTime.now();
         deleteSchedule.forEach((path, dateTime) -> {
             if (dateTime.isBefore(now)) {
-                try {
-                    logger.debug("Deleting file: " + path);
-                    Files.deleteIfExists(path);
-                    deleteSchedule.remove(path);
-                } catch (IOException e) {
-                    logger.error("Error deleting file: " + path, e);
-                }
+                logger.debug("Deleting file : {}",  path);
+                this.deleteFile(path);
             }
         });
     }
 
     public void deleteFile(String filename) {
+        Path fullFilePath = rootLocation.resolve(filename);
+        this.deleteFile(fullFilePath);
+    }
+
+    public void deleteFile(Path fullFilePath) {
         try {
-            Path fullFilePath = rootLocation.resolve(filename);
             Files.deleteIfExists(fullFilePath);
             deleteSchedule.remove(fullFilePath);
         } catch (IOException e) {
-            logger.error("Error deleting file: " + filename, e);
+            logger.error("Error deleting file {} : {}",  fullFilePath, e.getMessage());
         }
     }
 

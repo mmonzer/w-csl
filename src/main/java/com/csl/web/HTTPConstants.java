@@ -1,6 +1,8 @@
 package com.csl.web;
 
 public class HTTPConstants {
+    private HTTPConstants(){}
+
     public static final String CONTENT_DISPOSITION = "Content-disposition";
     public static final String CONTENT_TYPE = "Content-type";
     public static final String JSON_FORMAT = "application/json";

@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -16,17 +15,21 @@ import java.util.UUID;
  */
 public class ImportQuery {
     private static final Logger logger = LoggerFactory.getLogger(ImportQuery.class);
-    private UUID id;
-    private ImportQueryStatus status;
-    private OffsetDateTime startTime;
-    String message;
+    public static final String STATUS = "status";
+    public static final String MESSAGE = "message";
+    public static final String CREATED_AT = "createdAt";
+    @Getter
+    private final UUID id;
+    @Getter
+    private ImportQueryStatus importQueryStatus;
+    String importQueryMessage;
     @Getter
     String xCorrelationId="";  // TODO: need cleaning
 
     private ImportQuery(UUID id, ImportQueryStatus status, String message) {
         this.id = id;
-        this.status = status;
-        this.message = message;
+        this.importQueryStatus = status;
+        this.importQueryMessage = message;
         xCorrelationId = MDC.get(LoggerConstants.X_CORRELATION_ID);
     }
 
@@ -34,7 +37,6 @@ public class ImportQuery {
         UUID id;
         ImportQueryStatus status;
         String message;
-        OffsetDateTime startTime;
 
         if (json.has("uuid") && json.get("uuid").isString()) {
             id = UUID.fromString(json.get("uuid").asString());
@@ -43,17 +45,17 @@ public class ImportQuery {
             return null;
         }
 
-        if (json.has("status") && json.get("status").isString()) {
-            status = ImportQueryStatus.valueOf(json.get("status").asString());
+        if (json.has(STATUS) && json.get(STATUS).isString()) {
+            status = ImportQueryStatus.valueOf(json.get(STATUS).asString());
         } else {
             logger.error("ImportQuery.fromScannerJson: status is not a string");
             return null;
         }
 
-        if (json.has("message")) {
-            if (json.get("message").isString()) {
-                message = json.get("message").asString();
-            } else if (json.get("message").isNull()) {
+        if (json.has(MESSAGE)) {
+            if (json.get(MESSAGE).isString()) {
+                message = json.get(MESSAGE).asString();
+            } else if (json.get(MESSAGE).isNull()) {
                 message = null;
             } else {
                 logger.error("ImportQuery.fromScannerJson: message is not a string");
@@ -64,9 +66,7 @@ public class ImportQuery {
             return null;
         }
 
-        if (json.has("createdAt") && json.get("createdAt").isString()) {
-            startTime = OffsetDateTime.parse(json.get("createdAt").asString());
-        } else {
+        if (!json.has(CREATED_AT) || !json.get(CREATED_AT).isString()) {
             logger.error("ImportQuery.fromScannerJson: startTime is not a string");
             return null;
         }
@@ -74,20 +74,8 @@ public class ImportQuery {
         return new ImportQuery(id, status, message);
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public ImportQueryStatus getStatus() {
-        return status;
-    }
-
-    public ImportQuery setStatus(ImportQueryStatus status) {
-        this.status = status;
+    public ImportQuery setImportQueryStatus(ImportQueryStatus importQueryStatus) {
+        this.importQueryStatus = importQueryStatus;
         return this;
-    }
-
-    public String getMessage() {
-        return message;
     }
 }

@@ -33,11 +33,11 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
     private int batch_max_size = 200;
     private final String moduleName;
 
-    public PaginatedSynchronizationService(String module) {
+    protected PaginatedSynchronizationService(String module) {
         moduleName = module;
     }
 
-    public PaginatedSynchronizationService() {
+    protected PaginatedSynchronizationService() {
         this("CSL-Scan");
     }
 

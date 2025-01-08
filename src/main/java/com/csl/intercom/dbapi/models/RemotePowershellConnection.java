@@ -24,7 +24,7 @@ public class RemotePowershellConnection extends Connection {
     private String certificate;
 
     protected RemotePowershellConnection(String name, String id, int port, List<String> devices, String username, String password, Boolean isKeepPassword, String certificate, boolean useSSL) {
-        super(name, id, devices, StaticConnectionProtocol.RemotePowershell);
+        super(name, id, devices, StaticConnectionProtocol.REMOTE_POWERSHELL);
         this.port = port;
         this.username = username;
         this.password = password;

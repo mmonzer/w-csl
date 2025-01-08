@@ -10,8 +10,8 @@ public enum EntityHttpConnectionInputField {
     TOOLTIP("tooltip", "tooltip"),
     PLACEHOLDER("placeholder", "placeholder");
 
-    private String dbapiName;
-    private String scanName;
+    private final String dbapiName;
+    private final String scanName;
 
     private EntityHttpConnectionInputField(String dbapiName, String scanName) {
         this.dbapiName = dbapiName;

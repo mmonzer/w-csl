@@ -2,7 +2,6 @@ package com.csl.web.websockets;
 
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
-import org.eclipse.jetty.websocket.api.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,7 @@ public class CSLWebSocketHandler {
     @OnMessage
     public void onWebSocketText(String message)
     {
-        System.out.println("OnMessage user="+session+" message="+message);
+         // Should not receive any message. This socket should only send.
     }
 
 }

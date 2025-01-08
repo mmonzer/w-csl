@@ -8,6 +8,7 @@ import com.csl.intercom.cslscan.models.*;
 import com.csl.intercom.cslscan.models.scans.ExternalScan;
 import com.csl.intercom.dbapi.models.*;
 import com.csl.util.FileStorageService;
+import com.csl.util.ListUtils;
 import com.csl.util.Pair;
 import com.csl.web.apiclient.ApiHandler;
 import com.ucsl.json.Json;
@@ -16,9 +17,7 @@ import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.util.InputStreamResponseListener;
-import org.eclipse.jetty.client.util.MultiPartContentProvider;
-import org.eclipse.jetty.client.util.PathContentProvider;
+import org.eclipse.jetty.client.util.*;
 import org.eclipse.jetty.http.HttpMethod;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -29,16 +28,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 
@@ -47,10 +42,16 @@ import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
  */
 public class ScanApiHandler extends ApiHandler {
     private static final Logger logger = LoggerFactory.getLogger(ScanApiHandler.class);
+    public static final String CONTENT = "content";
+    public static final String STATUS_CODE = "status_code";
+    public static final String LIMIT = "limit";
+    public static final String VALUE = "value";
+    public static final String COULD_NOT_GET_THE_DISCOVERY_CRON_STATUS = "Could not get the discovery cron status: ";
+    public static final String FREQUENCY = "frequency";
     private final FileStorageService fileStorageService = new FileStorageService();
 
     public ScanApiHandler() {
-        super("CSL-Scan", Config.instance.Scan.getManagerIp(), Config.instance.Scan.getManagerPort(), Config.instance.Scan.getUseSSL());
+        super("CSL-Scan", Config.INSTANCE.scan.getManagerIp(), Config.INSTANCE.scan.getManagerPort(), Config.INSTANCE.scan.isUseSsl());
         addUriCommonPath("/api");
     }
 
@@ -127,7 +128,7 @@ public class ScanApiHandler extends ApiHandler {
             params.set("since", ScanUtils.localTimeToScan(date).toString());
         }
         if (limit != null) {
-            params.set("limit", limit);
+            params.set(LIMIT, limit);
         }
         if (offset != null) {
             params.set("skip", offset);
@@ -136,16 +137,15 @@ public class ScanApiHandler extends ApiHandler {
         if (!response.isSuccess()) {
             return null;
         }
-        return response.getResult().asJsonList().stream()
-                .map(connectionJson -> Connection.fromScannerJson(connectionJson, protocols))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return ListUtils.mapAndFilter(response.getResult().asJsonList(),
+                        connectionJson -> Connection.fromScannerJson(connectionJson, protocols),
+                        Objects::nonNull);
     }
 
     public OffsetDateTime getConnectionLastUpdatedDate() {
         JsonApiResponse response = sendGet(ScanApiEndpoint.CONNECTIONS_LAST_UPDATE, Json.object());
         try {
-            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            String dateString = response.getResult().get(VALUE).asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             return null;
@@ -176,7 +176,7 @@ public class ScanApiHandler extends ApiHandler {
                 String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id), Json.object());
         int statusCode;
         try {
-            statusCode = response.getExtra().get("status_code").asInteger();
+            statusCode = response.getExtra().get(STATUS_CODE).asInteger();
         } catch (Exception e) {
             return response;
         }
@@ -242,9 +242,8 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendDelete(
                 String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id), Json.object());
         boolean success = response.isSuccess();
-        Json result = response.getResult();
         if (success) {
-            if (response.getExtra().get("status_code").asInteger() == 404) {
+            if (response.getExtra().get(STATUS_CODE).asInteger() == 404) {
                 return JsonApiResponse.error("Could not find entity " + id + " in CSL-Scan (got 404)");
             }
             return JsonApiResponse.success();
@@ -289,7 +288,7 @@ public class ScanApiHandler extends ApiHandler {
      * @return A {@link JsonApiResponse} with CSL-Scan's status as it was received, or with an error in the 'error' field.
      */
     public JsonApiResponse getStatus() {
-        return sendGet(ScanApiEndpoint.DISCOVERY_STATUS, Json.object());
+        return sendGet(ScanApiEndpoint.DISCOVERY_STATUS.endpoint(), Json.object(),true);
     }
 
     /**
@@ -419,18 +418,17 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response;
         Json cpeItems = Json.array();
         if (date == null) {
-            response = sendGet(ScanApiEndpoint.CPE_ITEM, Json.object("limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.CPE_ITEM, Json.object(LIMIT, limit, "skip", offset));
         } else {
-            response = sendGet(ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.CPE_ITEM, Json.object("date", ScanUtils.localTimeToScan(date).toString(), LIMIT, limit, "skip", offset));
         }
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
             cpeItems = response.getResult();
 
             // Parse the items, filter those whose updated date is *exactly* the last updated date, and return the resulting list.
-            return cpeItems.asJsonList().stream()
-                    .map(CpeItem::fromScannerJson)
-                    .filter(Predicate.not(cpeItem -> cpeItem.getDiscoveredDate().equals(date)))
-                    .collect(Collectors.toList());
+            return ListUtils.mapAndFilter(cpeItems.asJsonList(),
+                            CpeItem::fromScannerJson,
+                            Predicate.not(cpeItem -> cpeItem.getDiscoveredDate().equals(date)));
         } else {
             return null;
         }
@@ -448,18 +446,16 @@ public class ScanApiHandler extends ApiHandler {
      */
     public List<MicrosoftKB> getMicrosoftKbChangesSince(OffsetDateTime date, int limit, int offset) {
         JsonApiResponse response;
-        Json microsoftKbs = Json.array();
         if (date == null) {
-            response = sendGet(ScanApiEndpoint.MICROSOFT_KB, Json.object("limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.MICROSOFT_KB, Json.object(LIMIT, limit, "skip", offset));
         } else {
-            response = sendGet(ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString(), "limit", limit, "skip", offset));
+            response = sendGet(ScanApiEndpoint.MICROSOFT_KB, Json.object("date", ScanUtils.localTimeToScan(date).toString(), LIMIT, limit, "skip", offset));
         }
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
-            microsoftKbs = response.getResult();
-            return microsoftKbs.asJsonList().stream()
-                    .map(MicrosoftKB::fromScannerJson)
-                    .filter(Predicate.not(microsoftKB -> microsoftKB.getDiscoveredDate().equals(date)))
-                    .collect(Collectors.toList());
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
+            Json microsoftKbs = response.getResult();
+            return ListUtils.mapAndFilter(microsoftKbs.asJsonList(),
+                            MicrosoftKB::fromScannerJson,
+                            Predicate.not(microsoftKB -> microsoftKB.getDiscoveredDate().equals(date)));
         } else {
             return null;
         }
@@ -519,10 +515,8 @@ public class ScanApiHandler extends ApiHandler {
     public List<EntityHttpConnection> getAllEntityHttpConnections(boolean visibleOnly) {
         JsonApiResponse response = sendGet(
                 ScanApiEndpoint.ENTITY_HTTP_CONNECTION, Json.object("visibleOnly", visibleOnly));
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
-            return response.getResult().asJsonList().stream()
-                    .map(EntityHttpConnection::fromScannerJson)
-                    .collect(Collectors.toList());
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
+            return ListUtils.map(response.getResult().asJsonList(), EntityHttpConnection::fromScannerJson);
         } else {
             logger.warn("Could not get all entity http connections from CSL-Scan");
             return null;
@@ -532,10 +526,8 @@ public class ScanApiHandler extends ApiHandler {
     public List<String> getAllEntityHttpConnectionsUuids() {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
                 ScanApiEndpoint.ENTITY_HTTP_CONNECTION_UUIDS, Json.object());
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
-            return response.getResult().asJsonList().stream()
-                    .map(Json::asString)
-                    .collect(Collectors.toList());
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
+            return ListUtils.map(response.getResult().asJsonList(), Json::asString);
         } else {
             return null;
         }
@@ -549,7 +541,7 @@ public class ScanApiHandler extends ApiHandler {
      */
     public EntityHttpConnection getEntityHttpConnection(String uuid, boolean visibleOnly) {
         JsonApiResponse response = sendGet(String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), uuid), Json.object("visibleOnly", visibleOnly));
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
             return EntityHttpConnection.fromScannerJson(response.getResult());
         } else {
             logger.warn("Could not get entity http connection {} from CSL-Scan", uuid);
@@ -570,7 +562,7 @@ public class ScanApiHandler extends ApiHandler {
 
     public JsonApiResponse createEntityHttpConnection(EntityHttpConnection entityHttpConnection) {
         JsonApiResponse response = sendPost(ScanApiEndpoint.ENTITY_HTTP_CONNECTION, entityHttpConnection.serializeForScanner());
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
             EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
             if (createdEntityHttpConnection != null) {
                 logger.debug("Created entity http connection {}", createdEntityHttpConnection.getUuid());
@@ -589,7 +581,7 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendPut(
                 String.format(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_DETAILS.endpoint(), entityHttpConnection.getUuid()),
                 entityHttpConnection.serializeForScanner());
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
             EntityHttpConnection createdEntityHttpConnection = EntityHttpConnection.fromScannerJson(response.getResult());
             if (createdEntityHttpConnection != null) {
                 logger.info("Updated entity http connection {}", createdEntityHttpConnection.getUuid());
@@ -652,7 +644,7 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendGet(
                 ScanApiEndpoint.ENTITY_LAST_UPDATE, Json.object());
         try {
-            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            String dateString = response.getResult().get(VALUE).asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             return null;
@@ -668,7 +660,7 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendGet(
                 ScanApiEndpoint.MICROSOFT_KB_LAST_UPDATE, Json.object());
         try {
-            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            String dateString = response.getResult().get(VALUE).asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
             logger.warn("Could not get last Microsoft KBs update date from CSL-Scan", e);
@@ -686,15 +678,14 @@ public class ScanApiHandler extends ApiHandler {
                 ScanApiEndpoint.CPE_ITEM_LAST_DELETION, Json.object());
 
         // If the response's status code is not 200, return null
-        if (response.getExtra().get("status_code").asInteger() != 200) {
+        if (response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             return null;
         }
 
         try {
-            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            String dateString = response.getResult().get(VALUE).asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
-//            logger.warn("Could not get last CPE items deletion date from CSL-Scan", e);
             return null;
         }
     }
@@ -708,10 +699,9 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendGet(
                 ScanApiEndpoint.ENTITY_LAST_DELETION, Json.object());
         try {
-            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            String dateString = response.getResult().get(VALUE).asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
-//            logger.warn("Could not get last entities deletion date from CSL-Scan", e);
             return null;
         }
     }
@@ -725,10 +715,9 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendGet(
                 ScanApiEndpoint.MICROSOFT_KB_LAST_DELETION, Json.object());
         try {
-            String dateString = response.getResult().get("value").asString().replace("\"", "");
+            String dateString = response.getResult().get(VALUE).asString().replace("\"", "");
             return ScanUtils.scanTimeToLocal(OffsetDateTime.parse(dateString));
         } catch (NullPointerException e) {
-//            logger.debug("Could not get last Microsoft KBs deletion date from CSL-Scan", e);
             return null;
         }
     }
@@ -743,7 +732,7 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendPost(ScanApiEndpoint.CPE_ITEM_LAST_DELETION,
                 Json.object("cpeItemsLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
-        if (response.getExtra().get("status_code").asInteger() != 200) {
+        if (response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             throw new Exception("Error while setting last CPE items deletion date: " + response.getResult());
         }
     }
@@ -758,7 +747,7 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendPost(ScanApiEndpoint.ENTITY_LAST_DELETION,
                 Json.object("entitiesLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
-        if (response.getExtra().get("status_code").asInteger() != 200) {
+        if (response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             throw new Exception("Error while setting last entities deletion date: " + response.getResult());
         }
     }
@@ -773,7 +762,7 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendPost(ScanApiEndpoint.MICROSOFT_KB_LAST_DELETION,
                 Json.object("microsoftKbsLastDeletion", ScanUtils.localTimeToScan(date).toString())
         );
-        if (response.getExtra().get("status_code").asInteger() != 200) {
+        if (response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             throw new Exception("Error while setting last Microsoft KBs deletion date: " + response.getResult());
         }
     }
@@ -784,7 +773,7 @@ public class ScanApiHandler extends ApiHandler {
     public void dropCollection(ScanCollection collection) throws Exception {
         JsonApiResponse response = sendDelete(
                 String.format(ScanApiEndpoint.DROP_COLLECTION.endpoint(), collection.getName()), Json.object());
-        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+        if (!response.isSuccess() || response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             throw new Exception("Could not drop collection " + collection.getName() + " in CSL-Scan");
         }
     }
@@ -884,7 +873,7 @@ public class ScanApiHandler extends ApiHandler {
      */
     public Json getDiscoveryCron() {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.DISCOVERY_GET_CRON, Json.object());
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
             Json result = response.getResult();
             String cron = null;
             DynamicDiscoveryFrequencyOption frequencyOption = null;
@@ -894,8 +883,8 @@ public class ScanApiHandler extends ApiHandler {
                 return null;
             }
 
-            if (result.has("frequency") && result.get("frequency").isString()) {
-                frequencyOption = DynamicDiscoveryFrequencyOption.fromScanName(result.get("frequency").asString());
+            if (result.has(FREQUENCY) && result.get(FREQUENCY).isString()) {
+                frequencyOption = DynamicDiscoveryFrequencyOption.fromScanName(result.get(FREQUENCY).asString());
             }
             return Json.object("cron", cron, "frequencyOption", frequencyOption.dbapiName());
         } else {
@@ -915,7 +904,7 @@ public class ScanApiHandler extends ApiHandler {
             endpoint += "&frequencyOption=" + frequencyOption.name();
         }
         JsonApiResponse response = sendPut(endpoint, Json.object());
-        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+        if (!response.isSuccess() || response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             throw new Exception("Could not set the discovery cron: " + response.getError().getReason());
         }
     }
@@ -928,21 +917,21 @@ public class ScanApiHandler extends ApiHandler {
      */
     public boolean isDiscoveryCronActive() throws Exception {
         JsonApiResponse response = sendGet(ScanApiEndpoint.DISCOVERY_IS_CRON_ACTIVE, Json.object());
-        if (response.isSuccess() && response.getExtra().get("status_code").asInteger() == 200) {
+        if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
             Json result = response.getResult();
-            if (result.has("value")) {
-                if (result.get("value").isBoolean()) {
-                    return result.get("value").asBoolean();
-                } else if (result.get("value").isString()) {
-                    return Boolean.parseBoolean(result.get("value").asString());
+            if (result.has(VALUE)) {
+                if (result.get(VALUE).isBoolean()) {
+                    return result.get(VALUE).asBoolean();
+                } else if (result.get(VALUE).isString()) {
+                    return Boolean.parseBoolean(result.get(VALUE).asString());
                 } else {
-                    throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+                    throw new Exception(COULD_NOT_GET_THE_DISCOVERY_CRON_STATUS + response.getError().getReason());
                 }
             } else {
-                throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+                throw new Exception(COULD_NOT_GET_THE_DISCOVERY_CRON_STATUS + response.getError().getReason());
             }
         } else {
-            throw new Exception("Could not get the discovery cron status: " + response.getError().getReason());
+            throw new Exception(COULD_NOT_GET_THE_DISCOVERY_CRON_STATUS + response.getError().getReason());
         }
     }
 
@@ -954,7 +943,7 @@ public class ScanApiHandler extends ApiHandler {
      */
     public void setDiscoveryCronActive(boolean active) throws Exception {
         JsonApiResponse response = sendPut(ScanApiEndpoint.DISCOVERY_SET_CRON_ACTIVE.endpoint() + "?isActive=" + active, Json.object());
-        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+        if (!response.isSuccess() || response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             throw new Exception("Could not set the discovery cron status: " + response.getError().getReason());
         }
     }
@@ -964,7 +953,7 @@ public class ScanApiHandler extends ApiHandler {
      */
     public void cancelScan() throws Exception {
         JsonApiResponse response = sendGet(ScanApiEndpoint.DISCOVERY_CANCEL, Json.object());
-        if (!response.isSuccess() || response.getExtra().get("status_code").asInteger() != 200) {
+        if (!response.isSuccess() || response.getExtra().get(STATUS_CODE).asInteger() != 200) {
             throw new Exception(response.getError().getReason());
         }
     }
@@ -1038,9 +1027,9 @@ public class ScanApiHandler extends ApiHandler {
 
     private static @Nullable JsonApiResponse extractErrorContent(JsonApiResponse response) {
         Json errorDetails = response.getError().getDetails();
-        if (errorDetails.has("content")) {
-            Json errorContents = Json.read(response.getError().getDetails().get("content").asString());
-            errorDetails.set("content", errorContents);
+        if (errorDetails.has(CONTENT)) {
+            Json errorContents = Json.read(response.getError().getDetails().get(CONTENT).asString());
+            errorDetails.set(CONTENT, errorContents);
             return JsonApiResponse.error(response.getError().getReason(), errorDetails);
         }
         return null;
@@ -1049,9 +1038,7 @@ public class ScanApiHandler extends ApiHandler {
     public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates() {
         JsonApiResponse response = sendGet(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, Json.object());
         if (response.isSuccess()) {
-            return response.getResult().asJsonList().stream()
-                    .map(ExternalConnectionInfoTemplate::fromScannerJson)
-                    .collect(Collectors.toList());
+            return ListUtils.map(response.getResult().asJsonList(), ExternalConnectionInfoTemplate::fromScannerJson);
         } else {
             return null;
         }
@@ -1062,9 +1049,7 @@ public class ScanApiHandler extends ApiHandler {
         if (!response.isSuccess()) {
             return null;
         }
-        return response.getResult().asJsonList().stream()
-                .map(ExternalConnectionInfo::fromScannerJson)
-                .collect(Collectors.toList());
+        return ListUtils.map(response.getResult().asJsonList(), ExternalConnectionInfo::fromScannerJson);
     }
 
     public JsonApiResponse createExternalConnectionInfo(ExternalConnectionInfo externalConnectionInfo) {
@@ -1112,16 +1097,14 @@ public class ScanApiHandler extends ApiHandler {
             requestParams.set("date", ScanUtils.localTimeToScan(dateTime).toString());
         }
         if (limit != null) {
-            requestParams.set("limit", limit);
+            requestParams.set(LIMIT, limit);
         }
         if (offset != null) {
             requestParams.set("skip", offset);
         }
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES, requestParams);
         if (response.isSuccess()) {
-            return response.getResult().asJsonList().stream()
-                    .map(ExternalDiscoveredDevice::fromScannerJson)
-                    .collect(Collectors.toList());
+            return ListUtils.map(response.getResult().asJsonList(), ExternalDiscoveredDevice::fromScannerJson);
         } else {
             return null;
         }
@@ -1156,25 +1139,23 @@ public class ScanApiHandler extends ApiHandler {
 //        String uri = url + ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint();
         String uri = createUriFrom(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_IMPORT_BSON.endpoint());
         Request request = httpClient.newRequest(uri);
-        request.header(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
-        request.param("drop", String.valueOf(shouldDrop));
         request.method(HttpMethod.POST);
-        MultiPartContentProvider multiPart = new MultiPartContentProvider();
-        try {
-            multiPart.addFilePart("file", bsonFilePath.getFileName().toString(), new PathContentProvider(bsonFilePath), null);
-        } catch (IOException e) {
-            logger.error("Could not add bson file to multipart content provider", e);
-            return null;
+        addHeaderTo(request, X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
+        request.param("drop", String.valueOf(shouldDrop));
+
+
+        try (MultiPartRequestContent multiPart = new MultiPartRequestContent()) {
+                multiPart.addFieldPart("file", new PathRequestContent(bsonFilePath), null);
+            addBodyTo(request, multiPart);
         }
-        multiPart.close();
-        request.content(multiPart);
+
+
         try {
             ContentResponse contentResponse = request.send();
             if (contentResponse.getStatus() >= 400) {
                 logger.warn("Error while sending request to CSL-Scan: {}", contentResponse.getContentAsString());
                 throw new Exception("Error while sending request to CSL-Scan: unexpected status code " + contentResponse.getStatus());
             }
-//            return UUID.fromString(contentResponse.getContentAsString().replace("\"", ""));
             return ImportQuery.fromScannerJson(Json.read(contentResponse.getContentAsString()));
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             logger.error("Error while sending request to CSL-Scan", e);
@@ -1255,9 +1236,7 @@ public class ScanApiHandler extends ApiHandler {
     public List<EntityHttpConnection> getEntityHttpConnectionsToSync() {
         JsonApiResponse response = sendGet(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_GET_SYNC_NEEDED, Json.object());
         if (response.isSuccess()) {
-            return response.getResult().asJsonList().stream()
-                    .map(EntityHttpConnection::fromScannerJson)
-                    .collect(Collectors.toList());
+            return ListUtils.map(response.getResult().asJsonList(), EntityHttpConnection::fromScannerJson);
         } else {
             return List.of();
         }

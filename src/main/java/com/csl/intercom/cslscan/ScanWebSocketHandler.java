@@ -16,6 +16,7 @@ import lombok.Setter;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
 import org.eclipse.jetty.io.EofException;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.messaging.Message;
@@ -45,10 +46,6 @@ import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
  */
 public class ScanWebSocketHandler {
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(ScanWebSocketHandler.class);
-    public static final String REQUEST = "request";
-    public static final String IMPORT_NOTIFICATIONS = "import notifications";
-    public static final String EXTERNAL_SCANS = "external scans";
-    public static final String EXPORT_NOTIFICATIONS = "export notifications";
     private final ImportExportBsonService importExportBsonService;
     private final DiscoveryServices discoveryService;
     private static final String WEBSOCKET_NOTIFICATIONS_ENDPOINT = "/discovery/ready";
@@ -61,7 +58,7 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private ExternalScansService externalScansService;
     private CpeScanService cpeScanService;
-    private StompChannel stompWebSocketChannel = new StompChannel(createStompClient());
+    private final StompChannel stompWebSocketChannel = new StompChannel(createStompClient());
     private boolean isScanConnected = false;
 
     /**
@@ -162,7 +159,7 @@ public class ScanWebSocketHandler {
     private void connectStompSessionsIfNecessary() {
         logger.trace("connectStompSessionsIfNecessary : {}", stompWebSocketChannel);
         if (!StompChannel.isConnected(stompWebSocketChannel)) {
-            stompWebSocketChannel = reconnectToScanWebSocket(stompWebSocketChannel, this.scanManagerDiscoveryUrl);
+            reconnectToScanWebSocket(stompWebSocketChannel, this.scanManagerDiscoveryUrl);
         }
 
         if (StompChannel.isConnected(stompWebSocketChannel)) {
@@ -171,22 +168,24 @@ public class ScanWebSocketHandler {
     }
 
     /**
-     * Manages the reconnection of a stomp channel channel
+     * Manages the reconnection of the stomp channel (scan websocket)
      *
-     * @return the stomp channel modified
+     * @param stompChannel the stomp channel modified and used
+     * @param connectionUrl url to connect the server
      */
-    private StompChannel reconnectToScanWebSocket(StompChannel stompChannel, String connectionUrl) {
+    private void reconnectToScanWebSocket(StompChannel stompChannel, String connectionUrl) {
         HashMap<String, StompFrameHandler> subscriptionsMap = new HashMap<>();
         subscriptionsMap.put(WEBSOCKET_IMPORT_NOTIFICATIONS_ENDPOINT, new ImportTopicHandler());
         subscriptionsMap.put(WEBSOCKET_EXPORT_NOTIFICATIONS_ENDPOINT, new ExportTopicHandler());
         subscriptionsMap.put(WEBSOCKET_EXTERNAL_SCAN_ENDPOINT, new ExternalScanTopicHandler());
         subscriptionsMap.put(WEBSOCKET_NOTIFICATIONS_ENDPOINT, new NotificationsTopicHandler());
+
         try {
             logger.trace("Connecting to CSL-Scan websocket ...");
             stompChannel.setSession(subscribeToChannel(stompChannel.getClient(), connectionUrl, new CorrelatedStompSessionHandler(subscriptionsMap)));
             logger.trace("Connected to CSL-Scan websocket : ", stompChannel.getSession());
             logIfScanWasNotConnected(stompChannel.getSession());
-            return stompChannel;
+            return ;
         } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
             if (logDisconnectedIfScanWasConnected()) {
                 logger.warn("Error while connecting to Stomp Websocket, retrying ...");
@@ -197,7 +196,6 @@ public class ScanWebSocketHandler {
             logger.error("Unexpected exception at CSL-Scan websocket : {}", e.getMessage());
         }
         StompChannel.setSessionNull(stompChannel);
-        return stompChannel;
     }
 
     /**
@@ -362,7 +360,6 @@ public class ScanWebSocketHandler {
             if (payload instanceof Json jsonPayload) {
                 logger.debug("[STOMP] " + payload);
                 ExternalScan scan = ExternalScan.fromScannerJson(jsonPayload);
-//                    externalScansService.createOrUpdateExternalScan(scan);
                 externalScansService.handleScanNotification(scan);
             } else {
                 logger.debug("[STOMP] null");
@@ -380,7 +377,7 @@ public class ScanWebSocketHandler {
 
             String scanId = JsonUtil.getStringFromJson(payload, "uuid", null);
 
-            //region Get or Create Scan Entity
+            // region Get or Create Scan Entity
             // Check if we already know the scan
             ScanEntity scan = cpeScanService.getScanByScanId(scanId);
 
@@ -392,7 +389,7 @@ public class ScanWebSocketHandler {
                 }
                 scan = ScanEntity.fromScanId(scanId, startDate);
             }
-            //endregion Get or Create Scan Entity
+            // endregion Get or Create Scan Entity
 
             //region Update the scan's info (status, progress)
             String scanStatus = JsonUtil.getStringFromJson(payload, "status", "NONE");
@@ -424,14 +421,14 @@ public class ScanWebSocketHandler {
      * Class handler for the notifications scan websocket
      */
     private class CorrelatedStompSessionHandler extends CorrelatedStompFrameHandler implements StompSessionHandler {
-        private final HashMap<String, StompFrameHandler> subscriptionMap;
+        private final Map<String, StompFrameHandler> subscriptionMap;
 
-        public CorrelatedStompSessionHandler(HashMap<String, StompFrameHandler> subscriptionMap){
+        public CorrelatedStompSessionHandler(Map<String, StompFrameHandler> subscriptionMap){
             super();
             this.subscriptionMap = subscriptionMap;
         }
 
-        public void onConnect(StompSession session, StompHeaders headers) {
+        public void onConnect(@NotNull StompSession session, @NotNull StompHeaders headers) {
             purgeScanRequestsQueue();
             for (Map.Entry<String, StompFrameHandler> subscription : subscriptionMap.entrySet()) {
                 if (subscription.getValue()!=null) {
@@ -449,7 +446,7 @@ public class ScanWebSocketHandler {
          * @param headers headers of the message
          */
         @Override
-        public void afterConnected(StompSession session, StompHeaders headers) {
+        public final void afterConnected(@NotNull StompSession session, @NotNull StompHeaders headers) {
             // Variables to logger : X-Correlation-ID ...
             setVariablesToMDC(headers);
             // Log connection
@@ -469,7 +466,8 @@ public class ScanWebSocketHandler {
          * @param payload payload of the message
          * @param exception exception arose when exception
          */
-        public void onException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+        public void onException(@NotNull StompSession session, StompCommand command, @NotNull StompHeaders headers, byte @NotNull [] payload, @NotNull Throwable exception) {
+            /* TODO : define exception callback. */
         }
 
         /**
@@ -483,7 +481,7 @@ public class ScanWebSocketHandler {
          * @param exception exception arose when exception
          */
         @Override
-        public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+        public final void handleException(@NotNull StompSession session, StompCommand command, @NotNull StompHeaders headers, byte @NotNull [] payload, @NotNull Throwable exception) {
             // Variables to logger : X-Correlation-ID ...
             setVariablesToMDC(headers);
             // Log exception in message
@@ -498,7 +496,7 @@ public class ScanWebSocketHandler {
          * @param session websocket session
          * @param exception exception arose when transmitting message
          */
-        public void onTransportError(StompSession session, Throwable exception) {
+        public void onTransportError(@NotNull StompSession session, @NotNull Throwable exception) {
             ScanWebSocketHandler.handleTransportError(session, exception);
         }
 
@@ -510,12 +508,14 @@ public class ScanWebSocketHandler {
          * @param exception exception arose when transmitting message
          */
         @Override
-        public void handleTransportError(StompSession session, Throwable exception) {
+        public final void handleTransportError(@NotNull StompSession session, @NotNull Throwable exception) {
             onTransportError(session, exception);
         }
 
         @Override
-        public void onFrame(StompHeaders headers, Object payloadRaw){};
+        public void onFrame(StompHeaders headers, Object payloadRaw){
+            /* This is empty because this is the main websocket handler and the onFrame is delegated to subscription handlers */
+        }
 
         /**
          * Try to execute all the scan requests in the queue.
@@ -525,18 +525,18 @@ public class ScanWebSocketHandler {
             while (isScanConnected && (scanRequest = scanRequestsQueue.poll()) != null) {
                 if (!StompChannel.isConnected(stompWebSocketChannel)) {
                     scanRequestsQueue.add(scanRequest);
-                    break;
+                    return;
                 }
                 startScan(scanRequest);
                 if (!StompChannel.isConnected(stompWebSocketChannel)) {
                     scanRequestsQueue.add(scanRequest);
-                    break;
+                    return;
                 }
             }
         }
     }
 
-    private abstract class CorrelatedStompFrameHandler implements StompFrameHandler {
+    private abstract static class CorrelatedStompFrameHandler implements StompFrameHandler {
 
         /**
          * Method called at the reception of a message
@@ -553,7 +553,7 @@ public class ScanWebSocketHandler {
          * @param payloadRaw payload of the message
          */
         @Override
-        public void handleFrame(StompHeaders headers, Object payloadRaw) {
+        public final void handleFrame(@NotNull StompHeaders headers, Object payloadRaw) {
             // Variables to logger : X-Correlation-ID ...
             setVariablesToMDC(headers);
             // Log info message received
@@ -563,7 +563,7 @@ public class ScanWebSocketHandler {
         }
 
         @Override
-        public Type getPayloadType(StompHeaders headers) {
+        public final @NotNull Type getPayloadType(@NotNull StompHeaders headers) {
             return String.class;
         }
 
@@ -582,9 +582,6 @@ public class ScanWebSocketHandler {
     private static void handleTransportError(StompSession session, Throwable exception) {
         if (session.isConnected()) {
             session.disconnect();
-        }
-        if (exception.getCause() != null) {
-            System.out.println(" >>> transport error cause " + exception.getCause());
         }
     }
 

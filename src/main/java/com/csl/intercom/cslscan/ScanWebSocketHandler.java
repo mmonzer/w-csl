@@ -185,7 +185,11 @@ public class ScanWebSocketHandler {
             logger.trace("Connecting to CSL-Scan websocket ...");
             stompChannel.setSession(subscribeToChannel(stompChannel.getClient(), connectionUrl, new CorrelatedStompSessionHandler(subscriptionsMap)));
             logger.trace("Connected to CSL-Scan websocket : ", stompChannel.getSession());
-            logIfScanWasNotConnected(stompChannel.getSession());
+            if (StompChannel.isConnected(stompChannel)) {
+                logIfScanWasNotConnected(stompChannel.getSession());
+            } else {
+                logDisconnectedIfScanWasConnected();
+            }
             return ;
         } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
             if (logDisconnectedIfScanWasConnected()) {
@@ -235,10 +239,10 @@ public class ScanWebSocketHandler {
      * @throws TimeoutException     if connection timed out.
      */
     private StompSession subscribeToChannel(WebSocketStompClient client, String uri, StompSessionHandler handler) throws ExecutionException, InterruptedException, TimeoutException {
-        // check if API is available
-        if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
-            throw new ConnectionLostException("CSL-Scan disconnected");
-        }
+//        // check if API is available
+//        if (!discoveryService.getScanApiHandler().getStatus().isSuccess()) {
+//            throw new ConnectionLostException("CSL-Scan disconnected");
+//        }
 
         try {
             return client.connectAsync(uri, handler).exceptionally(e -> null).get(1000, TimeUnit.MILLISECONDS);

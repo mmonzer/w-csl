@@ -7,7 +7,11 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class Config {
@@ -50,7 +54,7 @@ public class Config {
     }
 
     private Json readConfig(String f) {
-        Json jsonConfig = Json.read(readFile(f));
+        Json jsonConfig = Json.read(readResourceFile(f));
 
         // Check the environment for existing variables
         Map<String, String> env = System.getenv();
@@ -68,10 +72,17 @@ public class Config {
         return jsonConfig;
     }
 
-    private static String readFile(String filename) {
-        try {
-            return FileUtils.readFile(Config.class.getClassLoader().getResource(filename).getPath());
-        } catch (IOException e) {
+    private static String readResourceFile(String filename) {
+        try (InputStream inputStream = CSLContext.class.getClassLoader().getResourceAsStream(filename);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+            if (inputStream == null) {
+                throw new IllegalArgumentException("Resource not found: " + filename);
+            }
+
+            return FileUtils.readFile(reader);
+        } catch (Exception e) {
+            // e.printStackTrace();
             return null;
         }
     }

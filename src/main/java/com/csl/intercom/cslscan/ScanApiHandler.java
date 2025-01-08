@@ -137,9 +137,10 @@ public class ScanApiHandler extends ApiHandler {
         if (!response.isSuccess()) {
             return null;
         }
-        return ListUtils.mapAndFilter(response.getResult().asJsonList(),
-                        connectionJson -> Connection.fromScannerJson(connectionJson, protocols),
-                        Objects::nonNull);
+        return ListUtils.toList(response.getResult().asJsonList().stream()
+                .map(connectionJson -> Connection.fromScannerJson(connectionJson, protocols))
+                .filter(Objects::nonNull)
+        );
     }
 
     public OffsetDateTime getConnectionLastUpdatedDate() {
@@ -426,9 +427,11 @@ public class ScanApiHandler extends ApiHandler {
             cpeItems = response.getResult();
 
             // Parse the items, filter those whose updated date is *exactly* the last updated date, and return the resulting list.
-            return ListUtils.mapAndFilter(cpeItems.asJsonList(),
-                            CpeItem::fromScannerJson,
-                            Predicate.not(cpeItem -> cpeItem.getDiscoveredDate().equals(date)));
+            return ListUtils.toList(
+                    cpeItems.asJsonList().stream()
+                    .map(CpeItem::fromScannerJson)
+                    .filter(Predicate.not(cpeItem -> cpeItem.getDiscoveredDate().equals(date)))
+            );
         } else {
             return null;
         }
@@ -453,9 +456,10 @@ public class ScanApiHandler extends ApiHandler {
         }
         if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
             Json microsoftKbs = response.getResult();
-            return ListUtils.mapAndFilter(microsoftKbs.asJsonList(),
-                            MicrosoftKB::fromScannerJson,
-                            Predicate.not(microsoftKB -> microsoftKB.getDiscoveredDate().equals(date)));
+            return ListUtils.toList(microsoftKbs.asJsonList().stream()
+                    .map(MicrosoftKB::fromScannerJson)
+                    .filter(Predicate.not(microsoftKB -> microsoftKB.getDiscoveredDate().equals(date)))
+            );
         } else {
             return null;
         }
@@ -516,7 +520,10 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendGet(
                 ScanApiEndpoint.ENTITY_HTTP_CONNECTION, Json.object("visibleOnly", visibleOnly));
         if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
-            return ListUtils.map(response.getResult().asJsonList(), EntityHttpConnection::fromScannerJson);
+            return ListUtils.toList(
+                    response.getResult().asJsonList().stream()
+                    .map(EntityHttpConnection::fromScannerJson)
+            );
         } else {
             logger.warn("Could not get all entity http connections from CSL-Scan");
             return null;
@@ -527,7 +534,9 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET,
                 ScanApiEndpoint.ENTITY_HTTP_CONNECTION_UUIDS, Json.object());
         if (response.isSuccess() && response.getExtra().get(STATUS_CODE).asInteger() == 200) {
-            return ListUtils.map(response.getResult().asJsonList(), Json::asString);
+            return ListUtils.toList(response.getResult().asJsonList().stream()
+                    .map(Json::asString)
+            );
         } else {
             return null;
         }
@@ -1038,7 +1047,10 @@ public class ScanApiHandler extends ApiHandler {
     public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates() {
         JsonApiResponse response = sendGet(ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, Json.object());
         if (response.isSuccess()) {
-            return ListUtils.map(response.getResult().asJsonList(), ExternalConnectionInfoTemplate::fromScannerJson);
+            return ListUtils.toList(
+                    response.getResult().asJsonList().stream()
+                    .map(ExternalConnectionInfoTemplate::fromScannerJson)
+            );
         } else {
             return null;
         }
@@ -1049,7 +1061,9 @@ public class ScanApiHandler extends ApiHandler {
         if (!response.isSuccess()) {
             return null;
         }
-        return ListUtils.map(response.getResult().asJsonList(), ExternalConnectionInfo::fromScannerJson);
+        return ListUtils.toList(response.getResult().asJsonList().stream()
+                .map(ExternalConnectionInfo::fromScannerJson)
+        );
     }
 
     public JsonApiResponse createExternalConnectionInfo(ExternalConnectionInfo externalConnectionInfo) {
@@ -1104,7 +1118,9 @@ public class ScanApiHandler extends ApiHandler {
         }
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES, requestParams);
         if (response.isSuccess()) {
-            return ListUtils.map(response.getResult().asJsonList(), ExternalDiscoveredDevice::fromScannerJson);
+            return ListUtils.toList(response.getResult().asJsonList().stream()
+                    .map(ExternalDiscoveredDevice::fromScannerJson)
+            );
         } else {
             return null;
         }
@@ -1236,7 +1252,9 @@ public class ScanApiHandler extends ApiHandler {
     public List<EntityHttpConnection> getEntityHttpConnectionsToSync() {
         JsonApiResponse response = sendGet(ScanApiEndpoint.ENTITY_HTTP_CONNECTION_GET_SYNC_NEEDED, Json.object());
         if (response.isSuccess()) {
-            return ListUtils.map(response.getResult().asJsonList(), EntityHttpConnection::fromScannerJson);
+            return ListUtils.toList(response.getResult().asJsonList().stream()
+                    .map(EntityHttpConnection::fromScannerJson)
+            );
         } else {
             return List.of();
         }

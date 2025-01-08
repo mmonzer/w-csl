@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
@@ -161,8 +162,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      */
     public void sendCpeItems(List<CpeItem> cpeItems, ScanEntity scan, boolean hasMore) throws Exception {
         Json failedItems = Json.array();
-        List<CpeItem> newItems = ListUtils.filter(cpeItems, Predicate.not(CpeItem::isDeleted));
-        List<CpeItem> deletedItems = ListUtils.filter(cpeItems, CpeItem::isDeleted);
+        List<CpeItem> newItems = ListUtils.toList(cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)));
+        List<CpeItem> deletedItems = ListUtils.toList(cpeItems.stream().filter(CpeItem::isDeleted));
+
 
         try {
             if (!deletedItems.isEmpty()) {
@@ -208,8 +210,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
     public void sendMicrosoftKbs(List<MicrosoftKB> KBs, ScanEntity scan) throws Exception {
         Json failedItems = Json.array();
-        List<MicrosoftKB> newItems = ListUtils.filter(KBs, Predicate.not(MicrosoftKB::isDeleted));
-        List<MicrosoftKB> deletedItems = ListUtils.filter(KBs, MicrosoftKB::isDeleted);
+        List<MicrosoftKB> newItems = ListUtils.toList(KBs.stream().filter(Predicate.not(MicrosoftKB::isDeleted)));
+        List<MicrosoftKB> deletedItems = ListUtils.toList(KBs.stream().filter(MicrosoftKB::isDeleted));
 
         try {
             if (!deletedItems.isEmpty()) {
@@ -289,7 +291,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
         Json responseJson = Json.read(response.getContentAsString());
 
-        return ListUtils.mapAndFilter(responseJson.asJsonList(), Device::fromJson, Objects::nonNull);
+        return ListUtils.toList(
+                responseJson.asJsonList().stream()
+                .map(Device::fromJson)
+                .filter(Objects::nonNull)
+        );
     }
 
     /**
@@ -311,7 +317,11 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return new ArrayList<>();
         }
         Json responseJson = Json.read(response.getContentAsString());
-        return ListUtils.mapAndFilter(responseJson.asJsonList(), (Function<Json, Connection>) json -> Connection.fromDbapiJson(json, protocols), Objects::nonNull);
+        return ListUtils.toList(
+                responseJson.asJsonList().stream()
+                .map(json -> Connection.fromDbapiJson(json, protocols))
+                .filter(Objects::nonNull)
+        );
     }
 
     /**
@@ -498,7 +508,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return new ArrayList<>();
         }
 
-        return ListUtils.map(Json.read(response.getContentAsString()).asJsonList(), ConnectionProtocol::fromJson);
+        return ListUtils.toList(
+                Json.read(response.getContentAsString()).asJsonList().stream()
+                .map(ConnectionProtocol::fromJson)
+        );
     }
 
     public ConnectionProtocol fetchDiscoveryProtocol(String protocolName) throws ExecutionException, InterruptedException, TimeoutException {
@@ -1415,10 +1428,12 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 logger.warn("Unable to fetch available import tasks from DB-API: Unexpected status code: {}", response.getStatus());
                 return new ArrayList<>();
             }
-            return ListUtils.mapAndFilter(Json.read(response.getContentAsString()).asJsonList(),
-                            HttpTemplateImportNotification::fromDbapiJson,
-                            Objects::nonNull,
-                            query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED);
+            return ListUtils.toList(
+                    Json.read(response.getContentAsString()).asJsonList().stream()
+                    .map(HttpTemplateImportNotification::fromDbapiJson)
+                    .filter(Objects::nonNull)
+                    .filter(query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED)
+            );
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             logger.warn("Error fetching available import tasks");
             logger.debug("Error fetching available import tasks", e);

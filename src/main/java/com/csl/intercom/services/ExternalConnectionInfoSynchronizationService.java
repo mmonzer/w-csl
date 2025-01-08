@@ -52,7 +52,7 @@ public class ExternalConnectionInfoSynchronizationService {
             logger.warn("Error while getting external connection infos");
             return;
         }
-        List<ExternalConnectionInfo> deletedConnectionInfos = ListUtils.filter(connectionInfos, ExternalConnectionInfo::isDeleted);
+        List<ExternalConnectionInfo> deletedConnectionInfos = ListUtils.toList(connectionInfos.stream().filter(ExternalConnectionInfo::isDeleted));
         connectionInfos.removeAll(deletedConnectionInfos);
         try {
             dbapiHandler.createOrUpdateExternalConnectionInfos(connectionInfos);

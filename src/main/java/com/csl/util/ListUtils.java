@@ -100,9 +100,9 @@ public class ListUtils {
      * @return list from stream
      * @param <T> type of list and stream
      */
-    private static <T> List<T> toList(Stream<T> stream)  {
+    public static <T> List<T> toList(Stream<T> stream)  {
         // Although recommended to use .toList() instead of .collect(Collectors.toList()) the first one creates
-        // an immutable list, whereas the second one is not immutable, allowing adding connections afterwords (needed).
+        // an immutable list, whereas the second one is not immutable, allowing adding items afterwords (needed).
         return stream.collect(Collectors.toList());
     }
 }

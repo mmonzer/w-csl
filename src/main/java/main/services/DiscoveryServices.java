@@ -2173,12 +2173,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         if (!isRemote) {
             Json websocketStatus = scanWebSocketHandler.getStatus();
-            ///logger.debug("Scan websocket check status : {}", websocketStatus);
-            boolean requestWebsocketStatus = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
-            boolean notificationWebsocketStatus = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
-            /// logger.debug("Scan websocket check status : {}", websocketStatus);
-            //status.set("is_websocket_connected", requestWebsocketStatus && notificationWebsocketStatus);
-            status.set("is_websocket_connected", notificationWebsocketStatus);
+            boolean isWebSocketConnected = JsonUtil.getBooleanFromJson(websocketStatus, "is_websocket_connected", false);
+            status.set("is_websocket_connected", isWebSocketConnected);
         }
 
         logger.trace("CSL-Scan status : {}", status);

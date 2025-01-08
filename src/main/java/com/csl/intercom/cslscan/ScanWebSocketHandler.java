@@ -9,16 +9,13 @@ import com.csl.intercom.services.CpeScanService;
 import com.csl.intercom.services.ExternalScansService;
 import com.csl.logger.*;
 import com.csl.util.ThreadUtils;
-import com.csl.web.websockets.CorrelatedStompSessionHandlerAdapter;
 import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 import main.services.DiscoveryServices;
 import main.services.JsonApiResponse;
-import org.checkerframework.checker.units.qual.N;
 import org.eclipse.jetty.io.EofException;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.messaging.Message;
@@ -64,11 +61,7 @@ public class ScanWebSocketHandler {
     private ScheduledExecutorService webSocketsConnectionAttempts;
     private ExternalScansService externalScansService;
     private CpeScanService cpeScanService;
-    private StompChannel stompNotificationChannel = new StompChannel(createStompClient());
-    private StompChannel stompRequestChannel = new StompChannel(createStompClient());
-    private StompChannel stompExternalScanChannel = new StompChannel(createStompClient());
-    private StompChannel stompImportNotificationChannel = new StompChannel(createStompClient());
-    private StompChannel stompExportNotificationChannel = new StompChannel(createStompClient());
+    private StompChannel stompWebSocketChannel = new StompChannel(createStompClient());
     private boolean isScanConnected = false;
 
     /**
@@ -99,10 +92,7 @@ public class ScanWebSocketHandler {
     public void stop() {
         webSocketsConnectionAttempts.shutdown();
 
-//        StompChannel.disconnectIfHasSession(stompRequestChannel);
-        StompChannel.disconnectIfHasSession(stompNotificationChannel);
-//        StompChannel.disconnectIfHasSession(stompImportNotificationChannel);
-//        StompChannel.disconnectIfHasSession(stompExportNotificationChannel);
+        StompChannel.disconnectIfHasSession(stompWebSocketChannel);
 
         logger.info("CSL-Scan websocket disconnected at {}", scanManagerDiscoveryUrl);
     }
@@ -118,10 +108,7 @@ public class ScanWebSocketHandler {
     public Json getStatus() {
         Json status = Json.object();
 
-//        status.set("is_requests_websocket_connected", StompChannel.isConnected(stompRequestChannel));
-        status.set("is_notifications_websocket_connected", StompChannel.isConnected(stompNotificationChannel));
-//        status.set("is_import_notifications_websocket_connected", StompChannel.isConnected(stompImportNotificationChannel));
-//        status.set("is_export_notifications_websocket_connected", StompChannel.isConnected(stompExportNotificationChannel));
+        status.set("is_websocket_connected", StompChannel.isConnected(stompWebSocketChannel));
         status.set("scan_requests_queue", scanRequestsQueue.size());
 
         return status;
@@ -136,7 +123,7 @@ public class ScanWebSocketHandler {
     public JsonApiResponse requestScan(List<String> entities) {
         // Check if ws to csl-scan is already connected
         connectStompSessionsIfNecessary();
-        if (!StompChannel.isConnected(stompNotificationChannel)) {
+        if (!StompChannel.isConnected(stompWebSocketChannel)) {
             // not connected to csl-scan --> add this request to the queue
             scanRequestsQueue.add(entities);
             logger.debug("Scan service unavailable, added scan request to queue");
@@ -159,11 +146,11 @@ public class ScanWebSocketHandler {
         StompHeaders stompHeaders = new StompHeaders();
         stompHeaders.add(StompHeaders.DESTINATION, WEBSOCKET_START_DISCOVERY_ENDPOINT);
         stompHeaders.add(X_CORRELATION_ID, MDC.get(X_CORRELATION_ID));
-        if (StompChannel.isConnected(stompNotificationChannel)) {
+        if (StompChannel.isConnected(stompWebSocketChannel)) {
             if (uuids == null || uuids.isEmpty()) {
-                stompNotificationChannel.getSession().send(stompHeaders, "");
+                stompWebSocketChannel.getSession().send(stompHeaders, "");
             } else {
-                stompNotificationChannel.getSession().send(stompHeaders, Json.array(uuids.toArray()));
+                stompWebSocketChannel.getSession().send(stompHeaders, Json.array(uuids.toArray()));
             }
         }
     }
@@ -173,108 +160,14 @@ public class ScanWebSocketHandler {
      * Blocking, should be called asynchronously.
      */
     private void connectStompSessionsIfNecessary() {
-        logger.trace("connectStompSessionsIfNecessary : {}", stompNotificationChannel);
-        boolean successfulNotificationConnection = false;
-        if (!StompChannel.isConnected(stompNotificationChannel)) {
-            stompNotificationChannel = reconnectToScanWebSocket(stompNotificationChannel, this.scanManagerDiscoveryUrl);
-            successfulNotificationConnection = StompChannel.isConnected(stompNotificationChannel);
+        logger.trace("connectStompSessionsIfNecessary : {}", stompWebSocketChannel);
+        if (!StompChannel.isConnected(stompWebSocketChannel)) {
+            stompWebSocketChannel = reconnectToScanWebSocket(stompWebSocketChannel, this.scanManagerDiscoveryUrl);
         }
 
-//        boolean sucessfulRequestConnection = false;
-//        if (!StompChannel.isConnected(stompRequestChannel)) {
-//            sucessfulRequestConnection = reconnectToRequestChannel();
-//        }
-//
-//        if (!StompChannel.isConnected(stompImportNotificationChannel)) {
-//            reconnectToImportNotificationChannel();
-//        }
-//
-//        if (!StompChannel.isConnected(stompExportNotificationChannel)) {
-//            reconnectToExportNotificationChannel();
-//        }
-//
-//        boolean successfulExternalScanConnection = false;
-//        if (!StompChannel.isConnected(stompExternalScanChannel)) {
-//            successfulExternalScanConnection = reconnectToExternalScanChannel();
-//        }
-
-//        if (successfulNotificationConnection || sucessfulRequestConnection || successfulExternalScanConnection) {
-        if (successfulNotificationConnection) {
+        if (StompChannel.isConnected(stompWebSocketChannel)) {
                 externalScansService.handleConnectionEstablishedWithScanner();
         }
-    }
-
-    // region reconnect channels
-
-//    /**
-//     * Try to logIfScanWasNotConnected to the external scan channel for stomp notifications
-//     *
-//     * @return whether the connection was successful
-//     */
-//    private boolean reconnectToExternalScanChannel() {
-//        stompExternalScanChannel = reconnectToScanWebSocket(stompExternalScanChannel, "External Scan", this.scanManagerDiscoveryUrl, new ExternalScanTopicHandler());
-//        return StompChannel.isConnected(stompExternalScanChannel);
-//    }
-//
-//    /**
-//     * Try to logIfScanWasNotConnected to the export notification channel for stomp notifications
-//     */
-//    private void reconnectToExportNotificationChannel() {
-//        stompExportNotificationChannel = reconnectToScanWebSocket(stompExportNotificationChannel, "Export Notifications", this.scanManagerDiscoveryUrl, new ExportTopicHandler());
-//    }
-//
-//    /**
-//     * Try to logIfScanWasNotConnected to the import notification channel for stomp notifications
-//     */
-//    private void reconnectToImportNotificationChannel() {
-//        stompImportNotificationChannel = reconnectToScanWebSocket(stompImportNotificationChannel, "Import Notifications", this.scanManagerDiscoveryUrl, new ImportTopicHandler());
-//    }
-//
-//    /**
-//     * Try to logIfScanWasNotConnected to the request channel for stomp notifications
-//     *
-//     * @return whether the connection was successful
-//     */
-//    private boolean reconnectToRequestChannel() {
-//        stompRequestChannel = reconnectToScanWebSocket(stompRequestChannel, "Request", this.scanManagerDiscoveryUrl, new RequestTopicHandler());
-//        return StompChannel.isConnected(stompRequestChannel);
-//    }
-//
-//    /**
-//     * Manages the reconnection of notification channel
-//     *
-//     * @return whether the connection was successful
-//     */
-//    private boolean reconnectToNotificationsChannel() {
-//        stompNotificationChannel = reconnectToScanWebSocket(stompNotificationChannel, "Notifications", this.scanManagerDiscoveryUrl, new NotificationsTopicHandler());
-//        return StompChannel.isConnected(stompNotificationChannel);
-//    }
-
-    // endregion reconnect channels
-
-    /**
-     * Manages the reconnection of a stomp channel channel
-     *
-     * @return the stomp channel modified
-     */
-    private StompChannel reconnectToScanWebSocket(StompChannel stompChannel, String channelLabel, String connectionUrl, CorrelatedStompSessionHandlerAdapter handler) {
-        try {
-            logger.trace("Connecting to {} websocket ...", channelLabel);
-            stompChannel.setSession(subscribeToChannel(stompChannel.getClient(), connectionUrl, handler));
-            logger.trace("Connected to {} websocket : ", channelLabel, stompChannel.getSession());
-            logIfScanWasNotConnected(stompChannel.getSession());
-            return stompChannel;
-        } catch (InterruptedException | ExecutionException | ResourceAccessException | ConnectionLostException e) {
-            if (logDisconnectedIfScanWasConnected()) {
-                logger.warn("Error while connecting to Stomp Websocket, retrying ...");
-                logger.trace("Error while connecting to Stomp Websocket, retrying ...", e);
-            }
-        } catch (Throwable e) {
-            logDisconnectedIfScanWasConnected();
-            logger.error("Unexpected exception at {} channel : {}", channelLabel, e.getMessage());
-        }
-        StompChannel.setSessionNull(stompChannel);
-        return stompChannel;
     }
 
     /**
@@ -422,41 +315,7 @@ public class ScanWebSocketHandler {
         }
     }
 
-    // region Stomp Session Handlers
-
-    /**
-     * Class handler for the request websocket
-     */
-    private class RequestTopicHandler extends CorrelatedStompFrameHandler {
-        @Override
-        public void onFrame(StompHeaders headers, Object payload) {
-            if (payload != null) {
-                logger.debug("[STOMP] " + payload);
-                // handle response
-            } else {
-                logger.debug("[STOMP] null");
-            }
-        }
-
-        // TODO : add purge scan request
-        /**
-         * Try to execute all the scan requests in the queue.
-         */
-        private void purgeScanRequestsQueue() {
-            List<String> scanRequest;
-            while (isScanConnected && (scanRequest = scanRequestsQueue.poll()) != null) {
-                if (!StompChannel.isConnected(stompNotificationChannel)) {
-                    scanRequestsQueue.add(scanRequest);
-                    break;
-                }
-                startScan(scanRequest);
-                if (!StompChannel.isConnected(stompNotificationChannel)) {
-                    scanRequestsQueue.add(scanRequest);
-                    break;
-                }
-            }
-        }
-    }
+    // region Stomp Frame Handlers for different subscriptions
 
     /**
      * Class handler for the export bson websocket
@@ -579,7 +438,7 @@ public class ScanWebSocketHandler {
                     session.subscribe(subscription.getKey(), subscription.getValue());
                 }
             }
-            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/discovery", "WS", "Connected to notifications websocket at " + scanManagerDiscoveryUrl + "/" + WEBSOCKET_NOTIFICATIONS_ENDPOINT);
+            CSLNetworkLogger.info(LoggerFactory.getLogger(ScanWebSocketHandler.class), "scanWebsocket/discovery", "WS", "Connected to notifications Scan websocket at " + scanManagerDiscoveryUrl);
         }
 
         /**
@@ -664,12 +523,12 @@ public class ScanWebSocketHandler {
         private void purgeScanRequestsQueue() {
             List<String> scanRequest;
             while (isScanConnected && (scanRequest = scanRequestsQueue.poll()) != null) {
-                if (!StompChannel.isConnected(stompNotificationChannel)) {
+                if (!StompChannel.isConnected(stompWebSocketChannel)) {
                     scanRequestsQueue.add(scanRequest);
                     break;
                 }
                 startScan(scanRequest);
-                if (!StompChannel.isConnected(stompNotificationChannel)) {
+                if (!StompChannel.isConnected(stompWebSocketChannel)) {
                     scanRequestsQueue.add(scanRequest);
                     break;
                 }
@@ -729,7 +588,7 @@ public class ScanWebSocketHandler {
         }
     }
 
-    // endregion Stomp Session Handlers
+    // endregion Stomp Frame Handlers for different subscriptions
 
     @Getter
     private static class StompChannel {

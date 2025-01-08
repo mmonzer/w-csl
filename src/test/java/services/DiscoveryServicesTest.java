@@ -76,7 +76,7 @@ class DiscoveryServicesTest {
         statusExpected.set("is_http_api_reachable", true);
         Json websocketStatus = scanWebSocketHandler.getStatus();
         boolean requests_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_requests_websocket_connected", false);
-        boolean notifications_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_notifications_websocket_connected", false);
+        boolean notifications_ws_status = JsonUtil.getBooleanFromJson(websocketStatus, "is_websocket_connected", false);
         statusExpected.set("is_websocket_connected", requests_ws_status && notifications_ws_status);
 
         //When

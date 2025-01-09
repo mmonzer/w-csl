@@ -44,40 +44,12 @@ public class ExternalConnectionInfoTemplatesSynchronizationService {
 
     public void synchronizeDiscoveredDevices() {
         logger.info("Synchronizing discovered devices");
-        OffsetDateTime lastUpdate = dbapiHandler.getExternalConnectionInfoTemplatesLastUpdateDate();
-        List<ExternalDiscoveredDevice> discoveredDevices = scanApiHandler.getExternalDiscoveredDevices(lastUpdate);
-        dbapiHandler.createOrUpdateExternalDiscoveredDevices(discoveredDevices);
+        OffsetDateTime lastUpdate = dbapiHandler.getExternalConnectionInfoTemplatesLastUpdateDate();   // Not implemented
+        List<ExternalDiscoveredDevice> discoveredDevices = scanApiHandler.getExternalDiscoveredDevices(lastUpdate);   // Correct, but not the right context (corresponds to other class). The right method should be implemented on scan
+        dbapiHandler.createOrUpdateExternalDiscoveredDevices(discoveredDevices);   // Not implemented
     }
 
     public synchronized void synchronizeExternalConnectionInfoTemplates() {
-        logger.info("Synchronizing external connection info templates");
-
-        OffsetDateTime lastUpdate = dbapiHandler.getExternalConnectionInfoTemplatesLastUpdateDate();
-        List<ExternalDiscoveredDevice> discoveredDevices = scanApiHandler.getExternalDiscoveredDevices(lastUpdate);
-        dbapiHandler.createOrUpdateExternalDiscoveredDevices(discoveredDevices);
-
-
-
-        List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(true);
-        if (connectionInfos == null) {
-            logger.warn("Error while getting external connection infos");
-            return;
-        }
-        List<ExternalConnectionInfo> deletedConnectionInfos = ListUtils.filter(connectionInfos, ExternalConnectionInfo::isDeleted);
-        connectionInfos.removeAll(deletedConnectionInfos);
-        try {
-            dbapiHandler.createOrUpdateExternalConnectionInfos(connectionInfos);
-            deletedConnectionInfos.forEach(deletedConnectionInfo -> {
-                try {
-                    dbapiHandler.deleteExternalConnectionInfo(deletedConnectionInfo.getId());
-                    scanApiHandler.deleteExternalConnectionInfo(deletedConnectionInfo.getId(), true);
-                } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
-                    logger.error("Error while deleting external connection info: {}", e.getMessage());
-                }
-
-            });
-        } catch (DbapiUnexpectedStatusCodeException | ExecutionException | InterruptedException | TimeoutException e) {
-            logger.error("Error while synchronizing external connection infos: {}", e.getMessage());
-        }
+        logger.warn("Not yet implemented");
     }
 }

@@ -47,7 +47,7 @@ public class ExternalConnectionInfoSynchronizationService {
      *  Not lastUpdate is included in the synchronization, thus all the items are synchronized.
      */
     public synchronized void synchronizeAllExternalConnectionInfos() {
-        logger.info("Synchronizing external connection infos");
+        logger.debug("Synchronizing external connection infos");
         List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(true);
         if (connectionInfos == null) {
             logger.warn("Error while getting external connection infos");

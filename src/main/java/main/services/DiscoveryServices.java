@@ -169,7 +169,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     this.syncAll();
                     logger.info("Successfully synchronized all CPE items.");
                 },
-                0, 300, TimeUnit.SECONDS,
+                10, 300, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.DISCOVERY_SYNC
         );
 
@@ -2147,6 +2147,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
+                externalConnectionInfoTemplatesSynchronizationService.synchronizeExternalConnectionInfoTemplates();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
+                logger.debug("External Connection Information Templates synchronization finished");
                 externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
                 logger.debug("External Connection Informations synchronization finished");
                 externalDiscoveredDevicesSynchronizationService.syncData();  // This may need a service to sync deleted items

@@ -31,6 +31,8 @@ import org.eclipse.jetty.client.util.PathRequestContent;
 import org.eclipse.jetty.client.util.StringRequestContent;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -68,6 +70,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public static final String NOT_IMPLEMENTED_YET = "NOT IMPLEMENTED YET.";
     public static final String UNEXPECTED_STATUS_CODE = "Unexpected status code: ";
     public static final String ERROR_SENDING_IMPORT_STATUS_TO_DB_API = "Error sending import status to DB-API";
+    private static final Logger log = LoggerFactory.getLogger(DbapiHandlerForCSLScan.class);
     private final int maxPageSize = 1000;
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DbapiHandlerForCSLScan.class);
     private final FileStorageService fileStorageService = new FileStorageService();
@@ -319,11 +322,20 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return new ArrayList<>();
         }
         Json responseJson = Json.read(response.getContentAsString());
-        return ListUtils.toList(
-                responseJson.asJsonList().stream()
-                        .map(json -> Connection.fromDbapiJson(json, protocols))
-                        .filter(Objects::nonNull)
-        );
+        try {
+            java.util.stream.Stream<Connection> s = responseJson.asJsonList().stream()
+                    .map(json -> Connection.fromDbapiJson(json, protocols))
+                    .filter(Objects::nonNull);
+            return ListUtils.toList(s            );
+        } catch (UnsupportedOperationException e) {
+            logger.warn("UnsupportedOperationException : {}", e.getMessage());
+            List<Connection> connections = new ArrayList<>();
+            for (Json j : responseJson.asJsonList()) {
+                Connection x = Connection.fromDbapiJson(j, protocols);
+                if (x != null) connections.add(x);
+            }
+            return connections;
+        }
     }
 
     /**

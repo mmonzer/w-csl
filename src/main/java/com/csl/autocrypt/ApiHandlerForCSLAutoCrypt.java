@@ -386,7 +386,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public Json getStatus() {
         return Json.object(Common.IS_HTTP_API_KEY_REACHABLE, this.sendGet(
-                ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object()).isSuccess());
+                ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object(), true).isSuccess());
     }
 }
 

@@ -6,14 +6,11 @@ import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
 import com.csl.intercom.dbapi.exceptions.DbapiUnexpectedStatusCodeException;
 import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.logger.CSLApplicativeLogger;
-import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.util.ListUtils;
-import com.csl.util.ThreadUtils;
 import main.services.JsonApiResponse;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 
@@ -29,23 +26,27 @@ public class ExternalConnectionInfoSynchronizationService {
         this.dbapiHandler = dbapiHandler;
         this.synchronizationIntervalSeconds = synchronizationIntervalSeconds;
 
-        this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-                scheduledExecutorService,
-                () -> {
-                    this.synchronizeExternalConnectionInfos();
-                    logger.info("Successfully synchronized the external connection's informations.");
-                },
-                0, synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS,
-                LoggerCustomEndpoints.SYNC_EXT_CONNECTION_INFO
-        );
+//        this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+//        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+//                scheduledExecutorService,
+//                () -> {
+//                    this.synchronizeAllExternalConnectionInfos();
+//                    logger.info("Successfully synchronized the external connection's informations.");
+//                },
+//                0, synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS,
+//                LoggerCustomEndpoints.SYNC_EXT_CONNECTION_INFO
+//        );
     }
 
     public ExternalConnectionInfoSynchronizationService(ScanApiHandler scanApiHandler, DbapiHandlerForCSLScan dbapiHandler) {
         this(scanApiHandler, dbapiHandler, 3600);
     }
 
-    public synchronized void synchronizeExternalConnectionInfos() {
+    /**
+     *  This method synchronizes all external connection infos from the scan API and updates them in the DB-API.
+     *  Not lastUpdate is included in the synchronization, thus all the items are synchronized.
+     */
+    public synchronized void synchronizeAllExternalConnectionInfos() {
         logger.info("Synchronizing external connection infos");
         List<ExternalConnectionInfo> connectionInfos = scanApiHandler.getExternalConnectionInfos(true);
         if (connectionInfos == null) {

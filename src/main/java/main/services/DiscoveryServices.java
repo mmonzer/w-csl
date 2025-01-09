@@ -1222,7 +1222,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                         if (response.isSuccess()) {
                             logger.debug("External connection information synchronizing after creating connexion info {} ...", params.get(CONNECTION_INFO));
-                            externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                            externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
                             logger.debug("External connection information synchronized after creating connexion info {}", params.get(CONNECTION_INFO));
 
                             logger.info("External connection information synchronization after creating connexion info {}", params.get(CONNECTION_INFO));
@@ -1261,7 +1261,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (response.isSuccess()) {
                         logger.debug("External connection information synchronizing after updating connexion info {} ...", params.get(CONNECTION_INFO));
-                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                        externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
                         logger.debug("External connection information synchronized after updating connexion info {}", params.get(CONNECTION_INFO));
 
                         logger.info("External connection information synchronization after updating connexion info {}", params.get(CONNECTION_INFO));
@@ -1293,7 +1293,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (response.isSuccess()) {
                         logger.debug("External connection information synchronizing after deleting connexion info {} ...", connectionInfoId);
-                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                        externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
                         logger.debug("External connection information synchronized after deleting connexion info {}", connectionInfoId);
 
                         logger.info("External connection information synchronization after deleting connexion info id {}", connectionInfoId);
@@ -1993,7 +1993,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         importExportBsonService = ImportExportBsonService.getInstance();
         importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
         externalConnectionInfoSynchronizationService = new ExternalConnectionInfoSynchronizationService(scanApiHandler, dbapiHandler);
-        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+        externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
         externalConnectionInfoTemplatesSynchronizationService = new ExternalConnectionInfoTemplatesSynchronizationService(scanApiHandler, dbapiHandler, 3600);
         externalDiscoveredDevicesSynchronizationService = new ExternalDiscoveredDevicesSynchronizationService(dbapiHandler, scanApiHandler);
         externalScansService = new ExternalScansService(dbapiHandler, scanApiHandler, externalDiscoveredDevicesSynchronizationService);
@@ -2147,8 +2147,12 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
-                externalDiscoveredDevicesSynchronizationService.syncData();
-                connectionInfoSynchronizationService.syncData();
+                externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
+                logger.debug("External Connection Informations synchronization finished");
+                externalDiscoveredDevicesSynchronizationService.syncData();  // This may need a service to sync deleted items
+                logger.debug("External Discovered Devices synchronization finished");
+                connectionInfoSynchronizationService.syncData();  // This may need a service to sync deleted items
+                logger.debug("Connection Informations synchronization finished");
                 cpeItemSynchronizationService.syncData();
                 logger.debug("CPE items synchronization finished");
                 microsoftKbSynchronizationService.syncData();

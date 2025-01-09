@@ -2147,6 +2147,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
+                externalDiscoveredDevicesSynchronizationService.syncData();
                 connectionInfoSynchronizationService.syncData();
                 cpeItemSynchronizationService.syncData();
                 logger.debug("CPE items synchronization finished");
@@ -2208,7 +2209,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         }
     }
 
-    class DiscoveryMessages {
+    static class DiscoveryMessages {
         public static final String MISSING_CERTIFICATE_UUID = "Certificate uuid is missing";
         public static final String CERTIFICATE_UUID = "The certificate uuid";
         public static final String FAILED_TO_PARSE_ENTITY_CERTIFICATE_CONNECTION = "Failed to parse entity_certificate_connection";

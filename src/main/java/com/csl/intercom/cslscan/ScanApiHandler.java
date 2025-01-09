@@ -1117,6 +1117,7 @@ public class ScanApiHandler extends ApiHandler {
             requestParams.set("skip", offset);
         }
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES, requestParams);
+
         if (response.isSuccess()) {
             return ListUtils.toList(response.getResult().asJsonList().stream()
                     .map(ExternalDiscoveredDevice::fromScannerJson)
@@ -1133,7 +1134,8 @@ public class ScanApiHandler extends ApiHandler {
     public JsonApiResponse clearExternalDiscoveredDevices() {
         return sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES_CLEAR, Json.object());
     }
-    public JsonApiResponse publishExternalDiscoveredDevices(ArrayList<UUID> discoveredDeviceUuids) {
+
+    public JsonApiResponse publishExternalDiscoveredDevices(List<UUID> discoveredDeviceUuids) {
         Json body = Json.array(discoveredDeviceUuids.stream().map(UUID::toString).toArray());
         return sendRequestToScanManager(HttpMethod.POST, ScanApiEndpoint.EXTERNAL_PUBLISH_DISCOVERED_DEVICES, body);
     }

@@ -1038,7 +1038,6 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         logger.debug("Got discovery cron from CSL-Scan : {}", cron);
 
                         if (cron == null) {
-                            logger.error("Failed to get discovery cron");
                             throw new Exception(FAILED_TO_FETCH_DISCOVERY_CRON);
                         }
                         logger.info("Got discovery cron successfully");
@@ -1099,7 +1098,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         logger.info("Checking discovery cron status : {}", isActive);
                         return JsonApiResponse.result(Json.object(IS_ACTIVE, isActive)).toJson();
                     } catch (Exception e) {
-                        logger.error("Failed to fetch discovery cron status", e);
+                        logger.error("Failed to fetch discovery cron status : {}", e.getMessage());
                         return JsonApiResponse.error("Failed to fetch discovery cron status",
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();

@@ -169,7 +169,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     this.syncAll();
                     logger.info("Successfully synchronized all CPE items.");
                 },
-                0, 300, TimeUnit.SECONDS,
+                0, 20, TimeUnit.SECONDS,
                 LoggerCustomEndpoints.DISCOVERY_SYNC
         );
 

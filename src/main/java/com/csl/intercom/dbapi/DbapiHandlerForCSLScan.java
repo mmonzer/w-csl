@@ -31,8 +31,6 @@ import org.eclipse.jetty.client.util.PathRequestContent;
 import org.eclipse.jetty.client.util.StringRequestContent;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -43,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
@@ -71,8 +68,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public static final String NOT_IMPLEMENTED_YET = "NOT IMPLEMENTED YET.";
     public static final String UNEXPECTED_STATUS_CODE = "Unexpected status code: ";
     public static final String ERROR_SENDING_IMPORT_STATUS_TO_DB_API = "Error sending import status to DB-API";
-    private static final Logger log = LoggerFactory.getLogger(DbapiHandlerForCSLScan.class);
-    private final int maxPageSize = 1000;
+    private static final int MAX_PAGE_SIZE = 1000;
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DbapiHandlerForCSLScan.class);
     private final FileStorageService fileStorageService = new FileStorageService();
 
@@ -340,7 +336,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         boolean hasMore = true;
         int offset = 0;
         while (hasMore) {
-            Json params = object(OFFSET, String.valueOf(offset), LIMIT, String.valueOf(this.maxPageSize));
+            Json params = object(OFFSET, String.valueOf(offset), LIMIT, String.valueOf(this.MAX_PAGE_SIZE));
             if (dateUtc != null) {
                 params.set(DELETED_DATE_GT, dateUtc.toString());
             }
@@ -356,7 +352,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 deletedDevices.add(new Pair<>(uuid, deletedDate));
             }
             hasMore = !responseJson.get("next").isNull();
-            offset += this.maxPageSize;
+            offset += this.MAX_PAGE_SIZE;
         }
         return deletedDevices;
     }

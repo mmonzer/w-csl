@@ -15,8 +15,8 @@ import com.csl.intercom.dbapi.models.*;
 import com.csl.intercom.jsoncmd.ApiCommands;
 import com.csl.logger.CSLApplicativeLogger;
 import com.csl.util.FileStorageService;
-import com.csl.util.Pair;
 import com.csl.util.ListUtils;
+import com.csl.util.Pair;
 import com.csl.web.HTTPConstants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ucsl.json.Json;
@@ -25,7 +25,10 @@ import main.services.JsonApiResponse;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.util.*;
+import org.eclipse.jetty.client.util.InputStreamResponseListener;
+import org.eclipse.jetty.client.util.MultiPartRequestContent;
+import org.eclipse.jetty.client.util.PathRequestContent;
+import org.eclipse.jetty.client.util.StringRequestContent;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 
@@ -38,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
@@ -293,8 +295,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
         return ListUtils.toList(
                 responseJson.asJsonList().stream()
-                .map(Device::fromJson)
-                .filter(Objects::nonNull)
+                        .map(Device::fromJson)
+                        .filter(Objects::nonNull)
         );
     }
 
@@ -319,8 +321,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         Json responseJson = Json.read(response.getContentAsString());
         return ListUtils.toList(
                 responseJson.asJsonList().stream()
-                .map(json -> Connection.fromDbapiJson(json, protocols))
-                .filter(Objects::nonNull)
+                        .map(json -> Connection.fromDbapiJson(json, protocols))
+                        .filter(Objects::nonNull)
         );
     }
 
@@ -510,7 +512,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
         return ListUtils.toList(
                 Json.read(response.getContentAsString()).asJsonList().stream()
-                .map(ConnectionProtocol::fromJson)
+                        .map(ConnectionProtocol::fromJson)
         );
     }
 
@@ -715,6 +717,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             throw new DbapiUnexpectedStatusCodeException("Could not clear external connection infos.", response.getStatus());
         }
     }
+
     public void publishExternalDiscoveredDevicesWithConnections(ArrayList<UUID> discoveredDeviceUuids, Map<String, String> connectionUuidWithDiscoveredDeviceUuid) throws ExecutionException, InterruptedException, TimeoutException {
         logger.debug("Publishing external discovered devices with connections.");
         Json requestContents = object(
@@ -1430,9 +1433,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             }
             return ListUtils.toList(
                     Json.read(response.getContentAsString()).asJsonList().stream()
-                    .map(HttpTemplateImportNotification::fromDbapiJson)
-                    .filter(Objects::nonNull)
-                    .filter(query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED)
+                            .map(HttpTemplateImportNotification::fromDbapiJson)
+                            .filter(Objects::nonNull)
+                            .filter(query -> query.getType() == HttpTemplateImportNotification.Type.FILE_RECEIVED)
             );
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             logger.warn("Error fetching available import tasks");
@@ -1489,7 +1492,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         try {
             ContentResponse response = request.send();
             if (response.getStatus() >= 400) {
-                logger.warn(UNEXPECTED_STATUS_CODE+"{}", response.getStatus());
+                logger.warn(UNEXPECTED_STATUS_CODE + "{}", response.getStatus());
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             logger.error("Error sending file to DB-API", e);
@@ -1502,7 +1505,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             ContentResponse response = createAndSendRequest(HTTPConstants.PATCH, String.format(DbapiEndpointForCSLScan.FILE_ACTION_STATUS_DETAILS.getEndpoint(), id), null, contents);
 
             if (response.getStatus() != 200) {
-                logger.warn(UNEXPECTED_STATUS_CODE+"{}", response.getStatus());
+                logger.warn(UNEXPECTED_STATUS_CODE + "{}", response.getStatus());
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             logger.error(ERROR_SENDING_IMPORT_STATUS_TO_DB_API, e);

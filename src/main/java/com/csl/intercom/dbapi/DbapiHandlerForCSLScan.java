@@ -171,14 +171,13 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         List<CpeItem> newItems = ListUtils.toList(cpeItems.stream().filter(Predicate.not(CpeItem::isDeleted)));
         List<CpeItem> deletedItems = ListUtils.toList(cpeItems.stream().filter(CpeItem::isDeleted));
 
-
         try {
             if (!deletedItems.isEmpty()) {
                 deleteCpeItemsFromDbapi(deletedItems);
             }
             sendCpeItemsBatch(newItems, scan, hasMore);
         } catch (Exception e) {
-            logger.warn("Error sending CPE Items to DB-API.", e);
+            logger.debug("Error sending CPE Items to DB-API: {}", e.getMessage());
             cpeItems.stream().map(CpeItem::getMongoEntityId).forEach(failedItems::add);
             throw new Exception("Error sending the following CPE Items: " + failedItems);
         }

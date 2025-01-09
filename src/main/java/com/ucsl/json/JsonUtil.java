@@ -14,51 +14,57 @@ public class JsonUtil {
     private JsonUtil() {}
 
     public static String getStringFromJson(Json j, String propName, String defaultValue) {
-        Json v = findChild(j, propName);
+        Json v = findDescendant(j, propName);
         if (v == null || !v.isString()) return defaultValue;
         return v.asString();
     }
 
     public static Boolean getBooleanFromJson(Json j, String propName, Boolean defaultValue) {
-        Json v = findChild(j, propName);
+        Json v = findDescendant(j, propName);
         if (v == null || !v.isBoolean()) return defaultValue;
         return v.asBoolean();
     }
 
     public static Long getLongFromJson(Json j, String propName, long defaultValue) {
-        Json v = findChild(j, propName);
+        Json v = findDescendant(j, propName);
         if (v == null || !v.isNumber()) return defaultValue;
         return v.asLong();
     }
 
     public static Integer getIntFromJson(Json j, String propName, Integer defaultValue) {
-        Json v = findChild(j, propName);
+        Json v = findDescendant(j, propName);
         if (v == null || !v.isNumber()) return defaultValue;
         return v.asInteger();
     }
 
     public static Double getDoubleFromJson(Json j, String propName, Double defaultValue) {
-        Json v = findChild(j, propName);
+        Json v = findDescendant(j, propName);
         if (v == null || !v.isNumber()) return defaultValue;
         return v.asDouble();
     }
 
     public static Json getJson(Json j, String propName) {
-        return findChild(j, propName);
+        return findDescendant(j, propName);
     }
 
-    public static Json findChild(Json j, String path) {
+    /**
+     * Find descendant of json object. Example : path="a.b.c" and json='json', it will find 'a' in 'json', then 'b' in 'a', finally 'c' in 'b'.
+     * @param json json
+     * @param path tree path to find descendant.
+     * @return the descendant or null if not found.
+     */
+    public static Json findDescendant(Json json, String path) {
 
-        if (j == null) return null;
+        if (json == null) return null;
 
         path = path.replace(".", "/");
 
         String[] paths = path.split("/");
         for (String s : paths) {
-            j = j.get(s);
-            if (j == null) return null;
+            json = json.get(s);
+            if (json == null) return null;
         }
-        return j;
+        return json;
     }
 
     public static String prettyPrint(Json j) {

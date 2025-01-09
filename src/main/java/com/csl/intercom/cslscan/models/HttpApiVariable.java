@@ -39,7 +39,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         } else if (json.isArray()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = null;
-            httpApiVariable.childrenList = ListUtils.map(json.asJsonList(), HttpApiVariable::fromDbapiJson);
+            httpApiVariable.childrenList = ListUtils.toList(json.asJsonList().stream().map(HttpApiVariable::fromDbapiJson));
         } else {
             httpApiVariable.value = json;
             httpApiVariable.childrenMap = null;
@@ -71,7 +71,7 @@ public class HttpApiVariable implements IScannerSerializable, IDbapiSerializable
         } else if (value.isArray()) {
             httpApiVariable.value = null;
             httpApiVariable.childrenMap = null;
-            httpApiVariable.childrenList = ListUtils.map(value.asJsonList(), HttpApiVariable::fromScannerJson);
+            httpApiVariable.childrenList = ListUtils.toList(value.asJsonList().stream().map(HttpApiVariable::fromScannerJson));
         } else {
             httpApiVariable.value = value;
             httpApiVariable.childrenMap = null;

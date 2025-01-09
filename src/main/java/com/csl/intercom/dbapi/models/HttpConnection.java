@@ -141,7 +141,7 @@ public class HttpConnection extends Connection {
             Map<Integer, StageConfig> stagesConfig = new HashMap<>();
             otherData.get(HttpConnectionField.STAGES_CONFIG.dbapiName()).asJsonMap().forEach((key, value) -> stagesConfig.put(Integer.parseInt(key), StageConfig.fromJson(value)));
 
-            List<String> devices = ListUtils.map(connectionJson.get("connected_devices").asJsonList(), Json::asString);
+            List<String> devices = ListUtils.toList(connectionJson.get("connected_devices").asJsonList().stream().map(Json::asString));
 
             Map<String, String> inputs = new HashMap<>();
             // check if otherData has inputs key

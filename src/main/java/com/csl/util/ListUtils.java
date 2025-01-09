@@ -24,19 +24,19 @@ public class ListUtils {
         return filter(list.stream(), filters);
     }
 
-    /**
-     * Map and filter a list.
-     * @param list list of type T to map to type K.
-     * @param function mapping function to convert type T to type K
-     * @param filters list of filter predicates to filter a stream of type K.
-     * @return the list of K items, after the conversion and the filtering
-     * @param <T> input type
-     * @param <K> output type
-     */
-    @SafeVarargs
-    public static <T, K> List<K> mapAndFilter(List<T> list, Function<? super T, ? extends K> function, Predicate<K>... filters) {
-        return mapAndFilter(list.stream(), function, filters);
-    }
+//    /**
+//     * Map and filter a list.
+//     * @param list list of type T to map to type K.
+//     * @param function mapping function to convert type T to type K
+//     * @param filters list of filter predicates to filter a stream of type K.
+//     * @return the list of K items, after the conversion and the filtering
+//     * @param <T> input type
+//     * @param <K> output type
+//     */
+//    @SafeVarargs
+//    public static <T, K> List<K> mapAndFilter(List<T> list, Function<? super T, ? extends K> function, Predicate<K>... filters) {
+//        return mapAndFilter(list.stream(), function, filters);
+//    }
 
     /**
      * Map a list.
@@ -63,20 +63,20 @@ public class ListUtils {
     }
 
 
-
-    /**
-     * Map and filter a list.
-     * @param stream stream of type T to map to type K.
-     * @param function mapping function to convert type T to type K
-     * @param filters list of filter predicates to filter a stream of type K.
-     * @return the list of K items, after the conversion and the filtering
-     * @param <T> input type
-     * @param <K> output type
-     */
-    @SafeVarargs
-    private static <T, K> List<K> mapAndFilter(Stream<T> stream, Function<? super T, ? extends K> function, Predicate<K>... filters) {
-        return filter(stream.map(function), filters);
-    }
+//
+//    /**
+//     * Map and filter a list.
+//     * @param stream stream of type T to map to type K.
+//     * @param function mapping function to convert type T to type K
+//     * @param filters list of filter predicates to filter a stream of type K.
+//     * @return the list of K items, after the conversion and the filtering
+//     * @param <T> input type
+//     * @param <K> output type
+//     */
+//    @SafeVarargs
+//    private static <T, K> List<K> mapAndFilter(Stream<T> stream, Function<? super T, ? extends K> function, Predicate<K>... filters) {
+//        return filter(stream.map(function), filters);
+//    }
 
     /**
      * Map and filter a list.
@@ -103,6 +103,6 @@ public class ListUtils {
     public static <T> List<T> toList(Stream<T> stream)  {
         // Although recommended to use .toList() instead of .collect(Collectors.toList()) the first one creates
         // an immutable list, whereas the second one is not immutable, allowing adding items afterwords (needed).
-        return stream.collect(Collectors.toList());
+        return stream.collect(Collectors.toList()); // TODO: replace by stream.collect(Collectors.toCollection(ArrayList::new));
     }
 }

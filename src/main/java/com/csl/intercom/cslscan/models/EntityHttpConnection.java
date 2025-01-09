@@ -77,11 +77,9 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         try {
             entityHttpConnection.uuid = JsonUtil.getStringFromJson(json, EntityHttpConnectionField.UUID.dbapiName(), null);
             entityHttpConnection.name = JsonUtil.getStringFromJson(json, EntityHttpConnectionField.NAME.dbapiName(), null);
-            entityHttpConnection.stages = ListUtils.map(json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList(),
-                    EntityHttpConnectionStage::fromDbapiJson);
+            entityHttpConnection.stages = ListUtils.toList(json.get(EntityHttpConnectionField.STAGES.dbapiName()).asJsonList().stream().map(EntityHttpConnectionStage::fromDbapiJson));
             if (json.has(EntityHttpConnectionField.INPUTS.dbapiName()) && json.get(EntityHttpConnectionField.INPUTS.dbapiName()).isArray()) {
-                entityHttpConnection.inputs = ListUtils.map(json.get(EntityHttpConnectionField.INPUTS.dbapiName()).asJsonList(),
-                                EntityHttpConnectionInput::fromDbapiJson);
+                entityHttpConnection.inputs = ListUtils.toList(json.get(EntityHttpConnectionField.INPUTS.dbapiName()).asJsonList().stream().map(EntityHttpConnectionInput::fromDbapiJson));
             }
             if (json.has(EntityHttpConnectionField.VARIABLES.dbapiName()) && json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.dbapiName()).asJsonMap().entrySet().stream()
@@ -90,7 +88,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 entityHttpConnection.variables = new HashMap<>();
             }
             if (json.has(VENDORS_STR) && json.get(VENDORS_STR).isArray()) {
-                entityHttpConnection.vendors = ListUtils.map(json.get(VENDORS_STR).asJsonList(), Json::asString);
+                entityHttpConnection.vendors = ListUtils.toList(json.get(VENDORS_STR).asJsonList().stream().map(Json::asString));
             }
             return entityHttpConnection;
         } catch (Throwable e) {
@@ -104,11 +102,11 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
         try {
             entityHttpConnection.uuid = json.get(EntityHttpConnectionField.UUID.scanName()).asString();
             entityHttpConnection.name = json.get(EntityHttpConnectionField.NAME.scanName()).asString();
-            entityHttpConnection.stages = ListUtils.map(json.get(EntityHttpConnectionField.STAGES.scanName()).asJsonList(),
-                            EntityHttpConnectionStage::fromScannerJson);
+            entityHttpConnection.stages = ListUtils.toList(json.get(EntityHttpConnectionField.STAGES.scanName()).asJsonList().stream().map(
+                            EntityHttpConnectionStage::fromScannerJson));
             if (json.has(EntityHttpConnectionField.INPUTS.scanName()) && json.get(EntityHttpConnectionField.INPUTS.scanName()).isArray()) {
-                entityHttpConnection.inputs = ListUtils.map(json.get(EntityHttpConnectionField.INPUTS.scanName()).asJsonList(),
-                                EntityHttpConnectionInput::fromScannerJson);
+                entityHttpConnection.inputs = ListUtils.toList(json.get(EntityHttpConnectionField.INPUTS.scanName()).asJsonList().stream().map(
+                                EntityHttpConnectionInput::fromScannerJson));
             }
             if (json.has(EntityHttpConnectionField.VARIABLES.scanName()) && json.get(EntityHttpConnectionField.VARIABLES.scanName()).isObject()) {
                 entityHttpConnection.variables = json.get(EntityHttpConnectionField.VARIABLES.scanName()).asJsonMap().entrySet().stream()
@@ -117,7 +115,7 @@ public class EntityHttpConnection implements IScannerSerializable, IDbapiSeriali
                 entityHttpConnection.variables = new HashMap<>();
             }
             if (json.has(VENDORS_STR) && json.get(VENDORS_STR).isArray()) {
-                entityHttpConnection.vendors = ListUtils.map(json.get(VENDORS_STR).asJsonList(), Json::asString);
+                entityHttpConnection.vendors = ListUtils.toList(json.get(VENDORS_STR).asJsonList().stream().map(Json::asString));
             }
             return entityHttpConnection;
         } catch (Throwable e) {

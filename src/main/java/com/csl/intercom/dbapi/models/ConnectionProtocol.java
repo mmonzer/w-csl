@@ -112,7 +112,7 @@ public class ConnectionProtocol {
         } else {
             return null;
         }
-        List<ConnectionProtocol> possibleProtocols = ListUtils.filter(protocols, p -> p.staticConnectionProtocol == staticConnectionProtocol);
+        List<ConnectionProtocol> possibleProtocols = ListUtils.toList(protocols.stream().filter(p -> p.staticConnectionProtocol == staticConnectionProtocol));
         if (possibleProtocols.size() == 1) {
             return possibleProtocols.get(0);
         } else {

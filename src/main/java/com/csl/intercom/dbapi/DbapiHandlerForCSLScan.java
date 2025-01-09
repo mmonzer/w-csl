@@ -323,20 +323,9 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             return new ArrayList<>();
         }
         Json responseJson = Json.read(response.getContentAsString());
-        try {
-            java.util.stream.Stream<Connection> s = responseJson.asJsonList().stream()
-                    .map(json -> Connection.fromDbapiJson(json, protocols))
-                    .filter(Objects::nonNull);
-            return s.collect(Collectors.toCollection(ArrayList::new));
-        } catch (UnsupportedOperationException e) {
-            logger.warn("UnsupportedOperationException : {}", e.getMessage());
-            List<Connection> connections = new ArrayList<>();
-            for (Json j : responseJson.asJsonList()) {
-                Connection x = Connection.fromDbapiJson(j, protocols);
-                if (x != null) connections.add(x);
-            }
-            return connections;
-        }
+        return ListUtils.toList(responseJson.asJsonList().stream()
+                .map(json -> Connection.fromDbapiJson(json, protocols))
+                .filter(Objects::nonNull));
     }
 
     /**

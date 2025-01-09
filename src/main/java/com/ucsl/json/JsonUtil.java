@@ -15,31 +15,31 @@ public class JsonUtil {
 
     public static String getStringFromJson(Json j, String propName, String defaultValue) {
         Json v = findChild(j, propName);
-        if (v == null) return defaultValue;
+        if (v == null || !v.isString()) return defaultValue;
         return v.asString();
     }
 
     public static Boolean getBooleanFromJson(Json j, String propName, Boolean defaultValue) {
         Json v = findChild(j, propName);
-        if (v == null) return defaultValue;
+        if (v == null || !v.isBoolean()) return defaultValue;
         return v.asBoolean();
     }
 
     public static Long getLongFromJson(Json j, String propName, long defaultValue) {
         Json v = findChild(j, propName);
-        if (v == null) return defaultValue;
+        if (v == null || !v.isNumber()) return defaultValue;
         return v.asLong();
     }
 
     public static Integer getIntFromJson(Json j, String propName, Integer defaultValue) {
         Json v = findChild(j, propName);
-        if (v == null) return defaultValue;
+        if (v == null || !v.isNumber()) return defaultValue;
         return v.asInteger();
     }
 
     public static Double getDoubleFromJson(Json j, String propName, Double defaultValue) {
         Json v = findChild(j, propName);
-        if (v == null) return defaultValue;
+        if (v == null || !v.isNumber()) return defaultValue;
         return v.asDouble();
     }
 

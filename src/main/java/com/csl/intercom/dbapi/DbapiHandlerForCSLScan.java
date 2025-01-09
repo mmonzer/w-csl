@@ -336,7 +336,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         boolean hasMore = true;
         int offset = 0;
         while (hasMore) {
-            Json params = object(OFFSET, String.valueOf(offset), LIMIT, String.valueOf(this.MAX_PAGE_SIZE));
+            Json params = object(OFFSET, String.valueOf(offset), LIMIT, String.valueOf(MAX_PAGE_SIZE));
             if (dateUtc != null) {
                 params.set(DELETED_DATE_GT, dateUtc.toString());
             }
@@ -352,7 +352,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 deletedDevices.add(new Pair<>(uuid, deletedDate));
             }
             hasMore = !responseJson.get("next").isNull();
-            offset += this.MAX_PAGE_SIZE;
+            offset += MAX_PAGE_SIZE;
         }
         return deletedDevices;
     }

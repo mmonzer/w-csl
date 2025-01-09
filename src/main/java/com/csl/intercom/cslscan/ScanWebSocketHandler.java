@@ -210,7 +210,7 @@ public class ScanWebSocketHandler {
      */
     private void logIfScanWasNotConnected(StompSession session) {
         if (!isScanConnected && session != null && session.isConnected()) {
-            logger.info("Connected with CSLScan for STOMP WebSocket at {}", this.scanManagerDiscoveryUrl);
+            logger.info("Connected to CSL-Scan for STOMP WebSocket at {}", this.scanManagerDiscoveryUrl);
             isScanConnected = true;
         }
     }
@@ -220,7 +220,7 @@ public class ScanWebSocketHandler {
      */
     private boolean logDisconnectedIfScanWasConnected() {
         if (isScanConnected) {
-            logger.warn("Disconnected from CSLScan for STOMP WebSocket at {}", this.scanManagerDiscoveryUrl);
+            logger.warn("Disconnected from CSL-Scan for STOMP WebSocket at {}", this.scanManagerDiscoveryUrl);
             isScanConnected = false;
         }
         return isScanConnected;

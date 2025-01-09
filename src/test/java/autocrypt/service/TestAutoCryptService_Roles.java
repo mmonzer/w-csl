@@ -1,6 +1,6 @@
 package autocrypt.service;
 
-import com.csl.autocrypt.tests.TestConfig;
+import autocrypt.TestConfig;
 import com.csl.util.JCmd;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;

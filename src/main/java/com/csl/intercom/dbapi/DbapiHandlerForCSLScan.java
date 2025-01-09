@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.csl.intercom.dbapi.enums.StaticConnectionProtocol.*;
 import static com.csl.web.HTTPConstants.JSON_FORMAT;
@@ -326,7 +327,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             java.util.stream.Stream<Connection> s = responseJson.asJsonList().stream()
                     .map(json -> Connection.fromDbapiJson(json, protocols))
                     .filter(Objects::nonNull);
-            return ListUtils.toList(s            );
+            return s.collect(Collectors.toCollection(ArrayList::new));
         } catch (UnsupportedOperationException e) {
             logger.warn("UnsupportedOperationException : {}", e.getMessage());
             List<Connection> connections = new ArrayList<>();

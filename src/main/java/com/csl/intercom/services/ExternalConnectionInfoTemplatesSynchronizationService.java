@@ -11,7 +11,17 @@ import org.slf4j.LoggerFactory;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-public class ExternalConnectionInfoTemplatesSynchronizationService  extends PaginatedSynchronizationService<ExternalConnectionInfoTemplate> {
+/**
+ * This service seeks to synchronize the external connexion templates. However, this type of item has some particularities due to
+ * the implementation on CSL-Scan:
+ * Templates are not saved on DB but in memory.
+ * Create: once at service initialisation
+ * Update: probably, but need to be verified
+ * Get: yes, all or nothing
+ * Delete: probably not, but need to be verified.
+ *
+ */
+public class ExternalConnectionInfoTemplatesSynchronizationService extends PaginatedSynchronizationService<ExternalConnectionInfoTemplate> {
     private final Logger logger = LoggerFactory.getLogger(ExternalConnectionInfoTemplatesSynchronizationService.class);
     private final ScanApiHandler scanApiHandler;
     private final DbapiHandlerForCSLScan dbapiHandler;
@@ -31,7 +41,7 @@ public class ExternalConnectionInfoTemplatesSynchronizationService  extends Pagi
     @Override
     public List<ExternalConnectionInfoTemplate> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
         try {
-            return scanApiHandler.getExternalConnectionInfoTemplates(since, limit, offset);
+            return scanApiHandler.getExternalConnectionInfoTemplates(since);
         } catch (Exception e) {
             throw new SynchronizationException("Could not retrieve external connexion templates from CSL-Scan", e);
         }

@@ -164,10 +164,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             synchronizationSchedule = Executors.newScheduledThreadPool(1);
             ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
                     synchronizationSchedule,
-                    () -> {
-                        this.syncAll();
-                        logger.info("Successfully synchronized all CPE items.");
-                    },
+                    this::syncAll,
                     10, 300, TimeUnit.SECONDS,
                     LoggerCustomEndpoints.DISCOVERY_SYNC
             );
@@ -2165,9 +2162,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                 logger.info("Scan-Dbapi synchronization finished.");
             } catch (SynchronizationException e) {
-                logger.warn("Failed to synchronize CPE Items : {}", e.getMessage());
+                logger.warn("Failed to synchronize Scan-Dbapi : {}", e.getMessage());
             } catch (Exception e) {
-                logger.error("Failed to synchronize CPE Items : {}", e.getMessage());
+                logger.error("Unexpected error in Scan-Dbapi synchronization : {}", e.getMessage());
+                logger.debug("Unexpected error in Scan-Dbapi synchronization : {}", e.getMessage(), e);
             }
 
     }

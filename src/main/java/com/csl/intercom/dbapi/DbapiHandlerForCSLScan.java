@@ -963,7 +963,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public void sendConnections(List<Connection> items) {
-        logger.error("Sending connections to DB-API is not implemented yet.");
+        logger.warn("Sending connections to DB-API is not implemented yet.");
     }
 
     public int getConnectionPortNumberFromConnection(Connection connection) {

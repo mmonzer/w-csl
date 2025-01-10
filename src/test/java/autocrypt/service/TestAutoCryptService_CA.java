@@ -47,15 +47,7 @@ public class TestAutoCryptService_CA extends TestAutoCryptServiceTemplate {
         for (Map.Entry<String, Object> e : returnModule.asMap().entrySet()) {returnBd.at(e.getKey(), e.getValue());}
         returnBd.at("id", id);
         // Define mocked service behavior
-        MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/certificate_authorities"))
-                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
-                .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
-                        .withBody(returnBd.toString())
-                );
-        wireMockServerBd.stubFor(y);
+        extracted(expectedDbapi, returnBd);
 
 
         // Define expected input/output of the api
@@ -73,6 +65,18 @@ public class TestAutoCryptService_CA extends TestAutoCryptServiceTemplate {
 
         // assert behavior
         assertEquals(recvOutput, response);
+    }
+
+    private void extracted(Json expectedDbapi, Json returnBd) {
+        MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/certificate_authorities"))
+                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
+                .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
+                        .withBody(returnBd.toString())
+                );
+        wireMockServerBd.stubFor(y);
     }
 
     //@Test
@@ -249,15 +253,7 @@ public class TestAutoCryptService_CA extends TestAutoCryptServiceTemplate {
         for (Map.Entry<String, Object> e: returnModule.asMap().entrySet()) { returnBd.at(e.getKey(), e.getValue());}
 
         // Define mocked service behavior
-        MappingBuilder y = post(urlPathMatching(ENDPOINT_DBAPI + "/certificate_authorities"))
-                .withHeader(CONTENT_TYPE, (StringValuePattern) new EqualToPattern(JSON_FORMAT))
-                .withRequestBody((StringValuePattern) new EqualToPattern(expectedDbapi.toString()))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader(CONTENT_TYPE, JSON_FORMAT)
-                        .withBody(returnBd.toString())
-                );
-        wireMockServerBd.stubFor(y);
+        extracted(expectedDbapi, returnBd);
 
 
         // Define expected input/output of the api

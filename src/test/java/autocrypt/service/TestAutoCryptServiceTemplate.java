@@ -33,7 +33,6 @@ public class TestAutoCryptServiceTemplate extends TestConfig {
 
         service = new AutoCryptService();
         service.init();
-//        service. getManager().getMethods().setSaveToDb(true);
     }
 
     @AfterEach

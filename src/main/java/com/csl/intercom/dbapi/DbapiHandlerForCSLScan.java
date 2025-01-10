@@ -1131,7 +1131,6 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         } else if (response.getStatus() == 200) {
             logger.info("Connection updated in DB-API.");
         }
-        logger.error("Updating connections in DB-API is not implemented yet.");
     }
 
     /**

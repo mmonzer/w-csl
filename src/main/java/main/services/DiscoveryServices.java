@@ -655,8 +655,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
                     }
                     // remove element from entityConnectionInfoDrafts that have name and protocol empty
-                    entityConnectionInfoDrafts.removeIf(entityConnectionInfoDraft -> entityConnectionInfoDraft.getName().isEmpty() && entityConnectionInfoDraft.getProtocol().isEmpty());
-                    // Create a file action status in dbapi first
+                    entityConnectionInfoDrafts.removeIf(entityConnectionInfoDraft ->
+                            (entityConnectionInfoDraft.getName() == null || entityConnectionInfoDraft.getName().isEmpty()) &&
+                                    (entityConnectionInfoDraft.getProtocol() == null || entityConnectionInfoDraft.getProtocol().isEmpty())
+                    );   // Create a file action status in dbapi first
                     try {
                         int fileActionStatusIdInDbApi = dbapiHandler.createFileActionStatusForImportConnectionDraftAndReturnCreatedId();
                         // Send data to scan

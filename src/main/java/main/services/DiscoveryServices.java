@@ -160,18 +160,18 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         if (!isRemote) {
             initilizedScanClientSideServices(scanManagerDiscoveryUrl);
-        }
 
-        synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-                synchronizationSchedule,
-                () -> {
-                    this.syncAll();
-                    logger.info("Successfully synchronized all CPE items.");
-                },
-                10, 300, TimeUnit.SECONDS,
-                LoggerCustomEndpoints.DISCOVERY_SYNC
-        );
+            synchronizationSchedule = Executors.newScheduledThreadPool(1);
+            ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                    synchronizationSchedule,
+                    () -> {
+                        this.syncAll();
+                        logger.info("Successfully synchronized all CPE items.");
+                    },
+                    10, 300, TimeUnit.SECONDS,
+                    LoggerCustomEndpoints.DISCOVERY_SYNC
+            );
+        }
 
         addCmd("get_status", params -> {
                     logger.debug("Fetching CSL-Scan status");
@@ -2142,12 +2142,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * - CPE Items
      */
     public void syncAll() {
-        if (!isRemote) {
             logger.debug("Starting Discovery synchronization");
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
-                externalConnectionInfoTemplatesSynchronizationService.syncData();  // This may need a service to sync deleted items.
+                externalConnectionInfoTemplatesSynchronizationService.syncData();
                 logger.debug("External Connection Information Templates synchronization finished");
                 externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
                 logger.debug("External Connection Informations synchronization finished");
@@ -2162,11 +2161,15 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 deletedCpeItemsSynchronizationService.syncData();
                 logger.debug("Deleted CPE items synchronization finished");
                 deletedMicrosoftKbsSynchronizationService.syncData();
-                logger.info("Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
+                logger.debug("Deleted Microsoft KB synchronization finished");
+
+                logger.info("Scan-Dbapi synchronization finished.");
             } catch (SynchronizationException e) {
                 logger.warn("Failed to synchronize CPE Items : {}", e.getMessage());
+            } catch (Exception e) {
+                logger.warn("Failed to synchronize CPE Items : {}", e.getMessage());
             }
-        }
+
     }
 
     /**

@@ -18,8 +18,7 @@ import java.util.List;
  * Create: once at service initialisation
  * Update: probably, but need to be verified
  * Get: yes, all or nothing
- * Delete: probably not, but need to be verified.
- *
+ * Delete: probably not, but need to be verified. *
  */
 public class ExternalConnectionInfoTemplatesSynchronizationService extends PaginatedSynchronizationService<ExternalConnectionInfoTemplate> {
     private final Logger logger = LoggerFactory.getLogger(ExternalConnectionInfoTemplatesSynchronizationService.class);
@@ -68,5 +67,11 @@ public class ExternalConnectionInfoTemplatesSynchronizationService extends Pagin
     @Override
     protected Logger getLogger() {
         return logger;
+    }
+
+    @Override
+    public void syncData() throws SynchronizationException {
+        // TODO : implement this.
+        logger.warn("Synchronization of external connexion templates not implemented.");
     }
 }

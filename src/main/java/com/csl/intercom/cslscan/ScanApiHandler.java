@@ -1131,6 +1131,43 @@ public class ScanApiHandler extends ApiHandler {
         return getExternalDiscoveredDevices(dateTime, null, null);
     }
 
+    /**
+     * Get the external connection information templates from scan.
+     * @param dateTime datestamp of the last update. We will recover the templates from this date.
+     * @param limit quantity of the batch
+     * @param offset offset of the batch
+     * @return the list of the retrieved templates
+     */
+    public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates(OffsetDateTime dateTime, Integer limit, Integer offset) {
+        Json requestParams = Json.object();
+        if (dateTime != null) {
+            requestParams.set("date", ScanUtils.localTimeToScan(dateTime).toString());
+        }
+        if (limit != null) {
+            requestParams.set(LIMIT, limit);
+        }
+        if (offset != null) {
+            requestParams.set("skip", offset);
+        }
+
+        JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, requestParams);
+
+        if (response.isSuccess()) {
+            return ListUtils.map(response.getResult().asJsonList(), ExternalConnectionInfoTemplate::fromScannerJson);
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Get the external connection information templates from scan.
+     * @param dateTime datestamp of the last update. We will recover the templates from this date.
+     * @return the list of the retrieved templates
+     */
+    public List<ExternalConnectionInfoTemplate> getExternalConnectionInfoTemplates(OffsetDateTime dateTime) {
+        return getExternalConnectionInfoTemplates(dateTime, null, null);
+    }
+
     public JsonApiResponse clearExternalDiscoveredDevices() {
         return sendRequestToScanManager(HttpMethod.DELETE, ScanApiEndpoint.EXTERNAL_DISCOVERED_DEVICES_CLEAR, Json.object());
     }

@@ -639,9 +639,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public OffsetDateTime getExternalConnectionInfoTemplatesLastUpdateDate() {
-        logger.debug("Fetching external connection info templates last update date from DB-API.");
-        logger.warn(NOT_IMPLEMENTED_YET);
-
+        // This is set to null because the implementation of templates is hardcoded, and only created at service init.
+        // It may be modified later on, maybe. So every sync will take every template to upsert, thus the last updated time is useless.
         return null;
     }
 

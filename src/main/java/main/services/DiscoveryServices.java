@@ -1994,7 +1994,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
         externalConnectionInfoSynchronizationService = new ExternalConnectionInfoSynchronizationService(scanApiHandler, dbapiHandler);
         externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
-        externalConnectionInfoTemplatesSynchronizationService = new ExternalConnectionInfoTemplatesSynchronizationService(scanApiHandler, dbapiHandler, 3600);
+        externalConnectionInfoTemplatesSynchronizationService = new ExternalConnectionInfoTemplatesSynchronizationService(scanApiHandler, dbapiHandler);
         externalDiscoveredDevicesSynchronizationService = new ExternalDiscoveredDevicesSynchronizationService(dbapiHandler, scanApiHandler);
         externalScansService = new ExternalScansService(dbapiHandler, scanApiHandler, externalDiscoveredDevicesSynchronizationService);
         scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, importExportBsonService, externalScansService);
@@ -2147,7 +2147,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
-                externalConnectionInfoTemplatesSynchronizationService.synchronizeExternalConnectionInfoTemplates();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
+                externalConnectionInfoTemplatesSynchronizationService.syncData();  // This may need a service to sync deleted items.
                 logger.debug("External Connection Information Templates synchronization finished");
                 externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
                 logger.debug("External Connection Informations synchronization finished");

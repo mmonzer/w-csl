@@ -81,6 +81,7 @@ public abstract class PaginatedSynchronizationService<T> implements DataSynchron
     public abstract List<T> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException;
 
     public abstract void sendData(List<T> items) throws SynchronizationException;
+
     public abstract OffsetDateTime getLastChangeDate() throws SynchronizationException;
 
     public int getBatchMaxSize() {

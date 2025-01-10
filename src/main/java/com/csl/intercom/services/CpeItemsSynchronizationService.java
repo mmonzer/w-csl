@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,7 +28,7 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
     @Override
     public List<CpeItem> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
         if (cpeScanService.getRunningScan() == null && cpeScanService.getFinishedScan() == null) {
-            throw new SynchronizationException("No scan is running or finished (CpeItemsSynchronizationService)");
+            return new ArrayList<>();
         }
         return scanApiHandler.getCpeItemChangesSince(since, limit, offset);
     }
@@ -40,7 +41,7 @@ public class CpeItemsSynchronizationService extends PaginatedSynchronizationServ
                 scanEntity = cpeScanService.getFinishedScan();
             }
             if (scanEntity == null) {
-                throw new SynchronizationException("No running scan found");
+                return ; // Having no scanEntity should be handled normally.
             }
             dbapiHandler.sendCpeItems(items, scanEntity, items.size() == this.getBatchMaxSize() || scanEntity.getProgress() < 1.0);
         } catch (Exception e) {

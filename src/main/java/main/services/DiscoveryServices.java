@@ -2167,7 +2167,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
             } catch (SynchronizationException e) {
                 logger.warn("Failed to synchronize CPE Items : {}", e.getMessage());
             } catch (Exception e) {
-                logger.warn("Failed to synchronize CPE Items : {}", e.getMessage());
+                logger.error("Failed to synchronize CPE Items : {}", e.getMessage());
             }
 
     }

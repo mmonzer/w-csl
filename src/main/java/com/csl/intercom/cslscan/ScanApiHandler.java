@@ -1153,7 +1153,7 @@ public class ScanApiHandler extends ApiHandler {
         JsonApiResponse response = sendRequestToScanManager(HttpMethod.GET, ScanApiEndpoint.EXTERNAL_CONNECTION_INFO_TEMPLATES, requestParams);
 
         if (response.isSuccess()) {
-            return ListUtils.map(response.getResult().asJsonList(), ExternalConnectionInfoTemplate::fromScannerJson);
+            return ListUtils.toList(response.getResult().asJsonList().stream().map(ExternalConnectionInfoTemplate::fromScannerJson));
         } else {
             return new ArrayList<>();
         }

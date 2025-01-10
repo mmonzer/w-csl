@@ -205,15 +205,15 @@ public class CpeScanService {
         try {
             this.cpeItemsSynchronizationService.syncData();
         } catch (SynchronizationException e) {
-            logger.error("Could not synchronize CPE Items with DB-API");
-            logger.debug("Could not synchronize CPE Items with DB-API", e);
+            logger.warn("Could not synchronize CPE Items with DB-API");
+            logger.trace("Could not synchronize CPE Items with DB-API", e);
         }
 
         try {
             this.microsoftKbSynchronizationService.syncData();
         } catch (SynchronizationException e) {
-            logger.error("Could not synchronize Microsoft KBs with DB-API");
-            logger.debug("Could not synchronize Microsoft KBs with DB-API", e);
+            logger.warn("Could not synchronize Microsoft KBs with DB-API");
+            logger.trace("Could not synchronize Microsoft KBs with DB-API", e);
         }
 
         if (scan.isFinished()) {

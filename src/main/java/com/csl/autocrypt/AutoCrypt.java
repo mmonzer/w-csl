@@ -641,7 +641,7 @@ public class AutoCrypt {
                 logger.trace(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Synchronization of issuers with Dbapi successful");
             }
         } catch (NullPointerException e) {
-            logger.error(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Issuer synchronizer not initialized");
+            logger.warn(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API, "Issuer synchronizer not initialized");
             throw new SynchronizationException("Issuer synchronizer not initialized");
         }
     }

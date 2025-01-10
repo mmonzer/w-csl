@@ -16,6 +16,7 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.eclipse.jetty.client.util.StringContentProvider;
+import org.eclipse.jetty.client.util.StringRequestContent;
 import org.eclipse.jetty.http.HttpMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -870,7 +871,7 @@ public class TapsServices extends Service {
             // Create a POST request to the server
             Request request = httpClient.newRequest(serverUrl)
                     .method(HttpMethod.POST)
-                    .content(new StringContentProvider(CMD_SURICATA_GET_LOG_FILE), JSON_FORMAT);
+                    .body(new StringRequestContent(JSON_FORMAT, CMD_SURICATA_GET_LOG_FILE));
 
             // Send the request and get the response
             InputStreamResponseListener listener = new InputStreamResponseListener();

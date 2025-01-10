@@ -142,7 +142,7 @@ public abstract class AutocryptTemplateSynchronizationService extends PaginatedS
             logger.trace(LoggerActions.NULL, LoggerInterfaces.CSL_DBAPI_API,"converted date {} to local : {} ", lastUpdateDateString, DbapiUtilsForCSLScan.dbapiDateToLocal(lastUpdateDateString));
             return DbapiUtilsForCSLScan.dbapiDateToLocal(lastUpdateDateString);
         } catch (Exception e) {
-            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_DBAPI_API,"Could not get last update date from DB-API for Autocrypt service.");
+            logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_DBAPI_API,"Could not get last update date from DB-API for Autocrypt service.");
             throw new SynchronizationException(prefixLogger + " : Could not get last update date from DB-API for Autocrypt service", e);
         }
     }

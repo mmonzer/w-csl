@@ -74,7 +74,7 @@ public class SshConnection extends Connection {
 
             List<String> devices = null;
             if (connectionJson.has(CONNECTED_DEVICES) && connectionJson.get(CONNECTED_DEVICES).isArray()) {
-                devices = ListUtils.map(connectionJson.get(CONNECTED_DEVICES).asJsonList(), Json::asString);
+                devices = ListUtils.toList(connectionJson.get(CONNECTED_DEVICES).asJsonList().stream().map(Json::asString));
             }
 
             String username = null;

@@ -654,7 +654,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         EntityConnectionInfoDraft entityConnectionInfoDraft = EntityConnectionInfoDraft.fromHMIUploadingFile(connection);
                         entityConnectionInfoDrafts.add(entityConnectionInfoDraft);
                     }
-
+                    // remove element from entityConnectionInfoDrafts that have name and protocol empty
+                    entityConnectionInfoDrafts.removeIf(entityConnectionInfoDraft -> entityConnectionInfoDraft.getName().isEmpty() && entityConnectionInfoDraft.getProtocol().isEmpty());
                     // Create a file action status in dbapi first
                     try {
                         int fileActionStatusIdInDbApi = dbapiHandler.createFileActionStatusForImportConnectionDraftAndReturnCreatedId();
@@ -666,16 +667,17 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 try {
                                     dbapiHandler.createListOfConnectionDrafts(entityConnectionInfoDrafts, fileActionStatusIdInDbApi);
                                     logger.info("Successfully created a list of connection drafts in CSL-Dbapi.");
+                                    dbapiHandler.updateFileActionStatusForImportSucceededConnectionDraft(fileActionStatusIdInDbApi);
                                 } catch (Exception e) {
                                     logger.error("Failed to create list of connection drafts in CSL-Dbapi", e);
                                     return JsonApiResponse.error("Failed to create list of connection drafts in CSL-Dbapi",
                                             Json.object(EXCEPTION, e.getMessage())
                                     ).toJson();
                                 }
+                            } else{
+                                logger.error("Failed to add list of connection drafts to CSL-Scan");
+                                return JsonApiResponse.error("Failed to add list of connection drafts to CSL-Scan").toJson();
                             }
-
-                            dbapiHandler.updateFileActionStatusForImportSucceededConnectionDraft(fileActionStatusIdInDbApi);
-                            return response.toJson();
                         } catch (Exception e) {
                             logger.error("Failed to add list of connection drafts to CSL-Scan", e);
                             return JsonApiResponse.error("Failed to add list of connection drafts to CSL-Scan",
@@ -688,6 +690,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                                 Json.object(EXCEPTION, e.getMessage())
                         ).toJson();
                     }
+                    return JsonApiResponse.success().toJson();
                 },
                 new JsonCmdHelp().setDesc("Add an EntityHttpConnection to CSL-Scan")
                         .setParam(ENTITY_HTTP_CONNECTION, "The EntityHttpConnection to add", JsonCmdHelp.JSON)

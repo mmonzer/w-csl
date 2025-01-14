@@ -46,15 +46,16 @@
             <appender name="LOG_FILE_%log_type" class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <file>${LOG_PATH}/${LOG_FILENAME}-${log_type}.log</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                    <fileNamePattern>${LOG_PATH}${log_type}/${LOG_FILENAME}-${log_type}.%d{yyyy-MM-dd}.log</fileNamePattern>
-                    <maxHistory>
-                        <conditional>
-                            <on>applicative</on>
-                            <then>7</then>
-                            <on>network</on>
-                            <then>1</then>
-                        </conditional>
-                    </maxHistory>
+                    <fileNamePattern>${LOG_PATH}${log_type:-applicative}/${LOG_FILENAME}-${log_type:-applicative}.%d{yyyy-MM-dd}.log</fileNamePattern>
+                    <if condition='property("log_type").contains("applicative")'>
+                        <then>
+                            <maxHistory>7</maxHistory>
+                        </then>
+                        <else>
+                            <maxHistory>1</maxHistory>
+                        </else>
+                    </if>
+                    <totalSizeCap>2GB</totalSizeCap>
                 </rollingPolicy>
                 <!-- Logstash encoder -->
                 <encoder class="net.logstash.logback.encoder.LogstashEncoder">

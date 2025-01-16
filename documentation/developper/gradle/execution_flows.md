@@ -4,7 +4,19 @@ I will try to explain in a sequential way the execution flow.
 ## At initialization (client)
 1. Initialize context
 2. Register/Init services 
-    - scan : init different clients and scan synchronization services.
+    - scan : init different clients (scan api, dbapi api, scan websocket) and scan sub services:
+         - cpeScanService
+         - cpeItemSynchronizationService
+         - microsoftKbSynchronizationService
+         - deletedCpeItemsSynchronizationService
+         - deletedMicrosoftKbsSynchronizationService
+         - connectionInfoSynchronizationService
+         - importExportBsonService
+         - externalConnectionInfoSynchronizationService
+         - externalConnectionInfoTemplatesSynchronizationService
+         - externalDiscoveredDevicesSynchronizationService
+         - externalScansService
+         - fileStorageService
     - autocrypt : reinit API handlers, synchronization of everything related, register to status.
     - tap : read taps configurations and create commands.
     - status : get notifier and set callbacks.

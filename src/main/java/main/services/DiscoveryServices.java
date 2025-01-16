@@ -124,7 +124,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         fileStorageService = new FileStorageService();
 
         if (!isRemote) {
-            initilizedScanClientSideServices(scanManagerDiscoveryUrl);
+            initializedScanClientSideServices(scanManagerDiscoveryUrl);
+        
 
             synchronizationSchedule = Executors.newScheduledThreadPool(1);
             ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
@@ -1949,7 +1950,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         return true;
     }
 
-    private void initilizedScanClientSideServices(String scanManagerDiscoveryUrl) {
+    private void initializedScanClientSideServices(String scanManagerDiscoveryUrl) {
         cpeScanService = new CpeScanService();
         cpeItemSynchronizationService = new CpeItemsSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
         microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);

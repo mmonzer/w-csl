@@ -20,6 +20,7 @@ public class EntityConnectionInfoDraft {
     public static final String DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX = "discoveryProtocolNameRelatedToHttpCnx";
     public static final String PROTOCOL_STR = "protocol";
     public static final String OTHER_DATA_DRAFT = "other_data_draft";
+    public static final String IS_SIMULATED = "isSimulated";
     @Getter
     @Setter
     private String uuid;
@@ -44,6 +45,8 @@ public class EntityConnectionInfoDraft {
     String snmpPrivacyAlgorithm;
     @Getter @Setter
     String sshKey;
+    @Getter @Setter
+    boolean isSimulated = false;
 
     boolean isKeepPassword;
     boolean isKeepSshKey;
@@ -114,6 +117,24 @@ public class EntityConnectionInfoDraft {
         this.isKeepPassphrase = isKeepPassphrase;
         this.isKeepSnmpPrivacyKey = isKeepSnmpPrivacyKey;
     }
+    public EntityConnectionInfoDraft(String uuid, String port, String name, String userName, String password, String discoveryProtocol, String snmpCommunity, String snmpPrivacyKey, String snmpAuthenticationAlgorithm, String snmpPrivacyAlgorithm, String sshKey, boolean isSimulated ,boolean isKeepPassword, boolean isKeepSshKey, boolean isKeepPassphrase, boolean isKeepSnmpPrivacyKey) {
+        this.uuid = uuid;
+        this.port = port;
+        this.name = name;
+        this.username = userName;
+        this.password = password;
+        this.protocol = discoveryProtocol;
+        this.snmpCommunity = snmpCommunity;
+        this.snmpPrivacyKey = snmpPrivacyKey;
+        this.snmpAuthenticationAlgorithm = snmpAuthenticationAlgorithm;
+        this.snmpPrivacyAlgorithm = snmpPrivacyAlgorithm;
+        this.sshKey = sshKey;
+        this.isSimulated = isSimulated;
+        this.isKeepPassword = isKeepPassword;
+        this.isKeepSshKey = isKeepSshKey;
+        this.isKeepPassphrase = isKeepPassphrase;
+        this.isKeepSnmpPrivacyKey = isKeepSnmpPrivacyKey;
+    }
     public EntityConnectionInfoDraft() {
 
     }
@@ -131,6 +152,7 @@ public class EntityConnectionInfoDraft {
                 SNMP_AUTHENTICATION_ALGORITHM, this.snmpAuthenticationAlgorithm,
                 SNMP_PRIVACY_ALGORITHM, this.snmpPrivacyAlgorithm,
                 SSH_KEY, this.sshKey,
+                IS_SIMULATED, this.isSimulated,
                 INPUTS_STR, this.inputs,
                 DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX, this.discoveryProtocolNameRelatedToHttpCnx,
                 "isKeepPassword", this.isKeepPassword,
@@ -153,6 +175,7 @@ public class EntityConnectionInfoDraft {
                 SNMP_AUTHENTICATION_ALGORITHM, this.snmpAuthenticationAlgorithm,
                 SNMP_PRIVACY_ALGORITHM, this.snmpPrivacyAlgorithm,
                 SSH_KEY, this.sshKey,
+                IS_SIMULATED, this.isSimulated,
                 INPUTS_STR, this.inputs,
                 DISCOVERY_PROTOCOL_NAME_RELATED_TO_HTTP_CNX, this.discoveryProtocolNameRelatedToHttpCnx
         );
@@ -195,6 +218,10 @@ public class EntityConnectionInfoDraft {
         if ( connectionDraftJson.get(OTHER_DATA_DRAFT) !=null && connectionDraftJson.get(OTHER_DATA_DRAFT).has("ssh_key"))
             sshKey = connectionDraftJson.get(OTHER_DATA_DRAFT).get("ssh_key").asString();
 
+        boolean isSimulated = false;
+        if (connectionDraftJson.has(IS_SIMULATED))
+            isSimulated = connectionDraftJson.get(IS_SIMULATED).asBoolean();
+
         return new EntityConnectionInfoDraft(
                 connectionDraftJson.get("mongo_entity_id").asString(),
                 connectionDraftJson.get("port_number").asString(),
@@ -207,6 +234,7 @@ public class EntityConnectionInfoDraft {
                 snmpAuthenticationAlgorithm,
                 snmpPrivacyAlgorithm,
                 sshKey,
+                isSimulated,
                 is_keep_password,
                 is_keep_ssh_key,
                 is_keep_passphrase,
@@ -277,7 +305,11 @@ public class EntityConnectionInfoDraft {
             sshKey = connectionDraftJson.get(SSH_KEY).asString();
         }
         entityConnectionInfoDraft.setSshKey(sshKey);
-
+        boolean isSimulated = false;
+        if (connectionDraftJson.get(IS_SIMULATED) != null) {
+            isSimulated = connectionDraftJson.get(IS_SIMULATED).asBoolean();
+        }
+        entityConnectionInfoDraft.setSimulated(isSimulated);
         // manage inputs
         Json cnxInputFotCnxRelatedToHttp = Json.object();
         if (connectionDraftJson.get(INPUTS_STR) != null) {

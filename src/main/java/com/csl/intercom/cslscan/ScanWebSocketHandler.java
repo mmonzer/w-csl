@@ -161,10 +161,10 @@ public class ScanWebSocketHandler {
         logger.trace("connectStompSessionsIfNecessary : {}", stompWebSocketChannel);
         if (!StompChannel.isConnected(stompWebSocketChannel)) {
             reconnectToScanWebSocket(stompWebSocketChannel, this.scanManagerDiscoveryUrl);
-        }
 
-        if (StompChannel.isConnected(stompWebSocketChannel)) {
+            if (StompChannel.isConnected(stompWebSocketChannel)) {
                 externalScansService.handleConnectionEstablishedWithScanner();
+            }
         }
     }
 

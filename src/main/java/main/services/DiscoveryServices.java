@@ -160,18 +160,15 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         if (!isRemote) {
             initilizedScanClientSideServices(scanManagerDiscoveryUrl);
-        }
 
-        synchronizationSchedule = Executors.newScheduledThreadPool(1);
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-                synchronizationSchedule,
-                () -> {
-                    this.syncAll();
-                    logger.info("Successfully synchronized all CPE items.");
-                },
-                0, 300, TimeUnit.SECONDS,
-                LoggerCustomEndpoints.DISCOVERY_SYNC
-        );
+            synchronizationSchedule = Executors.newScheduledThreadPool(1);
+            ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
+                    synchronizationSchedule,
+                    this::syncAll,
+                    10, 300, TimeUnit.SECONDS,
+                    LoggerCustomEndpoints.DISCOVERY_SYNC
+            );
+        }
 
         addCmd("get_status", params -> {
                     logger.debug("Fetching CSL-Scan status");
@@ -1222,7 +1219,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                         if (response.isSuccess()) {
                             logger.debug("External connection information synchronizing after creating connexion info {} ...", params.get(CONNECTION_INFO));
-                            externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                            externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
                             logger.debug("External connection information synchronized after creating connexion info {}", params.get(CONNECTION_INFO));
 
                             logger.info("External connection information synchronization after creating connexion info {}", params.get(CONNECTION_INFO));
@@ -1261,7 +1258,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (response.isSuccess()) {
                         logger.debug("External connection information synchronizing after updating connexion info {} ...", params.get(CONNECTION_INFO));
-                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                        externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
                         logger.debug("External connection information synchronized after updating connexion info {}", params.get(CONNECTION_INFO));
 
                         logger.info("External connection information synchronization after updating connexion info {}", params.get(CONNECTION_INFO));
@@ -1293,7 +1290,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     if (response.isSuccess()) {
                         logger.debug("External connection information synchronizing after deleting connexion info {} ...", connectionInfoId);
-                        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
+                        externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
                         logger.debug("External connection information synchronized after deleting connexion info {}", connectionInfoId);
 
                         logger.info("External connection information synchronization after deleting connexion info id {}", connectionInfoId);
@@ -1993,8 +1990,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         importExportBsonService = ImportExportBsonService.getInstance();
         importExportBsonService.init(dbapiHandler, scanApiHandler, fileStorageService);
         externalConnectionInfoSynchronizationService = new ExternalConnectionInfoSynchronizationService(scanApiHandler, dbapiHandler);
-        externalConnectionInfoSynchronizationService.synchronizeExternalConnectionInfos();
-        externalConnectionInfoTemplatesSynchronizationService = new ExternalConnectionInfoTemplatesSynchronizationService(scanApiHandler, dbapiHandler, 3600);
+        externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
+        externalConnectionInfoTemplatesSynchronizationService = new ExternalConnectionInfoTemplatesSynchronizationService(scanApiHandler, dbapiHandler);
         externalDiscoveredDevicesSynchronizationService = new ExternalDiscoveredDevicesSynchronizationService(dbapiHandler, scanApiHandler);
         externalScansService = new ExternalScansService(dbapiHandler, scanApiHandler, externalDiscoveredDevicesSynchronizationService);
         scanWebSocketHandler = new ScanWebSocketHandler(this, scanManagerDiscoveryUrl, cpeScanService, importExportBsonService, externalScansService);
@@ -2142,12 +2139,18 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * - CPE Items
      */
     public void syncAll() {
-        if (!isRemote) {
             logger.debug("Starting Discovery synchronization");
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
-                connectionInfoSynchronizationService.syncData();
+                externalConnectionInfoTemplatesSynchronizationService.syncData();
+                logger.debug("External Connection Information Templates synchronization finished");
+                externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
+                logger.debug("External Connection Informations synchronization finished");
+                externalDiscoveredDevicesSynchronizationService.syncData();  // This may need a service to sync deleted items
+                logger.debug("External Discovered Devices synchronization finished");
+                connectionInfoSynchronizationService.syncData();  // This may need a service to sync deleted items
+                logger.debug("Connection Informations synchronization finished");
                 cpeItemSynchronizationService.syncData();
                 logger.debug("CPE items synchronization finished");
                 microsoftKbSynchronizationService.syncData();
@@ -2155,11 +2158,16 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 deletedCpeItemsSynchronizationService.syncData();
                 logger.debug("Deleted CPE items synchronization finished");
                 deletedMicrosoftKbsSynchronizationService.syncData();
-                logger.info("Discovery synchronization finished : CPE items, microsoft KB, deleted CPE items and deleted microsoft KB");
+                logger.debug("Deleted Microsoft KB synchronization finished");
+
+                logger.info("Scan-Dbapi synchronization finished.");
             } catch (SynchronizationException e) {
-                logger.warn("Failed to synchronize CPE Items : {}", e.getMessage());
+                logger.warn("Failed to synchronize Scan-Dbapi : {}", e.getMessage());
+            } catch (Exception e) {
+                logger.error("Unexpected error in Scan-Dbapi synchronization : {}", e.getMessage());
+                logger.debug("Unexpected error in Scan-Dbapi synchronization : {}", e.getMessage(), e);
             }
-        }
+
     }
 
     /**
@@ -2208,7 +2216,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         }
     }
 
-    class DiscoveryMessages {
+    static class DiscoveryMessages {
         public static final String MISSING_CERTIFICATE_UUID = "Certificate uuid is missing";
         public static final String CERTIFICATE_UUID = "The certificate uuid";
         public static final String FAILED_TO_PARSE_ENTITY_CERTIFICATE_CONNECTION = "Failed to parse entity_certificate_connection";

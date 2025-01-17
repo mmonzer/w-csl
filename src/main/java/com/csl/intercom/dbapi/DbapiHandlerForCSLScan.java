@@ -639,9 +639,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public OffsetDateTime getExternalConnectionInfoTemplatesLastUpdateDate() {
-        logger.debug("Fetching external connection info templates last update date from DB-API.");
-        logger.warn(NOT_IMPLEMENTED_YET);
-
+        // This is set to null because the implementation of templates is hardcoded, and only created at service init.
+        // It may be modified later on, maybe. So every sync will take every template to upsert, thus the last updated time is useless.
         return null;
     }
 
@@ -964,7 +963,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     public void sendConnections(List<Connection> items) {
-        logger.error("Sending connections to DB-API is not implemented yet.");
+        logger.warn("Sending connections to DB-API is not implemented yet.");
     }
 
     public int getConnectionPortNumberFromConnection(Connection connection) {
@@ -1132,7 +1131,6 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         } else if (response.getStatus() == 200) {
             logger.info("Connection updated in DB-API.");
         }
-        logger.error("Updating connections in DB-API is not implemented yet.");
     }
 
     /**

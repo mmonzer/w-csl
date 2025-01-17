@@ -1,46 +1,77 @@
 package com.csl.intercom.services;
 
 import com.csl.intercom.cslscan.ScanApiHandler;
+import com.csl.intercom.cslscan.models.ExternalConnectionInfoTemplate;
 import com.csl.intercom.cslscan.models.ExternalDiscoveredDevice;
 import com.csl.intercom.dbapi.DbapiHandlerForCSLScan;
-import com.csl.logger.LoggerCustomEndpoints;
-import com.csl.util.ThreadUtils;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
-public class ExternalConnectionInfoTemplatesSynchronizationService {
-    private Logger logger = LoggerFactory.getLogger(ExternalConnectionInfoTemplatesSynchronizationService.class);
-    private ScanApiHandler scanApiHandler;
-    private DbapiHandlerForCSLScan dbapiHandler;
-    private final long synchronizationIntervalSeconds;
-    private ScheduledExecutorService scheduledExecutorService;
+/**
+ * This service seeks to synchronize the external connexion templates. However, this type of item has some particularities due to
+ * the implementation on CSL-Scan:
+ * Templates are not saved on DB but in memory.
+ * Create: once at service initialisation
+ * Update: probably, but need to be verified
+ * Get: yes, all or nothing
+ * Delete: probably not, but need to be verified. *
+ */
+public class ExternalConnectionInfoTemplatesSynchronizationService extends PaginatedSynchronizationService<ExternalConnectionInfoTemplate> {
+    private final Logger logger = LoggerFactory.getLogger(ExternalConnectionInfoTemplatesSynchronizationService.class);
+    private final ScanApiHandler scanApiHandler;
+    private final DbapiHandlerForCSLScan dbapiHandler;
 
-    public ExternalConnectionInfoTemplatesSynchronizationService(ScanApiHandler scanApiHandler, DbapiHandlerForCSLScan dbapiHandler, long synchronizationIntervalSeconds) {
+    public ExternalConnectionInfoTemplatesSynchronizationService(ScanApiHandler scanApiHandler, DbapiHandlerForCSLScan dbapiHandler) {
         this.scanApiHandler = scanApiHandler;
         this.dbapiHandler = dbapiHandler;
-        this.synchronizationIntervalSeconds = synchronizationIntervalSeconds;
-
-        this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
-                scheduledExecutorService,
-                () -> {
-                    this.synchronizeDiscoveredDevices();
-                    logger.info("Successfully synchronized external connection's information templates.");
-                }, 0,
-                synchronizationIntervalSeconds, java.util.concurrent.TimeUnit.SECONDS,
-                LoggerCustomEndpoints.SYNC_DISCOVERED_DEVICES
-        );
     }
 
     public void synchronizeDiscoveredDevices() {
         logger.info("Synchronizing discovered devices");
-        OffsetDateTime lastUpdate = dbapiHandler.getExternalConnectionInfoTemplatesLastUpdateDate();
-        List<ExternalDiscoveredDevice> discoveredDevices = scanApiHandler.getExternalDiscoveredDevices(lastUpdate);
-        dbapiHandler.createOrUpdateExternalDiscoveredDevices(discoveredDevices);
+        OffsetDateTime lastUpdate = dbapiHandler.getExternalConnectionInfoTemplatesLastUpdateDate();   // Not implemented
+        List<ExternalDiscoveredDevice> discoveredDevices = scanApiHandler.getExternalDiscoveredDevices(lastUpdate);   // Correct, but not the right context (corresponds to other class). The right method should be implemented on scan
+        dbapiHandler.createOrUpdateExternalDiscoveredDevices(discoveredDevices);   // Not implemented
+    }
+
+    @Override
+    public List<ExternalConnectionInfoTemplate> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
+        try {
+            return scanApiHandler.getExternalConnectionInfoTemplates(since);
+        } catch (Exception e) {
+            throw new SynchronizationException("Could not retrieve external connexion templates from CSL-Scan", e);
+        }
+    }
+
+    @Override
+    public void sendData(List<ExternalConnectionInfoTemplate> items) throws SynchronizationException {
+        try {
+            dbapiHandler.createOrUpdateExternalConnectionInfoTemplates(items);
+        } catch (Exception e) {
+            throw new SynchronizationException("Could not send external connexion templates to DB-API", e);
+        }
+    }
+
+    @Override
+    public OffsetDateTime getLastChangeDate() throws SynchronizationException {
+        try {
+            return dbapiHandler.getExternalConnectionInfoTemplatesLastUpdateDate();
+        } catch (Exception e) {
+            throw new SynchronizationException("Could not get last update date for external connexion templates from DB-API", e);
+        }
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
+
+    @Override
+    public void syncData() throws SynchronizationException {
+        // TODO : implement this.
+        logger.warn("Synchronization of external connexion templates not implemented.");
     }
 }

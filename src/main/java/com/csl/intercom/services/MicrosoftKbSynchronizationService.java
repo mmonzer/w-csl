@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,7 +33,7 @@ public class MicrosoftKbSynchronizationService extends PaginatedSynchronizationS
     @Override
     public List<MicrosoftKB> retrieveData(OffsetDateTime since, int limit, int offset) throws SynchronizationException {
         if (cpeScanService.getRunningScan() == null && cpeScanService.getFinishedScan() == null) {
-            throw new SynchronizationException("No scan is running or finished (MicrosoftKbSynchronizationService)");
+            return new ArrayList<>(); // Having no running scan should be handled normally.
         }
         return scanApiHandler.getMicrosoftKbChangesSince(since, limit, offset);
     }

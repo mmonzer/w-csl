@@ -176,16 +176,16 @@ public class HttpConnection extends Connection {
             if (connectionJson.has(UUID) && connectionJson.get(UUID).isString()) {
                 uuid = connectionJson.get(UUID).asString();
             }
-            String port = connectionJson.get(HttpConnectionField.PORT.scanName()).asString();
-            String entityHttpConnectionUuid = connectionJson.get(HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName()).asString();
-            EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(connectionJson.get(HttpConnectionField.AUTHENTICATION_METHOD.scanName()).asString());
-            String username = connectionJson.get(HttpConnectionField.USERNAME.scanName()).asString();
-            String password = connectionJson.get(HttpConnectionField.PASSWORD.scanName()).asString();
-            String realm = connectionJson.get(HttpConnectionField.REALM.scanName()).asString();
-            String token = connectionJson.get(HttpConnectionField.TOKEN.scanName()).asString();
+            String port = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.PORT.scanName(), null);
+            String entityHttpConnectionUuid = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.ENTITY_HTTP_CONNECTION_ID.scanName(), null);
+            EntityHttpConnectionStage.HttpAuthenticationMethod authenticationMethod = EntityHttpConnectionStage.HttpAuthenticationMethod.valueOf(JsonUtil.getStringFromJson(connectionJson,HttpConnectionField.AUTHENTICATION_METHOD.scanName(), "NONE"));
+            String username = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.USERNAME.scanName(), null);
+            String password = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.PASSWORD.scanName(), null);
+            String realm = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.REALM.scanName(), null);
+            String token = JsonUtil.getStringFromJson(connectionJson, HttpConnectionField.TOKEN.scanName(), null);
 
             Map<String, String> inputs = new HashMap<>();
-            if (connectionJson.has(INPUTS)) {
+            if (connectionJson.has(INPUTS) && connectionJson.get(INPUTS).isObject()) {
                 connectionJson.get(INPUTS).asJsonMap().forEach((key, value) -> inputs.put(key, value.asString()));
             }
 

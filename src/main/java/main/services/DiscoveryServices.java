@@ -41,6 +41,8 @@ import java.util.concurrent.*;
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 import static com.csl.util.FileUtils.CONTENT;
 import static com.csl.util.FileUtils.FILENAME;
+import static java.lang.constant.ConstantDescs.DEFAULT_NAME;
+import static main.services.DiscoveryServices.DiscoveryConstants.*;
 
 /**
  * Service in charge of the SNMP manager microservice.
@@ -48,44 +50,7 @@ import static com.csl.util.FileUtils.FILENAME;
  * It also allows to know the current status of the requested scans.
  */
 public class DiscoveryServices extends Service implements IStatusProvider {
-    private static final String DEFAULT_CONFIG_FILE_SECTION_NAME = "discovery";
-    private static final String DEFAULT_NAME = "discovery";
-
     private static final CSLApplicativeLogger logger = CSLApplicativeLogger.getLogger(DiscoveryServices.class);
-    public static final String CONNECTION_INFO = "connection_info";
-    public static final String FREQUENCY_OPTION = "frequencyOption";
-    public static final String EXCEPTION = "exception";
-    public static final String FAILED_TO_FETCH_ENTITY_HTTP_CONNECTIONS_FROM_CSL_SCAN = "Failed to fetch entity HTTP connections from CSL-Scan";
-    public static final String FAILED_TO_DROP_COLLECTIONS = "Failed to drop collections";
-    public static final String FAILED_TO_FETCH_DISCOVERY_PROTOCOLS = "Failed to fetch discovery protocols";
-    public static final String FAILED_TO_TEST_ENTITY_HTTP_CONNECTION = "Failed to test entity HTTP connection";
-    public static final String FAILED_TO_FETCH_DISCOVERY_CRON = "Failed to fetch discovery cron";
-    public static final String FAILED_TO_PARSE_CONNECTION_INFO = "Failed to parse connection_info";
-    public static final String FAILED_TO_FETCH_ENTITY_HTTP_CONNECTION_FROM_CSL_SCAN = "Failed to fetch entity HTTP connection from CSL-Scan";
-    public static final String FAILED_TO_PARSE_CONNECTION = "Failed to parse connection";
-    public static final String FAILED_TO_SYNCHRONIZE_DELETED_CPE_ITEMS = "Failed to synchronize deleted CPE Items";
-    public static final String ENTITY_HTTP_CONNECTION = "entity_http_connection";
-    public static final String IS_ACTIVE = "isActive";
-    public static final String DISCOVERY_PROTOCOL_NAME = "discovery_protocol_name";
-    public static final String CONNECTION = "connection";
-    public static final String ENTITIES = "entities";
-    public static final String DEVICE_UUID = "device_uuid";
-    public static final String CONNECTION_ID = "connection_id";
-    public static final String CONNECTION_UUID = "connection_uuid";
-    public static final String IP_ADDRESS = "ip_address";
-    public static final String CONNECTION_INFO_UUID = "connection_info_uuid";
-    public static final String HEADERS = "headers";
-    public static final String QUERY_PARAMS = "queryParams";
-    public static final String STAGES = "stages";
-    public static final String STAGE_INDEX = "stageIndex";
-    public static final String RESULT = "result";
-    public static final String FAILED_TO_DELETE_CONNECTION_INFO = "Failed to delete connection info";
-    public static final String INPUTS = "inputs";
-    public static final String FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear verified connection draft in CSL-Scan";
-    public static final String DEFAULT_JSON_CMD_RESPONSE = "<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error,<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.";
-    public static final String FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI = "Failed to add connection info to CSL-Dbapi";
-    public static final String CONNECTION1 = "connection";
-    public static final String FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear failed connection draft in CSL-Scan";
 
     private final boolean isRemote;
     private ScanWebSocketHandler scanWebSocketHandler = null;
@@ -140,7 +105,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * Constructor of the Discovery service with custom concentration
      */
     public DiscoveryServices(boolean isRemote) {
-        this(DEFAULT_NAME, DEFAULT_CONFIG_FILE_SECTION_NAME, isRemote);
+        this(DEFAULT_NAME, DiscoveryConstants.DEFAULT_CONFIG_FILE_SECTION_NAME, isRemote);
     }
 
     /**
@@ -159,7 +124,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         fileStorageService = new FileStorageService();
 
         if (!isRemote) {
-            initilizedScanClientSideServices(scanManagerDiscoveryUrl);
+            initializedScanClientSideServices(scanManagerDiscoveryUrl);
+        
 
             synchronizationSchedule = Executors.newScheduledThreadPool(1);
             ThreadUtils.uncorrelatedSingleThreadScheduledAtFixedRate(
@@ -1984,7 +1950,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         return true;
     }
 
-    private void initilizedScanClientSideServices(String scanManagerDiscoveryUrl) {
+    private void initializedScanClientSideServices(String scanManagerDiscoveryUrl) {
         cpeScanService = new CpeScanService();
         cpeItemSynchronizationService = new CpeItemsSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
         microsoftKbSynchronizationService = new MicrosoftKbSynchronizationService(scanApiHandler, dbapiHandler, cpeScanService);
@@ -2228,4 +2194,44 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         public static final String GENERIC_JSON_API_RESPONSE = "<code>{ \"success\": true }</code> if the operation went without error," +
                 "<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.";
     }
+
+    static class DiscoveryConstants {
+
+        public static final String DEFAULT_CONFIG_FILE_SECTION_NAME = "discovery";
+        private static final String DEFAULT_NAME = "discovery";
+        public static final String CONNECTION_INFO = "connection_info";
+        public static final String FREQUENCY_OPTION = "frequencyOption";
+        public static final String EXCEPTION = "exception";
+        public static final String FAILED_TO_FETCH_ENTITY_HTTP_CONNECTIONS_FROM_CSL_SCAN = "Failed to fetch entity HTTP connections from CSL-Scan";
+        public static final String FAILED_TO_DROP_COLLECTIONS = "Failed to drop collections";
+        public static final String FAILED_TO_FETCH_DISCOVERY_PROTOCOLS = "Failed to fetch discovery protocols";
+        public static final String FAILED_TO_TEST_ENTITY_HTTP_CONNECTION = "Failed to test entity HTTP connection";
+        public static final String FAILED_TO_FETCH_DISCOVERY_CRON = "Failed to fetch discovery cron";
+        public static final String FAILED_TO_PARSE_CONNECTION_INFO = "Failed to parse connection_info";
+        public static final String FAILED_TO_FETCH_ENTITY_HTTP_CONNECTION_FROM_CSL_SCAN = "Failed to fetch entity HTTP connection from CSL-Scan";
+        public static final String FAILED_TO_PARSE_CONNECTION = "Failed to parse connection";
+        public static final String FAILED_TO_SYNCHRONIZE_DELETED_CPE_ITEMS = "Failed to synchronize deleted CPE Items";
+        public static final String ENTITY_HTTP_CONNECTION = "entity_http_connection";
+        public static final String IS_ACTIVE = "isActive";
+        public static final String DISCOVERY_PROTOCOL_NAME = "discovery_protocol_name";
+        public static final String CONNECTION = "connection";
+        public static final String ENTITIES = "entities";
+        public static final String DEVICE_UUID = "device_uuid";
+        public static final String CONNECTION_ID = "connection_id";
+        public static final String CONNECTION_UUID = "connection_uuid";
+        public static final String IP_ADDRESS = "ip_address";
+        public static final String CONNECTION_INFO_UUID = "connection_info_uuid";
+        public static final String HEADERS = "headers";
+        public static final String QUERY_PARAMS = "queryParams";
+        public static final String STAGES = "stages";
+        public static final String STAGE_INDEX = "stageIndex";
+        public static final String RESULT = "result";
+        public static final String FAILED_TO_DELETE_CONNECTION_INFO = "Failed to delete connection info";
+        public static final String INPUTS = "inputs";
+        public static final String FAILED_TO_CLEAR_VERIFIED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear verified connection draft in CSL-Scan";
+        public static final String DEFAULT_JSON_CMD_RESPONSE = "<code>{ \"success\": true, \"result\": { \"scan_id\": \"...\" } }</code> if the operation went without error,<code>{ \"success\": false, \"error\": {\"reason\": \"...\", \"details\": \"...\"} }</code> otherwise.";
+        public static final String FAILED_TO_ADD_CONNECTION_INFO_TO_CSL_DBAPI = "Failed to add connection info to CSL-Dbapi";
+        public static final String CONNECTION1 = "connection";
+        public static final String FAILED_TO_CLEAR_FAILED_CONNECTION_DRAFT_IN_CSL_SCAN = "Failed to clear failed connection draft in CSL-Scan";
+}
 }

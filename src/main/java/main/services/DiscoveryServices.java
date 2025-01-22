@@ -41,7 +41,6 @@ import java.util.concurrent.*;
 import static com.csl.logger.LoggerConstants.X_CORRELATION_ID;
 import static com.csl.util.FileUtils.CONTENT;
 import static com.csl.util.FileUtils.FILENAME;
-import static java.lang.constant.ConstantDescs.DEFAULT_NAME;
 import static main.services.DiscoveryServices.DiscoveryConstants.*;
 
 /**
@@ -2198,7 +2197,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     static class DiscoveryConstants {
 
         public static final String DEFAULT_CONFIG_FILE_SECTION_NAME = "discovery";
-        private static final String DEFAULT_NAME = "discovery";
+        public static final String DEFAULT_NAME = "discovery";
         public static final String CONNECTION_INFO = "connection_info";
         public static final String FREQUENCY_OPTION = "frequencyOption";
         public static final String EXCEPTION = "exception";

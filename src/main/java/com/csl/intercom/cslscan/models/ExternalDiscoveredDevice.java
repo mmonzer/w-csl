@@ -96,13 +96,11 @@ public class ExternalDiscoveredDevice {
         if (json.has(GENERATED_CONNECTION_FOR_DISCOVERED_DEVICE)) {
             Json generatedConnectionForDiscoveredDevice = json.get(GENERATED_CONNECTION_FOR_DISCOVERED_DEVICE);
             String username = generatedConnectionForDiscoveredDevice.get("username").getValue().toString();
-            String password = generatedConnectionForDiscoveredDevice.get("password").getValue().toString();
             String connectionName = generatedConnectionForDiscoveredDevice.get(DEVICE_NAME).getValue().toString();
             int connectionPortNumber = Integer.parseInt(generatedConnectionForDiscoveredDevice.get("portNumber").toString());
             String vendor = generatedConnectionForDiscoveredDevice.get("vendor").getValue().toString();
             externalGeneratedConnectionRelatesDevice = new ExternalGeneratedConnectionRelatesDevice();
             externalGeneratedConnectionRelatesDevice.setName(connectionName);
-            // externalGeneratedConnectionRelatesDevice.setPassword(password);  // password should not be saved in DBAPI
             externalGeneratedConnectionRelatesDevice.setUsername(username);
             externalGeneratedConnectionRelatesDevice.setPortNumber(connectionPortNumber);
             externalGeneratedConnectionRelatesDevice.setVendor(vendor);

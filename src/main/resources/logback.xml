@@ -47,15 +47,15 @@
                 <file>${LOG_PATH}/${LOG_FILENAME}-${log_type}.log</file>
                 <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                     <fileNamePattern>${LOG_PATH}${log_type:-applicative}/${LOG_FILENAME}-${log_type:-applicative}.%d{yyyy-MM-dd}.log</fileNamePattern>
-                    <if condition='property("log_type").contains("applicative")'>
+                    <if condition='property("log_type").contains("network")'>
                         <then>
-                            <maxHistory>7</maxHistory>
+                            <maxHistory>${NETWORK_LOG_ROTATION:-1}</maxHistory>
                         </then>
                         <else>
-                            <maxHistory>1</maxHistory>
+                            <maxHistory>${APPLICATIVE_LOG_ROTATION:-7}</maxHistory>
                         </else>
                     </if>
-                    <totalSizeCap>2GB</totalSizeCap>
+                    <totalSizeCap>${TOTAL_SIZE_LOGS:-2GB}</totalSizeCap>
                 </rollingPolicy>
                 <!-- Logstash encoder -->
                 <encoder class="net.logstash.logback.encoder.LogstashEncoder">

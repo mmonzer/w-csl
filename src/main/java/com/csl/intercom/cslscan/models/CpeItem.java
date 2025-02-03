@@ -44,6 +44,7 @@ public class CpeItem implements IDbapiSerializable {
     private final boolean isDeleted;
     private final boolean isMain;
     private final int discoveryConnectionId;
+    private final String connectionInfoUuid;
 
     /**
      * Create an object from the direct data. Should not be used directly, thus is private.
@@ -54,7 +55,7 @@ public class CpeItem implements IDbapiSerializable {
      * @param mongoEntityId  The uuid of the CPI Item in CSL-Scan's Mongodb.
      * @param deviceId       The uuid of the device associated with this CPE Item.
      */
-    private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId, boolean isDeleted, boolean isMain, int discoveryConnectionId) {
+    private CpeItem(Json cpeData, OffsetDateTime discoveredDate, String mongoEntityId, String deviceId, boolean isDeleted, boolean isMain, int discoveryConnectionId, String connectionInfoUuid) {
         this.cpeData = Json.object();
         this.discoveredDate = discoveredDate;
         this.mongoEntityId = mongoEntityId;
@@ -62,7 +63,7 @@ public class CpeItem implements IDbapiSerializable {
         this.isDeleted = isDeleted;
         this.isMain = isMain;
         this.discoveryConnectionId = discoveryConnectionId;
-
+        this.connectionInfoUuid = connectionInfoUuid;
         for (String field : dataFields) {
             this.cpeData.set(field, cpeData.get(field));
         }
@@ -82,6 +83,7 @@ public class CpeItem implements IDbapiSerializable {
         boolean isDeleted = false;
         boolean isMain = false;
         int discoveryConnectionId = 0;
+        String connectionInfoUuid = null;
 
         try {
             discoveredDate = ScanUtils.getDateFieldFromJson(data, "updatedAt");
@@ -100,13 +102,15 @@ public class CpeItem implements IDbapiSerializable {
             } catch (NumberFormatException | UnsupportedOperationException e) {
                 discoveryConnectionId = -1;
             }
+            connectionInfoUuid = JsonUtil.getStringFromJson(data, "connectionInfoUuid", null);
+            logger.info("Connection info uuid: " + connectionInfoUuid);
         } catch (NullPointerException e) {
             // If any of the fields are missing, throw an exception
             logger.error("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item", e);
             throw new IllegalArgumentException("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item");
         }
 
-        return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted, isMain, discoveryConnectionId);
+        return new CpeItem(data, discoveredDate, mongoEntityId, deviceId, isDeleted, isMain, discoveryConnectionId, connectionInfoUuid);
     }
 
     public boolean isDeleted() {
@@ -129,6 +133,9 @@ public class CpeItem implements IDbapiSerializable {
         // Add the connection's id if it is valid
         if (this.discoveryConnectionId > 0) {
             serialization.set("connection_id", this.discoveryConnectionId);
+        }
+        if (this.connectionInfoUuid != null) {
+            serialization.set("connection_info_uuid", this.connectionInfoUuid);
         }
         return serialization;
     }

@@ -8,6 +8,6 @@ import com.ucsl.json.Json;
 @FunctionalInterface
 public interface IJsonCmd {
 
-	public Json exec(Json params);
+	public Json exec(Json params) throws Exception;
 
 }

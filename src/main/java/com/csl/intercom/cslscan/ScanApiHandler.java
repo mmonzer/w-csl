@@ -206,7 +206,7 @@ public class ScanApiHandler extends ApiHandler {
         return response;
     }
 
-    public List<String> deleteEntities(List<Pair<String, OffsetDateTime>> deletedDevices) throws Exception {
+    public List<String> deleteEntities(List<Pair<String, OffsetDateTime>> deletedDevices,boolean hardDelete) throws Exception {
         OffsetDateTime maxDate = OffsetDateTime.MIN;
         List<String> failedDevices = new ArrayList<>();
         boolean hasFailed = false;
@@ -216,7 +216,7 @@ public class ScanApiHandler extends ApiHandler {
             String uuid = deletedDevice.getFirst();
             OffsetDateTime deletionDate = deletedDevice.getSecond();
             try {
-                deleteEntity(uuid);
+                deleteEntity(uuid, hardDelete);
                 if (deletionDate.isAfter(maxDate)) {
                     maxDate = deletionDate;
                 }
@@ -237,11 +237,12 @@ public class ScanApiHandler extends ApiHandler {
      * Delete an entity from the scanner.
      *
      * @param id The unique identifier of the entity, as returned at creation or in a list.
+     * @param hardDelete: boolean, to hard delete entities in scan or not
      * @return An empty object on success, an error message on failure.
      */
-    public JsonApiResponse deleteEntity(String id) {
+    public JsonApiResponse deleteEntity(String id, Boolean hardDelete) {
         JsonApiResponse response = sendDelete(
-                String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id), Json.object());
+                String.format(ScanApiEndpoint.ENTITY_DETAILS.endpoint(), id, hardDelete), Json.object());
         boolean success = response.isSuccess();
         if (success) {
             if (response.getExtra().get(STATUS_CODE).asInteger() == 404) {

@@ -31,6 +31,7 @@ import com.ucsl.json.Json;
 import com.ucsl.json.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.slf4j.MDC;
 
 import java.io.FileNotFoundException;
@@ -112,6 +113,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      *
      * @return True is the initialization was successful, false otherwise
      */
+    @SneakyThrows
     @Override
     public boolean init() {
         logger.info("Initializing Discovery service ..");
@@ -1968,7 +1970,13 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         externalDiscoveredDevicesSynchronizationService.init(externalScansService);
 
         mqttBroker = CSLContext.getInstance().getMqttBroker();
-        mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> dbapiHandler.sendNewDevicesToScanner(scanApiHandler));
+        mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.DEVICES, message -> {
+            try {
+                dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
         mqttBroker.subscribeToTopic(CSLMqttBrokerHandler.Topic.CPE_ITEMS, message -> {
             try {
                 deletedCpeItemsSynchronizationService.syncData();
@@ -2108,7 +2116,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * - Devices
      * - CPE Items
      */
-    public void syncAll() {
+    public void syncAll() throws Exception {
             logger.debug("Starting Discovery synchronization");
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
@@ -2146,7 +2154,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * @param entities The entities' uuids to scan. May be null, in which case all entities are scanned.
      * @return The result of the scan request, in a {@link JsonApiResponse}
      */
-    public JsonApiResponse startScan(List<String> entities) {
+    public JsonApiResponse startScan(List<String> entities) throws Exception {
         logger.trace("Starting scan fro entities : {}", entities);
         // Synchronize devices between DB-API and CSL-Scan
         JsonApiResponse syncResult = dbapiHandler.sendNewDevicesToScanner(scanApiHandler);

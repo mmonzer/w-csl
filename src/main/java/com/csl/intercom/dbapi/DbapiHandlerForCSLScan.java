@@ -358,6 +358,28 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     /**
+     * Hard delete devices from DB-API after synchronized them since an optional date.
+     *
+     * @param date The date of start of deletions to delete. May be null, in wich case fetches all deletions.
+     * */
+
+    public void hardDeleteDevicesSince(OffsetDateTime date) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
+        Json params = object();
+        if (dateUtc != null) {
+            params.set(DELETED_DATE_GT, dateUtc.toString());
+        }
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_DEVICES.getEndpoint(), params, null);
+        if (response.getStatus() >= 400) {
+            throw new Exception("Error hard deleting devices: got unexpected status " + response.getStatus());
+        } else if (response.getStatus()==204) {
+            logger.info("No devices to hard delete");
+        } else if (response.getStatus()==200) {
+            logger.info("Devices hard deleted successfully");
+        }
+    }
+
+    /**
      * Get the deleted CPE Items from DB-API that were changed since an optional date.
      *
      * @param date The date of start of deletions to fecth. May be null, in wich case fetches all deletions.
@@ -398,6 +420,27 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     }
 
     /**
+     * Hard delete cpe items from DB-API after synchronized them since an optional date.
+     *
+     * @param date The date of start of deletions to delete. May be null, in wich case fetches all deletions.
+     * */
+    public void hardDeleteCpeItemsSince(OffsetDateTime date) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
+        Json params = object();
+        if (dateUtc != null) {
+            params.set(DELETED_DATE_GT, dateUtc.toString());
+        }
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_CPE_ITEMS.getEndpoint(), params, null);
+        if (response.getStatus() >= 400) {
+            throw new Exception("Error hard deleting cpe items: got unexpected status " + response.getStatus());
+        } else if (response.getStatus()==204) {
+            logger.info("No cpe items to hard delete");
+        } else if (response.getStatus()==200) {
+            logger.info("Cpe items hard deleted successfully");
+        }
+    }
+
+    /**
      * Get the deleted Microsoft KBs from DB-API that were changed since an optional date.
      *
      * @param date The date of start of deletions to fecth. May be null, in wich case fetches all deletions.
@@ -435,6 +478,28 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
 
         return deletedMicrosoftKbs;
     }
+
+    /**
+     * Hard deletemicrosoft kbs from DB-API after synchronized them since an optional date.
+     *
+     * @param date The date of start of deletions to delete. May be null, in wich case fetches all deletions.
+     * */
+    public void hardDeleteMicrosoftKbsSince(OffsetDateTime date) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
+        Json params = object();
+        if (dateUtc != null) {
+            params.set(DELETED_DATE_GT, dateUtc.toString());
+        }
+        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_MICROSOFT_KBS.getEndpoint(), params, null);
+        if (response.getStatus() >= 400) {
+            throw new Exception("Error hard deleting microsoft kbs: got unexpected status " + response.getStatus());
+        } else if (response.getStatus()==204) {
+            logger.info("No microsoft kbs to hard delete");
+        } else if (response.getStatus()==200) {
+            logger.info("Microsoft kbs hard deleted successfully");
+        }
+    }
+
 
     /**
      * Fetch a list of devices from DB-API.
@@ -1139,13 +1204,14 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @param scanApiHandler The interface of the scanner's API.
      * @return A {@link Json} containing the result (success or failure).
      */
-    public JsonApiResponse sendNewDevicesToScanner(ScanApiHandler scanApiHandler) {
+    public JsonApiResponse sendNewDevicesToScanner(ScanApiHandler scanApiHandler) throws Exception {
         List<Device> newDevices;
         List<Pair<String, OffsetDateTime>> deletedDevices;
         List<String> failedDevices = new ArrayList<>();
+        OffsetDateTime lastDeviceModification;
         //region Get changes from DB-API
         try {
-            OffsetDateTime lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
+            lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
             List<ConnectionProtocol> protocols = fetchDiscoveryProtocols();
             newDevices = buildNewDevices(
                     getDevicesSince(lastDeviceModification),
@@ -1170,13 +1236,13 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
         //endregion Send changed devices to CSL-Scan
 
-        // Delete devices from CSL-Scan
+        // Delete devices from CSL-Scan (FOR NOW IS HARD DELETE IN CSL-SCAN)
         try {
-            failedDevices.addAll(scanApiHandler.deleteEntities(deletedDevices));
+            boolean hardDeleteEntity=false; // soft delete entities in CSL-Scan
+            failedDevices.addAll(scanApiHandler.deleteEntities(deletedDevices,hardDeleteEntity));
         } catch (Exception e) {
             return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }
-
         return failedDevices.isEmpty()
                 ? JsonApiResponse.success()
                 : JsonApiResponse.error(

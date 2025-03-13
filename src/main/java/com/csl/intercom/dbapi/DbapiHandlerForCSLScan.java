@@ -1236,7 +1236,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         }
         //endregion Send changed devices to CSL-Scan
 
-        // Delete devices from CSL-Scan (FOR NOW IS HARD DELETE IN CSL-SCAN)
+        // Delete devices from CSL-Scan (FOR NOW IS SOFT DELETE IN CSL-SCAN)
         try {
             boolean hardDeleteEntity=false; // soft delete entities in CSL-Scan
             failedDevices.addAll(scanApiHandler.deleteEntities(deletedDevices,hardDeleteEntity));

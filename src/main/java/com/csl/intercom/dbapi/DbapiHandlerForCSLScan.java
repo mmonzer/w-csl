@@ -1239,7 +1239,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         // Delete devices from CSL-Scan (FOR NOW IS SOFT DELETE IN CSL-SCAN)
         try {
             boolean hardDeleteEntity=false; // soft delete entities in CSL-Scan
-            failedDevices.addAll(scanApiHandler.deleteEntities(deletedDevices,hardDeleteEntity));
+            failedDevices.addAll(scanApiHandler.deleteMultipleEntities(deletedDevices,hardDeleteEntity));
         } catch (Exception e) {
             return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
         }

@@ -7,6 +7,7 @@ public enum ScanApiEndpoint {
     ENTITY_LAST_DELETION(ENTITY.endpoint() + Constants.LAST_DELETION),
     ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection"),
     ENTITY_TEST_EXISTING_CONNECTION(ENTITY_TEST_CONNECTION.endpoint() + "/%s"),
+    ENTITY_DELETE_MULTIPLE_ENTITIES(ENTITY.endpoint() + "delete_multiple_entities"),
 
     CONNECTIONS("/entity-connection-info/"),
     CREATE_CONNECTIONS(CONNECTIONS.endpoint() + "create_list_of_connections"),

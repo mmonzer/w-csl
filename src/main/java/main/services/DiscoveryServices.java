@@ -2112,6 +2112,34 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     }
 
     /**
+     * Hard delete all data in both DB-API and CSL-Scan.
+     * This method is used to clean up the data after a synchronization.
+     */
+     public void hardDeleteAllData() {
+         // 1- devices, get last updated date for device in dbapi and hard delete after it
+         OffsetDateTime lastDeviceModification;
+         try {
+             lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
+             dbapiHandler.hardDeleteDevicesSince(lastDeviceModification);
+             logger.info("Hard deleted devices since {}", lastDeviceModification);
+         } catch (Exception e) {
+                logger.error("Failed to get last device modification date from CSL-Scan : {}", e.getMessage(), e);
+                return;
+         }
+
+         // 2- Cpe items, get last updated date for cpe item in dbapi and hard delete after it
+         OffsetDateTime lastCpeItemModification;
+            try {
+                lastCpeItemModification = scanApiHandler.getLastLastEntityUpdateDate();
+                dbapiHandler.hardDeleteCpeItemsSince(lastCpeItemModification);
+                logger.info("Hard deleted CPE items since {}", lastCpeItemModification);
+            } catch (Exception e) {
+                    logger.error("Failed to get last CPE item modification date from CSL-Scan : {}", e.getMessage(), e);
+                    return;
+            }
+
+     }
+    /**
      * Synchronise the models :
      * - Devices
      * - CPE Items
@@ -2145,6 +2173,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 logger.error("Unexpected error in Scan-Dbapi synchronization : {}", e.getMessage());
                 logger.debug("Unexpected error in Scan-Dbapi synchronization : {}", e.getMessage(), e);
             }
+
+            // When done synchronizing, hard delete in both side(DB-API and CSL-San)
 
     }
 

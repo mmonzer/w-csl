@@ -206,6 +206,39 @@ public class ScanApiHandler extends ApiHandler {
         return response;
     }
 
+    public List<String> deleteMultipleEntities(List<Pair<String, OffsetDateTime>> deletedDevices, boolean hardDelete) throws Exception {
+        List<String> failedDevices = new ArrayList<>();
+        boolean hasFailed = false;
+        OffsetDateTime maxDate = OffsetDateTime.MIN;
+        // get the list of uuids from deletedDevices
+        List<String> uuids = new ArrayList<>();
+        for (Pair<String, OffsetDateTime> deletedDevice : deletedDevices) {
+            uuids.add(deletedDevice.getFirst());
+        }
+        // Delete devices from CSL-Scan
+        try {
+            JsonApiResponse response = sendDelete(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES, Json.object("uuids", uuids, "hardDelete", hardDelete));
+            if (!response.isSuccess()) {
+                throw new Exception("Could not delete the entities from CSL-Scan");
+            } else { // just getting the max deletion date based on the deleted devices list
+                for (Pair<String, OffsetDateTime> deletedDevice : deletedDevices) {
+                    OffsetDateTime deletionDate = deletedDevice.getSecond();
+                    if (deletionDate.isAfter(OffsetDateTime.MIN)) {
+                        maxDate = deletionDate;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Could not delete the entities from CSL-Scan", e);
+            return uuids;
+        }
+        // If the devices were deleted successfully, and at least one was deleted, update the last entities deletion date
+        if (!deletedDevices.isEmpty() && !hasFailed) {
+            setLastEntitiesDeletionDate(maxDate);
+        }
+        return failedDevices;
+    }
+
     public List<String> deleteEntities(List<Pair<String, OffsetDateTime>> deletedDevices,boolean hardDelete) throws Exception {
         OffsetDateTime maxDate = OffsetDateTime.MIN;
         List<String> failedDevices = new ArrayList<>();

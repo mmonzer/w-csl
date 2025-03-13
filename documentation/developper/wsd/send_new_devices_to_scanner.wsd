@@ -1,0 +1,13 @@
+title sendNewDevicesToScanner : called when start scan, when receiveing mqtt from dbapi (delete/update/create a device from hmi), when testing cnx or when using a command that force the syhcron.
+
+
+participant CSL-DBAPI
+participant CSL-CLIENT
+participant CSL-SCAN
+
+CSL-CLIENT -> CSL-DBAPI: Request last entity update date
+CSL-DBAPI -> CSL-CLIENT: Send last updated date (datetime)
+CSL-CLIENT -> CSL-DBAPI: Request deleted devices after last update date
+CSL-DBAPI -> CSL-CLIENT: Send list of deleted devices
+CSL-CLIENT -> CSL-SCAN: Send list of deleted devices
+CSL-SCAN -> CSL-SCAN: Soft delete entities in MongoDB

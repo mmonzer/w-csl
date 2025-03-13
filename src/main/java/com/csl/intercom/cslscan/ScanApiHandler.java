@@ -165,7 +165,16 @@ public class ScanApiHandler extends ApiHandler {
     public JsonApiResponse listEntities() {
         return sendGet(ScanApiEndpoint.ENTITY, Json.object());
     }
-
+    public List<String> listEntitiesUuids() {
+        JsonApiResponse response = sendGet(ScanApiEndpoint.ENTITY, Json.object());
+        if (response.isSuccess()) {
+            return ListUtils.toList(response.getResult().asJsonList().stream()
+                    .map(entity -> entity.get("uuid").asString())
+            );
+        } else {
+            return null;
+        }
+    }
     /**
      * Get a specific entity.
      *
@@ -207,7 +216,8 @@ public class ScanApiHandler extends ApiHandler {
     }
 
     public List<String> deleteMultipleEntities(List<Pair<String, OffsetDateTime>> deletedDevices, boolean hardDelete) throws Exception {
-        List<String> failedDevices = new ArrayList<>();
+        // Return the list of deleted entities in CSL-Scan (if any)
+        List<String> deletedEntitiesInScan = new ArrayList<>();
         boolean hasFailed = false;
         OffsetDateTime maxDate = OffsetDateTime.MIN;
         // get the list of uuids from deletedDevices
@@ -221,6 +231,9 @@ public class ScanApiHandler extends ApiHandler {
             if (!response.isSuccess()) {
                 throw new Exception("Could not delete the entities from CSL-Scan");
             } else { // just getting the max deletion date based on the deleted devices list
+                deletedEntitiesInScan = response.getResult().asJsonList().stream()
+                        .map(Json::asString)
+                        .toList();
                 for (Pair<String, OffsetDateTime> deletedDevice : deletedDevices) {
                     OffsetDateTime deletionDate = deletedDevice.getSecond();
                     if (deletionDate.isAfter(OffsetDateTime.MIN)) {
@@ -234,9 +247,34 @@ public class ScanApiHandler extends ApiHandler {
         }
         // If the devices were deleted successfully, and at least one was deleted, update the last entities deletion date
         if (!deletedDevices.isEmpty() && !hasFailed) {
-            setLastEntitiesDeletionDate(maxDate);
+            setLastEntitiesDeletionDate(maxDate);  // update the last entities deletion date in csl-scan
         }
-        return failedDevices;
+        return deletedEntitiesInScan;
+    }
+
+    public void hardDeleteEntitiesByUuids(List<String> uuids) {
+        boolean hardDelete = true;
+        try{
+            logger.info("Deleting entities from CSL-Scan by uuids: {}", uuids);
+            sendDelete(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES, Json.object("uuids", uuids, "hardDelete", hardDelete));
+            logger.info("Deleted entities from CSL-Scan by uuids: {}", uuids);
+        } catch (Exception e) {
+            logger.error("Could not delete the entities from CSL-Scan", e);
+        }
+    }
+
+    public JsonApiResponse getAllSoftDeletedEntities() {
+        return sendGet(ScanApiEndpoint.ENTITY_DELETED_ENTITIES, Json.object());
+    }
+    public List<String> getAllSoftDeletedEntitiesUuids() {
+        JsonApiResponse response = sendGet(ScanApiEndpoint.ENTITY_DELETED_ENTITIES_UUIDS, Json.object());
+        if (response.isSuccess()) {
+            return ListUtils.toList(response.getResult().asJsonList().stream()
+                    .map(Json::asString) // todo: check if this is correct
+            );
+        } else {
+            return null;
+        }
     }
 
     public List<String> deleteEntities(List<Pair<String, OffsetDateTime>> deletedDevices,boolean hardDelete) throws Exception {

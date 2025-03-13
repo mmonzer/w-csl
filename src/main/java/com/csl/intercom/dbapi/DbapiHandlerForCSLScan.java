@@ -59,6 +59,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public static final String OFFSET = "offset";
     public static final String LIMIT = "limit";
     public static final String DELETED_DATE_GT = "deleted_date__gt";
+    public static final String DELETED_DATE_LT = "deleted_date__lt";
     public static final String RESULTS = "results";
     public static final String DELETED_AT = "deleted_at";
     public static final String OTHER_DATA = "other_data";
@@ -363,11 +364,14 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @param date The date of start of deletions to delete. May be null, in wich case fetches all deletions.
      * */
 
-    public void hardDeleteDevicesSince(OffsetDateTime date) throws Exception {
+    public void hardDeleteDevicesSince(OffsetDateTime date, boolean isGreater) throws Exception {
         OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
         Json params = object();
-        if (dateUtc != null) {
+        if (dateUtc != null && isGreater) {
             params.set(DELETED_DATE_GT, dateUtc.toString());
+        } else if (dateUtc != null) {
+            params.set(DELETED_DATE_LT, dateUtc.toString());
+
         }
         ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_DEVICES.getEndpoint(), params, null);
         if (response.getStatus() >= 400) {
@@ -376,6 +380,21 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             logger.info("No devices to hard delete");
         } else if (response.getStatus()==200) {
             logger.info("Devices hard deleted successfully");
+        }
+    }
+    public void hardDeleteDeviceByUuids(List<String> deviceUuids) {
+        Json params = object("deleted_device_uuids", Json.array(deviceUuids.toArray()));
+        try {
+            ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_DEVICES.getEndpoint(), null, params);
+            if (response.getStatus() >= 400) {
+                throw new Exception("Error hard deleting devices: got unexpected status " + response.getStatus());
+            } else if (response.getStatus()==204) {
+                logger.info("No devices to hard delete");
+            } else if (response.getStatus()==200) {
+                logger.info("Devices hard deleted successfully");
+            }
+        } catch (Exception e) {
+            logger.error("Error hard deleting devices", e);
         }
     }
 
@@ -1204,7 +1223,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
      * @param scanApiHandler The interface of the scanner's API.
      * @return A {@link Json} containing the result (success or failure).
      */
-    public JsonApiResponse sendNewDevicesToScanner(ScanApiHandler scanApiHandler) throws Exception {
+    public JsonApiResponse sendNewDevicesToScanner_dep(ScanApiHandler scanApiHandler) throws Exception {
         List<Device> newDevices;
         List<Pair<String, OffsetDateTime>> deletedDevices;
         List<String> failedDevices = new ArrayList<>();
@@ -1251,6 +1270,89 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         );
     }
 
+    /**
+     * Handle the changes in the devices on DB-API.
+     *
+     * @param scanApiHandler The interface of the scanner's API.
+     * @return A {@link Json} containing the result (success or failure).
+     */
+    public JsonApiResponse sendNewDevicesToScanner(ScanApiHandler scanApiHandler) throws Exception {
+        List<Device> newDevices;
+        List<Pair<String, OffsetDateTime>> deletedDevices;
+        List<String> failedDevices = new ArrayList<>();
+        OffsetDateTime lastDeviceModification;
+        //region Get changes from DB-API
+        try {
+            lastDeviceModification = scanApiHandler.getLastLastEntityUpdateDate();
+            List<ConnectionProtocol> protocols = fetchDiscoveryProtocols();
+            newDevices = buildNewDevices(
+                    getDevicesSince(lastDeviceModification),
+                    getConnectionsSince(lastDeviceModification, protocols),
+                    protocols
+            );
+            OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
+            deletedDevices = new ArrayList<>(getDeletedDevicesSince(lastEntitiesDeletionDate));
+        } catch (Exception e) {
+            logger.error("Could not get changes from DB-API : {}", e.getMessage());
+            return JsonApiResponse.error("Could not get changes from DBAPI");
+        }
+        //endregion Get changes from DB-API
+
+        //region Send changed devices to CSL-Scan
+        for (Device newDevice : newDevices) {
+            try {
+                sendNewDeviceToScanner(newDevice, scanApiHandler);
+            } catch (Exception e) {
+                failedDevices.add(newDevice.getId());
+            }
+        }
+        //endregion Send changed devices to CSL-Scan
+
+        // Delete devices from CSL-Scan(Hard delete) and then hard delete from DB-API
+        try {
+            // Hard delete entities in CSL-Scan
+            List<String> deletedEntitiesInScan = new ArrayList<>();
+            boolean hardDeleteEntity=true; // soft delete entities in CSL-Scan
+            deletedEntitiesInScan = scanApiHandler.deleteMultipleEntities(deletedDevices,hardDeleteEntity);
+            // Hard delete entities in DB-API
+            hardDeleteDeviceByUuids(deletedEntitiesInScan);
+            // at the end clean data in both DB-API and CSL-Scan
+            cleanDeletedDevices(scanApiHandler);
+        } catch (Exception e) {
+            return JsonApiResponse.error("Could not delete devices from CSL-Scan" + e.getMessage());
+        }
+        return failedDevices.isEmpty()
+                ? JsonApiResponse.success()
+                : JsonApiResponse.error(
+                "Failed to send updated devices to CSL-Scan",
+                object("failed_devices", Json.array(failedDevices.toArray()))
+        );
+    }
+
+    public JsonApiResponse cleanDeletedDevices(ScanApiHandler scanApiHandler) {
+        // step1: get all existed deleted entities uuids from csl-scan
+        List<String> softDeletedEntitiesUuids = scanApiHandler.getAllSoftDeletedEntitiesUuids();
+        // step2: hard delete entities in db-api if they are not existed in csl-scan
+        if (softDeletedEntitiesUuids.isEmpty()) { // no entities to delete, return success
+            return JsonApiResponse.success();
+        }
+        try {
+            logger.info("Hard Deleting devices in DB-API");
+            hardDeleteDeviceByUuids(softDeletedEntitiesUuids); // hard delete entities in db-api
+            logger.info("Hard Delete entities in csl-scan");
+            scanApiHandler.hardDeleteEntitiesByUuids(softDeletedEntitiesUuids); /// hard delete entities in csl-scan
+            logger.info("successfully hard deleted entities in db-api and csl-scan");
+            // checking if no entities left in csl-scan, delete all device in dbapi where date is less or equal last deletion date in scan
+            if (scanApiHandler.listEntitiesUuids().isEmpty()) {
+                OffsetDateTime lastEntitiesDeletionDate = scanApiHandler.getLastEntitiesDeletionDate();
+                boolean isDateGreater = false; // hard delete device in dbapi where date is less or equal last deletion date in scan
+                hardDeleteDevicesSince(lastEntitiesDeletionDate, isDateGreater);
+            }
+            return JsonApiResponse.success();
+        } catch (Exception e) {
+            return JsonApiResponse.error("Could not delete devices from DB-API" + e.getMessage());
+        }
+    }
     public void createListOfConnectionDrafts(List<EntityConnectionInfoDraft> entityConnectionInfoDrafts, int fileActionStatusIdInDbApi) {
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CREATE_CONNECTIONS_DRAFT);
         Json requestContents = Json.array(entityConnectionInfoDrafts.stream().map(EntityConnectionInfoDraft::serializeForDbapi).toArray());

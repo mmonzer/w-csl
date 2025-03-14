@@ -16,6 +16,8 @@ public enum DbapiEndpointForCSLScan {
     DELETED_OBJECTS("/deleted_objects"),
     CREATE_CPE_ITEMS(CPE_ITEMS.getEndpoint() + "/create_discovery_cpe_entities"),
     GET_DELETED_CPE_ITEMS(DELETED_OBJECTS.getEndpoint() + "/get_deleted_cpe_items"),
+    GET_DELETED_CPE_ITEMS_COUNT(DELETED_OBJECTS.getEndpoint() + "/get_deleted_cpe_items_count"),
+
     HARD_DELETE_CPE_ITEMS(DELETED_OBJECTS.getEndpoint() + "/hard_delete_cpe_items"),
     NO_NEW_CPE_ITEM(CPE_ITEMS.getEndpoint() + "/notify_sync_ended_with_no_discovered_cpe"),
     DELETE_CPE_ITEMS(CPE_ITEMS.getEndpoint() + "/delete_by_mongo_ids"),
@@ -24,6 +26,7 @@ public enum DbapiEndpointForCSLScan {
     CREATE_MICROSOFT_KBS(MICROSOFT_KB.getEndpoint() + "/create_microsoft_kbs"),
     DELETE_MICROSOFT_KBS(MICROSOFT_KB.getEndpoint() + "/delete_by_mongo_ids"),
     GET_DELETED_MICROSOFT_KBS(DELETED_OBJECTS.getEndpoint() + "/get_deleted_microsoft_kbs"),
+    GET_DELETED_MICROSOFT_KBS_COUNT(DELETED_OBJECTS.getEndpoint() + "/get_deleted_microsoft_kbs_count"),
     HARD_DELETE_MICROSOFT_KBS(DELETED_OBJECTS.getEndpoint() + "/hard_delete_microsoft_kbs"),
     DEVICES("/devices"),
     DELETED_DEVICES(DELETED_OBJECTS.getEndpoint() + "/get_deleted_devices"),
@@ -36,6 +39,7 @@ public enum DbapiEndpointForCSLScan {
     CREATE_CONNECTIONS(CONNECTIONS.getEndpoint() + "create_list_of_connections"),
     CLEAR_ALL_CONNECTIONS(CONNECTIONS.getEndpoint() + "/clear"),
 
+    GET_DELETED_CONNECTIONS(DELETED_OBJECTS.getEndpoint() + "/get_deleted_connections"),
     CONNECTIONS_DRAFT("/connections_draft"),
     CONNECTIONS_DRAFT_DETAILS_BY_MONGO_ID(CONNECTIONS_DRAFT.getEndpoint() + "/get_connection_draft_details_by_mongo_entity_id"),
 

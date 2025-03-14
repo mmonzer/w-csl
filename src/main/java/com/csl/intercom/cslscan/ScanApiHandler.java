@@ -227,7 +227,16 @@ public class ScanApiHandler extends ApiHandler {
         }
         // Delete devices from CSL-Scan
         try {
-            JsonApiResponse response = sendDelete(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES, Json.object("uuids", uuids, "hardDelete", hardDelete));
+            Json deletedEntitiesUuidsArray = Json.array();
+            for (String uuid : uuids) {
+                deletedEntitiesUuidsArray.add(uuid);
+            }
+            JsonApiResponse response;
+            if(hardDelete){
+                response = sendPost(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES_HARD, deletedEntitiesUuidsArray);
+            } else {
+                response = sendPost(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES, deletedEntitiesUuidsArray);
+            }
             if (!response.isSuccess()) {
                 throw new Exception("Could not delete the entities from CSL-Scan");
             } else { // just getting the max deletion date based on the deleted devices list
@@ -256,7 +265,7 @@ public class ScanApiHandler extends ApiHandler {
         boolean hardDelete = true;
         try{
             logger.info("Deleting entities from CSL-Scan by uuids: {}", uuids);
-            sendDelete(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES, Json.object("uuids", uuids, "hardDelete", hardDelete));
+            sendDelete(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES_HARD, Json.object("uuids", uuids));
             logger.info("Deleted entities from CSL-Scan by uuids: {}", uuids);
         } catch (Exception e) {
             logger.error("Could not delete the entities from CSL-Scan", e);
@@ -430,6 +439,15 @@ public class ScanApiHandler extends ApiHandler {
             }
         }
     }
+    public void deleteAllSoftDeletedCpeItemsInScan() {
+        try {
+            logger.info("Deleting all soft deleted CPE items from CSL-Scan DB ...");
+            sendDelete(ScanApiEndpoint.CPE_ITEM_DELETE_ALL_SOFT_DELETED, Json.object());
+            logger.info("Successfully deleted all soft deleted CPE items from CSL-Scan DB.");
+        } catch (Exception e) {
+            logger.error("Could not delete all soft deleted CPE items from CSL-Scan", e);
+        }
+    }
 
     public void deleteCpeItemsBeforeDate(OffsetDateTime date, boolean deleteAll) {
         sendDelete(ScanApiEndpoint.CPE_ITEM_HARD_DELETE_BEFORE, Json.object("date", date.toString(), "deleteAll", deleteAll));
@@ -440,11 +458,20 @@ public class ScanApiHandler extends ApiHandler {
      *
      * @param id The uuid of the {@link MicrosoftKB} to delete.
      */
+
     public void deleteMicrosoftKBFromScan(String id) {
         sendDelete(
                 String.format(ScanApiEndpoint.MICROSOFT_KB_DETAILS.endpoint(), id), Json.object());
     }
-
+    public void deleteAllSoftDeletedMicrosoftKbsInScan() {
+        try {
+            logger.info("Deleting all soft deleted Microsoft KBs from CSL-Scan DB ...");
+            sendDelete(ScanApiEndpoint.MICROSOFT_KB_DELETE_ALL_SOFT_DELETED, Json.object());
+            logger.info("Successfully deleted all soft deleted Microsoft KBs from CSL-Scan DB.");
+        } catch (Exception e) {
+            logger.error("Could not delete all soft deleted Microsoft KBs from CSL-Scan", e);
+        }
+    }
     /**
      * Request multiple deletions of {@link MicrosoftKB} to CSL-Scan.
      *

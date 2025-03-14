@@ -8,6 +8,8 @@ public enum ScanApiEndpoint {
     ENTITY_TEST_CONNECTION(ENTITY.endpoint() + "test_connection"),
     ENTITY_TEST_EXISTING_CONNECTION(ENTITY_TEST_CONNECTION.endpoint() + "/%s"),
     ENTITY_DELETE_MULTIPLE_ENTITIES(ENTITY.endpoint() + "delete_multiple_entities"),
+    ENTITY_DELETE_MULTIPLE_ENTITIES_HARD(ENTITY_DELETE_MULTIPLE_ENTITIES.endpoint() + "?hardDelete=true"),
+
     ENTITY_DELETED_ENTITIES(ENTITY.endpoint() + "deleted_entities"),
     ENTITY_DELETED_ENTITIES_UUIDS(ENTITY.endpoint() + "deleted_entities_uuid"),
 
@@ -30,6 +32,7 @@ public enum ScanApiEndpoint {
     CPE_ITEM_DETAILS(CPE_ITEM.endpoint() + "%s"),
     CPE_ITEM_DELETE_MANY(CPE_ITEM.endpoint() + "deleteMany"),
     CPE_ITEM_DELETE_MANY_HARD(CPE_ITEM_DELETE_MANY.endpoint() + "?hardDelete=true"),
+    CPE_ITEM_DELETE_ALL_SOFT_DELETED(CPE_ITEM.endpoint() + "deleteAllSoftDeleted"),
     CPE_ITEM_HARD_DELETE_BEFORE(CPE_ITEM.endpoint() + "hardDeleteBefore"),
     CPE_ITEM_LAST_DELETION(CPE_ITEM.endpoint() + Constants.LAST_DELETION),
 
@@ -42,7 +45,7 @@ public enum ScanApiEndpoint {
     MICROSOFT_KB_HARD_DELETE_BEFORE(MICROSOFT_KB.endpoint() + "hardDeleteBefore"),
     MICROSOFT_KB_LAST_DELETION(MICROSOFT_KB.endpoint() + Constants.LAST_DELETION),
     MICROSOFT_KB_LAST_UPDATE(MICROSOFT_KB.endpoint() + "last_update"),
-
+    MICROSOFT_KB_DELETE_ALL_SOFT_DELETED(MICROSOFT_KB.endpoint() + "deleteAllSoftDeleted"),
     ENTITY_MICROSOFT_KB(MICROSOFT_KB.endpoint() + "entity/%s"),
 
     DISCOVERY("/discovery"),

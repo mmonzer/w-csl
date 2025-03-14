@@ -165,7 +165,7 @@ public class ApiCommands {
     public static Json wrapperForAPIRequest(IJsonCmd cmd, Json params) {
         try {
             return cmd.exec(params);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return JsonApiResponse.error(e.getMessage() + IS_MISSING_FROM_BODY).toJson();
         }
     }

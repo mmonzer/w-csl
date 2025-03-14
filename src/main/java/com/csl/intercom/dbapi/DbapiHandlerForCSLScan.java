@@ -385,7 +385,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
     public void hardDeleteDeviceByUuids(List<String> deviceUuids) {
         Json params = object("deleted_device_uuids", Json.array(deviceUuids.toArray()));
         try {
-            ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_DEVICES.getEndpoint(), null, params);
+            ContentResponse response = createAndSendRequest(HttpMethod.DELETE.toString(), DbapiEndpointForCSLScan.HARD_DELETE_DEVICES.getEndpoint(), null, params);
             if (response.getStatus() >= 400) {
                 throw new Exception("Error hard deleting devices: got unexpected status " + response.getStatus());
             } else if (response.getStatus()==204) {
@@ -449,7 +449,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         if (dateUtc != null) {
             params.set(DELETED_DATE_GT, dateUtc.toString());
         }
-        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_CPE_ITEMS.getEndpoint(), params, null);
+        ContentResponse response = createAndSendRequest(HttpMethod.DELETE.toString(), DbapiEndpointForCSLScan.HARD_DELETE_CPE_ITEMS.getEndpoint(), params, null);
         if (response.getStatus() >= 400) {
             throw new Exception("Error hard deleting cpe items: got unexpected status " + response.getStatus());
         } else if (response.getStatus()==204) {
@@ -458,6 +458,85 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             logger.info("Cpe items hard deleted successfully");
         }
     }
+    public void hardDeleteCpeItemsByIds(List<String> ids) {
+        Json params = object("deleted_cpe_items_ids", Json.array(ids.toArray()));
+        try {
+            ContentResponse response = createAndSendRequest(HttpMethod.DELETE.toString(), DbapiEndpointForCSLScan.HARD_DELETE_CPE_ITEMS.getEndpoint(), null, params);
+            if (response.getStatus() >= 400) {
+                throw new Exception("Error hard deleting cpe items: got unexpected status " + response.getStatus());
+            } else if (response.getStatus()==204) {
+                logger.info("No cpe items to hard delete");
+            } else if (response.getStatus()==200) {
+                logger.info("Cpe items hard deleted successfully");
+            }
+        } catch (Exception e) {
+            logger.error("Error hard deleting cpe items", e);
+        }
+    }
+    public int getSoftDeletedCpeItemsCountFromDbApi() throws Exception {
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_DELETED_CPE_ITEMS_COUNT.getEndpoint(), null, null);
+        if (response.getStatus() >= 400) {
+            throw new Exception("Error getting cpe items count: got unexpected status " + response.getStatus());
+        }
+        String responseBody = response.getContentAsString();
+        if (responseBody == null || responseBody.isEmpty()) {
+            throw new IOException("Error: response body is empty");
+        }
+        Json responseJson = Json.read(responseBody);
+        return responseJson.at("count").asInteger();
+    }
+    public List<String> getSoftDeletedCpeItemsIdsFromDbApi() {
+        List<String> softDeletedCpeItemsIds = new ArrayList<>();
+        try {
+            ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_DELETED_CPE_ITEMS.getEndpoint(), null, null);
+            if (response.getStatus() >= 400) {
+                throw new Exception("Error getting cpe items ids: got unexpected status " + response.getStatus());
+            }
+            String responseBody = response.getContentAsString();
+            if (responseBody == null || responseBody.isEmpty()) {
+                throw new IOException("Error: response body is empty");
+            }
+            Json responseJson = Json.read(responseBody);
+            return ListUtils.toList(responseJson.asJsonList().stream()
+                    .map(json -> json.get("object_repr").asString()));
+        } catch (Exception e) {
+            logger.error("Error getting soft deleted cpe items ids", e);
+        }
+        return softDeletedCpeItemsIds;
+    }
+
+    public List<Pair<String, OffsetDateTime>> getDeletedConnectionsSince(OffsetDateTime date, int limit, int offset) throws Exception {
+        OffsetDateTime dateUtc = DbapiUtilsForCSLScan.localDateToDbapi(date);
+        List<Pair<String, OffsetDateTime>> deletedMicrosoftKbs = new ArrayList<>();
+
+        Json params = object();
+        if (offset > 0) {
+            params.set(OFFSET, String.valueOf(offset));
+        }
+        if (limit > 0) {
+            params.set(LIMIT, String.valueOf(limit));
+        }
+        if (dateUtc != null) {
+            params.set(DELETED_DATE_GT, dateUtc.toString());
+        }
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_DELETED_MICROSOFT_KBS.getEndpoint(), params, null);
+
+        if (response.getStatus() != 200) {
+            throw new Exception("Unexpected status code " + response.getStatus());
+        }
+
+        Json responseContents = Json.read(response.getContentAsString());
+        List<Json> deletedMicrosoftKbsPageJson = responseContents.get(RESULTS).asJsonList();
+
+        // If the list is smaller than the max page size, there are no more pages
+
+        deletedMicrosoftKbsPageJson.stream()
+                .map(json -> new Pair<>(json.get("object_repr").asString(), DbapiUtilsForCSLScan.dbapiDateToLocal(json.get(DELETED_AT).asString())))
+                .forEach(deletedMicrosoftKbs::add);
+
+        return deletedMicrosoftKbs;
+    }
+
 
     /**
      * Get the deleted Microsoft KBs from DB-API that were changed since an optional date.
@@ -498,6 +577,34 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         return deletedMicrosoftKbs;
     }
 
+    public void hardDeleteMicrosoftKbsByIds(List<String> ids) {
+        Json params = object("deleted_microsoft_kbs_ids", Json.array(ids.toArray()));
+        try {
+            ContentResponse response = createAndSendRequest(HttpMethod.DELETE.toString(), DbapiEndpointForCSLScan.HARD_DELETE_MICROSOFT_KBS.getEndpoint(), null, params);
+            if (response.getStatus() >= 400) {
+                throw new Exception("Error hard deleting microsoft kbs: got unexpected status " + response.getStatus());
+            } else if (response.getStatus()==204) {
+                logger.info("No microsoft kbs to hard delete");
+            } else if (response.getStatus()==200) {
+                logger.info("Microsoft kbs hard deleted successfully");
+            }
+        } catch (Exception e) {
+            logger.error("Error hard deleting microsoft kbs", e);
+        }
+    }
+    public int getSoftDeletedMicrosoftKbsCountFromDbApi() throws Exception {
+        ContentResponse response = createAndSendRequest(HttpMethod.GET.toString(), DbapiEndpointForCSLScan.GET_DELETED_MICROSOFT_KBS_COUNT.getEndpoint(), null, null);
+        if (response.getStatus() >= 400) {
+            throw new Exception("Error getting microsoft kbs count: got unexpected status " + response.getStatus());
+        }
+        String responseBody = response.getContentAsString();
+        if (responseBody == null || responseBody.isEmpty()) {
+            throw new IOException("Error: response body is empty");
+        }
+        Json responseJson = Json.read(responseBody);
+        return responseJson.at("count").asInteger();
+    }
+
     /**
      * Hard deletemicrosoft kbs from DB-API after synchronized them since an optional date.
      *
@@ -509,7 +616,7 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
         if (dateUtc != null) {
             params.set(DELETED_DATE_GT, dateUtc.toString());
         }
-        ContentResponse response = createAndSendRequest(HttpMethod.POST.toString(), DbapiEndpointForCSLScan.HARD_DELETE_MICROSOFT_KBS.getEndpoint(), params, null);
+        ContentResponse response = createAndSendRequest(HttpMethod.DELETE.toString(), DbapiEndpointForCSLScan.HARD_DELETE_MICROSOFT_KBS.getEndpoint(), params, null);
         if (response.getStatus() >= 400) {
             throw new Exception("Error hard deleting microsoft kbs: got unexpected status " + response.getStatus());
         } else if (response.getStatus()==204) {

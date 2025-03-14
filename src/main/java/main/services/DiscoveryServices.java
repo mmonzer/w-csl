@@ -2115,18 +2115,19 @@ public class DiscoveryServices extends Service implements IStatusProvider {
      * - Devices
      * - CPE Items
      */
-    public void syncAll() throws Exception {
+    public void syncAll() {
+        try {
             logger.debug("Starting Discovery synchronization");
 
             dbapiHandler.sendNewDevicesToScanner(scanApiHandler);
             try {
                 externalConnectionInfoTemplatesSynchronizationService.syncData();
                 logger.debug("External Connection Information Templates synchronization finished");
-                externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();  // This may need a service to sync deleted items. It may need reformating to use PaginatedSync
+                externalConnectionInfoSynchronizationService.synchronizeAllExternalConnectionInfos();
                 logger.debug("External Connection Informations synchronization finished");
-                externalDiscoveredDevicesSynchronizationService.syncData();  // This may need a service to sync deleted items
+                externalDiscoveredDevicesSynchronizationService.syncData();
                 logger.debug("External Discovered Devices synchronization finished");
-                connectionInfoSynchronizationService.syncData();  // This may need a service to sync deleted items
+                connectionInfoSynchronizationService.syncData();
                 logger.debug("Connection Informations synchronization finished");
                 cpeItemSynchronizationService.syncData();
                 logger.debug("CPE items synchronization finished");
@@ -2145,8 +2146,9 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                 logger.debug("Unexpected error in Scan-Dbapi synchronization : {}", e.getMessage(), e);
             }
 
-            // When done synchronizing, hard delete in both side(DB-API and CSL-San)
-
+        } catch (Exception e) {
+            logger.error("Critical error in syncAll execution: {}", e.getMessage(), e);
+        }
     }
 
     /**

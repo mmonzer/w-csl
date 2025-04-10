@@ -144,6 +144,14 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam(AutocryptConstants.Common.PATH, "path to create the certificate", JsonCmdHelp.STR)
                     .setResult("The information of the new certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
+    SIGN_CSR("sign_csr",
+            new JsonCmdHelp()
+                    .setDesc("Signs a certificate signing request")
+                    .setParam("csr", "Certificate signing request", JsonCmdHelp.STR)
+                    .setParam("role_name", "name of the role creating the certificate(Signing the CSR)", JsonCmdHelp.STR)
+                    .setParam("common_name", "", JsonCmdHelp.STR)
+                    .setResult("The information of the new certificate", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_CERTIFICATES("get_certificates",
             new JsonCmdHelp()
                     .setDesc("Gives the list of certificates")

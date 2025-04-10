@@ -13,6 +13,8 @@ import lombok.Setter;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
 import org.eclipse.jetty.http.HttpHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
@@ -26,6 +28,7 @@ import static main.services.endpoints.AutoCryptEndpoints.*;
 public class AutoCrypt {
     public static final String FAILED_TO_CREATE_ROLE_AT_PATH = "Failed to create role {} at path {}";
     public static final String SYNCHRONIZED_ROLES = "synchronized roles";
+    private static final Logger log = LoggerFactory.getLogger(AutoCrypt.class);
     @Setter
     @Getter
     private String moduleIp;
@@ -541,6 +544,34 @@ public class AutoCrypt {
         return responseFromModule;
     }
 
+    /**
+     * Sign CSR (Certificate Signing Request)
+     *
+     * @params body: body of the request: csr as string, role name. commonname, name, ttl, ttl unit, etc.
+     */
+    public JsonApiResponse signCSR(Json body, Json params) {
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Signing CSR with body {}", body);
+        // Sign CSR in autocrypt
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API, "Signing CSR with body {} at path {}", body);
+        JsonApiResponse responseFromModule = autocryptApiHandler.signCSR(body, params);
+        if (!responseFromModule.isSuccess() ||
+                !responseFromModule.getResult().has(Certificate.SERIAL_NUMBER) ||
+                !responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).isString()) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "CSR signing in Autocrypt failed");
+            return JsonApiResponse.error("Error signing the CSR : " + responseFromModule.getError().toJson());
+        }
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API, "CSR signed in Autocrypt with response {}", responseFromModule);
+        String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
+        // Sync certificates
+        try {
+            syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized certificates", serialNumber);
+        } catch (SynchronizationException e) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to sign CSR with id {} and certificate number {}", serialNumber);
+            return JsonApiResponse.error(e.getMessage());
+        }
+        return responseFromModule;
+    }
     /**
      * Generate root CA
      *

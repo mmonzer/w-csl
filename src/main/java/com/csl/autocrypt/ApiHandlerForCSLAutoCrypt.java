@@ -225,6 +225,18 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
                 body
         );
     }
+    /**
+     * Sign CSR at the given path and role with given params for certificate
+     *
+     * @param body parameters with the path and role
+     */
+    public JsonApiResponse signCSR(Json body, Json params) {
+        return this.sendPost(
+                ApiEndpointForCSLAutocrypt.CERT_SIGN_CSR.endpoint(),
+                params,
+                body
+        );
+    }
 
     /**
      * Gives the list of certificates : revoked and not revoked

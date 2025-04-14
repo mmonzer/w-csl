@@ -552,6 +552,7 @@ public class AutoCrypt {
     public JsonApiResponse signCSR(Json body, Json params) {
         logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Signing CSR with body {}", body);
         // Sign CSR in autocrypt
+        String path = params.get("path").asString();
         logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API, "Signing CSR with body {} at path {}", body);
         JsonApiResponse responseFromModule = autocryptApiHandler.signCSR(body, params);
         if (!responseFromModule.isSuccess() ||

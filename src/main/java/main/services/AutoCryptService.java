@@ -127,6 +127,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.SIGN_CSR.cmd(), this::signCSR,
                 AutoCryptEndpoints.SIGN_CSR.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+
         addCmd(AutoCryptEndpoints.GET_CERTIFICATES.cmd(), this::getCertificates,
                 AutoCryptEndpoints.GET_CERTIFICATES.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
@@ -498,7 +499,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         body.set(Role.ROLE_NAME, roleName);
 
         // endregion -- Verify required body keys and extract key values
-        return autocrypt.signCSR(params, body).toJson();
+        return autocrypt.signCSR(body, params).toJson();
     }
 
     /**

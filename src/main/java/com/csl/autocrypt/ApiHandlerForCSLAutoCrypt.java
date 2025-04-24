@@ -1,10 +1,19 @@
 package com.csl.autocrypt;
 
 import com.csl.autocrypt.enums.AutocryptConstants;
+import com.csl.intercom.cslscan.ScanUtils;
+import com.csl.intercom.cslscan.enums.ScanApiEndpoint;
+import com.csl.intercom.dbapi.models.Connection;
+import com.csl.intercom.dbapi.models.ConnectionProtocol;
+import com.csl.util.ListUtils;
 import com.csl.web.apiclient.ApiHandler;
 import com.ucsl.json.Json;
 import main.services.JsonApiResponse;
 import com.csl.autocrypt.enums.ApiEndpointForCSLAutocrypt;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Objects;
 
 import static com.csl.autocrypt.enums.AutocryptConstants.Issuer;
 import static com.csl.autocrypt.enums.AutocryptConstants.Common;
@@ -18,14 +27,13 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      * General constructor
      *
      * @param nameModule name of the module
-     * @param ip ip of the module
-     * @param port port of the module
-     * @param useSSL use SSL for connecting the module
-     *
+     * @param ip         ip of the module
+     * @param port       port of the module
+     * @param useSSL     use SSL for connecting the module
      */
     public ApiHandlerForCSLAutoCrypt(String nameModule, String ip, int port, boolean useSSL) {
         super(nameModule, ip, port, useSSL);
-        testConnexion(()->this.sendGet(ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object(), true));
+        testConnexion(() -> this.sendGet(ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object(), true));
     }
 
     /**
@@ -97,11 +105,11 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      * Imports a new issuer
      *
      * @param params parameters with the path
-     * @param file certificate content
+     * @param file   certificate content
      */
     public JsonApiResponse importIssuer(Json params, String file) {
         Json newBody = Json.object();
-        newBody.set(Issuer.PEM_BUNDLE, file.replace("\r",""));
+        newBody.set(Issuer.PEM_BUNDLE, file.replace("\r", ""));
         return this.sendPost(
                 ApiEndpointForCSLAutocrypt.ISSUER_URI_IMPORT.endpoint(),
                 params,
@@ -202,7 +210,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Validate the template of a certificate
      *
-     * @param body body of the request
+     * @param body   body of the request
      * @param params parameters with the path and role
      */
     public JsonApiResponse validateTemplate(Json body, Json params) {
@@ -225,6 +233,7 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
                 body
         );
     }
+
     /**
      * Sign CSR at the given path and role with given params for certificate
      *
@@ -294,10 +303,10 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      * @param params       parameters with the serialNumber
      */
     public JsonApiResponse getCertificateWithoutPrivateKey(String serialNumber, Json params) {
-            return this.sendGet(
-                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WO_PK + serialNumber,
-                    params
-            );
+        return this.sendGet(
+                ApiEndpointForCSLAutocrypt.CERT_URI_GET_WO_PK + serialNumber,
+                params
+        );
     }
 
     /**
@@ -308,9 +317,9 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      */
     public JsonApiResponse getCertificateWithPrivateKey(String serialNumber, Json params) {
         return this.sendGet(
-                    ApiEndpointForCSLAutocrypt.CERT_URI_GET_WITH_PK + serialNumber,
-                    params
-            );
+                ApiEndpointForCSLAutocrypt.CERT_URI_GET_WITH_PK + serialNumber,
+                params
+        );
     }
 
     /**
@@ -346,8 +355,8 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     /**
      * Revokes the given certificate
      *
-     * @param body         body of the request
-     * @param params       parameters with the path
+     * @param body   body of the request
+     * @param params parameters with the path
      */
     public JsonApiResponse deployCertificate(Json body, Json params) {
         return this.sendPost(
@@ -400,6 +409,20 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
         return Json.object(Common.IS_HTTP_API_KEY_REACHABLE, this.sendGet(
                 ApiEndpointForCSLAutocrypt.MISC_URI_IS_ALIVE.endpoint(), Json.object(), true).isSuccess());
     }
+
+    /**
+     * Gets the list of connection info
+     *
+     */
+    public JsonApiResponse addConnectionInfoForAutoCrypt(Connection connection) {
+        return sendPost(ApiEndpointForCSLAutocrypt.CREATE_CONNECTION_INFO_URI.endpoint(),
+                connection.serializeForAutoCrypt());
+    }
+    public JsonApiResponse deleteConnectionInfoForAutoCrypt(String connectionUuid) {
+        return sendDelete(String.format(ApiEndpointForCSLAutocrypt.CONNECTIONS_DETAILS.endpoint(),connectionUuid), Json.object());
+    }
+    public JsonApiResponse updateConnectionInfoForAutoCrypt(Connection connection) {
+        return sendPut(String.format(ApiEndpointForCSLAutocrypt.CONNECTIONS_DETAILS.endpoint(),connection.getUuid()),
+                connection.serializeForAutoCrypt());
+    }
 }
-
-

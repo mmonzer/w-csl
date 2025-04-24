@@ -1,5 +1,6 @@
 package main.services;
 
+import com.csl.autocrypt.ApiHandlerForCSLAutoCrypt;
 import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.broker.CSLMqttBrokerHandler;
@@ -59,6 +60,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
     @Getter
     @Setter
     private ScanApiHandler scanApiHandler = null;
+    private ApiHandlerForCSLAutoCrypt autoCryptApiHandler = null;
     private FileStorageService fileStorageService = null;
     private ImportExportBsonService importExportBsonService = null;
     private CSLMqttBrokerHandler mqttBroker = null;
@@ -1409,6 +1411,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("add_connection", params -> {
                     logger.debug("Adding new connection ...");
                     Json connectionJson = params.get(CONNECTION);
+                    boolean isForAutoCrypt = params.get("is_for_autocrypt").asBoolean();
                     Connection connection = null;
                     try {
                         connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
@@ -1426,7 +1429,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     }
                     JsonApiResponse response;
                     try {
-                        response = scanApiHandler.addConnectionInfo(connection);
+                        if(!isForAutoCrypt) {
+                            response = scanApiHandler.addConnectionInfo(connection);
+                        } else {
+                            response = autoCryptApiHandler.addConnectionInfoForAutoCrypt(connection);
+                        }
                         if (response.isSuccess()) {
                             // add connection info to dbapi
                             try {
@@ -1476,6 +1483,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     logger.debug("Updating a connection ...");
 
                     Json connectionJson = params.get(CONNECTION);
+                    boolean isForAutoCrypt = params.get("is_for_autocrypt").asBoolean();
                     Connection connection = null;
                     try {
                         connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
@@ -1495,7 +1503,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                     // Modify CSL-Scan and then CSL-Dbapi
                     JsonApiResponse response;
                     try {
-                        response = scanApiHandler.updateConnectionInfo(connection);
+                        if(!isForAutoCrypt) {
+                            response = scanApiHandler.updateConnectionInfo(connection);
+                        } else {
+                            response = autoCryptApiHandler.updateConnectionInfoForAutoCrypt(connection);
+                        }
                         if (response.isSuccess()) {
                             logger.debug("Updated connection information with uuid={} in CSL-Scan.", connection.getUuid());
                             // update connection info in dbapi
@@ -1529,7 +1541,7 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         addCmd("delete_connection", params -> {
                     logger.debug("Deleting a connection ...");
-
+                    boolean isForAutoCrypt = params.get("is_for_autocrypt").asBoolean();
                     String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
                     if (connectionUuid == null) {
                         logger.error("Failed to delete a connection : connection_uuid is required");
@@ -1540,7 +1552,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
                     JsonApiResponse response;
                     try {
-                        response = scanApiHandler.deleteConnectionInfo(connectionUuid);
+                        if(!isForAutoCrypt) {
+                            response = scanApiHandler.deleteConnectionInfo(connectionUuid);
+                        } else {
+                            response = autoCryptApiHandler.deleteConnectionInfoForAutoCrypt(connectionUuid);
+                        }
                         if (response.isSuccess()) {
                             logger.debug("Deleted the connection with uuid={} from CSL-Scan.", connectionUuid);
                             // delete connection info from dbapi

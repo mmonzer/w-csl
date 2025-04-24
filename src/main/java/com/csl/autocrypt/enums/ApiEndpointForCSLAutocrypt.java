@@ -32,6 +32,14 @@ public enum ApiEndpointForCSLAutocrypt {
     CA_URI("/api/ca"),
     CA_URI_GENERATE_INTER(CA_URI+"/generate-intermediate"),
     CA_URI_GENERATE_ROOT(CA_URI+"/generate-root"),
+
+    // connection info in csl-autocrypt
+    CONNECTION_INFO_URI("/api/connection-info"),
+    CONNECTIONS_DETAILS(CONNECTION_INFO_URI.endpoint() + "%s"),
+    CREATE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint()),
+    CREATE_LIST_OF_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint()+"/create_list_of_connections"),
+    CONNECTIONS_LAST_UPDATE(CONNECTION_INFO_URI.endpoint()+"/last-update"),
+    CLEAR_ALL_ENTITY_CONNECTIONS(CONNECTION_INFO_URI.endpoint()+"/clear"),
     ;
 
     private final String endpoint;

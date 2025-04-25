@@ -94,6 +94,7 @@ public abstract class Connection implements IScannerSerializable {
             case REMOTE_POWERSHELL -> RemotePowershellConnection.fromHMIJson(connectionJson);
             case HTTP -> HttpConnection.fromJson(connectionJson, connectionProtocol);
             case SSH -> SshConnection.fromJson(connectionJson);
+            case CAMERADEPLOYEDCERTIFICATE -> CameraDeployedCertificateConnection.fromJson(connectionJson);
             default -> null;
         };
     }

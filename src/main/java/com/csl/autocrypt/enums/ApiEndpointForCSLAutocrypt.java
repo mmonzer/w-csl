@@ -35,8 +35,12 @@ public enum ApiEndpointForCSLAutocrypt {
 
     // connection info in csl-autocrypt
     CONNECTION_INFO_URI("/api/connection-info"),
+    CONNECTION_INFO_URI_SLASH(CONNECTION_INFO_URI+"/"),
     CONNECTIONS_DETAILS(CONNECTION_INFO_URI.endpoint() + "%s"),
-    CREATE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint()),
+    DELETE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint() + "/delete/"),
+    CREATE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint() + "/create"),
+    UPDATE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint() + "/update/"),
+
     CREATE_LIST_OF_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint()+"/create_list_of_connections"),
     CONNECTIONS_LAST_UPDATE(CONNECTION_INFO_URI.endpoint()+"/last-update"),
     CLEAR_ALL_ENTITY_CONNECTIONS(CONNECTION_INFO_URI.endpoint()+"/clear"),

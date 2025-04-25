@@ -122,6 +122,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         dbapiHandler = new DbapiHandlerForCSLScan();
         scanApiHandler = new ScanApiHandler();
+        autoCryptApiHandler = new ApiHandlerForCSLAutoCrypt("autocrypt",
+                Config.INSTANCE.autocrypt.getIp(), Config.INSTANCE.autocrypt.getPort(), false);
         fileStorageService = new FileStorageService();
 
         if (!isRemote) {
@@ -1411,7 +1413,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
         addCmd("add_connection", params -> {
                     logger.debug("Adding new connection ...");
                     Json connectionJson = params.get(CONNECTION);
-                    boolean isForAutoCrypt = params.get("is_for_autocrypt").asBoolean();
+                    boolean isForAutoCrypt = false;
+                    if(connectionJson.has("is_for_autocrypt")) {
+                        isForAutoCrypt = connectionJson.get("is_for_autocrypt").asBoolean();
+                    }
                     Connection connection = null;
                     try {
                         connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
@@ -1432,7 +1437,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if(!isForAutoCrypt) {
                             response = scanApiHandler.addConnectionInfo(connection);
                         } else {
-                            response = autoCryptApiHandler.addConnectionInfoForAutoCrypt(connection);
+                            Json paramsJson = Json.object();
+                            Json body = Json.object();
+                            body.set("connection", connection.serializeForAutoCrypt());
+                            response = autoCryptApiHandler.addConnectionInfoForAutoCrypt(body, paramsJson);
                         }
                         if (response.isSuccess()) {
                             // add connection info to dbapi
@@ -1481,9 +1489,11 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         addCmd("update_connection", params -> {
                     logger.debug("Updating a connection ...");
-
                     Json connectionJson = params.get(CONNECTION);
-                    boolean isForAutoCrypt = params.get("is_for_autocrypt").asBoolean();
+                    boolean isForAutoCrypt = false;
+                    if(connectionJson.has("is_for_autocrypt")) {
+                        isForAutoCrypt = connectionJson.get("is_for_autocrypt").asBoolean();
+                    }
                     Connection connection = null;
                     try {
                         connection = Connection.fromHMIJson(connectionJson, dbapiHandler.fetchDiscoveryProtocols());
@@ -1506,7 +1516,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if(!isForAutoCrypt) {
                             response = scanApiHandler.updateConnectionInfo(connection);
                         } else {
-                            response = autoCryptApiHandler.updateConnectionInfoForAutoCrypt(connection);
+                            Json paramsJson = Json.object();
+                            Json body = Json.object();
+                            body.set("connection", connection.serializeForAutoCrypt());
+                            response = autoCryptApiHandler.updateConnectionInfoForAutoCrypt(connection.getUuid(), body, paramsJson);
                         }
                         if (response.isSuccess()) {
                             logger.debug("Updated connection information with uuid={} in CSL-Scan.", connection.getUuid());
@@ -1541,7 +1554,10 @@ public class DiscoveryServices extends Service implements IStatusProvider {
 
         addCmd("delete_connection", params -> {
                     logger.debug("Deleting a connection ...");
-                    boolean isForAutoCrypt = params.get("is_for_autocrypt").asBoolean();
+                    boolean isForAutoCrypt = false;
+                    if(params.has("is_for_autocrypt")) {
+                        isForAutoCrypt = params.get("is_for_autocrypt").asBoolean();
+                    }
                     String connectionUuid = JsonUtil.getStringFromJson(params, "mongo_entity_id", null);
                     if (connectionUuid == null) {
                         logger.error("Failed to delete a connection : connection_uuid is required");
@@ -1555,7 +1571,8 @@ public class DiscoveryServices extends Service implements IStatusProvider {
                         if(!isForAutoCrypt) {
                             response = scanApiHandler.deleteConnectionInfo(connectionUuid);
                         } else {
-                            response = autoCryptApiHandler.deleteConnectionInfoForAutoCrypt(connectionUuid);
+                            Json paramsJson = Json.object();
+                            response = autoCryptApiHandler.deleteConnectionInfoForAutoCrypt(connectionUuid, params);
                         }
                         if (response.isSuccess()) {
                             logger.debug("Deleted the connection with uuid={} from CSL-Scan.", connectionUuid);

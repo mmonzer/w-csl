@@ -414,15 +414,21 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
      * Gets the list of connection info
      *
      */
-    public JsonApiResponse addConnectionInfoForAutoCrypt(Connection connection) {
-        return sendPost(ApiEndpointForCSLAutocrypt.CREATE_CONNECTION_INFO_URI.endpoint(),
-                connection.serializeForAutoCrypt());
+    public JsonApiResponse addConnectionInfoForAutoCrypt(Json body, Json params) {
+
+        return this.sendPost(ApiEndpointForCSLAutocrypt.CREATE_CONNECTION_INFO_URI.endpoint(),
+                body.get("connection"));
     }
-    public JsonApiResponse deleteConnectionInfoForAutoCrypt(String connectionUuid) {
-        return sendDelete(String.format(ApiEndpointForCSLAutocrypt.CONNECTIONS_DETAILS.endpoint(),connectionUuid), Json.object());
+    public JsonApiResponse deleteConnectionInfoForAutoCrypt(String connectionUuid, Json params) {
+        return this.sendDelete(
+                ApiEndpointForCSLAutocrypt.DELETE_CONNECTION_INFO_URI + connectionUuid,
+                params
+        );
     }
-    public JsonApiResponse updateConnectionInfoForAutoCrypt(Connection connection) {
-        return sendPut(String.format(ApiEndpointForCSLAutocrypt.CONNECTIONS_DETAILS.endpoint(),connection.getUuid()),
-                connection.serializeForAutoCrypt());
+    public JsonApiResponse updateConnectionInfoForAutoCrypt(String connectionUuid, Json body, Json params) {
+        return this.sendPut(
+                ApiEndpointForCSLAutocrypt.UPDATE_CONNECTION_INFO_URI + connectionUuid,
+                body.get("connection")
+        );
     }
 }

@@ -603,8 +603,6 @@ public class AutoCryptService extends Service implements IStatusProvider {
         getValueString(body, Device.VENDOR);
         getValueString(body, Device.CERTIFICATE_SERIAL_NUMBER);
         getValueString(body, Device.IP);
-        getValueString(body, Device.USERNAME);
-        getValueString(body, Device.PASSWORD);
 
         // endregion -- Verify required body keys and extract key values
 

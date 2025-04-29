@@ -128,6 +128,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
                 AutoCryptEndpoints.SIGN_CSR.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
 
+        addCmd(AutoCryptEndpoints.SET_CERTIFICATE_CNX.cmd(), this::setCertificateCnx,
+                AutoCryptEndpoints.SET_CERTIFICATE_CNX.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+
         addCmd(AutoCryptEndpoints.GET_CERTIFICATES.cmd(), this::getCertificates,
                 AutoCryptEndpoints.GET_CERTIFICATES.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
@@ -500,6 +504,18 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         // endregion -- Verify required body keys and extract key values
         return autocrypt.signCSR(body, params).toJson();
+    }
+
+    /**
+     * setCertificateCnx
+     * */
+    public Json setCertificateCnx(Json body) {
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, Common.PATH);
+        // endregion -- Verify required body keys and extract key values
+        return autocrypt.setCertificateCnx(body, params).toJson();
     }
 
     /**

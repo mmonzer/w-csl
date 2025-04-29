@@ -152,6 +152,16 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam("common_name", "", JsonCmdHelp.STR)
                     .setResult("The information of the new certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
+
+    //set_certificate_cnx
+    SET_CERTIFICATE_CNX("set_certificate_cnx",
+            new JsonCmdHelp()
+                    .setDesc("Set the connection information of the certificate")
+                    .setParam(AutocryptConstants.Common.PATH, "", JsonCmdHelp.STR)
+                    .setParam(AutocryptConstants.Certificate.SERIAL_NUMBER, Constants.NUMBER_OF_CERTIFICATE, JsonCmdHelp.STR)
+                    .setParam("connection_info", "Connection information", JsonCmdHelp.STR)
+                    .setResult("Whether the connection information was successfully set", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_CERTIFICATES("get_certificates",
             new JsonCmdHelp()
                     .setDesc("Gives the list of certificates")

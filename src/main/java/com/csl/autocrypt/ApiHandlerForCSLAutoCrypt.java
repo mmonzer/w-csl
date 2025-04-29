@@ -247,6 +247,14 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
         );
     }
 
+    public JsonApiResponse setCertificateCnx(Json body, Json params) {
+        return this.sendPost(
+                ApiEndpointForCSLAutocrypt.CERT_SET_CNX.endpoint(),
+                params,
+                body
+        );
+    }
+
     /**
      * Gives the list of certificates : revoked and not revoked
      *

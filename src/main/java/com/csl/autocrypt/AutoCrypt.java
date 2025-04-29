@@ -573,6 +573,35 @@ public class AutoCrypt {
         }
         return responseFromModule;
     }
+
+    /**
+     * set Certificate Cnx
+     *
+     * @params parameters with the path
+     * */
+    public JsonApiResponse setCertificateCnx(Json body, Json params) {
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Set Certificate Cnx with body {}", body);
+        // Set Certificate Cnx in autocrypt
+        String path = params.get("path").asString();
+        String serialNumber = body.get(Certificate.SERIAL_NUMBER).asString();
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API, "Set Certificate Cnx with body {} at path {}", body);
+        JsonApiResponse responseFromModule = autocryptApiHandler.setCertificateCnx(body, params);
+        if (!responseFromModule.isSuccess()) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Set Certificate Cnx in Autocrypt failed");
+            return JsonApiResponse.error("Error Set the Certificate Cnx : " + responseFromModule.getError().toJson());
+        }
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API, "Set Certificate Cnx in Autocrypt with response {}", responseFromModule);
+        // Sync certificates
+        try {
+            syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized certificates", serialNumber);
+        } catch (SynchronizationException e) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to Set Certificate Cnx with id {} and certificate number {}", serialNumber);
+            return JsonApiResponse.error(e.getMessage());
+        }
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Set Certificate Cnx with id {} and certificate number {}", serialNumber);
+        return responseFromModule;
+    }
     /**
      * Generate root CA
      *

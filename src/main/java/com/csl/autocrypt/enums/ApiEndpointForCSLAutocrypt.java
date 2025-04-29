@@ -26,6 +26,7 @@ public enum ApiEndpointForCSLAutocrypt {
     CERT_URI_GET_WITH_PK(CERT_URI_SLASH +"raw-with-private-key/"),
     CERT_URI_ISSUE(CERT_URI_SLASH +"issue"),
     CERT_SIGN_CSR(CERT_URI_SLASH +"sign-csr"),
+    CERT_SET_CNX(CERT_URI_SLASH +"set-connection"),
     CERT_URI_REVOKE(CERT_URI_SLASH +"revoke/"),
     CERT_URI_DEPLOY_CERTIFICATE(CERT_URI_SLASH +"deploy-certificate"),
 

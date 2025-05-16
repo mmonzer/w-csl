@@ -9,6 +9,8 @@ CurrentIDSParams.json
 csl-dev
 
 build/
+buildClient/
+buildServer/
 classes/
 downloads/
 # current logs

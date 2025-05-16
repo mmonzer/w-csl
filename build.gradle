@@ -4,10 +4,15 @@
  * This generated file contains a sample Java application project to get you started.
  * For more details on building Java & JVM projects, please refer to https://docs.gradle.org/8.7/userguide/building_java_projects.html in the Gradle documentation.
  */
-
 apply plugin: "java"
 apply plugin: "application"
 apply plugin : "jacoco"
+apply plugin : "base"
+
+if (project.hasProperty('customBuildDir')) {
+    println "Overriding buildDir to: ${project.customBuildDir}"
+    buildDir = file(project.customBuildDir)
+}
 
 repositories {
     // Use Maven Central for resolving dependencies.

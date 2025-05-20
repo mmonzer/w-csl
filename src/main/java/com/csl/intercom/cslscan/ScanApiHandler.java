@@ -265,7 +265,7 @@ public class ScanApiHandler extends ApiHandler {
         boolean hardDelete = true;
         try{
             logger.info("Deleting entities from CSL-Scan by uuids: {}", uuids);
-            sendDelete(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES_HARD, Json.object("uuids", uuids));
+            sendPost(ScanApiEndpoint.ENTITY_DELETE_MULTIPLE_ENTITIES_HARD, Json.object("uuids", uuids));
             logger.info("Deleted entities from CSL-Scan by uuids: {}", uuids);
         } catch (Exception e) {
             logger.error("Could not delete the entities from CSL-Scan", e);
@@ -782,8 +782,12 @@ public class ScanApiHandler extends ApiHandler {
      * @return The date of the last CPE items deletion in CSL-Scan.
      */
     public OffsetDateTime getLastCpeItemsDeletionDate() {
-        JsonApiResponse response = sendGet(
+        JsonApiResponse response = sendPost(
                 ScanApiEndpoint.CPE_ITEM_LAST_DELETION, Json.object());
+
+        if(response.getResult() == null) {
+            return null;
+        }
 
         // If the response's status code is not 200, return null
         if (response.getExtra().get(STATUS_CODE).asInteger() != 200) {

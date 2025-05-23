@@ -1031,7 +1031,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 "port_number", portNumber,
                 MONGO_ENTITY_ID, connection.getUuid(),
                 OTHER_DATA, getConnectionOtherData(connection, connectionJson),
-                "connected_devices", connection.getDevicesIds()
+                "connected_devices", connection.getDevicesIds(),
+                "purpose", connectionJson.get("purpose")
         );
         if (connection.getProtocol() == HTTP) {
             requestContents.set(DISCOVERY_PROTOCOL_NAME, discoveryProtocolName);

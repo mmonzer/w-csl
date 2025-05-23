@@ -7,7 +7,7 @@ public enum StaticConnectionProtocol {
     REMOTE_POWERSHELL("Powershell", "POWERSHELL", "POWERSHELL"),
     HTTP("HTTP", "HTTP", "HTTP"),
     SSH("SSH", "SSH", "SSH"),
-    CAMERADEPLOYEDCERTIFICATE("CamCertDeployDiscovery", "CAMERADEPLOYEDCERTIFICATE", "CAMERADEPLOYEDCERTIFICATE"),
+    CAMERADEPLOYEDCERTIFICATE("Deployment Certificate", "CAMERADEPLOYEDCERTIFICATE", "CAMERADEPLOYEDCERTIFICATE"),
     ;
 
     private final String dbapiName;

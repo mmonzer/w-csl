@@ -277,6 +277,15 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
                 params);
     }
 
+    public JsonApiResponse setDeployedSuccessCertificate(String serialNumber) {
+        Json params = Json.object();
+        params.set(Certificate.SERIAL_NUMBER, serialNumber);
+        return this.sendPut(
+                DbapiEndpointForCSLAutocrypt.SET_IS_DEPLOYED_CERTIFICATE_SUCCESS.endpoint(),
+                params
+        );
+    }
+
     /**
      * Revokes the list of certificate
      *

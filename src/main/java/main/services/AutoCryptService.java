@@ -5,8 +5,10 @@ import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLApplicativeLogger;
+import com.csl.logger.LoggerActions;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
@@ -619,9 +621,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
         getValueString(body, Device.VENDOR);
         getValueString(body, Device.CERTIFICATE_SERIAL_NUMBER);
         getValueString(body, Device.IP);
-
         // endregion -- Verify required body keys and extract key values
-
         return autocrypt.deployCertificate(body, params).toJson();
     }
 

@@ -539,8 +539,13 @@ public class AutoCrypt {
             logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"failed to deploy certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
             return responseFromModule;
         }
-        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"successfully deployed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
-
+        if(responseFromModule.getResult().get("success").toString().equals("true"))
+        {
+            String serialNumber = body.get(Device.CERTIFICATE_SERIAL_NUMBER).asString();
+            logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"successfully deployed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            // check response status before
+            dbApiHandler.setDeployedSuccessCertificate(serialNumber);
+        }
         return responseFromModule;
     }
 
@@ -725,7 +730,7 @@ public class AutoCrypt {
     /**
      * Synchronizes the certificates autocrypt -> dbapi
      */
-    private void syncCertificates() throws SynchronizationException {
+    public void syncCertificates() throws SynchronizationException {
         try {
             if (certificateSynchronizationService != null) {
                 certificateSynchronizationService.syncData();

@@ -375,6 +375,19 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
     }
 
     /**
+     * Remove a specific certificate from a specific device
+     * * @param body   body of the request with serialNumber and deviceUuid
+     * @param params parameters with the path
+     * */
+    public JsonApiResponse removeCertificate(Json body, Json params) {
+        return this.sendPost(
+                ApiEndpointForCSLAutocrypt.CERT_URI_REMOVE_CERTIFICATE.toString(),
+                params,
+                body
+        );
+    }
+
+    /**
      * Delete all the revoked certificates
      */
     public JsonApiResponse deleteRevokedCertificates() {

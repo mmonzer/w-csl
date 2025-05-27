@@ -22,6 +22,7 @@ public enum DbapiEndpointForCSLAutocrypt {
     ISSUER_UPT_BY_REF(ISSUER+"/update_by_issuer_ref/"),
     ISSUER_DEL_BY_REF(ISSUER+"/delete_by_issuer_ref/"),
     SET_IS_DEPLOYED_CERTIFICATE_SUCCESS(CERTIFICATES+"/set_is_deployed_certificate_success"),
+    REMOVE_DEPLOYED_CERTIFICATE(CERTIFICATES+"/remove_deployed_certificate"),
     ;
 
     private final String endpoint;

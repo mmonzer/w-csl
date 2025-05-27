@@ -550,6 +550,34 @@ public class AutoCrypt {
     }
 
     /**
+     * Remove specific certificate from specific device
+     * * @param body body of the request : with certificate_serial_number, ip, username, password and vendor
+     * * @param params       parameters with the path
+     * */
+    public JsonApiResponse removeCertificate(Json body, Json params) {
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Removing certificate with params {} and body {}", params, body);
+
+        String path = params.get("path").asString();
+
+        // removing certificate
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"removing certificate {} ({}) at device {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+        JsonApiResponse responseFromModule = autocryptApiHandler.removeCertificate(body, params);
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"removed certificate {} ({}) at device {} with username {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP), body.get(Device.USERNAME));
+
+        if (!responseFromModule.isSuccess()) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"failed to remove certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            return responseFromModule;
+        }
+        if(responseFromModule.getResult().get("success").toString().equals("true"))
+        {
+            String serialNumber = body.get(Device.CERTIFICATE_SERIAL_NUMBER).asString();
+            logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"successfully removed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            dbApiHandler.removeDeployedCertificate(serialNumber);
+        }
+        return responseFromModule;
+    }
+
+    /**
      * Sign CSR (Certificate Signing Request)
      *
      * @params body: body of the request: csr as string, role name. commonname, name, ttl, ttl unit, etc.

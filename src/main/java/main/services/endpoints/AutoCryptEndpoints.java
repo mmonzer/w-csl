@@ -207,6 +207,16 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam("password", "password for login into the camera", JsonCmdHelp.STR)
                     .setParam("vendor", "vendor of the camera", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
+    REMOVE_CERTIFICATE("remove_certificate",
+            new JsonCmdHelp()
+                    .setDesc("Remove the certificate from the given camera")
+                    .setParam("device_ip", "ip of the camera", JsonCmdHelp.STR)
+                    .setParam("certificate_path", "path of the certificate", JsonCmdHelp.STR)
+                    .setParam("certificate_serial_number", "serial number of the certificate", JsonCmdHelp.STR)
+                    .setParam("username", "user name for login into the camera", JsonCmdHelp.STR)
+                    .setParam("password", "password for login into the camera", JsonCmdHelp.STR)
+                    .setParam("vendor", "vendor of the camera", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     DELETE_REVOKED_CERTIFICATES("delete_revoked_certificates",
             new JsonCmdHelp()
                     .setDesc("Delete all revoked certificate")

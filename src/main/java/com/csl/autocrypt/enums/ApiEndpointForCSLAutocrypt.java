@@ -29,6 +29,7 @@ public enum ApiEndpointForCSLAutocrypt {
     CERT_SET_CNX(CERT_URI_SLASH +"set-connection"),
     CERT_URI_REVOKE(CERT_URI_SLASH +"revoke/"),
     CERT_URI_DEPLOY_CERTIFICATE(CERT_URI_SLASH +"deploy-certificate"),
+    CERT_URI_REMOVE_CERTIFICATE(CERT_URI_SLASH +"remove-certificate"),
 
     CA_URI("/api/ca"),
     CA_URI_GENERATE_INTER(CA_URI+"/generate-intermediate"),

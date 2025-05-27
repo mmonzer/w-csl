@@ -286,6 +286,15 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
         );
     }
 
+    public JsonApiResponse removeDeployedCertificate(String serialNumber) {
+        Json params = Json.object();
+        params.set(Certificate.SERIAL_NUMBER, serialNumber);
+        return this.sendPut(
+                DbapiEndpointForCSLAutocrypt.REMOVE_DEPLOYED_CERTIFICATE.endpoint(),
+                params
+        );
+    }
+
     /**
      * Revokes the list of certificate
      *

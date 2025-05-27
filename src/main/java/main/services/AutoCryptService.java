@@ -152,6 +152,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE.cmd(), this::deployCertificate,
                 AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.REMOVE_CERTIFICATE.cmd(), this::removeCertificate,
+                AutoCryptEndpoints.REMOVE_CERTIFICATE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+
         // ca-controller
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA.cmd(),
                 this::generateRootCA,
@@ -623,6 +627,25 @@ public class AutoCryptService extends Service implements IStatusProvider {
         getValueString(body, Device.IP);
         // endregion -- Verify required body keys and extract key values
         return autocrypt.deployCertificate(body, params).toJson();
+    }
+
+    /**
+     * Remove certiifcate from specific device
+     * * @param body parameters with the path, vendor, certificate_serial_number, connection_info_uuid
+     *
+     * */
+    public Json removeCertificate(Json body) {
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, Common.PATH);
+        getValueString(body, Device.VENDOR);
+        getValueString(body, Device.CERTIFICATE_SERIAL_NUMBER);
+        getValueString(body, Device.CONNECTION_INFO_UUID);
+
+        // endregion -- Verify required body keys and extract key values
+
+        return autocrypt.removeCertificate(body, params).toJson();
     }
 
     /**

@@ -105,6 +105,7 @@ public final class AutocryptConstants {
         public static final String IP = "ip";
         public static final String USERNAME = "username";
         public static final String PASSWORD = "password";
+        public static final String CONNECTION_INFO_UUID = "connection_info_uuid";
         private Device(){}
     }
 

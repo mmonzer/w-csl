@@ -120,6 +120,12 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
         return JsonApiResponse.success();
     }
 
+    public JsonApiResponse deleteIssuerByIssuerRef(String issuerRef) {
+        return this.sendDelete(
+                DbapiEndpointForCSLAutocrypt.ISSUER_DEL_BY_REF.endpoint() + issuerRef,
+                null);
+    }
+
     /**
      * Deletes the given issuer from the module and the DB
      *

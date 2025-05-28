@@ -139,9 +139,11 @@ public class AutoCrypt {
             return JsonApiResponse.error("Error deleting issuer : " + responseFromModule.getError().toJson());
         }
         logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Deleted issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
+        // delete issuer from dbapi by issuer ref
 
         // Sync issuers
         try {
+            dbApiHandler.deleteIssuerByIssuerRef(issuerRef);
             syncIssuers();
             syncCertificates();
             logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized issuers and certificates");

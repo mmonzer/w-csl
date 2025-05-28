@@ -100,7 +100,6 @@ public class ApiHandlerForCSLAutoCrypt extends ApiHandler {
                 body
         );
     }
-
     /**
      * Imports a new issuer
      *

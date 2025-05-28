@@ -431,7 +431,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
         result.set("street_address", certificateAuthOb.get("cert_street_address"));
         result.set("revocation_signature_algorithm", certificateAuthOb.get("cert_signature_algorithm"));
         // TODO: WHAT TO DO WITH TTL AND TTL UNIT
-        result.set("ttl", getTTL(certificateAuthOb.get("cert_expiration").asLong() / 1000));
+        result.set("ttl", getTTL(certificateAuthOb.get("cert_expiration").asLong()));
         result.set("ttl_unit", "years");
         return result;
     }

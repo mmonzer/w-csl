@@ -302,7 +302,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
 
         String name = getValueString(body, Common.COMMON_NAME);
         Json params = Json.object();
-        params.set( Common.PATH, path);
+        //params.set( Common.PATH, path);
         if (!body.has(Common.FILE) || !body.get(Common.FILE).isString()) {
             return JsonApiResponse.error("File was not correctly uploaded");
         }

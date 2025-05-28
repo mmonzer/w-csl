@@ -387,4 +387,18 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
                 DbapiEndpointForCSLAutocrypt.CA.endpoint(),
                 input);
     }
+
+    public JsonApiResponse generateCaAfterImport(Json certificateAuthObj) {
+        Json input = Json.object();
+        input.set(Common.COMMON_NAME, certificateAuthObj.get("common_name"));
+        input.set(Common.DESCRIPTION, certificateAuthObj.get("description"));
+        input.set(Issuer.ISSUER_REF, certificateAuthObj.get("issuer_ref"));
+        input.set(Common.PATH, certificateAuthObj.get(Common.PATH));
+        input.set(Certificate.SERIAL_NUMBER, certificateAuthObj.get(Certificate.SERIAL_NUMBER));
+
+        input.set(Issuer.CA_JSON, certificateAuthObj);
+        return this.sendPost(
+                DbapiEndpointForCSLAutocrypt.CA.endpoint(),
+                input);
+    }
 }

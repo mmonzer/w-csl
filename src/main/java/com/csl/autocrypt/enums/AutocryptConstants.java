@@ -64,6 +64,7 @@ public final class AutocryptConstants {
         public static final String NOT_AFTER = "not_after";
         public static final String OCSP_SERVERS = "ocsp_servers";
         public static final String PEM_BUNDLE = "pem_bundle";
+        public static final String NAME = "name";
         private Issuer(){}
     }
 

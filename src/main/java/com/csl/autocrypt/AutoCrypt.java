@@ -164,30 +164,22 @@ public class AutoCrypt {
      */
     public JsonApiResponse importIssuer(String idName, Json params, String file, boolean isRoot) {
         // Import issuer to Autocrypt
-        JsonApiResponse responseFromModule = autocryptApiHandler.importIssuer(params, file);
-        if (!responseFromModule.isSuccess() || responseFromModule.getResult().get(Issuer.IMPORTED_ISSUERS).isNull() ||
-                responseFromModule.getResult().get(Issuer.IMPORTED_ISSUERS).asJsonList().isEmpty()) {
-            return JsonApiResponse.error("Certificate already imported");
-        }
-
-        // Get issuer information from autocrypt
-        String issuerRef = responseFromModule.getResult().get(Issuer.IMPORTED_ISSUERS).asJsonList().get(0).asString();
-        responseFromModule = autocryptApiHandler.getIssuerInfo(issuerRef, params);
+        JsonApiResponse responseFromModule = autocryptApiHandler.importIssuer(params, file, idName);
         if (!responseFromModule.isSuccess()) {
-            return responseFromModule;
+            return JsonApiResponse.error("Error importing issuer: " + responseFromModule.getError().toJson());
         }
+        logger.info("Response from Autocrypt after importing issuer: {}", responseFromModule.getResult());
 
         // Save to dbapi
         responseFromModule.getResult().set(Issuer.CA_TYPE, isRoot ? Issuer.ROOT : Issuer.INTERMEDIATE);
         responseFromModule.getResult().set(Issuer.ISSUER_NAME, idName);
-        // TODO: deal with serial number and certificate object
         if (isRoot) {
             responseFromModule.getResult().set(Issuer.CA_TYPE, Issuer.ROOT);
         } else {
             responseFromModule.getResult().set(Issuer.CA_TYPE, Issuer.INTERMEDIATE);
         }
-        return dbApiHandler.generateCA(issuerRef, idName, isRoot ? Common.PKI : idName, null, null, null,
-                mergerJson(responseFromModule.getResult(), params));
+        Json createdIssuer = responseFromModule.getResult();
+        return dbApiHandler.generateCaAfterImport(createdIssuer);
     }
 
     /**

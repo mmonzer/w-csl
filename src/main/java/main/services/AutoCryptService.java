@@ -294,15 +294,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Imports a new certificate
      *
      * @param body parameters with the name and the file
-     * @param path path for the new issuer
      */
-    public JsonApiResponse importIssuer(Json body, String path, boolean isRoot) {
+    public JsonApiResponse importIssuer(Json body, boolean isRoot) {
 
         // region -- Verify required body keys and extract key values
 
         String name = getValueString(body, Common.COMMON_NAME);
         Json params = Json.object();
-        //params.set( Common.PATH, path);
         if (!body.has(Common.FILE) || !body.get(Common.FILE).isString()) {
             return JsonApiResponse.error("File was not correctly uploaded");
         }
@@ -319,7 +317,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the file
      */
     public Json importIssuerIntermediate(Json body) {
-        return importIssuer(body, extractValueString(body, Common.PATH), false).toJson();
+        return importIssuer(body, false).toJson();
     }
 
     /**
@@ -328,7 +326,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the file
      */
     public Json importIssuerRoot(Json body) {
-        return importIssuer(body, Common.PKI, true).toJson();
+        return importIssuer(body, true).toJson();
     }
 
     /**

@@ -181,7 +181,7 @@ public class AutoCrypt {
             responseFromModule.getResult().set(Issuer.CA_TYPE, Issuer.INTERMEDIATE);
         }
         Json createdIssuer = responseFromModule.getResult();
-        return dbApiHandler.generateCaAfterImport(createdIssuer);
+        return dbApiHandler.generateCaAfterImport(createdIssuer, isRoot);
     }
 
     /**

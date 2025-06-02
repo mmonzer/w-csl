@@ -442,7 +442,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
         return result;
     }
 
-    public JsonApiResponse generateCaAfterImport(Json certificateAuthObj) {
+    public JsonApiResponse generateCaAfterImport(Json certificateAuthObj, boolean isRootCa) {
         Json input = Json.object();
         input.set(Common.COMMON_NAME, certificateAuthObj.get("issuer_name"));
         input.set(Common.NAME, certificateAuthObj.get("issuer_name"));
@@ -453,7 +453,7 @@ public class DbapiHandlerForCSLAutoCrypt extends DbapiHandler {
         input.set(Certificate.CERTIFICATE_OBJECT, certificateAuthObj.get("certificate_details"));
         input.set(Issuer.CA_JSON, getCaJsonToSetInDbApi(certificateAuthObj));
         String ca_type = certificateAuthObj.get("ca_type").asString();
-        if (ca_type.equals("root")) {
+        if (isRootCa) {
             input.set("is_root", true);
         } else {
             input.set("is_root", false);

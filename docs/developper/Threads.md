@@ -2,6 +2,7 @@
 The CSL-Client has multiple threads running in parallel for the dealing for the different asynchronous tasks. 
 
 Here there is a non-exhaustive list of the threads subjects:
+
 - autoDelete files [client side] (uncorrelated) com.csl.util.FileStorageService.FileStorageService : autodeletes (temporary?) files for discovery service
 - sync all discovery [client side] (uncorrelated) main.services.DiscoveryService.init : sync all in discovery service
 - sync all autocrypt [client side] (uncorrelated) main.services.AutoCryptService.launchAutoSync : sync all in autocrypt service

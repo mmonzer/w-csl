@@ -1,0 +1,18 @@
+site_name: "CyberSmartLearn Versions"
+site_url: "https://cybersmartlearn.gitlab.io/csl/w-csl/"
+site_description: "Documentation for W-CSL"
+
+# The directory where your Markdown files are stored
+docs_dir: "docs"
+
+# Theme configuration (you can customize as needed)
+theme:
+  name: "readthedocs"
+
+# Define the structure of your navigation
+nav:
+  - Table of Content: README.md
+#  - Setup: user-setup.md
+#  - Versions: versions.md
+
+# You can include additional configurations such as plugins, markdown extensions, etc.

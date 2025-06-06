@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Introduction](introduction)
+- [Developer Overview](developper/developer_overview)
 - [Getting Started as a developer in w-csl](developper/getting_started)
     - [How to run the CSL with CSL_CLIENT in development environment](developper/getting_started)
     - [How to run the CSL with CSL_SERVER in development environment](developper/getting_started)

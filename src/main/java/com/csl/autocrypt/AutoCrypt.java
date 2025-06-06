@@ -13,6 +13,8 @@ import lombok.Setter;
 import main.services.JsonApiResponse;
 import main.services.endpoints.AutoCryptEndpoints;
 import org.eclipse.jetty.http.HttpHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.csl.autocrypt.ConvertDapiVault.transformKeysFromDbapiToVault;
 import static com.csl.autocrypt.enums.AutocryptConstants.*;
@@ -26,6 +28,7 @@ import static main.services.endpoints.AutoCryptEndpoints.*;
 public class AutoCrypt {
     public static final String FAILED_TO_CREATE_ROLE_AT_PATH = "Failed to create role {} at path {}";
     public static final String SYNCHRONIZED_ROLES = "synchronized roles";
+    private static final Logger log = LoggerFactory.getLogger(AutoCrypt.class);
     @Setter
     @Getter
     private String moduleIp;
@@ -136,9 +139,11 @@ public class AutoCrypt {
             return JsonApiResponse.error("Error deleting issuer : " + responseFromModule.getError().toJson());
         }
         logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"Deleted issuer {} at path {} in autocrypt", issuerRef, params.get(Common.PATH).asString());
+        // delete issuer from dbapi by issuer ref
 
         // Sync issuers
         try {
+            dbApiHandler.deleteIssuerByIssuerRef(issuerRef);
             syncIssuers();
             syncCertificates();
             logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized issuers and certificates");
@@ -161,30 +166,22 @@ public class AutoCrypt {
      */
     public JsonApiResponse importIssuer(String idName, Json params, String file, boolean isRoot) {
         // Import issuer to Autocrypt
-        JsonApiResponse responseFromModule = autocryptApiHandler.importIssuer(params, file);
-        if (!responseFromModule.isSuccess() || responseFromModule.getResult().get(Issuer.IMPORTED_ISSUERS).isNull() ||
-                responseFromModule.getResult().get(Issuer.IMPORTED_ISSUERS).asJsonList().isEmpty()) {
-            return JsonApiResponse.error("Certificate already imported");
-        }
-
-        // Get issuer information from autocrypt
-        String issuerRef = responseFromModule.getResult().get(Issuer.IMPORTED_ISSUERS).asJsonList().get(0).asString();
-        responseFromModule = autocryptApiHandler.getIssuerInfo(issuerRef, params);
+        JsonApiResponse responseFromModule = autocryptApiHandler.importIssuer(params, file, idName);
         if (!responseFromModule.isSuccess()) {
-            return responseFromModule;
+            return JsonApiResponse.error("Error importing issuer: " + responseFromModule.getError().toJson());
         }
+        logger.info("Response from Autocrypt after importing issuer: {}", responseFromModule.getResult());
 
         // Save to dbapi
         responseFromModule.getResult().set(Issuer.CA_TYPE, isRoot ? Issuer.ROOT : Issuer.INTERMEDIATE);
         responseFromModule.getResult().set(Issuer.ISSUER_NAME, idName);
-        // TODO: deal with serial number and certificate object
         if (isRoot) {
             responseFromModule.getResult().set(Issuer.CA_TYPE, Issuer.ROOT);
         } else {
             responseFromModule.getResult().set(Issuer.CA_TYPE, Issuer.INTERMEDIATE);
         }
-        return dbApiHandler.generateCA(issuerRef, idName, isRoot ? Common.PKI : idName, null, null, null,
-                mergerJson(responseFromModule.getResult(), params));
+        Json createdIssuer = responseFromModule.getResult();
+        return dbApiHandler.generateCaAfterImport(createdIssuer, isRoot);
     }
 
     /**
@@ -536,11 +533,102 @@ public class AutoCrypt {
             logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"failed to deploy certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
             return responseFromModule;
         }
-        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"successfully deployed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
-
+        if(responseFromModule.getResult().get("success").toString().equals("true"))
+        {
+            String serialNumber = body.get(Device.CERTIFICATE_SERIAL_NUMBER).asString();
+            logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"successfully deployed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            // check response status before
+            dbApiHandler.setDeployedSuccessCertificate(serialNumber);
+        }
         return responseFromModule;
     }
 
+    /**
+     * Remove specific certificate from specific device
+     * * @param body body of the request : with certificate_serial_number, ip, username, password and vendor
+     * * @param params       parameters with the path
+     * */
+    public JsonApiResponse removeCertificate(Json body, Json params) {
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER,"Removing certificate with params {} and body {}", params, body);
+
+        String path = params.get("path").asString();
+
+        // removing certificate
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API,"removing certificate {} ({}) at device {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+        JsonApiResponse responseFromModule = autocryptApiHandler.removeCertificate(body, params);
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API,"removed certificate {} ({}) at device {} with username {} ...", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP), body.get(Device.USERNAME));
+
+        if (!responseFromModule.isSuccess()) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"failed to remove certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            return responseFromModule;
+        }
+        if(responseFromModule.getResult().get("success").toString().equals("true"))
+        {
+            String serialNumber = body.get(Device.CERTIFICATE_SERIAL_NUMBER).asString();
+            logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER,"successfully removed certificate {} ({}) at device {}", body.get(Device.CERTIFICATE_SERIAL_NUMBER), path, body.get(Device.IP));
+            dbApiHandler.removeDeployedCertificate(serialNumber);
+        }
+        return responseFromModule;
+    }
+
+    /**
+     * Sign CSR (Certificate Signing Request)
+     *
+     * @params body: body of the request: csr as string, role name. commonname, name, ttl, ttl unit, etc.
+     */
+    public JsonApiResponse signCSR(Json body, Json params) {
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Signing CSR with body {}", body);
+        // Sign CSR in autocrypt
+        String path = params.get("path").asString();
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API, "Signing CSR with body {} at path {}", body);
+        JsonApiResponse responseFromModule = autocryptApiHandler.signCSR(body, params);
+        if (!responseFromModule.isSuccess() ||
+                !responseFromModule.getResult().has(Certificate.SERIAL_NUMBER) ||
+                !responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).isString()) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "CSR signing in Autocrypt failed");
+            return JsonApiResponse.error("Error signing the CSR : " + responseFromModule.getError().toJson());
+        }
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API, "CSR signed in Autocrypt with response {}", responseFromModule);
+        String serialNumber = responseFromModule.getResult().get(Certificate.SERIAL_NUMBER).asString();
+        // Sync certificates
+        try {
+            syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized certificates", serialNumber);
+        } catch (SynchronizationException e) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to sign CSR with id {} and certificate number {}", serialNumber);
+            return JsonApiResponse.error(e.getMessage());
+        }
+        return responseFromModule;
+    }
+
+    /**
+     * set Certificate Cnx
+     *
+     * @params parameters with the path
+     * */
+    public JsonApiResponse setCertificateCnx(Json body, Json params) {
+        logger.info(LoggerActions.REQUEST, LoggerInterfaces.CSL_SERVER, "Set Certificate Cnx with body {}", body);
+        // Set Certificate Cnx in autocrypt
+        String path = params.get("path").asString();
+        String serialNumber = body.get(Certificate.SERIAL_NUMBER).asString();
+        logger.trace(LoggerActions.REQUEST, LoggerInterfaces.CSL_AUTOCRYPT_API, "Set Certificate Cnx with body {} at path {}", body);
+        JsonApiResponse responseFromModule = autocryptApiHandler.setCertificateCnx(body, params);
+        if (!responseFromModule.isSuccess()) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Set Certificate Cnx in Autocrypt failed");
+            return JsonApiResponse.error("Error Set the Certificate Cnx : " + responseFromModule.getError().toJson());
+        }
+        logger.debug(LoggerActions.RESPONSE, LoggerInterfaces.CSL_AUTOCRYPT_API, "Set Certificate Cnx in Autocrypt with response {}", responseFromModule);
+        // Sync certificates
+        try {
+            syncCertificates();
+            logger.debug(LoggerActions.SYNC, LoggerInterfaces.CSL_AUTOCRYPT_API ,"synchronized certificates", serialNumber);
+        } catch (SynchronizationException e) {
+            logger.error(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Failed to Set Certificate Cnx with id {} and certificate number {}", serialNumber);
+            return JsonApiResponse.error(e.getMessage());
+        }
+        logger.info(LoggerActions.RESPONSE, LoggerInterfaces.CSL_SERVER, "Set Certificate Cnx with id {} and certificate number {}", serialNumber);
+        return responseFromModule;
+    }
     /**
      * Generate root CA
      *
@@ -664,7 +752,7 @@ public class AutoCrypt {
     /**
      * Synchronizes the certificates autocrypt -> dbapi
      */
-    private void syncCertificates() throws SynchronizationException {
+    public void syncCertificates() throws SynchronizationException {
         try {
             if (certificateSynchronizationService != null) {
                 certificateSynchronizationService.syncData();

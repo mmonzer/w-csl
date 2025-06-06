@@ -103,6 +103,7 @@ public class CpeItem implements IDbapiSerializable {
                 discoveryConnectionId = -1;
             }
             connectionInfoUuid = JsonUtil.getStringFromJson(data, "connectionInfoUuid", null);
+            logger.info("Connection info uuid: " + connectionInfoUuid);
         } catch (NullPointerException e) {
             // If any of the fields are missing, throw an exception
             logger.error("The fields 'updatedAt', 'uuid' and 'entityUuid' are required to build a CPE Item", e);

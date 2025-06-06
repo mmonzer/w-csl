@@ -5,8 +5,10 @@ import com.csl.core.CSLContext;
 import com.csl.core.Config;
 import com.csl.intercom.jsoncmd.JsonCmdHelp;
 import com.csl.intercom.jsoncmd.JsonCmdPrivilegeFamily;
+import com.csl.intercom.services.exceptions.SynchronizationException;
 import com.csl.intercom.status.IStatusProvider;
 import com.csl.logger.CSLApplicativeLogger;
+import com.csl.logger.LoggerActions;
 import com.csl.logger.LoggerCustomEndpoints;
 import com.csl.logger.LoggerInterfaces;
 import com.csl.util.ThreadUtils;
@@ -124,6 +126,14 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.GENERATE_CERTIFICATE.cmd(), this::generateCertificate,
                 AutoCryptEndpoints.GENERATE_CERTIFICATE.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.SIGN_CSR.cmd(), this::signCSR,
+                AutoCryptEndpoints.SIGN_CSR.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+
+        addCmd(AutoCryptEndpoints.SET_CERTIFICATE_CNX.cmd(), this::setCertificateCnx,
+                AutoCryptEndpoints.SET_CERTIFICATE_CNX.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+
         addCmd(AutoCryptEndpoints.GET_CERTIFICATES.cmd(), this::getCertificates,
                 AutoCryptEndpoints.GET_CERTIFICATES.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
@@ -142,6 +152,10 @@ public class AutoCryptService extends Service implements IStatusProvider {
         addCmd(AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE.cmd(), this::deployCertificate,
                 AutoCryptEndpoints.DEPLOY_CAMERA_CERTIFICATE.help(),
                 JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+        addCmd(AutoCryptEndpoints.REMOVE_CERTIFICATE.cmd(), this::removeCertificate,
+                AutoCryptEndpoints.REMOVE_CERTIFICATE.help(),
+                JsonCmdPrivilegeFamily.MANAGE_CERTIFICATE);
+
         // ca-controller
         addCmd(AutoCryptEndpoints.GENERATE_ROOT_CA.cmd(),
                 this::generateRootCA,
@@ -280,15 +294,13 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * Imports a new certificate
      *
      * @param body parameters with the name and the file
-     * @param path path for the new issuer
      */
-    public JsonApiResponse importIssuer(Json body, String path, boolean isRoot) {
+    public JsonApiResponse importIssuer(Json body, boolean isRoot) {
 
         // region -- Verify required body keys and extract key values
 
-        String name = getValueString(body, Common.NAME);
+        String name = getValueString(body, Common.COMMON_NAME);
         Json params = Json.object();
-        params.set( Common.PATH, path);
         if (!body.has(Common.FILE) || !body.get(Common.FILE).isString()) {
             return JsonApiResponse.error("File was not correctly uploaded");
         }
@@ -305,7 +317,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the file
      */
     public Json importIssuerIntermediate(Json body) {
-        return importIssuer(body, extractValueString(body, Common.PATH), false).toJson();
+        return importIssuer(body, false).toJson();
     }
 
     /**
@@ -314,7 +326,7 @@ public class AutoCryptService extends Service implements IStatusProvider {
      * @param body parameters with the path and the file
      */
     public Json importIssuerRoot(Json body) {
-        return importIssuer(body, Common.PKI, true).toJson();
+        return importIssuer(body, true).toJson();
     }
 
     /**
@@ -483,6 +495,34 @@ public class AutoCryptService extends Service implements IStatusProvider {
     }
 
     /**
+     * Sign CSR
+     */
+    public Json signCSR(Json body) {
+
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, Common.PATH);
+        String roleName = extractValueString(body, Role.VAULT_ROLE_NAME);
+        body.set(Role.ROLE_NAME, roleName);
+
+        // endregion -- Verify required body keys and extract key values
+        return autocrypt.signCSR(body, params).toJson();
+    }
+
+    /**
+     * setCertificateCnx
+     * */
+    public Json setCertificateCnx(Json body) {
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, Common.PATH);
+        // endregion -- Verify required body keys and extract key values
+        return autocrypt.setCertificateCnx(body, params).toJson();
+    }
+
+    /**
      * Gives the list of certificates
      *
      * @param body parameters with the path
@@ -583,12 +623,27 @@ public class AutoCryptService extends Service implements IStatusProvider {
         getValueString(body, Device.VENDOR);
         getValueString(body, Device.CERTIFICATE_SERIAL_NUMBER);
         getValueString(body, Device.IP);
-        getValueString(body, Device.USERNAME);
-        getValueString(body, Device.PASSWORD);
+        // endregion -- Verify required body keys and extract key values
+        return autocrypt.deployCertificate(body, params).toJson();
+    }
+
+    /**
+     * Remove certiifcate from specific device
+     * * @param body parameters with the path, vendor, certificate_serial_number, connection_info_uuid
+     *
+     * */
+    public Json removeCertificate(Json body) {
+        // region -- Verify required body keys and extract key values
+
+        Json params = Json.object();
+        transferValueString(body, params, Common.PATH);
+        getValueString(body, Device.VENDOR);
+        getValueString(body, Device.CERTIFICATE_SERIAL_NUMBER);
+        getValueString(body, Device.CONNECTION_INFO_UUID);
 
         // endregion -- Verify required body keys and extract key values
 
-        return autocrypt.deployCertificate(body, params).toJson();
+        return autocrypt.removeCertificate(body, params).toJson();
     }
 
     /**

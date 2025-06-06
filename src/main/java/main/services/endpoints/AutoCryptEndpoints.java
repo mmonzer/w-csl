@@ -144,6 +144,24 @@ public enum AutoCryptEndpoints implements Endpoint  {
                     .setParam(AutocryptConstants.Common.PATH, "path to create the certificate", JsonCmdHelp.STR)
                     .setResult("The information of the new certificate", JsonCmdHelp.STR)
                     .setStatus(JsonCmdHelp.STATUS_OK)),
+    SIGN_CSR("sign_csr",
+            new JsonCmdHelp()
+                    .setDesc("Signs a certificate signing request")
+                    .setParam("csr", "Certificate signing request", JsonCmdHelp.STR)
+                    .setParam("role_name", "name of the role creating the certificate(Signing the CSR)", JsonCmdHelp.STR)
+                    .setParam("common_name", "", JsonCmdHelp.STR)
+                    .setResult("The information of the new certificate", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+
+    //set_certificate_cnx
+    SET_CERTIFICATE_CNX("set_certificate_cnx",
+            new JsonCmdHelp()
+                    .setDesc("Set the connection information of the certificate")
+                    .setParam(AutocryptConstants.Common.PATH, "", JsonCmdHelp.STR)
+                    .setParam(AutocryptConstants.Certificate.SERIAL_NUMBER, Constants.NUMBER_OF_CERTIFICATE, JsonCmdHelp.STR)
+                    .setParam("connection_info", "Connection information", JsonCmdHelp.STR)
+                    .setResult("Whether the connection information was successfully set", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
     GET_CERTIFICATES("get_certificates",
             new JsonCmdHelp()
                     .setDesc("Gives the list of certificates")
@@ -182,6 +200,16 @@ public enum AutoCryptEndpoints implements Endpoint  {
     DEPLOY_CAMERA_CERTIFICATE("deploy_certificate",
             new JsonCmdHelp()
                     .setDesc("Deploy the certificate to the given camera")
+                    .setParam("device_ip", "ip of the camera", JsonCmdHelp.STR)
+                    .setParam("certificate_path", "path of the certificate", JsonCmdHelp.STR)
+                    .setParam("certificate_serial_number", "serial number of the certificate", JsonCmdHelp.STR)
+                    .setParam("username", "user name for login into the camera", JsonCmdHelp.STR)
+                    .setParam("password", "password for login into the camera", JsonCmdHelp.STR)
+                    .setParam("vendor", "vendor of the camera", JsonCmdHelp.STR)
+                    .setStatus(JsonCmdHelp.STATUS_OK)),
+    REMOVE_CERTIFICATE("remove_certificate",
+            new JsonCmdHelp()
+                    .setDesc("Remove the certificate from the given camera")
                     .setParam("device_ip", "ip of the camera", JsonCmdHelp.STR)
                     .setParam("certificate_path", "path of the certificate", JsonCmdHelp.STR)
                     .setParam("certificate_serial_number", "serial number of the certificate", JsonCmdHelp.STR)

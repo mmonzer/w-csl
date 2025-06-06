@@ -94,6 +94,7 @@ public abstract class Connection implements IScannerSerializable {
             case REMOTE_POWERSHELL -> RemotePowershellConnection.fromHMIJson(connectionJson);
             case HTTP -> HttpConnection.fromJson(connectionJson, connectionProtocol);
             case SSH -> SshConnection.fromJson(connectionJson);
+            case CAMERADEPLOYEDCERTIFICATE -> CameraDeployedCertificateConnection.fromJson(connectionJson);
             default -> null;
         };
     }
@@ -113,7 +114,6 @@ public abstract class Connection implements IScannerSerializable {
             default -> null;
         };
     }
-
     /**
      * Serialize the connection information in a format suitable to be sent to CSL-Scan (in the ConnectionInfos field).
      * Should be overriden by children.
@@ -123,6 +123,22 @@ public abstract class Connection implements IScannerSerializable {
     public Json serializeForScanner() {
         Json result = Json.object(
                 "queryProtocol", this.protocol.scanName()
+        );
+        if (this.uuid != null) {
+            result.set("uuid", this.uuid);
+        }
+        if (this.devicesIds != null) {
+            result.set("connected_devices", this.devicesIds);
+        }
+        if (this.name != null) {
+            result.set("name", this.name);
+        }
+        return result;
+    }
+
+    public Json serializeForAutoCrypt() {
+        Json result = Json.object(
+                "protocol", this.protocol.autocryptName()
         );
         if (this.uuid != null) {
             result.set("uuid", this.uuid);

@@ -1,0 +1,67 @@
+{
+  "server":{
+    "on": true,
+    "debug": true,
+    "webserver_port": 8000,
+    "vars_commands": true,
+    "jcmd_commands": true,
+    "database_commands": true,
+    "send_alerts": true,
+    "send_console_output": true,
+    "websocket_timeout": 0
+  },
+  "client":{
+    "ip_server_remote": "127.0.0.1",
+    "port_server_remote": 0,
+    "server_remote_url_prefix": "/jws",
+    "force_host_name_resolution": false,
+    "api_key": "",
+    "use_ssl": true,
+    "launch_web_api_server": false,
+    "web_api_server_port": 9900
+  },
+  "discovery_service": {
+    "manager_ip": "host.docker.internal",
+    "manager_port": 8081,
+    "manager_protocol": "http",
+    "use_ssl": false
+  },
+  "status": {
+    "send_notifications": true,
+    "notifications_period": 1
+  },
+  "tap_service": {
+    "localIpAddr": "16.0.0.1",
+    "localPort": 8001,
+    "knowHostFilePath": "~/.ssh/known_hosts"
+  },
+  "udp_server_conf": {
+    "on": true,
+    "ip": "0.0.0.0",
+    "port": 8001,
+    "max_input_queues": 10,
+    "max_size_of_input_queues": 100
+  },
+  "ids_conf": {
+    "on": true,
+    "show_ticks": false,
+    "history_length": 60
+  },
+  "alert_viewer": {
+    "ip": "127.0.0.1",
+    "port": 4445,
+    "name": "My Alerts",
+    "log_to_file": true,
+    "log_dir": "./files/alerts/idslogs/alerts",
+    "prefix_filename": "AL",
+    "max_size_of_log_files": 10000,
+    "do_not_resent_same_alert": true,
+    "alert_duration": 10000
+  },
+  "autocrypt_service": {
+    "ip": "host.docker.internal",
+    "port": 8002,
+    "sync_frequency": 300
+  }
+
+}

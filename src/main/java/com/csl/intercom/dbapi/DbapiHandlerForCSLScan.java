@@ -1171,6 +1171,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             port = ((RemotePowershellConnection) connection).getPort();
         } else if (connection.getProtocol() == HTTP) {
             port = Integer.parseInt(((HttpConnection) connection).getPort());
+        } else if (connection.getProtocol() == CAMERADEPLOYEDCERTIFICATE) {
+            port = Integer.parseInt(String.valueOf(((CameraDeployedCertificateConnection) connection).getPort()));
         }
         return port;
     }
@@ -1202,7 +1204,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             otherData.set("stagesConfig", stageConfigJson);
             otherData.set("headers", Json.object());
             otherData.set("queryParams", Json.object());
-        } else {
+        } else if (connection.getProtocol() == CAMERADEPLOYEDCERTIFICATE) {
+            otherData.set("vendor", ((CameraDeployedCertificateConnection) connection).getVendor());
+        }
+        else {
             return otherData;
         }
         return otherData;
@@ -1217,7 +1222,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
                 "port_number", portNumber,
                 MONGO_ENTITY_ID, connection.getUuid(),
                 OTHER_DATA, getConnectionOtherData(connection, connectionJson),
-                "connected_devices", connection.getDevicesIds()
+                "connected_devices", connection.getDevicesIds(),
+                "purpose", connectionJson.get("purpose")
         );
         if (connection.getProtocol() == HTTP) {
             requestContents.set(DISCOVERY_PROTOCOL_NAME, discoveryProtocolName);
@@ -1228,6 +1234,8 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             requestContents.set(USERNAME, ((RemotePowershellConnection) connection).getUsername());
         } else if (connection.getProtocol() == SSH) {
             requestContents.set(USERNAME, ((SshConnection) connection).getUsername());
+        } else if (connection.getProtocol() == CAMERADEPLOYEDCERTIFICATE) {
+            requestContents.set(USERNAME, ((CameraDeployedCertificateConnection) connection).getUsername());
         }
         boolean isCreated = false;
         Request request = createDbapiRequest(HttpMethod.POST, DbapiEndpointForCSLScan.CONNECTIONS);
@@ -1314,6 +1322,10 @@ public class DbapiHandlerForCSLScan extends DbapiHandler {
             requestContents.set(USERNAME, ((SNMPv3Connection) connection).getUsername());
         } else if (connection.getProtocol() == REMOTE_POWERSHELL) {
             requestContents.set(USERNAME, ((RemotePowershellConnection) connection).getUsername());
+        } else if (connection.getProtocol() == CAMERADEPLOYEDCERTIFICATE) {
+            requestContents.set(USERNAME, ((CameraDeployedCertificateConnection) connection).getUsername());
+        } else if (connection.getProtocol() == SSH) {
+            requestContents.set(USERNAME, ((SshConnection) connection).getUsername());
         }
         request.body(new StringRequestContent(JSON_FORMAT, requestContents.toString()));
         ContentResponse response = request.send();

@@ -25,12 +25,27 @@ public enum ApiEndpointForCSLAutocrypt {
     CERT_URI_GET_WO_PK(CERT_URI_SLASH +"raw/"),
     CERT_URI_GET_WITH_PK(CERT_URI_SLASH +"raw-with-private-key/"),
     CERT_URI_ISSUE(CERT_URI_SLASH +"issue"),
+    CERT_SIGN_CSR(CERT_URI_SLASH +"sign-csr"),
+    CERT_SET_CNX(CERT_URI_SLASH +"set-connection"),
     CERT_URI_REVOKE(CERT_URI_SLASH +"revoke/"),
     CERT_URI_DEPLOY_CERTIFICATE(CERT_URI_SLASH +"deploy-certificate"),
+    CERT_URI_REMOVE_CERTIFICATE(CERT_URI_SLASH +"remove-certificate"),
 
     CA_URI("/api/ca"),
     CA_URI_GENERATE_INTER(CA_URI+"/generate-intermediate"),
     CA_URI_GENERATE_ROOT(CA_URI+"/generate-root"),
+
+    // connection info in csl-autocrypt
+    CONNECTION_INFO_URI("/api/connection-info"),
+    CONNECTION_INFO_URI_SLASH(CONNECTION_INFO_URI+"/"),
+    CONNECTIONS_DETAILS(CONNECTION_INFO_URI.endpoint() + "%s"),
+    DELETE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint() + "/delete/"),
+    CREATE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint() + "/create"),
+    UPDATE_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint() + "/update/"),
+
+    CREATE_LIST_OF_CONNECTION_INFO_URI(CONNECTION_INFO_URI.endpoint()+"/create_list_of_connections"),
+    CONNECTIONS_LAST_UPDATE(CONNECTION_INFO_URI.endpoint()+"/last-update"),
+    CLEAR_ALL_ENTITY_CONNECTIONS(CONNECTION_INFO_URI.endpoint()+"/clear"),
     ;
 
     private final String endpoint;

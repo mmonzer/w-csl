@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
 import static com.csl.logger.CSLNetworkLogger.debugInboundResponse;
@@ -38,6 +39,8 @@ public class CSLWebSocketForJcmd {
     // Concurrent map to manage WebSocket sessions by API name
     static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
     private static final AtomicBoolean connected = new AtomicBoolean(false);
+    // Track active WebSocket connections
+    private static final AtomicInteger connectionCount = new AtomicInteger(0);
 
     static {
         startKeepAliveThread();
@@ -222,17 +225,22 @@ public class CSLWebSocketForJcmd {
     }
 
     /**
-     * Sets the keep alive thread to send keep alive messages
+     * Increments the number of active WebSocket connections and enables keep alive if needed.
      */
     public static void startKeepAlive() {
+        connectionCount.incrementAndGet();
         connected.set(true);
     }
 
     /**
-     * Unsets the keep alive thread to send keep alive messages
+     * Decrements the number of active connections and disables keep alive when none remain.
      */
     public static void stopKeepAlive() {
-        connected.set(false);
+        int remaining = connectionCount.decrementAndGet();
+        if (remaining <= 0) {
+            connectionCount.set(0);
+            connected.set(false);
+        }
     }
 
     /**

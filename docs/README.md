@@ -17,4 +17,5 @@
 - [How to manage the logs in the CSL_CLIENT and CSL_SERVER](developper/logging)
 - [Brief explanation about the threads running the CSL_CLIENT](developper/Threads)
 - [How to view the endpoints managed by CSL_CLIENT and CSL_SERVER](developper/endpoints)
+- [Multi-client support in CSL_SERVER](developper/multi_client_support)
 

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
 import static com.csl.logger.CSLNetworkLogger.debugInboundResponse;
@@ -38,6 +39,8 @@ public class CSLWebSocketForJcmd {
     // Concurrent map to manage WebSocket sessions by API name
     static Map<String, Session> sessionMap = new ConcurrentHashMap<>();
     private static final AtomicBoolean connected = new AtomicBoolean(false);
+    // Track active WebSocket connections
+    private static final AtomicInteger connectionCount = new AtomicInteger(0);
 
     static {
         startKeepAliveThread();
@@ -168,6 +171,35 @@ public class CSLWebSocketForJcmd {
     }
 
     /**
+     * Executes a Jcmd command for a specific client identifier while specifying the API name.
+     */
+    public static Json execJCmdToClient(String clientId, String apiName, Json jsonCmd, String xCorrelationId) {
+        Json fullMessage = Json.object();
+        String uuid = String.valueOf(getUuid());
+
+        fullMessage.set(ID, uuid);
+        fullMessage.set(X_CORRELATION_ID, xCorrelationId);
+        fullMessage.set("api", apiName);
+        fullMessage.set("jsonCommand", jsonCmd);
+
+        debugOutboundRequest(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", LoggerConstants.WS_REQUEST_SENT);
+
+        CompletableFuture<Json> futureResponse = new CompletableFuture<Json>().completeOnTimeout(Json.object(RESPONSE, Json.object(ERROR, "TIMEOUT")), TIME_OUT, TimeUnit.MILLISECONDS);
+        pendingMessages.put(uuid, futureResponse);
+        broadcastMessageJson(clientId, fullMessage);
+
+        Json response;
+        try {
+            response = futureResponse.get().get(RESPONSE);
+        } catch (InterruptedException | ExecutionException e) {
+            response = Json.object(ERROR, "Interrupted : " + e.getMessage());
+        }
+
+        debugInboundResponse(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", 0, LoggerConstants.WS_RESPONSE_RECV);
+        return (response != null && response.has("result")) ? response.get("result") : Json.object().set(ERROR, "timeout");
+    }
+
+    /**
      * Processes an incoming WebSocket message, matching it to a pending command and storing the response.
      *
      * @param message The incoming WebSocket message as a string.
@@ -222,17 +254,22 @@ public class CSLWebSocketForJcmd {
     }
 
     /**
-     * Sets the keep alive thread to send keep alive messages
+     * Increments the number of active WebSocket connections and enables keep alive if needed.
      */
     public static void startKeepAlive() {
+        connectionCount.incrementAndGet();
         connected.set(true);
     }
 
     /**
-     * Unsets the keep alive thread to send keep alive messages
+     * Decrements the number of active connections and disables keep alive when none remain.
      */
     public static void stopKeepAlive() {
-        connected.set(false);
+        int remaining = connectionCount.decrementAndGet();
+        if (remaining <= 0) {
+            connectionCount.set(0);
+            connected.set(false);
+        }
     }
 
     /**

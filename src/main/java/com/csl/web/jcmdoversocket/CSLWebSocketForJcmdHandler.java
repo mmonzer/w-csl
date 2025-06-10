@@ -2,6 +2,7 @@ package com.csl.web.jcmdoversocket;
 
 import com.csl.core.CSLContext;
 import com.csl.web.websockets.CSLWebSocket;
+import com.csl.auth.SupportedClients;
 import com.ucsl.json.Json;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
@@ -18,15 +19,31 @@ public class CSLWebSocketForJcmdHandler {
      
     @OnOpen
     public void onConnect(Session session) {
-		logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket  : {}", session);
-		logger.trace("Connection : {}", session);
+                logger.info("A new session has connected to the CSLWebSocketForJcmdHandler websocket  : {}", session);
+                logger.trace("Connection : {}", session);
 
-		CSLWebSocketForJcmd.clearSession();
+                this.session = session;
 
-		this.session = session;
+                String clientId = null;
+                String password = null;
+                try {
+                        clientId = session.getRequestParameterMap().getOrDefault("id", java.util.List.of("")).get(0);
+                        password = session.getRequestParameterMap().getOrDefault("password", java.util.List.of("")).get(0);
+                } catch (Exception ignored) {}
 
-		CSLWebSocketForJcmd.startKeepAlive();
-	}
+                if (!SupportedClients.authenticate(clientId, password)) {
+                        logger.warn("Rejecting WS connection for client {}", clientId);
+                        try {
+                                session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "Authentication failed"));
+                        } catch (Exception e) {
+                                logger.error("Error closing session", e);
+                        }
+                        return;
+                }
+
+                CSLWebSocketForJcmd.addApi(clientId, session);
+                CSLWebSocketForJcmd.startKeepAlive();
+        }
 
     @OnClose
     public void onClose(CloseReason close) {
@@ -43,14 +60,10 @@ public class CSLWebSocketForJcmdHandler {
     @OnMessage
     public void onMessage(String message) {
 		message=message.trim();
-    	if (message.startsWith("api:")) {
-    		String apiName=message.substring(4);
-    		CSLWebSocketForJcmd.addApi(apiName, session);
-    	}
-    	else if (message.startsWith("res:{")&&message.endsWith("}")) {
-    		message=message.substring(4);
-    		CSLWebSocketForJcmd.messageArrived(message);
-    	}
+        if (message.startsWith("res:{")&&message.endsWith("}")) {
+                message=message.substring(4);
+                CSLWebSocketForJcmd.messageArrived(message);
+        }
     	
     	else if (message.startsWith("wss:")) {
     		message=message.substring(4);

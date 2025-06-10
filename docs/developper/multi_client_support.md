@@ -4,7 +4,13 @@ This document explains how the server handles several CSL_CLIENT instances conne
 
 ## WebSocket registration
 
-`CSLWebSocketForJcmdHandler` exposes the `/cmd` WebSocket endpoint. Each client connects to this endpoint and sends a registration message formatted as `api:<client-name>`.
+`CSLWebSocketForJcmdHandler` exposes the `/cmd` WebSocket endpoint. Each client connects with its identifier and credentials provided as query parameters:
+
+```
+ws://server:port/cmd?id=<client-id>&password=<password>
+```
+
+During `@OnOpen`, the server validates these credentials using the `supported_clients.json` file and registers the client session if valid.
 
 ```java
 @OnMessage
@@ -55,8 +61,12 @@ Every five seconds `startKeepAliveThread` checks `connected` and broadcasts a `k
 
 ## Usage
 
-1. Each CSL_CLIENT must send `api:<unique-name>` once connected.
-2. The server keeps the session for each name in `sessionMap` and continues sending keep‑alive packets while at least one client is connected.
-3. API calls or notifications can be directed to a specific client with `broadcastMessageJson(apiName, json)` or similar methods.
+1. Each CSL_CLIENT provides its credentials via the WebSocket URL using `id` and `password` parameters.
+2. The server stores the session for each validated client and continues sending keep‑alive packets while at least one client is connected.
+3. API calls or notifications can be directed to a specific client with `broadcastMessageJson(clientId, json)` or similar methods.
 
 This mechanism allows the server to host multiple clients simultaneously over WebSocket without interfering with each other.
+
+### Configuration files
+
+The server reads `supported_clients.json` from the classpath to determine the list of allowed clients and their credentials. Each client must have a local `clientConfig.env` file providing `CLIENT_ID` and `PASSWORD`. These values are appended to the WebSocket URL when connecting.

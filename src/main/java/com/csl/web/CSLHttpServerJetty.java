@@ -267,13 +267,19 @@ public class CSLHttpServerJetty {
                 Json cmd = data.get(JCmd.CMD);
                 Json params = data.get(JCmd.PARAMETERS);
 
+                String site = req.getParameter("site");
+                if (site != null && !com.csl.auth.SupportedClients.isKnown(site)) {
+                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unknown site");
+                    return;
+                }
+
                 if (cmd == null) {
                     logger.warn("Invalid command: null");
                     resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid command: null");
                     return;
                 }
 
-                String bodyResp = executeApiCommand(api, data, cmd, params, req.getHeader(X_CORRELATION_ID));
+                String bodyResp = executeApiCommand(api, data, cmd, params, req.getHeader(X_CORRELATION_ID), site);
 
                 resp.getWriter().write(bodyResp);
             }
@@ -508,11 +514,12 @@ public class CSLHttpServerJetty {
      * @param params The parameters for the command.
      * @return The response from executing the command.
      */
-    private String executeApiCommand(ApiCommands api, Json data, Json cmd, Json params, String xCorrelationId) {
+    private String executeApiCommand(ApiCommands api, Json data, Json cmd, Json params, String xCorrelationId, String site) {
         String bodyResp;
         if (listOfRemoteApi.contains(api.getName().toLowerCase())) {
             logger.traceReq(LoggerInterfaces.CSL_CLIENT, "Sending command with body {} ...", params);
-            bodyResp = CSLWebSocketForJcmd.execJCmd(api.getName(), data, xCorrelationId).toString();
+            if (site == null) site = api.getName();
+            bodyResp = CSLWebSocketForJcmd.execJCmdToClient(site, api.getName(), data, xCorrelationId).toString();
             logger.traceResp(LoggerInterfaces.CSL_CLIENT, "Sent command with body {} : {}", params, bodyResp);
         } else {
             logger.traceReq(LoggerInterfaces.LOCAL, "Executing command with body {} ...", params);

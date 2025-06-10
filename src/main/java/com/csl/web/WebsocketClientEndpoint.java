@@ -56,6 +56,11 @@ public class WebsocketClientEndpoint {
             if (APIKEY != null) {
                 headers.put("Authorization", List.of("Api-Key " + APIKEY));
             }
+            com.csl.auth.ClientCredentials cred = com.csl.auth.ClientCredentials.get();
+            if (cred != null && cred.getId() != null && !cred.getId().isEmpty()) {
+                headers.put("X-Client-Id", List.of(cred.getId()));
+                headers.put("X-Client-Password", List.of(cred.getPassword()));
+            }
         }
     }
 
@@ -89,8 +94,7 @@ public class WebsocketClientEndpoint {
 
         isConnecting.set(false);
 
-        logger.info("Registering API endpoints with the server");
-        JServiceLoader.getApiMap().keySet().forEach(apiName -> sendMessageIfOpen("api:" + apiName));
+        // Registration is now handled through connection parameters
     }
 
     /**

@@ -1,0 +1,14 @@
+{
+  "clients": [
+    {
+      "id": "site1",
+      "auth_type": "password",
+      "password": "secret1"
+    },
+    {
+      "id": "site2",
+      "auth_type": "password",
+      "password": "secret2"
+    }
+  ]
+}

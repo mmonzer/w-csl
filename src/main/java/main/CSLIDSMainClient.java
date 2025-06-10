@@ -69,9 +69,15 @@ public class CSLIDSMainClient {
 
 
         String wsProtocol = useSsl ? "wss" : "ws";
-        return (serverPort > 0)
+        String base = (serverPort > 0)
                 ? wsProtocol + "://" + serverIp + ":" + serverPort + serverUrlPrefix + "/cmd"
                 : wsProtocol + "://" + serverIp + serverUrlPrefix + "/cmd";
+
+        com.csl.auth.ClientCredentials cred = com.csl.auth.ClientCredentials.get();
+        if (cred != null && cred.getId() != null && !cred.getId().isEmpty()) {
+            base += "?id=" + cred.getId() + "&password=" + cred.getPassword();
+        }
+        return base;
     }
 
     /**

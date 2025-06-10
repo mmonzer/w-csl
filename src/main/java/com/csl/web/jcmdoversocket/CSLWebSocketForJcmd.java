@@ -171,6 +171,35 @@ public class CSLWebSocketForJcmd {
     }
 
     /**
+     * Executes a Jcmd command for a specific client identifier while specifying the API name.
+     */
+    public static Json execJCmdToClient(String clientId, String apiName, Json jsonCmd, String xCorrelationId) {
+        Json fullMessage = Json.object();
+        String uuid = String.valueOf(getUuid());
+
+        fullMessage.set(ID, uuid);
+        fullMessage.set(X_CORRELATION_ID, xCorrelationId);
+        fullMessage.set("api", apiName);
+        fullMessage.set("jsonCommand", jsonCmd);
+
+        debugOutboundRequest(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", LoggerConstants.WS_REQUEST_SENT);
+
+        CompletableFuture<Json> futureResponse = new CompletableFuture<Json>().completeOnTimeout(Json.object(RESPONSE, Json.object(ERROR, "TIMEOUT")), TIME_OUT, TimeUnit.MILLISECONDS);
+        pendingMessages.put(uuid, futureResponse);
+        broadcastMessageJson(clientId, fullMessage);
+
+        Json response;
+        try {
+            response = futureResponse.get().get(RESPONSE);
+        } catch (InterruptedException | ExecutionException e) {
+            response = Json.object(ERROR, "Interrupted : " + e.getMessage());
+        }
+
+        debugInboundResponse(logger, LoggerInterfaces.CSL_CLIENT.toString(), 0, "", apiName, "WS", 0, LoggerConstants.WS_RESPONSE_RECV);
+        return (response != null && response.has("result")) ? response.get("result") : Json.object().set(ERROR, "timeout");
+    }
+
+    /**
      * Processes an incoming WebSocket message, matching it to a pending command and storing the response.
      *
      * @param message The incoming WebSocket message as a string.
